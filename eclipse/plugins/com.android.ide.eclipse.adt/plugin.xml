@@ -505,13 +505,13 @@
         that defers to multiple delegate handlers.
         -->
         <editor
-              class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
-              contributorClass="com.android.ide.eclipse.adt.internal.editors.CommonActionContributor"
+              class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
+              contributorClass="com.android.ide.eclipse.adt.internal.editors.common.CommonActionContributor"
               default="true"
               extensions="xml"
               icon="icons/android_file.png"
               id="com.android.ide.eclipse.editors.XmlCommonEditor"
-              matchingStrategy="com.android.ide.eclipse.adt.internal.editors.CommonMatchingStrategy"
+              matchingStrategy="com.android.ide.eclipse.adt.internal.editors.common.CommonMatchingStrategy"
               name="Android Common XML Editor">
         </editor>
 
@@ -525,12 +525,12 @@
         </editor>
 
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
-            contributorClass="com.android.ide.eclipse.adt.internal.editors.CommonActionContributor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
+            contributorClass="com.android.ide.eclipse.adt.internal.editors.common.CommonActionContributor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.layout.LayoutEditor"
-            matchingStrategy="com.android.ide.eclipse.adt.internal.editors.CommonMatchingStrategy"
+            matchingStrategy="com.android.ide.eclipse.adt.internal.editors.common.CommonMatchingStrategy"
             name="Legacy Android Layout Editor">
         </editor>
 
@@ -541,42 +541,42 @@
         Eclipse not complain upon startup of an existing workspace.
         -->
        <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.resources.ResourcesEditor"
             name="Legacy Android Resource Editor">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.menu.MenuEditor"
             name="Legacy Android Menu Editor">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.xml.XmlEditor"
             name="Legacy Android Xml Resources Editor">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.animator.AnimationEditor"
             name="Legacy Android Animation Editor">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.drawable.DrawableEditor"
             name="Legacy Android Drawable Editor">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.color.ColorEditor"

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors;
+package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate.IXmlEditorCreator;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate.IDelegateCreator;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
@@ -47,21 +48,21 @@ import org.w3c.dom.Document;
 
 /**
  * Multi-page form editor for ALL /res XML files.
- *
+ * <p/>
  * This editor doesn't actually do anything. Instead, it defers actual implementation
- * to {@link XmlEditorDelegate} instances.
+ * to {@link CommonXmlDelegate} instances.
  */
-public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEditorInput {
+public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInput {
 
     public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".XmlCommonEditor"; //$NON-NLS-1$
 
     /**
-     * Registered {@link XmlEditorDelegate}s.
+     * Registered {@link CommonXmlDelegate}s.
      * All delegates must have a {@code Creator} class which is instantiated
      * once here statically. All the creators are invoked in the order they
      * are defined and the first one to return a non-null delegate is used.
      */
-    private static final IXmlEditorCreator[] DELEGATES = {
+    private static final IDelegateCreator[] DELEGATES = {
             new LayoutEditorDelegate.Creator(),
             new ValuesEditorDelegate.Creator(),
             new AnimationEditorDelegate.Creator(),
@@ -72,7 +73,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
     };
 
     /**
-     * IDs of legacy editors replaced by the {@link AndroidXmlCommonEditor}.
+     * IDs of legacy editors replaced by the {@link CommonXmlEditor}.
      */
     public static final String[] LEGACY_EDITOR_IDS = {
         LayoutEditorDelegate.LEGACY_EDITOR_ID,
@@ -84,12 +85,12 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
         OtherXmlEditorDelegate.LEGACY_EDITOR_ID,
     };
 
-    private XmlEditorDelegate mDelegate = null;
+    private CommonXmlDelegate mDelegate = null;
 
     /**
      * Creates the form editor for resources XML files.
      */
-    public AndroidXmlCommonEditor() {
+    public CommonXmlEditor() {
         super();
     }
 
@@ -131,7 +132,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
             ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
             ResourceFolderType type = resFolder == null ? null : resFolder.getType();
 
-            for (IXmlEditorCreator creator : DELEGATES) {
+            for (IDelegateCreator creator : DELEGATES) {
                 mDelegate = creator.createForFile(this, fileInput, type);
                 if (mDelegate != null) {
                     break;
@@ -168,7 +169,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
         return mDelegate == null ? null : mDelegate.getUiRootNode();
     }
 
-    public XmlEditorDelegate getDelegate() {
+    public CommonXmlDelegate getDelegate() {
         return mDelegate;
     }
 

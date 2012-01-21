@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.drawable;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -35,13 +35,13 @@ import org.w3c.dom.Node;
  * Editor for /res/drawable XML files.
  */
 @SuppressWarnings("restriction")
-public class DrawableEditorDelegate extends XmlEditorDelegate {
+public class DrawableEditorDelegate extends CommonXmlDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public DrawableEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.DRAWABLE == type) {
@@ -54,7 +54,7 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         EDITORS_NAMESPACE + ".drawable.DrawableEditor"; //$NON-NLS-1$
@@ -65,7 +65,7 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
     /**
      * Creates the form editor for resources XML files.
      */
-    private DrawableEditorDelegate(AndroidXmlCommonEditor editor) {
+    private DrawableEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }

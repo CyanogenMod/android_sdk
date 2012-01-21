@@ -21,8 +21,8 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IUnknownDescriptorProvider;
@@ -74,14 +74,14 @@ import java.util.Set;
 /**
  * Multi-page form editor for /res/layout XML files.
  */
-public class LayoutEditorDelegate extends XmlEditorDelegate
-         implements IShowEditorInput, IPartListener, XmlEditorDelegate.IActionContributorDelegate {
+public class LayoutEditorDelegate extends CommonXmlDelegate
+         implements IShowEditorInput, IPartListener, CommonXmlDelegate.IActionContributorDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public LayoutEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.LAYOUT == type) {
@@ -94,7 +94,7 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         AdtConstants.EDITORS_NAMESPACE + ".layout.LayoutEditor"; //$NON-NLS-1$
@@ -120,15 +120,15 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
     private boolean mNewFileOnConfigChange = false;
 
     /**
-     * Checks whether an editor part is an instance of {@link AndroidXmlCommonEditor}
+     * Checks whether an editor part is an instance of {@link CommonXmlEditor}
      * with an associated {@link LayoutEditorDelegate} delegate.
      *
      * @param editorPart An editor part. Can be null.
      * @return The {@link LayoutEditorDelegate} delegate associated with the editor or null.
      */
     public static @Nullable LayoutEditorDelegate fromEditor(@Nullable IEditorPart editorPart) {
-        if (editorPart instanceof AndroidXmlCommonEditor) {
-            XmlEditorDelegate delegate = ((AndroidXmlCommonEditor) editorPart).getDelegate();
+        if (editorPart instanceof CommonXmlEditor) {
+            CommonXmlDelegate delegate = ((CommonXmlEditor) editorPart).getDelegate();
             if (delegate instanceof LayoutEditorDelegate) {
                 return ((LayoutEditorDelegate) delegate);
             }
@@ -140,7 +140,7 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
      * Creates the form editor for resources XML files.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected LayoutEditorDelegate(AndroidXmlCommonEditor editor) {
+    protected LayoutEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         // Note that LayoutEditor has its own listeners and does not
         // need to call editor.addDefaultTargetListener().

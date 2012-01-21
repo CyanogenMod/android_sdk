@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors;
+package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -35,34 +35,34 @@ import org.w3c.dom.Document;
 /**
  * Implementation of form editor for /res XML files.
  * <p/>
- * All delegates must have one {@link IXmlEditorCreator} instance
- * registered in the {@code DELEGATES[]} array of {@link AndroidXmlCommonEditor}.
+ * All delegates must have one {@link IDelegateCreator} instance
+ * registered in the {@code DELEGATES[]} array of {@link CommonXmlEditor}.
  */
-public abstract class XmlEditorDelegate {
+public abstract class CommonXmlDelegate {
 
     /** The editor that created the delegate. Never null. */
-    private final AndroidXmlCommonEditor mEditor;
+    private final CommonXmlEditor mEditor;
 
     /** Root node of the UI element hierarchy. Can be null. */
     private UiElementNode mUiRootNode;
 
     /**
-     * Static creator for {@link XmlEditorDelegate}s. Delegates implement a method
+     * Static creator for {@link CommonXmlDelegate}s. Delegates implement a method
      * that will decide whether this delegate can be created for the given file input.
      */
-    public interface IXmlEditorCreator {
+    public interface IDelegateCreator {
         /**
          * Determines whether this delegate can handle the given file, typically
          * based on its resource path (e.g. ResourceManager#getResourceFolder).
          *
-         * @param delegator The non-null instance of {@link AndroidXmlCommonEditor}.
+         * @param delegator The non-null instance of {@link CommonXmlEditor}.
          * @param input A non-null input file.
          * @param type The {@link ResourceFolderType} of the folder containing the file,
          *   if it can be determined. Null otherwise.
          * @return A new delegate that can handle that file or null.
          */
-        public @Nullable <T extends XmlEditorDelegate> T createForFile(
-                            @NonNull AndroidXmlCommonEditor delegator,
+        public @Nullable <T extends CommonXmlDelegate> T createForFile(
+                            @NonNull CommonXmlEditor delegator,
                             @NonNull IFileEditorInput input,
                             @Nullable ResourceFolderType type);
     }
@@ -73,7 +73,7 @@ public abstract class XmlEditorDelegate {
         public void setActiveEditor(IEditorPart part, IActionBars bars);
     }
 
-    protected XmlEditorDelegate(AndroidXmlCommonEditor editor) {
+    protected CommonXmlDelegate(CommonXmlEditor editor) {
         mEditor = editor;
     }
 
@@ -85,7 +85,7 @@ public abstract class XmlEditorDelegate {
      *
      * @return the editor that created this delegate. Never null.
      */
-    public @NonNull AndroidXmlCommonEditor getEditor() {
+    public @NonNull CommonXmlEditor getEditor() {
         return mEditor;
     }
 

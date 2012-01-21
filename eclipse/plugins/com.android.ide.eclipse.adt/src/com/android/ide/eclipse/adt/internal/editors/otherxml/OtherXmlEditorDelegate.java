@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.otherxml;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
@@ -31,13 +31,13 @@ import org.w3c.dom.Document;
 /**
  * Multi-page form editor for /res/xml XML files.
  */
-public class OtherXmlEditorDelegate extends XmlEditorDelegate {
+public class OtherXmlEditorDelegate extends CommonXmlDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public OtherXmlEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.XML == type) {
@@ -50,7 +50,7 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         AdtConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
@@ -58,7 +58,7 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
     /**
      * Creates the form editor for resources XML files.
      */
-    public OtherXmlEditorDelegate(AndroidXmlCommonEditor editor) {
+    public OtherXmlEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }

@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.animator;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -36,13 +36,13 @@ import org.w3c.dom.Node;
  * Editor for /res/animator XML files.
  */
 @SuppressWarnings("restriction")
-public class AnimationEditorDelegate extends XmlEditorDelegate {
+public class AnimationEditorDelegate extends CommonXmlDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public AnimationEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.ANIM == type || ResourceFolderType.ANIMATOR == type) {
@@ -55,7 +55,7 @@ public class AnimationEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         EDITORS_NAMESPACE + ".animator.AnimationEditor"; //$NON-NLS-1$
@@ -63,7 +63,7 @@ public class AnimationEditorDelegate extends XmlEditorDelegate {
     /** The tag used at the root */
     private String mRootTag;
 
-    private AnimationEditorDelegate(AndroidXmlCommonEditor editor) {
+    private AnimationEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }

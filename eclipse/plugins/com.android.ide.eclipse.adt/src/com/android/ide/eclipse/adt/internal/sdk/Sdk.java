@@ -26,7 +26,7 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -1269,8 +1269,8 @@ public final class Sdk  {
                     // This has no effect on currently open editors.
                     IEditorDescriptor desc = IDE.getDefaultEditor(file);
 
-                    if (desc == null || !AndroidXmlCommonEditor.ID.equals(desc.getId())) {
-                        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
+                    if (desc == null || !CommonXmlEditor.ID.equals(desc.getId())) {
+                        IDE.setDefaultEditor(file, CommonXmlEditor.ID);
                     }
                 }
             };
@@ -1313,7 +1313,7 @@ public final class Sdk  {
             @Override
             public void run() {
                 HashSet<String> legacyIds =
-                    new HashSet<String>(Arrays.asList(AndroidXmlCommonEditor.LEGACY_EDITOR_IDS));
+                    new HashSet<String>(Arrays.asList(CommonXmlEditor.LEGACY_EDITOR_IDS));
 
                 for (IWorkbenchWindow win : PlatformUI.getWorkbench().getWorkbenchWindows()) {
                     for (IWorkbenchPage page : win.getPages()) {
@@ -1351,7 +1351,7 @@ public final class Sdk  {
                     IEditorInput input,
                     IFile file,
                     String id) {
-                IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
+                IDE.setDefaultEditor(file, CommonXmlEditor.ID);
 
                 boolean ok = page.closeEditor(part, true /*save*/);
 
@@ -1364,7 +1364,7 @@ public final class Sdk  {
                 if (ok) {
                     // Try to reopen it with the new ID
                     try {
-                        page.openEditor(input, AndroidXmlCommonEditor.ID);
+                        page.openEditor(input, CommonXmlEditor.ID);
                     } catch (PartInitException e) {
                         AdtPlugin.log(e,
                             "Failed to reopen %s",          //$NON-NLS-1$

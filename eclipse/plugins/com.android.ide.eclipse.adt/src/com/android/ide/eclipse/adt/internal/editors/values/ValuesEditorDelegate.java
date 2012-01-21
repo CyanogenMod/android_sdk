@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.values;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.resources.ResourceFolderType;
@@ -38,13 +38,13 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for /res/values XML files.
  */
-public class ValuesEditorDelegate extends XmlEditorDelegate {
+public class ValuesEditorDelegate extends CommonXmlDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public ValuesEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.VALUES == type) {
@@ -57,7 +57,7 @@ public class ValuesEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
@@ -66,7 +66,7 @@ public class ValuesEditorDelegate extends XmlEditorDelegate {
     /**
      * Creates the form editor for resources XML files.
      */
-    private ValuesEditorDelegate(AndroidXmlCommonEditor editor) {
+    private ValuesEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }

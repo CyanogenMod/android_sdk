@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.menu;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -38,13 +38,13 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for /res/menu XML files.
  */
-public class MenuEditorDelegate extends XmlEditorDelegate {
+public class MenuEditorDelegate extends CommonXmlDelegate {
 
-    public static class Creator implements IXmlEditorCreator {
+    public static class Creator implements IDelegateCreator {
         @Override
         @SuppressWarnings("unchecked")
         public MenuEditorDelegate createForFile(
-                AndroidXmlCommonEditor delegator,
+                CommonXmlEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.MENU == type) {
@@ -57,7 +57,7 @@ public class MenuEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link CommonXmlEditor#ID} instead.
      */
     public static final String LEGACY_EDITOR_ID =
         AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
@@ -65,7 +65,7 @@ public class MenuEditorDelegate extends XmlEditorDelegate {
     /**
      * Creates the form editor for resources XML files.
      */
-    private MenuEditorDelegate(AndroidXmlCommonEditor editor) {
+    private MenuEditorDelegate(CommonXmlEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }
