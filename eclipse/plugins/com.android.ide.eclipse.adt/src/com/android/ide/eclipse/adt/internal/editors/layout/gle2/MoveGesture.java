@@ -390,7 +390,7 @@ public class MoveGesture extends DropGesture {
 
         try {
             UiElementNode.addNodeCreationListener(listener);
-            mCanvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+            mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel(label, new Runnable() {
                 @Override
                 public void run() {
                     InsertType insertType = getInsertType(event, mTargetNode);
@@ -539,7 +539,7 @@ public class MoveGesture extends DropGesture {
         }
         df.sameCanvas = mCanvas == mGlobalDragInfo.getSourceCanvas();
         df.invalidTarget = false;
-        df.dipScale = mCanvas.getLayoutEditor().getGraphicalEditor().getDipScale();
+        df.dipScale = mCanvas.getEditorDelegate().getGraphicalEditor().getDipScale();
         df.modifierMask = mCanvas.getGestureManager().getRuleModifierMask();
 
         // Set the drag bounds, after converting it from control coordinates to

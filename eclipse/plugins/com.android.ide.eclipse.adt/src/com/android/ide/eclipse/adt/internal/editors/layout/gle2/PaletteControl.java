@@ -36,7 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -904,7 +904,7 @@ public class PaletteControl extends Composite {
 
             // Insert our target view's XML into it as a node
             GraphicalEditorPart editor = getEditor();
-            LayoutEditor layoutEditor = editor.getLayoutEditor();
+            LayoutEditorDelegate layoutEditorDelegate = editor.getEditorDelegate();
 
             String viewName = mDesc.getXmlLocalName();
             Element element = document.createElement(viewName);
@@ -934,7 +934,7 @@ public class PaletteControl extends Composite {
             document.appendChild(element);
 
             // Construct UI model from XML
-            AndroidTargetData data = layoutEditor.getTargetData();
+            AndroidTargetData data = layoutEditorDelegate.getEditor().getTargetData();
             DocumentDescriptor documentDescriptor;
             if (data == null) {
                 documentDescriptor = new DocumentDescriptor("temp", null/*children*/);//$NON-NLS-1$
@@ -942,7 +942,7 @@ public class PaletteControl extends Composite {
                 documentDescriptor = data.getLayoutDescriptors().getDescriptor();
             }
             UiDocumentNode model = (UiDocumentNode) documentDescriptor.createUiNode();
-            model.setEditor(layoutEditor);
+            model.setEditor(layoutEditorDelegate.getEditor());
             model.setUnknownDescriptorProvider(editor.getModel().getUnknownDescriptorProvider());
             model.loadFromXmlNode(document);
 
@@ -959,15 +959,15 @@ public class PaletteControl extends Composite {
 
                 // Applying create hooks as part of palette render should
                 // not trigger model updates
-                layoutEditor.setIgnoreXmlUpdate(true);
+                layoutEditorDelegate.getEditor().setIgnoreXmlUpdate(true);
                 try {
-                    canvas.getRulesEngine().callCreateHooks(layoutEditor,
+                    canvas.getRulesEngine().callCreateHooks(layoutEditorDelegate.getEditor(),
                             null, childNode, InsertType.CREATE_PREVIEW);
                     childNode.applyPendingChanges();
                 } catch (Throwable t) {
                     AdtPlugin.log(t, "Failed calling creation hooks for widget %1$s", viewName);
                 } finally {
-                    layoutEditor.setIgnoreXmlUpdate(false);
+                    layoutEditorDelegate.getEditor().setIgnoreXmlUpdate(false);
                 }
             }
 

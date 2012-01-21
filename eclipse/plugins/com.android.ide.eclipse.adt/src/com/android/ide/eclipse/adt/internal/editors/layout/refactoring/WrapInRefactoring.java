@@ -29,7 +29,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
@@ -82,13 +82,16 @@ public class WrapInRefactoring extends VisualRefactoring {
         mTypeFqcn = arguments.get(KEY_TYPE);
     }
 
-    public WrapInRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
+    public WrapInRefactoring(
+            IFile file,
+            LayoutEditorDelegate delegate,
+            ITextSelection selection,
             ITreeSelection treeSelection) {
-        super(file, editor, selection, treeSelection);
+        super(file, delegate, selection, treeSelection);
     }
 
     @VisibleForTesting
-    WrapInRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+    WrapInRefactoring(List<Element> selectedElements, LayoutEditorDelegate editor) {
         super(selectedElements, editor);
     }
 
@@ -190,14 +193,14 @@ public class WrapInRefactoring extends VisualRefactoring {
         // For now, use 4 spaces
         String indentUnit = "    "; //$NON-NLS-1$
         boolean separateAttributes = true;
-        IStructuredDocument document = mEditor.getStructuredDocument();
+        IStructuredDocument document = mDelegate.getEditor().getStructuredDocument();
         String startIndent = AndroidXmlEditor.getIndentAtOffset(document, mSelectionStart);
 
         String viewClass = getViewClass(mTypeFqcn);
         String androidNsPrefix = getAndroidNamespacePrefix();
 
 
-        IFile file = mEditor.getInputFile();
+        IFile file = mDelegate.getEditor().getInputFile();
         List<Change> changes = new ArrayList<Change>();
         TextFileChange change = new TextFileChange(file.getName(), file);
         MultiTextEdit rootEdit = new MultiTextEdit();
@@ -208,7 +211,7 @@ public class WrapInRefactoring extends VisualRefactoring {
         // Update any layout references to the old id with the new id
         if (id != null) {
             String rootId = getRootId();
-            IStructuredModel model = mEditor.getModelForRead();
+            IStructuredModel model = mDelegate.getEditor().getModelForRead();
             try {
                 IStructuredDocument doc = model.getStructuredDocument();
                 if (doc != null) {
@@ -414,7 +417,7 @@ public class WrapInRefactoring extends VisualRefactoring {
 
     @Override
     VisualRefactoringWizard createWizard() {
-        return new WrapInWizard(this, mEditor);
+        return new WrapInWizard(this, mDelegate);
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {

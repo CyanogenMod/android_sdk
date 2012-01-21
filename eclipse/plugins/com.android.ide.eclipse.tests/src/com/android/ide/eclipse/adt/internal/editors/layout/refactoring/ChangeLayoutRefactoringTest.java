@@ -111,7 +111,7 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
             boolean flatten, String initialAttributes) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
-        TestLayoutEditor layoutEditor = info.mLayoutEditor;
+        TestLayoutEditorDelegate layoutEditor = info.mLayoutEditorDelegate;
         CanvasViewInfo rootView = info.mRootView;
         Element element = info.mElement;
 

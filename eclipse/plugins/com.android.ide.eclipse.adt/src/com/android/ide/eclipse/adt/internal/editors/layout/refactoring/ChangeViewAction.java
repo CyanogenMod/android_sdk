@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -29,9 +29,9 @@ public class ChangeViewAction extends VisualRefactoringAction {
     @Override
     public void run(IAction action) {
         if ((mTextSelection != null || mTreeSelection != null) && mFile != null) {
-            ChangeViewRefactoring ref = new ChangeViewRefactoring(mFile, mEditor,
+            ChangeViewRefactoring ref = new ChangeViewRefactoring(mFile, mDelegate,
                     mTextSelection, mTreeSelection);
-            RefactoringWizard wizard = new ChangeViewWizard(ref, mEditor);
+            RefactoringWizard wizard = new ChangeViewWizard(ref, mDelegate);
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());
@@ -41,7 +41,7 @@ public class ChangeViewAction extends VisualRefactoringAction {
         }
     }
 
-    public static IAction create(LayoutEditor editor) {
-        return create("Change Widget Type...", editor, ChangeViewAction.class);
+    public static IAction create(LayoutEditorDelegate editorDelegate) {
+        return create("Change Widget Type...", editorDelegate, ChangeViewAction.class);
     }
 }

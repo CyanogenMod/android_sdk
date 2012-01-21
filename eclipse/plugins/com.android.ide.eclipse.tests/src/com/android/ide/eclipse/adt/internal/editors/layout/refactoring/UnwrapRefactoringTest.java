@@ -43,7 +43,7 @@ public class UnwrapRefactoringTest extends RefactoringTest {
     private void checkRefactoring(String basename, String id) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
-        TestLayoutEditor layoutEditor = info.mLayoutEditor;
+        TestLayoutEditorDelegate layoutEditor = info.mLayoutEditorDelegate;
         List<Element> selectedElements = getElements(info.mElement, id);
         assertEquals(1, selectedElements.size());
 

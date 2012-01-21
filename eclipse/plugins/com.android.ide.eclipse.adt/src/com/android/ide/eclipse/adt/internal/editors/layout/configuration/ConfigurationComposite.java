@@ -38,7 +38,8 @@ import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -1109,12 +1110,12 @@ public class ConfigurationComposite extends Composite {
         IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
         IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
         IEditorPart activeEditor = page.getActiveEditor();
-        if (activeEditor instanceof LayoutEditor
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(activeEditor);
+        if (delegate != null
                 && mEditedFile != null
                 // (Only do this when the two files are in the same project)
-                && ((LayoutEditor) activeEditor).getProject() == mEditedFile.getProject()) {
-            LayoutEditor editor = (LayoutEditor) activeEditor;
-            FolderConfiguration configuration = editor.getGraphicalEditor().getConfiguration();
+                && delegate.getEditor().getProject() == mEditedFile.getProject()) {
+            FolderConfiguration configuration = delegate.getGraphicalEditor().getConfiguration();
             if (configuration != null) {
                 for (ConfigMatch match : matches) {
                     if (configuration.equals(match.testConfig)) {

@@ -31,6 +31,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
@@ -202,15 +203,15 @@ class ClientRulesEngine implements IClientRulesEngine {
     public IValidator getResourceValidator() {
         // When https://review.source.android.com/#change,20168 is integrated,
         // change this to
-        //return ResourceNameValidator.create(false, mEditor.getProject(), ResourceType.ID);
+        //return ResourceNameValidator.create(false, mDelegate.getProject(), ResourceType.ID);
         return null;
     }
 
     @Override
     public String displayReferenceInput(String currentValue) {
         GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
-        AndroidXmlEditor editor = graphicalEditor.getLayoutEditor();
-        IProject project = editor.getProject();
+        LayoutEditorDelegate delegate = graphicalEditor.getEditorDelegate();
+        IProject project = delegate.getEditor().getProject();
         if (project != null) {
             // get the resource repository for this project and the system resources.
             ResourceRepository projectRepository =
@@ -243,7 +244,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     private String displayResourceInput(String resourceTypeName, String currentValue,
             IInputValidator validator) {
         GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
-        AndroidXmlEditor editor = graphicalEditor.getLayoutEditor();
+        AndroidXmlEditor editor = graphicalEditor.getEditorDelegate().getEditor();
         IProject project = editor.getProject();
         ResourceType type = ResourceType.getEnum(resourceTypeName);
         if (project != null) {
@@ -304,7 +305,7 @@ class ClientRulesEngine implements IClientRulesEngine {
             if (shell == null) {
                 return null;
             }
-            AndroidTargetData data = editor.getLayoutEditor().getTargetData();
+            AndroidTargetData data = editor.getEditorDelegate().getEditor().getTargetData();
             MarginChooser dialog = new MarginChooser(shell, editor, data, all, left, right,
                     top, bottom);
             if (dialog.open() == Window.OK) {
@@ -317,7 +318,7 @@ class ClientRulesEngine implements IClientRulesEngine {
 
     @Override
     public String displayIncludeSourceInput() {
-        AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
+        AndroidXmlEditor editor = mRulesEngine.getEditor().getEditorDelegate().getEditor();
         IInputValidator validator = CyclicDependencyValidator.create(editor.getInputFile());
         return displayResourceInput(ResourceType.LAYOUT.getName(), null, validator);
     }

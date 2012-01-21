@@ -460,7 +460,7 @@ public class LayoutActionBar extends Composite {
         mLintButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                IFile file = mEditor.getLayoutEditor().getInputFile();
+                IFile file = mEditor.getEditorDelegate().getEditor().getInputFile();
                 EclipseLintClient.showErrors(getShell(), file);
             }
         });

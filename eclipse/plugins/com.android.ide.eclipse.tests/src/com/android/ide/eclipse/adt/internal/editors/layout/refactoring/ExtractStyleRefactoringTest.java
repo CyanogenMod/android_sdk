@@ -134,7 +134,7 @@ public class ExtractStyleRefactoringTest extends RefactoringTest {
 
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
-        TestLayoutEditor layoutEditor = info.mLayoutEditor;
+        TestLayoutEditorDelegate layoutEditor = info.mLayoutEditorDelegate;
         List<Element> selectedElements = getElements(info.mElement, ids);
 
         // Open the file such that ModelManager.getExistingModelForRead() in DomUtilities
@@ -161,7 +161,7 @@ public class ExtractStyleRefactoringTest extends RefactoringTest {
         int endOffset = getCaretOffset(file, endCaretLocation);
 
         TestContext info = setupTestContext(file, basename);
-        TestLayoutEditor layoutEditor = info.mLayoutEditor;
+        TestLayoutEditorDelegate layoutEditor = info.mLayoutEditorDelegate;
 
         // Open the file such that ModelManager.getExistingModelForRead() in DomUtilities
         // will succeed

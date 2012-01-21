@@ -31,7 +31,7 @@ import org.eclipse.ui.part.FileEditorInput;
  * Matching strategy for the Layout Editor. This is used to open all configurations of a layout
  * in the same editor.
  */
-public class MatchingStrategy implements IEditorMatchingStrategy {
+public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
 
     @Override
     public boolean matches(IEditorReference editorRef, IEditorInput input) {
@@ -43,7 +43,7 @@ public class MatchingStrategy implements IEditorMatchingStrategy {
             IFile iFile = fileInput.getFile();
             ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
 
-            // if it's a layout, we know check the name of the fileInput against the name of the
+            // if it's a layout, we now check the name of the fileInput against the name of the
             // file being currently edited by the editor since those are independent of the config.
             if (resFolder != null && resFolder.getType() == ResourceFolderType.LAYOUT) {
                 try {

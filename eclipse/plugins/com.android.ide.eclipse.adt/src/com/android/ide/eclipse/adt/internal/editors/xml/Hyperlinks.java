@@ -46,7 +46,7 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
@@ -669,19 +669,19 @@ public class Hyperlinks {
     private static FolderConfiguration getConfiguration() {
         IEditorPart editor = getEditor();
         if (editor != null) {
-            if (editor instanceof LayoutEditor) {
-                LayoutEditor layoutEditor = (LayoutEditor) editor;
-                GraphicalEditorPart graphicalEditor = layoutEditor.getGraphicalEditor();
-                if (graphicalEditor != null) {
-                    return graphicalEditor.getConfiguration();
-                } else {
-                    // TODO: Could try a few more things to get the configuration:
-                    // (1) try to look at the file.getPersistentProperty(NAME_CONFIG_STATE)
-                    //    which will return previously saved state. This isn't necessary today
-                    //    since no editors seem to be lazily initialized.
-                    // (2) attempt to use the configuration from any of the other open
-                    //    files, especially files in the same directory as this one.
-                }
+            LayoutEditorDelegate delegate = (LayoutEditorDelegate) editor;
+            GraphicalEditorPart graphicalEditor =
+                delegate == null ? null : delegate.getGraphicalEditor();
+
+            if (graphicalEditor != null) {
+                return graphicalEditor.getConfiguration();
+            } else {
+                // TODO: Could try a few more things to get the configuration:
+                // (1) try to look at the file.getPersistentProperty(NAME_CONFIG_STATE)
+                //    which will return previously saved state. This isn't necessary today
+                //    since no editors seem to be lazily initialized.
+                // (2) attempt to use the configuration from any of the other open
+                //    files, especially files in the same directory as this one.
             }
 
             // Create a configuration from the current file
@@ -705,12 +705,14 @@ public class Hyperlinks {
             // configuration.
             for (IEditorReference reference : editor.getSite().getPage().getEditorReferences()) {
                 IEditorPart part = reference.getEditor(false /*restore*/);
-                if (part instanceof LayoutEditor) {
-                    LayoutEditor layoutEditor = (LayoutEditor) part;
-                    if (project == null || layoutEditor.getProject() == project) {
-                        GraphicalEditorPart graphicalEditor = layoutEditor.getGraphicalEditor();
-                        if (graphicalEditor != null) {
-                            return graphicalEditor.getConfiguration();
+
+                LayoutEditorDelegate refDelegate = LayoutEditorDelegate.fromEditor(part);
+                if (refDelegate != null) {
+                    IProject refProject = refDelegate.getEditor().getProject();
+                    if (project == null || project == refProject) {
+                        GraphicalEditorPart refGraphicalEditor = delegate.getGraphicalEditor();
+                        if (refGraphicalEditor != null) {
+                            return refGraphicalEditor.getConfiguration();
                         }
                     }
                 }
@@ -723,13 +725,11 @@ public class Hyperlinks {
     /** Returns the {@link IAndroidTarget} to be used for looking up system resources */
     private static IAndroidTarget getTarget(IProject project) {
         IEditorPart editor = getEditor();
-        if (editor != null) {
-            if (editor instanceof LayoutEditor) {
-                LayoutEditor layoutEditor = (LayoutEditor) editor;
-                GraphicalEditorPart graphicalEditor = layoutEditor.getGraphicalEditor();
-                if (graphicalEditor != null) {
-                    return graphicalEditor.getRenderingTarget();
-                }
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(editor);
+        if (delegate != null) {
+            GraphicalEditorPart graphicalEditor = delegate.getGraphicalEditor();
+            if (graphicalEditor != null) {
+                return graphicalEditor.getRenderingTarget();
             }
         }
 

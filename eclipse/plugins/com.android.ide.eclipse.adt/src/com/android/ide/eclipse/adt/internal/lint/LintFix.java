@@ -31,7 +31,7 @@ import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROL
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UnwrapRefactoring;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -628,14 +628,15 @@ abstract class LintFix implements ICompletionProposal {
                 } else {
                     assert mId.equals(UselessViewDetector.USELESS_PARENT.getId());
                     // Invoke refactoring
-                    IEditorPart editor = AdtUtils.getActiveEditor();
-                    if (editor instanceof LayoutEditor) {
-                        LayoutEditor layout = (LayoutEditor) editor;
+                    LayoutEditorDelegate delegate =
+                        LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+
+                    if (delegate != null) {
                         IFile file = (IFile) mMarker.getResource();
                         ITextSelection textSelection = new TextSelection(start,
                                 end - start);
                         UnwrapRefactoring refactoring =
-                                new UnwrapRefactoring(file, layout, textSelection, null);
+                                new UnwrapRefactoring(file, delegate, textSelection, null);
                         RefactoringWizard wizard = refactoring.createWizard();
                         RefactoringWizardOpenOperation op =
                                 new RefactoringWizardOpenOperation(wizard);
@@ -687,22 +688,19 @@ abstract class LintFix implements ICompletionProposal {
         protected void apply(IDocument document, IStructuredModel model, Node node, int start,
                 int end) {
             // Invoke refactoring
-            IEditorPart editor = AdtUtils.getActiveEditor();
-            if (editor instanceof LayoutEditor) {
+            LayoutEditorDelegate delegate =
+                LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+
+            if (delegate != null) {
                 IFile file = (IFile) mMarker.getResource();
-                ITextSelection selection = new TextSelection(start,
-                        end - start);
+                ITextSelection selection = new TextSelection(start, end - start);
 
-                ExtractStringRefactoring refactoring = new ExtractStringRefactoring(file,
-                        editor,
-                        selection);
-
-                RefactoringWizard wizard = new ExtractStringWizard(refactoring,
-                        file.getProject());
+                ExtractStringRefactoring refactoring =
+                    new ExtractStringRefactoring(file, delegate.getEditor(), selection);
+                RefactoringWizard wizard = new ExtractStringWizard(refactoring, file.getProject());
                 RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
                 try {
-                    IWorkbenchWindow window = PlatformUI.getWorkbench().
-                            getActiveWorkbenchWindow();
+                    IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                     op.run(window.getShell(), wizard.getDefaultPageTitle());
                 } catch (InterruptedException e) {
                 }

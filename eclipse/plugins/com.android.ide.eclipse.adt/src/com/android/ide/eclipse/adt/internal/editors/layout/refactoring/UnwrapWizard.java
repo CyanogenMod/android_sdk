@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
 public class UnwrapWizard extends VisualRefactoringWizard {
-    public UnwrapWizard(UnwrapRefactoring ref, LayoutEditor editor) {
+    public UnwrapWizard(UnwrapRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle("Remove Container");
     }

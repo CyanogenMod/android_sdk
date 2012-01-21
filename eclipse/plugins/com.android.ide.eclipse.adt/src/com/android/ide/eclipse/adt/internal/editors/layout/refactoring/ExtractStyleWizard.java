@@ -19,7 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 import static org.eclipse.jface.viewers.StyledString.DECORATIONS_STYLER;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
@@ -56,7 +56,7 @@ import java.util.Map;
 import java.util.Set;
 
 class ExtractStyleWizard extends VisualRefactoringWizard {
-    public ExtractStyleWizard(ExtractStyleRefactoring ref, LayoutEditor editor) {
+    public ExtractStyleWizard(ExtractStyleRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle(ref.getName());
     }
@@ -64,7 +64,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
     @Override
     protected void addUserInputPages() {
         String initialName = "styleName";
-        addPage(new InputPage(mEditor.getProject(), initialName));
+        addPage(new InputPage(mDelegate.getEditor().getProject(), initialName));
     }
 
     /**

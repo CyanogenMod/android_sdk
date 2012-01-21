@@ -43,7 +43,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.util.Pair;
@@ -140,13 +140,16 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         }
     }
 
-    public ExtractStyleRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
+    public ExtractStyleRefactoring(
+            IFile file,
+            LayoutEditorDelegate delegate,
+            ITextSelection selection,
             ITreeSelection treeSelection) {
-        super(file, editor, selection, treeSelection);
+        super(file, delegate, selection, treeSelection);
     }
 
     @VisibleForTesting
-    ExtractStyleRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+    ExtractStyleRefactoring(List<Element> selectedElements, LayoutEditorDelegate editor) {
         super(selectedElements, editor);
     }
 
@@ -325,7 +328,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
             return changes;
         }
 
-        IFile file = getStyleFile(mEditor.getProject());
+        IFile file = getStyleFile(mDelegate.getEditor().getProject());
         boolean createFile = !file.exists();
         int insertAtIndex;
         String initialIndent = null;
@@ -366,7 +369,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         }
 
         if (rootEdit.hasChildren()) {
-            IFile sourceFile = mEditor.getInputFile();
+            IFile sourceFile = mDelegate.getEditor().getInputFile();
             TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
             change.setTextType(EXT_XML);
             changes.add(change);
@@ -498,7 +501,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
 
     @Override
     VisualRefactoringWizard createWizard() {
-        return new ExtractStyleWizard(this, mEditor);
+        return new ExtractStyleWizard(this, mDelegate);
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {
@@ -547,7 +550,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         if (types.size() == 1) {
             String view = DescriptorsUtils.getBasename(types.iterator().next());
 
-            ResourceResolver resolver = mEditor.getGraphicalEditor().getResourceResolver();
+            ResourceResolver resolver = mDelegate.getGraphicalEditor().getResourceResolver();
             // Look up the theme item name, which for a Button would be "buttonStyle", and so on.
             String n = Character.toLowerCase(view.charAt(0)) + view.substring(1)
                 + "Style"; //$NON-NLS-1$

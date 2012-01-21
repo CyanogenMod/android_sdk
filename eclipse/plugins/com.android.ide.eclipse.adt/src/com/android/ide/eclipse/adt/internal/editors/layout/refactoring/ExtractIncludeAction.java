@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -29,9 +29,9 @@ public class ExtractIncludeAction extends VisualRefactoringAction {
     @Override
     public void run(IAction action) {
         if ((mTextSelection != null || mTreeSelection != null) && mFile != null) {
-            ExtractIncludeRefactoring ref = new ExtractIncludeRefactoring(mFile, mEditor,
+            ExtractIncludeRefactoring ref = new ExtractIncludeRefactoring(mFile, mDelegate,
                     mTextSelection, mTreeSelection);
-            RefactoringWizard wizard = new ExtractIncludeWizard(ref, mEditor);
+            RefactoringWizard wizard = new ExtractIncludeWizard(ref, mDelegate);
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());
@@ -41,7 +41,7 @@ public class ExtractIncludeAction extends VisualRefactoringAction {
         }
     }
 
-    public static IAction create(LayoutEditor editor) {
-        return create("Extract Include...", editor, ExtractIncludeAction.class);
+    public static IAction create(LayoutEditorDelegate editorDelegate) {
+        return create("Extract Include...", editorDelegate, ExtractIncludeAction.class);
     }
 }

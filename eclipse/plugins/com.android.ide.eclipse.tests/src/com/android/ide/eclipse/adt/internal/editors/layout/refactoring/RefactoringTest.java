@@ -289,7 +289,8 @@ public class RefactoringTest extends AdtProjectTest {
         UiViewElementNode model = createModel(null, element);
         ViewInfo info = createInfos(model, relativePath);
         CanvasViewInfo rootView = CanvasViewInfo.create(info, true /* layoutlib5 */).getFirst();
-        TestLayoutEditor layoutEditor = new TestLayoutEditor(file, structuredDocument, null);
+        TestLayoutEditorDelegate layoutEditor =
+            new TestLayoutEditorDelegate(file, structuredDocument, null);
 
         TestContext testInfo = createTestContext();
         testInfo.mFile = file;
@@ -300,7 +301,7 @@ public class RefactoringTest extends AdtProjectTest {
         testInfo.mUiModel = model;
         testInfo.mViewInfo = info;
         testInfo.mRootView = rootView;
-        testInfo.mLayoutEditor = layoutEditor;
+        testInfo.mLayoutEditorDelegate = layoutEditor;
 
         return testInfo;
     }
@@ -318,7 +319,7 @@ public class RefactoringTest extends AdtProjectTest {
         protected UiViewElementNode mUiModel;
         protected ViewInfo mViewInfo;
         protected CanvasViewInfo mRootView;
-        protected TestLayoutEditor mLayoutEditor;
+        protected TestLayoutEditorDelegate mLayoutEditorDelegate;
     }
 
     @Override
