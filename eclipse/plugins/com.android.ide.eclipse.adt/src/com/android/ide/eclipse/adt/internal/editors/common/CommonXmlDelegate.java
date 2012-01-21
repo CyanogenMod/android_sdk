@@ -24,6 +24,7 @@ import com.android.resources.ResourceFolderType;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -45,6 +46,8 @@ public abstract class CommonXmlDelegate {
 
     /** Root node of the UI element hierarchy. Can be null. */
     private UiElementNode mUiRootNode;
+
+    private IContentAssistProcessor mContentAssist;
 
     /**
      * Static creator for {@link CommonXmlDelegate}s. Delegates implement a method
@@ -73,8 +76,11 @@ public abstract class CommonXmlDelegate {
         public void setActiveEditor(IEditorPart part, IActionBars bars);
     }
 
-    protected CommonXmlDelegate(CommonXmlEditor editor) {
+    protected CommonXmlDelegate(
+            CommonXmlEditor editor,
+            IContentAssistProcessor contentAssist) {
         mEditor = editor;
+        mContentAssist = contentAssist;
     }
 
     public void dispose() {
@@ -174,5 +180,13 @@ public abstract class CommonXmlDelegate {
         return null;
     }
 
-
+    /**
+     * Returns the {@link IContentAssistProcessor} associated with this editor.
+     * Most implementations should lazily allocate one processor and always return the
+     * same instance.
+     * Must return null if there's no specific content assist processor for this editor.
+     */
+    public IContentAssistProcessor getAndroidContentAssistProcessor() {
+        return mContentAssist;
+    }
 }

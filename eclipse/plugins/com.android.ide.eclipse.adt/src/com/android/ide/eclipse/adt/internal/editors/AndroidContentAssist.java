@@ -136,7 +136,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         String wordPrefix = extractElementPrefix(viewer, offset);
 
         if (mEditor == null) {
-            mEditor = AndroidXmlEditor.getAndroidXmlEditor(viewer);
+            mEditor = AndroidXmlEditor.fromTextViewer(viewer);
             if (mEditor == null) {
                 // This should not happen. Duck and forget.
                 AdtPlugin.log(IStatus.ERROR, "Editor not found during completion");

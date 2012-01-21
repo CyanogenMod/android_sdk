@@ -21,8 +21,8 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IUnknownDescriptorProvider;
@@ -141,7 +141,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected LayoutEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new LayoutContentAssist());
         // Note that LayoutEditor has its own listeners and does not
         // need to call editor.addDefaultTargetListener().
     }

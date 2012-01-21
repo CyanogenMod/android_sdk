@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.otherxml;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
@@ -59,7 +59,7 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
      * Creates the form editor for resources XML files.
      */
     public OtherXmlEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new OtherXmlContentAssist());
         editor.addDefaultTargetListener();
     }
 

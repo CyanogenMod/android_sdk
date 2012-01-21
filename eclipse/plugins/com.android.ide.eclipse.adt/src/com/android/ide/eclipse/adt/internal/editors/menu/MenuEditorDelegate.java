@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.menu;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -66,7 +66,7 @@ public class MenuEditorDelegate extends CommonXmlDelegate {
      * Creates the form editor for resources XML files.
      */
     private MenuEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new MenuContentAssist());
         editor.addDefaultTargetListener();
     }
 

@@ -81,7 +81,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             IQuickAssistInvocationContext invocationContext) {
 
         ISourceViewer sourceViewer = invocationContext.getSourceViewer();
-        AndroidXmlEditor xmlEditor = AndroidXmlEditor.getAndroidXmlEditor(sourceViewer);
+        AndroidXmlEditor xmlEditor = AndroidXmlEditor.fromTextViewer(sourceViewer);
         if (xmlEditor == null) {
             return null;
         }

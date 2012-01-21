@@ -55,6 +55,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
@@ -1489,11 +1490,12 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * viewer
      *
      * @param viewer the source viewer to ensure the active editor is associated with
-     * @return the active editor provided it matches the given source viewer
+     * @return the active editor provided it matches the given source viewer or null.
      */
-    public static AndroidXmlEditor getAndroidXmlEditor(ITextViewer viewer) {
+    public static AndroidXmlEditor fromTextViewer(ITextViewer viewer) {
         IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (wwin != null) {
+            // Try the active editor first.
             IWorkbenchPage page = wwin.getActivePage();
             if (page != null) {
                 IEditorPart editor = page.getActiveEditor();
@@ -1502,6 +1504,22 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                         ((AndroidXmlEditor) editor).getStructuredSourceViewer();
                     if (ssviewer == viewer) {
                         return (AndroidXmlEditor) editor;
+                    }
+                }
+            }
+
+            // If that didn't work, try all the editors
+            for (IWorkbenchPage page2 : wwin.getPages()) {
+                if (page2 != null) {
+                    for (IEditorReference editorRef : page2.getEditorReferences()) {
+                        IEditorPart editor = editorRef.getEditor(false /*restore*/);
+                        if (editor instanceof AndroidXmlEditor) {
+                            ISourceViewer ssviewer =
+                                ((AndroidXmlEditor) editor).getStructuredSourceViewer();
+                            if (ssviewer == viewer) {
+                                return (AndroidXmlEditor) editor;
+                            }
+                        }
                     }
                 }
             }

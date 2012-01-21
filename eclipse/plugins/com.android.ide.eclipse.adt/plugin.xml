@@ -498,6 +498,15 @@
             name="Android Export Editor">
         </editor>
 
+        <editor
+            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
+            default="true"
+            filenames="AndroidManifest.xml"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
+            name="Android Manifest Editor">
+        </editor>
+
         <!--
         This is the new generic multi-purpose single XML editor used by ADT.
         It is designed to replace all the other XML editors (layout, manifest, drawable,
@@ -510,20 +519,17 @@
               default="true"
               extensions="xml"
               icon="icons/android_file.png"
-              id="com.android.ide.eclipse.editors.XmlCommonEditor"
+              id="com.android.ide.eclipse.editors.CommonXmlEditor"
               matchingStrategy="com.android.ide.eclipse.adt.internal.editors.common.CommonMatchingStrategy"
               name="Android Common XML Editor">
         </editor>
 
-        <editor
-            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
-            default="true"
-            filenames="AndroidManifest.xml"
-            icon="icons/android_file.png"
-            id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
-            name="Android Manifest Editor">
-        </editor>
-
+        <!--
+        For compatibilit with existing ADT installs, we still need to keep the editor
+        IDs of the previously defined editors. E.g. for the color editor note that the
+        id remains the same but class name changes to the new class. This will make
+        Eclipse not complain upon startup of an existing workspace.
+        -->
         <editor
             class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             contributorClass="com.android.ide.eclipse.adt.internal.editors.common.CommonActionContributor"
@@ -533,13 +539,6 @@
             matchingStrategy="com.android.ide.eclipse.adt.internal.editors.common.CommonMatchingStrategy"
             name="Legacy Android Layout Editor">
         </editor>
-
-        <!--
-        For compatibilit with existing ADT installs, we still need to keep the editor
-        IDs of the previously defined editors. E.g. for the color editor note that the
-        id remains the same but class name changes to the new class. This will make
-        Eclipse not complain upon startup of an existing workspace.
-        -->
        <editor
             class="com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor"
             default="false"
@@ -612,42 +611,18 @@
         </view>
     </extension>
     <extension point="org.eclipse.wst.sse.ui.editorConfiguration">
-        <!-- TODO delegate from AndroidCommonXmlEditor -->
         <sourceViewerConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestSourceViewerConfig"
             target="com.android.ide.eclipse.editors.manifest.ManifestEditor">
         </sourceViewerConfiguration>
         <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.resources.ResourcesSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.resources.ResourcesEditor">
+            class="com.android.ide.eclipse.adt.internal.editors.common.CommonSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.CommonXmlEditor">
         </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.layout.LayoutSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.layout.LayoutEditor">
-        </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.menu.MenuSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.menu.MenuEditor">
-        </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.xml.XmlSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.xml.XmlEditor">
-        </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.animator.AnimationSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.animator.AnimationEditor">
-        </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.drawable.DrawableSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.drawable.DrawableEditor">
-        </sourceViewerConfiguration>
-        <sourceViewerConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.color.ColorSourceViewerConfig"
-            target="com.android.ide.eclipse.editors.color.ColorEditor">
-        </sourceViewerConfiguration>
+
         <quickOutlineConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.AndroidQuickOutlineConfiguration"
-            target="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor,com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor" />
+            target="com.android.ide.eclipse.adt.internal.editors.CommonXmlEditor" />
         <provisionalConfiguration
             type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
             class="com.android.ide.eclipse.adt.internal.editors.formatting.XmlQuickAssistManager"
