@@ -136,7 +136,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
                 sdk.getSdkLocation());
 
         Pair<Boolean, File> result = window.installExtraPackage(
-                "android", "compatibility");    //$NON-NLS-1$ //$NON-NLS-2$
+                "android", "support");    //$NON-NLS-1$ //$NON-NLS-2$
 
         if (!result.getFirst().booleanValue()) {
             AdtPlugin.printErrorToConsole("Failed to install Android Compatibility library");
