@@ -22,6 +22,9 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.Ui
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents an XML document node that can be modified by the user interface in the XML editor.
  * <p/>
@@ -29,10 +32,10 @@ import org.w3c.dom.Node;
  * {@link DocumentDescriptor}.
  */
 public class UiDocumentNode extends UiElementNode {
-    
+
     /**
      * Creates a new {@link UiDocumentNode} described by a given {@link DocumentDescriptor}.
-     * 
+     *
      * @param documentDescriptor The {@link DocumentDescriptor} for the XML node. Cannot be null.
      */
     public UiDocumentNode(DocumentDescriptor documentDescriptor) {
@@ -43,17 +46,17 @@ public class UiDocumentNode extends UiElementNode {
      * Computes a short string describing the UI node suitable for tree views.
      * Uses the element's attribute "android:name" if present, or the "android:label" one
      * followed by the element's name.
-     * 
+     *
      * @return A short string describing the UI node suitable for tree views.
      */
     @Override
     public String getShortDescription() {
         return "Document"; //$NON-NLS-1$
     }
-    
+
     /**
      * Computes a "breadcrumb trail" description for this node.
-     * 
+     *
      * @param include_root Whether to include the root (e.g. "Manifest") or not. Has no effect
      *                     when called on the root node itself.
      * @return The "breadcrumb trail" description for this node.
@@ -62,7 +65,7 @@ public class UiDocumentNode extends UiElementNode {
     public String getBreadcrumbTrailDescription(boolean include_root) {
         return "Document"; //$NON-NLS-1$
     }
-    
+
     /**
      * This method throws an exception when attempted to assign a parent, since XML documents
      * cannot have a parent. It is OK to assign null.
@@ -78,13 +81,13 @@ public class UiDocumentNode extends UiElementNode {
 
     /**
      * Populate this element node with all values from the given XML node.
-     * 
+     *
      * This fails if the given XML node has a different element name -- it won't change the
      * type of this ui node.
-     * 
+     *
      * This method can be both used for populating values the first time and updating values
      * after the XML model changed.
-     * 
+     *
      * @param xml_node The XML node to mirror
      * @return Returns true if the XML structure has changed (nodes added, removed or replaced)
      */
@@ -98,13 +101,13 @@ public class UiDocumentNode extends UiElementNode {
         }
         return structure_changed;
     }
-    
+
     /**
      * This method throws an exception if there is no underlying XML document.
      * <p/>
      * XML documents cannot be created per se -- they are a by-product of the StructuredEditor
      * XML parser.
-     * 
+     *
      * @return The current value of getXmlDocument().
      */
     @Override
@@ -123,13 +126,35 @@ public class UiDocumentNode extends UiElementNode {
      * <p/>
      * XML documents cannot be deleted per se -- they are a by-product of the StructuredEditor
      * XML parser.
-     * 
-     * @return The removed node or null if it didn't exist in the firtst place. 
+     *
+     * @return The removed node or null if it didn't exist in the first place.
      */
     @Override
     public Node deleteXmlNode() {
         // DEBUG. Change to log warning.
         throw new UnsupportedOperationException("Documents cannot be deleted"); //$NON-NLS-1$
+    }
+
+    /**
+     * Returns all elements in this document.
+     *
+     * @param document the document
+     * @return all elements in the document
+     */
+    public static List<UiElementNode> getAllElements(UiDocumentNode document) {
+        List<UiElementNode> elements = new ArrayList<UiElementNode>(64);
+        for (UiElementNode child : document.getUiChildren()) {
+            addElements(child, elements);
+        }
+        return elements;
+    }
+
+    private static void addElements(UiElementNode node, List<UiElementNode> elements) {
+        elements.add(node);
+
+        for (UiElementNode child : node.getUiChildren()) {
+            addElements(child, elements);
+        }
     }
 }
 

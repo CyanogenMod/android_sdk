@@ -383,7 +383,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
                 @Override
                 public void done(IJobChangeEvent event) {
                     LayoutActionBar bar = getGraphicalEditor().getLayoutActionBar();
-                    bar.updateErrorIndicator();
+                    if (!bar.isDisposed()) {
+                        bar.updateErrorIndicator();
+                    }
                 }
             });
         }

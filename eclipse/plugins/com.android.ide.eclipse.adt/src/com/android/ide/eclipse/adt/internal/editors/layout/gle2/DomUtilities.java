@@ -86,6 +86,30 @@ public class DomUtilities {
     }
 
     /**
+     * Returns all elements below the given node (which can be a document,
+     * element, etc). This will include the node itself, if it is an element.
+     *
+     * @param node the node to search from
+     * @return all elements in the subtree formed by the node parameter
+     */
+    public static List<Element> getAllElements(Node node) {
+        List<Element> elements = new ArrayList<Element>(64);
+        addElements(node, elements);
+        return elements;
+    }
+
+    private static void addElements(Node node, List<Element> elements) {
+        if (node instanceof Element) {
+            elements.add((Element) node);
+        }
+
+        NodeList childNodes = node.getChildNodes();
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            addElements(childNodes.item(i), elements);
+        }
+    }
+
+    /**
      * Returns the depth of the given node (with the document node having depth 0,
      * and the document element having depth 1)
      *

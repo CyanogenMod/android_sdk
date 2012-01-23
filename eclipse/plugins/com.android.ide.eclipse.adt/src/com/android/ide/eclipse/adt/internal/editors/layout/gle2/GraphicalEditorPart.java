@@ -17,13 +17,22 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
 
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
 import com.android.ide.common.rendering.api.Capability;
@@ -164,7 +173,7 @@ import java.util.Set;
  * @since GLE2
  */
 public class GraphicalEditorPart extends EditorPart
-    implements IPageImageProvider, ISelectionListener, INullSelectionListener {
+    implements IPageImageProvider, INullSelectionListener {
 
     /*
      * Useful notes:
@@ -1628,15 +1637,15 @@ public class GraphicalEditorPart extends EditorPart
                 addTypoSuggestions(clazz, getAndroidViewClassNames(project), false);
 
                 addActionLink(mErrorLabel,
-                        ActionLinkStyleRange.LINK_FIX_BUILD_PATH, "Fix Build Path", clazz, null);
+                        ActionLinkStyleRange.LINK_FIX_BUILD_PATH, "Fix Build Path", clazz);
                 addText(mErrorLabel, ", ");
                 addActionLink(mErrorLabel,
-                        ActionLinkStyleRange.LINK_EDIT_XML, "Edit XML", clazz, null);
+                        ActionLinkStyleRange.LINK_EDIT_XML, "Edit XML", clazz);
                 if (clazz.indexOf('.') != -1) {
                     // Add "Create Class" link, but only for custom views
                     addText(mErrorLabel, ", ");
                     addActionLink(mErrorLabel,
-                            ActionLinkStyleRange.LINK_CREATE_CLASS, "Create Class", clazz, null);
+                            ActionLinkStyleRange.LINK_CREATE_CLASS, "Create Class", clazz);
                 }
                 addText(mErrorLabel, ")\n");
             }
@@ -1651,10 +1660,10 @@ public class GraphicalEditorPart extends EditorPart
                 addText(mErrorLabel, "- ");
                 addText(mErrorLabel, " (");
                 addActionLink(mErrorLabel,
-                        ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class", clazz, null);
+                        ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class", clazz);
                 addText(mErrorLabel, ", ");
                 addActionLink(mErrorLabel,
-                        ActionLinkStyleRange.LINK_SHOW_LOG, "Show Error Log", clazz, null);
+                        ActionLinkStyleRange.LINK_SHOW_LOG, "Show Error Log", clazz);
                 addText(mErrorLabel, ")\n");
 
                 if (!(clazz.startsWith("android.") || //$NON-NLS-1$
@@ -1705,9 +1714,8 @@ public class GraphicalEditorPart extends EditorPart
                                     // Only show full package name if class name
                                     // is the same
                                     labelClass),
-                                    actual,
-                                    viewNeedsPackage(suggested) ? suggested : suggestedBase
-                    );
+                            actual,
+                            viewNeedsPackage(suggested) ? suggested : suggestedBase);
                     addText(mErrorLabel, ", ");
                 }
             }
@@ -1803,6 +1811,21 @@ public class GraphicalEditorPart extends EditorPart
                 addBoldText(mErrorLabel, message);
             }
 
+            if (logger.seenTag(RenderLogger.TAG_MISSING_DIMENSION)) {
+                List<UiElementNode> elements = UiDocumentNode.getAllElements(getModel());
+                for (UiElementNode element : elements) {
+                    String width = element.getAttributeValue(ATTR_LAYOUT_WIDTH);
+                    if (width == null || width.length() == 0) {
+                        addSetAttributeLink(element, ATTR_LAYOUT_WIDTH);
+                    }
+
+                    String height = element.getAttributeValue(ATTR_LAYOUT_HEIGHT);
+                    if (height == null || height.length() == 0) {
+                        addSetAttributeLink(element, ATTR_LAYOUT_HEIGHT);
+                    }
+                }
+            }
+
             String problems = logger.getProblems(false /*includeFidelityWarnings*/);
             addText(mErrorLabel, problems);
 
@@ -1814,7 +1837,7 @@ public class GraphicalEditorPart extends EditorPart
                     addText(mErrorLabel, warning + ' ');
                     addActionLink(mErrorLabel,
                             ActionLinkStyleRange.IGNORE_FIDELITY_WARNING,
-                            "(Ignore for this session)\n", warning, null);
+                            "(Ignore for this session)\n", warning);
                 }
             }
 
@@ -1822,6 +1845,44 @@ public class GraphicalEditorPart extends EditorPart
         } else {
             mSashError.setMaximizedControl(mCanvasViewer.getControl());
         }
+    }
+
+    /** Appends an action link to set the given attribute on the given value */
+    private void addSetAttributeLink(UiElementNode element, String attribute) {
+        if (element.getXmlNode().getNodeName().equals(GRID_LAYOUT)) {
+            // GridLayout does not require a layout_width or layout_height to be defined
+            return;
+        }
+
+        String fill = VALUE_FILL_PARENT;
+        // See whether we should offer match_parent instead of fill_parent
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget target = currentSdk.getTarget(getProject());
+            if (target.getVersion().getApiLevel() >= 8) {
+                fill = VALUE_MATCH_PARENT;
+            }
+        }
+
+        String id = element.getAttributeValue(ATTR_ID);
+        if (id == null || id.length() == 0) {
+            id = '<' + element.getXmlNode().getNodeName() + '>';
+        } else {
+            id = BaseLayoutRule.stripIdPrefix(id);
+        }
+
+        addText(mErrorLabel, String.format("\"%1$s\" does not set the required %2$s attribute:\n",
+                id, attribute));
+        addText(mErrorLabel, " (1) ");
+        addActionLink(mErrorLabel,
+                ActionLinkStyleRange.SET_ATTRIBUTE,
+                String.format("Set to \"%1$s\"", VALUE_WRAP_CONTENT),
+                element, attribute, VALUE_WRAP_CONTENT);
+        addText(mErrorLabel, "\n (2) ");
+        addActionLink(mErrorLabel,
+                ActionLinkStyleRange.SET_ATTRIBUTE,
+                String.format("Set to \"%1$s\"\n", fill),
+                element, attribute, fill);
     }
 
     /** Appends the given text as a bold string in the given text widget */
@@ -1844,12 +1905,12 @@ public class GraphicalEditorPart extends EditorPart
      * action, corresponding to the value fields in {@link ActionLinkStyleRange}.
      */
     private void addActionLink(StyledText styledText, int action, String label,
-            String data1, String data2) {
+            Object... data) {
         String s = styledText.getText();
         int start = (s == null ? 0 : s.length());
         styledText.append(label);
 
-        StyleRange sr = new ActionLinkStyleRange(action, data1, data2);
+        StyleRange sr = new ActionLinkStyleRange(action, data);
         sr.start = start;
         sr.length = label.length();
         sr.fontStyle = SWT.NORMAL;
@@ -1997,26 +2058,25 @@ public class GraphicalEditorPart extends EditorPart
         private static final int LINK_CHANGE_CLASS_TO = 6;
         /** Ignore the given fidelity warning */
         private static final int IGNORE_FIDELITY_WARNING = 7;
+        /** Set an attribute on the given XML element to a given value  */
+        private static final int SET_ATTRIBUTE = 8;
 
-        /** Client data 1 - usually the class name */
-        private final String mData1;
-        /** Client data 2 - such as the suggested new name */
-        private final String mData2;
+        /** Client data: the contents depend on the specific action */
+        private final Object[] mData;
         /** The action to be taken when the link is clicked */
         private final int mAction;
 
-        private ActionLinkStyleRange(int action, String data1, String data2) {
+        private ActionLinkStyleRange(int action, Object... data) {
             super();
             mAction = action;
-            mData1 = data1;
-            mData2 = data2;
+            mData = data;
         }
 
         /** Performs the click action */
         public void onClick() {
             switch (mAction) {
                 case LINK_CREATE_CLASS:
-                    createNewClass(mData1);
+                    createNewClass((String) mData[0]);
                     break;
                 case LINK_EDIT_XML:
                     mEditorDelegate.getEditor().setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
@@ -2029,7 +2089,7 @@ public class GraphicalEditorPart extends EditorPart
                             getProject(), id, null, null).open();
                     break;
                 case LINK_OPEN_CLASS:
-                    AdtPlugin.openJavaClass(getProject(), mData1);
+                    AdtPlugin.openJavaClass(getProject(), (String) mData[0]);
                     break;
                 case LINK_SHOW_LOG:
                     IWorkbench workbench = PlatformUI.getWorkbench();
@@ -2042,7 +2102,7 @@ public class GraphicalEditorPart extends EditorPart
                     }
                     break;
                 case LINK_CHANGE_CLASS_TO:
-                    // Change class reference of mData1 to mData2
+                    // Change class reference of mData[0] to mData[1]
                     // TODO: run under undo lock
                     MultiTextEdit edits = new MultiTextEdit();
                     ISourceViewer textViewer =
@@ -2052,8 +2112,8 @@ public class GraphicalEditorPart extends EditorPart
                     int index = 0;
                     // Replace <old with <new and </old with </new
                     String prefix = "<"; //$NON-NLS-1$
-                    String find = prefix + mData1;
-                    String replaceWith = prefix + mData2;
+                    String find = prefix + mData[0];
+                    String replaceWith = prefix + mData[1];
                     while (true) {
                         index = xml.indexOf(find, index);
                         if (index == -1) {
@@ -2064,8 +2124,8 @@ public class GraphicalEditorPart extends EditorPart
                     }
                     index = 0;
                     prefix = "</"; //$NON-NLS-1$
-                    find = prefix + mData1;
-                    replaceWith = prefix + mData2;
+                    find = prefix + mData[0];
+                    replaceWith = prefix + mData[1];
                     while (true) {
                         index = xml.indexOf(find, index);
                         if (index == -1) {
@@ -2078,8 +2138,8 @@ public class GraphicalEditorPart extends EditorPart
                     index = 0;
                     prefix = "\""; //$NON-NLS-1$
                     String suffix = "\""; //$NON-NLS-1$
-                    find = prefix + mData1 + suffix;
-                    replaceWith = prefix + mData2 + suffix;
+                    find = prefix + mData[0] + suffix;
+                    replaceWith = prefix + mData[1] + suffix;
                     while (true) {
                         index = xml.indexOf(find, index);
                         if (index == -1) {
@@ -2097,10 +2157,26 @@ public class GraphicalEditorPart extends EditorPart
                     }
                     break;
                 case IGNORE_FIDELITY_WARNING:
-                    RenderLogger.ignoreFidelityWarning(mData1);
+                    RenderLogger.ignoreFidelityWarning((String) mData[0]);
                     recomputeLayout();
                     break;
+                case SET_ATTRIBUTE: {
+                    final UiElementNode element = (UiElementNode) mData[0];
+                    final String attribute = (String) mData[1];
+                    final String value = (String) mData[2];
+                    mEditorDelegate.getEditor().wrapUndoEditXmlModel(
+                            String.format("Set \"%1$s\" to \"%2$s\"", attribute, value),
+                            new Runnable() {
+                        @Override
+                        public void run() {
+                            element.setAttributeValue(attribute, ANDROID_URI, value, true);
+                            element.commitDirtyAttributesToXml();
+                        }
+                    });
+                    break;
+                }
                 default:
+                    assert false : mAction;
                     break;
             }
         }
