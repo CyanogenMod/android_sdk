@@ -181,6 +181,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     @Override
     public void dispose() {
         super.dispose();
+        if (mGraphicalEditor != null) {
+            mGraphicalEditor.dispose();
+        }
         getEditor().getSite().getPage().removePartListener(this);
     }
 
