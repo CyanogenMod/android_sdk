@@ -831,4 +831,28 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
+
+    public void testMarkup() throws Exception {
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "<string name=\"welcome\">Welcome to <b>Android</b>!</string>" +
+                "<string name=\"glob_settings_top_text\"><b>To install a 24 Clock Widget, " +
+                "please <i>long press</i> in Home Screen.</b> Configure the Global Settings " +
+                "here.</string>" +
+                "" +
+                "\n" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"welcome\">Welcome to <b>Android</b>!</string>\n" +
+                "    <string name=\"glob_settings_top_text\"><b>To install a 24 Clock Widget, please <i>long press</i>\n" +
+                " in Home Screen.</b> Configure the Global Settings here.</string>\n" +
+                "\n" +
+                "</resources>");
+    }
 }
