@@ -37,11 +37,11 @@ public class TabIconGenerator extends GraphicGenerator {
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
-        Rectangle iconSizeHdpi = new Rectangle(0, 0, 48, 48);
-        Rectangle targetRectHdpi = new Rectangle(3, 3, 42, 42);
-        final float scaleFactor = GraphicGenerator.getHdpiScaleFactor(options.density);
-        Rectangle imageRect = Util.scaleRectangle(iconSizeHdpi, scaleFactor);
-        Rectangle targetRect = Util.scaleRectangle(targetRectHdpi, scaleFactor);
+        Rectangle iconSizeMdpi = new Rectangle(0, 0, 32, 32);
+        Rectangle targetRectMdpi = new Rectangle(2, 2, 28, 28);
+        final float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
+        Rectangle imageRect = Util.scaleRectangle(iconSizeMdpi, scaleFactor);
+        Rectangle targetRect = Util.scaleRectangle(targetRectMdpi, scaleFactor);
         BufferedImage outImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g = (Graphics2D) outImage.getGraphics();
 
@@ -62,8 +62,8 @@ public class TabIconGenerator extends GraphicGenerator {
                                         new Color(0x787878))),
                         new ShadowEffect(
                                 0,
-                                3 * scaleFactor,
-                                3 * scaleFactor,
+                                2 * scaleFactor,
+                                2 * scaleFactor,
                                 Color.BLACK,
                                 0.2,
                                 true),
@@ -88,7 +88,7 @@ public class TabIconGenerator extends GraphicGenerator {
                         new ShadowEffect(
                                 0,
                                 0,
-                                5 * scaleFactor,
+                                3 * scaleFactor,
                                 Color.BLACK,
                                 0.25,
                                 false),
@@ -106,8 +106,8 @@ public class TabIconGenerator extends GraphicGenerator {
                                         new Color(0xdfdfdf))),
                         new ShadowEffect(
                                 0,
-                                3 * scaleFactor,
-                                3 * scaleFactor,
+                                2 * scaleFactor,
+                                2 * scaleFactor,
                                 Color.BLACK,
                                 0.1,
                                 true),

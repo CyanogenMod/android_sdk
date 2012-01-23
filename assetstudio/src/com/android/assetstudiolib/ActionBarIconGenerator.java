@@ -17,7 +17,6 @@ package com.android.assetstudiolib;
 
 import com.android.assetstudiolib.Util.Effect;
 import com.android.assetstudiolib.Util.FillEffect;
-import com.android.assetstudiolib.Util.ShadowEffect;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -35,11 +34,11 @@ public class ActionBarIconGenerator extends GraphicGenerator {
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
-        Rectangle iconSizeHdpi = new Rectangle(0, 0, 48, 48);
-        Rectangle targetRectHdpi = new Rectangle(6, 6, 36, 36);
-        final float scaleFactor = GraphicGenerator.getHdpiScaleFactor(options.density);
-        Rectangle imageRect = Util.scaleRectangle(iconSizeHdpi, scaleFactor);
-        Rectangle targetRect = Util.scaleRectangle(targetRectHdpi, scaleFactor);
+        Rectangle iconSizeMdpi = new Rectangle(0, 0, 32, 32);
+        Rectangle targetRectMdpi = new Rectangle(4, 4, 24, 24);
+        final float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
+        Rectangle imageRect = Util.scaleRectangle(iconSizeMdpi, scaleFactor);
+        Rectangle targetRect = Util.scaleRectangle(targetRectMdpi, scaleFactor);
         BufferedImage outImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g = (Graphics2D) outImage.getGraphics();
 
@@ -51,21 +50,12 @@ public class ActionBarIconGenerator extends GraphicGenerator {
         ActionBarOptions actionBarOptions = (ActionBarOptions) options;
         if (actionBarOptions.theme == Theme.HOLO_LIGHT) {
             Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
-                    new FillEffect(new Color(0x898989)),
+                    new FillEffect(new Color(0x333333), 0.6),
             });
         } else {
             assert actionBarOptions.theme == Theme.HOLO_DARK;
             Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
-                    // TODO: should be white @ 60% opacity, but
-                    // the fill then blends with the drop shadow
-                    new FillEffect(new Color(0x909090)),
-                    new ShadowEffect(
-                            0,
-                            0,
-                            3 * scaleFactor,
-                            Color.BLACK,
-                            0.85,
-                            false),
+                    new FillEffect(new Color(0xFFFFFF), 0.8)
             });
         }
 

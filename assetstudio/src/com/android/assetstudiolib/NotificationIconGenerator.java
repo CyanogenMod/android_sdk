@@ -36,24 +36,24 @@ public class NotificationIconGenerator extends GraphicGenerator {
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
-        Rectangle iconSizeHdpi;
-        Rectangle targetRectHdpi;
+        Rectangle iconSizeMdpi;
+        Rectangle targetRectMdpi;
         NotificationOptions notificationOptions = (NotificationOptions) options;
         if (notificationOptions.version == Version.OLDER) {
-            iconSizeHdpi = new Rectangle(0, 0, 38, 38);
-            targetRectHdpi = new Rectangle(6, 6, 26, 26);
+            iconSizeMdpi = new Rectangle(0, 0, 25, 25);
+            targetRectMdpi = new Rectangle(4, 4, 17, 17);
         } else if (notificationOptions.version == Version.V11) {
-            iconSizeHdpi = new Rectangle(0, 0, 48, 48);
-            targetRectHdpi = new Rectangle(6, 6, 36, 36);
+            iconSizeMdpi = new Rectangle(0, 0, 24, 24);
+            targetRectMdpi = new Rectangle(1, 1, 22, 22);
         } else {
             assert notificationOptions.version == Version.V9;
-            iconSizeHdpi = new Rectangle(0, 0, 24, 38);
-            targetRectHdpi = new Rectangle(0, 7, 24, 24);
+            iconSizeMdpi = new Rectangle(0, 0, 16, 25);
+            targetRectMdpi = new Rectangle(0, 5, 16, 16);
         }
 
-        final float scaleFactor = GraphicGenerator.getHdpiScaleFactor(options.density);
-        Rectangle imageRect = Util.scaleRectangle(iconSizeHdpi, scaleFactor);
-        Rectangle targetRect = Util.scaleRectangle(targetRectHdpi, scaleFactor);
+        final float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
+        Rectangle imageRect = Util.scaleRectangle(iconSizeMdpi, scaleFactor);
+        Rectangle targetRect = Util.scaleRectangle(targetRectMdpi, scaleFactor);
 
         BufferedImage outImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g = (Graphics2D) outImage.getGraphics();

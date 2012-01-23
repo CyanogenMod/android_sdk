@@ -183,29 +183,14 @@ public abstract class GraphicGenerator {
     }
 
     /**
-     * Returns the scale factor to apply for a given HDPI density to compute the
+     * Returns the scale factor to apply for a given MDPI density to compute the
      * absolute pixel count to use to draw an icon of the given target density
      *
      * @param density the density
-     * @return a factor to multiple hdpi distances with to compute the target density
+     * @return a factor to multiple mdpi distances with to compute the target density
      */
-    public static float getHdpiScaleFactor(Density density) {
-        // We used to do this:
-        //return density.getDpiValue() / (float) Density.DEFAULT_DENSITY;
-        // However, the HTML5 version of the AssetStudio would end up with different
-        // sizes for the assets, because it uses this table:
-        //    studio.util.getMultBaseHdpi = function(density) {
-        //        switch (density) {
-        //          case 'xhdpi': return 1.333333;
-        //          case  'hdpi': return 1.0;
-        //          case  'mdpi': return 0.666667;
-        //          case  'ldpi': return 0.5;
-        //        }
-        //        return 1.0;
-        //      };
-        // This corresponds to dividing the dpi value not by Density.MEDIUM but
-        // Density.HIGH:
-        return density.getDpiValue() / (float) Density.HIGH.getDpiValue();
+    public static float getMdpiScaleFactor(Density density) {
+        return density.getDpiValue() / (float) Density.MEDIUM.getDpiValue();
     }
 
     /**
