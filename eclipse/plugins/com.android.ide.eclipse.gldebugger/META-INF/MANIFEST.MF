@@ -15,6 +15,7 @@ Bundle-ClassPath: libs/host-libprotobuf-java-2.3.0-lite.jar,
  libs/liblzf.jar,
  libs/sdklib.jar,
  libs/ddmlib.jar,
+ libs/guava-10.0.1.jar,
  .
 Bundle-Vendor: The Android Open Source Project
 Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.eclipse.gldebugger.tests",

@@ -230,8 +230,9 @@ public class GLState {
                 GLEnum.GL_INVALID_VALUE);
         IGLProperty imageType = new GLEnumProperty(GLStateType.TEXTURE_IMAGE_TYPE,
                 GLEnum.GL_UNSIGNED_BYTE);
+        IGLProperty image = new GLStringProperty(GLStateType.TEXTURE_IMAGE, null);
         IGLProperty textureDefaultState = new GLCompositeProperty(GLStateType.PER_TEXTURE_STATE,
-                minFilter, magFilter, wrapS, wrapT, format, width, height, imageType);
+                minFilter, magFilter, wrapS, wrapT, format, width, height, imageType, image);
         GLSparseArrayProperty textures = new GLSparseArrayProperty(GLStateType.TEXTURES,
                 textureDefaultState);
         textures.add(0);

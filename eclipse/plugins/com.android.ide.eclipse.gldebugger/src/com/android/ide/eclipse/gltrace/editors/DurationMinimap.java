@@ -196,6 +196,12 @@ public class DurationMinimap extends Canvas {
     private void initializeBackBuffer() {
         Rectangle clientArea = getClientArea();
 
+        if (clientArea.width == 0 || clientArea.height == 0) {
+            mBackBufferImage = null;
+            mBackBufferGC = null;
+            return;
+        }
+
         mBackBufferImage = new Image(getDisplay(),
                 clientArea.width,
                 clientArea.height);
@@ -230,6 +236,10 @@ public class DurationMinimap extends Canvas {
     private void draw(Display display, GC gc) {
         if (mBackBufferImage == null) {
             initializeBackBuffer();
+        }
+
+        if (mBackBufferImage == null) {
+            return;
         }
 
         // draw contents onto the back buffer

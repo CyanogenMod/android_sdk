@@ -17,17 +17,24 @@
 package com.android.ide.eclipse.gltrace.state.transforms;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.FileUtils;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.state.GLState;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.google.common.io.Files;
+import com.google.protobuf.ByteString;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class StateTransformFactory {
+    private static final String TEXTURE_DATA_FILE_PREFIX = "tex";   //$NON-NLS-1$
+    private static final String TEXTURE_DATA_FILE_SUFFIX = ".dat";  //$NON-NLS-1$
+
     /** Construct a list of transformations to be applied for the provided OpenGL call. */
     public static List<IStateTransform> getTransformsFor(GLMessage msg) {
         switch (msg.getFunction()) {
@@ -694,7 +701,7 @@ public class StateTransformFactory {
      * {@link #transformsForGlTexSubImage2D(GLMessage)}.
      */
     private static List<IStateTransform> transformsForGlTexImage(GLMessage msg, int widthArgIndex,
-            int heightArgIndex) {
+            int heightArgIndex, int xOffsetIndex, int yOffsetIndex) {
         GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
         Integer width = Integer.valueOf(msg.getArgs(widthArgIndex).getIntValue(0));
         Integer height = Integer.valueOf(msg.getArgs(heightArgIndex).getIntValue(0));
@@ -722,19 +729,49 @@ public class StateTransformFactory {
                                             getTextureUnitTargetName(target),
                                             GLStateType.TEXTURE_IMAGE_TYPE),
                 type));
+
+        // if texture data is available, extract and store it in the cache folder
+        File f = null;
+        if (msg.getArgs(8).getIsArray()) {
+            ByteString data = msg.getArgs(8).getRawBytes(0);
+            f = FileUtils.createTempFile(TEXTURE_DATA_FILE_PREFIX, TEXTURE_DATA_FILE_SUFFIX);
+            try {
+                Files.write(data.toByteArray(), f);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        int xOffset = 0;
+        int yOffset = 0;
+
+        if (xOffsetIndex >= 0) {
+            xOffset = msg.getArgs(xOffsetIndex).getIntValue(0);
+        }
+
+        if (yOffsetIndex >= 0) {
+            yOffset = msg.getArgs(yOffsetIndex).getIntValue(0);
+        }
+
+        transforms.add(new TexImageTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                        getTextureUnitTargetName(target),
+                        GLStateType.TEXTURE_IMAGE),
+                f, format, xOffset, yOffset, width, height));
+
         return transforms;
     }
 
     private static List<IStateTransform> transformsForGlTexImage2D(GLMessage msg) {
         // void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width,
-        //          GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * data);
-        return transformsForGlTexImage(msg, 3, 4);
+        //          GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *data);
+        return transformsForGlTexImage(msg, 3, 4, -1, -1);
     }
 
     private static List<IStateTransform> transformsForGlTexSubImage2D(GLMessage msg) {
         // void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-        //          GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * data);
-        return transformsForGlTexImage(msg, 4, 5);
+        //          GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *data);
+        return transformsForGlTexImage(msg, 4, 5, 2, 3);
     }
 
     private static List<IStateTransform> transformsForGlTexParameter(GLMessage msg) {

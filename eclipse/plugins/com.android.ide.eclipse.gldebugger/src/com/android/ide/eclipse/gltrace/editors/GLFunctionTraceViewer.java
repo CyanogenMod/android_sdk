@@ -346,6 +346,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             @Override
             public void callSelected(int selectedCallIndex) {
                 table.select(selectedCallIndex);
+                table.setTopIndex(selectedCallIndex);
             }
         });
 

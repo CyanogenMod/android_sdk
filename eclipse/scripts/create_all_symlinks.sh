@@ -162,9 +162,10 @@ if [[ $PLATFORM != "windows-x86" ]]; then
   
   GLD_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.gldebugger/libs"
   GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf sdklib ddmlib"
+  GLD_PREBUILTS="prebuilts/tools/common/guava-tools/guava-10.0.1.jar"
 
   LIBS="$LIBS $GLD_LIBS"
-  CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS"
+  CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS $GLD_PREBUILTS"
 fi
 
 # Make sure we have lunch sdk-<something>

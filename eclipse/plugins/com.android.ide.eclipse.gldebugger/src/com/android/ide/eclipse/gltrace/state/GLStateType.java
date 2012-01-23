@@ -112,6 +112,7 @@ public enum GLStateType {
                 TEXTURE_WIDTH("Width"),
                 TEXTURE_HEIGHT("Height"),
                 TEXTURE_IMAGE_TYPE("Image Type"),
+                TEXTURE_IMAGE("Image"),
 
     FRAMEBUFFER_STATE("Framebuffer State"),
         FRAMEBUFFER_BINDING("Framebuffer Binding"),

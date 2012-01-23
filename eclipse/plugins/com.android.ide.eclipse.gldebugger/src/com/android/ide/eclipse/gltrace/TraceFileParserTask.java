@@ -130,15 +130,10 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
             // counters that maintain some statistics about the trace messages
             long minTraceStartTime = Long.MAX_VALUE;
-            int maxContextId = -1;
 
-            while ((msg = sReader.getMessageAtOffset(mFile, 0)) != null) {
+            while ((msg = sReader.getMessageAtOffset(mFile, -1)) != null) {
                 if (minTraceStartTime > msg.getStartTime()) {
                     minTraceStartTime = msg.getStartTime();
-                }
-
-                if (maxContextId < msg.getContextId()) {
-                    maxContextId = msg.getContextId();
                 }
 
                 addMessage(msgCount, filePointer, msg, msg.getStartTime() - minTraceStartTime);
@@ -151,7 +146,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                 }
             }
 
-            if (maxContextId > 0) {
+            if (mGLContextIds.size() > 1) {
                 // if there are multiple contexts, then the calls may arrive at the
                 // host out of order. So we perform a sort based on the invocation time.
                 Collections.sort(mGLCalls, new Comparator<GLCall>() {

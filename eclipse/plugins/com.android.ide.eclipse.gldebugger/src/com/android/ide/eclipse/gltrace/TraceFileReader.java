@@ -43,7 +43,7 @@ public class TraceFileReader {
         int len;
         byte[] b;
         try {
-            if (offset != 0) {
+            if (offset != -1) {
                 file.seek(offset);
             }
 
