@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.xml.descriptors;
+package com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 

@@ -25,9 +25,9 @@ import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.otherxml.OtherXmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.values.ValuesEditorDelegate;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
 
@@ -63,7 +63,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
      */
     private static final IXmlEditorCreator[] DELEGATES = {
             new LayoutEditorDelegate.Creator(),
-            new ResourcesEditorDelegate.Creator(),
+            new ValuesEditorDelegate.Creator(),
             new AnimationEditorDelegate.Creator(),
             new ColorEditorDelegate.Creator(),
             new DrawableEditorDelegate.Creator(),
@@ -76,7 +76,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
      */
     public static final String[] LEGACY_EDITOR_IDS = {
         LayoutEditorDelegate.LEGACY_EDITOR_ID,
-        ResourcesEditorDelegate.LEGACY_EDITOR_ID,
+        ValuesEditorDelegate.LEGACY_EDITOR_ID,
         AnimationEditorDelegate.LEGACY_EDITOR_ID,
         ColorEditorDelegate.LEGACY_EDITOR_ID,
         DrawableEditorDelegate.LEGACY_EDITOR_ID,

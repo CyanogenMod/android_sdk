@@ -1110,13 +1110,13 @@
     </extension>
     <extension point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
         <hyperlinkDetector
-            class="com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks$XmlResolver"
+            class="com.android.ide.eclipse.adt.internal.editors.Hyperlinks$XmlResolver"
             id="com.android.ide.eclipse.xmlCodeResolver"
             name="Android XML Hyperlink Detector"
             targetId="com.android.ide.eclipse.xmlCode">
         </hyperlinkDetector>
         <hyperlinkDetector
-            class="com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks$JavaResolver"
+            class="com.android.ide.eclipse.adt.internal.editors.Hyperlinks$JavaResolver"
             id="com.android.ide.eclipse.javaCodeResolver"
             name="Android Java Hyperlink Detector"
             targetId="org.eclipse.jdt.ui.javaCode">
@@ -1129,7 +1129,7 @@
       action. The second registration adds a quick bypass for that.
       -->
         <hyperlinkDetector
-            class="com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks$JavaResolver"
+            class="com.android.ide.eclipse.adt.internal.editors.Hyperlinks$JavaResolver"
             id="com.android.ide.eclipse.javaCodeResolver2"
             modifierKeys="M1+M2+M3"
             name="Android Java Hyperlink Detector (Extra Modifier Key)"

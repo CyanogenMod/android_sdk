@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.eclipse.adt.internal.editors.xml;
+package com.android.ide.eclipse.adt.internal.editors;
 
 import static com.android.sdklib.SdkConstants.FD_SOURCES;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
+import com.android.ide.eclipse.adt.internal.editors.Hyperlinks.ResourceLink;
+import com.android.ide.eclipse.adt.internal.editors.Hyperlinks.XmlResolver;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks.ResourceLink;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks.XmlResolver;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;

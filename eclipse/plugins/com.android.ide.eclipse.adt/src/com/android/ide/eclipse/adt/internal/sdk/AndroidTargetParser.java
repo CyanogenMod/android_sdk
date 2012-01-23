@@ -29,7 +29,7 @@ import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableDescriptors
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.OtherXmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;

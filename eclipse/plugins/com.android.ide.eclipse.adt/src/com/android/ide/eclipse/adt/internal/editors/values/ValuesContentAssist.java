@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources;
+package com.android.ide.eclipse.adt.internal.editors.values;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ITEM_TAG;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.DESCRIPTOR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TYPE;
 
@@ -60,12 +60,12 @@ import java.util.Map;
  * </ul>
  */
 @VisibleForTesting
-public class ResourcesContentAssist extends AndroidContentAssist {
+public class ValuesContentAssist extends AndroidContentAssist {
 
     /**
      * Constructor for ResourcesContentAssist
      */
-    public ResourcesContentAssist() {
+    public ValuesContentAssist() {
         super(AndroidTargetData.DESCRIPTOR_RESOURCES);
     }
 

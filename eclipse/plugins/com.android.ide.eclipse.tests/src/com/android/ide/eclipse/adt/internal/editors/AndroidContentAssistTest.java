@@ -35,7 +35,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
-import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.values.ValuesContentAssist;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.Document;
@@ -822,13 +822,13 @@ public class AndroidContentAssistTest extends AdtProjectTest {
 
     private void checkResourceCompletion(String name, String caretLocation) throws Exception {
         checkCompletion(name, getValueFile(getProject(), name), caretLocation,
-                new ResourcesContentAssist());
+                new ValuesContentAssist());
     }
 
     private void checkApplyResourceCompletion(String name, String caretLocation,
             String match) throws Exception {
         checkApplyCompletion(name, getValueFile(getProject(), name), caretLocation,
-                new ResourcesContentAssist(), match);
+                new ValuesContentAssist(), match);
     }
 
     private ICompletionProposal[] complete(IFile file, String caretLocation,

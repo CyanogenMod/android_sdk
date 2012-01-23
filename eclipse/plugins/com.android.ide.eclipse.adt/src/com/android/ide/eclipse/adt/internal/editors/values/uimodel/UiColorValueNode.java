@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources.uimodel;
+package com.android.ide.eclipse.adt.internal.editors.values.uimodel;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextValueDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.xml;
+package com.android.ide.eclipse.adt.internal.editors;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
@@ -29,9 +29,9 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_CLASS;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ROOT_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ROOT_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 import static com.android.sdklib.SdkConstants.FD_DOCS;
 import static com.android.sdklib.SdkConstants.FD_DOCS_REFERENCE;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
@@ -49,7 +49,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -501,7 +501,7 @@ public class Hyperlinks {
     public static String getTagName(ResourceType type) {
         if (type == ResourceType.ID) {
             // Ids are recorded in <item> tags instead of <id> tags
-            return ResourcesDescriptors.ITEM_TAG;
+            return ValuesDescriptors.ITEM_TAG;
         }
 
         return type.getName();
@@ -760,7 +760,7 @@ public class Hyperlinks {
 
     /**
      * Finds a definition of an id attribute in layouts. (Ids can also be defined as
-     * resources; use {@link #findValueDefinition} to locate it there.)
+     * resources; use {@link #findValueInXml} or {@link #findValueInDocument} to locate it there.)
      */
     private static Pair<IFile, IRegion> findIdDefinition(IProject project, String id) {
         // FIRST look in the same file as the originating request, that's where you usually
@@ -1587,7 +1587,6 @@ public class Hyperlinks {
          *
          * @return the region of the surrounding element, never null
          */
-        @SuppressWarnings("unused")
         public ITextRegion getElementRegion() {
             return mOuterRegion;
         }

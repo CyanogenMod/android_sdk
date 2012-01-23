@@ -38,7 +38,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescript
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
@@ -314,7 +314,7 @@ class NewXmlFileCreationPage extends WizardPage {
         new TypeInfo("Values",                                              // UI name
                 "An XML file with simple values: colors, strings, dimensions, etc.", // tooltip
                 ResourceFolderType.VALUES,                                  // folder type
-                ResourcesDescriptors.ROOT_ELEMENT,                          // root seed
+                ValuesDescriptors.ROOT_ELEMENT,                          // root seed
                 null,                                                       // default root
                 null,                                                       // xmlns
                 null,                                                       // default attributes

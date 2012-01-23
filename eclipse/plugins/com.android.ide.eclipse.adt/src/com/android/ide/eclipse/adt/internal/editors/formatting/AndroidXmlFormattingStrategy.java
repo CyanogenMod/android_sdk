@@ -29,7 +29,7 @@ import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.resources.ResourceType;
 import com.android.sdklib.SdkConstants;
@@ -511,7 +511,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         // integer-arrays, string-arrays, and typed-arrays
         Element rootElement = domDocument.getDocumentElement();
         if (rootElement != null
-                && ResourcesDescriptors.ROOT_ELEMENT.equals(rootElement.getTagName())) {
+                && ValuesDescriptors.ROOT_ELEMENT.equals(rootElement.getTagName())) {
             style = XmlFormatStyle.RESOURCE;
         }
 

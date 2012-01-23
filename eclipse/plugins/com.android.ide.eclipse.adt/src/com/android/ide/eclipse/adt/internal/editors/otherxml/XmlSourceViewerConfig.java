@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.xml;
+package com.android.ide.eclipse.adt.internal.editors.otherxml;
 
-import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+
+import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
 
 /**
- * Content Assist Processor for /res/xml XML files
+ * Source Viewer Configuration that calls in OtherXmlContentAssist.
  */
-class OtherXmlContentAssist extends AndroidContentAssist {
+public class XmlSourceViewerConfig extends AndroidSourceViewerConfig {
 
-    /**
-     * Constructor for LayoutContentAssist 
-     */
-    public OtherXmlContentAssist() {
-        super(AndroidTargetData.DESCRIPTOR_OTHER_XML);
+    public XmlSourceViewerConfig() {
+        super(new OtherXmlContentAssist());
     }
 }

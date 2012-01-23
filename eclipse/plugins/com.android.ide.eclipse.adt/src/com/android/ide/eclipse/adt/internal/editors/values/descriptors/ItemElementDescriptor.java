@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources.descriptors;
+package com.android.ide.eclipse.adt.internal.editors.values.descriptors;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.resources.uimodel.UiItemElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.editors.values.uimodel.UiItemElementNode;
 
 /**
  * {@link ItemElementDescriptor} is a special version of {@link ElementDescriptor} that
