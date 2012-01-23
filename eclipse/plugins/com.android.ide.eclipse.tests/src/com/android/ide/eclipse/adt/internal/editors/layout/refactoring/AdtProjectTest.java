@@ -20,7 +20,7 @@ import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -617,7 +617,7 @@ public class AdtProjectTest extends SdkTestCase {
             super(new TestAndroidXmlCommonEditor(file, structuredDocument, uiRootNode));
         }
 
-        static class TestAndroidXmlCommonEditor extends AndroidXmlCommonEditor {
+        static class TestAndroidXmlCommonEditor extends CommonXmlEditor {
 
             private final IFile mFile;
             private final IStructuredDocument mStructuredDocument;

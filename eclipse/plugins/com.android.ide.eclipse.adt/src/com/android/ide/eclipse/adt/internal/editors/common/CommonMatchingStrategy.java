@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors;
+package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorMatchingStrategy;

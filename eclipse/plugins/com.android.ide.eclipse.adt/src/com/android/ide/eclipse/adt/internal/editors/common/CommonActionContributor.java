@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.eclipse.adt.internal.editors;
+package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 

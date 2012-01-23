@@ -21,9 +21,9 @@ import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -1447,7 +1447,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         file.getFullPath().toOSString(), type);
                 }
                 // All the /res XML files are handled by the same common editor now.
-                IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
+                IDE.setDefaultEditor(file, CommonXmlEditor.ID);
             }
 
             /**
