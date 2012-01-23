@@ -156,7 +156,8 @@ public final class GuidelinePainter implements IFeedbackPainter {
             description = description.substring(ATTR_LAYOUT_PREFIX.length());
         }
         if (margin > 0) {
-            description = String.format("%1$s, margin=%2$d dp", description, margin);
+            int dp = state.getRulesEngine().pxToDp(margin);
+            description = String.format("%1$s, margin=%2$d dp", description, dp);
         }
         strings.add(description);
     }
