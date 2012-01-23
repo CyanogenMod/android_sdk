@@ -140,7 +140,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
     public ICompletionProposal[] computeQuickAssistProposals(
             IQuickAssistInvocationContext invocationContext) {
         ISourceViewer sourceViewer = invocationContext.getSourceViewer();
-        AndroidXmlEditor editor = AndroidXmlEditor.getAndroidXmlEditor(sourceViewer);
+        AndroidXmlEditor editor = AndroidXmlEditor.fromTextViewer(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
             IDocument document = sourceViewer.getDocument();

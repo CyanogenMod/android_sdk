@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.animator;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -64,7 +64,7 @@ public class AnimationEditorDelegate extends CommonXmlDelegate {
     private String mRootTag;
 
     private AnimationEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new AnimationContentAssist());
         editor.addDefaultTargetListener();
     }
 
@@ -78,7 +78,7 @@ public class AnimationEditorDelegate extends CommonXmlDelegate {
             AdtPlugin.getDefault().getLog().log(e.getStatus());
         }
         */
-     }
+    }
 
     /**
      * Processes the new XML Model.

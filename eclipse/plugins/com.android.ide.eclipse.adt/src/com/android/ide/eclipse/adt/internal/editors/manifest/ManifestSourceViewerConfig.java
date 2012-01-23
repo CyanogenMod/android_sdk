@@ -19,12 +19,25 @@ package com.android.ide.eclipse.adt.internal.editors.manifest;
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
 
+import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
+import org.eclipse.jface.text.source.ISourceViewer;
+
 /**
  * Source Viewer Configuration that calls in ManifestContentAssist.
  */
 public final class ManifestSourceViewerConfig extends AndroidSourceViewerConfig {
 
+    private ManifestContentAssist mAndroidContentAssist;
+
     public ManifestSourceViewerConfig() {
-        super(new ManifestContentAssist());
+        super();
+        mAndroidContentAssist = new ManifestContentAssist();
+    }
+
+    @Override
+    public IContentAssistProcessor getAndroidContentAssistProcessor(
+            ISourceViewer sourceViewer,
+            String partitionType) {
+        return mAndroidContentAssist;
     }
 }

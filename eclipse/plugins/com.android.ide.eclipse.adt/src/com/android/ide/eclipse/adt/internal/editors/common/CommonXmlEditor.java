@@ -36,6 +36,8 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.ISourceViewerExtension2;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -54,7 +56,7 @@ import org.w3c.dom.Document;
  */
 public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInput {
 
-    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".XmlCommonEditor"; //$NON-NLS-1$
+    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".CommonXmlEditor"; //$NON-NLS-1$
 
     /**
      * Registered {@link CommonXmlDelegate}s.
@@ -231,6 +233,26 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
 
         if (mDelegate != null) {
             mDelegate.postCreatePages();
+        }
+    }
+
+    @Override
+    protected void addPages() {
+        // Create the editor pages.
+        // This will also create the EditorPart.
+        super.addPages();
+
+        // When the EditorPart is being created, it configures the SourceViewer
+        // and will try to use our CommonSourceViewerConfig. Our config needs to
+        // know which ContentAssist processor to use (since we have one per resource
+        // folder type) but it doesn't have the necessary info to do so.
+        // Consequently, once the part is created, we can now unconfigure the source
+        // viewer and reconfigure it with the right settings.
+        ISourceViewer ssv = getStructuredSourceViewer();
+        if (mDelegate != null && ssv instanceof ISourceViewerExtension2) {
+            ((ISourceViewerExtension2) ssv).unconfigure();
+            ssv.configure(new CommonSourceViewerConfig(
+                    mDelegate.getAndroidContentAssistProcessor()));
         }
     }
 

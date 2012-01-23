@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.values;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.resources.ResourceFolderType;
@@ -67,7 +67,7 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
      * Creates the form editor for resources XML files.
      */
     private ValuesEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new ValuesContentAssist());
         editor.addDefaultTargetListener();
     }
 

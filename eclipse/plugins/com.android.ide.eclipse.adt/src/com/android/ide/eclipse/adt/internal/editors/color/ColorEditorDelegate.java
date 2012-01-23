@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.color;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
@@ -60,7 +60,7 @@ public class ColorEditorDelegate extends CommonXmlDelegate {
 
 
     private ColorEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new ColorContentAssist());
         editor.addDefaultTargetListener();
     }
 

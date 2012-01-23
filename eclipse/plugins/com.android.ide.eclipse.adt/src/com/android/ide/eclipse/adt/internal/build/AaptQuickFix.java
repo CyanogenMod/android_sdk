@@ -164,7 +164,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         // we'll make sure that that editor has the same sourceViewer such that
         // we are indeed looking at the right file:
         ISourceViewer sourceViewer = invocationContext.getSourceViewer();
-        AndroidXmlEditor editor = AndroidXmlEditor.getAndroidXmlEditor(sourceViewer);
+        AndroidXmlEditor editor = AndroidXmlEditor.fromTextViewer(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
             IDocument document = sourceViewer.getDocument();

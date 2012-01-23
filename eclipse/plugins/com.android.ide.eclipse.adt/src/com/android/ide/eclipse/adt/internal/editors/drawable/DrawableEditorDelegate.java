@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.drawable;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -66,7 +66,7 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
      * Creates the form editor for resources XML files.
      */
     private DrawableEditorDelegate(CommonXmlEditor editor) {
-        super(editor);
+        super(editor, new DrawableContentAssist());
         editor.addDefaultTargetListener();
     }
 
