@@ -221,6 +221,8 @@ public class PreCompilerBuilder extends BaseBuilder {
         IProject[] result = null;
 
         try {
+            assert mDerivedProgressMonitor != null;
+
             mDerivedProgressMonitor.reset();
 
             // get the project info

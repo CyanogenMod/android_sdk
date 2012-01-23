@@ -309,8 +309,18 @@ public class AdtUpdateDialog extends SwtBaseDialog {
             boolean accept(Package pkg) {
                 if (pkg instanceof ExtraPackage) {
                     ExtraPackage ep = (ExtraPackage) pkg;
-                    return ep.getVendor().equals(mVendor) &&
-                           ep.getPath().equals(mPath);
+                    if (ep.getVendor().equals(mVendor)) {
+                        // Check actual extra <path> field first
+                        if (ep.getPath().equals(mPath)) {
+                            return true;
+                        }
+                        // If not, check whether this is one of the <old-paths> values.
+                        for (String oldPath : ep.getOldPaths()) {
+                            if (oldPath.equals(mPath)) {
+                                return true;
+                            }
+                        }
+                    }
                 }
                 return false;
             }
