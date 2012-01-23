@@ -17,10 +17,11 @@
 package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Position;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
@@ -32,7 +33,7 @@ class XmlReporter extends Reporter {
     private final File mOutput;
 
     XmlReporter(File output) throws IOException {
-        super(new BufferedWriter(new FileWriter(output)));
+        super(new BufferedWriter(Files.newWriter(output, Charsets.UTF_8)));
         mOutput = output;
     }
 
@@ -47,18 +48,22 @@ class XmlReporter extends Reporter {
                 mWriter.write("\n    <issue");
                 writeAttribute(mWriter, "id", warning.issue.getId());   //$NON-NLS-1$
                 writeAttribute(mWriter, "severity", warning.severity.getDescription()); //$NON-NLS-1$
-                writeAttribute(mWriter, "message", warning.issue.getId());  //$NON-NLS-1$
+                writeAttribute(mWriter, "message", warning.message);  //$NON-NLS-1$
                 if (warning.file != null) {
-                    writeAttribute(mWriter, "file", warning.file.getPath());  //$NON-NLS-1$
+                    writeAttribute(mWriter, "file", warning.path);  //$NON-NLS-1$
                     if (warning.location != null) {
                         Position start = warning.location.getStart();
                         if (start != null) {
                             int line = start.getLine();
                             int column = start.getColumn();
                             if (line >= 0) {
-                                writeAttribute(mWriter, "line", Integer.toString(line));  //$NON-NLS-1$
+                                // +1: Line numbers internally are 0-based, report should be
+                                // 1-based.
+                                writeAttribute(mWriter, "line",         //$NON-NLS-1$
+                                        Integer.toString(line + 1));
                                 if (column >= 0) {
-                                    writeAttribute(mWriter, "column", Integer.toString(column)); //$NON-NLS-1$
+                                    writeAttribute(mWriter, "column",   //$NON-NLS-1$
+                                            Integer.toString(column + 1));
                                 }
                             }
                         }
