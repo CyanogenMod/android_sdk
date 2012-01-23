@@ -175,8 +175,6 @@ public final class ManifestEditor extends AndroidXmlEditor {
         initUiRootNode(false /*force*/);
 
         loadFromXml(xml_doc);
-
-        super.xmlModelChanged(xml_doc);
     }
 
     private void loadFromXml(Document xmlDoc) {

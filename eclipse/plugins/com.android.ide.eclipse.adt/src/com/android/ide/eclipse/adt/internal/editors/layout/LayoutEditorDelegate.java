@@ -183,6 +183,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         super.dispose();
         if (mGraphicalEditor != null) {
             mGraphicalEditor.dispose();
+            mGraphicalEditor = null;
         }
         getEditor().getSite().getPage().removePartListener(this);
     }
@@ -362,6 +363,13 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         mGraphicalEditor.recomputeLayout();
     }
 
+    /**
+     * Does this editor participate in the "format GUI editor changes" option?
+     *
+     * @return true since this editor supports automatically formatting XML
+     *         affected by GUI changes
+     */
+    @Override
     public boolean supportsFormatOnGuiEdit() {
         return true;
     }

@@ -137,7 +137,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * so the document listeners can use this flag to skip updating the model when edits
      * are observed during a formatting operation
      */
-    protected boolean mIgnoreXmlUpdate;
+    private boolean mIgnoreXmlUpdate;
 
     /**
      * Flag indicating we're inside {@link #wrapEditXmlModel(Runnable)}.
@@ -232,9 +232,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      *
      * @param xml_doc The XML document, if available, or null if none exists.
      */
-    protected void xmlModelChanged(Document xml_doc) {
-        // pass
-    }
+    abstract protected void xmlModelChanged(Document xml_doc);
 
     /**
      * Controls whether XML models are ignored or not.

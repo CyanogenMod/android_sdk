@@ -189,4 +189,14 @@ public abstract class CommonXmlDelegate {
     public IContentAssistProcessor getAndroidContentAssistProcessor() {
         return mContentAssist;
     }
+
+    /**
+     * Does this editor participate in the "format GUI editor changes" option?
+     *
+     * @return false since editors do not support automatically formatting XML
+     *         affected by GUI changes unless they explicitly opt in to it.
+     */
+    public boolean supportsFormatOnGuiEdit() {
+        return false;
+    }
 }

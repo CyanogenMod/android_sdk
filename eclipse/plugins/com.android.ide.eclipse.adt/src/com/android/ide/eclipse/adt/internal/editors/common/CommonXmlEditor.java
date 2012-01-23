@@ -286,7 +286,6 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         if (mDelegate != null) {
             mDelegate.xmlModelChanged(xml_doc);
         }
-        super.xmlModelChanged(xml_doc);
     }
 
     @Override
@@ -333,11 +332,20 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         }
     }
 
+    /* Implements showEditorInput(...) in IShowEditorInput */
     @Override
     public void showEditorInput(IEditorInput editorInput) {
         if (mDelegate instanceof LayoutEditorDelegate) {
             ((LayoutEditorDelegate) mDelegate).showEditorInput(editorInput);
         }
+    }
+
+    @Override
+    public boolean supportsFormatOnGuiEdit() {
+        if (mDelegate != null) {
+            return mDelegate.supportsFormatOnGuiEdit();
+        }
+        return super.supportsFormatOnGuiEdit();
     }
 
 
