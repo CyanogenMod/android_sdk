@@ -790,6 +790,10 @@ public class XmlPrettyPrinter {
     }
 
     private boolean indentBeforeElementOpen(Element element, int depth) {
+        if (isMarkupElement(element)) {
+            return false;
+        }
+
         if (element.getParentNode().getNodeType() == Node.ELEMENT_NODE
                 && keepElementAsSingleLine(depth - 1, (Element) element.getParentNode())) {
             return false;
@@ -799,6 +803,10 @@ public class XmlPrettyPrinter {
     }
 
     private boolean indentBeforeElementClose(Element element, int depth) {
+        if (isMarkupElement(element)) {
+            return false;
+        }
+
         char lastOutChar = mOut.charAt(mOut.length() - 1);
         char lastDelimiterChar = mLineSeparator.charAt(mLineSeparator.length() - 1);
         return lastOutChar == lastDelimiterChar;
@@ -809,6 +817,10 @@ public class XmlPrettyPrinter {
             return false;
         }
 
+        if (isMarkupElement(element)) {
+            return false;
+        }
+
         // In resource files we keep the child content directly on the same
         // line as the element (unless it has children). in other files, separate them
         return isClosed || !keepElementAsSingleLine(depth, element);
@@ -816,6 +828,10 @@ public class XmlPrettyPrinter {
 
     private boolean newlineBeforeElementClose(Element element, int depth) {
         if (hasBlankLineAbove()) {
+            return false;
+        }
+
+        if (isMarkupElement(element)) {
             return false;
         }
 
@@ -838,6 +854,12 @@ public class XmlPrettyPrinter {
 
         return element.getParentNode().getNodeType() == Node.ELEMENT_NODE
                 && !keepElementAsSingleLine(depth - 1, (Element) element.getParentNode());
+    }
+
+    private boolean isMarkupElement(Element element) {
+        // <u>, <b>, <i>, ...
+        // http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
+        return mStyle == XmlFormatStyle.RESOURCE && element.getTagName().length() == 1;
     }
 
     /**
