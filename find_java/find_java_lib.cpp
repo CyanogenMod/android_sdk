@@ -19,8 +19,6 @@
 #include "find_java.h"
 #include <shlobj.h>
 
-extern bool gDebug;
-
 // Check whether we can find $PATH/java.exe
 static bool checkPath(CPath *inOutPath) {
     inOutPath->addPath("java.exe");
@@ -53,7 +51,7 @@ bool findJavaInEnvPath(CPath *outJavaPath) {
     if (envPath != NULL) {
         CPath p(envPath);
         if (checkBinPath(&p)) {
-            if (gDebug) msgBox("Java found via JAVA_HOME: %s", p.cstr());
+            if (gIsDebug) msgBox("Java found via JAVA_HOME: %s", p.cstr());
             *outJavaPath = p;
             return true;
         }
@@ -66,7 +64,7 @@ bool findJavaInEnvPath(CPath *outJavaPath) {
     for(int i = 0; i < paths->size(); i++) {
         CPath p((*paths)[i].cstr());
         if (checkPath(&p)) {
-            if (gDebug) msgBox("Java found via env PATH: %s", p.cstr());
+            if (gIsDebug) msgBox("Java found via env PATH: %s", p.cstr());
             *outJavaPath = p;
             delete paths;
             return true;
@@ -243,15 +241,22 @@ bool findJavaInProgramFiles(CPath *outJavaPath) {
 
 // --------------
 
-static bool getJavaVersion(CPath &javaPath, CString *version) {
+bool getJavaVersion(CPath &javaPath, CString *version) {
     bool result = false;
 
-    // Run "java -version".
-    // TODO: capture output to string.
+    // Run "java -version", which outputs something like to *STDERR*:
+    //
+    // java version "1.6.0_29"
+    // Java(TM) SE Runtime Environment (build 1.6.0_29-b11)
+    // Java HotSpot(TM) Client VM (build 20.4-b02, mixed mode, sharing)
+    //
+    // We want to capture the first line, and more exactly the "1.6" part.
+
+
     CString cmd;
     cmd.setf("\"%s\" -version", javaPath.cstr());
 
-    SECURITY_ATTRIBUTES saAttr;
+    SECURITY_ATTRIBUTES   saAttr;
     STARTUPINFO           startup;
     PROCESS_INFORMATION   pinfo;
 
@@ -271,28 +276,75 @@ static bool getJavaVersion(CPath &javaPath, CString *version) {
         displayLastError("CreatePipe failed: ");
         return false;
     }
-
+    if (!SetHandleInformation(stdoutPipeRd, HANDLE_FLAG_INHERIT, 0)) {
+        displayLastError("SetHandleInformation failed: ");
+        return false;
+    }
 
     ZeroMemory(&pinfo, sizeof(pinfo));
 
     ZeroMemory(&startup, sizeof(startup));
     startup.cb          = sizeof(startup);
-    startup.dwFlags     = STARTF_USESHOWWINDOW;
+    startup.dwFlags     = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
     startup.wShowWindow = SW_HIDE|SW_MINIMIZE;
+    // Capture both stderr and stdout
+    startup.hStdError   = stdoutPipeWt;
+    startup.hStdOutput  = stdoutPipeWt;
+    startup.hStdInput   = GetStdHandle(STD_INPUT_HANDLE);
 
-    int ret = CreateProcessA(
-            NULL,                                       /* program path */
-            (LPSTR) cmd,                                /* command-line */
-            NULL,                  /* process handle is not inheritable */
-            NULL,                   /* thread handle is not inheritable */
-            TRUE,                          /* yes, inherit some handles */
-            CREATE_NO_WINDOW,                /* we don't want a console */
-            NULL,                     /* use parent's environment block */
-            NULL,                    /* use parent's starting directory */
-            &startup,                 /* startup info, i.e. std handles */
+    BOOL ok = CreateProcessA(
+            NULL,                   // program path
+            (LPSTR) cmd.cstr(),     // command-line
+            NULL,                   // process handle is not inheritable
+            NULL,                   // thread handle is not inheritable
+            TRUE,                   // yes, inherit some handles
+            0,                      // process creation flags
+            NULL,                   // use parent's environment block
+            NULL,                   // use parent's starting directory
+            &startup,               // startup info, i.e. std handles
             &pinfo);
 
-    if (ret) {
+    if (gIsConsole && !ok) displayLastError("CreateProcess failed: ");
+
+    // Close the write-end of the output pipe (we're only reading from it)
+    CloseHandle(stdoutPipeWt);
+
+    // Read from the output pipe. We don't need to read everything,
+    // the first line should be 'Java version "1.2.3_45"\r\n'
+    // so reading about 32 chars is all we need.
+    char first32[32 + 1];
+    int index = 0;
+    first32[0] = 0;
+
+    if (ok) {
+
+        #define SIZE 1024
+        char buffer[SIZE];
+        DWORD sizeRead = 0;
+
+        while (ok) {
+            // Keep reading in the same buffer location
+            ok = ReadFile(stdoutPipeRd,     // hFile
+                          buffer,           // lpBuffer
+                          SIZE,             // DWORD buffer size to read
+                          &sizeRead,        // DWORD buffer size read
+                          NULL);            // overlapped
+            if (!ok || sizeRead == 0 || sizeRead > SIZE) break;
+
+            // Copy up to the first 32 characters
+            if (index < 32) {
+                DWORD n = 32 - index;
+                if (n > sizeRead) n = sizeRead;
+                // copy as lowercase to simplify checks later
+                for (char *b = buffer; n > 0; n--, b++, index++) {
+                    char c = *b;
+                    if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+                    first32[index] = c;
+                }
+                first32[index] = 0;
+            }
+        }
+
         WaitForSingleObject(pinfo.hProcess, INFINITE);
 
         DWORD exitCode;
@@ -300,18 +352,33 @@ static bool getJavaVersion(CPath &javaPath, CString *version) {
             // this should not return STILL_ACTIVE (259)
             result = exitCode == 0;
         }
+
         CloseHandle(pinfo.hProcess);
         CloseHandle(pinfo.hThread);
     }
     CloseHandle(stdoutPipeRd);
-    CloseHandle(stdoutPipeWt);
 
-    if (result) {
-        // TODO
-        // Parse output of "java -version".
-        // It should be something like:
-        //   java version "1.6.0_29"
-        // (including the quotes.)
+    if (index > 0) {
+        // Look for a few keywords in the output however we don't
+        // care about specific ordering or case-senstiviness.
+        // We only captures roughtly the first line in lower case.
+        char *j = strstr(first32, "java");
+        char *v = strstr(first32, "version");
+        if (gIsDebug && gIsConsole && (!j || !v)) {
+            fprintf(stderr, "Error: keywords 'java version' not found in '%s'\n", first32);
+        }
+        if (j != NULL && v != NULL) {
+            // Now extract the first thing that looks like digit.digit
+            for (int i = 0; i < index - 2; i++) {
+                if (isdigit(first32[i]) &&
+                        first32[i+1] == '.' &&
+                        isdigit(first32[i+2])) {
+                    version->set(first32 + i, 3);
+                    result = true;
+                    break;
+                }
+            }
+        }
     }
 
     return result;

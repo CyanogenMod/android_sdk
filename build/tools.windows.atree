@@ -94,4 +94,4 @@ bin/sdklauncher.exe              "SDK Manager.exe"
 # Supporting bat files
 sdk/files/post_tools_install.bat                  tools/lib/post_tools_install.bat
 sdk/files/find_java.bat                           tools/lib/find_java.bat
-
+bin/find_java.exe                                 tools/lib/find_java.exe

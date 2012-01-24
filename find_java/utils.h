@@ -34,7 +34,8 @@
     #define _ASSERT(x)      // undef
 #endif
 
-extern bool gDebug;
+extern bool gIsDebug;
+extern bool gIsConsole;
 
 // An array that knows its own size. Not dynamically resizable.
 template <class T> class CArray {
@@ -148,12 +149,24 @@ public:
         return mStr == NULL ? 0 : strlen(mStr);
     }
 
-    CString& add(const char *s) {
+    CString& add(const char *str) {
         if (mStr == NULL) {
-            set(s);
+            set(str);
         } else {
-            mStr = (char *)realloc((void *)mStr, strlen(mStr) + strlen(s) + 1);
-            strcat(mStr, s);
+            mStr = (char *)realloc((void *)mStr, strlen(mStr) + strlen(str) + 1);
+            strcat(mStr, str);
+        }
+        return *this;
+    }
+
+    CString& add(const char *str, int length) {
+        if (mStr == NULL) {
+            set(str, length);
+        } else {
+            int   l1 = strlen(mStr);
+            mStr = (char *)realloc((void *)mStr, l1 + length + 1);
+            strncpy(mStr + l1, str, length);
+            mStr[l1 + length] = 0;
         }
         return *this;
     }
@@ -302,6 +315,32 @@ public:
             strcpy(mStr + n - sn, newName);
             mStr[n + sn2 - sn] = 0;
         }
+    }
+
+    // Returns a copy of this path as a DOS short path in the destination.
+    // Returns true if the Win32 getShortPathName method worked.
+    // In case of error, returns false and does not change the destination.
+    // It's OK to invoke this->toShortPath(this).
+    bool toShortPath(CPath *dest) {
+        const char *longPath = mStr;
+        if (mStr == NULL) return false;
+
+        DWORD lenShort = strlen(longPath) + 1;
+        char * shortPath = (char *)malloc(lenShort);
+
+        DWORD length = GetShortPathName(longPath, shortPath, lenShort);
+        if (length > lenShort) {
+            // The buffer wasn't big enough, this is the size to use.
+            free(shortPath);
+            lenShort = length;
+            shortPath = (char *)malloc(length);
+            length = GetShortPathName(longPath, shortPath, lenShort);
+        }
+
+        if (length != 0) dest->set(shortPath);
+
+        free(shortPath);
+        return length != 0;
     }
 };
 

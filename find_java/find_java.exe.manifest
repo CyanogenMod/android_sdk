@@ -16,11 +16,11 @@
 
     <assemblyIdentity version="1.0.0.0"
         processorArchitecture="x86"
-        name="Android.SDK.AndroidTool"
+        name="Android.SDK.FindJava"
         type="win32"
         />
 
-    <description>Wrapper to start the command-line "android" tool or the Android SDK Manager user interface.</description>
+    <description>Utility to find java.exe on the local system.</description>
 
     <!-- Identify the application security requirements. -->
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">

@@ -20,7 +20,11 @@
 
 #define _CRT_SECURE_NO_WARNINGS 1
 
-bool gDebug = false;
+// Set to true to get some extra debug information
+bool gIsDebug = false;
+// Set to true to output errors to stderr (for a Console app)
+// or to false to output using msg box (for a Windows UI app)
+bool gIsConsole = false;
 
 // Displays a message in an ok+info dialog box.
 void msgBox(const char* text, ...) {
@@ -45,7 +49,12 @@ void displayLastError(const char *description, ...) {
     error.setLastWin32Error();
     formatted.add("\r\n");
     formatted.add(error.cstr());
-    MessageBox(NULL, formatted.cstr(), "Android SDK Manager - Error", MB_OK | MB_ICONERROR);
+
+    if (gIsConsole) {
+        fprintf(stderr, "%s\n", formatted.cstr());
+    } else {
+        MessageBox(NULL, formatted.cstr(), "Android SDK Manager - Error", MB_OK | MB_ICONERROR);
+    }
 }
 
 // Executes the command line. Does not wait for the program to finish.
