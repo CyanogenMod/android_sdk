@@ -31,6 +31,14 @@
             name="GL State"
             restorable="true">
       </view>
+      <view
+            category="com.android.ide.eclipse.gltrace"
+            class="com.android.ide.eclipse.gltrace.views.TextureView"
+            icon="icons/opengl.png"
+            id="com.android.ide.eclipse.gltrace.views.Texture"
+            name="Texture"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">

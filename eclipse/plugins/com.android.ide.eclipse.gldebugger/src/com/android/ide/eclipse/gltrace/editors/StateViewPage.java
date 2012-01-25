@@ -28,6 +28,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -52,7 +54,7 @@ import java.util.Set;
  * A tree view of the OpenGL state. It listens to the current GLCall that is selected
  * in the Function Trace view, and updates its view to reflect the state as of the selected call.
  */
-public class StateViewPage extends Page implements ISelectionListener {
+public class StateViewPage extends Page implements ISelectionListener, ISelectionProvider {
     public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
 
     private final GLTrace mTrace;
@@ -260,5 +262,25 @@ public class StateViewPage extends Page implements ISelectionListener {
         }
 
         return changedProperties;
+    }
+
+    @Override
+    public void addSelectionChangedListener(ISelectionChangedListener listener) {
+        mTreeViewer.addSelectionChangedListener(listener);
+    }
+
+    @Override
+    public ISelection getSelection() {
+        return mTreeViewer.getSelection();
+    }
+
+    @Override
+    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+        mTreeViewer.removeSelectionChangedListener(listener);
+    }
+
+    @Override
+    public void setSelection(ISelection selection) {
+        mTreeViewer.setSelection(selection);
     }
 }

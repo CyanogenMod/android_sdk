@@ -16,90 +16,26 @@
 
 package com.android.ide.eclipse.gltrace.views;
 
-import com.android.ide.eclipse.gldebugger.Activator;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
-import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.part.ViewPart;
 
 import java.util.List;
 
-public class GLFramebufferView extends ViewPart implements ISelectionListener {
-    public static final String ID = "com.android.ide.eclipse.gltrace.views.GLFrameBuffer"; //$NON-NLS-1$
-    private static final boolean FIT_TO_CANVAS_DEFAULT = true;
-    private ImageCanvas mImageCanvas;
-
+public class GLFramebufferView extends ImageViewPart {
     public GLFramebufferView() {
+        super(true);
     }
 
-    @Override
-    public void createPartControl(Composite parent) {
-        createImageCanvas(parent);
-        createToolbar();
-
-        ISelectionService selectionService = getSite().getWorkbenchWindow().getSelectionService();
-        selectionService.addPostSelectionListener(this);
-    }
-
-    @Override
-    public void dispose() {
-        if (mImageCanvas != null) {
-            mImageCanvas.dispose();
-            mImageCanvas = null;
-        }
-
-        ISelectionService selectionService = getSite().getWorkbenchWindow().getSelectionService();
-        selectionService.removePostSelectionListener(this);
-        super.dispose();
-    }
-
-    @Override
-    public void setFocus() {
-        if (mImageCanvas != null) {
-            mImageCanvas.setFocus();
-        }
-    }
-
-    private class FitToCanvasAction extends Action {
-        public FitToCanvasAction() {
-            super("Fit to Canvas", Activator.getImageDescriptor("/icons/zoomfit.png")); //$NON-NLS-2$
-            setToolTipText("Fit Image to Canvas");
-            setChecked(FIT_TO_CANVAS_DEFAULT);
-        }
-
-        @Override
-        public void run() {
-            mImageCanvas.setFitToCanvas(isChecked());
-        }
-    }
-
-    private void createImageCanvas(Composite parent) {
-        mImageCanvas = new ImageCanvas(parent);
-        mImageCanvas.setFitToCanvas(FIT_TO_CANVAS_DEFAULT);
-    }
-
-    private void createToolbar() {
-        getViewSite().getActionBars().getToolBarManager().add(new FitToCanvasAction());
-    }
+    public static final String ID = "com.android.ide.eclipse.gltrace.views.GLFrameBuffer"; //$NON-NLS-1$
 
     public void displayFB(final Image image) {
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                mImageCanvas.setImage(image);
-            }
-        });
+        setImage(image);
     }
 
     @Override

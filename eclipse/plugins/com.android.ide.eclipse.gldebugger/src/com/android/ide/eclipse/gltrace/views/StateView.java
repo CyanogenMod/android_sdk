@@ -19,9 +19,11 @@ package com.android.ide.eclipse.gltrace.views;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import com.android.ide.eclipse.gltrace.editors.StateViewPage;
 
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IPage;
+import org.eclipse.ui.part.IPageSite;
 import org.eclipse.ui.part.MessagePage;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.PageBookView;
@@ -83,5 +85,17 @@ public class StateView extends PageBookView {
     @Override
     public void partBroughtToTop(IWorkbenchPart part) {
         partActivated(part);
+    }
+
+    @Override
+    protected void showPageRec(PageRec pageRec) {
+        IPageSite pageSite = getPageSite(pageRec.page);
+        if (pageRec.page instanceof ISelectionProvider) {
+            pageSite.setSelectionProvider((ISelectionProvider) pageRec.page);
+        } else {
+            pageSite.setSelectionProvider(null); // clear selection provider
+        }
+
+        super.showPageRec(pageRec);
     }
 }

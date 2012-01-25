@@ -57,6 +57,6 @@ public class GLStringProperty extends GLAbstractAtomicProperty {
 
     @Override
     public String toString() {
-        return mCurrentValue;
+        return getType() + "=" + getStringValue(); //$NON-NLS-1$
     };
 }
