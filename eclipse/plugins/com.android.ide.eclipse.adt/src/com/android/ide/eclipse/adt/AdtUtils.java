@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 
@@ -42,6 +43,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -239,6 +242,25 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Attempts to convert the given {@link URL} into a {@link File}.
+     *
+     * @param url the {@link URL} to be converted
+     * @return the corresponding {@link File}, which may not exist
+     */
+    @NonNull
+    public static File getFile(@NonNull URL url) {
+        try {
+            // First try URL.toURI(): this will work for URLs that contain %20 for spaces etc.
+            // Unfortunately, it *doesn't* work for "broken" URLs where the URL contains
+            // spaces, which is often the case.
+            return new File(url.toURI());
+        } catch (URISyntaxException e) {
+            // ...so as a fallback, go to the old url.getPath() method, which handles space paths.
+            return new File(url.getPath());
+        }
     }
 
     /**

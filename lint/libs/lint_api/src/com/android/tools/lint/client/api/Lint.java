@@ -579,8 +579,8 @@ public class Lint {
 
     private void runFileDetectors(@NonNull Project project, @Nullable Project main) {
         // Look up manifest information (but not for library projects)
-        File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
-        if (!project.isLibrary() && manifestFile.exists()) {
+        File manifestFile = project.getManifestFile();
+        if (!project.isLibrary() && manifestFile != null) {
             XmlContext context = new XmlContext(this, project, main, manifestFile);
             IDomParser parser = mClient.getDomParser();
             context.document = parser.parseXml(context);
@@ -1071,6 +1071,11 @@ public class Lint {
         @Nullable
         public IJavaParser getJavaParser() {
             return mDelegate.getJavaParser();
+        }
+
+        @Override
+        public File findResource(String relativePath) {
+            return mDelegate.findResource(relativePath);
         }
     }
 

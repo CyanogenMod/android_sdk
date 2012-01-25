@@ -17,8 +17,8 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.LintCliXmlParser;
-import com.android.tools.lint.Main;
 import com.android.tools.lint.LombokParser;
+import com.android.tools.lint.Main;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
@@ -41,6 +41,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -49,7 +52,8 @@ import java.util.List;
 import junit.framework.TestCase;
 
 /** Common utility methods for the various lint check tests */
-abstract class AbstractCheckTest extends TestCase {
+@SuppressWarnings("javadoc")
+public abstract class AbstractCheckTest extends TestCase {
     protected abstract Detector getDetector();
 
     protected List<Issue> getIssues() {
@@ -254,7 +258,7 @@ abstract class AbstractCheckTest extends TestCase {
         return false;
     }
 
-    private class TestLintClient extends Main {
+    public class TestLintClient extends Main {
         private List<String> mErrors = new ArrayList<String>();
 
         public List<String> getErrors() {
@@ -357,6 +361,34 @@ abstract class AbstractCheckTest extends TestCase {
         public Configuration getConfiguration(Project project) {
             return new TestConfiguration();
         }
+
+        @Override
+        public File findResource(String relativePath) {
+            // First look within the Eclipse install directory; then look within the $ANDROID_SDK
+            CodeSource source = getClass().getProtectionDomain().getCodeSource();
+            if (source != null) {
+                URL location = source.getLocation();
+                try {
+                    File dir = new File(location.toURI());
+                    assertTrue(dir.getPath(), dir.exists());
+                    File sdkDir = dir.getParentFile().getParentFile().getParentFile()
+                            .getParentFile().getParentFile();
+                    assertEquals("sdk", sdkDir.getName());
+                    File lib = new File(sdkDir, "eclipse" + File.separator + "plugins"
+                            + File.separator + "com.android.ide.eclipse.adt" + File.separator
+                            + "libs");
+                    assertTrue(lib.getPath(), lib.exists());
+                    File file = new File(lib, relativePath);
+                    assertTrue(file.getPath(), file.exists());
+                    return file;
+                } catch (URISyntaxException e) {
+                    fail(e.getLocalizedMessage());
+                }
+            }
+
+            return super.findResource(relativePath);
+        }
+
     }
 
     public class TestConfiguration extends Configuration {
