@@ -19,12 +19,14 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_REF_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_GIF;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STYLEABLE;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
+import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.R_ATTR_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.R_ID_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.R_PREFIX;
@@ -33,9 +35,9 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.resources.ResourceType;
-import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -43,7 +45,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -60,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,12 +120,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES))
             .setEnabledByDefault(false);
 
-    protected Set<String> mDeclarations;
-    protected Set<String> mReferences;
-    protected Map<String, Attr> mIdToAttr;
-    protected Map<Attr, Handle> mAttrToLocation;
-    protected Map<String, File> mDeclarationToFile;
-    protected Map<String, Handle> mDeclarationToHandle;
+    private Set<String> mDeclarations;
+    private Set<String> mReferences;
+    private Map<String, Location> mUnused;
 
     /**
      * Constructs a new {@link UnusedResourceDetector}
@@ -138,17 +137,15 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     @Override
     public boolean appliesTo(Context context, File file) {
-        return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
+        return true;
     }
 
     @Override
     public void beforeCheckProject(Context context) {
-        mIdToAttr = new HashMap<String, Attr>(300);
-        mAttrToLocation = new HashMap<Attr, Handle>(300);
-        mDeclarations = new HashSet<String>(300);
-        mReferences = new HashSet<String>(300);
-        mDeclarationToFile = new HashMap<String, File>(300);
-        mDeclarationToHandle = new HashMap<String, Handle>(300);
+        if (context.getPhase() == 1) {
+            mDeclarations = new HashSet<String>(300);
+            mReferences = new HashSet<String>(300);
+        }
     }
 
     // ---- Implements JavaScanner ----
@@ -156,8 +153,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     @Override
     public void beforeCheckFile(Context context) {
         File file = context.file;
+
         String fileName = file.getName();
-        if (LintUtils.endsWith(fileName, DOT_XML)) {
+        if (endsWith(fileName, DOT_XML)
+                || endsWith(fileName, DOT_PNG)
+                || endsWith(fileName, DOT_JPG)
+                || endsWith(fileName, DOT_GIF)) {
             String parentName = file.getParentFile().getName();
             int dash = parentName.indexOf('-');
             String typeName = parentName.substring(0, dash == -1 ? parentName.length() : dash);
@@ -165,93 +166,138 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             if (type != null && LintUtils.isFileBasedResourceType(type)) {
                 String baseName = fileName.substring(0, fileName.length() - DOT_XML.length());
                 String resource = R_PREFIX + typeName + '.' + baseName;
-                mDeclarations.add(resource);
-                mDeclarationToFile.put(resource, file);
+                if (context.getPhase() == 1) {
+                    mDeclarations.add(resource);
+                } else {
+                    assert context.getPhase() == 2;
+                    if (mUnused.containsKey(resource)) {
+                        recordLocation(resource, Location.create(file));
+                    }
+                }
             }
         }
     }
 
     @Override
     public void afterCheckProject(Context context) {
-        mDeclarations.removeAll(mReferences);
-        Set<String> unused = mDeclarations;
+        if (context.getPhase() == 1) {
+            mDeclarations.removeAll(mReferences);
+            Set<String> unused = mDeclarations;
+            mReferences = null;
+            mDeclarations = null;
 
-        // Remove styles: they may be used
-        List<String> styles = new ArrayList<String>();
-        for (String resource : unused) {
-            // R.style.x, R.styleable.x
-            if (resource.startsWith("R.style")) { //$NON-NLS-1$
-                styles.add(resource);
-            }
-        }
-        unused.removeAll(styles);
-
-        // Remove id's if the user has disabled reporting issue ids
-        if (unused.size() > 0 && !context.isEnabled(ISSUE_IDS)) {
-            // Remove all R.id references
-            List<String> ids = new ArrayList<String>();
+            // Remove styles: they may be used
+            List<String> styles = new ArrayList<String>();
             for (String resource : unused) {
-                if (resource.startsWith(R_ID_PREFIX)) {
-                    ids.add(resource);
+                // R.style.x, R.styleable.x
+                if (resource.startsWith("R.style")) { //$NON-NLS-1$
+                    styles.add(resource);
                 }
             }
-            unused.removeAll(ids);
-        }
+            unused.removeAll(styles);
 
-        List<String> sorted = new ArrayList<String>();
-        for (String r : unused) {
-            sorted.add(r);
-        }
-        Collections.sort(sorted);
-
-        for (String resource : sorted) {
-            String message = String.format("The resource %1$s appears to be unused", resource);
-            Location location = null;
-            Attr attr = mIdToAttr.get(resource);
-            if (attr != null) {
-                Handle handle = mAttrToLocation.get(attr);
-                if (handle != null) {
-                    location = handle.resolve();
+            // Remove id's if the user has disabled reporting issue ids
+            if (unused.size() > 0 && !context.isEnabled(ISSUE_IDS)) {
+                // Remove all R.id references
+                List<String> ids = new ArrayList<String>();
+                for (String resource : unused) {
+                    if (resource.startsWith(R_ID_PREFIX)) {
+                        ids.add(resource);
+                    }
                 }
-            } else {
-                // Try to figure out the file if it's a file based resource (such as R.layout) --
-                // in that case we can figure out the filename since it has a simple mapping
-                // from the resource name (though the presence of qualifiers like -land etc
-                // makes it a little tricky if there's no base file provided)
-                int secondDot = resource.indexOf('.', 2);
-                String typeName = resource.substring(2, secondDot); // 2: Skip R.
-                ResourceType type = ResourceType.getEnum(typeName);
-                if (type != null && LintUtils.isFileBasedResourceType(type)) {
-                    String name = resource.substring(secondDot + 1);
-                    File file = new File(context.getProject().getDir(),
-                            "res" + File.separator + typeName + File.separator + //$NON-NLS-1$
-                            name + DOT_XML);
-                    if (file.exists()) {
-                        location = Location.create(file);
-                    } else if (type == ResourceType.DRAWABLE) {
-                        file = new File(file.getParentFile(), file.getName().substring(0,
-                                file.getName().length() - DOT_XML.length()) + DOT_PNG);
-                        if (file.exists()) {
-                            location = Location.create(file);
+                unused.removeAll(ids);
+            }
+
+            if (unused.size() > 0) {
+                mUnused = new HashMap<String, Location>(unused.size());
+                for (String resource : unused) {
+                    mUnused.put(resource, null);
+                }
+
+                // Request another pass, and in the second pass we'll gather location
+                // information for all declaration locations we've found
+                context.requestRepeat(this, Scope.ALL_RESOURCES_SCOPE);
+            }
+        } else {
+            assert context.getPhase() == 2;
+
+            // Report any resources that we (for some reason) could not find a declaration
+            // location for
+            if (mUnused.size() > 0) {
+                // Fill in locations for files that we didn't encounter in other ways
+                for (Map.Entry<String, Location> entry : mUnused.entrySet()) {
+                    String resource = entry.getKey();
+                    Location location = entry.getValue();
+                    if (location != null) {
+                        continue;
+                    }
+
+                    // Try to figure out the file if it's a file based resource (such as R.layout) --
+                    // in that case we can figure out the filename since it has a simple mapping
+                    // from the resource name (though the presence of qualifiers like -land etc
+                    // makes it a little tricky if there's no base file provided)
+                    int secondDot = resource.indexOf('.', 2);
+                    String typeName = resource.substring(2, secondDot); // 2: Skip R.
+                    ResourceType type = ResourceType.getEnum(typeName);
+                    if (type != null && LintUtils.isFileBasedResourceType(type)) {
+                        String name = resource.substring(secondDot + 1);
+
+                        File res = new File(context.getProject().getDir(), RES_FOLDER);
+                        File[] folders = res.listFiles();
+                        if (folders != null) {
+                            // Process folders in alphabetical order such that we process
+                            // based folders first: we want the locations in base folder
+                            // order
+                            Arrays.sort(folders, new Comparator<File>() {
+                                @Override
+                                public int compare(File file1, File file2) {
+                                    return file1.getName().compareTo(file2.getName());
+                                }
+                            });
+                            for (File folder : folders) {
+                                if (folder.getName().startsWith(typeName)) {
+                                    File[] files = folder.listFiles();
+                                    if (files != null) {
+                                        for (File file : files) {
+                                            String fileName = file.getName();
+                                            if (fileName.startsWith(name)
+                                                    && fileName.startsWith(".", //$NON-NLS-1$
+                                                            name.length())) {
+                                                recordLocation(resource, Location.create(file));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-            if (location == null) {
-                Handle handle = mDeclarationToHandle.get(resource);
-                if (handle != null) {
-                    location = handle.resolve();
+
+                List<String> sorted = new ArrayList<String>(mUnused.keySet());
+                Collections.sort(sorted);
+
+                for (String resource : sorted) {
+                    Location location = mUnused.get(resource);
+                    if (location != null) {
+                        // We were prepending locations, but we want to prefer the base
+                        // folders
+                        location = Location.reverse(location);
+                    }
+                    String message = String.format("The resource %1$s appears to be unused",
+                            resource);
+                    Issue issue = resource.startsWith(R_ID_PREFIX) ? ISSUE_IDS : ISSUE;
+                    context.report(issue, location, message, resource);
                 }
             }
-            if (location == null) {
-                File file = mDeclarationToFile.get(resource);
-                if (file != null) {
-                    location = Location.create(file);
-                }
-            }
-            Issue issue = resource.startsWith(R_ID_PREFIX) ? ISSUE_IDS : ISSUE;
-            context.report(issue, location, message, resource);
         }
+    }
+
+    private void recordLocation(String resource, Location location) {
+        Location oldLocation = mUnused.get(resource);
+        if (oldLocation != null) {
+            location.setSecondary(oldLocation);
+        }
+        mUnused.put(resource, location);
     }
 
     @Override
@@ -288,15 +334,19 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                         type = RESOURCE_CLZ_ARRAY;
                     }
                     String resource = R_PREFIX + type + '.' + name;
-                    mDeclarations.add(resource);
-                    mDeclarationToFile.put(resource, context.file);
-                    Handle handle = context.parser.createLocationHandle(context, item);
-                    mDeclarationToHandle.put(resource, handle);
 
-                    checkChildRefs(item);
+                    if (context.getPhase() == 1) {
+                        mDeclarations.add(resource);
+                        checkChildRefs(item);
+                    } else {
+                        assert context.getPhase() == 2;
+                        if (mUnused.containsKey(resource)) {
+                            recordLocation(resource, context.getLocation(item));
+                        }
+                    }
                 }
             }
-        } else {
+        } else if (mReferences != null) {
             assert TAG_STYLE.equals(element.getTagName())
                 || TAG_ARRAY.equals(element.getTagName())
                 || TAG_STRING_ARRAY.equals(element.getTagName());
@@ -335,27 +385,30 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     @Override
     public void visitAttribute(XmlContext context, Attr attribute) {
         String value = attribute.getValue();
+
         if (value.startsWith("@+") && !value.startsWith("@+android")) { //$NON-NLS-1$ //$NON-NLS-2$
-            String r = R_PREFIX + value.substring(2).replace('/', '.');
+            String resource = R_PREFIX + value.substring(2).replace('/', '.');
             // We already have the declarations when we scan the R file, but we're tracking
             // these here to get attributes for position info
-            mDeclarations.add(r);
-            mIdToAttr.put(r, attribute);
-            // It's important for this to be lightweight since we're storing ALL attribute
-            // locations even if we don't know that we're going to have any unused resources!
-            IDomParser parser = context.parser;
-            mAttrToLocation.put(attribute, parser.createLocationHandle(context, attribute));
-        } else if (value.startsWith("@")              //$NON-NLS-1$
-                && !value.startsWith("@android:")) {  //$NON-NLS-1$
-            // Compute R-string, e.g. @string/foo => R.string.foo
-            String r = R_PREFIX + value.substring(1).replace('/', '.');
-            mReferences.add(r);
-        } else if (value.startsWith(ATTR_REF_PREFIX)) {
-            mReferences.add(R_ATTR_PREFIX + value.substring(ATTR_REF_PREFIX.length()));
+
+            if (context.getPhase() == 1) {
+                mDeclarations.add(resource);
+            } else if (mUnused.containsKey(resource)) {
+                recordLocation(resource, context.getLocation(attribute));
+            }
+        } else if (mReferences != null) {
+            if (value.startsWith("@")              //$NON-NLS-1$
+                    && !value.startsWith("@android:")) {  //$NON-NLS-1$
+                // Compute R-string, e.g. @string/foo => R.string.foo
+                String r = R_PREFIX + value.substring(1).replace('/', '.');
+                mReferences.add(r);
+            } else if (value.startsWith(ATTR_REF_PREFIX)) {
+                mReferences.add(R_ATTR_PREFIX + value.substring(ATTR_REF_PREFIX.length()));
+            }
         }
 
         if (attribute.getNamespaceURI() != null
-                && !ANDROID_URI.equals(attribute.getNamespaceURI())) {
+                && !ANDROID_URI.equals(attribute.getNamespaceURI()) && mReferences != null) {
             mReferences.add(R_ATTR_PREFIX + attribute.getLocalName());
         }
     }
@@ -378,13 +431,20 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     @Override
     public void visitResourceReference(JavaContext context, AstVisitor visitor,
             VariableReference node, String type, String name) {
-        String reference = R_PREFIX + type + '.' + name;
-        mReferences.add(reference);
+        if (mReferences != null) {
+            String reference = R_PREFIX + type + '.' + name;
+            mReferences.add(reference);
+        }
     }
 
     @Override
     public AstVisitor createJavaVisitor(JavaContext context) {
-        return new UnusedResourceVisitor();
+        if (mReferences != null) {
+            return new UnusedResourceVisitor();
+        } else {
+            // Second pass, computing resource declaration locations: No need to look at Java
+            return null;
+        }
     }
 
     // Look for references and declarations
@@ -432,8 +492,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                                                                 (VariableDefinition) child;
                                                         String name = def.astVariables().first()
                                                                 .astName().astValue();
-                                                        String resource = R_PREFIX + className + '.'
-                                                                + name;
+                                                        String resource = R_PREFIX + className
+                                                                + '.' + name;
                                                         mDeclarations.add(resource);
                                                     } // Else: It could be a comment node
                                                 }

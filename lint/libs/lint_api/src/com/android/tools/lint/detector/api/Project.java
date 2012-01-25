@@ -30,6 +30,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
 import com.google.common.io.Closeables;
 
@@ -64,6 +65,9 @@ public class Project {
     private int mMinSdk = -1;
     private int mTargetSdk = -1;
     private boolean mLibrary;
+
+    /** The SDK info, if any */
+    private SdkInfo mSdkInfo;
 
     /**
      * If non null, specifies a non-empty list of specific files under this
@@ -458,5 +462,19 @@ public class Project {
             // Recurse
             library.addLibraryProjects(collection);
         }
+    }
+
+    /**
+     * Gets the SDK info for the current project.
+     *
+     * @return the SDK info for the current project, never null
+     */
+    @NonNull
+    public SdkInfo getSdkInfo() {
+        if (mSdkInfo == null) {
+            mSdkInfo = mClient.getSdkInfo(this);
+        }
+
+        return mSdkInfo;
     }
 }

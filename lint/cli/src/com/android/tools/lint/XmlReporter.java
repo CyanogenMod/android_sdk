@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -31,9 +32,11 @@ import java.util.List;
  */
 class XmlReporter extends Reporter {
     private final File mOutput;
+    private final Main mClient;
 
-    XmlReporter(File output) throws IOException {
+    XmlReporter(Main client, File output) throws IOException {
         super(new BufferedWriter(Files.newWriter(output, Charsets.UTF_8)));
+        mClient = client;
         mOutput = output;
     }
 
@@ -45,45 +48,66 @@ class XmlReporter extends Reporter {
 
         if (issues.size() > 0) {
             for (Warning warning : issues) {
-                mWriter.write("\n    <issue");
-                writeAttribute(mWriter, "id", warning.issue.getId());   //$NON-NLS-1$
-                writeAttribute(mWriter, "severity", warning.severity.getDescription()); //$NON-NLS-1$
-                writeAttribute(mWriter, "message", warning.message);  //$NON-NLS-1$
+                mWriter.write('\n');
+                indent(mWriter, 1);
+                mWriter.write("<issue"); //$NON-NLS-1$
+                writeAttribute(mWriter, 2, "id", warning.issue.getId());   //$NON-NLS-1$
+                writeAttribute(mWriter, 2, "severity", warning.severity.getDescription()); //$NON-NLS-1$
+                writeAttribute(mWriter, 2, "message", warning.message);  //$NON-NLS-1$
+                assert (warning.file != null) == (warning.location != null);
+
                 if (warning.file != null) {
-                    writeAttribute(mWriter, "file", warning.path);  //$NON-NLS-1$
-                    if (warning.location != null) {
-                        Position start = warning.location.getStart();
+                    assert warning.location.getFile() == warning.file;
+                }
+
+                Location location = warning.location;
+                if (location != null) {
+                    mWriter.write(">\n"); //$NON-NLS-1$
+                    while (location != null) {
+                        indent(mWriter, 2);
+                        mWriter.write("<location"); //$NON-NLS-1$
+                        String path = mClient.getDisplayPath(warning.project, location.getFile());
+                        writeAttribute(mWriter, 3, "file", path);  //$NON-NLS-1$
+                        Position start = location.getStart();
                         if (start != null) {
                             int line = start.getLine();
                             int column = start.getColumn();
                             if (line >= 0) {
                                 // +1: Line numbers internally are 0-based, report should be
                                 // 1-based.
-                                writeAttribute(mWriter, "line",         //$NON-NLS-1$
+                                writeAttribute(mWriter, 3, "line",         //$NON-NLS-1$
                                         Integer.toString(line + 1));
                                 if (column >= 0) {
-                                    writeAttribute(mWriter, "column",   //$NON-NLS-1$
+                                    writeAttribute(mWriter, 3, "column",   //$NON-NLS-1$
                                             Integer.toString(column + 1));
                                 }
                             }
                         }
+
+                        mWriter.write("/>\n"); //$NON-NLS-1$
+                        location = location.getSecondary();
                     }
+                    indent(mWriter, 1);
+                    mWriter.write("</issue>\n"); //$NON-NLS-1$
+                } else {
+                    mWriter.write('\n');
+                    indent(mWriter, 1);
+                    mWriter.write("/>\n");  //$NON-NLS-1$
                 }
-                mWriter.write("\n    />\n");
             }
         }
 
-        mWriter.write(
-                "\n</issues>\n");                                      //$NON-NLS-1$
+        mWriter.write("\n</issues>\n");       //$NON-NLS-1$
         mWriter.close();
 
         String path = mOutput.getAbsolutePath();
         System.out.println(String.format("Wrote HTML report to %1$s", path));
     }
 
-    private static void writeAttribute(Writer writer, String name, String value)
+    private static void writeAttribute(Writer writer, int indent, String name, String value)
             throws IOException {
-        writer.write("\n      ");           //$NON-NLS-1$
+        writer.write('\n');
+        indent(writer, indent);
         writer.write(name);
         writer.write('=');
         writer.write('"');
@@ -108,5 +132,11 @@ class XmlReporter extends Reporter {
             }
         }
         writer.write('"');
+    }
+
+    private static void indent(Writer writer, int indent) throws IOException {
+        for (int level = 0; level < indent; level++) {
+            writer.write("    "); //$NON-NLS-1$
+        }
     }
 }

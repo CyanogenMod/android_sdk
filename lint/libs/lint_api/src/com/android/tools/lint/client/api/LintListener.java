@@ -42,6 +42,9 @@ public interface LintListener {
         /** Lint is about to check the given file, see {@link Context#file} */
         SCANNING_FILE,
 
+        /** A new pass was initiated */
+        NEW_PHASE,
+
         /** The lint check was canceled */
         CANCELED,
 
@@ -57,8 +60,9 @@ public interface LintListener {
      * {@link EventType#COMPLETED} events which are fired outside of project
      * contexts.)
      *
+     * @param driver the driver running through the checks
      * @param type the type of event that occurred
      * @param context the context providing additional information
      */
-    public void update(@NonNull EventType type, @NonNull Context context);
+    public void update(@NonNull Lint driver, @NonNull EventType type, @NonNull Context context);
 }

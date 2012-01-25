@@ -19,6 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.Lint;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
@@ -46,8 +47,8 @@ public class Context {
      */
     public final File file;
 
-    /** The client requesting a lint check */
-    private final LintClient mClient;
+    /** The driver running through the checks */
+    private final Lint mDriver;
 
     /** The project containing the file being checked */
     @NonNull
@@ -71,12 +72,6 @@ public class Context {
     /** The contents of the file */
     private String mContents;
 
-    /** The scope of the current lint check */
-    private final EnumSet<Scope> mScope;
-
-    /** The SDK info, if any */
-    private SdkInfo mSdkInfo;
-
     /**
      * Whether the lint job has been canceled.
      * <p>
@@ -92,27 +87,24 @@ public class Context {
     /**
      * Construct a new {@link Context}
      *
-     * @param client the client requesting a lint check
+     * @param driver the driver running through the checks
      * @param project the project containing the file being checked
      * @param main the main project if this project is a library project, or
      *            null if this is not a library project. The main project is
      *            the root project of all library projects, not necessarily the
      *            directly including project.
      * @param file the file being checked
-     * @param scope the scope for the lint job
      */
     public Context(
-            @NonNull LintClient client,
+            @NonNull Lint driver,
             @NonNull Project project,
             @Nullable Project main,
-            @NonNull File file,
-            @NonNull EnumSet<Scope> scope) {
+            @NonNull File file) {
         this.file = file;
 
-        mClient = client;
+        mDriver = driver;
         mProject = project;
         mMainProject = main;
-        mScope = scope;
         mConfiguration = project.getConfiguration();
     }
 
@@ -123,7 +115,7 @@ public class Context {
      */
     @NonNull
     public EnumSet<Scope> getScope() {
-        return mScope;
+        return mDriver.getScope();
     }
 
     /**
@@ -165,7 +157,17 @@ public class Context {
      */
     @NonNull
     public LintClient getClient() {
-        return mClient;
+        return mDriver.getClient();
+    }
+
+    /**
+     * Returns the driver running through the lint checks
+     *
+     * @return the driver
+     */
+    @NonNull
+    public Lint getDriver() {
+        return mDriver;
     }
 
     /**
@@ -179,7 +181,7 @@ public class Context {
     @Nullable
     public String getContents() {
         if (mContents == null) {
-            mContents = mClient.readFile(file);
+            mContents = mDriver.getClient().readFile(file);
         }
 
         return mContents;
@@ -226,11 +228,7 @@ public class Context {
      */
     @NonNull
     public SdkInfo getSdkInfo() {
-        if (mSdkInfo == null) {
-            mSdkInfo = mClient.getSdkInfo(mProject);
-        }
-
-        return mSdkInfo;
+        return mProject.getSdkInfo();
     }
 
     // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)
@@ -259,7 +257,7 @@ public class Context {
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data) {
-        mClient.report(this, issue, location, message, data);
+        mDriver.getClient().report(this, issue, location, message, data);
     }
 
     /**
@@ -273,7 +271,35 @@ public class Context {
             @Nullable Throwable exception,
             @Nullable String format,
             @Nullable Object... args) {
-        mClient.log(exception, format, args);
+        mDriver.getClient().log(exception, format, args);
     }
 
+    /**
+     * Returns the current phase number. The first pass is numbered 1. Only one pass
+     * will be performed, unless a {@link Detector} calls {@link #requestRepeat}.
+     *
+     * @return the current phase, usually 1
+     */
+    public int getPhase() {
+        return mDriver.getPhase();
+    }
+
+    /**
+     * Requests another pass through the data for the given detector. This is
+     * typically done when a detector needs to do more expensive computation,
+     * but it only wants to do this once it <b>knows</b> that an error is
+     * present, or once it knows more specifically what to check for.
+     *
+     * @param detector the detector that should be included in the next pass.
+     *            Note that the lint runner may refuse to run more than a couple
+     *            of runs.
+     * @param scope the scope to be revisited. This must be a subset of the
+     *       current scope ({@link #getScope()}, and it is just a performance hint;
+     *       in particular, the detector should be prepared to be called on other
+     *       scopes as well (since they may have been requested by other detectors).
+     *       You can pall null to indicate "all".
+     */
+    public void requestRepeat(@NonNull Detector detector, @Nullable EnumSet<Scope> scope) {
+        mDriver.requestRepeat(detector, scope);
+    }
 }

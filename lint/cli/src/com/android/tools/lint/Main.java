@@ -65,7 +65,7 @@ import java.util.Set;
  * </ul>
  */
 public class Main extends LintClient {
-    private static final int MAX_LINE_WIDTH = 78;
+    static final int MAX_LINE_WIDTH = 78;
     private static final String ARG_ENABLE     = "--enable";       //$NON-NLS-1$
     private static final String ARG_DISABLE    = "--disable";      //$NON-NLS-1$
     private static final String ARG_CHECK      = "--check";        //$NON-NLS-1$
@@ -285,7 +285,7 @@ public class Main extends LintClient {
                     System.exit(ERRNO_EXISTS);
                 }
                 try {
-                    mReporter = new XmlReporter(output);
+                    mReporter = new XmlReporter(this, output);
                 } catch (IOException e) {
                     log(e, null);
                     System.exit(ERRNO_INVALIDARGS);
@@ -912,12 +912,19 @@ public class Main extends LintClient {
 
     private class ProgressPrinter implements LintListener {
         @Override
-        public void update(EventType type, Context context) {
+        public void update(Lint lint, EventType type, Context context) {
             switch (type) {
                 case SCANNING_PROJECT:
-                    System.out.print(String.format(
-                            "\nScanning %1$s: ",
-                            context.getProject().getDir().getName()));
+                    if (lint.getPhase() > 1) {
+                        System.out.print(String.format(
+                                "\nScanning %1$s (Phase %2$d): ",
+                                context.getProject().getDir().getName(),
+                                lint.getPhase()));
+                    } else {
+                        System.out.print(String.format(
+                                "\nScanning %1$s: ",
+                                context.getProject().getDir().getName()));
+                    }
                     break;
                 case SCANNING_LIBRARY_PROJECT:
                     System.out.print(String.format(
@@ -926,6 +933,9 @@ public class Main extends LintClient {
                     break;
                 case SCANNING_FILE:
                     System.out.print('.');
+                    break;
+                case NEW_PHASE:
+                    // Ignored for now: printing status as part of next project's status
                     break;
                 case CANCELED:
                 case COMPLETED:

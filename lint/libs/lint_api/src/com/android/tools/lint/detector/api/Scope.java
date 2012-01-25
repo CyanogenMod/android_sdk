@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.google.common.annotations.Beta;
 import com.android.annotations.NonNull;
+import com.google.common.annotations.Beta;
 
 import java.util.EnumSet;
 
@@ -95,6 +95,23 @@ public enum Scope {
                         || scopes.contains(RESOURCE_FILE)
                         || scopes.contains(PROGUARD_FILE)
                         || scopes.contains(MANIFEST));
+    }
+
+    /**
+     * Returns the intersection of two scope sets
+     *
+     * @param scope1 the first set to intersect
+     * @param scope2 the second set to intersect
+     * @return the intersection of the two sets
+     */
+    @NonNull
+    public static EnumSet<Scope> intersect(
+            @NonNull EnumSet<Scope> scope1,
+            @NonNull EnumSet<Scope> scope2) {
+        EnumSet<Scope> scope = EnumSet.copyOf(scope1);
+        scope.retainAll(scope2);
+
+        return scope;
     }
 
     /** All scopes: running lint on a project will check these scopes */

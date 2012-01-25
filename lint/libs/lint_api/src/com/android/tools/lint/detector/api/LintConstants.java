@@ -205,6 +205,7 @@ public class LintConstants {
 
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
+    public static final String PROGUARD_CFG = "proguard.cfg";          //$NON-NLS-1$
     public static final String RES_FOLDER = "res";                     //$NON-NLS-1$
     public static final String DOT_XML = ".xml";                       //$NON-NLS-1$
     public static final String DOT_GIF = ".gif";                       //$NON-NLS-1$
@@ -249,5 +250,6 @@ public class LintConstants {
     public static final String R_PREFIX = "R.";                          //$NON-NLS-1$
     public static final String R_ID_PREFIX = "R.id.";                    //$NON-NLS-1$
     public static final String R_LAYOUT_PREFIX = "R.layout.";            //$NON-NLS-1$
+    public static final String R_DRAWABLE_PREFIX = "R.drawable.";        //$NON-NLS-1$
     public static final String R_ATTR_PREFIX = "R.attr.";                //$NON-NLS-1$
 }

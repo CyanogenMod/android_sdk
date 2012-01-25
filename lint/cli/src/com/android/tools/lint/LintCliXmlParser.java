@@ -145,6 +145,12 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         public void setEnd(com.android.util.PositionXmlParser.Position end) {
             mEnd = end;
         }
+
+        @Override
+        public String toString() {
+            return "OffsetPosition [line=" + mLine + ", column=" + mColumn + ", offset="
+                    + mOffset + ", end=" + mEnd + "]";
+        }
     }
 
     @Override

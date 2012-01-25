@@ -925,7 +925,6 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             return result;
         }
 
-
         return Collections.emptySet();
     }
 
