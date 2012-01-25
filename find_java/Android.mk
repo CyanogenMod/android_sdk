@@ -10,8 +10,10 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+ifeq ($(HOST_OS),windows)
+
 LOCAL_MODULE := libfindjava
-LOCAL_SRC_FILES := find_java.cpp utils.cpp
+LOCAL_SRC_FILES := find_java_lib.cpp utils.cpp
 
 LOCAL_CFLAGS += -Wall -Wno-unused-parameter
 LOCAL_CFLAGS += -D_XOPEN_SOURCE -D_GNU_SOURCE -DSH_HISTORY -DUSE_MINGW
@@ -24,10 +26,8 @@ include $(BUILD_HOST_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 
-ifeq ($(HOST_OS),windows)
-
 LOCAL_SRC_FILES := \
-	win_android.cpp
+	find_java_exe.cpp
 
 LOCAL_MODULE := find_java
 LOCAL_STATIC_LIBRARIES := libfindjava
