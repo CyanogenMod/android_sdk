@@ -29,7 +29,8 @@
 
 #include "utils.h"
 #include "find_java.h"
-
+#include <io.h>
+#include <fcntl.h>
 
 // A NULL-terminated list of directory to create in the temp folder.
 static const char * sMkDirList[] = {
@@ -178,6 +179,7 @@ static bool execSdkManager(const char *javaPath,
     // The default is to use java.exe to automatically dump stdout in
     // the parent console.
     CPath javaExecPath(javaPath);
+    bool redirectStdout = true;
 
     // Attach to the parent console, if there's one.
     if (AttachConsole(-1) == 0) {
@@ -198,9 +200,15 @@ static bool execSdkManager(const char *javaPath,
             PVOID oldWow64Value = disableWow64FsRedirection();
             if (!javaExecPath.fileExists()) {
                 javaExecPath.set(javaPath);
+                redirectStdout = false;
             }
             revertWow64FsRedirection(&oldWow64Value);
         }
+    }
+    if (redirectStdout && GetStdHandle(STD_OUTPUT_HANDLE) != NULL) {
+        // If we have an output, redirect to it.
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
     }
 
     // Check whether the underlying system is x86 or x86_64.
@@ -226,7 +234,7 @@ static bool execSdkManager(const char *javaPath,
     // It's important to not use toolsDir otherwise it would lock that diretory.
 
     CString cmdLine;
-    cmdLine.setf("\"%s\" "                                   // javaPath
+    cmdLine.setf("\"%s\" "                                   // javaExecPath basename
                  "-Dcom.android.sdkmanager.toolsdir=\"%s\" " // toolsDir
                  "-Dcom.android.sdkmanager.workdir=\"%s\" "  // workDir==toolsdir
                  "-classpath \"lib\\sdkmanager.jar;lib\\swtmenubar.jar;lib\\%s\\swt.jar\" " // arch
@@ -247,6 +255,69 @@ static bool execSdkManager(const char *javaPath,
     return true;
 }
 
+// Attaches to a parent console or create one and then redirect stdout
+// and stderr to this console. Returns false if it failed to attach
+// or create the console.
+static bool sendStdoutToConsole() {
+    // See http://stackoverflow.com/questions/4028353 for some background.
+
+    HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConOut != NULL) {
+        // Std output is set. Might or might not be a console though.
+        // Try to attach to the parent console and use its ConOut.
+        if (AttachConsole(ATTACH_PARENT_PROCESS) != 0) {
+            goto redirect;
+        }
+    }
+
+    // There is no current console output.
+    // Create one and attach ConOut to stdout.
+    if (AllocConsole() == 0) {
+        displayLastError("AllocConsole failed: ");
+        return false;
+    }
+
+redirect:
+    // Redirect both stdout and stderr.
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    int fdOut = _open_osfhandle((intptr_t) hOut, _O_TEXT);
+    if (fdOut != -1) {
+        FILE *fpOut = _fdopen(fdOut, "w");
+        *stdout = *fpOut;
+    } else {
+        // Workaround for Cygwin when not redirecting to a pipe
+        freopen("CONOUT$", "w", stdout);
+    }
+
+    HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+    int fdErr = _open_osfhandle((intptr_t) hErr, _O_TEXT);
+    if (fdErr != -1) {
+        FILE *fpErr = _fdopen(fdErr, "w");
+        *stderr = *fpErr;
+    } else {
+        // Workaround for Cygwin when not redirecting to a pipe
+        // Note: there's is no such 'CONERR$'. See MSDN for GetStdHandle().
+        freopen("CONOUT$", "w", stderr);
+    }
+    return true;
+}
+
+static void testFindJava() {
+    sendStdoutToConsole();
+
+    CPath javaPath("<not found>");
+    bool ok = findJavaInEnvPath(&javaPath);
+    printf("findJavaInEnvPath: [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+
+    javaPath.set("<not found>");
+    ok = findJavaInRegistry(&javaPath);
+    printf("findJavaInRegistry [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+
+    javaPath.set("<not found>");
+    ok = findJavaInProgramFiles(&javaPath);
+    printf("findJavaInProgramFiles [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -254,7 +325,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     gDebug = (getenv("ANDROID_SDKMAN_DEBUG") != NULL);
 
-    PVOID oldWow64Value = disableWow64FsRedirection();
+    if (strcmp(lpCmdLine, "/test") == 0) {
+        testFindJava();
+        return 0;
+    }
 
     CPath javaPath;
     if (!findJavaInEnvPath(&javaPath) &&
@@ -264,8 +338,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         return 2;
     }
     _ASSERT(!javaPath.isEmpty());
-
-    revertWow64FsRedirection(oldWow64Value);
 
     // For debugging it's convenient to override the tools directory location
     CPath toolsDir(getenv("ANDROID_SDKMAN_TOOLS_DIR"));

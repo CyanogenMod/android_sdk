@@ -19,6 +19,8 @@
 
 #ifdef _WIN32
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <direct.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -68,14 +70,20 @@ protected:
     char *mStr;
 public:
     CString()                              { mStr = NULL; }
-    CString(const CString &str)            { mStr = str.mStr == NULL ? NULL : _strdup(str.mStr); }
+    CString(const CString &str)            { mStr = NULL; set(str.mStr); }
     explicit CString(const char *str)      { mStr = NULL; set(str); }
     CString(const char *start, int length) { mStr = NULL; set(start, length); }
 
+    CString& operator=(const CString &str) {
+        return set(str.cstr());
+    }
+
     CString& set(const char *str) {
-        _free();
-        if (str != NULL) {
-            mStr = _strdup(str);
+        if (str != mStr) {
+            _free();
+            if (str != NULL) {
+                mStr = _strdup(str);
+            }
         }
         return *this;
     }
@@ -211,9 +219,15 @@ private:
 class CPath : public CString {
 public:
     CPath()                              : CString()    { }
+    CPath(const CString &str)            : CString(str) { }
     CPath(const CPath &str)              : CString(str) { }
     explicit CPath(const char *str)      : CString(str) { }
     CPath(const char *start, int length) : CString(start, length) { }
+
+    CPath& operator=(const CPath &str) {
+        set(str.cstr());
+        return *this;
+    }
 
     // Appends a path segment, adding a \ as necessary.
     CPath& addPath(const CString &s) {
