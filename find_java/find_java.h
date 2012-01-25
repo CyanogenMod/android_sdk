@@ -24,6 +24,7 @@
 bool findJavaInEnvPath(CPath *outJavaPath);
 bool findJavaInRegistry(CPath *outJavaPath);
 bool findJavaInProgramFiles(CPath *outJavaPath);
+bool getJavaVersion(CPath &javaPath, CString *version);
 
 #endif /* _WIN32 */
 #endif /* _H_FIND_JAVA */
