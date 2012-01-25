@@ -47,10 +47,10 @@ public class Util {
      */
     public static Rectangle scaleRectangle(Rectangle rect, float scaleFactor) {
         return new Rectangle(
-                (int) (rect.x * scaleFactor),
-                (int) (rect.y * scaleFactor),
-                (int) (rect.width * scaleFactor),
-                (int) (rect.height * scaleFactor));
+                (int) Math.round(rect.x * scaleFactor),
+                (int) Math.round(rect.y * scaleFactor),
+                (int) Math.round(rect.width * scaleFactor),
+                (int) Math.round(rect.height * scaleFactor));
     }
 
     /**
@@ -279,6 +279,7 @@ public class Util {
         final Rectangle imageRect = new Rectangle(0, 0, source.getWidth(), source.getHeight());
         BufferedImage out = newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g2 = (Graphics2D) out.getGraphics();
+        double fillOpacity = 1.0;
 
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         g2.drawImage(source, 0, 0, null);
@@ -288,6 +289,7 @@ public class Util {
         for (FillEffect effect : fillEffects) {
             g2.setPaint(effect.paint);
             g2.fillRect(0, 0, imageRect.width, imageRect.height);
+            fillOpacity = Math.max(0, Math.min(1, effect.opacity));
         }
 
         // Inner shadows
@@ -309,7 +311,9 @@ public class Util {
                     0, 0, null);
         }
 
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) fillOpacity));
         g.drawImage(out, x, y, null);
+        g.setComposite(oldComposite);
     }
 
     /**
@@ -432,9 +436,16 @@ public class Util {
      */
     public static class FillEffect extends Effect {
         public Paint paint;
+        public double opacity;
+
+        public FillEffect(Paint paint, double opacity) {
+            this.paint = paint;
+            this.opacity = opacity;
+        }
 
         public FillEffect(Paint paint) {
             this.paint = paint;
+            this.opacity = 1.0;
         }
     }
 }

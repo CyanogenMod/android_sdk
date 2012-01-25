@@ -36,9 +36,9 @@ public class MenuIconGenerator extends GraphicGenerator {
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
-        Rectangle imageSizeHdpi = new Rectangle(0, 0, 72, 72);
-        Rectangle targetRectHdpi = new Rectangle(12, 12, 48, 48);
-        float scaleFactor = GraphicGenerator.getHdpiScaleFactor(options.density);
+        Rectangle imageSizeHdpi = new Rectangle(0, 0, 48, 48);
+        Rectangle targetRectHdpi = new Rectangle(8, 8, 32, 32);
+        float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
         Rectangle imageRect = Util.scaleRectangle(imageSizeHdpi, scaleFactor);
         Rectangle targetRect = Util.scaleRectangle(targetRectHdpi, scaleFactor);
 
@@ -59,8 +59,8 @@ public class MenuIconGenerator extends GraphicGenerator {
                                 new Color(0x787878))),
                 new ShadowEffect(
                         0,
-                        3 * scaleFactor,
-                        3 * scaleFactor,
+                        2 * scaleFactor,
+                        2 * scaleFactor,
                         Color.BLACK,
                         0.2,
                         true),
