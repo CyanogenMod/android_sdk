@@ -11,6 +11,7 @@ WIN_SDK_TARGETS := \
 	find_java \
 	find_lock \
 	mksdcard \
+	monitor \
 	sdklauncher
 
 # Add OpenGLES emulation host libraries if needed.
