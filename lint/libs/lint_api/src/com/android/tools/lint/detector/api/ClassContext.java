@@ -21,13 +21,12 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.Lint;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -53,28 +52,26 @@ public class ClassContext extends Context {
     /**
      * Construct a new {@link ClassContext}
      *
-     * @param client the client requesting a lint check
+     * @param driver the driver running through the checks
      * @param project the project containing the file being checked
      * @param main the main project if this project is a library project, or
      *            null if this is not a library project. The main project is
      *            the root project of all library projects, not necessarily the
      *            directly including project.
      * @param file the file being checked
-     * @param scope the scope for the lint job
      * @param binDir the root binary directory containing this .class file.
      * @param bytes the bytecode raw data
      * @param classNode the bytecode object model
      */
     public ClassContext(
-            @NonNull LintClient client,
+            @NonNull Lint driver,
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file,
-            @NonNull EnumSet<Scope> scope,
             @NonNull File binDir,
             @NonNull byte[] bytes,
             @NonNull ClassNode classNode) {
-        super(client, project, main, file, scope);
+        super(driver, project, main, file);
         mBinDir = binDir;
         mBytes = bytes;
         mClassNode = classNode;

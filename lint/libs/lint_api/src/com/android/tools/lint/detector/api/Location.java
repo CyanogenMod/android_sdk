@@ -143,6 +143,13 @@ public class Location {
         return mMessage;
     }
 
+
+    @Override
+    public String toString() {
+        return "Location [file=" + mFile + ", start=" + mStart + ", end=" + mEnd + ", message="
+                + mMessage + "]";
+    }
+
     /**
      * Creates a new location for the given file
      *
@@ -289,6 +296,25 @@ public class Location {
         }
 
         return Location.create(file);
+    }
+
+    /**
+     * Reverses the secondary location list initiated by the given location
+     *
+     * @param location the first location in the list
+     * @return the first location in the reversed list
+     */
+    public static Location reverse(Location location) {
+        Location next = location.getSecondary();
+        location.setSecondary(null);
+        while (next != null) {
+            Location nextNext = next.getSecondary();
+            next.setSecondary(location);
+            location = next;
+            next = nextNext;
+        }
+
+        return location;
     }
 
     /**

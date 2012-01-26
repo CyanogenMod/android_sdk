@@ -68,44 +68,76 @@ class TextReporter extends Reporter {
                 output.append('\n');
 
                 if (warning.errorLine != null) {
-                    output.append(warning.errorLine);
+                    output.append(warning.errorLine.trim());
+                    output.append('\n');
                 }
 
                 if (warning.location != null && warning.location.getSecondary() != null) {
                     Location location = warning.location.getSecondary();
-                    int count = 0;
                     while (location != null) {
-                        if (location.getMessage() != null && location.getMessage().length() > 0) {
+                        if (location.getMessage() != null
+                                && location.getMessage().length() > 0) {
+                            output.append("    "); //$NON-NLS-1$
                             String path = mClient.getDisplayPath(warning.project,
                                     location.getFile());
                             output.append(path);
-                            output.append(':');
 
                             Position start = location.getStart();
                             if (start != null) {
                                 int line = start.getLine();
                                 if (line >= 0) {
-                                    output.append(Integer.toString(line + 1));
                                     output.append(':');
+                                    output.append(Integer.toString(line + 1));
                                 }
                             }
 
-                            output.append(' ');
-                            output.append(location.getMessage());
+                            if (location.getMessage() != null
+                                    && location.getMessage().length() > 0) {
+                                output.append(':');
+                                output.append(' ');
+                                output.append(location.getMessage());
+                            }
+
                             output.append('\n');
-                            count++;
-                            if (count == 5) {
-                                output.append("...");
-                                output.append('\n');
+                        }
+
+                        location = location.getSecondary();
+                    }
+
+                    location = warning.location.getSecondary();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Also affects: ");
+                    int begin = sb.length();
+                    while (location != null) {
+                        if (location.getMessage() == null
+                                || location.getMessage().length() > 0) {
+                            if (sb.length() > begin) {
+                                sb.append(", ");
+                            }
+
+                            String path = mClient.getDisplayPath(warning.project,
+                                    location.getFile());
+                            sb.append(path);
+
+                            Position start = location.getStart();
+                            if (start != null) {
+                                int line = start.getLine();
+                                if (line >= 0) {
+                                    sb.append(':');
+                                    sb.append(Integer.toString(line + 1));
+                                }
                             }
                         }
 
                         location = location.getSecondary();
                     }
+                    String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     "); //$NON-NLS-1$
+                    output.append(wrapped);
+
                 }
             }
 
-            System.out.println(output.toString());
+            System.out.print(output.toString());
 
             System.out.println(String.format("%1$d errors, %2$d warnings",
                     errorCount, warningCount));

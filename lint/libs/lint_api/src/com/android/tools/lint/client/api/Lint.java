@@ -16,8 +16,11 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
+import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,6 +40,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
@@ -64,9 +69,11 @@ import java.util.Set;
  */
 @Beta
 public class Lint {
-    private static final String PROGUARD_CFG = "proguard.cfg";                       //$NON-NLS-1$
-    private static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml";        //$NON-NLS-1$
-    private static final String RES_FOLDER_NAME = "res";                             //$NON-NLS-1$
+    /**
+     * Max number of passes to run through the lint runner if requested by
+     * {@link #requestRepeat}
+     */
+    private static final int MAX_PHASES = 3;
 
     private final LintClient mClient;
     private volatile boolean mCanceled;
@@ -75,6 +82,9 @@ public class Lint {
     private List<? extends Detector> mApplicableDetectors;
     private Map<Scope, List<Detector>> mScopeDetectors;
     private List<LintListener> mListeners;
+    private int mPhase;
+    private List<Detector> mRepeatingDetectors;
+    private EnumSet<Scope> mRepeatScope;
 
     /**
      * Creates a new {@link Lint}
@@ -90,6 +100,36 @@ public class Lint {
     /** Cancels the current lint run as soon as possible */
     public void cancel() {
         mCanceled = true;
+    }
+
+    /**
+     * Returns the scope for the lint job
+     *
+     * @return the scope, never null
+     */
+    @NonNull
+    public EnumSet<Scope> getScope() {
+        return mScope;
+    }
+
+    /**
+     * Returns the lint client requesting the lint check
+     *
+     * @return the client, never null
+     */
+    @NonNull
+    public LintClient getClient() {
+        return mClient;
+    }
+
+    /**
+     * Returns the current phase number. The first pass is numbered 1. Only one pass
+     * will be performed, unless a {@link Detector} calls {@link #requestRepeat}.
+     *
+     * @return the current phase, usually 1
+     */
+    public int getPhase() {
+        return mPhase;
     }
 
     /**
@@ -126,8 +166,8 @@ public class Lint {
                             mScope.add(Scope.RESOURCE_FILE);
                         } else if (name.equals(PROGUARD_CFG)) {
                             mScope.add(Scope.PROGUARD_FILE);
-                        } else if (name.equals(RES_FOLDER_NAME)
-                                || file.getParent().equals(RES_FOLDER_NAME)) {
+                        } else if (name.equals(RES_FOLDER)
+                                || file.getParent().equals(RES_FOLDER)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
                             mScope.add(Scope.RESOURCE_FILE);
                         } else if (name.endsWith(DOT_JAVA)) {
@@ -147,16 +187,151 @@ public class Lint {
         fireEvent(EventType.STARTING, null);
 
         for (Project project : projects) {
+            mPhase = 1;
+
             // The set of available detectors varies between projects
             computeDetectors(project);
+
+            if (mApplicableDetectors.size() == 0) {
+                // No detectors enabled in this project: skip it
+                continue;
+            }
 
             checkProject(project);
             if (mCanceled) {
                 break;
             }
+
+            runExtraPhases(project);
         }
 
         fireEvent(mCanceled ? EventType.CANCELED : EventType.COMPLETED, null);
+    }
+
+    private void runExtraPhases(Project project) {
+        // Did any detectors request another phase?
+        if (mRepeatingDetectors != null) {
+            // Yes. Iterate up to MAX_PHASES times.
+
+            // During the extra phases, we might be narrowing the scope, and setting it in the
+            // scope field such that detectors asking about the available scope will get the
+            // correct result. However, we need to restore it to the original scope when this
+            // is done in case there are other projects that will be checked after this, since
+            // the repeated phases is done *per project*, not after all projects have been
+            // processed.
+            EnumSet<Scope> oldScope = mScope;
+
+            do {
+                mPhase++;
+                fireEvent(EventType.NEW_PHASE,
+                        new Context(this, project, null, project.getDir()));
+
+                // Narrow the scope down to the set of scopes requested by
+                // the rules.
+                if (mRepeatScope == null) {
+                    mRepeatScope = Scope.ALL;
+                }
+                mScope = Scope.intersect(mScope, mRepeatScope);
+                if (mScope.isEmpty()) {
+                    break;
+                }
+
+                // Compute the detectors to use for this pass.
+                // Unlike the normal computeDetectors(project) call,
+                // this is going to use the existing instances, and include
+                // those that apply for the configuration.
+                computeRepeatingDetectors(mRepeatingDetectors, project);
+
+                if (mApplicableDetectors.size() == 0) {
+                    // No detectors enabled in this project: skip it
+                    continue;
+                }
+
+                checkProject(project);
+                if (mCanceled) {
+                    break;
+                }
+            } while (mPhase < MAX_PHASES && mRepeatingDetectors != null);
+
+            mScope = oldScope;
+        }
+    }
+
+    private void computeRepeatingDetectors(List<Detector> detectors, Project project) {
+        // Ensure that the current visitor is recomputed
+        mCurrentFolderType = null;
+        mCurrentVisitor = null;
+
+        // Create map from detector class to issue such that we can
+        // compute applicable issues for each detector in the list of detectors
+        // to be repeated
+        List<Issue> issues = mRegistry.getIssues();
+        Multimap<Class<? extends Detector>, Issue> issueMap =
+                ArrayListMultimap.create(issues.size(), 3);
+        for (Issue issue : issues) {
+            issueMap.put(issue.getDetectorClass(), issue);
+        }
+
+        Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
+                new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
+        Map<Scope, List<Detector>> scopeToDetectors =
+                new HashMap<Scope, List<Detector>>();
+
+        List<Detector> detectorList = new ArrayList<Detector>();
+        // Compute the list of detectors (narrowed down from mRepeatingDetectors),
+        // and simultaneously build up the detectorToScope map which tracks
+        // the scopes each detector is affected by (this is used to populate
+        // the mScopeDetectors map which is used during iteration).
+        Configuration configuration = project.getConfiguration();
+        for (Detector detector : detectors) {
+            Class<? extends Detector> detectorClass = detector.getClass();
+            Collection<Issue> detectorIssues = issueMap.get(detectorClass);
+            if (issues != null) {
+                boolean add = false;
+                for (Issue issue : detectorIssues) {
+                    // The reason we have to check whether the detector is enabled
+                    // is that this is a per-project property, so when running lint in multiple
+                    // projects, a detector enabled only in a different project could have
+                    // requested another phase, and we end up in this project checking whether
+                    // the detector is enabled here.
+                    if (!configuration.isEnabled(issue)) {
+                        continue;
+                    }
+
+                    add = true; // Include detector if any of its issues are enabled
+
+                    EnumSet<Scope> s = detectorToScope.get(detectorClass);
+                    EnumSet<Scope> issueScope = issue.getScope();
+                    if (s == null) {
+                        detectorToScope.put(detectorClass, issueScope);
+                    } else if (!s.containsAll(issueScope)) {
+                        EnumSet<Scope> union = EnumSet.copyOf(s);
+                        union.addAll(issueScope);
+                        detectorToScope.put(detectorClass, union);
+                    }
+                }
+
+                if (add) {
+                    detectorList.add(detector);
+                    EnumSet<Scope> union = detectorToScope.get(detector.getClass());
+                    for (Scope s : union) {
+                        List<Detector> list = scopeToDetectors.get(s);
+                        if (list == null) {
+                            list = new ArrayList<Detector>();
+                            scopeToDetectors.put(s, list);
+                        }
+                        list.add(detector);
+                    }
+                }
+            }
+        }
+
+        mApplicableDetectors = detectorList;
+        mScopeDetectors = scopeToDetectors;
+        mRepeatingDetectors = null;
+        mRepeatScope = null;
+
+        validateScopeList();
     }
 
     private void computeDetectors(@NonNull Project project) {
@@ -343,7 +518,7 @@ public class Lint {
     private void checkProject(@NonNull Project project) {
         File projectDir = project.getDir();
 
-        Context projectContext = new Context(mClient, project, null, projectDir, mScope);
+        Context projectContext = new Context(this, project, null, projectDir);
         fireEvent(EventType.SCANNING_PROJECT, projectContext);
 
         for (Detector check : mApplicableDetectors) {
@@ -359,7 +534,7 @@ public class Lint {
         if (!Scope.checkSingleFile(mScope)) {
             List<Project> libraries = project.getDirectLibraries();
             for (Project library : libraries) {
-                Context libraryContext = new Context(mClient, library, project, projectDir, mScope);
+                Context libraryContext = new Context(this, library, project, projectDir);
                 fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext);
 
                 for (Detector check : mApplicableDetectors) {
@@ -406,7 +581,7 @@ public class Lint {
         // Look up manifest information (but not for library projects)
         File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
         if (!project.isLibrary() && manifestFile.exists()) {
-            XmlContext context = new XmlContext(mClient, project, main, manifestFile, mScope);
+            XmlContext context = new XmlContext(this, project, main, manifestFile);
             IDomParser parser = mClient.getDomParser();
             context.document = parser.parseXml(context);
             if (context.document != null) {
@@ -441,7 +616,7 @@ public class Lint {
                         checkIndividualResources(project, main, xmlDetectors,
                                 project.getSubset());
                     } else {
-                        File res = new File(project.getDir(), RES_FOLDER_NAME);
+                        File res = new File(project.getDir(), RES_FOLDER);
                         if (res.exists() && xmlDetectors.size() > 0) {
                             checkResFolder(project, main, res, xmlDetectors);
                         }
@@ -484,7 +659,7 @@ public class Lint {
             if (detectors != null) {
                 File file = new File(project.getDir(), PROGUARD_CFG);
                 if (file.exists()) {
-                    Context context = new Context(mClient, project, main, file, mScope);
+                    Context context = new Context(this, project, main, file);
                     fireEvent(EventType.SCANNING_FILE, context);
                     for (Detector detector : detectors) {
                         if (detector.appliesTo(context, file)) {
@@ -543,9 +718,8 @@ public class Lint {
                         ClassReader reader = new ClassReader(bytes);
                         ClassNode classNode = new ClassNode();
                         reader.accept(classNode, 0 /*flags*/);
-                        ClassContext context = new ClassContext(mClient, project, main, file,
-                                mScope, binDir, bytes, classNode);
-
+                        ClassContext context = new ClassContext(this, project, main, file,
+                                binDir, bytes, classNode);
                         for (Detector detector : checks) {
                             if (detector.appliesTo(context, file)) {
                                 fireEvent(EventType.SCANNING_FILE, context);
@@ -609,7 +783,7 @@ public class Lint {
         if (sources.size() > 0) {
             JavaVisitor visitor = new JavaVisitor(javaParser, checks);
             for (File file : sources) {
-                JavaContext context = new JavaContext(mClient, project, main, file, mScope);
+                JavaContext context = new JavaContext(this, project, main, file);
                 fireEvent(EventType.SCANNING_FILE, context);
                 visitor.visitFile(context, file);
                 if (mCanceled) {
@@ -709,8 +883,7 @@ public class Lint {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
                     if (LintUtils.isXmlFile(file)) {
-                        XmlContext context = new XmlContext(mClient, project, main,
-                                file, mScope);
+                        XmlContext context = new XmlContext(this, project, main, file);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {
@@ -732,10 +905,10 @@ public class Lint {
             if (file.isDirectory()) {
                 // Is it a resource folder?
                 ResourceFolderType type = ResourceFolderType.getFolderType(file.getName());
-                if (type != null && new File(file.getParentFile(), RES_FOLDER_NAME).exists()) {
+                if (type != null && new File(file.getParentFile(), RES_FOLDER).exists()) {
                     // Yes.
                     checkResourceFolder(project, main, file, type, xmlDetectors);
-                } else if (file.getName().equals(RES_FOLDER_NAME)) { // Is it the res folder?
+                } else if (file.getName().equals(RES_FOLDER)) { // Is it the res folder?
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors);
                 } else {
@@ -750,8 +923,7 @@ public class Lint {
                 if (type != null) {
                     XmlVisitor visitor = getVisitor(type, xmlDetectors);
                     if (visitor != null) {
-                        XmlContext context = new XmlContext(mClient, project, main, file,
-                                mScope);
+                        XmlContext context = new XmlContext(this, project, main, file);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                     }
@@ -789,7 +961,7 @@ public class Lint {
         if (mListeners != null) {
             for (int i = 0, n = mListeners.size(); i < n; i++) {
                 LintListener listener = mListeners.get(i);
-                listener.update(type, context);
+                listener.update(this, type, context);
             }
         }
     }
@@ -802,7 +974,7 @@ public class Lint {
      * and lint clients don't have to make sure they check for ignored issues or
      * filtered out warnings.
      */
-    private static class LintClientWrapper extends LintClient {
+    private class LintClientWrapper extends LintClient {
         @NonNull
         private final LintClient mDelegate;
 
@@ -899,6 +1071,39 @@ public class Lint {
         @Nullable
         public IJavaParser getJavaParser() {
             return mDelegate.getJavaParser();
+        }
+    }
+
+    /**
+     * Requests another pass through the data for the given detector. This is
+     * typically done when a detector needs to do more expensive computation,
+     * but it only wants to do this once it <b>knows</b> that an error is
+     * present, or once it knows more specifically what to check for.
+     *
+     * @param detector the detector that should be included in the next pass.
+     *            Note that the lint runner may refuse to run more than a couple
+     *            of runs.
+     * @param scope the scope to be revisited. This must be a subset of the
+     *       current scope ({@link #getScope()}, and it is just a performance hint;
+     *       in particular, the detector should be prepared to be called on other
+     *       scopes as well (since they may have been requested by other detectors).
+     *       You can pall null to indicate "all".
+     */
+    public void requestRepeat(@NonNull Detector detector, @Nullable EnumSet<Scope> scope) {
+        if (mRepeatingDetectors == null) {
+            mRepeatingDetectors = new ArrayList<Detector>();
+        }
+        mRepeatingDetectors.add(detector);
+
+        if (scope != null) {
+            if (mRepeatScope == null) {
+                mRepeatScope = scope;
+            } else {
+                mRepeatScope = EnumSet.copyOf(mRepeatScope);
+                mRepeatScope.addAll(scope);
+            }
+        } else {
+            mRepeatScope = Scope.ALL;
         }
     }
 }

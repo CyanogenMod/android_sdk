@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
@@ -267,6 +268,7 @@ class HtmlReporter extends Reporter {
                     if (warning.path != null) {
                         url = writeLocation(warning.file, warning.path, warning.line);
                     }
+                    mWriter.write(':');
 
                     // Is the URL for a single image? If so, place it here near the top
                     // of the error floating on the right. If there are multiple images,
@@ -295,30 +297,51 @@ class HtmlReporter extends Reporter {
                     if (warning.location != null && warning.location.getSecondary() != null) {
                         mWriter.write("<ul>");
                         Location l = warning.location.getSecondary();
+                        boolean haveOtherLocations = false;
                         while (l != null) {
                             if (l.getMessage() != null && l.getMessage().length() > 0) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
-                                int offset = start != null ? start.getOffset() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
                                 writeLocation(l.getFile(), path, line);
+                                mWriter.write(':');
                                 mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
                                 appendEscapedText(l.getMessage());
                                 mWriter.write("</span>");                            //$NON-NLS-1$
                                 mWriter.write("<br />");                         //$NON-NLS-1$
 
-                                String s = mClient.readFile(l.getFile());
-                                if (s != null && s.length() > 0) {
-                                    mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
-                                    appendCodeBlock(s, line, offset);
-                                    mWriter.write("\n</pre>");                       //$NON-NLS-1$
+                                String name = l.getFile().getName();
+                                if (!(endsWith(name, DOT_PNG) || endsWith(name, DOT_JPG))) {
+                                    String s = mClient.readFile(l.getFile());
+                                    if (s != null && s.length() > 0) {
+                                        mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
+                                        int offset = start != null ? start.getOffset() : -1;
+                                        appendCodeBlock(s, line, offset);
+                                        mWriter.write("\n</pre>");                       //$NON-NLS-1$
+                                    }
                                 }
+                            } else {
+                                haveOtherLocations = true;
                             }
 
                             l = l.getSecondary();
                         }
                         mWriter.write("</ul>");
-
+                        if (haveOtherLocations) {
+                            mWriter.write("Additional locations: ");
+                            mWriter.write("<ul>\n"); //$NON-NLS-1$
+                            l = warning.location.getSecondary();
+                            while (l != null) {
+                                Position start = l.getStart();
+                                int line = start != null ? start.getLine() : -1;
+                                String path = mClient.getDisplayPath(warning.project, l.getFile());
+                                mWriter.write("<li> "); //$NON-NLS-1$
+                                writeLocation(l.getFile(), path, line);
+                                mWriter.write("\n");  //$NON-NLS-1$
+                                l = l.getSecondary();
+                            }
+                            mWriter.write("</ul>\n"); //$NON-NLS-1$
+                        }
                     }
 
                     // Place a block of images?
@@ -406,10 +429,10 @@ class HtmlReporter extends Reporter {
         if (url != null) {
             mWriter.write("</a>");                       //$NON-NLS-1$
         }
-        mWriter.write(':');
         if (line >= 0) {
             // 0-based line numbers, but display 1-based
-            mWriter.write(Integer.toString(line + 1) + ':');
+            mWriter.write(':');
+            mWriter.write(Integer.toString(line + 1));
         }
         mWriter.write("</span>"); //$NON-NLS-1$
         mWriter.write(' ');

@@ -19,10 +19,9 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IJavaParser;
-import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.Lint;
 
 import java.io.File;
-import java.util.EnumSet;
 
 import lombok.ast.Node;
 
@@ -43,22 +42,20 @@ public class JavaContext extends Context {
      * the given scope, in the given project reporting errors to the given
      * client.
      *
-     * @param client the client to report errors to
+     * @param driver the driver running through the checks
      * @param project the project to run lint on which contains the given file
      * @param main the main project if this project is a library project, or
      *            null if this is not a library project. The main project is
      *            the root project of all library projects, not necessarily the
      *            directly including project.
      * @param file the file to be analyzed
-     * @param scope the scope used for analysis
      */
     public JavaContext(
-            @NonNull LintClient client,
+            @NonNull Lint driver,
             @NonNull Project project,
             @Nullable Project main,
-            @NonNull File file,
-            @NonNull EnumSet<Scope> scope) {
-        super(client, project, main, file, scope);
+            @NonNull File file) {
+        super(driver, project, main, file);
     }
 
     /**
