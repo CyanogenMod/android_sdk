@@ -458,63 +458,67 @@ public class PositionXmlParser {
         @Override
         public void startElement(String uri, String localName, String qName,
                 Attributes attributes) throws SAXException {
-            flushText();
-            Element element = mDocument.createElement(qName);
-            for (int i = 0; i < attributes.getLength(); i++) {
-                if (attributes.getURI(i) != null && attributes.getURI(i).length() > 0) {
-                    Attr attr = mDocument.createAttributeNS(attributes.getURI(i),
-                            attributes.getQName(i));
-                    attr.setValue(attributes.getValue(i));
-                    element.setAttributeNodeNS(attr);
-                    assert attr.getOwnerElement() == element;
-                } else {
-                    Attr attr = mDocument.createAttribute(attributes.getQName(i));
-                    attr.setValue(attributes.getValue(i));
-                    element.setAttributeNode(attr);
-                    assert attr.getOwnerElement() == element;
-                }
-            }
-
-            Position pos = getCurrentPosition();
-
-            // The starting position reported to us by SAX is really the END of the
-            // open tag in an element, when all the attributes have been processed.
-            // We have to scan backwards to find the real beginning. We'll do that
-            // by scanning backwards.
-            // -1: Make sure that when we have <foo></foo> we don't consider </foo>
-            // the beginning since pos.offset will typically point to the first character
-            // AFTER the element open tag, which could be a closing tag or a child open
-            // tag
-
-            for (int offset = pos.getOffset() - 1; offset >= 0; offset--) {
-                char c = mXml.charAt(offset);
-                // < cannot appear in attribute values or anywhere else within
-                // an element open tag, so we know the first occurrence is the real
-                // element start
-                if (c == '<') {
-                    // Adjust line position
-                    int line = pos.getLine();
-                    for (int i = offset, n = pos.getOffset(); i < n; i++) {
-                        if (mXml.charAt(i) == '\n') {
-                            line--;
-                        }
+            try {
+                flushText();
+                Element element = mDocument.createElement(qName);
+                for (int i = 0; i < attributes.getLength(); i++) {
+                    if (attributes.getURI(i) != null && attributes.getURI(i).length() > 0) {
+                        Attr attr = mDocument.createAttributeNS(attributes.getURI(i),
+                                attributes.getQName(i));
+                        attr.setValue(attributes.getValue(i));
+                        element.setAttributeNodeNS(attr);
+                        assert attr.getOwnerElement() == element;
+                    } else {
+                        Attr attr = mDocument.createAttribute(attributes.getQName(i));
+                        attr.setValue(attributes.getValue(i));
+                        element.setAttributeNode(attr);
+                        assert attr.getOwnerElement() == element;
                     }
-
-                    // Compute new column position
-                    int column = 0;
-                    for (int i = offset; i >= 0; i--, column++) {
-                        if (mXml.charAt(i) == '\n') {
-                            break;
-                        }
-                    }
-
-                    pos = createPosition(line, column, offset);
-                    break;
                 }
-            }
 
-            element.setUserData(POS_KEY, pos, null);
-            mStack.add(element);
+                Position pos = getCurrentPosition();
+
+                // The starting position reported to us by SAX is really the END of the
+                // open tag in an element, when all the attributes have been processed.
+                // We have to scan backwards to find the real beginning. We'll do that
+                // by scanning backwards.
+                // -1: Make sure that when we have <foo></foo> we don't consider </foo>
+                // the beginning since pos.offset will typically point to the first character
+                // AFTER the element open tag, which could be a closing tag or a child open
+                // tag
+
+                for (int offset = pos.getOffset() - 1; offset >= 0; offset--) {
+                    char c = mXml.charAt(offset);
+                    // < cannot appear in attribute values or anywhere else within
+                    // an element open tag, so we know the first occurrence is the real
+                    // element start
+                    if (c == '<') {
+                        // Adjust line position
+                        int line = pos.getLine();
+                        for (int i = offset, n = pos.getOffset(); i < n; i++) {
+                            if (mXml.charAt(i) == '\n') {
+                                line--;
+                            }
+                        }
+
+                        // Compute new column position
+                        int column = 0;
+                        for (int i = offset; i >= 0; i--, column++) {
+                            if (mXml.charAt(i) == '\n') {
+                                break;
+                            }
+                        }
+
+                        pos = createPosition(line, column, offset);
+                        break;
+                    }
+                }
+
+                element.setUserData(POS_KEY, pos, null);
+                mStack.add(element);
+            } catch (Exception t) {
+                throw new SAXException(t);
+            }
         }
 
         @Override
@@ -547,9 +551,10 @@ public class PositionXmlParser {
 
             // Compute offset incrementally now that we have the new line and column
             // numbers
-            while (mCurrentLine < line) {
+            int xmlLength = mXml.length();
+            while (mCurrentLine < line && mCurrentOffset < xmlLength) {
                 char c = mXml.charAt(mCurrentOffset);
-                if (c == '\r' && mCurrentOffset < mXml.length() - 1) {
+                if (c == '\r' && mCurrentOffset < xmlLength - 1) {
                     if (mXml.charAt(mCurrentOffset + 1) != '\n') {
                         mCurrentLine++;
                         mCurrentColumn = 0;
@@ -564,6 +569,11 @@ public class PositionXmlParser {
             }
 
             mCurrentOffset += column - mCurrentColumn;
+            if (mCurrentOffset >= xmlLength) {
+                // The parser sometimes passes wrong column numbers at the
+                // end of the file: Ensure that the offset remains valid.
+                mCurrentOffset = xmlLength;
+            }
             mCurrentColumn = column;
 
             return createPosition(mCurrentLine, mCurrentColumn, mCurrentOffset);

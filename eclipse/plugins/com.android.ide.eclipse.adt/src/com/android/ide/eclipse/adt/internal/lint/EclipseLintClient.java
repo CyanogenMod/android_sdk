@@ -752,6 +752,11 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 // Don't analyze files containing errors
                 List<ParseProblem> problems = source.getProblems();
                 if (problems != null && problems.size() > 0) {
+                    /* Silently ignore the errors. There are still some bugs in Lombok/Parboiled
+                     * (triggered if you run lint on the AOSP framework directory for example),
+                     * and having these show up as fatal errors when it's really a tool bug
+                     * is bad. To make matters worse, the error messages aren't clear:
+                     * http://code.google.com/p/projectlombok/issues/detail?id=313
                     for (ParseProblem problem : problems) {
                         lombok.ast.Position position = problem.getPosition();
                         Location location = Location.create(context.file,
@@ -763,6 +768,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                                 null);
 
                     }
+                    */
                     return null;
                 }
 
