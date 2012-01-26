@@ -47,6 +47,7 @@ import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TypographyDetector;
+import com.android.tools.lint.checks.UseCompoundDrawableDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintConstants;
@@ -201,6 +202,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(TypographyDetector.FRACTIONS.getId(), TypographyFix.class);
         sFixes.put(TypographyDetector.OTHER.getId(), TypographyFix.class);
         sFixes.put(TypographyDetector.QUOTES.getId(), TypographyFix.class);
+        sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(), UseCompoundDrawableDetectorFix.class);
     }
 
     public static boolean hasFix(String id) {
@@ -230,7 +232,7 @@ abstract class LintFix implements ICompletionProposal {
         return null;
     }
 
-    private abstract static class DocumentFix extends LintFix {
+    abstract static class DocumentFix extends LintFix {
 
         protected DocumentFix(String id, IMarker marker) {
             super(id, marker);
@@ -265,7 +267,7 @@ abstract class LintFix implements ICompletionProposal {
         }
     }
 
-    private abstract static class SetPropertyFix extends DocumentFix {
+    abstract static class SetPropertyFix extends DocumentFix {
         private Region mSelect;
 
         private SetPropertyFix(String id, IMarker marker) {

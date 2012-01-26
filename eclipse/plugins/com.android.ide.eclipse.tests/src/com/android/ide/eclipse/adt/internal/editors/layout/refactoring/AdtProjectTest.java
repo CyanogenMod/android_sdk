@@ -61,7 +61,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({"restriction", "javadoc"})
 public class AdtProjectTest extends SdkTestCase {
     private static final int TARGET_API_LEVEL = 12;
     public static final String TEST_PROJECT_PACKAGE = "com.android.eclipse.tests"; //$NON-NLS-1$

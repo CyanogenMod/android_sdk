@@ -20,6 +20,9 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_IMAGE_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_TEXT_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.SPINNER;
@@ -40,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeVie
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UnwrapAction;
+import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UseCompoundDrawableAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 
@@ -240,6 +244,20 @@ class DynamicContextMenu {
         // Only include the menu item if you are not right clicking on a root,
         // or on an included view, or on a non-contiguous selection
         mMenuManager.insertBefore(endId, new Separator());
+        if (selection.size() == 1 && selection.get(0).getViewInfo() != null
+                && selection.get(0).getViewInfo().getName().equals(FQCN_LINEAR_LAYOUT)) {
+            CanvasViewInfo info = selection.get(0).getViewInfo();
+            List<CanvasViewInfo> children = info.getChildren();
+            if (children.size() == 2) {
+                String first = children.get(0).getName();
+                String second = children.get(1).getName();
+                if ((first.equals(FQCN_IMAGE_VIEW) && second.equals(FQCN_TEXT_VIEW))
+                        || (first.equals(FQCN_TEXT_VIEW) && second.equals(FQCN_IMAGE_VIEW))) {
+                    mMenuManager.insertBefore(endId, UseCompoundDrawableAction.create(
+                            mEditorDelegate));
+                }
+            }
+        }
         mMenuManager.insertBefore(endId, ExtractIncludeAction.create(mEditorDelegate));
         mMenuManager.insertBefore(endId, ExtractStyleAction.create(mEditorDelegate));
         mMenuManager.insertBefore(endId, WrapInAction.create(mEditorDelegate));

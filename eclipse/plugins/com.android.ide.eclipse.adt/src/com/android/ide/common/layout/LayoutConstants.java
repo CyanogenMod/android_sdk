@@ -83,6 +83,12 @@ public class LayoutConstants {
     public static final String ATTR_LAYOUT_MARGIN_TOP = "layout_marginTop";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MARGIN_BOTTOM = "layout_marginBottom";  //$NON-NLS-1$
 
+    // TextView
+    public static final String ATTR_DRAWABLE_RIGHT = "drawableRight";              //$NON-NLS-1$
+    public static final String ATTR_DRAWABLE_LEFT = "drawableLeft";                //$NON-NLS-1$
+    public static final String ATTR_DRAWABLE_BOTTOM = "drawableBottom";            //$NON-NLS-1$
+    public static final String ATTR_DRAWABLE_TOP = "drawableTop";                  //$NON-NLS-1$
+
     // RelativeLayout layout params:
     public static final String ATTR_LAYOUT_ALIGN_LEFT = "layout_alignLeft";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_RIGHT = "layout_alignRight";      //$NON-NLS-1$
@@ -241,6 +247,12 @@ public class LayoutConstants {
 
     /** The fully qualified class name of a Space */
     public static final String FQCN_SPACE = "android.widget.Space"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a TextView view */
+    public static final String FQCN_TEXT_VIEW = "android.widget.TextView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of an ImageView view */
+    public static final String FQCN_IMAGE_VIEW = "android.widget.ImageView"; //$NON-NLS-1$
 
     public static final String ATTR_SRC = "src"; //$NON-NLS-1$
 
