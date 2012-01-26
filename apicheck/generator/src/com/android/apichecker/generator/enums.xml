@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="utf-8"?>
+<api version="1">
+	<class name="android/database/CursorJoiner$Result" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BOTH" />
+		<field name="LEFT" />
+		<field name="RIGHT" />
+	</class>
+	<class name="android/graphics/AvoidXfermode$Mode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="AVOID" />
+		<field name="TARGET" />
+	</class>
+	<class name="android/graphics/Bitmap$CompressFormat" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="JPEG" />
+		<field name="PNG" />
+	</class>
+	<class name="android/graphics/Bitmap$Config" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ALPHA_8" />
+		<field name="ARGB_4444" />
+		<field name="ARGB_8888" />
+		<field name="RGB_565" />
+	</class>
+	<class name="android/graphics/BlurMaskFilter$Blur" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="INNER" />
+		<field name="NORMAL" />
+		<field name="OUTER" />
+		<field name="SOLID" />
+	</class>
+	<class name="android/graphics/Canvas$EdgeType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="AA" />
+		<field name="BW" />
+	</class>
+	<class name="android/graphics/Canvas$VertexMode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="TRIANGLES" />
+		<field name="TRIANGLE_FAN" />
+		<field name="TRIANGLE_STRIP" />
+	</class>
+	<class name="android/graphics/Interpolator$Result" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="FREEZE_END" />
+		<field name="FREEZE_START" />
+		<field name="NORMAL" />
+	</class>
+	<class name="android/graphics/Matrix$ScaleToFit" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CENTER" />
+		<field name="END" />
+		<field name="FILL" />
+		<field name="START" />
+	</class>
+	<class name="android/graphics/Paint$Align" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CENTER" />
+		<field name="LEFT" />
+		<field name="RIGHT" />
+	</class>
+	<class name="android/graphics/Paint$Cap" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BUTT" />
+		<field name="ROUND" />
+		<field name="SQUARE" />
+	</class>
+	<class name="android/graphics/Paint$Join" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BEVEL" />
+		<field name="MITER" />
+		<field name="ROUND" />
+	</class>
+	<class name="android/graphics/Paint$Style" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="FILL" />
+		<field name="FILL_AND_STROKE" />
+		<field name="STROKE" />
+	</class>
+	<class name="android/graphics/Path$Direction" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CCW" />
+		<field name="CW" />
+	</class>
+	<class name="android/graphics/Path$FillType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="EVEN_ODD" />
+		<field name="INVERSE_EVEN_ODD" />
+		<field name="INVERSE_WINDING" />
+		<field name="WINDING" />
+	</class>
+	<class name="android/graphics/PathDashPathEffect$Style" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="MORPH" />
+		<field name="ROTATE" />
+		<field name="TRANSLATE" />
+	</class>
+	<class name="android/graphics/PorterDuff$Mode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ADD" since="11" />
+		<field name="CLEAR" />
+		<field name="DARKEN" />
+		<field name="DST" />
+		<field name="DST_ATOP" />
+		<field name="DST_IN" />
+		<field name="DST_OUT" />
+		<field name="DST_OVER" />
+		<field name="LIGHTEN" />
+		<field name="MULTIPLY" />
+		<field name="OVERLAY" since="11" />
+		<field name="SCREEN" />
+		<field name="SRC" />
+		<field name="SRC_ATOP" />
+		<field name="SRC_IN" />
+		<field name="SRC_OUT" />
+		<field name="SRC_OVER" />
+		<field name="XOR" />
+	</class>
+	<class name="android/graphics/Region$Op" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DIFFERENCE" />
+		<field name="INTERSECT" />
+		<field name="REPLACE" />
+		<field name="REVERSE_DIFFERENCE" />
+		<field name="UNION" />
+		<field name="XOR" />
+	</class>
+	<class name="android/graphics/Shader$TileMode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CLAMP" />
+		<field name="MIRROR" />
+		<field name="REPEAT" />
+	</class>
+	<class name="android/graphics/drawable/GradientDrawable$Orientation" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BL_TR" />
+		<field name="BOTTOM_TOP" />
+		<field name="BR_TL" />
+		<field name="LEFT_RIGHT" />
+		<field name="RIGHT_LEFT" />
+		<field name="TL_BR" />
+		<field name="TOP_BOTTOM" />
+		<field name="TR_BL" />
+	</class>
+	<class name="android/net/LocalSocketAddress$Namespace" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ABSTRACT" />
+		<field name="FILESYSTEM" />
+		<field name="RESERVED" />
+	</class>
+	<class name="android/net/NetworkInfo$DetailedState" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="AUTHENTICATING" />
+		<field name="CONNECTED" />
+		<field name="CONNECTING" />
+		<field name="DISCONNECTED" />
+		<field name="DISCONNECTING" />
+		<field name="FAILED" />
+		<field name="IDLE" />
+		<field name="OBTAINING_IPADDR" />
+		<field name="SCANNING" />
+		<field name="SUSPENDED" />
+	</class>
+	<class name="android/net/NetworkInfo$State" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CONNECTED" />
+		<field name="CONNECTING" />
+		<field name="DISCONNECTED" />
+		<field name="DISCONNECTING" />
+		<field name="SUSPENDED" />
+		<field name="UNKNOWN" />
+	</class>
+	<class name="android/net/wifi/SupplicantState" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ASSOCIATED" />
+		<field name="ASSOCIATING" />
+		<field name="COMPLETED" />
+		<field name="DISCONNECTED" />
+		<field name="DORMANT" />
+		<field name="FOUR_WAY_HANDSHAKE" />
+		<field name="GROUP_HANDSHAKE" />
+		<field name="INACTIVE" />
+		<field name="INVALID" />
+		<field name="SCANNING" />
+		<field name="UNINITIALIZED" />
+	</class>
+	<class name="android/os/AsyncTask$Status" since="3">
+		<extends name="java/lang/Enum" />
+		<field name="FINISHED" />
+		<field name="PENDING" />
+		<field name="RUNNING" />
+	</class>
+	<class name="android/renderscript/Allocation$MipmapControl" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="MIPMAP_FULL" />
+		<field name="MIPMAP_NONE" />
+		<field name="MIPMAP_ON_SYNC_TO_TEXTURE" />
+	</class>
+	<class name="android/renderscript/Element$DataKind" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="PIXEL_A" />
+		<field name="PIXEL_L" />
+		<field name="PIXEL_LA" />
+		<field name="PIXEL_RGB" />
+		<field name="PIXEL_RGBA" />
+		<field name="USER" />
+	</class>
+	<class name="android/renderscript/Element$DataType" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="BOOLEAN" />
+		<field name="FLOAT_32" />
+		<field name="FLOAT_64" />
+		<field name="MATRIX_2X2" />
+		<field name="MATRIX_3X3" />
+		<field name="MATRIX_4X4" />
+		<field name="RS_ALLOCATION" />
+		<field name="RS_ELEMENT" />
+		<field name="RS_MESH" />
+		<field name="RS_PROGRAM_FRAGMENT" />
+		<field name="RS_PROGRAM_RASTER" />
+		<field name="RS_PROGRAM_STORE" />
+		<field name="RS_PROGRAM_VERTEX" />
+		<field name="RS_SAMPLER" />
+		<field name="RS_SCRIPT" />
+		<field name="RS_TYPE" />
+		<field name="SIGNED_16" />
+		<field name="SIGNED_32" />
+		<field name="SIGNED_64" />
+		<field name="SIGNED_8" />
+		<field name="UNSIGNED_16" />
+		<field name="UNSIGNED_32" />
+		<field name="UNSIGNED_4_4_4_4" />
+		<field name="UNSIGNED_5_5_5_1" />
+		<field name="UNSIGNED_5_6_5" />
+		<field name="UNSIGNED_64" />
+		<field name="UNSIGNED_8" />
+	</class>
+	<class name="android/renderscript/FileA3D$EntryType" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="MESH" />
+		<field name="UNKNOWN" />
+	</class>
+	<class name="android/renderscript/Font$Style" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="BOLD" />
+		<field name="BOLD_ITALIC" />
+		<field name="ITALIC" />
+		<field name="NORMAL" />
+	</class>
+	<class name="android/renderscript/Mesh$Primitive" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="LINE" />
+		<field name="LINE_STRIP" />
+		<field name="POINT" />
+		<field name="TRIANGLE" />
+		<field name="TRIANGLE_FAN" />
+		<field name="TRIANGLE_STRIP" />
+	</class>
+	<class name="android/renderscript/Program$TextureType" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="TEXTURE_2D" />
+		<field name="TEXTURE_CUBE" />
+	</class>
+	<class name="android/renderscript/ProgramFragmentFixedFunction$Builder$EnvMode" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="DECAL" />
+		<field name="MODULATE" />
+		<field name="REPLACE" />
+	</class>
+	<class name="android/renderscript/ProgramFragmentFixedFunction$Builder$Format" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="ALPHA" />
+		<field name="LUMINANCE_ALPHA" />
+		<field name="RGB" />
+		<field name="RGBA" />
+	</class>
+	<class name="android/renderscript/ProgramRaster$CullMode" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="BACK" />
+		<field name="FRONT" />
+		<field name="NONE" />
+	</class>
+	<class name="android/renderscript/ProgramStore$BlendDstFunc" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="DST_ALPHA" />
+		<field name="ONE" />
+		<field name="ONE_MINUS_DST_ALPHA" />
+		<field name="ONE_MINUS_SRC_ALPHA" />
+		<field name="ONE_MINUS_SRC_COLOR" />
+		<field name="SRC_ALPHA" />
+		<field name="SRC_COLOR" />
+		<field name="ZERO" />
+	</class>
+	<class name="android/renderscript/ProgramStore$BlendSrcFunc" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="DST_ALPHA" />
+		<field name="DST_COLOR" />
+		<field name="ONE" />
+		<field name="ONE_MINUS_DST_ALPHA" />
+		<field name="ONE_MINUS_DST_COLOR" />
+		<field name="ONE_MINUS_SRC_ALPHA" />
+		<field name="SRC_ALPHA" />
+		<field name="SRC_ALPHA_SATURATE" />
+		<field name="ZERO" />
+	</class>
+	<class name="android/renderscript/ProgramStore$DepthFunc" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="ALWAYS" />
+		<field name="EQUAL" />
+		<field name="GREATER" />
+		<field name="GREATER_OR_EQUAL" />
+		<field name="LESS" />
+		<field name="LESS_OR_EQUAL" />
+		<field name="NOT_EQUAL" />
+	</class>
+	<class name="android/renderscript/RenderScript$Priority" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="LOW" />
+		<field name="NORMAL" />
+	</class>
+	<class name="android/renderscript/Sampler$Value" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="CLAMP" />
+		<field name="LINEAR" />
+		<field name="LINEAR_MIP_LINEAR" />
+		<field name="LINEAR_MIP_NEAREST" />
+		<field name="NEAREST" />
+		<field name="WRAP" />
+	</class>
+	<class name="android/renderscript/Type$CubemapFace" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="NEGATIVE_X" />
+		<field name="NEGATIVE_Y" />
+		<field name="NEGATIVE_Z" />
+		<field name="POSITVE_X" />
+		<field name="POSITVE_Y" />
+		<field name="POSITVE_Z" />
+	</class>
+	<class name="android/telephony/SmsMessage$MessageClass" since="4">
+		<extends name="java/lang/Enum" />
+		<field name="CLASS_0" />
+		<field name="CLASS_1" />
+		<field name="CLASS_2" />
+		<field name="CLASS_3" />
+		<field name="UNKNOWN" />
+	</class>
+	<class name="android/telephony/gsm/SmsMessage$MessageClass" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CLASS_0" />
+		<field name="CLASS_1" />
+		<field name="CLASS_2" />
+		<field name="CLASS_3" />
+		<field name="UNKNOWN" />
+	</class>
+	<class name="android/text/Layout$Alignment" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ALIGN_CENTER" />
+		<field name="ALIGN_NORMAL" />
+		<field name="ALIGN_OPPOSITE" />
+	</class>
+	<class name="android/text/TextUtils$TruncateAt" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="END" />
+		<field name="MARQUEE" since="2" />
+		<field name="MIDDLE" />
+		<field name="START" />
+	</class>
+	<class name="android/text/method/TextKeyListener$Capitalize" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CHARACTERS" />
+		<field name="NONE" />
+		<field name="SENTENCES" />
+		<field name="WORDS" />
+	</class>
+	<class name="android/util/JsonToken" since="11">
+		<extends name="java/lang/Enum" />
+		<field name="BEGIN_ARRAY" />
+		<field name="BEGIN_OBJECT" />
+		<field name="BOOLEAN" />
+		<field name="END_ARRAY" />
+		<field name="END_DOCUMENT" />
+		<field name="END_OBJECT" />
+		<field name="NAME" />
+		<field name="NULL" />
+		<field name="NUMBER" />
+		<field name="STRING" />
+	</class>
+	<class name="android/util/Xml$Encoding" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ISO_8859_1" />
+		<field name="US_ASCII" />
+		<field name="UTF_16" />
+		<field name="UTF_8" />
+	</class>
+	<class name="android/view/ViewDebug$HierarchyTraceType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BUILD_CACHE" />
+		<field name="DRAW" />
+		<field name="INVALIDATE" />
+		<field name="INVALIDATE_CHILD" />
+		<field name="INVALIDATE_CHILD_IN_PARENT" />
+		<field name="ON_LAYOUT" />
+		<field name="ON_MEASURE" />
+		<field name="REQUEST_LAYOUT" />
+	</class>
+	<class name="android/view/ViewDebug$RecyclerTraceType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BIND_VIEW" />
+		<field name="MOVE_FROM_ACTIVE_TO_SCRAP_HEAP" />
+		<field name="MOVE_TO_ACTIVE_HEAP" />
+		<field name="MOVE_TO_SCRAP_HEAP" />
+		<field name="NEW_VIEW" />
+		<field name="RECYCLE_FROM_ACTIVE_HEAP" />
+		<field name="RECYCLE_FROM_SCRAP_HEAP" />
+	</class>
+	<class name="android/webkit/ConsoleMessage$MessageLevel" since="8">
+		<extends name="java/lang/Enum" />
+		<field name="DEBUG" />
+		<field name="ERROR" />
+		<field name="LOG" />
+		<field name="TIP" />
+		<field name="WARNING" />
+	</class>
+	<class name="android/webkit/WebSettings$LayoutAlgorithm" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="NARROW_COLUMNS" />
+		<field name="NORMAL" />
+		<field name="SINGLE_COLUMN" />
+	</class>
+	<class name="android/webkit/WebSettings$PluginState" since="8">
+		<extends name="java/lang/Enum" />
+		<field name="OFF" />
+		<field name="ON" />
+		<field name="ON_DEMAND" />
+	</class>
+	<class name="android/webkit/WebSettings$RenderPriority" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="HIGH" />
+		<field name="LOW" />
+		<field name="NORMAL" />
+	</class>
+	<class name="android/webkit/WebSettings$TextSize" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="LARGER" />
+		<field name="LARGEST" />
+		<field name="NORMAL" />
+		<field name="SMALLER" />
+		<field name="SMALLEST" />
+	</class>
+	<class name="android/webkit/WebSettings$ZoomDensity" since="7">
+		<extends name="java/lang/Enum" />
+		<field name="CLOSE" />
+		<field name="FAR" />
+		<field name="MEDIUM" />
+	</class>
+	<class name="android/widget/ImageView$ScaleType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CENTER" />
+		<field name="CENTER_CROP" />
+		<field name="CENTER_INSIDE" />
+		<field name="FIT_CENTER" />
+		<field name="FIT_END" />
+		<field name="FIT_START" />
+		<field name="FIT_XY" />
+		<field name="MATRIX" />
+	</class>
+	<class name="android/widget/TextView$BufferType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="EDITABLE" />
+		<field name="NORMAL" />
+		<field name="SPANNABLE" />
+	</class>
+	<class name="com/google/android/maps/MapView$ReticleDrawMode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DRAW_RETICLE_NEVER" />
+		<field name="DRAW_RETICLE_OVER" />
+		<field name="DRAW_RETICLE_UNDER" />
+	</class>
+	<class name="java/lang/Thread$State" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BLOCKED" />
+		<field name="NEW" />
+		<field name="RUNNABLE" />
+		<field name="TERMINATED" />
+		<field name="TIMED_WAITING" />
+		<field name="WAITING" />
+	</class>
+	<class name="java/lang/annotation/ElementType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="ANNOTATION_TYPE" />
+		<field name="CONSTRUCTOR" />
+		<field name="FIELD" />
+		<field name="LOCAL_VARIABLE" />
+		<field name="METHOD" />
+		<field name="PACKAGE" />
+		<field name="PARAMETER" />
+		<field name="TYPE" />
+	</class>
+	<class name="java/lang/annotation/RetentionPolicy" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CLASS" />
+		<field name="RUNTIME" />
+		<field name="SOURCE" />
+	</class>
+	<class name="java/math/RoundingMode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="CEILING" />
+		<field name="DOWN" />
+		<field name="FLOOR" />
+		<field name="HALF_DOWN" />
+		<field name="HALF_EVEN" />
+		<field name="HALF_UP" />
+		<field name="UNNECESSARY" />
+		<field name="UP" />
+	</class>
+	<class name="java/net/Authenticator$RequestorType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="PROXY" />
+		<field name="SERVER" />
+	</class>
+	<class name="java/net/Proxy$Type" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DIRECT" />
+		<field name="HTTP" />
+		<field name="SOCKS" />
+	</class>
+	<class name="java/security/KeyRep$Type" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="PRIVATE" />
+		<field name="PUBLIC" />
+		<field name="SECRET" />
+	</class>
+	<class name="java/sql/ClientInfoStatus" since="9">
+		<extends name="java/lang/Enum" />
+		<field name="REASON_UNKNOWN" />
+		<field name="REASON_UNKNOWN_PROPERTY" />
+		<field name="REASON_VALUE_INVALID" />
+		<field name="REASON_VALUE_TRUNCATED" />
+	</class>
+	<class name="java/sql/RowIdLifetime" since="9">
+		<extends name="java/lang/Enum" />
+		<field name="ROWID_UNSUPPORTED" />
+		<field name="ROWID_VALID_FOREVER" />
+		<field name="ROWID_VALID_OTHER" />
+		<field name="ROWID_VALID_SESSION" />
+		<field name="ROWID_VALID_TRANSACTION" />
+	</class>
+	<class name="java/text/Normalizer$Form" since="9">
+		<extends name="java/lang/Enum" />
+		<field name="NFC" />
+		<field name="NFD" />
+		<field name="NFKC" />
+		<field name="NFKD" />
+	</class>
+	<class name="java/util/Formatter$BigDecimalLayoutForm" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DECIMAL_FLOAT" />
+		<field name="SCIENTIFIC" />
+	</class>
+	<class name="java/util/concurrent/TimeUnit" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DAYS" since="9" />
+		<field name="HOURS" since="9" />
+		<field name="MICROSECONDS" />
+		<field name="MILLISECONDS" />
+		<field name="MINUTES" since="9" />
+		<field name="NANOSECONDS" />
+		<field name="SECONDS" />
+	</class>
+	<class name="javax/net/ssl/SSLEngineResult$HandshakeStatus" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="FINISHED" />
+		<field name="NEED_TASK" />
+		<field name="NEED_UNWRAP" />
+		<field name="NEED_WRAP" />
+		<field name="NOT_HANDSHAKING" />
+	</class>
+	<class name="javax/net/ssl/SSLEngineResult$Status" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="BUFFER_OVERFLOW" />
+		<field name="BUFFER_UNDERFLOW" />
+		<field name="CLOSED" />
+		<field name="OK" />
+	</class>
+	<class name="org/apache/http/conn/routing/RouteInfo$LayerType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="LAYERED" />
+		<field name="PLAIN" />
+	</class>
+	<class name="org/apache/http/conn/routing/RouteInfo$TunnelType" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="PLAIN" />
+		<field name="TUNNELLED" />
+	</class>
+</api>
