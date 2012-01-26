@@ -179,8 +179,30 @@ public abstract class LintClient {
     }
 
     /**
-     * Locates a resource within the lint installation, usually located under
-     * {@code lib/}.
+     * Returns a suitable location for storing cache files. Note that the
+     * directory may not exist.
+     *
+     * @param create if true, attempt to create the cache dir if it does not
+     *            exist
+     * @return a suitable location for storing cache files, which may be null if
+     *         the create flag was false, or if for some reason the directory
+     *         could not be created
+     */
+    @NonNull
+    public File getCacheDir(boolean create) {
+        String home = System.getProperty("user.home");
+        String relative = ".android" + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$
+        File dir = new File(home, relative);
+        if (create && !dir.exists()) {
+            if (!dir.mkdirs()) {
+                return null;
+            }
+        }
+        return dir;
+    }
+
+    /**
+     * Locates an SDK resource (relative to the SDK root directory).
      * <p>
      * TODO: Consider switching to a {@link URL} return type instead.
      *
@@ -193,11 +215,12 @@ public abstract class LintClient {
     public File findResource(@NonNull String relativePath) {
         String path = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
         if (path == null) {
-            throw new IllegalArgumentException("Lint must be invoked with the System property " +
-                    "com.android.tools.lint.bindir pointing to the ANDROID_SDK tools direectory");
+            throw new IllegalArgumentException("Lint must be invoked with the System property "
+                    + "com.android.tools.lint.bindir pointing to the ANDROID_SDK tools directory");
         }
 
-        File file = new File(path, "lib" + File.separator + relativePath); //$NON-NLS-1$
+        File top = new File(path).getParentFile();
+        File file = new File(top, relativePath);
         if (file.exists()) {
             return file;
         } else {

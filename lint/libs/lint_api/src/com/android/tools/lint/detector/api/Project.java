@@ -63,7 +63,7 @@ public class Project {
     private final File mReferenceDir;
     private Configuration mConfiguration;
     private String mPackage;
-    private int mMinSdk = -1;
+    private int mMinSdk = 1;
     private int mTargetSdk = -1;
     private boolean mLibrary;
 
@@ -390,7 +390,7 @@ public class Project {
                 try {
                     mMinSdk = Integer.valueOf(minSdk);
                 } catch (NumberFormatException e) {
-                    mMinSdk = -1;
+                    mMinSdk = 1;
                 }
             }
 
