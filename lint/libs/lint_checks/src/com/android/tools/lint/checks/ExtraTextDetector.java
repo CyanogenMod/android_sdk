@@ -18,7 +18,10 @@ package com.android.tools.lint.checks;
 
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -88,7 +91,38 @@ public class ExtraTextDetector extends ResourceXmlDetector {
                     if (snippet.length() > maxLength) {
                         snippet = snippet.substring(0, maxLength) + "...";
                     }
-                    context.report(ISSUE, context.getLocation(node),
+                    Location location = context.getLocation(node);
+                    if (i > 0) {
+                        // Adjust the error position to point to the beginning of
+                        // the text rather than the beginning of the text node
+                        // (which is often the newline at the end of the previous
+                        // line and the indentation)
+                        Position start = location.getStart();
+                        if (start != null) {
+                            int line = start.getLine();
+                            int column = start.getColumn();
+                            int offset = start.getOffset();
+
+                            for (int j = 0; j < i; j++) {
+                                offset++;
+
+                                if (text.charAt(j) == '\n') {
+                                    if (line != -1) {
+                                        line++;
+                                    }
+                                    if (column != -1) {
+                                        column = 0;
+                                    }
+                                } else if (column != -1) {
+                                    column++;
+                                }
+                            }
+
+                            start = new DefaultPosition(line, column, offset);
+                            location = Location.create(context.file, start, location.getEnd());
+                        }
+                    }
+                    context.report(ISSUE, location,
                             String.format("Unexpected text found in layout file: \"%1$s\"",
                                     snippet), null);
                     mFoundText = true;
