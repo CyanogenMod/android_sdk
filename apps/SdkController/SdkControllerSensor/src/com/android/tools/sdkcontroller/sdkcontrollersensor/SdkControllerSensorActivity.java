@@ -56,16 +56,12 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
     private TableLayout mTableLayout;
 
     /**
-     * Encapsulates a sensor that is being monitored.
-     *
-     * To monitor sensor changes each monitored sensor registers with sensor
-     * manager as a sensor listener.
-     *
+     * Encapsulates a sensor that is being monitored. To monitor sensor changes
+     * each monitored sensor registers with sensor manager as a sensor listener.
      * To control sensor monitoring from the UI, each monitored sensor has two
-     * UI controls associated with it:
-     *   - A check box (named after sensor) that can be used to enable,
-     *     or disable listening to the sensor changes.
-     *   - A text view where current sensor value is displayed.
+     * UI controls associated with it: - A check box (named after sensor) that
+     * can be used to enable, or disable listening to the sensor changes. - A
+     * text view where current sensor value is displayed.
      */
     private class MonitoredSensor implements SensorEventListener,
             CompoundButton.OnCheckedChangeListener {
@@ -460,6 +456,20 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
             Loge("Unknown query " + query + "(" + param + ")");
             return "ko:Query is unknown\0";
         }
+    }
+
+    /**
+     * Called when a BLOB query is received from the emulator. NOTE: This method
+     * is called from the I/O loop, so all communication with the emulator will be
+     * "on hold" until this method returns.
+     *
+     * @param array contains BLOB data for the query.
+     * @return Zero-terminated reply string. String must be formatted as such:
+     *         "ok|ko[:reply data]"
+     */
+    @Override
+    public String onEmulatorBlobQuery(byte[] array) {
+        return "ko:Unexpected\0";
     }
 
     /***************************************************************************

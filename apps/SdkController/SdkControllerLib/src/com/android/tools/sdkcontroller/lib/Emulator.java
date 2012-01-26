@@ -98,6 +98,8 @@ public class Emulator {
         private static final String QUERY_CHANNEL = "query";
         /** Identifier for an event channel type. */
         private static final String EVENT_CHANNEL = "event";
+        /** BLOB query string. */
+        private static final String BLOBL_QUERY = "$BLOB";
 
         /***********************************************************************
          * Abstract API
@@ -128,6 +130,7 @@ public class Emulator {
         /**
          * Handles a query received in this channel.
          *
+         * @param socket A socket through which the query has been received.
          * @param query_str Query received from this channel. All queries are
          *            formatted as such: <query>:<query parameters> where -
          *            <query> Is a query name that identifies the query, and -
@@ -135,8 +138,8 @@ public class Emulator {
          *            Query name and query parameters are separated with a ':'
          *            character.
          */
-        public void onQueryReceived(String query_str) throws IOException {
-            String query, query_param;
+        public void onQueryReceived(Socket socket, String query_str) throws IOException {
+            String query, query_param, response;
 
             // Lets see if query has parameters.
             int sep = query_str.indexOf(':');
@@ -153,8 +156,29 @@ public class Emulator {
             }
 
             // Handle the query, obtain response string, and reply it back to
-            // the emulator.
-            String response = onQuery(query, query_param);
+            // the emulator. Note that there is one special query: $BLOB, that
+            // requires reading of a byte array of data first. The size of the
+            // array is defined by the query parameter.
+            if (query.compareTo(BLOBL_QUERY) == 0) {
+                // This is the BLOB query. It must have a parameter which
+                // contains byte size of the blob.
+                final int array_size = Integer.parseInt(query_param);
+                if (array_size > 0) {
+                    // Read data from the query's socket.
+                    byte[] array = new byte[array_size];
+                    final int transferred = readSocketArray(socket, array);
+                    if (transferred == array_size) {
+                        // Handle blob query.
+                        response = onBlobQuery(array);
+                    } else {
+                        response = "ko:Transfer failure\0";
+                    }
+                } else {
+                    response = "ko:Invalid parameter\0";
+                }
+            } else {
+                response = onQuery(query, query_param);
+            }
             if (response.length() == 0) {
                 Logw("No response to query '" + query + "'. Replying with 'ko'");
                 response = "ko:Protocol error.\0";
@@ -229,7 +253,7 @@ public class Emulator {
             try {
                 for (;;) {
                     String query = readSocketString(mSocket);
-                    onQueryReceived(query);
+                    onQueryReceived(mSocket, query);
                 }
             } catch (IOException e) {
                 onLostConnection();
@@ -384,7 +408,7 @@ public class Emulator {
                 if (c == '\0') {
                     // Zero-terminator is read. Process the query, and reset
                     // the query string.
-                    onQueryReceived(mQuery);
+                    onQueryReceived(mChannel.socket(), mQuery);
                     mQuery = "";
                 } else {
                     // Continue building the query string.
@@ -634,6 +658,27 @@ public class Emulator {
         }
     }
 
+    /**
+     * Called when a BLOB query is received from the emulator. NOTE: This method
+     * could be called from the I/O loop, in which case all communication with
+     * the emulator will be "on hold" until this method returns.
+     *
+     * @param array Array containing blob data.
+     * @return Zero-terminated reply string. String must be formatted as such:
+     *         "ok|ko[:reply data]"
+     */
+    private String onBlobQuery(byte[] array) {
+        OnEmulatorListener listener;
+        synchronized (this) {
+            listener = mListener;
+        }
+        if (listener != null) {
+            return listener.onEmulatorBlobQuery(array);
+        } else {
+            return "ko:Service is detached.\0";
+        }
+    }
+
     /***************************************************************************
      * Emulator implementation
      **************************************************************************/
@@ -828,6 +873,27 @@ public class Emulator {
 
         // Got disconnected!
         throw new ClosedChannelException();
+    }
+
+    /**
+     * Reads a block of data from a socket.
+     *
+     * @param socket Socket to read data from. Must be a synchronous socket.
+     * @param array Array where to read data.
+     * @return Number of bytes read from the socket, or -1 on an error.
+     * @throws IOException
+     */
+    private static int readSocketArray(Socket socket, byte[] array) throws IOException {
+        int in = 0;
+        while (in < array.length) {
+            final int ret = socket.getInputStream().read(array, in, array.length - in);
+            if (ret == -1) {
+                // Got disconnected!
+                throw new ClosedChannelException();
+            }
+            in += ret;
+        }
+        return in;
     }
 
     /***************************************************************************
