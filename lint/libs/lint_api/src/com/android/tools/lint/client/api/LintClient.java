@@ -32,6 +32,7 @@ import org.xml.sax.InputSource;
 
 import java.io.File;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -175,6 +176,33 @@ public abstract class LintClient {
     public SdkInfo getSdkInfo(@NonNull Project project) {
         // By default no per-platform SDK info
         return new DefaultSdkInfo();
+    }
+
+    /**
+     * Locates a resource within the lint installation, usually located under
+     * {@code lib/}.
+     * <p>
+     * TODO: Consider switching to a {@link URL} return type instead.
+     *
+     * @param relativePath A relative path (using {@link File#separator} to
+     *            separate path components) to the given resource
+     * @return a {@link File} pointing to the resource, or null if it does not
+     *         exist
+     */
+    @Nullable
+    public File findResource(@NonNull String relativePath) {
+        String path = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
+        if (path == null) {
+            throw new IllegalArgumentException("Lint must be invoked with the System property " +
+                    "com.android.tools.lint.bindir pointing to the ANDROID_SDK tools direectory");
+        }
+
+        File file = new File(path, "lib" + File.separator + relativePath); //$NON-NLS-1$
+        if (file.exists()) {
+            return file;
+        } else {
+            return null;
+        }
     }
 
     /**

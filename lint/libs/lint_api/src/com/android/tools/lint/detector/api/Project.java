@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_LIBRARY;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
@@ -476,5 +477,19 @@ public class Project {
         }
 
         return mSdkInfo;
+    }
+
+    /**
+     * Gets the path to the manifest file in this project, if it exists
+     *
+     * @return the path to the manifest file, or null if it does not exist
+     */
+    public File getManifestFile() {
+        File manifestFile = new File(mDir, ANDROID_MANIFEST_XML);
+        if (manifestFile.exists()) {
+            return manifestFile;
+        }
+
+        return null;
     }
 }

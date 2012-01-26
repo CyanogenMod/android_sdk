@@ -18,10 +18,14 @@ package com.android.ide.eclipse.adt.internal.lint;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
@@ -81,6 +85,8 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.security.CodeSource;
 import java.util.Collections;
 import java.util.List;
 
@@ -261,6 +267,34 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         if (s == Severity.ERROR) {
             mWasFatal = true;
         }
+    }
+
+    @Override
+    @Nullable
+    public File findResource(@NonNull String relativePath) {
+        // First look within the Eclipse install directory; then look within the $ANDROID_SDK
+        CodeSource source = getClass().getProtectionDomain().getCodeSource();
+        if (source != null) {
+            URL location = source.getLocation();
+            File eclipseDir = AdtUtils.getFile(location);
+            if (eclipseDir.exists()) {
+                File file = new File(eclipseDir, "libs" + File.separator + relativePath); //$NON-NLS-1$
+                if (file.exists()) {
+                    return file;
+                }
+            }
+        }
+
+        String sdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
+        if (sdkFolder != null) {
+            File root = new File(sdkFolder, SdkConstants.FD_TOOLS);
+            File file = new File(root, "lib" + File.separator + relativePath); //$NON-NLS-1$
+            if (file.exists()) {
+                return file;
+            }
+        }
+
+        return null;
     }
 
     /** Clears any lint markers from the given resource (project, folder or file) */
