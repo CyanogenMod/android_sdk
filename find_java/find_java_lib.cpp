@@ -16,8 +16,24 @@
 
 #ifdef _WIN32
 
+// Indicate we want at least all Windows Server 2003 (5.2) APIs.
+// Note: default is set by system/core/include/arch/windows/AndroidConfig.h to 0x0500
+// which is Win2K. However our minimum SDK tools requirement is Win XP (0x0501).
+// However we do need 0x0502 to get access to the WOW-64-32 constants for the
+// registry, except we'll need to be careful since they are not available on XP.
+#undef  _WIN32_WINNT
+#define _WIN32_WINNT 0x0502
+// Indicate we want at least all IE 5 shell APIs
+#define _WIN32_IE    0x0500
+
 #include "find_java.h"
 #include <shlobj.h>
+#include <ctype.h>
+
+// Define some types missing in MingW
+#ifndef LSTATUS
+typedef LONG LSTATUS;
+#endif
 
 // Check whether we can find $PATH/java.exe
 static bool checkPath(CPath *inOutPath) {
@@ -160,6 +176,8 @@ bool findJavaInRegistry(CPath *outJavaPath) {
     SYSTEM_INFO sysInfo;
     GetNativeSystemInfo(&sysInfo);
 
+    // Only try to access the WOW64-32 redirected keys on a 64-bit system.
+    // There's no point in doing that on a 32-bit system.
     if (sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
         if (exploreJavaRegistry("Java Runtime Environment", KEY_WOW64_32KEY, outJavaPath) ||
                 exploreJavaRegistry("Java Development Kit", KEY_WOW64_32KEY, outJavaPath)) {
