@@ -27,29 +27,29 @@ import android.util.Log;
 /**
  * Encapsulates a connection with the emulator. The connection is established
  * over a TCP port forwarding enabled with 'adb forward' command.
- *
- * Communication with the emulator is performed via two socket channels connected
- * to the forwarded TCP port. One channel is a query channel that is intended
- * solely for receiving queries from the emulator. Another channel is an event
- * channel that is intended for sending notification messages (events) to the
- * emulator.
- *
+ * <p/>
+ * Communication with the emulator is performed via two socket channels
+ * connected to the forwarded TCP port. One channel is a query channel that is
+ * intended solely for receiving queries from the emulator. Another channel is
+ * an event channel that is intended for sending notification messages (events)
+ * to the emulator.
+ * <p/>
  * Emulator is considered to be "connected" when both channels are connected.
  * Emulator is considered to be "disconnected" when connection with any of the
  * channels is lost.
- *
+ * <p/>
  * Instance of this class is operational only for a single connection with the
- * emulator. Once connection is established and then lost, a new instance of this
- * class must be created to establish new connection.
- *
+ * emulator. Once connection is established and then lost, a new instance of
+ * this class must be created to establish new connection.
+ * <p/>
  * Note that connection with the device over TCP port forwarding is extremely
- * fragile at the moment. For whatever reason the connection is even more fragile
- * if device uses asynchronous sockets (based on java.nio API). So, to address
- * this issue Emulator class implements two types of connections. One is using
- * synchronous sockets, and another is using asynchronous sockets. The type of
- * connection is selected when Emulator instance is created (see comments to
- * Emulator's constructor).
- *
+ * fragile at the moment. For whatever reason the connection is even more
+ * fragile if device uses asynchronous sockets (based on java.nio API). So, to
+ * address this issue Emulator class implements two types of connections. One is
+ * using synchronous sockets, and another is using asynchronous sockets. The
+ * type of connection is selected when Emulator instance is created (see
+ * comments to Emulator's constructor).
+ * <p/>
  * According to the exchange protocol with the emulator, queries, responses to
  * the queries, and notification messages are all zero-terminated strings.
  */
@@ -84,6 +84,8 @@ public class Emulator {
     private boolean mIsConnected = false;
     /** Disconnection status */
     private boolean mIsDisconnected = false;
+    /** Exit I/O loop flag. */
+    private boolean mExitIoLoop = false;
 
     /***************************************************************************
      * EmulatorChannel - Base class for sync / async channels.
@@ -178,15 +180,18 @@ public class Emulator {
                 }
             } else {
                 response = onQuery(query, query_param);
+                if (response.length() == 0 || response.charAt(0) == '\0') {
+                    Logw("No response to the query " + query_str);
+                }
             }
-            if (response.length() == 0) {
-                Logw("No response to query '" + query + "'. Replying with 'ko'");
-                response = "ko:Protocol error.\0";
-            } else if (response.charAt(response.length() - 1) != '\0') {
-                Logw("Response '" + response + "' to query '" + query
-                        + "' does not contain zero-terminator.");
+
+            if (response.length() != 0) {
+                if (response.charAt(response.length() - 1) != '\0') {
+                    Logw("Response '" + response + "' to query '" + query
+                            + "' does not contain zero-terminator.");
+                }
+                sendMessage(response);
             }
-            sendMessage(response);
         }
     } // EmulatorChannel
 
@@ -555,6 +560,7 @@ public class Emulator {
         // Register 'accept' I/O on the server socket.
         mServerSocket.register(mSelector, SelectionKey.OP_ACCEPT);
 
+        Logv("Emulator listener is created for port " + port);
         // Start I/O looper and dispatcher.
         new Thread(new Runnable() {
             @Override
@@ -689,7 +695,10 @@ public class Emulator {
     private void runIOLooper() {
         try {
             Logv("Waiting on Emulator to connect...");
-            while (mSelector.select() >= 0) {
+            // Check mExitIoLoop before calling 'select', and after in order to
+            // detect condition when mSelector has been waken up to exit the
+            // I/O loop.
+            while (!mExitIoLoop && mSelector.select() >= 0 && !mExitIoLoop) {
                 Set<SelectionKey> readyKeys = mSelector.selectedKeys();
                 Iterator<SelectionKey> i = readyKeys.iterator();
                 while (i.hasNext()) {
@@ -726,7 +735,9 @@ public class Emulator {
         }
 
         // Destroy connection on any I/O failure.
-        onLostConnection();
+        if (!mExitIoLoop) {
+            onLostConnection();
+        }
     }
 
     /**
@@ -763,8 +774,8 @@ public class Emulator {
                 }
             } else {
                 // TODO: Find better way to do that!
-                socket.getOutputStream().write("ko:Duplicate,\0".getBytes());
                 Loge("Duplicate query channel.");
+                socket.getOutputStream().write("ko:Duplicate\0".getBytes());
                 channel.close();
                 return;
             }
@@ -780,13 +791,14 @@ public class Emulator {
                     Logv("Synchronous event channel is registered.");
                 }
             } else {
-                socket.getOutputStream().write("ko:Duplicate,\0".getBytes());
                 Loge("Duplicate event channel.");
+                socket.getOutputStream().write("ko:Duplicate\0".getBytes());
                 channel.close();
                 return;
             }
         } else {
             Loge("Unknown channel is connecting: " + socket_type);
+            socket.getOutputStream().write("ko:Unknown channel type\0".getBytes());
             channel.close();
             return;
         }
@@ -814,23 +826,25 @@ public class Emulator {
             mIsDisconnected = true;
         }
         if (first_time) {
-            Logw("Connection with the emulator is lost.");
-            synchronized (this) {
-                // Close all channels.
-                if (mSelector != null) {
-                    try {
-                        if (mEventChannel != null) {
-                            mEventChannel.closeChannel();
-                        }
-                        if (mQueryChannel != null) {
-                            mQueryChannel.closeChannel();
-                        }
-                        mServerSocket.close();
-                        mSelector.close();
-                    } catch (IOException e) {
-                        Loge("onLostConnection exception: " + e.getMessage());
-                    }
+            Logw("Connection with the emulator is lost!");
+            // Close all channels, exit the I/O loop, and close the selector.
+            try {
+                if (mEventChannel != null) {
+                    mEventChannel.closeChannel();
                 }
+                if (mQueryChannel != null) {
+                    mQueryChannel.closeChannel();
+                }
+                if (mServerSocket != null) {
+                    mServerSocket.close();
+                }
+                if (mSelector != null) {
+                    mExitIoLoop = true;
+                    mSelector.wakeup();
+                    mSelector.close();
+                }
+            } catch (IOException e) {
+                Loge("onLostConnection exception: " + e.getMessage());
             }
 
             // Notify the app about lost connection.

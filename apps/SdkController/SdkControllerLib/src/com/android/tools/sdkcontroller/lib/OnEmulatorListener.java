@@ -22,40 +22,40 @@ package com.android.tools.sdkcontroller.lib;
  * setOnEmulatorListener method of the Emulator class.
  */
 public interface OnEmulatorListener {
-  /**
-   * Called when emulator is connected. NOTE: This method is called from the I/O
-   * loop, so all communication with the emulator will be "on hold" until this
-   * method returns.
-   */
-  public void onEmulatorConnected();
+    /**
+     * Called when emulator is connected. NOTE: This method is called from the
+     * I/O loop, so all communication with the emulator will be "on hold" until
+     * this method returns.
+     */
+    public void onEmulatorConnected();
 
-  /**
-   * Called when emulator is disconnected. NOTE: This method could be called
-   * from the I/O loop, in which case all communication with the emulator will
-   * be "on hold" until this method returns.
-   */
-  public void onEmulatorDisconnected();
+    /**
+     * Called when emulator is disconnected. NOTE: This method could be called
+     * from the I/O loop, in which case all communication with the emulator will
+     * be "on hold" until this method returns.
+     */
+    public void onEmulatorDisconnected();
 
-  /**
-   * Called when a query is received from the emulator. NOTE: This method is
-   * called from the I/O loop, so all communication with the emulator will be
-   * "on hold" until this method returns.
-   *
-   * @param query Name of the query received from the emulator.
-   * @param param Query parameters.
-   * @return Zero-terminated reply string. String must be formatted as such:
-   *         "ok|ko[:reply data]"
-   */
-  public String onEmulatorQuery(String query, String param);
+    /**
+     * Called when a query is received from the emulator. NOTE: This method is
+     * called from the I/O loop, so all communication with the emulator will be
+     * "on hold" until this method returns.
+     *
+     * @param query Name of the query received from the emulator.
+     * @param param Query parameters.
+     * @return Zero-terminated reply string. If not an empty string is returned,
+     *         it must be formatted as such: "ok|ko[:reply data]"
+     */
+    public String onEmulatorQuery(String query, String param);
 
-  /**
-   * Called when a BLOB query is received from the emulator. NOTE: This method
-   * is called from the I/O loop, so all communication with the emulator will be
-   * "on hold" until this method returns.
-   *
-   * @param array contains BLOB data for the query.
-   * @return Zero-terminated reply string. String must be formatted as such:
-   *         "ok|ko[:reply data]"
-   */
-  public String onEmulatorBlobQuery(byte[] array);
+    /**
+     * Called when a BLOB query is received from the emulator. NOTE: This method
+     * is called from the I/O loop, so all communication with the emulator will
+     * be "on hold" until this method returns.
+     *
+     * @param array contains BLOB data for the query.
+     * @return Zero-terminated reply string. If not an empty string is returned,
+     *         it must be formatted as such: "ok|ko[:reply data]"
+     */
+    public String onEmulatorBlobQuery(byte[] array);
 }

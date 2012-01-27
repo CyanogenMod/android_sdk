@@ -460,8 +460,8 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
 
     /**
      * Called when a BLOB query is received from the emulator. NOTE: This method
-     * is called from the I/O loop, so all communication with the emulator will be
-     * "on hold" until this method returns.
+     * is called from the I/O loop, so all communication with the emulator will
+     * be "on hold" until this method returns.
      *
      * @param array contains BLOB data for the query.
      * @return Zero-terminated reply string. String must be formatted as such:

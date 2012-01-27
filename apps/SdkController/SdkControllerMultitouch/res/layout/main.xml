@@ -3,8 +3,10 @@
       xmlns:android="http://schemas.android.com/apk/res/android"
       android:layout_width="fill_parent"
       android:layout_height="fill_parent" >
-   <ImageView android:id="@+id/imageView"
+   <com.android.tools.sdkcontroller.sdkcontrollermultitouch.MultiTouchView
+         class="com.android.tools.sdkcontroller.sdkcontrollermultitouch.MultiTouchView"
+         android:id="@+id/imageView"
          android:layout_width="fill_parent"
          android:layout_height="fill_parent" >
-   </ImageView>
+   </com.android.tools.sdkcontroller.sdkcontrollermultitouch.MultiTouchView>
 </FrameLayout>
