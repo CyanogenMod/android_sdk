@@ -36,13 +36,15 @@ public class LauncherIconGeneratorTest extends GeneratorTest {
         checkGraphic(4 + (isWebGraphic ? 1 : 0), "launcher", baseName, generator, options);
     }
 
-    public void testLauncher_fancyCircle() throws Exception {
-        checkGraphic("red_fancy_circle", GraphicGenerator.Shape.CIRCLE,
-                GraphicGenerator.Style.FANCY, true, 0xFF0000, true);
+    public void testLauncher_simpleCircle() throws Exception {
+        checkGraphic("red_simple_circle", GraphicGenerator.Shape.CIRCLE,
+                GraphicGenerator.Style.SIMPLE, true, 0xFF0000, true);
     }
 
-    public void testLauncher_glossySquare() throws Exception {
-        checkGraphic("blue_glossy_square", GraphicGenerator.Shape.SQUARE,
-                GraphicGenerator.Style.GLOSSY, true, 0x0040FF, true);
-    }
+    // The glossy rendering type is no longer included since it doesn't match the
+    // style guide.
+    //public void testLauncher_glossySquare() throws Exception {
+    //    checkGraphic("blue_glossy_square", GraphicGenerator.Shape.SQUARE,
+    //            GraphicGenerator.Style.GLOSSY, true, 0x0040FF, true);
+    //}
 }
