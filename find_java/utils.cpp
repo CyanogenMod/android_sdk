@@ -46,7 +46,7 @@ void displayLastError(const char *description, ...) {
     va_end(ap);
 
     CString error;
-    error.setLastWin32Error();
+    error.setLastWin32Error(NULL);
     formatted.add("\r\n");
     formatted.add(error.cstr());
 

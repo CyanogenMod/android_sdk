@@ -201,7 +201,8 @@ public:
     }
 
     // Sets the string to the message matching Win32 GetLastError.
-    CString& setLastWin32Error() {
+    // If message is non-null, it is prepended to the last error string.
+    CString& setLastWin32Error(const char *message) {
         DWORD err = GetLastError();
         LPSTR errStr;
         if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | /* dwFlags */
@@ -212,7 +213,11 @@ public:
                           (LPSTR)&errStr,                   /* lpBuffer */
                           0,                                /* nSize */
                           NULL) != 0) {                     /* va_list args */
-            setf("[%d] %s", err, errStr);
+            if (message == NULL) {
+                setf("[%d] %s", err, errStr);
+            } else {
+                setf("%s[%d] %s", message, err, errStr);
+            }
             LocalFree(errStr);
         }
         return *this;
