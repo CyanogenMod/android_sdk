@@ -65,6 +65,7 @@ int main(int argc, char* argv[]) {
     gIsDebug = (getenv("ANDROID_SDKMAN_DEBUG") != NULL);
     bool doShortPath = false;
     bool doVersion = false;
+    bool doJavaW = false;
 
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "-t", 2) == 0) {
@@ -80,6 +81,9 @@ int main(int argc, char* argv[]) {
         } else if (strncmp(argv[i], "-v", 2) == 0) {
             doVersion = true;
 
+        } else if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "-javaw") == 0) {
+            doJavaW = true;
+
         } else {
             printf(
                 "Outputs the path of the first Java.exe found on the local system.\n"
@@ -88,6 +92,7 @@ int main(int argc, char* argv[]) {
                 "-h / -help   : This help.\n"
                 "-t / -test   : Internal test.\n"
                 "-s / -short  : Print path in short DOS form.\n"
+                "-w / -javaw  : Search a matching javaw.exe; defaults to java.exe if not found.\n"
                 "-v / -version: Only prints the Java version found.\n"
                 );
             return 2;
@@ -123,6 +128,18 @@ int main(int argc, char* argv[]) {
         } else {
             fprintf(stderr, "Failed to get version of %s\n", javaPath.cstr());
         }
+    }
+
+    if (doJavaW) {
+        // Try to find a javaw.exe instead of java.exe at the same location.
+        CPath javawPath(javaPath);
+        javawPath.replaceName("java.exe", "javaw.exe");
+        // Only accept it if we can actually find the exec
+        PVOID oldWow64Value = disableWow64FsRedirection();
+        if (javawPath.fileExists()) {
+            javaPath.set(javawPath.cstr());
+        }
+        revertWow64FsRedirection(&oldWow64Value);
     }
 
     // Print java.exe path found
