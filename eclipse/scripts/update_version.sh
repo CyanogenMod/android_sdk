@@ -28,10 +28,10 @@ NEW="${NEW//./\.}\.qualifier"
 
 # Now find the same files but this time use sed to replace in-place with
 # the new pattern. Old files get backuped with the .old extension.
-grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i -e "s/$OLD/$NEW/g"
+grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i "" "s/$OLD/$NEW/g"
 
 # do another grep for older version without the qualifier. We don't
 # want to replace those automatically as it could be something else.
 # Printing out occurence helps find ones to update manually.
-grep -rl "$REALOLD" *
+grep -r "$REALOLD" *
 
