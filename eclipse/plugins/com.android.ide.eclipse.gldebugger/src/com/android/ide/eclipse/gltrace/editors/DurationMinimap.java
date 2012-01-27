@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 
@@ -77,6 +78,7 @@ public class DurationMinimap extends Canvas {
 
     private Color mBackgroundColor;
     private Color mDurationLineColor;
+    private Color mGlDrawColor;
     private Color mContextHeaderColor;
     private Color mVisibleCallsHighlightColor;
     private Color mMouseMarkerColor;
@@ -167,7 +169,8 @@ public class DurationMinimap extends Canvas {
 
     private void initializeColors() {
         mBackgroundColor = new Color(getDisplay(), 0x33, 0x33, 0x33);
-        mDurationLineColor = new Color(getDisplay(), 0x21, 0x66, 0xac);
+        mDurationLineColor = new Color(getDisplay(), 0x08, 0x51, 0x9c);
+        mGlDrawColor = new Color(getDisplay(), 0x6b, 0xae, 0xd6);
         mContextHeaderColor = new Color(getDisplay(), 0xd1, 0xe5, 0xf0);
         mVisibleCallsHighlightColor = new Color(getDisplay(), 0xcc, 0xcc, 0xcc);
         mMouseMarkerColor = new Color(getDisplay(), 0xaa, 0xaa, 0xaa);
@@ -176,6 +179,7 @@ public class DurationMinimap extends Canvas {
     private void disposeColors() {
         mBackgroundColor.dispose();
         mDurationLineColor.dispose();
+        mGlDrawColor.dispose();
         mContextHeaderColor.dispose();
         mVisibleCallsHighlightColor.dispose();
         mMouseMarkerColor.dispose();
@@ -294,12 +298,22 @@ public class DurationMinimap extends Canvas {
 
         int callUnderScan = mPositionHelper.getCallUnderScanValue();
         for (int i = mStartCallIndex; i < mEndCallIndex; i += callUnderScan) {
+            boolean resetColor = false;
             GLCall c = mCalls.get(i);
+            if (c.getFunction() == Function.glDrawArrays
+                    || c.getFunction() == Function.glDrawElements) {
+                gc.setBackground(mGlDrawColor);
+                resetColor = true;
+            }
             Rectangle bounds = mPositionHelper.getDurationBounds(
                     i - mStartCallIndex,
                     c.getContextId(),
                     c.getDuration());
             gc.fillRectangle(bounds);
+
+            if (resetColor) {
+                gc.setBackground(mDurationLineColor);
+            }
         }
     }
 

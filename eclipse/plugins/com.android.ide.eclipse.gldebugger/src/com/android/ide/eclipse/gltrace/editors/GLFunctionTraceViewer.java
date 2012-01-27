@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
 import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
@@ -25,6 +26,9 @@ import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -43,6 +47,8 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -77,8 +83,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
 
-    // TODO: The thumbnail width & height are constant right now, but should be scaled
-    //       based on the size of the viewport/device.
     /** Width of thumbnail images of the framebuffer. */
     private static final int THUMBNAIL_WIDTH = 50;
 
@@ -94,6 +98,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Text mFilterText;
     private GLCallFilter mGLCallFilter;
 
+    private Color mGldrawTextColor;
+
     // Currently displayed frame's start and end call indices.
     private int mCallStartIndex;
     private int mCallEndIndex;
@@ -102,6 +108,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private ScrollBar mVerticalScrollBar;
 
     public GLFunctionTraceViewer() {
+        mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
     }
 
     @Override
@@ -225,9 +232,18 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionSpinner.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                // Disable spinner until all necessary action is complete.
+                // This seems to be necessary (atleast on Linux) for the spinner to not get
+                // stuck in a pressed state if it is pressed for more than a few seconds
+                // continuously.
+                mFrameSelectionSpinner.setEnabled(false);
+
                 int selectedFrame = mFrameSelectionSpinner.getSelection();
                 mFrameSelectionScale.setSelection(selectedFrame);
                 selectFrame(selectedFrame);
+
+                // re-enable spinner
+                mFrameSelectionSpinner.setEnabled(true);
             }
         });
     }
@@ -241,7 +257,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionScale.setSelection(selectedFrame);
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
-        List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
+        final List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
         mFrameTableViewer.setInput(glcalls);
         mFrameTableViewer.refresh();
 
@@ -249,6 +265,30 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mCallStartIndex = f.getStartIndex();
         mCallEndIndex = f.getEndIndex();
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
+
+        // update framebuffer view
+        Job job = new Job("Update Framebuffer view") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                if (glcalls.size() == 0) {
+                    return Status.OK_STATUS;
+                }
+
+                GLCall lastCallInFrame = glcalls.get(glcalls.size() - 1);
+                final Image image = mTrace.getImage(lastCallInFrame);
+
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        displayFB(image);
+                    }
+                });
+
+                return Status.OK_STATUS;
+            }
+        };
+        job.setPriority(Job.SHORT);
+        job.schedule();
     }
 
     private void createFilterBar(Composite parent) {
@@ -321,20 +361,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         mFrameTableViewer.setContentProvider(new GLFrameContentProvider());
 
-        table.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetDefaultSelected(SelectionEvent event) {
-                int []indices = table.getSelectionIndices();
-                if (indices.length != 1) {
-                    return;
-                }
-
-                int selectedIndex = indices[0];
-                GLCall glCall = (GLCall) table.getItem(selectedIndex).getData();
-                displayFB(glCall);
-            }
-        });
-
         mGLCallFilter = new GLCallFilter();
         mFrameTableViewer.addFilter(mGLCallFilter);
 
@@ -381,7 +407,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mDurationMinimap.setVisibleCallRange(visibleCallTopIndex, visibleCallBottomIndex);
     }
 
-    private void displayFB(GLCall glCall) {
+    private void displayFB(Image image) {
         IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (window == null) {
             return;
@@ -397,7 +423,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             return;
         }
 
-        v.displayFB(mTrace.getImage(glCall));
+        v.displayFB(image);
     }
 
     private GLFramebufferView displayFBView(IWorkbenchPage page) {
@@ -447,6 +473,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             }
 
             GLCall c = (GLCall) element;
+
+            if (c.getFunction() == Function.glDrawArrays
+                    || c.getFunction() == Function.glDrawElements) {
+                cell.setForeground(mGldrawTextColor);
+            }
+
             cell.setText(getColumnText(c, cell.getColumnIndex()));
         }
 
