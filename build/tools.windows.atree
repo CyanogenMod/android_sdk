@@ -17,6 +17,9 @@
 #
 # These are the files that comprise the tools component of the Windows SDK.
 #
+# IMPORTANT: for a binary to be included here, it must be built --
+# typically by adding it to WIN_SDK_TARGETS in windows_sdk_tools.mk.
+#
 
 rm tools/android
 sdk/sdkmanager/app/etc/android.bat                tools/android.bat
@@ -86,12 +89,12 @@ bin/zipalign.exe                            strip tools/zipalign.exe
 
 # Copy the AVD & SDK Manager (aka avd/sdklauncher) to the root of the SDK as
 # well as in SDK/tools/lib (so that tools updates can update the root one too)
-bin/avdlauncher.exe              "AVD Manager.exe"
-bin/sdklauncher.exe              "SDK Manager.exe"
-/bin/avdlauncher.exe              "tools/lib/AVD Manager.exe"
-/bin/sdklauncher.exe              "tools/lib/SDK Manager.exe"
+bin/avdlauncher.exe                               "AVD Manager.exe"
+bin/sdklauncher.exe                               "SDK Manager.exe"
+bin/avdlauncher.exe                               "tools/lib/AVD Manager.exe"
+bin/sdklauncher.exe                               "tools/lib/SDK Manager.exe"
 
 # Supporting bat files
 sdk/files/post_tools_install.bat                  tools/lib/post_tools_install.bat
 sdk/find_java/find_java.bat                       tools/lib/find_java.bat
-bin/find_java.exe                                 tools/lib/find_java.exe
+bin/find_java.exe                           strip tools/lib/find_java.exe
