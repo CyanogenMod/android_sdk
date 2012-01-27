@@ -536,7 +536,9 @@ class HtmlReporter extends Reporter {
 
                 String line = Main.getLineOfOffset(contents, lineOffset);
                 if (offset != -1 && lineOffset <= offset && lineOffset+line.length() >= offset) {
-                    assert l == lineno;
+                    // Text nodes do not always have correct lines/offsets
+                    //assert l == lineno;
+
                     // This line contains the beginning of the offset
                     // First print everything before
                     int delta = offset - lineOffset;

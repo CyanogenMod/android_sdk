@@ -50,5 +50,7 @@ public class DefaultSdkInfoTest extends TestCase {
         assertFalse(info.isSubViewOf("TableLayout", "LinearLayout"));
         assertTrue(info.isSubViewOf("TextView", "EditText"));
         assertFalse(info.isSubViewOf("EditText", "TextView"));
+        assertTrue(info.isSubViewOf("View", "TextView"));
+        assertFalse(info.isSubViewOf("TextView", "View"));
     }
 }
