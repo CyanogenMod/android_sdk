@@ -84,6 +84,7 @@ public class LintConstants {
     public static final String SEEK_BAR = "SeekBar";                   //$NON-NLS-1$
     public static final String VIEW_STUB = "ViewStub";                 //$NON-NLS-1$
     public static final String SPINNER = "Spinner";                    //$NON-NLS-1$
+    public static final String WEB_VIEW = "WebView";                   //$NON-NLS-1$
     public static final String TOGGLE_BUTTON = "ToggleButton";         //$NON-NLS-1$
     public static final String CHECK_BOX = "CheckBox";                 //$NON-NLS-1$
     public static final String ABS_LIST_VIEW = "AbsListView";          //$NON-NLS-1$

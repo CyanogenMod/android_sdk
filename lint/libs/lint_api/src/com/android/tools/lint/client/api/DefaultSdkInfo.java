@@ -54,6 +54,7 @@ import static com.android.tools.lint.detector.api.LintConstants.VIEW_GROUP;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_PKG_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_STUB;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_SWITCHER;
+import static com.android.tools.lint.detector.api.LintConstants.WEB_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.WIDGET_PKG_PREFIX;
 
 import com.android.annotations.NonNull;
@@ -106,6 +107,11 @@ class DefaultSdkInfo extends SdkInfo {
         if (child.indexOf('.') != -1) {
             child = child.substring(child.lastIndexOf('.') + 1);
         }
+
+        if (parent.equals(VIEW)) {
+            return true;
+        }
+
         while (!child.equals(VIEW)) {
             if (parent.equals(child)) {
                 return true;
@@ -120,7 +126,7 @@ class DefaultSdkInfo extends SdkInfo {
         return false;
     }
 
-    private static final int CLASS_COUNT = 56;
+    private static final int CLASS_COUNT = 57;
 
     @NonNull
     private static final Map<String, String> PARENTS = new HashMap<String, String>(CLASS_COUNT);
@@ -163,6 +169,7 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(TABLE_LAYOUT, LINEAR_LAYOUT);
         PARENTS.put(SCROLL_VIEW, FRAME_LAYOUT);
         PARENTS.put(GRID_VIEW, ABS_LIST_VIEW);
+        PARENTS.put(WEB_VIEW, ABSOLUTE_LAYOUT);
 
         PARENTS.put("CheckedTextView", TEXT_VIEW);        //$NON-NLS-1$
         PARENTS.put("MediaController", FRAME_LAYOUT);     //$NON-NLS-1$
