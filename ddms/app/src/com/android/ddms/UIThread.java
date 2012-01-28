@@ -52,6 +52,7 @@ import com.android.ddmuilib.logcat.LogColors;
 import com.android.ddmuilib.logcat.LogFilter;
 import com.android.ddmuilib.logcat.LogPanel;
 import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
+import com.android.ddmuilib.net.NetworkPanel;
 import com.android.menubar.IMenuBarCallback;
 import com.android.menubar.IMenuBarEnhancer;
 import com.android.menubar.IMenuBarEnhancer.MenuBarMode;
@@ -127,19 +128,22 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
     private static final int PANEL_SYSINFO = 5;
 
-    private static final int PANEL_COUNT = 6;
+    private static final int PANEL_NETWORK = 6;
+
+    private static final int PANEL_COUNT = 7;
 
     /** Content is setup in the constructor */
     private static TablePanel[] mPanels = new TablePanel[PANEL_COUNT];
 
     private static final String[] mPanelNames = new String[] {
             "Info", "Threads", "VM Heap", "Native Heap",
-            "Allocation Tracker", "Sysinfo"
+            "Allocation Tracker", "Sysinfo", "Network"
     };
 
     private static final String[] mPanelTips = new String[] {
             "Client information", "Thread status", "VM heap status",
-            "Native heap status", "Allocation Tracker", "Sysinfo graphs"
+            "Native heap status", "Allocation Tracker", "Sysinfo graphs",
+            "Network usage"
     };
 
     private static final String PREFERENCE_LOGSASH =
@@ -420,6 +424,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         }
         mPanels[PANEL_ALLOCATIONS] = new AllocationPanel();
         mPanels[PANEL_SYSINFO] = new SysinfoPanel();
+        mPanels[PANEL_NETWORK] = new NetworkPanel();
     }
 
     /**
