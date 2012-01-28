@@ -147,6 +147,9 @@ prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  to
 # SDK Controller
 sdk/apps/SdkController       tools/apps/SdkController
 
+# tools specific support jar
+framework/annotations.jar   tools/support/annotations.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################

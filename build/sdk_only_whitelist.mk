@@ -40,6 +40,7 @@ ifneq (,$(shell which javac 2>/dev/null))
 subdirs += \
 	sdk/archquery \
 	sdk/androidprefs \
+	sdk/annotations \
 	sdk/apkbuilder \
 	sdk/assetstudio \
 	sdk/common \
