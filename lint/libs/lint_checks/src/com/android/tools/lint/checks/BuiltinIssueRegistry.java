@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 
@@ -58,6 +59,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MathDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(SdCardDetector.ISSUE);
+        issues.add(ApiDetector.MISSING);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(WrongIdDetector.UNKNOWN_ID);

@@ -22,6 +22,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,5 +71,9 @@ public class Api {
 
     public ApiClass getClass(String fqcn) {
         return mClasses.get(fqcn);
+    }
+
+    public Map<String, ApiClass> getClasses() {
+        return Collections.unmodifiableMap(mClasses);
     }
 }

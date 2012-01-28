@@ -364,26 +364,24 @@ public abstract class AbstractCheckTest extends TestCase {
 
         @Override
         public File findResource(String relativePath) {
-            // First look within the Eclipse install directory; then look within the $ANDROID_SDK
-            CodeSource source = getClass().getProtectionDomain().getCodeSource();
-            if (source != null) {
-                URL location = source.getLocation();
-                try {
-                    File dir = new File(location.toURI());
-                    assertTrue(dir.getPath(), dir.exists());
-                    File sdkDir = dir.getParentFile().getParentFile().getParentFile()
-                            .getParentFile().getParentFile();
-                    assertEquals("sdk", sdkDir.getName());
-                    File lib = new File(sdkDir, "eclipse" + File.separator + "plugins"
-                            + File.separator + "com.android.ide.eclipse.adt" + File.separator
-                            + "libs");
-                    assertTrue(lib.getPath(), lib.exists());
-                    File file = new File(lib, relativePath);
-                    assertTrue(file.getPath(), file.exists());
-                    return file;
-                } catch (URISyntaxException e) {
-                    fail(e.getLocalizedMessage());
+            if (relativePath.equals("platform-tools/api/api-versions.xml")) {
+                CodeSource source = getClass().getProtectionDomain().getCodeSource();
+                if (source != null) {
+                    URL location = source.getLocation();
+                    try {
+                        File dir = new File(location.toURI());
+                        assertTrue(dir.getPath(), dir.exists());
+                        File sdkDir = dir.getParentFile().getParentFile().getParentFile()
+                                .getParentFile().getParentFile().getParentFile();
+                        File file = new File(sdkDir, "development" + File.separator + "sdk"
+                                + File.separator + "api-versions.xml");
+                        return file;
+                    } catch (URISyntaxException e) {
+                        fail(e.getLocalizedMessage());
+                    }
                 }
+            } else {
+                fail("Unit tests don't support arbitrary resource lookup yet.");
             }
 
             return super.findResource(relativePath);

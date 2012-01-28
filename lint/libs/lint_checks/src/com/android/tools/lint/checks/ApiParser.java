@@ -41,7 +41,7 @@ public class ApiParser extends DefaultHandler {
 
     private final Map<String, ApiClass> mClasses = new HashMap<String, ApiClass>();
 
-    private ApiClassImpl mCurrentClass;
+    private ApiClass mCurrentClass;
 
     public ApiParser() {
     }
@@ -99,10 +99,10 @@ public class ApiParser extends DefaultHandler {
         }
     }
 
-    private ApiClassImpl addClass(String name, int apiLevel) {
-        ApiClassImpl theClass = (ApiClassImpl) mClasses.get(name);
+    private ApiClass addClass(String name, int apiLevel) {
+        ApiClass theClass = mClasses.get(name);
         if (theClass == null) {
-            theClass = new ApiClassImpl(name, apiLevel);
+            theClass = new ApiClass(name, apiLevel);
             mClasses.put(name, theClass);
         }
 
