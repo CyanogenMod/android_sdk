@@ -203,7 +203,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mImageRadio.setText("Image");
 
         mClipartRadio = new Button(foregroundComposite, SWT.FLAT | SWT.TOGGLE);
-        mClipartRadio.setEnabled(false);
         mClipartRadio.setText("Clipart");
         mClipartRadio.addSelectionListener(this);
 
@@ -693,7 +692,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                                         if (icon != null) {
                                             Display display = mClipartForm.getDisplay();
                                             Image swtImage = SwtUtils.convertToSwt(display, icon,
-                                                    false, -1);
+                                                    true, -1);
                                             new ImageControl(mClipartPreviewPanel,
                                                     SWT.NONE, swtImage);
                                         }
@@ -716,7 +715,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                         try {
                             BufferedImage icon = GraphicGenerator.getClipartIcon(name);
                             if (icon != null) {
-                                Image swtImage = SwtUtils.convertToSwt(display, icon, false, -1);
+                                Image swtImage = SwtUtils.convertToSwt(display, icon, true, -1);
                                 ImageControl img = new ImageControl(chooserForm,
                                         SWT.NONE, swtImage);
                                 img.setData(name);
