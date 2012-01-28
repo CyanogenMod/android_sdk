@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -37,6 +38,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,7 +134,7 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
                 }
             }
 
-            // same thing for the library container
+            // if there isn't any, add it.
             if (foundLibrariesContainer == false) {
                 // add the android container to the array
                 rawClasspath = ProjectHelper.addEntryToClasspath(rawClasspath,
@@ -184,6 +186,20 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
                 entries.add(entry);
             }
+        }
+
+        // annotations support for older version of android
+        if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
+            File annotationsJar = new File(Sdk.getCurrent().getSdkLocation(),
+                    SdkConstants.FD_TOOLS + File.separator + SdkConstants.FD_SUPPORT +
+                    File.separator + SdkConstants.FN_ANNOTATIONS_JAR);
+
+            IClasspathEntry entry = JavaCore.newLibraryEntry(
+                    new Path(annotationsJar.getAbsolutePath()),
+                    null, // source attachment path
+                    null);        // default source attachment root path.
+
+            entries.add(0, entry);
         }
 
         return new AndroidClasspathContainer(
