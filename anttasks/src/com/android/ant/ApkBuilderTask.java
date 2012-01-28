@@ -349,25 +349,6 @@ public class ApkBuilderTask extends SingleDependencyTask {
                 apkBuilder.addSourceFolder(f);
             }
 
-            // now go through the list of jar folders.
-            for (Path pathList : mJarfolderList) {
-                for (String path : pathList.list()) {
-                    // it's ok if top level folders are missing
-                    File folder = new File(path);
-                    if (folder.isDirectory()) {
-                        String[] filenames = folder.list(new FilenameFilter() {
-                            public boolean accept(File dir, String name) {
-                                return PATTERN_JAR_EXT.matcher(name).matches();
-                            }
-                        });
-
-                        for (String filename : filenames) {
-                            apkBuilder.addResourcesFromJar(new File(folder, filename));
-                        }
-                    }
-                }
-            }
-
             // now go through the list of jar files.
             for (File f : jarFileList) {
                 apkBuilder.addResourcesFromJar(f);
