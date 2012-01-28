@@ -52,6 +52,9 @@
     <property name="java.source" value="1.5" />
     <property name="java.compilerargs" value="" />
 
+    <!-- instrumentation options -->
+    <property name="emma.filter" value="" />
+
     <!-- Verbosity -->
     <property name="verbose" value="false" />
 
@@ -692,9 +695,9 @@
                                mode="overwrite"
                                instrpath="${out.absolute.dir}/classes"
                                outdir="${out.absolute.dir}/classes">
+                            <filter excludes="${manifest.package}.R,${manifest.package}.R$$*,${manifest.package}.BuildConfig" />
+                            <filter value="${emma.filter}" />
                         </instr>
-                        <!-- TODO: exclusion filters on R*.class and allowing custom exclusion from
-                             user defined file -->
                     </emma>
                 </then>
             </if>
