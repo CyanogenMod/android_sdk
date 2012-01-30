@@ -85,6 +85,9 @@ public final class SdkConstants {
     /** Intent category list file */
     public static final String FN_INTENT_CATEGORIES = "categories.txt";               //$NON-NLS-1$
 
+    /** annotations support jar */
+    public static final String FN_ANNOTATIONS_JAR = "annotations.jar";                //$NON-NLS-1$
+
     /** platform build property file */
     public final static String FN_BUILD_PROP = "build.prop";                          //$NON-NLS-1$
     /** plugin properties file */
@@ -204,6 +207,8 @@ public final class SdkConstants {
     public final static String FD_PKG_SOURCES = "sources";              //$NON-NLS-1$
     /** Name of the SDK tools folder. */
     public final static String FD_TOOLS = "tools";                      //$NON-NLS-1$
+    /** Name of the SDK tools/support folder. */
+    public final static String FD_SUPPORT = "support";                  //$NON-NLS-1$
     /** Name of the SDK platform tools folder. */
     public final static String FD_PLATFORM_TOOLS = "platform-tools";    //$NON-NLS-1$
     /** Name of the SDK tools/lib folder. */

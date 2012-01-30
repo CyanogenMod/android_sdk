@@ -76,7 +76,7 @@ public class InputPath {
      */
     public boolean ignores(File file) {
         // always ignore hidden files/folders.
-        return file.getName().startsWith(".") == false;
+        return file.getName().startsWith(".");
     }
 
     /**

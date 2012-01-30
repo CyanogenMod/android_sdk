@@ -24,7 +24,6 @@ import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
@@ -71,7 +70,6 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -1055,6 +1053,8 @@ public final class Sdk  {
                                 file.getProject());
                         if (javaProject != null) {
                             AndroidClasspathContainerInitializer.updateProjects(
+                                    new IJavaProject[] { javaProject });
+                            LibraryClasspathContainerInitializer.updateProjects(
                                     new IJavaProject[] { javaProject });
                         }
 

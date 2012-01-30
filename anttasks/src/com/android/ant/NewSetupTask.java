@@ -20,10 +20,10 @@ import com.android.io.FileWrapper;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
@@ -282,7 +282,7 @@ public class NewSetupTask extends Task {
         }
 
         // look for referenced libraries.
-        processReferencedLibraries(antProject, androidTarget);
+        processReferencedLibraries(antProject, androidTarget, sdkOsPath);
 
         // always check the manifest minSdkVersion.
         checkManifest(antProject, androidTarget.getVersion());
@@ -436,7 +436,8 @@ public class NewSetupTask extends Task {
         }
     }
 
-    private void processReferencedLibraries(Project antProject, IAndroidTarget androidTarget) {
+    private void processReferencedLibraries(Project antProject, IAndroidTarget androidTarget,
+            String sdkLocation) {
         // prepare several paths for future tasks
         Path rootPath = new Path(antProject);
         Path resPath = new Path(antProject);
@@ -522,6 +523,17 @@ public class NewSetupTask extends Task {
         }
 
         System.out.println("------------------\n");
+
+        if (androidTarget.getVersion().getApiLevel() <= 15) {
+            System.out.println("API<=15: Adding annotations.jar to the classpath.\n");
+
+            PathElement element = jarsPath.createPathElement();
+            element.setPath(sdkLocation + "/" + SdkConstants.FD_TOOLS +
+                    "/" + SdkConstants.FD_SUPPORT +
+                    "/" + SdkConstants.FN_ANNOTATIONS_JAR);
+
+            System.out.println("------------------\n");
+        }
 
         // even with no libraries, always setup these so that various tasks in Ant don't complain
         // (the task themselves can handle a ref to an empty Path)
