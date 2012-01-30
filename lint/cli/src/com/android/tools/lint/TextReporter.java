@@ -67,9 +67,8 @@ class TextReporter extends Reporter {
 
                 output.append('\n');
 
-                if (warning.errorLine != null) {
-                    output.append(warning.errorLine.trim());
-                    output.append('\n');
+                if (warning.errorLine != null && warning.errorLine.length() > 0) {
+                    output.append(warning.errorLine);
                 }
 
                 if (warning.location != null && warning.location.getSecondary() != null) {

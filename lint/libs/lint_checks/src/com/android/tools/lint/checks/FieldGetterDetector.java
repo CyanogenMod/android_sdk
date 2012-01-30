@@ -127,7 +127,9 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                                 Integer line = pair.getSecond();
                                 Location location = null;
                                 if (source != null) {
-                                    location = Location.create(source, contents, line);
+                                    // ASM line numbers are 1-based, Lint needs 0-based
+                                    location = Location.create(source, contents, line - 1, name,
+                                            null);
                                 } else {
                                     location = Location.create(mContext.file);
                                 }
@@ -164,6 +166,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                         if (mPendingCalls == null) {
                             mPendingCalls = new ArrayList<Pair<String,Integer>>();
                         }
+                        // Line numbers should be 0-based
                         mPendingCalls.add(Pair.of(name, mCurrentLine));
                     }
                 }

@@ -175,6 +175,7 @@ public class ClassContext extends Context {
     public Location getLocationForLine(int line, String patternStart, String patternEnd) {
         File sourceFile = getSourceFile();
         if (sourceFile != null) {
+            // ASM line numbers are 1-based, and lint line numbers are 0-based
             return Location.create(sourceFile, getSourceContents(), line - 1,
                     patternStart, patternEnd);
         }
