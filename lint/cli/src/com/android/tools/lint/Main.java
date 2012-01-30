@@ -246,6 +246,22 @@ public class Main extends LintClient {
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 File output = new File(args[++index]);
+                if (output.isDirectory() ||
+                        (!output.exists() && output.getName().indexOf('.') == -1)) {
+                    if (!output.exists()) {
+                        boolean mkdirs = output.mkdirs();
+                        if (!mkdirs) {
+                            log(null, "Could not create output directory %1$s", output);
+                            System.exit(ERRNO_EXISTS);
+                        }
+                    }
+                    MultiProjectHtmlReporter reporter = new MultiProjectHtmlReporter(this, output);
+                    if (arg.equals(ARG_SIMPLEHTML)) {
+                        reporter.setSimpleFormat(true);
+                    }
+                    mReporter = reporter;
+                    continue;
+                }
                 if (output.exists()) {
                     boolean delete = output.delete();
                     if (!delete) {
@@ -253,7 +269,7 @@ public class Main extends LintClient {
                         System.exit(ERRNO_EXISTS);
                     }
                 }
-                if (output.canWrite()) {
+                if (!output.getParentFile().canWrite()) {
                     System.err.println("Cannot write HTML output file " + output);
                     System.exit(ERRNO_EXISTS);
                 }
@@ -386,7 +402,6 @@ public class Main extends LintClient {
                 }
                 files.add(file);
             }
-            // TODO: Add flag to point to a file of specific errors to suppress
         }
 
         if (files.size() == 0) {
@@ -402,29 +417,28 @@ public class Main extends LintClient {
             }
 
             mReporter = new TextReporter(this, new PrintWriter(System.out, true));
-        } else if (mReporter instanceof HtmlReporter) {
-            HtmlReporter htmlReporter = (HtmlReporter) mReporter;
-
+        } else {
             if (urlMap == null) {
                 // By default just map from /foo to file:///foo
                 // TODO: Find out if we need file:// on Windows.
                 urlMap = "=file://"; //$NON-NLS-1$
-                if (!htmlReporter.isSimpleFormat()) {
-                    htmlReporter.setBundleResources(true);
+                if (!mReporter.isSimpleFormat()) {
+                    mReporter.setBundleResources(true);
                 }
-            }
-            Map<String, String> map = new HashMap<String, String>();
-            String[] replace = urlMap.split(","); //$NON-NLS-1$
-            for (String s : replace) {
-                String[] v = s.split("="); //$NON-NLS-1$
-                if (v.length != 2) {
-                    System.err.println(
-                            "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                    System.exit(ERRNO_INVALIDARGS);
+            } else {
+                Map<String, String> map = new HashMap<String, String>();
+                String[] replace = urlMap.split(","); //$NON-NLS-1$
+                for (String s : replace) {
+                    String[] v = s.split("="); //$NON-NLS-1$
+                    if (v.length != 2) {
+                        System.err.println(
+                                "The URL map argument must be of the form 'path_prefix=url_prefix'");
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    map.put(v[0], v[1]);
                 }
-                map.put(v[0], v[1]);
+                mReporter.setUrlMap(map);
             }
-            htmlReporter.setUrlMap(map);
         }
 
         Lint analyzer = new Lint(registry, this);
@@ -644,7 +658,9 @@ public class Main extends LintClient {
             ARG_NOLINES, "Do not include the source file lines with errors " +
                 "in the output. By default, the error output includes snippets of source code " +
                 "on the line containing the error, but this flag turns it off.",
-            ARG_HTML + " <filename>", "Create an HTML report instead.",
+            ARG_HTML + " <filename>", "Create an HTML report instead. If the filename is a " +
+                "directory (or a new filename without an extension), lint will create a " +
+                "separate report for each scanned project.",
             ARG_URL + " filepath=url", "Add links to HTML report, replacing local " +
                 "path prefixes with url prefix. The mapping can be a comma-separated list of " +
                 "path prefixes to corresponding URL prefixes, such as " +
@@ -918,18 +934,18 @@ public class Main extends LintClient {
                     if (lint.getPhase() > 1) {
                         System.out.print(String.format(
                                 "\nScanning %1$s (Phase %2$d): ",
-                                context.getProject().getDir().getName(),
+                                context.getProject().getName(),
                                 lint.getPhase()));
                     } else {
                         System.out.print(String.format(
                                 "\nScanning %1$s: ",
-                                context.getProject().getDir().getName()));
+                                context.getProject().getName()));
                     }
                     break;
                 case SCANNING_LIBRARY_PROJECT:
                     System.out.print(String.format(
                             "\n         - %1$s: ",
-                            context.getProject().getDir().getName()));
+                            context.getProject().getName()));
                     break;
                 case SCANNING_FILE:
                     System.out.print('.');

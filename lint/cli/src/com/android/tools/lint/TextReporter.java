@@ -25,11 +25,11 @@ import java.util.List;
 
 /** A reporter which emits lint warnings as plain text strings */
 class TextReporter extends Reporter {
-    private Main mClient;
+    private final Writer mWriter;
 
     TextReporter(Main client, Writer writer) {
-        super(writer);
-        mClient = client;
+        super(client, null);
+        mWriter = writer;
     }
 
     @Override

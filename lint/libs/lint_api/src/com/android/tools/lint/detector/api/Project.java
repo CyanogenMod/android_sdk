@@ -66,6 +66,7 @@ public class Project {
     private int mMinSdk = 1;
     private int mTargetSdk = -1;
     private boolean mLibrary;
+    private String mName;
 
     /** The SDK info, if any */
     private SdkInfo mSdkInfo;
@@ -491,5 +492,20 @@ public class Project {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the name of the project
+     *
+     * @return the name of the project, never null
+     */
+    @NonNull
+    public String getName() {
+        if (mName == null) {
+            // TODO: Consider reading the name from .project (if it's an Eclipse project)
+            mName = mDir.getName();
+        }
+
+        return mName;
     }
 }
