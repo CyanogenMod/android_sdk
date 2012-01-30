@@ -164,7 +164,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                         String className = desc.substring(1, desc.length() - 1);
                         int api = mApiDatabase.getClassVersion(className);
                         if (api > minSdk) {
-                            String fqcn = desc.replace('/', '.');
+                            String fqcn = className.replace('/', '.').replace('$', '.');
                             String message = String.format(
                                 "Class requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
@@ -187,7 +187,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                     String type = signature.substring(args + 2, signature.length() - 1);
                     int api = mApiDatabase.getClassVersion(type);
                     if (api > minSdk) {
-                        String fqcn = type.replace('/', '.');
+                        String fqcn = type.replace('/', '.').replace('$', '.');
                         String message = String.format(
                             "Class requires API level %1$d (current min is %2$d): %3$s",
                             api, minSdk, fqcn);
