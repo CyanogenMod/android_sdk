@@ -31,13 +31,11 @@ import java.util.List;
  * A reporter which emits lint results into an XML report.
  */
 class XmlReporter extends Reporter {
-    private final File mOutput;
-    private final Main mClient;
+    private final Writer mWriter;
 
     XmlReporter(Main client, File output) throws IOException {
-        super(new BufferedWriter(Files.newWriter(output, Charsets.UTF_8)));
-        mClient = client;
-        mOutput = output;
+        super(client, output);
+        mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
     }
 
     @Override

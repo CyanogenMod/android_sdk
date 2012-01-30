@@ -26,21 +26,17 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A reporter which emits lint results into an HTML report.
@@ -57,19 +53,11 @@ class HtmlReporter extends Reporter {
      */
     private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
 
-    private final Main mClient;
-    private final File mOutput;
-    private File mResources;
-    private boolean mSimpleFormat;
-    private boolean mBundleResources;
-    private Map<String, String> mUrlMap;
-    private Map<File, String> mResourceUrl = new HashMap<File, String>();
-    private Map<String, File> mNameToFile = new HashMap<String, File>();
+    private final Writer mWriter;
 
     HtmlReporter(Main client, File output) throws IOException {
-        super(new BufferedWriter(new FileWriter(output)));
-        mClient = client;
-        mOutput = output;
+        super(client, output);
+        mWriter = new BufferedWriter(new FileWriter(output));
     }
 
     @Override
@@ -77,7 +65,7 @@ class HtmlReporter extends Reporter {
         mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
-                "<title>Lint Report</title>\n" +                         //$NON-NLS-1$
+                "<title>" + mTitle + "</title>\n" +                      //$NON-NLS-1$//$NON-NLS-2$
                 "<style type=\"text/css\">\n" +                          //$NON-NLS-1$
 
                 // CSS stylesheet for the report:
@@ -164,7 +152,7 @@ class HtmlReporter extends Reporter {
                 "</head>\n" +                                            //$NON-NLS-1$
                 "<body>\n" +                                             //$NON-NLS-1$
                 "<h1>" +                                                 //$NON-NLS-1$
-                "Lint Report" +
+                mTitle +
                 "</h1>");                                                //$NON-NLS-1$
 
         Issue previousIssue = null;
@@ -269,6 +257,7 @@ class HtmlReporter extends Reporter {
                         url = writeLocation(warning.file, warning.path, warning.line);
                     }
                     mWriter.write(':');
+                    mWriter.write(' ');
 
                     // Is the URL for a single image? If so, place it here near the top
                     // of the error floating on the right. If there are multiple images,
@@ -305,6 +294,7 @@ class HtmlReporter extends Reporter {
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
                                 writeLocation(l.getFile(), path, line);
                                 mWriter.write(':');
+                                mWriter.write(' ');
                                 mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
                                 appendEscapedText(l.getMessage());
                                 mWriter.write("</span>");                            //$NON-NLS-1$
@@ -435,7 +425,6 @@ class HtmlReporter extends Reporter {
             mWriter.write(Integer.toString(line + 1));
         }
         mWriter.write("</span>"); //$NON-NLS-1$
-        mWriter.write(' ');
         return url;
     }
 
@@ -577,144 +566,5 @@ class HtmlReporter extends Reporter {
                 }
             }
         }
-    }
-
-    private String getUrl(File file) {
-        if (mBundleResources && !mSimpleFormat) {
-            String url = getRelativeResourceUrl(file);
-            if (url != null) {
-                return url;
-            }
-        }
-
-        if (mUrlMap != null) {
-            String path = file.getAbsolutePath();
-            try {
-                // Perform the comparison using URLs such that we properly escape spaces etc.
-                String pathUrl = URLEncoder.encode(path, "UTF-8");         //$NON-NLS-1$
-                for (Map.Entry<String, String> entry : mUrlMap.entrySet()) {
-                    String prefix = entry.getKey();
-                    String prefixUrl = URLEncoder.encode(prefix, "UTF-8"); //$NON-NLS-1$
-                    if (pathUrl.startsWith(prefixUrl)) {
-                        String relative = pathUrl.substring(prefixUrl.length());
-                        return entry.getValue()
-                                + relative.replace("%2F", "/"); //$NON-NLS-1$ //$NON-NLS-2$
-                    }
-                }
-            } catch (UnsupportedEncodingException e) {
-                // This shouldn't happen for UTF-8
-                System.err.println("Invalid URL map specification - " + e.getLocalizedMessage());
-            }
-        }
-
-        return null;
-    }
-
-    /** Encodes the given String as a safe URL substring, escaping spaces etc */
-    private static String encodeUrl(String url) {
-        try {
-            return URLEncoder.encode(url, "UTF-8");         //$NON-NLS-1$
-        } catch (UnsupportedEncodingException e) {
-            // This shouldn't happen for UTF-8
-            System.err.println("Invalid string " + e.getLocalizedMessage());
-            return url;
-        }
-    }
-
-    /** Set mapping of path prefixes to corresponding URLs in the HTML report */
-    void setUrlMap(Map<String, String> urlMap) {
-        mUrlMap = urlMap;
-    }
-
-    /** Gets a pointer to the local resource directory, if any */
-    private File getResourceDir() {
-        if (mResources == null && mBundleResources) {
-            String fileName = mOutput.getName();
-            int dot = fileName.indexOf('.');
-            if (dot != -1) {
-                fileName = fileName.substring(0, dot);
-            }
-
-            mResources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
-            if (!mResources.mkdir()) {
-                mResources = null;
-                mBundleResources = false;
-            }
-        }
-
-        return mResources;
-    }
-
-    /** Returns a URL to a local copy of the given file, or null */
-    private String getRelativeResourceUrl(File file) {
-        String resource = mResourceUrl.get(file);
-        if (resource != null) {
-            return resource;
-        }
-
-        String name = file.getName();
-        if (!endsWith(name, DOT_PNG) || endsWith(name, DOT_9PNG)) {
-            return null;
-        }
-
-        // Attempt to make local copy
-        File resourceDir = getResourceDir();
-        if (resourceDir != null) {
-            String base = file.getName();
-
-            File path = mNameToFile.get(base);
-            if (path != null && !path.equals(file)) {
-                // That filename already exists and is associated with a different path:
-                // make a new unique version
-                for (int i = 0; i < 100; i++) {
-                    base = '_' + base;
-                    path = mNameToFile.get(base);
-                    if (path == null || path.equals(file)) {
-                        break;
-                    }
-                }
-            }
-
-            File target = new File(resourceDir, base);
-            try {
-                Files.copy(file, target);
-            } catch (IOException e) {
-                return null;
-            }
-            return resourceDir.getName() + '/' + encodeUrl(base);
-        }
-        return null;
-    }
-
-    /**
-     * Sets whether the report should bundle up resources along with the HTML report.
-     * This implies a non-simple format (see {@link #setSimpleFormat(boolean)}).
-     *
-     * @param bundleResources if true, copy images into a directory relative to
-     *            the report
-     */
-    public void setBundleResources(boolean bundleResources) {
-        mBundleResources = bundleResources;
-        mSimpleFormat = false;
-    }
-
-    /**
-     * Sets whether the report should use simple formatting (meaning no JavaScript,
-     * embedded images, etc).
-     *
-     * @param simpleFormat whether the formatting should be simple
-     */
-    public void setSimpleFormat(boolean simpleFormat) {
-        mSimpleFormat = simpleFormat;
-    }
-
-    /**
-     * Returns whether the report should use simple formatting (meaning no JavaScript,
-     * embedded images, etc).
-     *
-     * @return whether the report should use simple formatting
-     */
-    public boolean isSimpleFormat() {
-        return mSimpleFormat;
     }
 }
