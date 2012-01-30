@@ -33,7 +33,9 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -48,6 +50,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A project contains information about an Android project being scanned for
@@ -224,6 +228,14 @@ public class Project {
     @NonNull
     public List<File> getJavaSourceFolders() {
         if (mJavaSourceFolders == null) {
+            if (isAospBuildEnvironment()) {
+                String top = getAospTop();
+                if (mDir.getAbsolutePath().startsWith(top)) {
+                    mJavaSourceFolders = getAospJavaSourcePath();
+                    return mJavaSourceFolders;
+                }
+            }
+
             mJavaSourceFolders = mClient.getJavaSourceFolders(this);
         }
 
@@ -237,6 +249,14 @@ public class Project {
     @NonNull
     public List<File> getJavaClassFolders() {
         if (mJavaClassFolders == null) {
+            if (isAospBuildEnvironment()) {
+                String top = getAospTop();
+                if (mDir.getAbsolutePath().startsWith(top)) {
+                    mJavaClassFolders = getAospJavaClassPath();
+                    return mJavaClassFolders;
+                }
+            }
+
             mJavaClassFolders = mClient.getJavaClassFolders(this);
         }
         return mJavaClassFolders;
@@ -409,6 +429,8 @@ public class Project {
                     mTargetSdk = -1;
                 }
             }
+        } else if (isAospBuildEnvironment()) {
+            extractAospMinSdkVersion();
         }
     }
 
@@ -507,5 +529,189 @@ public class Project {
         }
 
         return mName;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Support for running lint on the AOSP source tree itself
+
+    private static Boolean sAospBuild;
+
+    /** Is lint running in an AOSP build environment */
+    private static boolean isAospBuildEnvironment() {
+        if (sAospBuild == null) {
+            sAospBuild = getAospTop() != null;
+        }
+
+        return sAospBuild.booleanValue();
+    }
+
+    /** Get the root AOSP dir, if any */
+    private static String getAospTop() {
+        return System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+    }
+
+    /** Get the host out directory in AOSP, if any */
+    private static String getAospHostOut() {
+        return System.getenv("ANDROID_HOST_OUT");    //$NON-NLS-1$
+    }
+
+    /** Get the product out directory in AOSP, if any */
+    private static String getAospProductOut() {
+        return System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
+    }
+
+    private List<File> getAospJavaSourcePath() {
+        List<File> sources = new ArrayList<File>(2);
+        // Normal sources
+        File src = new File(mDir, "src"); //$NON-NLS-1$
+        if (src.exists()) {
+            sources.add(src);
+        }
+
+        // Generates sources
+        for (File dir : getIntermediateDirs()) {
+            File classes = new File(dir, "src"); //$NON-NLS-1$
+            if (classes.exists()) {
+                sources.add(classes);
+            }
+        }
+
+        if (sources.size() == 0) {
+            mClient.log(null,
+                    "Warning: Could not find sources or generated sources for project %1$s",
+                    getName());
+        }
+
+        return sources;
+    }
+
+    private List<File> getAospJavaClassPath() {
+        List<File> classDirs = new ArrayList<File>(1);
+
+        for (File dir : getIntermediateDirs()) {
+            File classes = new File(dir, "classes"); //$NON-NLS-1$
+            if (classes.exists()) {
+                classDirs.add(classes);
+            } else {
+                classes = new File(dir, "classes.jar"); //$NON-NLS-1$
+                if (classes.exists()) {
+                    classDirs.add(classes);
+                }
+            }
+        }
+
+        if (classDirs.size() == 0) {
+            mClient.log(null,
+                    "No bytecode found: Has the project been built? (%1$s)", getName());
+        }
+
+        return classDirs;
+    }
+
+    /** Find the _intermediates directories for a given module name */
+    private List<File> getIntermediateDirs() {
+        // See build/core/definitions.mk and in particular the "intermediates-dir-for" definition
+        List<File> intermediates = new ArrayList<File>();
+
+        // TODO: Look up the module name, e.g. LOCAL_MODULE. However,
+        // some Android.mk files do some complicated things with it - and most
+        // projects use the same module name as the directory name.
+        String moduleName = mDir.getName();
+
+        String top = getAospTop();
+        final String[] outFolders = new String[] {
+            top + "/out/host/common/obj",             //$NON-NLS-1$
+            top + "/out/target/common/obj",           //$NON-NLS-1$
+            getAospHostOut() + "/obj",                //$NON-NLS-1$
+            getAospProductOut() + "/obj"              //$NON-NLS-1$
+        };
+        final String[] moduleClasses = new String[] {
+                "APPS",                //$NON-NLS-1$
+                "JAVA_LIBRARIES",      //$NON-NLS-1$
+        };
+
+        for (String out : outFolders) {
+            assert new File(out.replace('/', File.separatorChar)).exists() : out;
+            for (String moduleClass : moduleClasses) {
+                String path = out + '/' + moduleClass + '/' + moduleName
+                        + "_intermediates"; //$NON-NLS-1$
+                File file = new File(path.replace('/', File.separatorChar));
+                if (file.exists()) {
+                    intermediates.add(file);
+                }
+            }
+        }
+
+        return intermediates;
+    }
+
+    private void extractAospMinSdkVersion() {
+        // Is the SDK level specified by a Makefile?
+        boolean found = false;
+        File makefile = new File(mDir, "Android.mk"); //$NON-NLS-1$
+        if (makefile.exists()) {
+            try {
+                List<String> lines = Files.readLines(makefile, Charsets.UTF_8);
+                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)"); //$NON-NLS-1$
+                for (String line : lines) {
+                    line = line.trim();
+                    Matcher matcher = p.matcher(line);
+                    if (matcher.matches()) {
+                        found = true;
+                        String version = matcher.group(1);
+                        if (version.equals("current")) { //$NON-NLS-1$
+                            mMinSdk = findCurrentAospVersion();
+                        } else {
+                            try {
+                                mMinSdk = Integer.valueOf(version);
+                            } catch (NumberFormatException e) {
+                                // Codename - just use current
+                                mMinSdk = findCurrentAospVersion();
+                            }
+                        }
+                        break;
+                    }
+                }
+            } catch (IOException ioe) {
+                mClient.log(ioe, null);
+            }
+        }
+
+        if (!found) {
+            mMinSdk = findCurrentAospVersion();
+        }
+    }
+
+    /** Cache for {@link #findCurrentAospVersion()} */
+    private static int sCurrentVersion;
+
+    /** In an AOSP build environment, identify the currently built image version, if available */
+    private int findCurrentAospVersion() {
+        if (sCurrentVersion < 1) {
+            File apiDir = new File(getAospTop(), "frameworks/base/api" //$NON-NLS-1$
+                    .replace('/', File.separatorChar));
+            File[] apiFiles = apiDir.listFiles();
+            int max = 1;
+            for (File apiFile : apiFiles) {
+                String name = apiFile.getName();
+                int index = name.indexOf('.');
+                if (index > 0) {
+                    String base = name.substring(0, index);
+                    if (Character.isDigit(base.charAt(0))) {
+                        try {
+                            int version = Integer.parseInt(base);
+                            if (version > max) {
+                                max = version;
+                            }
+                        } catch (NumberFormatException nufe) {
+                            // pass
+                        }
+                    }
+                }
+            }
+            sCurrentVersion = max;
+        }
+
+        return sCurrentVersion;
     }
 }
