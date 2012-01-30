@@ -795,7 +795,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                         location.setSecondary(linkedLocation);
                     }
 
-                    context.report(ICON_DENSITIES, location,
+                    context.report(ICON_NODPI, location,
                         String.format(
                             "The following images appear in both -nodpi and in a density folder: %1$s",
                             LintUtils.formatList(list, 10)),
