@@ -27,11 +27,11 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "GetterTest.java:48: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:49: Warning: Calling getter method getFoo2() on self is slower than field access\n" +
-                "GetterTest.java:53: Warning: Calling getter method isBar1() on self is slower than field access\n" +
-                "GetterTest.java:55: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:56: Warning: Calling getter method getFoo2() on self is slower than field access",
+                "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
+                "GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access\n" +
+                "GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access\n" +
+                "GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
+                "GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access",
 
                 lintProject(
                     "bytecode/.classpath=>.classpath",

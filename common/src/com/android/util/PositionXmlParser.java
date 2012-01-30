@@ -382,11 +382,10 @@ public class PositionXmlParser {
                             if (t == '\n') {
                                 newLine++;
                                 newColumn = 0;
+                            } else if (!Character.isWhitespace(t)) {
+                                break;
                             } else {
                                 newColumn++;
-                            }
-                            if (!Character.isWhitespace(t)) {
-                                break;
                             }
                         }
                         if (textIndex == textLength) {
@@ -397,7 +396,7 @@ public class PositionXmlParser {
                         }
 
                         Position attributePosition = createPosition(line, column,
-                                offset);
+                                offset + textIndex);
                         // Also set end range for retrieval in getLocation
                         attributePosition.setEnd(createPosition(line, column,
                                 offset + textLength));
@@ -503,7 +502,7 @@ public class PositionXmlParser {
 
                         // Compute new column position
                         int column = 0;
-                        for (int i = offset; i >= 0; i--, column++) {
+                        for (int i = offset - 1; i >= 0; i--, column++) {
                             if (mXml.charAt(i) == '\n') {
                                 break;
                             }

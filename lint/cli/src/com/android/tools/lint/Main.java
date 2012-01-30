@@ -777,7 +777,7 @@ public class Main extends LintClient {
                             warning.errorLine = warning.errorLine.replace('\t', ' ');
                             int column = startPosition.getColumn();
                             if (column < 0) {
-                                column = 1;
+                                column = 0;
                                 for (int i = 0; i < warning.errorLine.length(); i++, column++) {
                                     if (!Character.isWhitespace(warning.errorLine.charAt(i))) {
                                         break;
@@ -787,7 +787,7 @@ public class Main extends LintClient {
                             StringBuilder sb = new StringBuilder();
                             sb.append(warning.errorLine);
                             sb.append('\n');
-                            for (int i = 0; i < column - 1; i++) {
+                            for (int i = 0; i < column; i++) {
                                 sb.append(' ');
                             }
                             sb.append('^');

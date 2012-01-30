@@ -273,10 +273,31 @@ public class Location {
         if (line == currentLine) {
             if (patternStart != null) {
                 int index = contents.indexOf(patternStart, offset);
+                if (index == -1) {
+                    // Allow some flexibility: peek at previous couple of lines
+                    // as well (for example, bytecode line numbers are sometimes
+                    // a few lines off from their location in a source file
+                    // since they are attached to executable lines of code)
+                    int lineStart = offset;
+                    for (int i = 0; i < 4; i++) {
+                        int prevLineStart = contents.lastIndexOf('\n', lineStart - 1);
+                        if (prevLineStart == -1) {
+                            break;
+                        }
+                        index = contents.indexOf(patternStart, prevLineStart);
+                        if (index != -1 || prevLineStart == 0) {
+                            break;
+                        }
+                        lineStart = prevLineStart;
+                    }
+                }
+
                 if (index != -1) {
                     int lineStart = contents.lastIndexOf('\n', index);
                     if (lineStart == -1) {
                         lineStart = 0;
+                    } else {
+                        lineStart++; // was pointing to the previous line's CR, not line start
                     }
                     int column = index - lineStart;
                     if (patternEnd != null) {

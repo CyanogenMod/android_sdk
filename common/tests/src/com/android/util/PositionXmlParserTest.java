@@ -22,6 +22,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -80,6 +81,7 @@ public class PositionXmlParserTest extends TestCase {
         Position start = parser.getPosition(attr);
         Position end = start.getEnd();
         assertEquals(2, start.getLine());
+        assertEquals(4, start.getColumn());
         assertEquals(xml.indexOf("android:layout_width"), start.getOffset());
         assertEquals(2, end.getLine());
         String target = "android:layout_width=\"match_parent\"";
@@ -91,6 +93,7 @@ public class PositionXmlParserTest extends TestCase {
         end = start.getEnd();
         assertNull(end.getEnd());
         assertEquals(6, start.getLine());
+        assertEquals(4, start.getColumn());
         assertEquals(xml.indexOf("<Button"), start.getOffset());
         assertEquals(xml.indexOf("/>") + 2, end.getOffset());
         assertEquals(10, end.getLine());
@@ -100,11 +103,58 @@ public class PositionXmlParserTest extends TestCase {
         start = parser.getPosition(button2);
         end = start.getEnd();
         assertEquals(12, start.getLine());
+        assertEquals(4, start.getColumn());
         assertEquals(xml.indexOf("<Button", button1End), start.getOffset());
         assertEquals(xml.indexOf("/>", start.getOffset()) + 2, end.getOffset());
         assertEquals(16, end.getLine());
 
         file.delete();
+    }
+
+    public void testText() throws Exception {
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"wrap_content\"\n" +
+                "    android:orientation=\"vertical\" >\n" +
+                "\n" +
+                "    <Button\n" +
+                "        android:id=\"@+id/button1\"\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:text=\"Button\" />\n" +
+                "          some text\n" +
+                "\n" +
+                "</LinearLayout>\n";
+        PositionXmlParser parser = new PositionXmlParser();
+        File file = File.createTempFile("parsertest", ".xml");
+        file.deleteOnExit();
+        Writer fw = new BufferedWriter(new FileWriter(file));
+        fw.write(xml);
+        fw.close();
+        Document document = parser.parse(new FileInputStream(file));
+        assertNotNull(document);
+
+        // Basic parsing heart beat tests
+        Element linearLayout = (Element) document.getElementsByTagName("LinearLayout").item(0);
+        assertNotNull(linearLayout);
+        NodeList buttons = document.getElementsByTagName("Button");
+        assertEquals(1, buttons.getLength());
+        final String ANDROID_URI = "http://schemas.android.com/apk/res/android";
+        assertEquals("wrap_content",
+                linearLayout.getAttributeNS(ANDROID_URI, "layout_height"));
+
+        // Check text positions
+        Element button = (Element) buttons.item(0);
+        Text text = (Text) button.getNextSibling();
+        assertNotNull(text);
+
+        // Check attribute positions
+        Position start = parser.getPosition(text);
+        assertEquals(11, start.getLine());
+        assertEquals(10, start.getColumn());
+        assertEquals(xml.indexOf("some text"), start.getOffset());
     }
 
     public void testLineEndings() throws Exception {
