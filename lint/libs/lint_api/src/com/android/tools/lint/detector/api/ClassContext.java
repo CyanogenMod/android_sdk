@@ -48,17 +48,20 @@ public class ClassContext extends Context {
     private String mSourceContents;
     /** Whether we've searched for the source file (used to avoid repeated failed searches) */
     private boolean mSearchedForSource;
+    /** If the file is a relative path within a jar file, this is the jar file, otherwise null */
+    private final File mJarFile;
 
     /**
      * Construct a new {@link ClassContext}
      *
      * @param driver the driver running through the checks
      * @param project the project containing the file being checked
-     * @param main the main project if this project is a library project, or
-     *            null if this is not a library project. The main project is
-     *            the root project of all library projects, not necessarily the
-     *            directly including project.
+     * @param main the main project if this project is a library project, or null if this
+     *            is not a library project. The main project is the root project of all
+     *            library projects, not necessarily the directly including project.
      * @param file the file being checked
+     * @param jarFile If the file is a relative path within a jar file, this is the jar
+     *            file, otherwise null
      * @param binDir the root binary directory containing this .class file.
      * @param bytes the bytecode raw data
      * @param classNode the bytecode object model
@@ -68,10 +71,12 @@ public class ClassContext extends Context {
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file,
+            @Nullable File jarFile,
             @NonNull File binDir,
             @NonNull byte[] bytes,
             @NonNull ClassNode classNode) {
         super(driver, project, main, file);
+        mJarFile = jarFile;
         mBinDir = binDir;
         mBytes = bytes;
         mClassNode = classNode;
@@ -98,6 +103,17 @@ public class ClassContext extends Context {
     }
 
     /**
+     * Returns the jar file, if any. If this is null, the .class file is a real file
+     * on disk, otherwise it represents a relative path within the jar file.
+     *
+     * @return the jar file, or null
+     */
+    @Nullable
+    public File getJarFile() {
+        return mJarFile;
+    }
+
+    /**
      * Returns the source file for this class file, if possible.
      *
      * @return the source file, or null
@@ -119,17 +135,29 @@ public class ClassContext extends Context {
                 }
             }
             if (source != null) {
-                // Determine package
-                String topPath = mBinDir.getPath();
-                String parentPath = file.getParentFile().getPath();
-                if (parentPath.startsWith(topPath)) {
-                    String relative = parentPath.substring(topPath.length() + 1);
+                if (mJarFile != null) {
+                    String relative = file.getParent() + File.separator + source;
                     List<File> sources = getProject().getJavaSourceFolders();
                     for (File dir : sources) {
-                        File sourceFile = new File(dir, relative + File.separator + source);
+                        File sourceFile = new File(dir, relative);
                         if (sourceFile.exists()) {
                             mSourceFile = sourceFile;
                             break;
+                        }
+                    }
+                } else {
+                    // Determine package
+                    String topPath = mBinDir.getPath();
+                    String parentPath = file.getParentFile().getPath();
+                    if (parentPath.startsWith(topPath)) {
+                        String relative = parentPath.substring(topPath.length() + 1);
+                        List<File> sources = getProject().getJavaSourceFolders();
+                        for (File dir : sources) {
+                            File sourceFile = new File(dir, relative + File.separator + source);
+                            if (sourceFile.exists()) {
+                                mSourceFile = sourceFile;
+                                break;
+                            }
                         }
                     }
                 }

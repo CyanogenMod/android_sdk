@@ -215,6 +215,7 @@ public class LintConstants {
     public static final String DOT_9PNG = ".9.png";                    //$NON-NLS-1$
     public static final String DOT_JAVA = ".java";                     //$NON-NLS-1$
     public static final String DOT_CLASS = ".class";                   //$NON-NLS-1$
+    public static final String DOT_JAR = ".jar";                       //$NON-NLS-1$
     public static final String DRAWABLE_FOLDER = "drawable";           //$NON-NLS-1$
     public static final String DRAWABLE_XHDPI = "drawable-xhdpi";      //$NON-NLS-1$
     public static final String DRAWABLE_HDPI = "drawable-hdpi";        //$NON-NLS-1$
