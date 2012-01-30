@@ -21,10 +21,16 @@
 
 #include "utils.h"
 
-bool findJavaInEnvPath(CPath *outJavaPath);
-bool findJavaInRegistry(CPath *outJavaPath);
-bool findJavaInProgramFiles(CPath *outJavaPath);
-bool getJavaVersion(CPath &javaPath, CString *version);
+// We currently search for a Java version for at least 1.5
+#define MIN_JAVA_VERSION_MAJOR 1
+#define MIN_JAVA_VERSION_MINOR 5
+#define MIN_JAVA_VERSION (MIN_JAVA_VERSION_MAJOR * 1000 + MIN_JAVA_VERSION_MINOR)
+
+
+int findJavaInEnvPath(CPath *outJavaPath);
+int findJavaInRegistry(CPath *outJavaPath);
+int findJavaInProgramFiles(CPath *outJavaPath);
+bool getJavaVersion(CPath &javaPath, CString *outVersionStr, int *outVersionInt);
 
 #endif /* _WIN32 */
 #endif /* _H_FIND_JAVA */
