@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
@@ -42,12 +43,14 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +63,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Analyzes Android projects and files
@@ -707,7 +712,62 @@ public class Lint {
             //        "output folders found. Does the project need to be built first?");
         }
 
-        for (File binDir : binFolders) {
+        for (File classPathEntry : binFolders) {
+            if (classPathEntry.getName().endsWith(DOT_JAR)) {
+                File jarFile = classPathEntry;
+                try {
+                    FileInputStream fis = new FileInputStream(jarFile);
+                    ZipInputStream zis = new ZipInputStream(fis);
+                    ZipEntry entry = zis.getNextEntry();
+                    while (entry != null) {
+                        String name = entry.getName();
+                        if (name.endsWith(DOT_CLASS)) {
+                            byte[] b = ByteStreams.toByteArray(zis);
+                            try {
+                                ClassReader reader = new ClassReader(b);
+                                ClassNode classNode = new ClassNode();
+                                reader.accept(classNode, 0 /*flags*/);
+
+                                // TODO: Which file handle do I pass? JAR urls?
+                                File file = new File(entry.getName());
+
+                                ClassContext context = new ClassContext(this, project, main, file,
+                                        jarFile, jarFile, b, classNode);
+                                for (Detector detector : checks) {
+                                    if (detector.appliesTo(context, file)) {
+                                        fireEvent(EventType.SCANNING_FILE, context);
+                                        detector.beforeCheckFile(context);
+
+                                        Detector.ClassScanner scanner =
+                                            (Detector.ClassScanner) detector;
+                                        scanner.checkClass(context, classNode);
+                                        detector.afterCheckFile(context);
+                                    }
+
+                                    if (mCanceled) {
+                                        return;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                mClient.log(e, null);
+                                continue;
+                            }
+                        }
+
+                        if (mCanceled) {
+                            return;
+                        }
+
+                        entry = zis.getNextEntry();
+                    }
+                } catch (IOException e) {
+                    mClient.log(e, "Could not read jar file contents from %1$s", jarFile);
+                }
+
+                continue;
+            }
+
+            File binDir = classPathEntry;
             List<File> classFiles = new ArrayList<File>();
             addClassFiles(binDir, classFiles);
 
@@ -718,7 +778,7 @@ public class Lint {
                         ClassReader reader = new ClassReader(bytes);
                         ClassNode classNode = new ClassNode();
                         reader.accept(classNode, 0 /*flags*/);
-                        ClassContext context = new ClassContext(this, project, main, file,
+                        ClassContext context = new ClassContext(this, project, main, file, null,
                                 binDir, bytes, classNode);
                         for (Detector detector : checks) {
                             if (detector.appliesTo(context, file)) {
