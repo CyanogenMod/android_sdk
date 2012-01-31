@@ -112,8 +112,21 @@ class MultiProjectHtmlReporter extends Reporter {
             }
             reporter.write(projectErrorCount, projectWarningCount, issues);
 
+            String prefix = project.getReferenceDir().getPath();
+            String path = project.getDir().getPath();
+            String relative;
+            if (path.startsWith(prefix) && path.length() > prefix.length()) {
+                int i = prefix.length();
+                if (path.charAt(i) == File.separatorChar) {
+                    i++;
+                }
+                relative = path.substring(i);
+            } else {
+                relative = projectName;
+            }
+
             projects.add(new ProjectEntry(project, fileName, projectErrorCount,
-                    projectWarningCount));
+                    projectWarningCount, relative));
         }
 
         // Write overview index?
@@ -187,7 +200,7 @@ class MultiProjectHtmlReporter extends Reporter {
             writer.write("<a href=\"");
             writer.write(entry.fileName); // TODO: Escape?
             writer.write("\">");                                        //$NON-NLS-1$
-            writer.write(entry.project.getName());
+            writer.write(entry.path);
             writer.write("</a></td><td>");                              //$NON-NLS-1$
             writer.write(Integer.toString(entry.errorCount));
             writer.write("</td><td>");                                  //$NON-NLS-1$
@@ -207,14 +220,16 @@ class MultiProjectHtmlReporter extends Reporter {
         public int errorCount;
         public int warningCount;
         public String fileName;
+        public String path;
 
 
-        public ProjectEntry(Project project, String fileName, int errorCount, int warningCount) {
-            super();
+        public ProjectEntry(Project project, String fileName, int errorCount, int warningCount,
+                String path) {
             this.project = project;
             this.fileName = fileName;
             this.errorCount = errorCount;
             this.warningCount = warningCount;
+            this.path = path;
         }
 
         @Override
@@ -229,7 +244,7 @@ class MultiProjectHtmlReporter extends Reporter {
                 return delta;
             }
 
-            return project.getName().compareTo(other.project.getName());
+            return path.compareTo(other.path);
         }
     }
 }
