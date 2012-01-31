@@ -25,6 +25,8 @@ import com.android.tools.lint.client.api.Lint;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
 import java.util.List;
@@ -209,5 +211,78 @@ public class ClassContext extends Context {
         }
 
         return Location.create(file);
+    }
+
+    /**
+     * Reports an issue.
+     * <p>
+     * Detectors should only call this method if an error applies to the whole class
+     * scope and there is no specific method or field that applies to the error.
+     * If so, use
+     * {@link #report(Issue, MethodNode, Location, String, Object)} or
+     * {@link #report(Issue, FieldNode, Location, String, Object)}, such that
+     * suppress annotations are checked.
+     *
+     * @param issue the issue to report
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    @Override
+    public void report(Issue issue, Location location, String message, Object data) {
+        if (mDriver.isSuppressed(issue, mClassNode)) {
+            return;
+        }
+        super.report(issue, location, message, data);
+    }
+
+    // Unfortunately, ASMs nodes do not extend a common DOM node type with parent
+    // pointers, so we have to have multiple methods which pass in each type
+    // of node (class, method, field) to be checked.
+
+    /**
+     * Reports an issue applicable to a given method node.
+     *
+     * @param issue the issue to report
+     * @param method the method (scope the error applies to. The lint infrastructure
+     *    will check whether there are suppress annotations on this method (or its enclosing
+     *    class) and if so suppress the warning without involving the client.
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable MethodNode method,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
+        if (method != null && mDriver.isSuppressed(issue, method)) {
+            return;
+        }
+        report(issue, location, message, data); // also checks the class node
+    }
+
+    /**
+     * Reports an issue applicable to a given method node.
+     *
+     * @param issue the issue to report
+     * @param field the method (scope the error applies to. The lint infrastructure
+     *    will check whether there are suppress annotations on this field (or its enclosing
+     *    class) and if so suppress the warning without involving the client.
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable FieldNode field,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
+        if (field != null && mDriver.isSuppressed(issue, field)) {
+            return;
+        }
+        report(issue, location, message, data); // also checks the class node
     }
 }

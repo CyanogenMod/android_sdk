@@ -254,4 +254,7 @@ public class LintConstants {
     public static final String R_LAYOUT_PREFIX = "R.layout.";            //$NON-NLS-1$
     public static final String R_DRAWABLE_PREFIX = "R.drawable.";        //$NON-NLS-1$
     public static final String R_ATTR_PREFIX = "R.attr.";                //$NON-NLS-1$
+
+    // SuppressLint
+    public static final String SUPPRESS_ALL = "all";                     //$NON-NLS-1$
 }

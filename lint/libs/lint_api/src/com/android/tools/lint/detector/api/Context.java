@@ -48,7 +48,7 @@ public class Context {
     public final File file;
 
     /** The driver running through the checks */
-    private final Lint mDriver;
+    protected final Lint mDriver;
 
     /** The project containing the file being checked */
     @NonNull

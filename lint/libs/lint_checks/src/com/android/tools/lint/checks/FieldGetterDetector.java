@@ -25,15 +25,15 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
-import com.android.util.Pair;
+import com.google.common.collect.Maps;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -83,78 +84,30 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
 
     // ---- Implements ClassScanner ----
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void checkClass(ClassContext context, ClassNode classNode) {
-        classNode.accept(new Visitor(context));
-    }
+        List<Entry> pendingCalls = null;
+        int currentLine = 0;
+        List methodList = classNode.methods;
+        for (Object m : methodList) {
+            MethodNode method = (MethodNode) m;
+            InsnList nodes = method.instructions;
+            for (int i = 0, n = nodes.size(); i < n; i++) {
+                AbstractInsnNode instruction = nodes.get(i);
+                int type = instruction.getType();
+                if (type == AbstractInsnNode.LINE) {
+                    currentLine = ((LineNumberNode) instruction).line;
+                } else if (type == AbstractInsnNode.METHOD_INSN) {
+                    MethodInsnNode node = (MethodInsnNode) instruction;
+                    String name = node.name;
+                    String owner = node.owner;
 
-    private static class Visitor extends ClassVisitor {
-        private final ClassContext mContext;
-        private int mCurrentLine;
-        private String mClass;
-        private List<Pair<String, Integer>> mPendingCalls;
-
-        public Visitor(ClassContext context) {
-            super(Opcodes.ASM4);
-            mContext = context;
-        }
-
-        @Override
-        public void visit(int version, int access, String name, String signature,
-                String superName, String[] interfaces) {
-            mClass = name;
-        }
-
-        @Override
-        public void visitEnd() {
-            if (mPendingCalls != null) {
-                Set<String> names = new HashSet<String>(mPendingCalls.size());
-                for (Pair<String, Integer> pair : mPendingCalls) {
-                    String name = pair.getFirst();
-                    names.add(name);
-                }
-
-                List<String> getters = checkMethods(mContext.getClassNode(), names);
-                if (getters.size() > 0) {
-                    File source = mContext.getSourceFile();
-                    String contents = mContext.getSourceContents();
-                    for (String getter : getters) {
-                        for (Pair<String, Integer> pair : mPendingCalls) {
-                            String name = pair.getFirst();
-                            // There can be more than one reference to the same name:
-                            // one for each call site
-                            if (name.equals(getter)) {
-                                Integer line = pair.getSecond();
-                                Location location = null;
-                                if (source != null) {
-                                    // ASM line numbers are 1-based, Lint needs 0-based
-                                    location = Location.create(source, contents, line - 1, name,
-                                            null);
-                                } else {
-                                    location = Location.create(mContext.file);
-                                }
-                                mContext.report(ISSUE, location, String.format(
-                                    "Calling getter method %1$s() on self is " +
-                                    "slower than field access", getter), null);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-                String[] exceptions) {
-            return new MethodVisitor(Opcodes.ASM4) {
-                @SuppressWarnings("hiding")
-                @Override
-                public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-                    if (((name.startsWith("get") && name.length() > 3             //$NON-NLS-1$
-                                    && Character.isUpperCase(name.charAt(3)))
-                                || (name.startsWith("is") && name.length() > 2    //$NON-NLS-1$
-                                    && Character.isUpperCase(name.charAt(2))))
-                            && owner.equals(mClass)) {
+                    if (((name.startsWith("get") && name.length() > 3     //$NON-NLS-1$
+                            && Character.isUpperCase(name.charAt(3)))
+                        || (name.startsWith("is") && name.length() > 2    //$NON-NLS-1$
+                            && Character.isUpperCase(name.charAt(2))))
+                            && owner.equals(classNode.name)) {
                         // Calling a potential getter method on self. We now need to
                         // investigate the method body of the getter call and make sure
                         // it's really a plain getter, not just a method which happens
@@ -163,19 +116,66 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                         // other initialization or side effects. This is done in a
                         // second pass over the bytecode, initiated by the finish()
                         // method.
-                        if (mPendingCalls == null) {
-                            mPendingCalls = new ArrayList<Pair<String,Integer>>();
+                        if (pendingCalls == null) {
+                            pendingCalls = new ArrayList<Entry>();
                         }
-                        // Line numbers should be 0-based
-                        mPendingCalls.add(Pair.of(name, mCurrentLine));
+
+                        pendingCalls.add(new Entry(name, currentLine, method));
                     }
                 }
+            }
+        }
 
-                @Override
-                public void visitLineNumber(int line, Label start) {
-                    mCurrentLine = line;
+        if (pendingCalls != null) {
+            Set<String> names = new HashSet<String>(pendingCalls.size());
+            for (Entry entry : pendingCalls) {
+                names.add(entry.name);
+            }
+
+            Map<String, String> getters = checkMethods(context.getClassNode(), names);
+            if (getters.size() > 0) {
+                File source = context.getSourceFile();
+                String contents = context.getSourceContents();
+                for (String getter : getters.keySet()) {
+                    for (Entry entry : pendingCalls) {
+                        String name = entry.name;
+                        // There can be more than one reference to the same name:
+                        // one for each call site
+                        if (name.equals(getter)) {
+                            int line = entry.lineNumber;
+                            Location location = null;
+                            if (source != null) {
+                                // ASM line numbers are 1-based, Lint needs 0-based
+                                location = Location.create(source, contents, line - 1, name,
+                                        null);
+                            } else {
+                                location = Location.create(context.file);
+                            }
+                            String fieldName = getters.get(getter);
+                            if (fieldName == null) {
+                                fieldName = "";
+                            }
+                            context.report(ISSUE, entry.method, location, String.format(
+                                "Calling getter method %1$s() on self is " +
+                                "slower than field access (%2$s)", getter, fieldName), fieldName);
+                        }
+                    }
                 }
-            };
+            }
+        }
+    }
+
+    // Holder class for getters to be checked
+    private static class Entry {
+        public final String name;
+        public final int lineNumber;
+        public final MethodNode method;
+
+        public Entry(String name, int lineNumber, MethodNode method) {
+            super();
+            this.name = name;
+            this.lineNumber = lineNumber;
+            this.method = method;
         }
     }
 
@@ -192,10 +192,14 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
     //    0:   aload_0
     //    1:   getfield    #25; //Field mBar:Ljava/lang/String;
     //    4:   areturn
-    private static List<String> checkMethods(ClassNode classNode, Set<String> names) {
-        List<String> validGetters = new ArrayList<String>();
+    //
+    // Returns a map of valid getters as keys, and if the field name is found, the field name
+    // for each getter as its value.
+    private static Map<String, String> checkMethods(ClassNode classNode, Set<String> names) {
+        Map<String, String> validGetters = Maps.newHashMap();
         @SuppressWarnings("rawtypes")
         List methods = classNode.methods;
+        String fieldName = null;
         checkMethod:
         for (Object methodObject : methods) {
             MethodNode method = (MethodNode) methodObject;
@@ -212,6 +216,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                             continue;
                         case Opcodes.ALOAD:
                             if (mState == 1) {
+                                fieldName = null;
                                 mState = 2;
                             } else {
                                 continue checkMethod;
@@ -219,6 +224,8 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                             break;
                         case Opcodes.GETFIELD:
                             if (mState == 2) {
+                                FieldInsnNode field = (FieldInsnNode) curr;
+                                fieldName = field.name;
                                 mState = 3;
                             } else {
                                 continue checkMethod;
@@ -230,12 +237,13 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                         case Opcodes.DRETURN:
                         case Opcodes.LRETURN:
                         case Opcodes.RETURN:
-                            validGetters.add(method.name);
+                            if (mState == 3) {
+                                validGetters.put(method.name, fieldName);
+                            }
                             continue checkMethod;
                         default:
                             continue checkMethod;
                     }
-                    curr = curr.getNext();
                 }
             }
         }

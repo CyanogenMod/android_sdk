@@ -26,15 +26,16 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -78,9 +79,14 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
 
     // ---- Implements ClassScanner ----
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void checkClass(ClassContext context, ClassNode classNode) {
-        classNode.accept(new MathCallFinder(context));
+        List methodList = classNode.methods;
+        for (Object m : methodList) {
+            MethodNode method = (MethodNode) m;
+            method.accept(new MyMethodVisitor(context, method));
+        }
     }
 
     /** Methods on java.lang.Math that we want to find and suggest replacements for */
@@ -93,36 +99,17 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
         sFloatMethods.add("floor"); //$NON-NLS-1$
     }
 
-    private static class MathCallFinder extends ClassVisitor {
-        private final ClassContext mContext;
-        private String mCurrentSource;
-
-        public MathCallFinder(ClassContext context) {
-            super(Opcodes.ASM4);
-            mContext = context;
-        }
-
-        @Override
-        public void visitSource(String source, String debug) {
-            mCurrentSource = source;
-        }
-
-        @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-                String[] exceptions) {
-            return new MyMethodVisitor(mContext, mCurrentSource);
-        }
-    }
-
     private static class MyMethodVisitor extends MethodVisitor {
         private final ClassContext mContext;
+        private final MethodNode mMethod;
         private int mCurrentLine;
         private int mLastInsn;
         private String mPendingMethod;
 
-        public MyMethodVisitor(ClassContext context, String currentSource) {
+        public MyMethodVisitor(ClassContext context, MethodNode method) {
             super(Opcodes.ASM4);
             mContext = context;
+            mMethod = method;
         }
 
         private Location getCurrentLocation() {
@@ -158,7 +145,7 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
                 String message = String.format(
                         "Use android.util.FloatMath#%1$s() instead of java.lang.Math#%1$s to " +
                         "avoid argument float to double conversion", name);
-                mContext.report(ISSUE, getCurrentLocation(), message, null /*data*/);
+                mContext.report(ISSUE, mMethod, getCurrentLocation(), message, null /*data*/);
             }
         }
 
@@ -169,7 +156,7 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
                     String message = String.format(
                             "Use android.util.FloatMath#%1$s() instead of java.lang.Math#%1$s " +
                             "to avoid double to float return value conversion", mPendingMethod);
-                    mContext.report(ISSUE, getCurrentLocation(), message, null /*data*/);
+                    mContext.report(ISSUE, mMethod, getCurrentLocation(), message, null /*data*/);
 
                 }
                 mPendingMethod = null;

@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
+import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -47,7 +48,10 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -724,30 +728,9 @@ public class Lint {
                         if (name.endsWith(DOT_CLASS)) {
                             byte[] b = ByteStreams.toByteArray(zis);
                             try {
-                                ClassReader reader = new ClassReader(b);
-                                ClassNode classNode = new ClassNode();
-                                reader.accept(classNode, 0 /*flags*/);
-
-                                // TODO: Which file handle do I pass? JAR urls?
                                 File file = new File(entry.getName());
-
-                                ClassContext context = new ClassContext(this, project, main, file,
-                                        jarFile, jarFile, b, classNode);
-                                for (Detector detector : checks) {
-                                    if (detector.appliesTo(context, file)) {
-                                        fireEvent(EventType.SCANNING_FILE, context);
-                                        detector.beforeCheckFile(context);
-
-                                        Detector.ClassScanner scanner =
-                                            (Detector.ClassScanner) detector;
-                                        scanner.checkClass(context, classNode);
-                                        detector.afterCheckFile(context);
-                                    }
-
-                                    if (mCanceled) {
-                                        return;
-                                    }
-                                }
+                                checkClassFile(b, project, main, file, jarFile, jarFile,
+                                        checks);
                             } catch (Exception e) {
                                 mClient.log(e, null);
                                 continue;
@@ -775,25 +758,8 @@ public class Lint {
                 try {
                     byte[] bytes = Files.toByteArray(file);
                     if (bytes != null) {
-                        ClassReader reader = new ClassReader(bytes);
-                        ClassNode classNode = new ClassNode();
-                        reader.accept(classNode, 0 /*flags*/);
-                        ClassContext context = new ClassContext(this, project, main, file, null,
-                                binDir, bytes, classNode);
-                        for (Detector detector : checks) {
-                            if (detector.appliesTo(context, file)) {
-                                fireEvent(EventType.SCANNING_FILE, context);
-                                detector.beforeCheckFile(context);
-
-                                Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
-                                scanner.checkClass(context, classNode);
-                                detector.afterCheckFile(context);
-                            }
-
-                            if (mCanceled) {
-                                return;
-                            }
-                        }
+                        checkClassFile(bytes, project, main, file, null /*jarFile*/, binDir,
+                                checks);
                     }
                 } catch (IOException e) {
                     mClient.log(e, null);
@@ -803,6 +769,41 @@ public class Lint {
                 if (mCanceled) {
                     return;
                 }
+            }
+        }
+    }
+
+    private void checkClassFile(
+            byte[] bytes,
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File file,
+            @NonNull File jarFile,
+            @NonNull File binDir,
+            @NonNull List<Detector> checks) {
+        ClassReader reader = new ClassReader(bytes);
+        ClassNode classNode = new ClassNode();
+        reader.accept(classNode, 0 /*flags*/);
+
+        if (isSuppressed(null, classNode)) {
+            // Class was annotated with suppress all -- no need to look any further
+            return;
+        }
+
+        ClassContext context = new ClassContext(this, project, main, file, jarFile,
+                binDir, bytes, classNode);
+        for (Detector detector : checks) {
+            if (detector.appliesTo(context, file)) {
+                fireEvent(EventType.SCANNING_FILE, context);
+                detector.beforeCheckFile(context);
+
+                Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
+                scanner.checkClass(context, classNode);
+                detector.afterCheckFile(context);
+            }
+
+            if (mCanceled) {
+                return;
             }
         }
     }
@@ -1170,5 +1171,107 @@ public class Lint {
         } else {
             mRepeatScope = Scope.ALL;
         }
+    }
+
+    // Unfortunately, ASMs nodes do not extend a common DOM node type with parent
+    // pointers, so we have to have multiple methods which pass in each type
+    // of node (class, method, field) to be checked.
+
+    // TODO: The Quickfix should look for lint warnings placed *inside* warnings
+    // and warn that they won't apply to checks that are bytecode oriented!
+
+    /**
+     * Returns whether the given issue is suppressed in the given method.
+     *
+     * @param issue the issue to be checked, or null to just check for "all"
+     * @param method the method containing the issue
+     * @return true if there is a suppress annotation covering the specific
+     *         issue on this method
+     */
+    public boolean isSuppressed(@Nullable Issue issue, @NonNull MethodNode method) {
+        if (method.invisibleAnnotations != null) {
+            @SuppressWarnings("unchecked")
+            List<AnnotationNode> annotations = method.invisibleAnnotations;
+            return isSuppressed(issue, annotations);
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the given issue is suppressed for the given field.
+     *
+     * @param issue the issue to be checked, or null to just check for "all"
+     * @param field the field potentially annotated with a suppress annotation
+     * @return true if there is a suppress annotation covering the specific
+     *         issue on this field
+     */
+    public boolean isSuppressed(@Nullable Issue issue, @NonNull FieldNode field) {
+        if (field.invisibleAnnotations != null) {
+            @SuppressWarnings("unchecked")
+            List<AnnotationNode> annotations = field.invisibleAnnotations;
+            return isSuppressed(issue, annotations);
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the given issue is suppressed in the given class.
+     *
+     * @param issue the issue to be checked, or null to just check for "all"
+     * @param classNode the class containing the issue
+     * @return true if there is a suppress annotation covering the specific
+     *         issue in this class
+     */
+    public boolean isSuppressed(@Nullable Issue issue, @NonNull ClassNode classNode) {
+        if (classNode.invisibleAnnotations != null) {
+            @SuppressWarnings("unchecked")
+            List<AnnotationNode> annotations = classNode.invisibleAnnotations;
+            return isSuppressed(issue, annotations);
+        }
+
+        return false;
+    }
+
+    private boolean isSuppressed(@Nullable Issue issue, List<AnnotationNode> annotations) {
+        for (AnnotationNode annotation : annotations) {
+            String desc = annotation.desc;
+
+            // We could obey @SuppressWarnings("all") too, but no need to look for it
+            // because that annotation only has source retention.
+
+            if (desc.endsWith("/SuppressLint;")) { //$NON-NLS-1$
+                if (annotation.values != null) {
+                    for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
+                        String key = (String) annotation.values.get(i);
+                        if (key.equals("value")) {
+                            Object value = annotation.values.get(i + 1);
+                            if (value instanceof String) {
+                                String id = (String) value;
+                                if (id.equals(SUPPRESS_ALL) ||
+                                        issue != null && id.equals(issue.getId())) {
+                                    return true;
+                                }
+                            } else if (value instanceof List) {
+                                @SuppressWarnings("rawtypes")
+                                List list = (List) value;
+                                for (Object v : list) {
+                                    if (v instanceof String) {
+                                        String id = (String) v;
+                                        if (id.equals(SUPPRESS_ALL) ||
+                                                issue != null && id.equals(issue.getId())) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }
