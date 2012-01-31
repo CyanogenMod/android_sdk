@@ -113,6 +113,7 @@ highlighter
 holo
 hotfix
 href
+html
 http
 hyperlink
 hyperlinks

@@ -60,16 +60,8 @@ class HtmlReporter extends Reporter {
         mWriter = new BufferedWriter(new FileWriter(output));
     }
 
-    @Override
-    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
-        mWriter.write(
-                "<html>\n" +                                             //$NON-NLS-1$
-                "<head>\n" +                                             //$NON-NLS-1$
-                "<title>" + mTitle + "</title>\n" +                      //$NON-NLS-1$//$NON-NLS-2$
-                "<style type=\"text/css\">\n" +                          //$NON-NLS-1$
-
-                // CSS stylesheet for the report:
-
+    static String getStyleSheet() {
+        return
                 "body { max-width: 800px }\n" +                          //$NON-NLS-1$
                 // The div surrounding each issue with groups of warnings within
                 ".issue {\n" +                                           //$NON-NLS-1$
@@ -132,13 +124,25 @@ class HtmlReporter extends Reporter {
                 // The whole line containing the highlighted error
                 ".errorline { font-weight: bold; }\n" +                  //$NON-NLS-1$
                 // The list of specific warnings for a given issue
-                ".warningslist { margin-bottom: 20px; }\n" +             //$NON-NLS-1$
+                ".warningslist { margin-bottom: 20px; }\n";              //$NON-NLS-1$
+    }
 
-                "</style>\n");
+    @Override
+    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+        mWriter.write(
+                "<html>\n" +                                             //$NON-NLS-1$
+                "<head>\n" +                                             //$NON-NLS-1$
+                "<title>" + mTitle + "</title>\n" +                      //$NON-NLS-1$//$NON-NLS-2$
+                "<style type=\"text/css\">\n" +                          //$NON-NLS-1$
+
+                // CSS stylesheet for the report:
+                getStyleSheet() +
+
+                "</style>\n");                                           //$NON-NLS-1$
         if (!mSimpleFormat) {
             mWriter.write(
                 "<script language=\"javascript\"> \n" +                  //$NON-NLS-1$
-                "<!--\n" +
+                "<!--\n" +                                               //$NON-NLS-1$
                 "function reveal(id) {\n" +                              //$NON-NLS-1$
                 "if (document.getElementById) {\n" +                     //$NON-NLS-1$
                 "document.getElementById(id).style.display = 'block';\n" +       //$NON-NLS-1$
