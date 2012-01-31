@@ -77,7 +77,7 @@ public class GLAPISpec {
             while ((line = reader.readLine()) != null) {
                 // strip away the comments
                 int commentPos = line.indexOf('#');
-                if (commentPos > 0) {
+                if (commentPos != -1) {
                     line = line.substring(0, commentPos);
                 }
                 line = line.trim();
