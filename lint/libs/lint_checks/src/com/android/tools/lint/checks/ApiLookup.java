@@ -108,6 +108,15 @@ public class ApiLookup {
             ApiLookup db = sInstance.get();
             if (db == null) {
                 File file = client.findResource(XML_FILE_PATH);
+                if (file == null) {
+                    // AOSP build environment?
+                    String build = System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+                    if (build != null) {
+                        file = new File(build, "development/sdk/api-versions.xml" //$NON-NLS-1$
+                                .replace('/', File.separatorChar));
+                    }
+                }
+
                 if (file == null || !file.exists()) {
                     client.log(null, "Fatal error: No API database found at %1$s", file);
                     return null;
