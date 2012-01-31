@@ -183,4 +183,19 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 "apicheck/SuppressTest4.class.data=>bin/classes/foo/bar/SuppressTest4.class"
                 ));
     }
+
+    public void testApiTargetAnnotation() throws Exception {
+        assertEquals(
+            "ApiTargetTest.java:13: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
+            "ApiTargetTest.java:25: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler\n" +
+            "ApiTargetTest.java:39: Error: Class requires API level 8 (current min is 7): org.w3c.dom.DOMErrorHandler",
+
+            lintProject(
+                "apicheck/classpath=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/ApiTargetTest.java.txt=>src/foo/bar/ApiTargetTest.java",
+                "apicheck/ApiTargetTest.class.data=>bin/classes/foo/bar/ApiTargetTest.class",
+                "apicheck/ApiTargetTest$LocalClass.class.data=>bin/classes/foo/bar/ApiTargetTest$LocalClass.class"
+                ));
+    }
 }
