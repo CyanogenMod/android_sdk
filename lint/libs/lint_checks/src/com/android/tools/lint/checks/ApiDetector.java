@@ -168,7 +168,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                             String message = String.format(
                                 "Class requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
-                            report(context, message, var.start,
+                            report(context, message, var.start, method,
                                     className.substring(className.lastIndexOf('/') + 1), null);
                         }
 
@@ -192,7 +192,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                             "Class requires API level %1$d (current min is %2$d): %3$s",
                             api, minSdk, fqcn);
                         AbstractInsnNode first = nodes.size() > 0 ? nodes.get(0) : null;
-                        report(context, message, first, null, null);
+                        report(context, message, first, method, null, null);
                     }
                 }
             }
@@ -222,7 +222,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                         String message = String.format(
                                 "Call requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
-                        report(context, message, node, name, null);
+                        report(context, message, node, method, name, null);
                     }
                 } else if (type == AbstractInsnNode.FIELD_INSN) {
                     FieldInsnNode node = (FieldInsnNode) instruction;
@@ -234,7 +234,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                         String message = String.format(
                                 "Field requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
-                        report(context, message, node, name, null);
+                        report(context, message, node, method, name, null);
                     }
                 } else if (type == AbstractInsnNode.LDC_INSN) {
                     LdcInsnNode node = (LdcInsnNode) instruction;
@@ -248,7 +248,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                             String message = String.format(
                                     "Class requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
-                            report(context, message, node,
+                            report(context, message, node, method,
                                     className.substring(className.lastIndexOf('/') + 1), null);
                         }
                     }
@@ -281,9 +281,9 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
     }
 
     private void report(final ClassContext context, String message, AbstractInsnNode node,
-            String patternStart, String patternEnd) {
+            MethodNode method, String patternStart, String patternEnd) {
         int lineNumber = node != null ? findLineNumber(node) : -1;
         Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd);
-        context.report(MISSING, location, message, null);
+        context.report(MISSING, method, location, message, null);
     }
 }

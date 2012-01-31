@@ -27,33 +27,33 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access\n" +
-                "GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access\n" +
-                "GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access",
+            "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1)\n" +
+            "GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2)\n" +
+            "GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1)\n" +
+            "GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1)\n" +
+            "GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2)",
 
-                lintProject(
-                    "bytecode/.classpath=>.classpath",
-                    "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
-                    "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
-                    "bytecode/GetterTest.class.data=>bin/classes/test/bytecode/GetterTest.class"
-                    ));
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.class.data=>bin/classes/test/bytecode/GetterTest.class"
+                ));
     }
 
     public void testJar() throws Exception {
         assertEquals(
-                "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access\n" +
-                "GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access\n" +
-                "GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access\n" +
-                "GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access",
+            "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1)\n" +
+            "GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2)\n" +
+            "GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1)\n" +
+            "GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1)\n" +
+            "GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2)",
 
-                lintProject(
-                    "bytecode/classpath-jar=>.classpath",
-                    "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
-                    "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
-                    "bytecode/GetterTest.jar.data=>bin/classes.jar"
-                    ));
+            lintProject(
+                "bytecode/classpath-jar=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.jar.data=>bin/classes.jar"
+                ));
     }
 }
