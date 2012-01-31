@@ -28,6 +28,7 @@ import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -78,6 +79,8 @@ public class StateTransformFactory {
                 return transformsForGlBlendFuncSeparate(msg);
             case glPixelStorei:
                 return transformsForGlPixelStorei(msg);
+
+            // Texture State Transformations
             case glGenTextures:
                 return transformsForGlGenTextures(msg);
             case glDeleteTextures:
@@ -92,6 +95,24 @@ public class StateTransformFactory {
                 return transformsForGlTexSubImage2D(msg);
             case glTexParameteri:
                 return transformsForGlTexParameter(msg);
+
+            // Program State Transformations
+            case glCreateProgram:
+                return transformsForGlCreateProgram(msg);
+            case glUseProgram:
+                return transformsForGlUseProgram(msg);
+            case glAttachShader:
+                return transformsForGlAttachShader(msg);
+            case glDetachShader:
+                return transformsForGlDetachShader(msg);
+
+            // Shader State Transformations
+            case glCreateShader:
+                return transformsForGlCreateShader(msg);
+            case glDeleteShader:
+                return transformsForGlDeleteShader(msg);
+            case glShaderSource:
+                return transformsForGlShaderSource(msg);
             default:
                 return Collections.emptyList();
         }
@@ -785,6 +806,106 @@ public class StateTransformFactory {
                                             getTextureUnitTargetName(target),
                                             getTextureTargetName(pname)),
                 pvalue);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlCreateProgram(GLMessage msg) {
+        // GLuint glCreateProgram(void);
+        int program = msg.getReturnValue().getIntValue(0);
+
+        IStateTransform transform = new SparseArrayElementAddTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS),
+                program);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlUseProgram(GLMessage msg) {
+        // void glUseProgram(GLuint program);
+        Integer program = Integer.valueOf(msg.getArgs(0).getIntValue(0));
+
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.CURRENT_PROGRAM),
+                program);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlAttachShader(GLMessage msg) {
+        // void glAttachShader(GLuint program, GLuint shader);
+        int program = msg.getArgs(0).getIntValue(0);
+        int shader = msg.getArgs(1).getIntValue(0);
+
+        IStateTransform transform = new SparseArrayElementAddTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                GLStateType.ATTACHED_SHADERS),
+                Integer.valueOf(shader));
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlDetachShader(GLMessage msg) {
+        // void glDetachShader(GLuint program, GLuint shader);
+        int program = msg.getArgs(0).getIntValue(0);
+        int shader = msg.getArgs(1).getIntValue(0);
+
+        IStateTransform transform = new SparseArrayElementRemoveTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                GLStateType.ATTACHED_SHADERS),
+                Integer.valueOf(shader));
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlCreateShader(GLMessage msg) {
+        // GLuint glCreateShader(GLenum shaderType);
+        GLEnum shaderType = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        int shader = msg.getReturnValue().getIntValue(0);
+
+        IStateTransform addShader = new SparseArrayElementAddTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.SHADERS),
+                shader);
+        IStateTransform setShaderType = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.SHADERS,
+                                                Integer.valueOf(shader),
+                                                GLStateType.SHADER_TYPE),
+                shaderType);
+        return Arrays.asList(addShader, setShaderType);
+    }
+
+    private static List<IStateTransform> transformsForGlDeleteShader(GLMessage msg) {
+        // void glDeleteShader(GLuint shader);
+        int shader = msg.getArgs(0).getIntValue(0);
+
+        IStateTransform transform = new SparseArrayElementRemoveTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                        GLStateType.SHADERS),
+                shader);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlShaderSource(GLMessage msg) {
+        // void glShaderSource(GLuint shader, GLsizei count, const GLchar **string,
+        //                                                          const GLint *length);
+        // This message is patched up on the device to return a single string as opposed to a
+        // list of strings
+        int shader = msg.getArgs(0).getIntValue(0);
+        String src = msg.getArgs(2).getCharValue(0).toStringUtf8();
+
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.SHADERS,
+                                                Integer.valueOf(shader),
+                                                GLStateType.SHADER_SOURCE),
+                src);
         return Collections.singletonList(transform);
     }
 

@@ -114,6 +114,18 @@ public enum GLStateType {
                 TEXTURE_IMAGE_TYPE("Image Type"),
                 TEXTURE_IMAGE("Image"),
 
+    PROGRAM_STATE("Program Object State"),
+        CURRENT_PROGRAM("Current Program"),
+        PROGRAMS("Programs"),
+            PER_PROGRAM_STATE("Per Program State"),
+                ATTACHED_SHADERS("Attached Shaders"),
+                    ATTACHED_SHADER_ID("Attached Shader ID"),
+
+    SHADERS("Shader Objects"),
+        PER_SHADER_STATE("Per Shader State"),
+            SHADER_TYPE("Shader Type"),
+            SHADER_SOURCE("Source"),
+
     FRAMEBUFFER_STATE("Framebuffer State"),
         FRAMEBUFFER_BINDING("Framebuffer Binding"),
         FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE("Framebuffer object type"),

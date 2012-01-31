@@ -243,6 +243,33 @@ public class GLState {
                 textures);
     }
 
+    private IGLProperty createProgramState() {
+        IGLProperty currentProgram = new GLIntegerProperty(GLStateType.CURRENT_PROGRAM,
+                Integer.valueOf(0));
+
+        IGLProperty attachedShaderId = new GLIntegerProperty(GLStateType.ATTACHED_SHADER_ID,
+                Integer.valueOf(0));
+        IGLProperty attachedShaders = new GLSparseArrayProperty(GLStateType.ATTACHED_SHADERS,
+                attachedShaderId);
+
+        IGLProperty perProgramState = new GLCompositeProperty(GLStateType.PER_PROGRAM_STATE,
+                attachedShaders);
+
+        IGLProperty programs = new GLSparseArrayProperty(GLStateType.PROGRAMS, perProgramState);
+
+        return new GLCompositeProperty(GLStateType.PROGRAM_STATE, currentProgram, programs);
+    }
+
+    private IGLProperty createShaderState() {
+        IGLProperty shaderType = new GLEnumProperty(GLStateType.SHADER_TYPE,
+                GLEnum.GL_VERTEX_SHADER);
+        IGLProperty shaderSource = new GLStringProperty(GLStateType.SHADER_SOURCE,
+                ""); //$NON-NLS-1$
+        IGLProperty perShaderState = new GLCompositeProperty(GLStateType.PER_SHADER_STATE,
+                shaderType, shaderSource);
+        return new GLSparseArrayProperty(GLStateType.SHADERS, perShaderState);
+    }
+
     public static IGLProperty createDefaultES2State() {
         GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE_ES2,
                 sGLState.createVertexArrayData(),
@@ -251,7 +278,9 @@ public class GLState {
                 sGLState.createRasterizationState(),
                 sGLState.createPixelOperationsState(),
                 sGLState.createPixelPackState(),
-                sGLState.createTextureState());
+                sGLState.createTextureState(),
+                sGLState.createProgramState(),
+                sGLState.createShaderState());
         return glState;
     }
 

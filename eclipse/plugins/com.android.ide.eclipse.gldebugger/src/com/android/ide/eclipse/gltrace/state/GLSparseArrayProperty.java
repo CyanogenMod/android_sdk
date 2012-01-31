@@ -33,8 +33,10 @@ public class GLSparseArrayProperty implements IGLProperty {
         mSparseArray = new SparseArray<IGLProperty>(20);
     }
 
-    private GLSparseArrayProperty(GLStateType type, SparseArray<IGLProperty> contents) {
+    private GLSparseArrayProperty(GLStateType type, IGLProperty defaultValue,
+            SparseArray<IGLProperty> contents) {
         mType = type;
+        mDefaultValue = defaultValue;
         mSparseArray = contents;
     }
 
@@ -106,7 +108,7 @@ public class GLSparseArrayProperty implements IGLProperty {
             copy.put(key, value);
         }
 
-        return new GLSparseArrayProperty(mType, copy);
+        return new GLSparseArrayProperty(mType, mDefaultValue, copy);
     }
 
     @Override
