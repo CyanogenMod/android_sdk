@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apichecker.generator;
+package com.android.apigenerator;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

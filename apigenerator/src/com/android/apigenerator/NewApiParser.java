@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apichecker.generator;
+package com.android.apigenerator;
 
 import java.io.IOException;
 import java.io.InputStream;

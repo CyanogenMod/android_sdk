@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package enumfix;
+package com.android.apigenerator.enumfix;
 
-import com.android.apichecker.generator.ApiClass;
+import com.android.apigenerator.ApiClass;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;

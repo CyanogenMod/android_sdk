@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apichecker.generator;
+package com.android.apigenerator;
 
 import com.android.util.Pair;
 

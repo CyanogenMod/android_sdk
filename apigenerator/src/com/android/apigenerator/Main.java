@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.apichecker.generator;
+package com.android.apigenerator;
 
 
-import enumfix.AndroidJarReader;
+import com.android.apigenerator.enumfix.AndroidJarReader;
 
 import org.xml.sax.SAXException;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apichecker.generator;
+package com.android.apigenerator;
 
 import java.util.Map;
 
@@ -133,9 +133,7 @@ class ParserState {
                 }
             } else {
                 if (fqcn.charAt(i) == '<') {
-                    if (i < length - 1) {
-                        isClass = Character.isUpperCase(fqcn.charAt(i+1));
-                    }
+                    break;
                 }
 
                 sb.append(fqcn.charAt(i));
