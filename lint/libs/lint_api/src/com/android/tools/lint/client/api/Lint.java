@@ -64,11 +64,26 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import lombok.ast.Annotation;
+import lombok.ast.AnnotationElement;
+import lombok.ast.AnnotationValue;
+import lombok.ast.ArrayInitializer;
+import lombok.ast.ClassDeclaration;
+import lombok.ast.Expression;
+import lombok.ast.MethodDeclaration;
+import lombok.ast.Modifiers;
+import lombok.ast.Node;
+import lombok.ast.StrictListAccessor;
+import lombok.ast.StringLiteral;
+import lombok.ast.TypeReference;
+import lombok.ast.VariableDefinition;
 
 /**
  * Analyzes Android projects and files
@@ -1263,6 +1278,115 @@ public class Lint {
                                                 issue != null && id.equals(issue.getId())) {
                                             return true;
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the given issue is suppressed in the given parse tree node.
+     *
+     * @param issue the issue to be checked, or null to just check for "all"
+     * @param scope the AST node containing the issue
+     * @return true if there is a suppress annotation covering the specific
+     *         issue in this class
+     */
+    public boolean isSuppressed(Issue issue, Node scope) {
+        while (scope != null) {
+            Class<? extends Node> type = scope.getClass();
+            // The Lombok AST uses a flat hierarchy of node type implementation classes
+            // so no need to do instanceof stuff here.
+            if (type == VariableDefinition.class) {
+                // Variable
+                VariableDefinition declaration = (VariableDefinition) scope;
+                if (isSuppressed(issue, declaration.astModifiers())) {
+                    return true;
+                }
+            } else if (type == MethodDeclaration.class) {
+                // Method
+                // Look for annotations on the method
+                MethodDeclaration declaration = (MethodDeclaration) scope;
+                if (isSuppressed(issue, declaration.astModifiers())) {
+                    return true;
+                }
+            } else if (type == ClassDeclaration.class) {
+                // Class
+                ClassDeclaration declaration = (ClassDeclaration) scope;
+                if (isSuppressed(issue, declaration.astModifiers())) {
+                    return true;
+                }
+            }
+
+            scope = scope.getParent();
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if the given AST modifier has a suppress annotation for the
+     * given issue (which can be null to check for the "all" annotation)
+     *
+     * @param issue the issue to be checked
+     * @param modifiers the modifier to check
+     * @return true if the issue or all issues should be suppressed for this
+     *         modifier
+     */
+    private static boolean isSuppressed(@Nullable Issue issue, @NonNull Modifiers modifiers) {
+        if (modifiers == null) {
+            return false;
+        }
+        StrictListAccessor<Annotation, Modifiers> annotations = modifiers.astAnnotations();
+        if (annotations == null) {
+            return false;
+        }
+
+        Iterator<Annotation> iterator = annotations.iterator();
+        while (iterator.hasNext()) {
+            Annotation annotation = iterator.next();
+            TypeReference t = annotation.astAnnotationTypeReference();
+            String typeName = t.getTypeName();
+            if (typeName.endsWith("SuppressLint")                   //$NON-NLS-1$
+                    || typeName.endsWith("SuppressWarnings")) {     //$NON-NLS-1$
+                StrictListAccessor<AnnotationElement, Annotation> values =
+                        annotation.astElements();
+                if (values != null) {
+                    Iterator<AnnotationElement> valueIterator = values.iterator();
+                    while (valueIterator.hasNext()) {
+                        AnnotationElement element = valueIterator.next();
+                        AnnotationValue valueNode = element.astValue();
+                        if (valueNode == null) {
+                            continue;
+                        }
+                        if (valueNode instanceof StringLiteral) {
+                            StringLiteral literal = (StringLiteral) valueNode;
+                            String value = literal.astValue();
+                            if (value.equals(SUPPRESS_ALL) ||
+                                    issue != null && issue.getId().equals(value)) {
+                                return true;
+                            }
+                        } else if (valueNode instanceof ArrayInitializer) {
+                            ArrayInitializer array = (ArrayInitializer) valueNode;
+                            StrictListAccessor<Expression, ArrayInitializer> expressions =
+                                    array.astExpressions();
+                            if (expressions == null) {
+                                continue;
+                            }
+                            Iterator<Expression> arrayIterator = expressions.iterator();
+                            while (arrayIterator.hasNext()) {
+                                Expression arrayElement = arrayIterator.next();
+                                if (arrayElement instanceof StringLiteral) {
+                                    String value = ((StringLiteral) arrayElement).astValue();
+                                    if (value.equals(SUPPRESS_ALL) ||
+                                            issue != null && issue.getId().equals(value)) {
+                                        return true;
                                     }
                                 }
                             }

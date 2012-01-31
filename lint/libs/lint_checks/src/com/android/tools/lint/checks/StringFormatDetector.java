@@ -698,7 +698,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                             "Wrong argument count, format string %1$s requires %2$d but format " +
                             "call supplies %3$d",
                             name, count, args.size() - 1);
-                    context.report(ARG_TYPES, location,
+                    context.report(ARG_TYPES, method, location,
                             message, null);
                 } else {
                     for (int i = 1; i <= count; i++) {
@@ -768,7 +768,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                         "Wrong argument type for formatting argument '#%1$d' " +
                                         "in %2$s: conversion is '%3$s', received %4$s",
                                         i, name, formatType, type.getSimpleName());
-                                context.report(ARG_TYPES, location,
+                                context.report(ARG_TYPES, method, location,
                                         message, null);
                             }
                         }

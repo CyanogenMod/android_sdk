@@ -72,4 +72,36 @@ public class JavaContext extends Context {
 
         return new Location(file, null, null);
     }
+
+    @Override
+    public void report(Issue issue, Location location, String message, Object data) {
+        if (mDriver.isSuppressed(issue, compilationUnit)) {
+            return;
+        }
+        super.report(issue, location, message, data);
+    }
+
+    /**
+     * Reports an issue applicable to a given AST node. The AST node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue the issue to report
+     * @param scope the AST node scope the error applies to. The lint infrastructure
+     *    will check whether there are suppress annotations on this node (or its enclosing
+     *    nodes) and if so suppress the warning without involving the client.
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Node scope,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
+        if (scope != null && mDriver.isSuppressed(issue, scope)) {
+            return;
+        }
+        super.report(issue, location, message, data);
+    }
 }
