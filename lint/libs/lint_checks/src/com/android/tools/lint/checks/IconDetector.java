@@ -935,7 +935,10 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     private void checkDrawableDir(Context context, File folder, File[] files,
             Map<File, Dimension> pixelSizes, Map<File, Long> fileSizes) {
         if (folder.getName().equals(DRAWABLE_FOLDER)
-                && context.isEnabled(ICON_LOCATION)) {
+                && context.isEnabled(ICON_LOCATION) &&
+                // If supporting older versions than Android 1.6, it's not an error
+                // to include bitmaps in drawable/
+                context.getProject().getMinSdk() >= 4) {
             for (File file : files) {
                 String name = file.getName();
                 if (name.endsWith(DOT_XML)) {
