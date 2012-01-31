@@ -43,6 +43,16 @@ public class IconDetectorTest extends AbstractCheckTest {
                     "res/drawable-hdpi/ic_launcher.png"));
     }
 
+    public void testApi1() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    // manifest file which specifies uses sdk = 2
+                    "apicheck/minsdk2.xml=>AndroidManifest.xml",
+                    "res/drawable/ic_launcher.png"));
+    }
+
     public void test2() throws Exception {
         assertEquals(
             "drawable-hdpi/other.9.png: Warning: The following unrelated icon files have identical contents: appwidget_bg.9.png, other.9.png\n" +
