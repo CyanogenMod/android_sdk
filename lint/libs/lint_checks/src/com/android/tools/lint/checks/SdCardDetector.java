@@ -99,7 +99,7 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
                 String message = "Do not hardcode \"/sdcard/\"; " +
                     "use Environment.getExternalStorageDirectory().getPath() instead";
                 Location location = mContext.getLocation(node);
-                mContext.report(ISSUE, location, message, s);
+                mContext.report(ISSUE, node, location, message, s);
             }
 
             return false;

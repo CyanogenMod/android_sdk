@@ -39,4 +39,14 @@ public class SdCardDetectorTest extends AbstractCheckTest {
 
                 lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
     }
+
+    public void testSuppress() throws Exception {
+        assertEquals(
+            // The only reference in the file not covered by an annotation
+            "SuppressTest5.java:40: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+
+            // File with lots of /sdcard references, but with @SuppressLint warnings
+            // on fields, methods, variable declarations etc
+            lintProject("src/test/pkg/SuppressTest5.java.txt=>src/test/pkg/SuppressTest5.java"));
+    }
 }

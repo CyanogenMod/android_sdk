@@ -229,8 +229,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         public boolean visitIdentifier(Identifier node) {
             if ("MODE_WORLD_WRITEABLE".equals(node.getDescription())) { //$NON-NLS-1$
                 Location location = mContext.getLocation(node);
-                mContext.report(WORLD_WRITEABLE,
-                        location,
+                mContext.report(WORLD_WRITEABLE, node, location,
                         "Using MODE_WORLD_WRITEABLE with openFileOutput can be " +
                                 "risky, review carefully",
                         null);

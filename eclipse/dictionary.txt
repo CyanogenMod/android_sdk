@@ -150,6 +150,7 @@ linux
 locale
 locales
 logo
+lombok
 lowercase
 luminance
 mac

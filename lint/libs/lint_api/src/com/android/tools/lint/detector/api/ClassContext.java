@@ -244,7 +244,7 @@ public class ClassContext extends Context {
      * Reports an issue applicable to a given method node.
      *
      * @param issue the issue to report
-     * @param method the method (scope the error applies to. The lint infrastructure
+     * @param method the method scope the error applies to. The lint infrastructure
      *    will check whether there are suppress annotations on this method (or its enclosing
      *    class) and if so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
@@ -267,7 +267,7 @@ public class ClassContext extends Context {
      * Reports an issue applicable to a given method node.
      *
      * @param issue the issue to report
-     * @param field the method (scope the error applies to. The lint infrastructure
+     * @param field the scope the error applies to. The lint infrastructure
      *    will check whether there are suppress annotations on this field (or its enclosing
      *    class) and if so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
