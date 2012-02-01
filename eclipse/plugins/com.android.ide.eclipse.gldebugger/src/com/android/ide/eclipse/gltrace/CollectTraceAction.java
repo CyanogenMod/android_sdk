@@ -23,6 +23,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -41,6 +42,12 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
+    /** Abstract Unix Domain Socket Name used by the gltrace device code. */
+    private static final String GLTRACE_UDS = "gltrace";
+
+    /** Local port that is forwarded to the device's {@link #GLTRACE_UDS} socket. */
+    private static final int LOCAL_FORWARDED_PORT = 6039;
+
     @Override
     public void run(IAction action) {
         connectToDevice();
@@ -59,8 +66,6 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     }
 
     private void connectToDevice() {
-        int port = 5039;
-
         Shell shell = Display.getDefault().getActiveShell();
         GLTraceOptionsDialog dlg = new GLTraceOptionsDialog(shell);
         if (dlg.open() != Window.OK) {
@@ -81,7 +86,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
 
         try {
-            setupForwarding(device, port);
+            setupForwarding(device, LOCAL_FORWARDED_PORT);
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
                     "Error while setting up port forwarding: " + e.getMessage());
@@ -103,7 +108,11 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
         // if everything went well, the app should now be waiting for the gl debugger
         // to connect
-        startTracing(shell, traceOptions, port);
+        startTracing(shell, traceOptions, LOCAL_FORWARDED_PORT);
+
+        // once tracing is complete, disable tracing on device, and remove port forwarding
+        disableGLTrace(device);
+        disablePortForwarding(device, LOCAL_FORWARDED_PORT);
     }
 
     private void startTracing(Shell shell, TraceOptions traceOptions, int port) {
@@ -177,19 +186,32 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
     private void setupForwarding(IDevice device, int i)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        device.createForward(i, i);
+        device.createForward(i, GLTRACE_UDS, DeviceUnixSocketNamespace.ABSTRACT);
+    }
+
+    private void disablePortForwarding(IDevice device, int port) {
+        try {
+            device.removeForward(port, GLTRACE_UDS, DeviceUnixSocketNamespace.ABSTRACT);
+        } catch (Exception e) {
+            // ignore exceptions;
+        }
     }
 
     // adb shell setprop debug.egl.debug_proc <procname>
-    // adb shell setprop debug.egl.debug_forceUseFile 0
     private void setGLTraceOn(IDevice device, String appName)
             throws TimeoutException, AdbCommandRejectedException,
             ShellCommandUnresponsiveException, IOException {
         String setDebugProcProperty = "setprop debug.egl.debug_proc " + appName; //$NON-NLS-1$
-        String setNoFileProperty = "setprop debug.egl.debug_forceUseFile 0";     //$NON-NLS-1$
-
         device.executeShellCommand(setDebugProcProperty, new IgnoreOutputReceiver());
-        device.executeShellCommand(setNoFileProperty, new IgnoreOutputReceiver());
+    }
+
+    private void disableGLTrace(IDevice device) {
+        // The only way to disable is by enabling tracing with an empty package name
+        try {
+            setGLTraceOn(device, "");
+        } catch (Exception e) {
+            // ignore any exception
+        }
     }
 
     private IDevice getDevice(String deviceName) {
