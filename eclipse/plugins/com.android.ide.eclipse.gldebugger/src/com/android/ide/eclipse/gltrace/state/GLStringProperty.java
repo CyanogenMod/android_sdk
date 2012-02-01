@@ -23,7 +23,7 @@ public class GLStringProperty extends GLAbstractAtomicProperty {
     public GLStringProperty(GLStateType type, String defaultValue) {
         super(type);
 
-        mDefaultValue = defaultValue;
+        mDefaultValue = mCurrentValue = defaultValue;
     }
 
     @Override
