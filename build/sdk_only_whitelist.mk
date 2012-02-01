@@ -31,6 +31,7 @@ subdirs += \
 	sdk/avdlauncher \
 	sdk/emulator/mksdcard \
 	sdk/find_java \
+	sdk/find_lock \
 	sdk/sdklauncher
 
 # -----
