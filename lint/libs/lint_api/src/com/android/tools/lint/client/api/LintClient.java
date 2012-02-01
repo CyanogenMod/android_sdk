@@ -31,6 +31,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -297,12 +298,27 @@ public abstract class LintClient {
         if (mDirToProject == null) {
             mDirToProject = new HashMap<File, Project>();
         }
-        Project project = mDirToProject.get(dir);
+
+        File canonicalDir = dir;
+        try {
+            // Attempt to use the canonical handle for the file, in case there
+            // are symlinks etc present (since when handling library projects,
+            // we also call getCanonicalFile to compute the result of appending
+            // relative paths, which can then resolve symlinks and end up with
+            // a different prefix)
+            canonicalDir = dir.getCanonicalFile();
+        } catch (IOException ioe) {
+            // pass
+        }
+
+        Project project = mDirToProject.get(canonicalDir);
         if (project != null) {
             return project;
         }
+
+
         project = Project.create(this, dir, referenceDir);
-        mDirToProject.put(dir, project);
+        mDirToProject.put(canonicalDir, project);
         return project;
     }
 }

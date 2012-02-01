@@ -20,11 +20,16 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
@@ -146,20 +151,29 @@ abstract class Reporter {
     /** Gets a pointer to the local resource directory, if any */
     File getResourceDir() {
         if (mResources == null && mBundleResources) {
-            String fileName = mOutput.getName();
-            int dot = fileName.indexOf('.');
-            if (dot != -1) {
-                fileName = fileName.substring(0, dot);
-            }
-
-            mResources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
-            if (!mResources.mkdir()) {
-                mResources = null;
+            mResources = computeResourceDir();
+            if (mResources == null) {
                 mBundleResources = false;
             }
         }
 
         return mResources;
+    }
+
+    /** Finds/creates the local resource directory, if possible */
+    File computeResourceDir() {
+        String fileName = mOutput.getName();
+        int dot = fileName.indexOf('.');
+        if (dot != -1) {
+            fileName = fileName.substring(0, dot);
+        }
+
+        File resources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
+        if (!resources.exists() && !resources.mkdir()) {
+            resources = null;
+        }
+
+        return resources;
     }
 
     /** Returns a URL to a local copy of the given file, or null */
@@ -195,6 +209,31 @@ abstract class Reporter {
             File target = new File(resourceDir, base);
             try {
                 Files.copy(file, target);
+            } catch (IOException e) {
+                return null;
+            }
+            return resourceDir.getName() + '/' + encodeUrl(base);
+        }
+        return null;
+    }
+
+    /** Returns a URL to a local copy of the given resource, or null. There is
+     * no filename conflict resolution. */
+    protected String addLocalResources(URL url) {
+        // Attempt to make local copy
+        File resourceDir = computeResourceDir();
+        if (resourceDir != null) {
+            String base = url.getFile();
+            base = base.substring(base.lastIndexOf('/') + 1);
+            mNameToFile.put(base, new File(url.toExternalForm()));
+
+            File target = new File(resourceDir, base);
+            try {
+                FileOutputStream output = new FileOutputStream(target);
+                InputStream input = url.openStream();
+                ByteStreams.copy(input, output);
+                Closeables.closeQuietly(output);
+                Closeables.closeQuietly(input);
             } catch (IOException e) {
                 return null;
             }
