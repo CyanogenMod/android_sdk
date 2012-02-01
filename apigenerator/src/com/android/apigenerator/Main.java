@@ -84,7 +84,7 @@ public class Main {
         Map<String, ApiClass> map = new HashMap<String, ApiClass>();
 
         InputStream stream = Main.class.getResourceAsStream(
-                "/com/android/apichecker/generator/enums.xml");
+                "enums.xml");
         if (stream != null) {
             map = EnumParser.parseApi(stream);
         }
