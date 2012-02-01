@@ -46,16 +46,16 @@
 static void testFindJava() {
 
     CPath javaPath("<not found>");
-    bool ok = findJavaInEnvPath(&javaPath);
-    printf("findJavaInEnvPath: [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+    int v = findJavaInEnvPath(&javaPath);
+    printf("findJavaInEnvPath: [%d] %s\n", v, javaPath.cstr());
 
     javaPath.set("<not found>");
-    ok = findJavaInRegistry(&javaPath);
-    printf("findJavaInRegistry [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+    v = findJavaInRegistry(&javaPath);
+    printf("findJavaInRegistry [%d] %s\n", v, javaPath.cstr());
 
     javaPath.set("<not found>");
-    ok = findJavaInProgramFiles(&javaPath);
-    printf("findJavaInProgramFiles [%s] %s\n", ok ? "OK" : "FAIL", javaPath.cstr());
+    v = findJavaInProgramFiles(&javaPath);
+    printf("findJavaInProgramFiles [%d] %s\n", v, javaPath.cstr());
 }
 
 
@@ -99,14 +99,20 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Find the first suitable version of Java we can use.
     CPath javaPath;
-    if (!findJavaInEnvPath(&javaPath) &&
-        !findJavaInRegistry(&javaPath) &&
-        !findJavaInProgramFiles(&javaPath)) {
-            if (gIsDebug) {
-                fprintf(stderr, "Failed to find Java on your system.\n");
-            }
-            return 1;
+    int version = findJavaInEnvPath(&javaPath);
+    if (version < MIN_JAVA_VERSION) {
+        version = findJavaInRegistry(&javaPath);
+    }
+    if (version < MIN_JAVA_VERSION) {
+        version = findJavaInProgramFiles(&javaPath);
+    }
+    if (version < MIN_JAVA_VERSION || javaPath.isEmpty()) {
+        if (gIsDebug) {
+            fprintf(stderr, "Failed to find Java on your system.\n");
+        }
+        return 1;
     }
     _ASSERT(!javaPath.isEmpty());
 
@@ -120,14 +126,10 @@ int main(int argc, char* argv[]) {
     }
 
     if (doVersion) {
-        // Print version found
-        CString version;
-        if (getJavaVersion(javaPath, &version)) {
-            printf("%s", version.cstr());
-            return 0;
-        } else {
-            fprintf(stderr, "Failed to get version of %s\n", javaPath.cstr());
-        }
+        // Print version found. We already have the version as an integer
+        // so we don't need to run java -version a second time.
+        printf("%d.%d", version / 1000, version % 1000);
+        return 0;
     }
 
     if (doJavaW) {
