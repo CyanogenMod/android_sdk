@@ -42,6 +42,7 @@ public interface IDevice {
     public static final int CHANGE_BUILD_INFO = 0x0004;
 
     /** @deprecated Use {@link #PROP_BUILD_API_LEVEL}. */
+    @Deprecated
     public final static String PROP_BUILD_VERSION_NUMBER = PROP_BUILD_API_LEVEL;
 
     public final static String MNT_EXTERNAL_STORAGE = "EXTERNAL_STORAGE"; //$NON-NLS-1$
@@ -78,6 +79,25 @@ public interface IDevice {
             return null;
         }
     }
+
+    /**
+     * Namespace of a Unix Domain Socket created on the device.
+     */
+    public static enum DeviceUnixSocketNamespace {
+        ABSTRACT("localabstract"),      //$NON-NLS-1$
+        FILESYSTEM("localfilesystem"),  //$NON-NLS-1$
+        RESERVED("localreserved");      //$NON-NLS-1$
+
+        private String mType;
+
+        private DeviceUnixSocketNamespace(String type) {
+            mType = type;
+        }
+
+        String getType() {
+            return mType;
+        }
+    };
 
     /**
      * Returns the serial number of the device.
@@ -334,6 +354,21 @@ public interface IDevice {
             throws TimeoutException, AdbCommandRejectedException, IOException;
 
     /**
+     * Creates a port forwarding between a local TCP port and a remote Unix Domain Socket.
+     *
+     * @param localPort the local port to forward
+     * @param remoteSocketName name of the unix domain socket created on the device
+     * @param namespace namespace in which the unix domain socket was created
+     * @return <code>true</code> if success.
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public void createForward(int localPort, String remoteSocketName,
+            DeviceUnixSocketNamespace namespace)
+            throws TimeoutException, AdbCommandRejectedException, IOException;
+
+    /**
      * Removes a port forwarding between a local and a remote port.
      *
      * @param localPort the local port to forward
@@ -344,6 +379,21 @@ public interface IDevice {
      * @throws IOException in case of I/O error on the connection.
      */
     public void removeForward(int localPort, int remotePort)
+            throws TimeoutException, AdbCommandRejectedException, IOException;
+
+    /**
+     * Removes an existing port forwarding between a local and a remote port.
+     *
+     * @param localPort the local port to forward
+     * @param remoteSocketName the remote unix domain socket name.
+     * @param namespace namespace in which the unix domain socket was created
+     * @return <code>true</code> if success.
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public void removeForward(int localPort, String remoteSocketName,
+            DeviceUnixSocketNamespace namespace)
             throws TimeoutException, AdbCommandRejectedException, IOException;
 
     /**

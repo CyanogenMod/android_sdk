@@ -413,13 +413,35 @@ final class Device implements IDevice {
     @Override
     public void createForward(int localPort, int remotePort)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this, localPort, remotePort);
+        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this,
+                String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
+    }
+
+    @Override
+    public void createForward(int localPort, String remoteSocketName,
+            DeviceUnixSocketNamespace namespace) throws TimeoutException,
+            AdbCommandRejectedException, IOException {
+        AdbHelper.createForward(AndroidDebugBridge.getSocketAddress(), this,
+                String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
     }
 
     @Override
     public void removeForward(int localPort, int remotePort)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this, localPort, remotePort);
+        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this,
+                String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                String.format("tcp:%d", remotePort));   //$NON-NLS-1$
+    }
+
+    @Override
+    public void removeForward(int localPort, String remoteSocketName,
+            DeviceUnixSocketNamespace namespace) throws TimeoutException,
+            AdbCommandRejectedException, IOException {
+        AdbHelper.removeForward(AndroidDebugBridge.getSocketAddress(), this,
+                String.format("tcp:%d", localPort),     //$NON-NLS-1$
+                String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
     }
 
     /*

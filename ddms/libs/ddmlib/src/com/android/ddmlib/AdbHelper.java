@@ -511,14 +511,22 @@ final class AdbHelper {
      * Creates a port forwarding between a local and a remote port.
      * @param adbSockAddr the socket address to connect to adb
      * @param device the device on which to do the port fowarding
-     * @param localPort the local port to forward
-     * @param remotePort the remote port.
+     * @param localPortSpec specification of the local port to forward, should be of format
+     *                             tcp:<port number>
+     * @param remotePortSpec specification of the remote port to forward to, one of:
+     *                             tcp:<port>
+     *                             localabstract:<unix domain socket name>
+     *                             localreserved:<unix domain socket name>
+     *                             localfilesystem:<unix domain socket name>
+     *                             dev:<character device name>
+     *                             jdwp:<process pid> (remote only)
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    public static void createForward(InetSocketAddress adbSockAddr, Device device, int localPort,
-            int remotePort) throws TimeoutException, AdbCommandRejectedException, IOException {
+    public static void createForward(InetSocketAddress adbSockAddr, Device device,
+            String localPortSpec, String remotePortSpec)
+                    throws TimeoutException, AdbCommandRejectedException, IOException {
 
         SocketChannel adbChan = null;
         try {
@@ -526,8 +534,8 @@ final class AdbHelper {
             adbChan.configureBlocking(false);
 
             byte[] request = formAdbRequest(String.format(
-                    "host-serial:%1$s:forward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                    device.getSerialNumber(), localPort, remotePort));
+                    "host-serial:%1$s:forward:%2$s;%3$s", //$NON-NLS-1$
+                    device.getSerialNumber(), localPortSpec, remotePortSpec));
 
             write(adbChan, request);
 
@@ -547,14 +555,22 @@ final class AdbHelper {
      * Remove a port forwarding between a local and a remote port.
      * @param adbSockAddr the socket address to connect to adb
      * @param device the device on which to remove the port fowarding
-     * @param localPort the local port of the forward
-     * @param remotePort the remote port.
+     * @param localPortSpec specification of the local port that was forwarded, should be of format
+     *                             tcp:<port number>
+     * @param remotePortSpec specification of the remote port forwarded to, one of:
+     *                             tcp:<port>
+     *                             localabstract:<unix domain socket name>
+     *                             localreserved:<unix domain socket name>
+     *                             localfilesystem:<unix domain socket name>
+     *                             dev:<character device name>
+     *                             jdwp:<process pid> (remote only)
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    public static void removeForward(InetSocketAddress adbSockAddr, Device device, int localPort,
-            int remotePort) throws TimeoutException, AdbCommandRejectedException, IOException {
+    public static void removeForward(InetSocketAddress adbSockAddr, Device device,
+            String localPortSpec, String remotePortSpec)
+                    throws TimeoutException, AdbCommandRejectedException, IOException {
 
         SocketChannel adbChan = null;
         try {
@@ -562,8 +578,8 @@ final class AdbHelper {
             adbChan.configureBlocking(false);
 
             byte[] request = formAdbRequest(String.format(
-                    "host-serial:%1$s:killforward:tcp:%2$d;tcp:%3$d", //$NON-NLS-1$
-                    device.getSerialNumber(), localPort, remotePort));
+                    "host-serial:%1$s:killforward:%2$s;%3$s", //$NON-NLS-1$
+                    device.getSerialNumber(), localPortSpec, remotePortSpec));
 
             write(adbChan, request);
 
