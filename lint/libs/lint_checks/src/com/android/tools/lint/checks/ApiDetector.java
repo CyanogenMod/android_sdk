@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.XmlContext;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
@@ -146,11 +147,20 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
         }
 
         // Workaround for the fact that beforeCheckProject is too early
-        int minSdk = getMinSdk(context);
+        int classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
+        if (classMinSdk == -1) {
+            classMinSdk = getMinSdk(context);;
+        }
 
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
+
+            int minSdk = getLocalMinSdk(method.invisibleAnnotations);
+            if (minSdk == -1) {
+                minSdk = classMinSdk;
+            }
+
             InsnList nodes = method.instructions;
 
             // Check types in parameter list and types of local variables
@@ -255,6 +265,44 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                 }
             }
         }
+    }
+
+    /**
+     * Returns the minimum SDK to use according to the given annotation list, or
+     * -1 if no annotation was found.
+     *
+     * @param annotations a list of annotation nodes from ASM
+     * @return the API level to use for this node, or -1
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private int getLocalMinSdk(List annotations) {
+        if (annotations != null) {
+            for (AnnotationNode annotation : (List<AnnotationNode>)annotations) {
+                String desc = annotation.desc;
+                if (desc.endsWith("/TargetApi;")) { //$NON-NLS-1$
+                    if (annotation.values != null) {
+                        for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
+                            String key = (String) annotation.values.get(i);
+                            if (key.equals("value")) {  //$NON-NLS-1$
+                                Object value = annotation.values.get(i + 1);
+                                if (value instanceof Integer) {
+                                    return ((Integer) value).intValue();
+                                } else if (value instanceof List) {
+                                    List list = (List) value;
+                                    for (Object v : list) {
+                                        if (v instanceof Integer) {
+                                            return ((Integer) value).intValue();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return -1;
     }
 
     private static int findLineNumber(AbstractInsnNode node) {

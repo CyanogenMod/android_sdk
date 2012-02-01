@@ -1260,7 +1260,7 @@ public class Lint {
                 if (annotation.values != null) {
                     for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                         String key = (String) annotation.values.get(i);
-                        if (key.equals("value")) {
+                        if (key.equals("value")) {   //$NON-NLS-1$
                             Object value = annotation.values.get(i + 1);
                             if (value instanceof String) {
                                 String id = (String) value;
