@@ -27,6 +27,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
@@ -86,6 +87,14 @@ abstract class LintColumn implements Comparator<IMarker> {
      * @return the value of this column for the given marker
      */
     public abstract String getValue(@NonNull IMarker marker);
+
+    /**
+     * @param marker the {@link IMarker} to get the value for
+     * @return the styled value of this column for the given marker
+     */
+    public StyledString getStyledValue(@NonNull IMarker marker) {
+        return null;
+    }
 
     /**
      * @param marker the {@link IMarker} to get the image for
@@ -148,14 +157,23 @@ abstract class LintColumn implements Comparator<IMarker> {
 
         @Override
         public String getValue(IMarker marker) {
+            return getStyledValue(marker).toString();
+        }
+
+        @Override
+        public StyledString getStyledValue(IMarker marker) {
+            StyledString styledString = new StyledString();
+
             String message = marker.getAttribute(IMarker.MESSAGE, "");
+            styledString.append(message);
 
             int count = mList.getCount(marker);
             if (count > 1) {
-                message = String.format("%1$s (%2$d items)", message, count);
+                styledString.append(String.format(" (%2$d items)", message, count),
+                        StyledString.COUNTER_STYLER);
             }
 
-            return message;
+            return styledString;
         }
 
         @Override
@@ -296,35 +314,40 @@ abstract class LintColumn implements Comparator<IMarker> {
 
         @Override
         public String getValue(IMarker marker) {
+            return getStyledValue(marker).toString();
+        }
+
+        @Override
+        public StyledString getStyledValue(IMarker marker) {
+            StyledString styledString = new StyledString();
+
             // Combined location
-            StringBuilder sb = new StringBuilder();
             IResource resource = marker.getResource();
             if (resource instanceof IProject) {
-                sb.append(resource.getName());
+                styledString.append(resource.getName());
             } else {
                 // Show location as Parent/File:Line in Project
-                sb.append(resource.getName());
+                styledString.append(resource.getName());
                 if (resource instanceof IFile) {
                     int line = marker.getAttribute(IMarker.LINE_NUMBER, -1);
                     if (line > 1) {
-                        sb.append(':').append(Integer.toString(line));
+                        styledString.append(':').append(Integer.toString(line));
                     }
                 } else if (resource instanceof IFolder) {
-                    sb.append(File.separatorChar);
+                    styledString.append(File.separatorChar);
                 }
 
                 if (!(resource.getParent() instanceof IProject)) {
-                    sb.append(" in ");
-                    sb.append(resource.getParent().getName());
+                    styledString.append(" in ");
+                    styledString.append(resource.getParent().getName(),
+                            StyledString.DECORATIONS_STYLER);
                 }
 
-                sb.append(' ');
-                sb.append('(');
-                sb.append(resource.getProject().getName());
-                sb.append(')');
+                styledString.append(String.format(" (%1$s)", resource.getProject().getName()),
+                        StyledString.QUALIFIER_STYLER);
             }
 
-            return sb.toString();
+            return styledString;
         }
 
         @Override
