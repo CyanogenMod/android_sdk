@@ -255,11 +255,17 @@ public class Main extends LintClient {
                             System.exit(ERRNO_EXISTS);
                         }
                     }
-                    MultiProjectHtmlReporter reporter = new MultiProjectHtmlReporter(this, output);
-                    if (arg.equals(ARG_SIMPLEHTML)) {
-                        reporter.setSimpleFormat(true);
+                    try {
+                        MultiProjectHtmlReporter reporter =
+                                new MultiProjectHtmlReporter(this, output);
+                        if (arg.equals(ARG_SIMPLEHTML)) {
+                            reporter.setSimpleFormat(true);
+                        }
+                        mReporter = reporter;
+                    } catch (IOException e) {
+                        log(e, null);
+                        System.exit(ERRNO_INVALIDARGS);
                     }
-                    mReporter = reporter;
                     continue;
                 }
                 if (output.exists()) {
@@ -422,23 +428,24 @@ public class Main extends LintClient {
                 // By default just map from /foo to file:///foo
                 // TODO: Find out if we need file:// on Windows.
                 urlMap = "=file://"; //$NON-NLS-1$
+            } else {
                 if (!mReporter.isSimpleFormat()) {
                     mReporter.setBundleResources(true);
                 }
-            } else {
-                Map<String, String> map = new HashMap<String, String>();
-                String[] replace = urlMap.split(","); //$NON-NLS-1$
-                for (String s : replace) {
-                    String[] v = s.split("="); //$NON-NLS-1$
-                    if (v.length != 2) {
-                        System.err.println(
-                                "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                        System.exit(ERRNO_INVALIDARGS);
-                    }
-                    map.put(v[0], v[1]);
-                }
-                mReporter.setUrlMap(map);
             }
+
+            Map<String, String> map = new HashMap<String, String>();
+            String[] replace = urlMap.split(","); //$NON-NLS-1$
+            for (String s : replace) {
+                String[] v = s.split("="); //$NON-NLS-1$
+                if (v.length != 2) {
+                    System.err.println(
+                            "The URL map argument must be of the form 'path_prefix=url_prefix'");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                map.put(v[0], v[1]);
+            }
+            mReporter.setUrlMap(map);
         }
 
         Lint analyzer = new Lint(registry, this);

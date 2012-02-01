@@ -139,13 +139,18 @@ public class Project {
                         // library dir
                         File libraryReferenceDir = referenceDir;
                         if (!libraryDir.getPath().startsWith(referenceDir.getPath())) {
-                            File f = libraryReferenceDir;
-                            while (f != null && f.getPath().length() > 0) {
-                                if (libraryDir.getPath().startsWith(f.getPath())) {
-                                    libraryReferenceDir = f;
-                                    break;
+                            // Symlinks etc might have been resolved, so do those to
+                            // the reference dir as well
+                            libraryReferenceDir = libraryReferenceDir.getCanonicalFile();
+                            if (!libraryDir.getPath().startsWith(referenceDir.getPath())) {
+                                File f = libraryReferenceDir;
+                                while (f != null && f.getPath().length() > 0) {
+                                    if (libraryDir.getPath().startsWith(f.getPath())) {
+                                        libraryReferenceDir = f;
+                                        break;
+                                    }
+                                    f = f.getParentFile();
                                 }
-                                f = f.getParentFile();
                             }
                         }
 

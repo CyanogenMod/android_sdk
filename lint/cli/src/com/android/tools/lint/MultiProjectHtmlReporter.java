@@ -22,9 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -40,9 +38,14 @@ import java.util.Set;
  * "Multiplexing" reporter which allows output to be split up into a separate
  * report for each separate project. It also adds an overview index.
  */
-class MultiProjectHtmlReporter extends Reporter {
-    MultiProjectHtmlReporter(Main client, File dir) {
-        super(client, dir);
+class MultiProjectHtmlReporter extends HtmlReporter {
+    private static final String INDEX_NAME = "index.html"; //$NON-NLS-1$
+    private final File mDir;
+    private List<String> mRoots;
+
+    MultiProjectHtmlReporter(Main client, File dir) throws IOException {
+        super(client, new File(dir, INDEX_NAME));
+        mDir = dir;
     }
 
     @Override
@@ -60,10 +63,8 @@ class MultiProjectHtmlReporter extends Reporter {
 
         // Set of unique file names: lowercase names to avoid case conflicts in web environment
         Set<String> unique = Sets.newHashSet();
+        unique.add(INDEX_NAME.toLowerCase(Locale.US));
         List<ProjectEntry> projects = Lists.newArrayList();
-
-        String indexName = "index.html"; //$NON-NLS-1$
-        unique.add(indexName.toLowerCase(Locale.US));
 
         for (Project project : projectToWarnings.keySet()) {
             // TODO: Can I get the project name from the Android manifest file instead?
@@ -83,7 +84,7 @@ class MultiProjectHtmlReporter extends Reporter {
                 number++;
             }
 
-            File output = new File(mOutput, fileName);
+            File output = new File(mDir, fileName);
             if (output.exists()) {
                 boolean deleted = output.delete();
                 if (!deleted) {
@@ -98,7 +99,7 @@ class MultiProjectHtmlReporter extends Reporter {
             HtmlReporter reporter = new HtmlReporter(mClient, output);
             reporter.setBundleResources(mBundleResources);
             reporter.setSimpleFormat(mSimpleFormat);
-            reporter.setTitle(String.format("Lint Report for %1$s", projectName));
+            reporter.setUrlMap(mUrlMap);
 
             List<Warning> issues = projectToWarnings.get(project);
             int projectErrorCount = 0;
@@ -110,7 +111,6 @@ class MultiProjectHtmlReporter extends Reporter {
                     projectWarningCount++;
                 }
             }
-            reporter.write(projectErrorCount, projectWarningCount, issues);
 
             String prefix = project.getReferenceDir().getPath();
             String path = project.getDir().getPath();
@@ -124,6 +124,9 @@ class MultiProjectHtmlReporter extends Reporter {
             } else {
                 relative = projectName;
             }
+            reporter.setTitle(String.format("Lint Report for %1$s", relative));
+            reporter.setStripPrefix(relative);
+            reporter.write(projectErrorCount, projectWarningCount, issues);
 
             projects.add(new ProjectEntry(project, fileName, projectErrorCount,
                     projectWarningCount, relative));
@@ -131,48 +134,24 @@ class MultiProjectHtmlReporter extends Reporter {
 
         // Write overview index?
         if (projects.size() > 1) {
-            writeOverview(errorCount, warningCount, projects, indexName);
+            writeOverview(errorCount, warningCount, projects);
         }
     }
 
-    private void writeOverview(int errorCount, int warningCount, List<ProjectEntry> projects,
-            String indexName) throws IOException {
-        File index = new File(mOutput, indexName);
-        if (index.exists()) {
-            boolean deleted = index.delete();
-            if (!deleted) {
-                mClient.log(null, "Could not delete old index file %1$s", index);
-                System.exit(-1);
-            }
-        }
-        Writer writer = new BufferedWriter(new FileWriter(index));
+    private void writeOverview(int errorCount, int warningCount, List<ProjectEntry> projects)
+            throws IOException {
+        Writer writer = mWriter;
         writer.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
-                "<title>" + mTitle + "</title>\n" +                      //$NON-NLS-1$//$NON-NLS-2$
-                "<style type=\"text/css\">\n" +                          //$NON-NLS-1$
-
-                // CSS stylesheet for the report:
-                // TODO: Export the CSS into a separate file?
-                HtmlReporter.getStyleSheet() +
-
-                ".overview th { font-weight: bold; }\n" +                //$NON-NLS-1$
-                ".overview {\n" +                                        //$NON-NLS-1$
-                "    padding: 10pt;\n" +                                 //$NON-NLS-1$
-                "    width: 70%;\n" +                                    //$NON-NLS-1$
-                "    text-align: right;\n" +                             //$NON-NLS-1$
-                "    border: solid 1px #cccccc;\n" +                     //$NON-NLS-1$
-                "    background-color: #eeeeee;\n" +                     //$NON-NLS-1$
-                "    margin: 10pt;\n" +                                  //$NON-NLS-1$
-                "    overflow: auto;\n" +                                //$NON-NLS-1$
-                "}\n" +                                                  //$NON-NLS-1$
-
-                "</style>\n" +                                           //$NON-NLS-1$
-
+                "<title>" + mTitle + "</title>\n");                      //$NON-NLS-1$//$NON-NLS-2$
+        writeStyleSheet();
+        writer.write(
                 "</head>\n" +                                            //$NON-NLS-1$
                 "<body>\n" +                                             //$NON-NLS-1$
                 "<h1>" +                                                 //$NON-NLS-1$
                 mTitle +
+                "<div class=\"titleSeparator\"></div>\n" +               //$NON-NLS-1$
                 "</h1>");                                                //$NON-NLS-1$
 
 
@@ -181,17 +160,36 @@ class MultiProjectHtmlReporter extends Reporter {
 
         writer.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
-        writer.write("<br/><br/>");                                     //$NON-NLS-1$
+        writer.write("<br/>");                                          //$NON-NLS-1$
         writer.write(String.format("%1$d errors and %2$d warnings found:\n",
                 errorCount, warningCount));
-        writer.write("<br/>");                                          //$NON-NLS-1$
+        writer.write("<br/><br/>");                                     //$NON-NLS-1$
+
+        String errorUrl = null;
+        String warningUrl = null;
+        if (!mSimpleFormat) {
+            errorUrl = addLocalResources(HtmlReporter.getErrorIconUrl());
+            warningUrl = addLocalResources(HtmlReporter.getWarningIconUrl());
+        }
 
         writer.write("<table class=\"overview\">\n");                   //$NON-NLS-1$
         writer.write("<tr><th>");                                       //$NON-NLS-1$
         writer.write("Project");
-        writer.write("</th><th>");                                      //$NON-NLS-1$
+        writer.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
+
+        if (errorUrl != null) {
+            mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
+            mWriter.write(errorUrl);
+            mWriter.write("\" />\n");                          //$NON-NLS-1$
+        }
         writer.write("Errors");
-        writer.write("</th><th>");                                      //$NON-NLS-1$
+        writer.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
+
+        if (warningUrl != null) {
+            mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
+            mWriter.write(warningUrl);
+            mWriter.write("\" />\n");                          //$NON-NLS-1$
+        }
         writer.write("Warnings");
         writer.write("</th></tr>\n");                                   //$NON-NLS-1$
 
@@ -201,9 +199,9 @@ class MultiProjectHtmlReporter extends Reporter {
             writer.write(entry.fileName); // TODO: Escape?
             writer.write("\">");                                        //$NON-NLS-1$
             writer.write(entry.path);
-            writer.write("</a></td><td>");                              //$NON-NLS-1$
+            writer.write("</a></td><td class=\"countColumn\">");        //$NON-NLS-1$
             writer.write(Integer.toString(entry.errorCount));
-            writer.write("</td><td>");                                  //$NON-NLS-1$
+            writer.write("</td><td class=\"countColumn\">");            //$NON-NLS-1$
             writer.write(Integer.toString(entry.warningCount));
             writer.write("</td></tr>\n");                               //$NON-NLS-1$
         }
@@ -211,6 +209,7 @@ class MultiProjectHtmlReporter extends Reporter {
 
         Closeables.closeQuietly(writer);
 
+        File index = new File(mDir, INDEX_NAME);
         System.out.println();
         System.out.println(String.format("Wrote overview index to %1$s", index));
     }

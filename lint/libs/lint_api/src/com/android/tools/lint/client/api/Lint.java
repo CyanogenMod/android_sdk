@@ -426,6 +426,14 @@ public class Lint {
 
         for (File file : files) {
             if (file.isDirectory()) {
+                File rootDir = file;
+                if (files.size() > 1) {
+                    rootDir = file.getParentFile();
+                    if (rootDir == null) {
+                        rootDir = file;
+                    }
+                }
+
                 // Figure out what to do with a directory. Note that the meaning of the
                 // directory can be ambiguous:
                 // If you pass a directory which is unknown, we don't know if we should
@@ -436,7 +444,7 @@ public class Lint {
                 // right within it (say at the src/ or res/) folder, and if not, you're
                 // hopefully pointing at a project tree that you want to scan recursively.
                 if (isProjectDir(file)) {
-                    registerProjectFile(fileToProject, file, file, file);
+                    registerProjectFile(fileToProject, file, file, rootDir);
                     continue;
                 } else {
                     File parent = file.getParentFile();
@@ -454,7 +462,7 @@ public class Lint {
                     }
 
                     // Search downwards for nested projects
-                    addProjects(file, fileToProject, file);
+                    addProjects(file, fileToProject, rootDir);
                 }
             } else {
                 // Pointed at a file: Search upwards for the containing project
@@ -477,6 +485,17 @@ public class Lint {
             File file = entry.getKey();
             Project project = entry.getValue();
             if (!file.equals(project.getDir())) {
+                if (file.isDirectory()) {
+                    try {
+                        File dir = file.getCanonicalFile();
+                        if (dir.equals(project.getDir())) {
+                            continue;
+                        }
+                    } catch (IOException ioe) {
+                        // pass
+                    }
+                }
+
                 project.addFile(file);
             }
         }
