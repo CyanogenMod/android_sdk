@@ -41,14 +41,16 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.StyledCellLabelProvider;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -60,7 +62,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -367,7 +368,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         }
     }
 
-    private static class LintColumnLabelProvider extends ColumnLabelProvider {
+    private class LintColumnLabelProvider extends StyledCellLabelProvider {
         private LintColumn mColumn;
 
         LintColumnLabelProvider(LintColumn column) {
@@ -375,13 +376,18 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         }
 
         @Override
-        public String getText(Object element) {
-            return mColumn.getValue((IMarker) element);
-        }
-
-        @Override
-        public Image getImage(Object element) {
-            return mColumn.getImage((IMarker) element);
+        public void update(ViewerCell cell) {
+            Object element = cell.getElement();
+            cell.setImage(mColumn.getImage((IMarker) element));
+            StyledString styledString = mColumn.getStyledValue((IMarker) element);
+            if (styledString == null) {
+                cell.setText(mColumn.getValue((IMarker) element));
+                cell.setStyleRanges(null);
+            } else {
+                cell.setText(styledString.toString());
+                cell.setStyleRanges(styledString.getStyleRanges());
+            }
+            super.update(cell);
         }
     }
 
