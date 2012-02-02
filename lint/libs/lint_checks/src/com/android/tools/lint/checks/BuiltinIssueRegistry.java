@@ -21,9 +21,9 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
+import com.google.common.annotations.Beta;
 
 import java.io.File;
 import java.io.IOException;
@@ -228,5 +228,46 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         // just dump to the console so detector developers get some feedback on what went
         // wrong.
         e.printStackTrace();
+    }
+
+    private static Set<Issue> sAdtFixes;
+
+    /**
+     * Returns true if the given issue has an automatic IDE fix.
+     *
+     * @param tool the name of the tool to be checked
+     * @param issue the issue to be checked
+     * @return true if the given tool is known to have an automatic fix for the
+     *         given issue
+     */
+    @Beta
+    public boolean hasAutoFix(String tool, Issue issue) {
+        assert tool.equals("adt"); // This is not yet a generic facility;
+        // the primary purpose right now is to allow for example the HTML report
+        // to give a hint to the user that some fixes don't require manual work
+
+        if (sAdtFixes == null) {
+            sAdtFixes = new HashSet<Issue>(20);
+            sAdtFixes.add(InefficientWeightDetector.INEFFICIENT_WEIGHT);
+            sAdtFixes.add(AccessibilityDetector.ISSUE);
+            sAdtFixes.add(InefficientWeightDetector.BASELINE_WEIGHTS);
+            sAdtFixes.add(HardcodedValuesDetector.ISSUE);
+            sAdtFixes.add(UselessViewDetector.USELESS_LEAF);
+            sAdtFixes.add(UselessViewDetector.USELESS_PARENT);
+            sAdtFixes.add(PxUsageDetector.ISSUE);
+            sAdtFixes.add(TextFieldDetector.ISSUE);
+            sAdtFixes.add(SecurityDetector.EXPORTED_SERVICE);
+            sAdtFixes.add(DetectMissingPrefix.MISSING_NAMESPACE);
+            sAdtFixes.add(ScrollViewChildDetector.ISSUE);
+            sAdtFixes.add(ObsoleteLayoutParamsDetector.ISSUE);
+            sAdtFixes.add(TypographyDetector.DASHES);
+            sAdtFixes.add(TypographyDetector.ELLIPSIS);
+            sAdtFixes.add(TypographyDetector.FRACTIONS);
+            sAdtFixes.add(TypographyDetector.OTHER);
+            sAdtFixes.add(TypographyDetector.QUOTES);
+            sAdtFixes.add(UseCompoundDrawableDetector.ISSUE);
+        }
+
+        return sAdtFixes.contains(issue);
     }
 }

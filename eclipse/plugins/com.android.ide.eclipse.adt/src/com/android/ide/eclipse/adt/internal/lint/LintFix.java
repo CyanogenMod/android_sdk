@@ -183,6 +183,7 @@ abstract class LintFix implements ICompletionProposal {
 
     private static final Map<String, Class<? extends LintFix>> sFixes =
             new HashMap<String, Class<? extends LintFix>>();
+    // Keep this map in sync with BuiltinIssueRegistry's hasAutoFix() data
     static {
         sFixes.put(InefficientWeightDetector.INEFFICIENT_WEIGHT.getId(),
                 LinearLayoutWeightFix.class);
