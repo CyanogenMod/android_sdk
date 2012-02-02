@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
@@ -70,6 +71,7 @@ class HtmlReporter extends Reporter {
 
     protected final Writer mWriter;
     private String mStripPrefix;
+    private String mFixUrl;
 
     HtmlReporter(Main client, File output) throws IOException {
         super(client, output);
@@ -288,6 +290,18 @@ class HtmlReporter extends Reporter {
             throws IOException {
         mWriter.write("<div class=\"metadata\">");               //$NON-NLS-1$
 
+        if (mClient.getRegistry() instanceof BuiltinIssueRegistry &&
+                ((BuiltinIssueRegistry) mClient.getRegistry()).hasAutoFix("adt", issue)) { //$NON-NLS-1$
+            mWriter.write("Note: This issue has an associated quickfix operation in Eclipse/ADT");
+            if (mFixUrl != null) {
+                mWriter.write("&nbsp;<img border=\"0\" align=\"top\" src=\""); //$NON-NLS-1$
+                mWriter.write(mFixUrl);
+                mWriter.write("\" />\n");                            //$NON-NLS-1$
+            }
+
+            mWriter.write("<br>\n");
+        }
+
         if (disabledBy != null) {
             mWriter.write(String.format("Disabled By: %1$s<br/>\n", disabledBy));
         }
@@ -452,6 +466,7 @@ class HtmlReporter extends Reporter {
         if (!mSimpleFormat) {
             errorUrl = addLocalResources(getErrorIconUrl());
             warningUrl = addLocalResources(getWarningIconUrl());
+            mFixUrl = addLocalResources(HtmlReporter.class.getResource("lint-run.png")); //$NON-NLS-1$)
         }
 
         Category previousCategory = null;
