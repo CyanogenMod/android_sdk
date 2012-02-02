@@ -53,13 +53,22 @@ import java.util.List;
  * by this application (according to its minimum API requirement in the manifest).
  */
 public class ApiDetector extends LayoutDetector implements Detector.ClassScanner {
+    private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
+
     /** Accessing an unsupported API */
     public static final Issue MISSING = Issue.create("NewApi", //$NON-NLS-1$
             "Finds API accesses to APIs that are not supported in all targeted API versions",
 
             "This check scans through all the Android API calls in the application and " +
             "warns about any calls that are not available on *all* versions targeted " +
-            "by this application (according to its minimum SDK attribute in the manifest).",
+            "by this application (according to its minimum SDK attribute in the manifest).\n" +
+            "\n" +
+            "If your code is *deliberately* accessing newer APIs, and you have ensured " +
+            "(e.g. with conditional execution) that this code will only ever be called on a " +
+            "supported platform, then you can annotate your class or method with the " +
+            "@TargetApi annotation specifying the local minimum SDK to apply, such as" +
+            "@TargetApi(11), such that this check considers 11 rather than your manifest " +
+            "file's minimum SDK as the required API level.",
             Category.CORRECTNESS,
             6,
             Severity.ERROR,
@@ -69,7 +78,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
     private ApiLookup mApiDatabase;
     private int mMinApi = -1;
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new API check */
     public ApiDetector() {
     }
 
@@ -143,6 +152,10 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
     @Override
     public void checkClass(final ClassContext context, ClassNode classNode) {
         if (mApiDatabase == null) {
+            return;
+        }
+
+        if (AOSP_BUILD && classNode.name.startsWith("android/support/")) { //$NON-NLS-1$
             return;
         }
 

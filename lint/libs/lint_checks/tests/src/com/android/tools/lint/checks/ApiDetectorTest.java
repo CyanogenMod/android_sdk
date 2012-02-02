@@ -198,4 +198,23 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 "apicheck/ApiTargetTest$LocalClass.class.data=>bin/classes/foo/bar/ApiTargetTest$LocalClass.class"
                 ));
     }
+
+    public void testSkipAndroidSupportInAospHalf() throws Exception {
+        String expected;
+        if (System.getenv("ANDROID_BUILD_TOP") != null) {
+            expected = "No warnings.";
+        } else {
+            expected = "Foo.class: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError";
+        }
+
+        assertEquals(
+            expected,
+
+            lintProject(
+                "apicheck/classpath=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/ApiCallTest2.java.txt=>src/src/android/support/foo/Foo.java",
+                "apicheck/ApiCallTest2.class.data=>bin/classes/android/support/foo/Foo.class"
+                ));
+    }
 }
