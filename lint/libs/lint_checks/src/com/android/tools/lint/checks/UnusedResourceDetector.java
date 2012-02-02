@@ -91,16 +91,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     /** Unused resources (other than ids). */
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
             "Looks for unused resources",
-            "Unused resources make applications larger and slow down builds.\n" +
-            "\n" +
-            "LIMITATIONS:\n" +
-            "* If you are running lint from the command line instead of Eclipse, then the " +
-            "analysis of Java files is pattern based rather than using an accurate parse " +
-            "tree, so the results may not be accurate. (This limitation will go away soon.)\n" +
-            "* The analysis does not consider dependencies between projects, so if you " +
-            "have a library project which defines resources and a project including the " +
-            "library project referencing the resources, then the resources will still be " +
-            "reported as unused.",
+            "Unused resources make applications larger and slow down builds.",
             Category.PERFORMANCE,
             3,
             Severity.WARNING,
