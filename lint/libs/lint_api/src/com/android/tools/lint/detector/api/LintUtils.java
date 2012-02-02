@@ -264,4 +264,66 @@ public class LintUtils {
         }
         return name;
     }
+
+    /**
+     * Computes the shared parent among a set of files (which may be null).
+     *
+     * @param files the set of files to be checked
+     * @return the closest common ancestor file, or null if none was found
+     */
+    @Nullable
+    public static File getCommonParent(@NonNull List<File> files) {
+        int fileCount = files.size();
+        if (fileCount == 0) {
+            return null;
+        } else if (fileCount == 1) {
+            return files.get(0);
+        } else if (fileCount == 2) {
+            return getCommonParent(files.get(0), files.get(1));
+        } else {
+            File common = files.get(0);
+            for (int i = 1; i < fileCount; i++) {
+                common = getCommonParent(common, files.get(i));
+                if (common == null) {
+                    return null;
+                }
+            }
+
+            return common;
+        }
+    }
+
+    /**
+     * Computes the closest common parent path between two files.
+     *
+     * @param file1 the first file to be compared
+     * @param file2 the second file to be compared
+     * @return the closest common ancestor file, or null if the two files have
+     *         no common parent
+     */
+    @Nullable
+    public static File getCommonParent(@NonNull File file1, @NonNull File file2) {
+        if (file1.equals(file2)) {
+            return file1;
+        } else if (file1.getPath().startsWith(file2.getPath())) {
+            return file2;
+        } else if (file2.getPath().startsWith(file1.getPath())) {
+            return file1;
+        } else {
+            // Dumb and simple implementation
+            File first = file1.getParentFile();
+            while (first != null) {
+                File second = file2.getParentFile();
+                while (second != null) {
+                    if (first.equals(second)) {
+                        return first;
+                    }
+                    second = second.getParentFile();
+                }
+
+                first = first.getParentFile();
+            }
+        }
+        return null;
+    }
 }
