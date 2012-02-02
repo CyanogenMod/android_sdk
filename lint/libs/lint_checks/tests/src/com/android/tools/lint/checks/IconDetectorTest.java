@@ -34,6 +34,8 @@ public class IconDetectorTest extends AbstractCheckTest {
             "sample_icon.gif: Warning: Using the .gif format for bitmaps is discouraged",
 
             lintProject(
+                    // Use minSDK4 to ensure that we get warnings about missing drawables
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
                     "res/drawable/ic_launcher.png",
                     "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher.png",
                     "res/drawable-mdpi/sample_icon.gif",
