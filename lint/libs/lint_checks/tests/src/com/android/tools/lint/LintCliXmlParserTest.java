@@ -17,7 +17,7 @@
 package com.android.tools.lint;
 
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -68,7 +68,7 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        Lint driver = new Lint(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         Project project = Project.create(client, file.getParentFile(), file.getParentFile());
         XmlContext context = new XmlContext(driver, project, null, file);
         Document document = parser.parseXml(context);
@@ -142,7 +142,7 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        Lint driver = new Lint(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         Project project = Project.create(client, file.getParentFile(), file.getParentFile());
         XmlContext context = new XmlContext(driver, project, null, file);
         Document document = parser.parseXml(context);

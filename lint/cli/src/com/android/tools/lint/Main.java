@@ -25,7 +25,7 @@ import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Category;
@@ -459,13 +459,13 @@ public class Main extends LintClient {
             mReporter.setUrlMap(map);
         }
 
-        Lint analyzer = new Lint(registry, this);
+        LintDriver driver = new LintDriver(registry, this);
 
         if (!mQuiet) {
-            analyzer.addLintListener(new ProgressPrinter());
+            driver.addLintListener(new ProgressPrinter());
         }
 
-        analyzer.analyze(files, null /* scope */);
+        driver.analyze(files, null /* scope */);
 
         Collections.sort(mWarnings);
 
@@ -1002,7 +1002,7 @@ public class Main extends LintClient {
 
     private class ProgressPrinter implements LintListener {
         @Override
-        public void update(Lint lint, EventType type, Context context) {
+        public void update(LintDriver lint, EventType type, Context context) {
             switch (type) {
                 case SCANNING_PROJECT:
                     if (lint.getPhase() > 1) {

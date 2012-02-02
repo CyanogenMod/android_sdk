@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.actions;
 
-import com.android.ide.eclipse.adt.internal.lint.LintRunner;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.project.ExportHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -62,7 +62,7 @@ public class ExportAction implements IObjectActionDelegate {
 
                 // and finally do the action
                 if (project != null) {
-                    if (!LintRunner.runLintOnExport(mShell, project)) {
+                    if (!EclipseLintRunner.runLintOnExport(mShell, project)) {
                         return;
                     }
 

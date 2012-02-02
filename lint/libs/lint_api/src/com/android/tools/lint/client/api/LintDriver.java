@@ -93,7 +93,7 @@ import lombok.ast.VariableDefinition;
  * to adjust your code for the next tools release.</b>
  */
 @Beta
-public class Lint {
+public class LintDriver {
     /**
      * Max number of passes to run through the lint runner if requested by
      * {@link #requestRepeat}
@@ -113,12 +113,12 @@ public class Lint {
     private EnumSet<Scope> mRepeatScope;
 
     /**
-     * Creates a new {@link Lint}
+     * Creates a new {@link LintDriver}
      *
      * @param registry The registry containing issues to be checked
      * @param client the tool wrapping the analyzer, such as an IDE or a CLI
      */
-    public Lint(@NonNull IssueRegistry registry, @NonNull LintClient client) {
+    public LintDriver(@NonNull IssueRegistry registry, @NonNull LintClient client) {
         mRegistry = registry;
         mClient = new LintClientWrapper(client);
     }

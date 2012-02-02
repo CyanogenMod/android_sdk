@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.eclipse.adt.internal.lint;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UseCompoundDrawableRefactoring;
-import com.android.tools.lint.checks.UseCompoundDrawableDetector;
+import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
+import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -30,66 +28,65 @@ import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.w3c.dom.Node;
 
-/** Quickfix for the {@link UseCompoundDrawableDetector} */
+/**
+ * Fix for extracting strings.
+ * <p>
+ * TODO: Look for existing string values, and if it matches one of the
+ * existing Strings offer to just replace it with the given string!
+ */
 @SuppressWarnings("restriction") // DOM model
-class UseCompoundDrawableDetectorFix extends DocumentFix {
-    protected UseCompoundDrawableDetectorFix(String id, IMarker marker) {
+final class ExtractStringFix extends DocumentFix {
+    private ExtractStringFix(String id, IMarker marker) {
         super(id, marker);
     }
 
     @Override
-    public String getDisplayString() {
-        return "Convert to a compound drawable";
-    }
-
-    @Override
-    public Image getImage() {
-        return AdtPlugin.getAndroidLogo();
-    }
-
-    @Override
     public boolean needsFocus() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCancelable() {
-        return false;
+        return true;
     }
 
     @Override
-    public boolean isBulkCapable() {
-        return false;
-    }
-
-    @Override
-    protected void apply(IDocument document, IStructuredModel model, Node node,
-            int start, int end) {
-
+    protected void apply(IDocument document, IStructuredModel model, Node node, int start,
+            int end) {
         // Invoke refactoring
         LayoutEditorDelegate delegate =
-                LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+            LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
 
         if (delegate != null) {
             IFile file = (IFile) mMarker.getResource();
-            ITextSelection textSelection = new TextSelection(start,
-                    end - start);
-            UseCompoundDrawableRefactoring refactoring =
-                    new UseCompoundDrawableRefactoring(file, delegate, textSelection, null);
-            RefactoringWizard wizard = refactoring.createWizard();
-            RefactoringWizardOpenOperation op =
-                    new RefactoringWizardOpenOperation(wizard);
+            ITextSelection selection = new TextSelection(start, end - start);
+
+            ExtractStringRefactoring refactoring =
+                new ExtractStringRefactoring(file, delegate.getEditor(), selection);
+            RefactoringWizard wizard = new ExtractStringWizard(refactoring, file.getProject());
+            RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
-                IWorkbenchWindow window = PlatformUI.getWorkbench().
-                        getActiveWorkbenchWindow();
+                IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                 op.run(window.getShell(), wizard.getDefaultPageTitle());
             } catch (InterruptedException e) {
             }
         }
+    }
+
+    @Override
+    public String getDisplayString() {
+        return "Extract String";
+    }
+
+    @Override
+    public Image getImage() {
+        ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+        return sharedImages.getImage(ISharedImages.IMG_OBJ_ADD);
     }
 }

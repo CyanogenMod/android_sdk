@@ -19,7 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IJavaParser;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 
 import java.io.File;
 
@@ -51,7 +51,7 @@ public class JavaContext extends Context {
      * @param file the file to be analyzed
      */
     public JavaContext(
-            @NonNull Lint driver,
+            @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file) {

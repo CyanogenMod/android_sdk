@@ -109,7 +109,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
     @Override
     public IMarkerResolution[] getResolutions(IMarker marker) {
-        String id = marker.getAttribute(LintRunner.MARKER_CHECKID_PROPERTY,
+        String id = marker.getAttribute(EclipseLintRunner.MARKER_CHECKID_PROPERTY,
                 ""); //$NON-NLS-1$
         IResource resource = marker.getResource();
 
@@ -162,7 +162,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
             if (markers.size() > 0) {
                 for (IMarker marker : markers) {
-                    String id = marker.getAttribute(LintRunner.MARKER_CHECKID_PROPERTY,
+                    String id = marker.getAttribute(EclipseLintRunner.MARKER_CHECKID_PROPERTY,
                             ""); //$NON-NLS-1$
                     // TODO: Allow for more than one fix?
                     ICompletionProposal fix = LintFix.getFix(id, marker);

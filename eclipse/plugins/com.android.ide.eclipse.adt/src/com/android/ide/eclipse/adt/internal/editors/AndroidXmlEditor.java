@@ -22,7 +22,7 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.lint.LintRunner;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -569,7 +569,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * <p/>
      * The default implementation is to call {@link #startLintJob()}.
      *
-     * @return The Job started by {@link LintRunner} or null if no job was started.
+     * @return The Job started by {@link EclipseLintRunner} or null if no job was started.
      */
     protected Job runLint() {
         return startLintJob();
@@ -579,10 +579,10 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * Utility method that creates a Job to run Lint on the current document.
      * Does not wait for the job to finish - just returns immediately.
      *
-     * @see LintRunner#startLint(java.util.List, IDocument, boolean, boolean)
+     * @see EclipseLintRunner#startLint(java.util.List, IDocument, boolean, boolean)
      */
     public Job startLintJob() {
-        return LintRunner.startLint(Collections.singletonList(getInputFile()),
+        return EclipseLintRunner.startLint(Collections.singletonList(getInputFile()),
                 getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
     }
 
