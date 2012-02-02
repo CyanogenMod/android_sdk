@@ -23,7 +23,7 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -94,8 +94,8 @@ public abstract class AbstractCheckTest extends TestCase {
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
         TestLintClient lintClient = new TestLintClient();
-        Lint analyzer = new Lint(new CustomIssueRegistry(), lintClient);
-        analyzer.analyze(files, null /* scope */);
+        LintDriver driver = new LintDriver(new CustomIssueRegistry(), lintClient);
+        driver.analyze(files, null /* scope */);
 
         List<String> errors = lintClient.getErrors();
         Collections.sort(errors);

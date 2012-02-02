@@ -24,7 +24,7 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 
@@ -52,7 +52,7 @@ import java.util.Map;
 /**
  * Eclipse implementation for running lint on workspace files and projects.
  */
-public class LintRunner {
+public class EclipseLintRunner {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
 
     /**
@@ -125,7 +125,7 @@ public class LintRunner {
      */
     public static boolean runLintOnExport(Shell shell, IProject project) {
         if (AdtPrefs.getPrefs().isLintOnExport()) {
-            boolean fatal = LintRunner.runLint(Collections.singletonList(project), null,
+            boolean fatal = EclipseLintRunner.runLint(Collections.singletonList(project), null,
                     true /*fatalOnly*/);
             if (fatal) {
                 MessageDialog.openWarning(shell,
@@ -213,11 +213,12 @@ public class LintRunner {
         private static final Object FAMILY_RUN_LINT = new Object();
         private final List<? extends IResource> mResources;
         private final IDocument mDocument;
-        private Lint mLint;
+        private LintDriver mLint;
         private boolean mFatal;
         private boolean mFatalOnly;
 
-        private CheckFileJob(List<? extends IResource> resources, IDocument doc, boolean fatalOnly) {
+        private CheckFileJob(List<? extends IResource> resources, IDocument doc,
+                boolean fatalOnly) {
             super("Running Android Lint");
             mResources = resources;
             mDocument = doc;
@@ -280,7 +281,7 @@ public class LintRunner {
 
                 EclipseLintClient client = new EclipseLintClient(registry, mResources,
                             mDocument, mFatalOnly);
-                mLint = new Lint(registry, client);
+                mLint = new LintDriver(registry, client);
                 mLint.analyze(files, scope);
                 mFatal = client.hasFatalErrors();
                 return Status.OK_STATUS;

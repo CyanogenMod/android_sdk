@@ -64,5 +64,6 @@ public interface LintListener {
      * @param type the type of event that occurred
      * @param context the context providing additional information
      */
-    public void update(@NonNull Lint driver, @NonNull EventType type, @NonNull Context context);
+    public void update(@NonNull LintDriver driver, @NonNull EventType type,
+            @NonNull Context context);
 }

@@ -21,7 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -69,7 +69,7 @@ public class ClassContext extends Context {
      * @param classNode the bytecode object model
      */
     public ClassContext(
-            @NonNull Lint driver,
+            @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file,

@@ -279,7 +279,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     }
 
     private void refreshStopIcon() {
-        Job[] currentJobs = LintRunner.getCurrentJobs();
+        Job[] currentJobs = EclipseLintRunner.getCurrentJobs();
         if (currentJobs.length > 0) {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             mRefreshAction.setImageDescriptor(sharedImages.getImageDescriptor(
@@ -442,15 +442,15 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         public void run() {
             switch (mAction) {
                 case ACTION_REFRESH: {
-                    Job[] jobs = LintRunner.getCurrentJobs();
+                    Job[] jobs = EclipseLintRunner.getCurrentJobs();
                     if (jobs.length > 0) {
-                        LintRunner.cancelCurrentJobs(false);
+                        EclipseLintRunner.cancelCurrentJobs(false);
                     } else {
                         List<? extends IResource> resources = mLintView.getResources();
                         if (resources == null) {
                             return;
                         }
-                        Job job = LintRunner.startLint(resources, null,
+                        Job job = EclipseLintRunner.startLint(resources, null,
                                 false /*fatalOnly*/, false /*show*/);
                         if (job != null) {
                             job.addJobChangeListener(LintViewPart.this);

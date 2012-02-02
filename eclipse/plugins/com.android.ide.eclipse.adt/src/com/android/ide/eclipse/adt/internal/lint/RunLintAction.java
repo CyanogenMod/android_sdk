@@ -76,7 +76,7 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
         List<IProject> projects = getProjects(mSelection, true /* warn */);
 
         if (!projects.isEmpty()) {
-            LintRunner.startLint(projects, null, false /*fatalOnly*/, true /*show*/);
+            EclipseLintRunner.startLint(projects, null, false /*fatalOnly*/, true /*show*/);
         } else {
             MessageDialog.openWarning(AdtPlugin.getDisplay().getActiveShell(), "Lint",
                     "Could not run Lint: Select a project first.");
@@ -267,11 +267,11 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
             } else {
                 resources.add(mResource);
             }
-            LintRunner.cancelCurrentJobs(false);
+            EclipseLintRunner.cancelCurrentJobs(false);
             if (mClear) {
                 EclipseLintClient.clearMarkers(resources);
             } else {
-                LintRunner.startLint(resources, null, false /*fatalOnly*/, true /*show*/);
+                EclipseLintRunner.startLint(resources, null, false /*fatalOnly*/, true /*show*/);
             }
         }
     }

@@ -19,7 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IDomParser;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
@@ -52,7 +52,7 @@ public class XmlContext extends Context {
      * @param file the file being checked
      */
     public XmlContext(
-            @NonNull Lint driver,
+            @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file) {

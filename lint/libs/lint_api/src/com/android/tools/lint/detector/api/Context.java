@@ -19,7 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
@@ -48,7 +48,7 @@ public class Context {
     public final File file;
 
     /** The driver running through the checks */
-    protected final Lint mDriver;
+    protected final LintDriver mDriver;
 
     /** The project containing the file being checked */
     @NonNull
@@ -96,7 +96,7 @@ public class Context {
      * @param file the file being checked
      */
     public Context(
-            @NonNull Lint driver,
+            @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file) {
@@ -166,7 +166,7 @@ public class Context {
      * @return the driver
      */
     @NonNull
-    public Lint getDriver() {
+    public LintDriver getDriver() {
         return mDriver;
     }
 
