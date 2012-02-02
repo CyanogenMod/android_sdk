@@ -23,6 +23,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
+import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -98,6 +99,7 @@ public class Lint {
      * {@link #requestRepeat}
      */
     private static final int MAX_PHASES = 3;
+    private static final String SUPPRESS_LINT_VMSIG = '/' + SUPPRESS_LINT + ';';
 
     private final LintClient mClient;
     private volatile boolean mCanceled;
@@ -1296,7 +1298,7 @@ public class Lint {
             // We could obey @SuppressWarnings("all") too, but no need to look for it
             // because that annotation only has source retention.
 
-            if (desc.endsWith("/SuppressLint;")) { //$NON-NLS-1$
+            if (desc.endsWith(SUPPRESS_LINT_VMSIG)) {
                 if (annotation.values != null) {
                     for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                         String key = (String) annotation.values.get(i);
@@ -1304,8 +1306,8 @@ public class Lint {
                             Object value = annotation.values.get(i + 1);
                             if (value instanceof String) {
                                 String id = (String) value;
-                                if (id.equals(SUPPRESS_ALL) ||
-                                        issue != null && id.equals(issue.getId())) {
+                                if (id.equalsIgnoreCase(SUPPRESS_ALL) ||
+                                        issue != null && id.equalsIgnoreCase(issue.getId())) {
                                     return true;
                                 }
                             } else if (value instanceof List) {
@@ -1314,8 +1316,8 @@ public class Lint {
                                 for (Object v : list) {
                                     if (v instanceof String) {
                                         String id = (String) v;
-                                        if (id.equals(SUPPRESS_ALL) ||
-                                                issue != null && id.equals(issue.getId())) {
+                                        if (id.equalsIgnoreCase(SUPPRESS_ALL) || (issue != null
+                                                && id.equalsIgnoreCase(issue.getId()))) {
                                             return true;
                                         }
                                     }
@@ -1393,7 +1395,7 @@ public class Lint {
             Annotation annotation = iterator.next();
             TypeReference t = annotation.astAnnotationTypeReference();
             String typeName = t.getTypeName();
-            if (typeName.endsWith("SuppressLint")                   //$NON-NLS-1$
+            if (typeName.endsWith(SUPPRESS_LINT)
                     || typeName.endsWith("SuppressWarnings")) {     //$NON-NLS-1$
                 StrictListAccessor<AnnotationElement, Annotation> values =
                         annotation.astElements();
@@ -1408,8 +1410,8 @@ public class Lint {
                         if (valueNode instanceof StringLiteral) {
                             StringLiteral literal = (StringLiteral) valueNode;
                             String value = literal.astValue();
-                            if (value.equals(SUPPRESS_ALL) ||
-                                    issue != null && issue.getId().equals(value)) {
+                            if (value.equalsIgnoreCase(SUPPRESS_ALL) ||
+                                    issue != null && issue.getId().equalsIgnoreCase(value)) {
                                 return true;
                             }
                         } else if (valueNode instanceof ArrayInitializer) {
@@ -1424,8 +1426,8 @@ public class Lint {
                                 Expression arrayElement = arrayIterator.next();
                                 if (arrayElement instanceof StringLiteral) {
                                     String value = ((StringLiteral) arrayElement).astValue();
-                                    if (value.equals(SUPPRESS_ALL) ||
-                                            issue != null && issue.getId().equals(value)) {
+                                    if (value.equalsIgnoreCase(SUPPRESS_ALL) || (issue != null
+                                            && issue.getId().equalsIgnoreCase(value))) {
                                         return true;
                                     }
                                 }

@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
+
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -110,13 +112,24 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         String id = marker.getAttribute(LintRunner.MARKER_CHECKID_PROPERTY,
                 ""); //$NON-NLS-1$
         IResource resource = marker.getResource();
-        return new IMarkerResolution[] {
-                new MoreInfoProposal(id, marker.getAttribute(IMarker.MESSAGE, null)),
-                new SuppressProposal(resource, id, false),
-                new SuppressProposal(resource.getProject(), id, true /* all */),
-                new SuppressProposal(resource, id, true /* all */),
-                new ClearMarkersProposal(resource, true /* all */),
-        };
+
+        List<IMarkerResolution> resolutions = new ArrayList<IMarkerResolution>();
+
+        if (resource.getName().endsWith(DOT_JAVA)) {
+            AddSuppressLintFix.createFixes(marker, id, resolutions);
+        }
+
+        resolutions.add(new MoreInfoProposal(id, marker.getAttribute(IMarker.MESSAGE, null)));
+        resolutions.add(new SuppressProposal(resource, id, false));
+        resolutions.add(new SuppressProposal(resource.getProject(), id, true /* all */));
+        resolutions.add(new SuppressProposal(resource, id, true /* all */));
+        resolutions.add(new ClearMarkersProposal(resource, true /* all */));
+
+        if (resolutions.size() > 0) {
+            return resolutions.toArray(new IMarkerResolution[resolutions.size()]);
+        }
+
+        return null;
     }
 
     // ---- Implements IQuickAssistProcessor ----
@@ -459,5 +472,4 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             return null;
         }
     }
-
 }
