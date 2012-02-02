@@ -51,6 +51,12 @@ public class ApiLookupTest extends AbstractCheckTest {
                 "<init>", "(I)V"));
     }
 
+    public void test2() {
+        // Regression test:
+        // This used to return 11 because of some wildcard syntax in the signature
+        assertTrue(mDb.getCallVersion("java/lang/Object", "getClass", "()") <= 1);
+    }
+
     @Override
     protected Detector getDetector() {
         fail("This is not used in the ApiDatabase test");
