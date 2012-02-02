@@ -18,12 +18,17 @@ package com.android.ddmuilib.net;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.TablePanel;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -73,6 +78,7 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Formatter;
 import java.util.Iterator;
 
@@ -84,8 +90,6 @@ public class NetworkPanel extends TablePanel {
     // TODO: enable view of packets and bytes/packet
     // TODO: add sash to resize chart and table
     // TODO: let user edit tags to be meaningful
-    // TODO: hide panel when remote device is missing support
-    // TODO: add disposal listeners to clean up
 
     /** Amount of historical data to display. */
     private static final long HISTORY_MILLIS = 30 * 1000;
@@ -120,9 +124,11 @@ public class NetworkPanel extends TablePanel {
 
     private Label mSpeedLabel;
     private Combo mSpeedCombo;
-    private long mSpeed;
 
-    private Button mPauseButton;
+    /** Current sleep between each sample, from {@link #mSpeedCombo}. */
+    private long mSpeedMillis;
+
+    private Button mRunningButton;
     private Button mResetButton;
 
     /** Chart of recent network activity. */
@@ -153,25 +159,27 @@ public class NetworkPanel extends TablePanel {
     /** List of traffic flows being actively tracked. */
     private ArrayList<TrackedItem> mTrackedItems = new ArrayList<TrackedItem>();
 
-    /** Flag indicating that user has paused data collection. */
-    private volatile boolean mPaused = false;
-
     private SampleThread mSampleThread;
 
     private class SampleThread extends Thread {
+        private volatile boolean mFinish;
+
+        public void finish() {
+            mFinish = true;
+            interrupt();
+        }
+
         @Override
         public void run() {
-            while (!mPaused && mDisplay != null) {
+            while (!mFinish && !mDisplay.isDisposed()) {
                 performSample();
 
                 try {
-                    Thread.sleep(mSpeed);
+                    Thread.sleep(mSpeedMillis);
                 } catch (InterruptedException e) {
                     // ignored
                 }
             }
-
-            mSampleThread = null;
         }
     }
 
@@ -220,20 +228,14 @@ public class NetworkPanel extends TablePanel {
         mSpeedCombo.select(1);
         updateSpeed();
 
-        mPauseButton = new Button(mHeader, SWT.PUSH);
-        mPauseButton.setText("Pause");
-        mPauseButton.addSelectionListener(new SelectionAdapter() {
+        mRunningButton = new Button(mHeader, SWT.PUSH);
+        mRunningButton.setText("Start");
+        mRunningButton.setEnabled(false);
+        mRunningButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                mPaused = !mPaused;
-                updateRunning();
-                if (mPaused) {
-                    mPauseButton.setText("Resume");
-                    mHeader.pack();
-                } else {
-                    mPauseButton.setText("Pause");
-                    mHeader.pack();
-                }
+                final boolean alreadyRunning = mSampleThread != null;
+                updateRunning(!alreadyRunning);
             }
         });
 
@@ -351,7 +353,7 @@ public class NetworkPanel extends TablePanel {
         mTable.setHeaderVisible(true);
         mTable.setLinesVisible(true);
 
-        final IPreferenceStore store = null; //DdmUiPreferences.getStore();
+        final IPreferenceStore store = DdmUiPreferences.getStore();
 
         TableHelper.createTableColumn(mTable, "", SWT.CENTER, buildSampleText(2), null, null);
         TableHelper.createTableColumn(
@@ -371,19 +373,40 @@ public class NetworkPanel extends TablePanel {
     }
 
     /**
-     * Update {@link #mSpeed} to match {@link #mSpeedCombo} selection.
+     * Update {@link #mSpeedMillis} to match {@link #mSpeedCombo} selection.
      */
     private void updateSpeed() {
         switch (mSpeedCombo.getSelectionIndex()) {
             case 0:
-                mSpeed = 100;
+                mSpeedMillis = 100;
                 break;
             case 1:
-                mSpeed = 250;
+                mSpeedMillis = 250;
                 break;
             case 2:
-                mSpeed = 500;
+                mSpeedMillis = 500;
                 break;
+        }
+    }
+
+    /**
+     * Update if {@link SampleThread} should be actively running. Will create
+     * new thread or finish existing thread to match requested state.
+     */
+    private void updateRunning(boolean shouldRun) {
+        final boolean alreadyRunning = mSampleThread != null;
+        if (alreadyRunning && !shouldRun) {
+            mSampleThread.finish();
+            mSampleThread = null;
+
+            mRunningButton.setText("Start");
+            mHeader.pack();
+        } else if (!alreadyRunning && shouldRun) {
+            mSampleThread = new SampleThread();
+            mSampleThread.start();
+
+            mRunningButton.setText("Stop");
+            mHeader.pack();
         }
     }
 
@@ -506,7 +529,7 @@ public class NetworkPanel extends TablePanel {
             // record values under correct series
             if (isTotal()) {
                 mRxTotalSeries.addOrUpdate(time, rxBytesPerSecond);
-                mTxTotalSeries.addOrUpdate(time, txBytesPerSecond);
+                mTxTotalSeries.addOrUpdate(time, -txBytesPerSecond);
             } else {
                 mRxDetailDataset.addValue(rxBytesPerSecond, time, label);
                 mTxDetailDataset.addValue(-txBytesPerSecond, time, label);
@@ -521,42 +544,38 @@ public class NetworkPanel extends TablePanel {
 
     @Override
     public void deviceSelected() {
-        // ignored
-    }
-
-    /**
-     * Start {@link SampleThread} if not already running, and user hasn't paused
-     * playback.
-     */
-    public synchronized void updateRunning() {
-        if (!mPaused && mSampleThread == null) {
-            mSampleThread = new SampleThread();
-            mSampleThread.start();
-        }
+        // treat as client selection to update enabled states
+        clientSelected();
     }
 
     @Override
     public void clientSelected() {
-        final Client client = getCurrentClient();
-        final int pid = client.getClientData().getPid();
+        mActiveUid = -1;
 
-        try {
-            // map PID to UID from device
-            final UidParser uidParser = new UidParser();
-            getCurrentDevice().executeShellCommand("cat /proc/" + pid + "/status", uidParser);
-            mActiveUid = uidParser.uid;
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        } catch (AdbCommandRejectedException e) {
-            e.printStackTrace();
-        } catch (ShellCommandUnresponsiveException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        final Client client = getCurrentClient();
+        if (client != null) {
+            final int pid = client.getClientData().getPid();
+            try {
+                // map PID to UID from device
+                final UidParser uidParser = new UidParser();
+                getCurrentDevice().executeShellCommand("cat /proc/" + pid + "/status", uidParser);
+                mActiveUid = uidParser.uid;
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            } catch (AdbCommandRejectedException e) {
+                e.printStackTrace();
+            } catch (ShellCommandUnresponsiveException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         clearTrackedItems();
-        updateRunning();
+        updateRunning(false);
+
+        final boolean validUid = mActiveUid != -1;
+        mRunningButton.setEnabled(validUid);
     }
 
     @Override
@@ -569,10 +588,31 @@ public class NetworkPanel extends TablePanel {
      * network traffic to {@link TrackedItem}.
      */
     public void performSample() {
+        final IDevice device = getCurrentDevice();
+        if (device == null) return;
+
         try {
-            final NetworkSnapshot snapshot = new NetworkSnapshot(System.currentTimeMillis());
-            getCurrentDevice().executeShellCommand(
-                    "cat " + PROC_XT_QTAGUID, new NetworkSnapshotParser(snapshot));
+            final NetworkSnapshotParser parser = new NetworkSnapshotParser();
+            device.executeShellCommand("cat " + PROC_XT_QTAGUID, parser);
+
+            if (parser.isError()) {
+                mDisplay.asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateRunning(false);
+
+                        final String title = "Problem reading stats";
+                        final String message = "Problem reading xt_qtaguid network "
+                                + "statistics from selected device.";
+                        Status status = new Status(IStatus.ERROR, "NetworkPanel", 0, message, null);
+                        ErrorDialog.openError(mPanel.getShell(), title, title, status);
+                    }
+                });
+
+                return;
+            }
+
+            final NetworkSnapshot snapshot = parser.getParsedSnapshot();
 
             // use first snapshot as baseline
             if (mLastSnapshot == null) {
@@ -584,7 +624,7 @@ public class NetworkPanel extends TablePanel {
             mLastSnapshot = snapshot;
 
             // perform delta updates over on UI thread
-            if (mDisplay != null) {
+            if (!mDisplay.isDisposed()) {
                 mDisplay.syncExec(new UpdateDeltaRunnable(delta, snapshot.timestamp));
             }
 
@@ -613,7 +653,9 @@ public class NetworkPanel extends TablePanel {
 
         @Override
         public void run() {
-            final Millisecond time = new Millisecond();
+            if (mDisplay.isDisposed()) return;
+
+            final Millisecond time = new Millisecond(new Date(mEndTime));
             for (NetworkSnapshot.Entry entry : mDelta) {
                 if (mActiveUid != entry.uid) continue;
 
@@ -668,10 +710,18 @@ public class NetworkPanel extends TablePanel {
      * {@link NetworkPanel#PROC_XT_QTAGUID} file.
      */
     private static class NetworkSnapshotParser extends MultiLineReceiver {
-        private final NetworkSnapshot mSnapshot;
+        private NetworkSnapshot mSnapshot;
 
-        public NetworkSnapshotParser(NetworkSnapshot snapshot) {
-            mSnapshot = snapshot;
+        public NetworkSnapshotParser() {
+            mSnapshot = new NetworkSnapshot(System.currentTimeMillis());
+        }
+
+        public boolean isError() {
+            return mSnapshot == null;
+        }
+
+        public NetworkSnapshot getParsedSnapshot() {
+            return mSnapshot;
         }
 
         @Override
@@ -682,6 +732,11 @@ public class NetworkPanel extends TablePanel {
         @Override
         public void processNewLines(String[] lines) {
             for (String line : lines) {
+                if (line.endsWith("No such file or directory")) {
+                    mSnapshot = null;
+                    return;
+                }
+
                 // ignore header line
                 if (line.startsWith("idx")) {
                     continue;
