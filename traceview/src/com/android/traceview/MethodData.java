@@ -222,6 +222,7 @@ public class MethodData {
 
         // Sort the array by elapsed inclusive time
         Arrays.sort(sorted, new Comparator<ProfileData>() {
+            @Override
             public int compare(ProfileData pd1, ProfileData pd2) {
                 if (timeBase.getElapsedInclusiveTime(pd2) > timeBase.getElapsedInclusiveTime(pd1))
                     return 1;
@@ -392,6 +393,7 @@ public class MethodData {
     }
 
     public static class Sorter implements Comparator<MethodData> {
+        @Override
         public int compare(MethodData md1, MethodData md2) {
             if (mColumn == Column.BY_NAME) {
                 int result = md1.getName().compareTo(md2.getName());

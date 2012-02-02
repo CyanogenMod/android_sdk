@@ -20,7 +20,6 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
@@ -50,6 +49,7 @@ public class DumpDisplayListAction extends SelectedNodeEnabledAction implements 
         HierarchyViewerDirector.getDirector().dumpDisplayListForCurrentNode();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

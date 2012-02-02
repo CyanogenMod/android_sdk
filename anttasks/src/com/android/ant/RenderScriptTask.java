@@ -56,10 +56,12 @@ public class RenderScriptTask extends MultiFilesTask {
             mTargetApiStr = Integer.toString(mTargetApi < 11 ? 11 : mTargetApi);
         }
 
+        @Override
         public String getSourceFileExtension() {
             return "rs";
         }
 
+        @Override
         public void process(String filePath, String sourceFolder, List<String> sourceFolders,
                 Project taskProject) {
             File exe = new File(mExecutable);
@@ -102,6 +104,7 @@ public class RenderScriptTask extends MultiFilesTask {
             task.execute();
         }
 
+        @Override
         public void displayMessage(DisplayType type, int count) {
             switch (type) {
                 case FOUND:

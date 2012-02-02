@@ -55,6 +55,7 @@ public class SaveTreeViewAction extends TreeViewEnabledAction implements ImageAc
         HierarchyViewerDirector.getDirector().saveTreeView(mShell);
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

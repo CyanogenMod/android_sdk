@@ -39,6 +39,7 @@ public abstract class SingleDependencyTask extends BuildTypedTask {
     }
 
     private final static InputPathFactory sDefaultFactory = new InputPathFactory() {
+        @Override
         public InputPath createPath(File file, Set<String> extensionsToCheck) {
             return new InputPath(file, extensionsToCheck);
         }

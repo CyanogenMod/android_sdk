@@ -55,6 +55,7 @@ public class SavePixelPerfectAction extends PixelPerfectEnabledAction implements
         HierarchyViewerDirector.getDirector().savePixelPerfect(mShell);
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

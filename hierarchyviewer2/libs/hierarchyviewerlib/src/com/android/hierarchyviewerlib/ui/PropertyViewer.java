@@ -58,6 +58,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
 
     private class ContentProvider implements ITreeContentProvider, ITableLabelProvider {
 
+        @Override
         public Object[] getChildren(Object parentElement) {
             synchronized (PropertyViewer.this) {
                 if (mSelectedNode != null && parentElement instanceof String) {
@@ -80,6 +81,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
             }
         }
 
+        @Override
         public Object getParent(Object element) {
             synchronized (PropertyViewer.this) {
                 if (mSelectedNode != null && element instanceof Property) {
@@ -97,6 +99,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
             }
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             synchronized (PropertyViewer.this) {
                 if (mSelectedNode != null && element instanceof String) {
@@ -117,6 +120,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
             }
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             synchronized (PropertyViewer.this) {
                 if (mSelectedNode != null && inputElement instanceof TreeViewModel) {
@@ -132,18 +136,22 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
 
+        @Override
         public Image getColumnImage(Object element, int column) {
             return null;
         }
 
+        @Override
         public String getColumnText(Object element, int column) {
             synchronized (PropertyViewer.this) {
                 if (mSelectedNode != null) {
@@ -167,15 +175,18 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -226,6 +237,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeTreeChangeListener(PropertyViewer.this);
             mSmallFont.dispose();
@@ -259,6 +271,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         }
     };
 
+    @Override
     public void selectionChanged() {
         synchronized (this) {
             mSelectedNode = mModel.getSelection();
@@ -266,6 +279,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         doRefresh();
     }
 
+    @Override
     public void treeChanged() {
         synchronized (this) {
             mSelectedNode = mModel.getSelection();
@@ -273,16 +287,19 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         doRefresh();
     }
 
+    @Override
     public void viewportChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }
 
     private void doRefresh() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mTreeViewer.refresh();
             }

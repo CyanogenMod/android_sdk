@@ -58,24 +58,30 @@ public class ShowOverlayAction extends Action implements ImageAction, IImageChan
         HierarchyViewerApplication.getMainWindow().showOverlayInLoupe(sAction.isChecked());
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }
-    
+
+    @Override
     public void crosshairMoved() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void imageChanged() {
         // pass
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 Image overlayImage = PixelPerfectModel.getModel().getOverlayImage();
                 setEnabled(overlayImage != null);
@@ -83,22 +89,27 @@ public class ShowOverlayAction extends Action implements ImageAction, IImageChan
         });
     }
 
+    @Override
     public void overlayChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 setEnabled(PixelPerfectModel.getModel().getOverlayImage() != null);
             }
         });
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         // pass
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

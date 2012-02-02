@@ -75,6 +75,7 @@ public class SdkStatsService {
     private void askUserPermissionForPing(final Shell parent) {
         final Display display = parent.getDisplay();
         display.syncExec(new Runnable() {
+            @Override
             public void run() {
                 SdkStatsPermissionDialog dialog = new SdkStatsPermissionDialog(parent);
                 dialog.open();

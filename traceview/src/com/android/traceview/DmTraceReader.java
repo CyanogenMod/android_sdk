@@ -539,6 +539,7 @@ public class DmTraceReader extends TraceReader {
         Collection<ThreadData> tv = mThreadMap.values();
         mSortedThreads = tv.toArray(new ThreadData[tv.size()]);
         Arrays.sort(mSortedThreads, new Comparator<ThreadData>() {
+            @Override
             public int compare(ThreadData td1, ThreadData td2) {
                 if (timeBase.getTime(td2) > timeBase.getTime(td1))
                     return 1;
@@ -553,6 +554,7 @@ public class DmTraceReader extends TraceReader {
         MethodData[] methods;
         methods = mv.toArray(new MethodData[mv.size()]);
         Arrays.sort(methods, new Comparator<MethodData>() {
+            @Override
             public int compare(MethodData md1, MethodData md2) {
                 if (timeBase.getElapsedInclusiveTime(md2) > timeBase.getElapsedInclusiveTime(md1))
                     return 1;

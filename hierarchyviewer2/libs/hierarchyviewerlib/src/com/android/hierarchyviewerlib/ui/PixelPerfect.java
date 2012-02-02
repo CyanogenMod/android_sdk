@@ -91,6 +91,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeImageChangeListener(PixelPerfect.this);
             mCrosshairColor.dispose();
@@ -106,14 +107,17 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
 
     private MouseListener mMouseListener = new MouseListener() {
 
+        @Override
         public void mouseDoubleClick(MouseEvent e) {
             // pass
         }
 
+        @Override
         public void mouseDown(MouseEvent e) {
             handleMouseEvent(e);
         }
 
+        @Override
         public void mouseUp(MouseEvent e) {
             handleMouseEvent(e);
         }
@@ -121,6 +125,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
     };
 
     private MouseMoveListener mMouseMoveListener = new MouseMoveListener() {
+        @Override
         public void mouseMove(MouseEvent e) {
             if (e.stateMask != 0) {
                 handleMouseEvent(e);
@@ -147,6 +152,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
 
     private KeyListener mKeyListener = new KeyListener() {
 
+        @Override
         public void keyPressed(KeyEvent e) {
             boolean crosshairMoved = false;
             synchronized (PixelPerfect.this) {
@@ -184,6 +190,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
             }
         }
 
+        @Override
         public void keyReleased(KeyEvent e) {
             // pass
         }
@@ -191,6 +198,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
     };
 
     private PaintListener mPaintListener = new PaintListener() {
+        @Override
         public void paintControl(PaintEvent e) {
             synchronized (PixelPerfect.this) {
                 e.gc.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
@@ -281,6 +289,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
 
     private void doRedraw() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mCanvas.redraw();
             }
@@ -299,8 +308,10 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         setMinSize(mWidth, mHeight);
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     loadImage();
@@ -314,8 +325,10 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         doRedraw();
     }
 
+    @Override
     public void imageChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     loadImage();
@@ -325,6 +338,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         doRedraw();
     }
 
+    @Override
     public void crosshairMoved() {
         synchronized (this) {
             mCrosshairLocation = mModel.getCrosshairLocation();
@@ -332,6 +346,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         doRedraw();
     }
 
+    @Override
     public void selectionChanged() {
         synchronized (this) {
             mSelectedNode = mModel.getSelected();
@@ -340,8 +355,10 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
     }
 
     // Note the syncExec and then synchronized... It avoids deadlock
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     mSelectedNode = mModel.getSelected();
@@ -351,10 +368,12 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         doRedraw();
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }
 
+    @Override
     public void overlayChanged() {
         synchronized (this) {
             mOverlayImage = mModel.getOverlayImage();
@@ -363,6 +382,7 @@ public class PixelPerfect extends ScrolledComposite implements IImageChangeListe
         doRedraw();
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         synchronized (this) {
             mOverlayTransparency = mModel.getOverlayTransparency();

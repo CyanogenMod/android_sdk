@@ -35,38 +35,47 @@ public class PixelPerfectEnabledAction extends Action implements IImageChangeLis
         PixelPerfectModel.getModel().addImageChangeListener(this);
     }
 
+    @Override
     public void crosshairMoved() {
         // pass
     }
 
+    @Override
     public void imageChanged() {
-        // 
+        //
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 setEnabled(PixelPerfectModel.getModel().getImage() != null);
             }
         });
     }
 
+    @Override
     public void overlayChanged() {
         // pass
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         // pass
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

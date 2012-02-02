@@ -64,12 +64,14 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeImageChangeListener(PixelPerfectPixelPanel.this);
         }
     };
 
     private PaintListener mPaintListener = new PaintListener() {
+        @Override
         public void paintControl(PaintEvent e) {
             synchronized (PixelPerfectPixelPanel.this) {
                 e.gc.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
@@ -138,12 +140,14 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
 
     private void doRedraw() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 redraw();
             }
         });
     }
 
+    @Override
     public void crosshairMoved() {
         synchronized (this) {
             mCrosshairLocation = mModel.getCrosshairLocation();
@@ -151,6 +155,7 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
         doRedraw();
     }
 
+    @Override
     public void imageChanged() {
         synchronized (this) {
             mImage = mModel.getImage();
@@ -158,6 +163,7 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
         doRedraw();
     }
 
+    @Override
     public void imageLoaded() {
         synchronized (this) {
             mImage = mModel.getImage();
@@ -167,6 +173,7 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
         doRedraw();
     }
 
+    @Override
     public void overlayChanged() {
         synchronized (this) {
             mOverlayImage = mModel.getOverlayImage();
@@ -174,18 +181,22 @@ public class PixelPerfectPixelPanel extends Canvas implements IImageChangeListen
         doRedraw();
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         // pass
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

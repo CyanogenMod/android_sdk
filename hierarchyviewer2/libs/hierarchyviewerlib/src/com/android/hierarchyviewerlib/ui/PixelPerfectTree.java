@@ -53,6 +53,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
     private Image mFileImage;
 
     private class ContentProvider implements ITreeContentProvider, ILabelProvider {
+        @Override
         public Object[] getChildren(Object element) {
             if (element instanceof ViewNode) {
                 List<ViewNode> children = ((ViewNode) element).children;
@@ -61,6 +62,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return null;
         }
 
+        @Override
         public Object getParent(Object element) {
             if (element instanceof ViewNode) {
                 return ((ViewNode) element).parent;
@@ -68,6 +70,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             if (element instanceof ViewNode) {
                 return ((ViewNode) element).children.size() != 0;
@@ -75,6 +78,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return false;
         }
 
+        @Override
         public Object[] getElements(Object element) {
             if (element instanceof PixelPerfectModel) {
                 ViewNode viewNode = ((PixelPerfectModel) element).getViewNode();
@@ -88,14 +92,17 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return new Object[0];
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
 
+        @Override
         public Image getImage(Object element) {
             if (element instanceof ViewNode) {
                 if (hasChildren(element)) {
@@ -106,6 +113,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return null;
         }
 
+        @Override
         public String getText(Object element) {
             if (element instanceof ViewNode) {
                 return ((ViewNode) element).name;
@@ -113,15 +121,18 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -156,6 +167,7 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeImageChangeListener(PixelPerfectTree.this);
         }
@@ -166,8 +178,10 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
         return mTree.setFocus();
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mTreeViewer.refresh();
                 mTreeViewer.expandAll();
@@ -175,26 +189,32 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
         });
     }
 
+    @Override
     public void imageChanged() {
         // pass
     }
 
+    @Override
     public void crosshairMoved() {
         // pass
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         imageLoaded();
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         // pass
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         // To combat phantom selection...
         if (((TreeSelection) mTreeViewer.getSelection()).isEmpty()) {
@@ -204,14 +224,17 @@ public class PixelPerfectTree extends Composite implements IImageChangeListener,
         }
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }
 
+    @Override
     public void overlayChanged() {
         // pass
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         // pass
     }

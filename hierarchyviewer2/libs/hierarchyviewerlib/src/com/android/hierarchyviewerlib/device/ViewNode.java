@@ -178,6 +178,7 @@ public class ViewNode {
         } while (!stop);
 
         Collections.sort(properties, new Comparator<ViewNode.Property>() {
+            @Override
             public int compare(ViewNode.Property source, ViewNode.Property destination) {
                 return source.name.compareTo(destination.name);
             }

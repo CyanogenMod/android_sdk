@@ -130,6 +130,7 @@ public final class AaptExecTask extends SingleDependencyTask {
 
     private final static InputPathFactory sPathFactory = new InputPathFactory() {
 
+        @Override
         public InputPath createPath(File file, Set<String> extensionsToCheck) {
             return new ResFolderInputPath(file, extensionsToCheck);
         }

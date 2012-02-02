@@ -288,6 +288,7 @@ public class DeviceBridge {
             }
         }
 
+        @Override
         public boolean isCancelled() {
             return false;
         }

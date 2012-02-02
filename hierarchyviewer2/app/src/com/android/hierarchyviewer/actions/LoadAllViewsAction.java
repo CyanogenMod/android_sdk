@@ -53,6 +53,7 @@ public class LoadAllViewsAction extends TreeViewEnabledAction implements ImageAc
         HierarchyViewerDirector.getDirector().loadAllViews();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

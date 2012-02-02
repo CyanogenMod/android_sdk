@@ -52,6 +52,7 @@ public class PixelPerfectAutoRefreshAction extends PixelPerfectEnabledAction imp
         HierarchyViewerDirector.getDirector().setPixelPerfectAutoRefresh(sAction.isChecked());
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

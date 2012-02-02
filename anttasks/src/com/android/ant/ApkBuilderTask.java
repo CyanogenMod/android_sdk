@@ -17,10 +17,10 @@
 package com.android.ant;
 
 import com.android.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkBuilder.FileEntry;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
-import com.android.sdklib.build.ApkBuilder.FileEntry;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
@@ -269,6 +269,7 @@ public class ApkBuilderTask extends SingleDependencyTask {
                     File folder = new File(path);
                     if (folder.isDirectory()) {
                         String[] filenames = folder.list(new FilenameFilter() {
+                            @Override
                             public boolean accept(File dir, String name) {
                                 return PATTERN_JAR_EXT.matcher(name).matches();
                             }

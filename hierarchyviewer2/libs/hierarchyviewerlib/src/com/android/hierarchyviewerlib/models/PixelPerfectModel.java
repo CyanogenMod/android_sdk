@@ -67,6 +67,7 @@ public class PixelPerfectModel {
         final Image toDispose = this.mImage;
         final Image toDispose2 = this.mOverlayImage;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (PixelPerfectModel.this) {
                     PixelPerfectModel.this.mDevice = device;
@@ -87,6 +88,7 @@ public class PixelPerfectModel {
         notifyImageLoaded();
         if (toDispose != null) {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     toDispose.dispose();
                 }
@@ -94,6 +96,7 @@ public class PixelPerfectModel {
         }
         if (toDispose2 != null) {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     toDispose2.dispose();
                 }
@@ -118,6 +121,7 @@ public class PixelPerfectModel {
 
     public void setTree(final ViewNode viewNode) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (PixelPerfectModel.this) {
                     PixelPerfectModel.this.mViewNode = viewNode;
@@ -131,6 +135,7 @@ public class PixelPerfectModel {
     public void setImage(final Image image) {
         final Image toDispose = this.mImage;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (PixelPerfectModel.this) {
                     PixelPerfectModel.this.mImage = image;
@@ -140,6 +145,7 @@ public class PixelPerfectModel {
         notifyImageChanged();
         if (toDispose != null) {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     toDispose.dispose();
                 }
@@ -163,6 +169,7 @@ public class PixelPerfectModel {
     public void setOverlayImage(final Image overlayImage) {
         final Image toDispose = this.mOverlayImage;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (PixelPerfectModel.this) {
                     PixelPerfectModel.this.mOverlayImage = overlayImage;
@@ -172,6 +179,7 @@ public class PixelPerfectModel {
         notifyOverlayChanged();
         if (toDispose != null) {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     toDispose.dispose();
                 }

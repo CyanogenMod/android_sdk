@@ -49,42 +49,52 @@ class Call implements TimeLineView.Block {
         mName = mMethodData.getProfileName();
     }
 
+    @Override
     public double addWeight(int x, int y, double weight) {
         return mMethodData.addWeight(x, y, weight);
     }
 
+    @Override
     public void clearWeight() {
         mMethodData.clearWeight();
     }
 
+    @Override
     public long getStartTime() {
         return mGlobalStartTime;
     }
 
+    @Override
     public long getEndTime() {
         return mGlobalEndTime;
     }
 
+    @Override
     public long getExclusiveCpuTime() {
         return mExclusiveCpuTime;
     }
 
+    @Override
     public long getInclusiveCpuTime() {
         return mInclusiveCpuTime;
     }
 
+    @Override
     public long getExclusiveRealTime() {
         return mExclusiveRealTime;
     }
 
+    @Override
     public long getInclusiveRealTime() {
         return mInclusiveRealTime;
     }
 
+    @Override
     public Color getColor() {
         return mMethodData.getColor();
     }
 
+    @Override
     public String getName() {
         return mName;
     }
@@ -101,19 +111,23 @@ class Call implements TimeLineView.Block {
         return mThreadData.getId();
     }
 
+    @Override
     public MethodData getMethodData() {
         return mMethodData;
     }
 
+    @Override
     public boolean isContextSwitch() {
         return mMethodData.getId() < 0;
     }
 
+    @Override
     public boolean isIgnoredBlock() {
         // Ignore the top-level call or context switches within the top-level call.
         return mCaller == null || isContextSwitch() && mCaller.mCaller == null;
     }
 
+    @Override
     public TimeLineView.Block getParentBlock() {
         return mCaller;
     }
