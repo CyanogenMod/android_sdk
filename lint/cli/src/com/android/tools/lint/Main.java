@@ -112,6 +112,7 @@ public class Main extends LintClient {
     private boolean mAllErrors;
 
     private Configuration mDefaultConfiguration;
+    private IssueRegistry mRegistry;
 
     /** Creates a CLI driver */
     public Main() {
@@ -137,7 +138,7 @@ public class Main extends LintClient {
             System.exit(ERRNO_USAGE);
         }
 
-        IssueRegistry registry = new BuiltinIssueRegistry();
+        IssueRegistry registry = mRegistry = new BuiltinIssueRegistry();
 
         // Mapping from file path prefix to URL. Applies only to HTML reports
         String urlMap = null;
@@ -938,7 +939,7 @@ public class Main extends LintClient {
      * Consult the lint.xml file, but override with the --enable and --disable
      * flags supplied on the command line
      */
-    private class CliConfiguration extends DefaultConfiguration {
+    class CliConfiguration extends DefaultConfiguration {
         CliConfiguration(Configuration parent, Project project) {
             super(Main.this, project, parent);
         }
@@ -1045,5 +1046,20 @@ public class Main extends LintClient {
         }
 
         return path;
+    }
+
+    /** Returns the issue registry used by this client */
+    IssueRegistry getRegistry() {
+        return mRegistry;
+    }
+
+    /** Returns the configuration used by this client */
+    Configuration getConfiguration() {
+        return mDefaultConfiguration;
+    }
+
+    /** Returns true if the given issue has been explicitly disabled */
+    boolean isSuppressed(Issue issue) {
+        return mSuppress.contains(issue.getId());
     }
 }

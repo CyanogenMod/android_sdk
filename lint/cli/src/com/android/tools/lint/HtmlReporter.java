@@ -21,12 +21,15 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 
@@ -41,7 +44,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A reporter which emits lint results into an HTML report.
@@ -72,6 +78,8 @@ class HtmlReporter extends Reporter {
 
     @Override
     void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+        Map<Issue, String> missing = computeMissingIssues(issues);
+
         mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
@@ -124,7 +132,7 @@ class HtmlReporter extends Reporter {
             mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
 
 
-            writeOverview(related);
+            writeOverview(related, missing.size() > 0);
 
             Category previousCategory = null;
             for (List<Warning> warnings : related) {
@@ -264,65 +272,147 @@ class HtmlReporter extends Reporter {
                 }
 
                 mWriter.write("</div>\n");                               //$NON-NLS-1$
-
-                mWriter.write("<div class=\"metadata\">");               //$NON-NLS-1$
-                mWriter.write("Priority: ");
-                mWriter.write(String.format("%1$d / 10", issue.getPriority()));
-                mWriter.write("<br/>\n");                                //$NON-NLS-1$
-                mWriter.write("Category: ");
-                mWriter.write(issue.getCategory().getFullName());
-                mWriter.write("</div>\n");                               //$NON-NLS-1$
-
-                mWriter.write("Severity: ");
-                if (first.severity == Severity.ERROR) {
-                    mWriter.write("<span class=\"error\">");             //$NON-NLS-1$
-                } else if (first.severity == Severity.WARNING) {
-                    mWriter.write("<span class=\"warning\">");           //$NON-NLS-1$
-                } else {
-                    mWriter.write("<span>");                             //$NON-NLS-1$
-                }
-                appendEscapedText(first.severity.getDescription());
-                mWriter.write("</span>");                                //$NON-NLS-1$
-
-                mWriter.write("<div class=\"summary\">\n");              //$NON-NLS-1$
-                mWriter.write("Explanation: ");
-                String description = issue.getDescription();
-                mWriter.write(description);
-                if (description.length() > 0
-                        && Character.isLetter(description.charAt(description.length() - 1))) {
-                    mWriter.write('.');
-                }
-                mWriter.write("</div>\n");                               //$NON-NLS-1$
-                mWriter.write("<div class=\"explanation\">\n");          //$NON-NLS-1$
-                String explanation = issue.getExplanation();
-                appendEscapedText(explanation, true /* preserve newlines*/);
-                mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
-                if (issue.getMoreInfo() != null) {
-                    mWriter.write("<div class=\"moreinfo\">");           //$NON-NLS-1$
-                    mWriter.write("More info: ");
-                    mWriter.write("<a href=\"");                         //$NON-NLS-1$
-                    mWriter.write(issue.getMoreInfo());
-                    mWriter.write("\">");                                //$NON-NLS-1$
-                    mWriter.write(issue.getMoreInfo());
-                    mWriter.write("</a></div>\n");                       //$NON-NLS-1$
-                }
-
-                mWriter.write("<br/>");                                  //$NON-NLS-1$
-                mWriter.write("To suppress this error, see ");
-                mWriter.write("<code>lint --help suppress</code> ");     //$NON-NLS-1$
-                mWriter.write("and use id ");
-                mWriter.write("\"<code>");                               //$NON-NLS-1$
-                mWriter.write(issue.getId());
-                mWriter.write("</code>\"<br/>");                         //$NON-NLS-1$
-
-                mWriter.write("</div>");                                 //$NON-NLS-1$
+                writeIssueMetadata(issue, first.severity, null);
             }
+
+            writeMissingIssues(missing);
         }
         mWriter.write("\n</body>\n</html>");                             //$NON-NLS-1$
         mWriter.close();
 
         String path = mOutput.getAbsolutePath();
         System.out.println(String.format("Wrote HTML report to %1$s", path));
+    }
+
+    private void writeIssueMetadata(Issue issue, Severity severity, String disabledBy)
+            throws IOException {
+        mWriter.write("<div class=\"metadata\">");               //$NON-NLS-1$
+
+        if (disabledBy != null) {
+            mWriter.write(String.format("Disabled By: %1$s<br/>\n", disabledBy));
+        }
+
+        mWriter.write("Priority: ");
+        mWriter.write(String.format("%1$d / 10", issue.getPriority()));
+        mWriter.write("<br/>\n");                                //$NON-NLS-1$
+        mWriter.write("Category: ");
+        mWriter.write(issue.getCategory().getFullName());
+        mWriter.write("</div>\n");                               //$NON-NLS-1$
+
+        mWriter.write("Severity: ");
+        if (severity == Severity.ERROR) {
+            mWriter.write("<span class=\"error\">");             //$NON-NLS-1$
+        } else if (severity == Severity.WARNING) {
+            mWriter.write("<span class=\"warning\">");           //$NON-NLS-1$
+        } else {
+            mWriter.write("<span>");                             //$NON-NLS-1$
+        }
+        appendEscapedText(severity.getDescription());
+        mWriter.write("</span>");                                //$NON-NLS-1$
+
+        mWriter.write("<div class=\"summary\">\n");              //$NON-NLS-1$
+        mWriter.write("Explanation: ");
+        String description = issue.getDescription();
+        mWriter.write(description);
+        if (description.length() > 0
+                && Character.isLetter(description.charAt(description.length() - 1))) {
+            mWriter.write('.');
+        }
+        mWriter.write("</div>\n");                               //$NON-NLS-1$
+        mWriter.write("<div class=\"explanation\">\n");          //$NON-NLS-1$
+        String explanation = issue.getExplanation();
+        appendEscapedText(explanation, true /* preserve newlines*/);
+        mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
+        if (issue.getMoreInfo() != null) {
+            mWriter.write("<div class=\"moreinfo\">");           //$NON-NLS-1$
+            mWriter.write("More info: ");
+            mWriter.write("<a href=\"");                         //$NON-NLS-1$
+            mWriter.write(issue.getMoreInfo());
+            mWriter.write("\">");                                //$NON-NLS-1$
+            mWriter.write(issue.getMoreInfo());
+            mWriter.write("</a></div>\n");                       //$NON-NLS-1$
+        }
+
+        mWriter.write("<br/>");                                  //$NON-NLS-1$
+        mWriter.write("To suppress this error, see ");
+        mWriter.write("<code>lint --help suppress</code> ");     //$NON-NLS-1$
+        mWriter.write("and use id ");
+        mWriter.write("\"<code>");                               //$NON-NLS-1$
+        mWriter.write(issue.getId());
+        mWriter.write("</code>\"<br/>");                         //$NON-NLS-1$
+
+        mWriter.write("</div>");                                 //$NON-NLS-1$
+    }
+
+    protected Map<Issue, String> computeMissingIssues(List<Warning> warnings) {
+        Set<Project> projects = new HashSet<Project>();
+        Set<Issue> seen = new HashSet<Issue>();
+        for (Warning warning : warnings) {
+            projects.add(warning.project);
+            seen.add(warning.issue);
+        }
+        Configuration cliConfiguration = mClient.getConfiguration();
+        Map<Issue, String> map = Maps.newHashMap();
+        for (Issue issue : mClient.getRegistry().getIssues()) {
+            if (!seen.contains(issue)) {
+                if (mClient.isSuppressed(issue)) {
+                    map.put(issue, "Command line flag");
+                    continue;
+                }
+
+                if (!issue.isEnabledByDefault()) {
+                    map.put(issue, "Default");
+                    continue;
+                }
+
+                if (cliConfiguration != null && !cliConfiguration.isEnabled(issue)) {
+                    map.put(issue, "Command line supplied --config lint.xml file");
+                    continue;
+                }
+
+                // See if any projects disable this warning
+                for (Project project : projects) {
+                    if (!project.getConfiguration().isEnabled(issue)) {
+                        map.put(issue, "Project lint.xml file");
+                        break;
+                    }
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private void writeMissingIssues(Map<Issue, String> missing) throws IOException {
+        mWriter.write("\n<a name=\"MissingIssues\">\n");         //$NON-NLS-1$
+        mWriter.write("<div class=\"category\">");               //$NON-NLS-1$
+        mWriter.write("Disabled Checks");
+        mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
+        mWriter.write("</div>\n");                               //$NON-NLS-1$
+
+        mWriter.write(
+                "The following issues were not run by lint, either " +
+                "because the check is not enabled by default, or because " +
+                "it was disabled with a command line flag or via one or " +
+                "more lint.xml configuration files in the project directories.");
+        mWriter.write("\n<br/><br/>\n"); //$NON-NLS-1$
+
+        List<Issue> list = new ArrayList<Issue>(missing.keySet());
+        Collections.sort(list);
+
+
+        for (Issue issue : list) {
+            mWriter.write("<a name=\"" + issue.getId() + "\">\n");  //$NON-NLS-1$ //$NON-NLS-2$
+            mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
+
+            // Explain this issue
+            mWriter.write("<div class=\"id\">");                     //$NON-NLS-1$
+            mWriter.write(issue.getId());
+            mWriter.write("<div class=\"issueSeparator\"></div>\n"); //$NON-NLS-1$
+            mWriter.write("</div>\n");                               //$NON-NLS-1$
+            String disabledBy = missing.get(issue);
+            writeIssueMetadata(issue, issue.getDefaultSeverity(), disabledBy);
+        }
     }
 
     protected void writeStyleSheet() throws IOException {
@@ -352,7 +442,8 @@ class HtmlReporter extends Reporter {
         }
     }
 
-    private void writeOverview(List<List<Warning>> related) throws IOException {
+    private void writeOverview(List<List<Warning>> related, boolean hasMissing)
+            throws IOException {
         // Write issue id summary
         mWriter.write("<table class=\"overview\">\n");                          //$NON-NLS-1$
 
@@ -410,6 +501,14 @@ class HtmlReporter extends Reporter {
             mWriter.write("</a>\n");                                 //$NON-NLS-1$
 
             mWriter.write("</td></tr>\n");
+        }
+
+        if (hasMissing) {
+            mWriter.write("<tr><td></td><td class=\"categoryColumn\">");//$NON-NLS-1$
+            mWriter.write("<a href=\"#MissingIssues\">");            //$NON-NLS-1$
+            mWriter.write("Disabled Checks");
+            mWriter.write("</a>\n");                                 //$NON-NLS-1$
+            mWriter.write("</td></tr>");                             //$NON-NLS-1$
         }
 
         mWriter.write("</table>\n");                                 //$NON-NLS-1$
