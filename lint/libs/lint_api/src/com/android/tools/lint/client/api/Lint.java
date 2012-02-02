@@ -424,13 +424,34 @@ public class Lint {
         // Compute list of projects
         Map<File, Project> fileToProject = new HashMap<File, Project>();
 
+        File sharedRoot = null;
+
+        // Ensure that we have absolute paths such that if you lint
+        //  "foo bar" in "baz" we can show baz/ as the root
+        if (files.size() > 1) {
+            List<File> absolute = new ArrayList<File>(files.size());
+            for (File file : files) {
+                absolute.add(file.getAbsoluteFile());
+            }
+            files = absolute;
+
+            sharedRoot = LintUtils.getCommonParent(files);
+            if (sharedRoot != null && sharedRoot.getParentFile() == null) { // "/" ?
+                sharedRoot = null;
+            }
+        }
+
+
         for (File file : files) {
             if (file.isDirectory()) {
-                File rootDir = file;
-                if (files.size() > 1) {
-                    rootDir = file.getParentFile();
-                    if (rootDir == null) {
-                        rootDir = file;
+                File rootDir = sharedRoot;
+                if (rootDir == null) {
+                    rootDir = file;
+                    if (files.size() > 1) {
+                        rootDir = file.getParentFile();
+                        if (rootDir == null) {
+                            rootDir = file;
+                        }
                     }
                 }
 

@@ -66,4 +66,53 @@ public class LintUtilsTest extends TestCase {
         assertEquals(1, LintUtils.editDistance("button", "bitton"));
         assertEquals(6, LintUtils.editDistance("radiobutton", "bitton"));
     }
+
+    public void testCommonParen1() {
+        assertEquals(new File("/a"), (LintUtils.getCommonParent(
+                new File("/a/b/c/d/e"), new File("/a/c"))));
+        assertEquals(new File("/a"), (LintUtils.getCommonParent(
+                new File("/a/c"), new File("/a/b/c/d/e"))));
+
+        assertEquals(new File("/"), LintUtils.getCommonParent(
+                new File("/foo/bar"), new File("/bar/baz")));
+        assertEquals(new File("/"), LintUtils.getCommonParent(
+                new File("/foo/bar"), new File("/")));
+        assertNull(LintUtils.getCommonParent(
+               new File("C:\\Program Files"), new File("F:\\")));
+        assertNull(LintUtils.getCommonParent(
+                new File("C:/Program Files"), new File("F:/")));
+
+        assertEquals(new File("/foo/bar/baz"), LintUtils.getCommonParent(
+                new File("/foo/bar/baz"), new File("/foo/bar/baz")));
+        assertEquals(new File("/foo/bar"), LintUtils.getCommonParent(
+                new File("/foo/bar/baz"), new File("/foo/bar")));
+        assertEquals(new File("/foo/bar"), LintUtils.getCommonParent(
+                new File("/foo/bar/baz"), new File("/foo/bar/foo")));
+        assertEquals(new File("/foo"), LintUtils.getCommonParent(
+                new File("/foo/bar"), new File("/foo/baz")));
+        assertEquals(new File("/foo"), LintUtils.getCommonParent(
+                new File("/foo/bar"), new File("/foo/baz")));
+        assertEquals(new File("/foo/bar"), LintUtils.getCommonParent(
+                new File("/foo/bar"), new File("/foo/bar/baz")));
+    }
+
+    public void testCommonParent2() {
+        assertEquals(new File("/"), LintUtils.getCommonParent(
+                Arrays.asList(new File("/foo/bar"), new File("/bar/baz"))));
+        assertEquals(new File("/"), LintUtils.getCommonParent(
+                Arrays.asList(new File("/foo/bar"), new File("/"))));
+        assertNull(LintUtils.getCommonParent(
+                Arrays.asList(new File("C:\\Program Files"), new File("F:\\"))));
+        assertNull(LintUtils.getCommonParent(
+                Arrays.asList(new File("C:/Program Files"), new File("F:/"))));
+
+        assertEquals(new File("/foo"), LintUtils.getCommonParent(
+                Arrays.asList(new File("/foo/bar"), new File("/foo/baz"))));
+        assertEquals(new File("/foo"), LintUtils.getCommonParent(
+                Arrays.asList(new File("/foo/bar"), new File("/foo/baz"),
+                        new File("/foo/baz/f"))));
+        assertEquals(new File("/foo/bar"), LintUtils.getCommonParent(
+                Arrays.asList(new File("/foo/bar"), new File("/foo/bar/baz"),
+                        new File("/foo/bar/foo2/foo3"))));
+    }
 }
