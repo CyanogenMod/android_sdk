@@ -185,6 +185,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeTreeChangeListener(TreeView.this);
             mTransform.dispose();
@@ -198,6 +199,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     };
 
     private Listener mResizeListener = new Listener() {
+        @Override
         public void handleEvent(Event e) {
             synchronized (TreeView.this) {
                 if (mTree != null && mViewport != null) {
@@ -220,6 +222,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
 
     private KeyListener mKeyListener = new KeyListener() {
 
+        @Override
         public void keyPressed(KeyEvent e) {
             boolean selectionChanged = false;
             DrawableViewNode clickedNode = null;
@@ -318,12 +321,14 @@ public class TreeView extends Canvas implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void keyReleased(KeyEvent e) {
         }
     };
 
     private MouseListener mMouseListener = new MouseListener() {
 
+        @Override
         public void mouseDoubleClick(MouseEvent e) {
             DrawableViewNode clickedNode = null;
             synchronized (TreeView.this) {
@@ -338,6 +343,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void mouseDown(MouseEvent e) {
             boolean selectionChanged = false;
             synchronized (TreeView.this) {
@@ -391,6 +397,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void mouseUp(MouseEvent e) {
             boolean redraw = false;
             boolean redrawButton = false;
@@ -451,6 +458,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     };
 
     private MouseMoveListener mMouseMoveListener = new MouseMoveListener() {
+        @Override
         public void mouseMove(MouseEvent e) {
             boolean redraw = false;
             boolean viewportChanged = false;
@@ -537,6 +545,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     }
 
     private MouseWheelListener mMouseWheelListener = new MouseWheelListener() {
+        @Override
         public void mouseScrolled(MouseEvent e) {
             Point zoomPoint = null;
             synchronized (TreeView.this) {
@@ -552,6 +561,7 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     };
 
     private PaintListener mPaintListener = new PaintListener() {
+        @Override
         public void paintControl(PaintEvent e) {
             synchronized (TreeView.this) {
                 e.gc.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
@@ -966,15 +976,17 @@ public class TreeView extends Canvas implements ITreeChangeListener {
 
     private void doRedraw() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 redraw();
             }
         });
     }
-    
+
     public void loadAllData() {
         boolean newViewport = mViewport == null;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     mTree = mModel.getTree();
@@ -999,8 +1011,10 @@ public class TreeView extends Canvas implements ITreeChangeListener {
 
     // Fickle behaviour... When a new tree is loaded, the model doesn't know
     // about the viewport until it passes through here.
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     mTree = mModel.getTree();
@@ -1038,8 +1052,10 @@ public class TreeView extends Canvas implements ITreeChangeListener {
     }
 
     // Note the syncExec and then synchronized... It avoids deadlock
+    @Override
     public void viewportChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     mViewport = mModel.getViewport();
@@ -1051,10 +1067,12 @@ public class TreeView extends Canvas implements ITreeChangeListener {
         doRedraw();
     }
 
+    @Override
     public void zoomChanged() {
         viewportChanged();
     }
 
+    @Override
     public void selectionChanged() {
         synchronized (this) {
             mSelectedNode = mModel.getSelection();

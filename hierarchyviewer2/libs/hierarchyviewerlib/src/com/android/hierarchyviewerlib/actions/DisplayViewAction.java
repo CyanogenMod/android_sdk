@@ -55,6 +55,7 @@ public class DisplayViewAction extends SelectedNodeEnabledAction implements Imag
         HierarchyViewerDirector.getDirector().showCapture(mShell);
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

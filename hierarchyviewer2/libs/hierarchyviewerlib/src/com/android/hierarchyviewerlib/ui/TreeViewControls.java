@@ -84,6 +84,7 @@ public class TreeViewControls extends Composite implements ITreeChangeListener {
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             TreeViewModel.getModel().removeTreeChangeListener(TreeViewControls.this);
         }
@@ -92,10 +93,12 @@ public class TreeViewControls extends Composite implements ITreeChangeListener {
     private SelectionListener mZoomSliderSelectionListener = new SelectionListener() {
         private int oldValue;
 
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             int newValue = mZoomSlider.getSelection();
             if (oldValue != newValue) {
@@ -108,17 +111,21 @@ public class TreeViewControls extends Composite implements ITreeChangeListener {
     };
 
     private ModifyListener mFilterTextModifyListener = new ModifyListener() {
+        @Override
         public void modifyText(ModifyEvent e) {
             HierarchyViewerDirector.getDirector().filterNodes(mFilterText.getText());
         }
     };
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (TreeViewModel.getModel().getTree() != null) {
                     mZoomSlider.setSelection((int) Math
@@ -129,12 +136,15 @@ public class TreeViewControls extends Composite implements ITreeChangeListener {
         });
     }
 
+    @Override
     public void viewportChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mZoomSlider.setSelection((int) Math.round(TreeViewModel.getModel().getZoom() * 10));
             }

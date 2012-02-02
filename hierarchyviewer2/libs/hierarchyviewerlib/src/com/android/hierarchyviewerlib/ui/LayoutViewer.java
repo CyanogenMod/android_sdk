@@ -89,6 +89,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeTreeChangeListener(LayoutViewer.this);
             mTransform.dispose();
@@ -100,6 +101,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
     };
 
     private Listener mResizeListener = new Listener() {
+        @Override
         public void handleEvent(Event e) {
             synchronized (this) {
                 setTransform();
@@ -109,6 +111,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
 
     private MouseListener mMouseListener = new MouseListener() {
 
+        @Override
         public void mouseDoubleClick(MouseEvent e) {
             if (mSelectedNode != null) {
                 HierarchyViewerDirector.getDirector()
@@ -116,6 +119,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void mouseDown(MouseEvent e) {
             boolean selectionChanged = false;
             DrawableViewNode newSelection = null;
@@ -138,6 +142,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
             }
         }
 
+        @Override
         public void mouseUp(MouseEvent e) {
             // pass
         }
@@ -176,6 +181,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
     }
 
     private PaintListener mPaintListener = new PaintListener() {
+        @Override
         public void paintControl(PaintEvent e) {
             synchronized (LayoutViewer.this) {
                 if (mOnBlack) {
@@ -286,6 +292,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
 
     private void doRedraw() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 redraw();
             }
@@ -317,6 +324,7 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
         }
     }
 
+    @Override
     public void selectionChanged() {
         synchronized (this) {
             if (mSelectedNode != null) {
@@ -331,8 +339,10 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
     }
 
     // Note the syncExec and then synchronized... It avoids deadlock
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     if (mSelectedNode != null) {
@@ -350,10 +360,12 @@ public class LayoutViewer extends Canvas implements ITreeChangeListener {
         doRedraw();
     }
 
+    @Override
     public void viewportChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

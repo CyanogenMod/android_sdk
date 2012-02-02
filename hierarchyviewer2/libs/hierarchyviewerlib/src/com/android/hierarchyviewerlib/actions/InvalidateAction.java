@@ -51,6 +51,7 @@ public class InvalidateAction extends SelectedNodeEnabledAction implements Image
         HierarchyViewerDirector.getDirector().invalidateCurrentNode();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

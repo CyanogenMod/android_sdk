@@ -26,36 +26,44 @@ interface TimeBase {
     public long getElapsedInclusiveTime(ProfileData profileData);
 
     public static final class CpuTimeBase implements TimeBase {
+        @Override
         public long getTime(ThreadData threadData) {
             return threadData.getCpuTime();
         }
 
+        @Override
         public long getElapsedInclusiveTime(MethodData methodData) {
             return methodData.getElapsedInclusiveCpuTime();
         }
 
+        @Override
         public long getElapsedExclusiveTime(MethodData methodData) {
             return methodData.getElapsedExclusiveCpuTime();
         }
 
+        @Override
         public long getElapsedInclusiveTime(ProfileData profileData) {
             return profileData.getElapsedInclusiveCpuTime();
         }
     }
 
     public static final class RealTimeBase implements TimeBase {
+        @Override
         public long getTime(ThreadData threadData) {
             return threadData.getRealTime();
         }
 
+        @Override
         public long getElapsedInclusiveTime(MethodData methodData) {
             return methodData.getElapsedInclusiveRealTime();
         }
 
+        @Override
         public long getElapsedExclusiveTime(MethodData methodData) {
             return methodData.getElapsedExclusiveRealTime();
         }
 
+        @Override
         public long getElapsedInclusiveTime(ProfileData profileData) {
             return profileData.getElapsedInclusiveRealTime();
         }

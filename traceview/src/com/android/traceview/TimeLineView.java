@@ -197,18 +197,18 @@ public class TimeLineView extends Composite implements Observer {
         layout.marginWidth = 0;
         layout.verticalSpacing = 1;
         composite.setLayout(layout);
-        
+
         // Create a blank corner space in the upper left corner
         BlankCorner corner = new BlankCorner(composite);
         GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
         gridData.heightHint = topMargin;
         corner.setLayoutData(gridData);
-        
+
         // Add the thread labels below the blank corner.
         mLabels = new RowLabels(composite);
         gridData = new GridData(GridData.FILL_BOTH);
         mLabels.setLayoutData(gridData);
-        
+
         // Create another composite for the right side of the sash
         composite = new Composite(mSashForm, SWT.NONE);
         layout = new GridLayout(1, true /* make columns equal width */);
@@ -229,7 +229,8 @@ public class TimeLineView extends Composite implements Observer {
 
         final ScrollBar vBar = mSurface.getVerticalBar();
         vBar.addListener(SWT.Selection, new Listener() {
-           public void handleEvent(Event e) {
+           @Override
+        public void handleEvent(Event e) {
                mScrollOffsetY = vBar.getSelection();
                Point dim = mSurface.getSize();
                int newScrollOffsetY = computeVisibleRows(dim.y);
@@ -244,6 +245,7 @@ public class TimeLineView extends Composite implements Observer {
 
         final ScrollBar hBar = mSurface.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 mSurface.setScaleFromHorizontalScrollBar(hBar.getSelection());
                 mSurface.redraw();
@@ -251,9 +253,10 @@ public class TimeLineView extends Composite implements Observer {
         });
 
         mSurface.addListener(SWT.Resize, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 Point dim = mSurface.getSize();
-                
+
                 // If we don't need the scroll bar then don't display it.
                 if (dim.y >= mNumRows * rowYSpace) {
                     vBar.setVisible(false);
@@ -265,7 +268,7 @@ public class TimeLineView extends Composite implements Observer {
                     mScrollOffsetY = newScrollOffsetY;
                     vBar.setSelection(newScrollOffsetY);
                 }
-                
+
                 int spaceNeeded = mNumRows * rowYSpace;
                 vBar.setMaximum(spaceNeeded);
                 vBar.setThumb(dim.y);
@@ -291,14 +294,16 @@ public class TimeLineView extends Composite implements Observer {
                 mSurface.mouseDoubleClick(me);
             }
         });
-        
+
         mSurface.addMouseMoveListener(new MouseMoveListener() {
+            @Override
             public void mouseMove(MouseEvent me) {
                 mSurface.mouseMove(me);
             }
         });
 
         mSurface.addMouseWheelListener(new MouseWheelListener() {
+            @Override
             public void mouseScrolled(MouseEvent me) {
                 mSurface.mouseScrolled(me);
             }
@@ -320,14 +325,16 @@ public class TimeLineView extends Composite implements Observer {
                 mTimescale.mouseDoubleClick(me);
             }
         });
-        
+
         mTimescale.addMouseMoveListener(new MouseMoveListener() {
+            @Override
             public void mouseMove(MouseEvent me) {
                 mTimescale.mouseMove(me);
             }
         });
 
         mLabels.addMouseMoveListener(new MouseMoveListener() {
+            @Override
             public void mouseMove(MouseEvent me) {
                 mLabels.mouseMove(me);
             }
@@ -336,6 +343,7 @@ public class TimeLineView extends Composite implements Observer {
         setData(reader.getThreadTimeRecords());
     }
 
+    @Override
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
         if (arg == "TimeLineView")  //$NON-NLS-1$
@@ -388,6 +396,7 @@ public class TimeLineView extends Composite implements Observer {
 
         // Sort the records into increasing start time, and decreasing end time
         Collections.sort(records, new Comparator<Record>() {
+            @Override
             public int compare(Record r1, Record r2) {
                 long start1 = r1.block.getStartTime();
                 long start2 = r2.block.getStartTime();
@@ -485,6 +494,7 @@ public class TimeLineView extends Composite implements Observer {
         Collection<RowData> rv = mRowByName.values();
         mRows = rv.toArray(new RowData[rv.size()]);
         Arrays.sort(mRows, new Comparator<RowData>() {
+            @Override
             public int compare(RowData rd1, RowData rd2) {
                 return (int) (rd2.mElapsed - rd1.mElapsed);
             }
@@ -507,6 +517,7 @@ public class TimeLineView extends Composite implements Observer {
         // increasing start values.
         mSegments = segmentList.toArray(new Segment[segmentList.size()]);
         Arrays.sort(mSegments, new Comparator<Segment>() {
+            @Override
             public int compare(Segment bd1, Segment bd2) {
                 RowData rd1 = bd1.mRowData;
                 RowData rd2 = bd2.mRowData;
@@ -566,6 +577,7 @@ public class TimeLineView extends Composite implements Observer {
         public RowLabels(Composite parent) {
             super(parent, SWT.NO_BACKGROUND);
             addPaintListener(new PaintListener() {
+                @Override
                 public void paintControl(PaintEvent pe) {
                     draw(pe.display, pe.gc);
                 }
@@ -632,12 +644,13 @@ public class TimeLineView extends Composite implements Observer {
             gcImage.dispose();
         }
     }
-    
+
     private class BlankCorner extends Canvas {
         public BlankCorner(Composite parent) {
             //super(parent, SWT.NO_BACKGROUND);
             super(parent, SWT.NONE);
             addPaintListener(new PaintListener() {
+                @Override
                 public void paintControl(PaintEvent pe) {
                     draw(pe.display, pe.gc);
                 }
@@ -664,7 +677,7 @@ public class TimeLineView extends Composite implements Observer {
         private int mDetailsStartY;
         private int mMarkStartX;
         private int mMarkEndX;
-        
+
         /** The space between the colored block and the method name */
         private static final int METHOD_BLOCK_MARGIN = 10;
 
@@ -677,6 +690,7 @@ public class TimeLineView extends Composite implements Observer {
             mMethodStartY = mSmallFontHeight + 1;
             mDetailsStartY = mMethodStartY + mSmallFontHeight + 1;
             addPaintListener(new PaintListener() {
+                @Override
                 public void paintControl(PaintEvent pe) {
                     draw(pe.display, pe.gc);
                 }
@@ -698,7 +712,7 @@ public class TimeLineView extends Composite implements Observer {
         public void setMethodName(String name) {
             mMethodName = name;
         }
-        
+
         public void setMethodColor(Color color) {
             mMethodColor = color;
         }
@@ -711,16 +725,16 @@ public class TimeLineView extends Composite implements Observer {
             me.y = -1;
             mSurface.mouseMove(me);
         }
-        
+
         private void mouseDown(MouseEvent me) {
             mSurface.startScaling(me.x);
             mSurface.redraw();
         }
-        
+
         private void mouseUp(MouseEvent me) {
             mSurface.stopScaling(me.x);
         }
-        
+
         private void mouseDoubleClick(MouseEvent me) {
             mSurface.resetScale();
             mSurface.redraw();
@@ -740,16 +754,16 @@ public class TimeLineView extends Composite implements Observer {
             if (mSurface.drawingSelection()) {
                 drawSelection(display, gcImage);
             }
-            
+
             drawTicks(display, gcImage);
 
             // Draw the vertical bar where the mouse is
             gcImage.setForeground(mColorDarkGray);
             gcImage.drawLine(mMouse.x, timeLineOffsetY, mMouse.x, dim.y);
-            
+
             // Draw the current millseconds
             drawTickLegend(display, gcImage);
-            
+
             // Draw the method name and color, if needed
             drawMethod(display, gcImage);
 
@@ -763,7 +777,7 @@ public class TimeLineView extends Composite implements Observer {
             image.dispose();
             gcImage.dispose();
         }
-        
+
         private void drawSelection(Display display, GC gc) {
             Point dim = getSize();
             gc.setForeground(mColorGray);
@@ -802,7 +816,7 @@ public class TimeLineView extends Composite implements Observer {
             int x1 = dim.x - RightMargin - extent.x;
             gc.drawString(info, x1, 1, true);
         }
-        
+
         private void drawMethod(Display display, GC gc) {
             if (mMethodName == null) {
                 return;
@@ -841,7 +855,7 @@ public class TimeLineView extends Composite implements Observer {
             double tickIncrement = mScaleInfo.getTickIncrement();
             double minorTickIncrement = tickIncrement / 5;
             double pixelsPerRange = mScaleInfo.getPixelsPerRange();
-            
+
             // Draw the initial minor ticks, if any
             if (minVal < minMajorTick) {
                 gc.setForeground(mColorGray);
@@ -855,7 +869,7 @@ public class TimeLineView extends Composite implements Observer {
                     gc.drawLine(x1, timeLineOffsetY, x1, y3);
                 }
             }
-            
+
             if (tickIncrement <= 10) {
                 // TODO avoid rendering the loop when tickIncrement is invalid. It can be zero
                 // or too small.
@@ -907,18 +921,21 @@ public class TimeLineView extends Composite implements Observer {
             initZoomFractionsWithExp();
 
             addPaintListener(new PaintListener() {
+                @Override
                 public void paintControl(PaintEvent pe) {
                     draw(pe.display, pe.gc);
                 }
             });
 
             mZoomAnimator = new Runnable() {
+                @Override
                 public void run() {
                     animateZoom();
                 }
             };
 
             mHighlightAnimator = new Runnable() {
+                @Override
                 public void run() {
                     animateHighlight();
                 }
@@ -944,7 +961,7 @@ public class TimeLineView extends Composite implements Observer {
         private void initZoomFractionsWithSinWave() {
             mZoomFractions = new double[ZOOM_STEPS];
             for (int ii = 0; ii < ZOOM_STEPS; ++ii) {
-                double offset = Math.PI * (double) ii / (double) ZOOM_STEPS;
+                double offset = Math.PI * ii / ZOOM_STEPS;
                 mZoomFractions[ii] = (Math.sin((1.5 * Math.PI + offset)) + 1.0) / 2.0;
                 // System.out.printf("%d %f\n", ii, zoomFractions[ii]);
             }
@@ -961,7 +978,7 @@ public class TimeLineView extends Composite implements Observer {
             mLimitMinVal = minVal;
             mLimitMaxVal = maxVal;
         }
-        
+
         public void resetScale() {
             mScaleInfo.setMinVal(mLimitMinVal);
             mScaleInfo.setMaxVal(mLimitMaxVal);
@@ -1043,7 +1060,7 @@ public class TimeLineView extends Composite implements Observer {
             // Recompute the ticks and strips only if the size has changed,
             // or we scrolled so that a new row is visible.
             Point dim = getSize();
-            if (mStartRow != mCachedStartRow || mEndRow != mCachedEndRow 
+            if (mStartRow != mCachedStartRow || mEndRow != mCachedEndRow
                     || mScaleInfo.getMinVal() != mCachedMinVal
                     || mScaleInfo.getMaxVal() != mCachedMaxVal) {
                 mCachedStartRow = mStartRow;
@@ -1153,7 +1170,7 @@ public class TimeLineView extends Composite implements Observer {
                 int mouseX = mMouse.x - LeftMargin;
                 double mouseXval = mScaleInfo.pixelToValue(mouseX);
                 selections.add(Selection.highlight("Time", mouseXval));  //$NON-NLS-1$
-                
+
                 mSelectionController.change(selections, "TimeLineView");  //$NON-NLS-1$
                 mHighlightMethodData = null;
                 mHighlightCall = (Call) selectBlock;
@@ -1298,7 +1315,7 @@ public class TimeLineView extends Composite implements Observer {
             return mGraphicsState == GraphicsState.Marking
                     || mGraphicsState == GraphicsState.Animating;
         }
-        
+
         private void drawSelection(Display display, GC gc) {
             Point dim = getSize();
             gc.setForeground(mColorGray);
@@ -1860,7 +1877,7 @@ public class TimeLineView extends Composite implements Observer {
         // No defined behavior yet for double-click.
         private void mouseDoubleClick(MouseEvent me) {
         }
-        
+
         public void startScaling(int mouseX) {
             Point dim = mSurface.getSize();
             int x = mouseX;
@@ -1878,7 +1895,7 @@ public class TimeLineView extends Composite implements Observer {
         public void stopScaling(int mouseX) {
             mGraphicsState = GraphicsState.Normal;
         }
-        
+
         private void animateHighlight() {
             mHighlightStep += 1;
             if (mHighlightStep >= HIGHLIGHT_STEPS) {
@@ -2022,7 +2039,7 @@ public class TimeLineView extends Composite implements Observer {
         if (mEndRow >= mNumRows) {
             mEndRow = mNumRows - 1;
         }
-        
+
         return offsetY;
     }
 

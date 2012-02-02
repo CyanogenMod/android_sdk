@@ -42,8 +42,8 @@ import com.android.hierarchyviewerlib.actions.SaveTreeViewAction;
 import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
-import com.android.hierarchyviewerlib.models.TreeViewModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel.IImageChangeListener;
+import com.android.hierarchyviewerlib.models.TreeViewModel;
 import com.android.hierarchyviewerlib.models.TreeViewModel.ITreeChangeListener;
 import com.android.hierarchyviewerlib.ui.DeviceSelector;
 import com.android.hierarchyviewerlib.ui.LayoutViewer;
@@ -57,8 +57,8 @@ import com.android.hierarchyviewerlib.ui.TreeView;
 import com.android.hierarchyviewerlib.ui.TreeViewControls;
 import com.android.hierarchyviewerlib.ui.TreeViewOverview;
 import com.android.menubar.IMenuBarEnhancer;
-import com.android.menubar.MenuBarEnhancer;
 import com.android.menubar.IMenuBarEnhancer.MenuBarMode;
+import com.android.menubar.MenuBarEnhancer;
 
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -136,6 +136,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
      * thing down.
      */
     private static class UncaughtHandler implements Thread.UncaughtExceptionHandler {
+        @Override
         public void uncaughtException(Thread t, Throwable e) {
             Log.e("HierarchyViewer", "shutting down due to uncaught exception");
             Log.e("HierarchyViewer", e);
@@ -573,6 +574,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     public void startTask(final String taskName) {
         mProgressString = taskName;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (mProgressLabel != null && mProgressBar != null) {
                     mProgressLabel.setText(taskName);
@@ -588,6 +590,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     public void endTask() {
         mProgressString = null;
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (mProgressLabel != null && mProgressBar != null) {
                     mProgressLabel.setVisible(false);
@@ -747,10 +750,12 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     }
 
     private SelectionListener deviceViewButtonSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             mDeviceViewButton.setSelection(true);
             showDeviceSelector();
@@ -758,10 +763,12 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     };
 
     private SelectionListener treeViewButtonSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             mTreeViewButton.setSelection(true);
             showTreeView();
@@ -769,10 +776,12 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     };
 
     private SelectionListener pixelPerfectButtonSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             mPixelPerfectButton.setSelection(true);
             showPixelPerfect();
@@ -780,10 +789,12 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     };
 
     private SelectionListener onBlackWhiteSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             if (mLayoutViewer.getOnBlack()) {
                 mLayoutViewer.setOnBlack(false);
@@ -796,20 +807,24 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     };
 
     private SelectionListener showExtrasSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             mLayoutViewer.setShowExtras(mShowExtras.getSelection());
         }
     };
 
     private SelectionListener loadAllViewsSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             mShowExtras.setSelection(true);
             showExtrasSelectionListener.widgetSelected(null);
@@ -817,12 +832,15 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     };
 
     private ITreeChangeListener mTreeChangeListener = new ITreeChangeListener() {
+        @Override
         public void selectionChanged() {
             // pass
         }
 
+        @Override
         public void treeChanged() {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (TreeViewModel.getModel().getTree() == null) {
                         showDeviceSelector();
@@ -835,10 +853,12 @@ public class HierarchyViewerApplication extends ApplicationWindow {
             });
         }
 
+        @Override
         public void viewportChanged() {
             // pass
         }
 
+        @Override
         public void zoomChanged() {
             // pass
         }
@@ -846,20 +866,25 @@ public class HierarchyViewerApplication extends ApplicationWindow {
 
     private IImageChangeListener mImageChangeListener = new IImageChangeListener() {
 
+        @Override
         public void crosshairMoved() {
             // pass
         }
 
+        @Override
         public void treeChanged() {
             // pass
         }
 
+        @Override
         public void imageChanged() {
             // pass
         }
 
+        @Override
         public void imageLoaded() {
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (PixelPerfectModel.getModel().getImage() == null) {
                         mPixelPerfectButton.setEnabled(false);
@@ -872,18 +897,22 @@ public class HierarchyViewerApplication extends ApplicationWindow {
             });
         }
 
+        @Override
         public void overlayChanged() {
             // pass
         }
 
+        @Override
         public void overlayTransparencyChanged() {
             // pass
         }
 
+        @Override
         public void selectionChanged() {
             // pass
         }
 
+        @Override
         public void zoomChanged() {
             // pass
         }

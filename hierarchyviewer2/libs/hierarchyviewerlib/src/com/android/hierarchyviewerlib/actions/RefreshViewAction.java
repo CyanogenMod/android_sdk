@@ -51,6 +51,7 @@ public class RefreshViewAction extends TreeViewEnabledAction implements ImageAct
         HierarchyViewerDirector.getDirector().reloadViewHierarchy();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

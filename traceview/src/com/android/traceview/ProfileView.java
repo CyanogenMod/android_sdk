@@ -96,6 +96,7 @@ public class ProfileView extends Composite implements Observer {
         // Add a listener to the tree so that we can make the row
         // height smaller.
         tree.addListener(SWT.MeasureItem, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 int fontHeight = event.gc.getFontMetrics().getHeight();
                 event.height = fontHeight;
@@ -124,6 +125,7 @@ public class ProfileView extends Composite implements Observer {
         mColorMatch = mSearchBox.getBackground();
 
         mSearchBox.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent ev) {
                 String query = mSearchBox.getText();
                 if (query.length() == 0)
@@ -183,6 +185,7 @@ public class ProfileView extends Composite implements Observer {
         // on a method that is a child or parent and jump to that method.
         mTreeViewer
                 .addSelectionChangedListener(new ISelectionChangedListener() {
+                    @Override
                     public void selectionChanged(SelectionChangedEvent ev) {
                         ISelection sel = ev.getSelection();
                         if (sel.isEmpty())
@@ -208,6 +211,7 @@ public class ProfileView extends Composite implements Observer {
         // Add a tree listener so that we can expand the parents and children
         // of a method when a method is expanded.
         mTreeViewer.addTreeListener(new ITreeViewerListener() {
+            @Override
             public void treeExpanded(TreeExpansionEvent event) {
                 Object element = event.getElement();
                 if (element instanceof MethodData) {
@@ -215,11 +219,13 @@ public class ProfileView extends Composite implements Observer {
                     expandNode(md);
                 }
             }
+            @Override
             public void treeCollapsed(TreeExpansionEvent event) {
             }
         });
 
         tree.addListener(SWT.MouseDown, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 Point point = new Point(event.x, event.y);
                 TreeItem treeItem = tree.getItem(point);
@@ -260,6 +266,7 @@ public class ProfileView extends Composite implements Observer {
         highlightMethod(md, false);
     }
 
+    @Override
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
         if (arg == "ProfileView")

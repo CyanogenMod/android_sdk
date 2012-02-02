@@ -48,6 +48,7 @@ public class TreeColumnResizer {
     }
 
     private Listener resizeListener = new Listener() {
+        @Override
         public void handleEvent(Event e) {
             if (mColumn1Width == 0 && mColumn2Width == 0) {
                 mColumn1Width = (mControl.getBounds().width - 18) / 2;
@@ -83,6 +84,7 @@ public class TreeColumnResizer {
     };
 
     private Listener column1ResizeListener = new Listener() {
+        @Override
         public void handleEvent(Event e) {
             int widthDif = mColumn1Width - mColumn1.getWidth();
             mColumn1Width -= widthDif;

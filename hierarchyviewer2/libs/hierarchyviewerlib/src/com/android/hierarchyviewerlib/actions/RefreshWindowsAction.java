@@ -52,6 +52,7 @@ public class RefreshWindowsAction extends Action implements ImageAction {
         HierarchyViewerDirector.getDirector().refreshWindows();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

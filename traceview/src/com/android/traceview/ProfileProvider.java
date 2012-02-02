@@ -16,10 +16,6 @@
 
 package com.android.traceview;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.regex.Pattern;
-
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -35,6 +31,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.regex.Pattern;
 
 class ProfileProvider implements ITreeContentProvider {
 
@@ -162,6 +162,7 @@ class ProfileProvider implements ITreeContentProvider {
         return mColumnAlignments;
     }
 
+    @Override
     public Object[] getChildren(Object element) {
         if (element instanceof MethodData) {
             MethodData md = (MethodData) element;
@@ -174,10 +175,12 @@ class ProfileProvider implements ITreeContentProvider {
         return new Object[0];
     }
 
+    @Override
     public Object getParent(Object element) {
         return null;
     }
 
+    @Override
     public boolean hasChildren(Object element) {
         if (element instanceof MethodData)
             return true;
@@ -186,13 +189,16 @@ class ProfileProvider implements ITreeContentProvider {
         return false;
     }
 
+    @Override
     public Object[] getElements(Object element) {
         return mRoots;
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
     }
 
@@ -225,6 +231,7 @@ class ProfileProvider implements ITreeContentProvider {
             traceUnits = mReader.getTraceUnits();
         }
 
+        @Override
         public String getColumnText(Object element, int col) {
             if (element instanceof MethodData) {
                 MethodData md = (MethodData) element;
@@ -359,6 +366,7 @@ class ProfileProvider implements ITreeContentProvider {
             return "col" + col;
         }
 
+        @Override
         public Image getColumnImage(Object element, int col) {
             if (col != COL_NAME)
                 return null;
@@ -374,10 +382,12 @@ class ProfileProvider implements ITreeContentProvider {
             return null;
         }
 
+        @Override
         public Color getForeground(Object element) {
             return null;
         }
 
+        @Override
         public Color getBackground(Object element) {
             if (element instanceof ProfileData) {
                 ProfileData pd = (ProfileData) element;

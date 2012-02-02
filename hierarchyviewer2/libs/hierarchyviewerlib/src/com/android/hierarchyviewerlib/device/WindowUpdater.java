@@ -128,6 +128,7 @@ public class WindowUpdater {
             this.device = device;
         }
 
+        @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 DeviceConnection connection = null;

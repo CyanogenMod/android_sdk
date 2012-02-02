@@ -30,8 +30,10 @@ public class SelectedNodeEnabledAction extends Action implements ITreeChangeList
         TreeViewModel.getModel().addTreeChangeListener(this);
     }
 
+    @Override
     public void selectionChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 setEnabled(TreeViewModel.getModel().getTree() != null
                         && TreeViewModel.getModel().getSelection() != null);
@@ -39,8 +41,10 @@ public class SelectedNodeEnabledAction extends Action implements ITreeChangeList
         });
     }
 
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 setEnabled(TreeViewModel.getModel().getTree() != null
                         && TreeViewModel.getModel().getSelection() != null);
@@ -48,9 +52,11 @@ public class SelectedNodeEnabledAction extends Action implements ITreeChangeList
         });
     }
 
+    @Override
     public void viewportChanged() {
     }
 
+    @Override
     public void zoomChanged() {
     }
 }

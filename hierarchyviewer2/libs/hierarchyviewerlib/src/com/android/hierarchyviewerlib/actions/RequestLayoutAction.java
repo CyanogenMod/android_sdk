@@ -51,6 +51,7 @@ public class RequestLayoutAction extends SelectedNodeEnabledAction implements Im
         HierarchyViewerDirector.getDirector().relayoutCurrentNode();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

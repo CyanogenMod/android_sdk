@@ -227,6 +227,7 @@ public class NewSetupTask extends Task {
         // load up the sdk targets.
         final ArrayList<String> messages = new ArrayList<String>();
         SdkManager manager = SdkManager.createManager(sdkOsPath, new ISdkLog() {
+            @Override
             public void error(Throwable t, String errorFormat, Object... args) {
                 if (errorFormat != null) {
                     messages.add(String.format("Error: " + errorFormat, args));
@@ -236,10 +237,12 @@ public class NewSetupTask extends Task {
                 }
             }
 
+            @Override
             public void printf(String msgFormat, Object... args) {
                 messages.add(String.format(msgFormat, args));
             }
 
+            @Override
             public void warning(String warningFormat, Object... args) {
                 messages.add(String.format("Warning: " + warningFormat, args));
             }
@@ -446,6 +449,7 @@ public class NewSetupTask extends Task {
         StringBuilder packageStrBuilder = new StringBuilder();
 
         FilenameFilter filter = new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return name.toLowerCase().endsWith(".jar");
             }
@@ -559,6 +563,7 @@ public class NewSetupTask extends Task {
 
         // get the top level list of library dependencies.
         List<File> topLevelLibraries = getDirectDependencies(baseDir, new IPropertySource() {
+            @Override
             public String getProperty(String name) {
                 return antProject.getProperty(name);
             }
@@ -589,6 +594,7 @@ public class NewSetupTask extends Task {
 
             // get its libraries
             List<File> dependencies = getDirectDependencies(library, new IPropertySource() {
+                @Override
                 public String getProperty(String name) {
                     return projectProp.getProperty(name);
                 }

@@ -18,16 +18,16 @@ package com.android.hierarchyviewerlib;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.hierarchyviewerlib.device.DeviceBridge;
+import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
 import com.android.hierarchyviewerlib.device.ViewNode;
 import com.android.hierarchyviewerlib.device.Window;
 import com.android.hierarchyviewerlib.device.WindowUpdater;
-import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
 import com.android.hierarchyviewerlib.device.WindowUpdater.IWindowChangeListener;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
@@ -129,8 +129,10 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public abstract void executeInBackground(String taskName, Runnable task);
 
+    @Override
     public void deviceConnected(final IDevice device) {
         executeInBackground("Connecting device", new Runnable() {
+            @Override
             public void run() {
                 if (DeviceSelectionModel.getModel().containsDevice(device)) {
                     windowsChanged(device);
@@ -174,8 +176,10 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     }
 
+    @Override
     public void deviceDisconnected(final IDevice device) {
         executeInBackground("Disconnecting device", new Runnable() {
+            @Override
             public void run() {
                 ViewServerInfo viewServerInfo = DeviceBridge.getViewServerInfo(device);
                 if (viewServerInfo != null && viewServerInfo.protocolVersion >= 3) {
@@ -196,14 +200,17 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         });
     }
 
+    @Override
     public void deviceChanged(IDevice device, int changeMask) {
         if ((changeMask & IDevice.CHANGE_STATE) != 0 && device.isOnline()) {
             deviceConnected(device);
         }
     }
 
+    @Override
     public void windowsChanged(final IDevice device) {
         executeInBackground("Refreshing windows", new Runnable() {
+            @Override
             public void run() {
                 if (!DeviceBridge.isViewServerRunning(device)) {
                     if (!DeviceBridge.startViewServer(device)) {
@@ -217,8 +224,10 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         });
     }
 
+    @Override
     public void focusChanged(final IDevice device) {
         executeInBackground("Updating focus", new Runnable() {
+            @Override
             public void run() {
                 int focusedWindow = DeviceBridge.getFocusedWindow(device);
                 DeviceSelectionModel.getModel().updateFocusedWindow(device, focusedWindow);
@@ -242,6 +251,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             }
             if (proceed) {
                 executeInBackground("Refreshing pixel perfect screenshot", new Runnable() {
+                    @Override
                     public void run() {
                         Image screenshotImage = getScreenshotImage(device);
                         if (screenshotImage != null) {
@@ -261,6 +271,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         final IDevice device = PixelPerfectModel.getModel().getDevice();
         if (device != null) {
             executeInBackground("Refreshing pixel perfect tree", new Runnable() {
+                @Override
                 public void run() {
                     ViewNode viewNode =
                             DeviceBridge.loadWindowData(Window.getFocusedWindow(device));
@@ -275,6 +286,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void loadPixelPerfectData(final IDevice device) {
         executeInBackground("Loading pixel perfect data", new Runnable() {
+            @Override
             public void run() {
                 Image screenshotImage = getScreenshotImage(device);
                 if (screenshotImage != null) {
@@ -299,6 +311,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             }
             final ImageContainer imageContainer = new ImageContainer();
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     ImageData imageData =
                             new ImageData(screenshot.width, screenshot.height, screenshot.bpp,
@@ -321,6 +334,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void loadViewTreeData(final Window window) {
         executeInBackground("Loading view hierarchy", new Runnable() {
+            @Override
             public void run() {
 
                 mFilterText = ""; //$NON-NLS-1$
@@ -337,6 +351,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void loadOverlay(final Shell shell) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 FileDialog fileDialog = new FileDialog(shell, SWT.OPEN);
                 fileDialog.setFilterExtensions(new String[] {
@@ -361,11 +376,13 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void showCapture(final Shell shell, final ViewNode viewNode) {
         executeInBackground("Capturing node", new Runnable() {
+            @Override
             public void run() {
                 final Image image = loadCapture(viewNode);
                 if (image != null) {
 
                     Display.getDefault().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             CaptureDisplay.show(shell, viewNode, image);
                         }
@@ -388,6 +405,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void loadCaptureInBackground(final ViewNode viewNode) {
         executeInBackground("Capturing node", new Runnable() {
+            @Override
             public void run() {
                 loadCapture(viewNode);
             }
@@ -403,6 +421,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void refreshWindows() {
         executeInBackground("Refreshing windows", new Runnable() {
+            @Override
             public void run() {
                 IDevice[] devicesA = DeviceSelectionModel.getModel().getDevices();
                 IDevice[] devicesB = DeviceBridge.getDevices();
@@ -441,6 +460,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void saveTreeView(final Shell shell) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 final DrawableViewNode viewNode = TreeViewModel.getModel().getTree();
                 if (viewNode != null) {
@@ -455,6 +475,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                     final String fileName = fileDialog.open();
                     if (fileName != null) {
                         executeInBackground("Saving tree view", new Runnable() {
+                            @Override
                             public void run() {
                                 Image image = TreeView.paintToImage(viewNode);
                                 ImageLoader imageLoader = new ImageLoader();
@@ -482,6 +503,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void savePixelPerfect(final Shell shell) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 Image untouchableImage = PixelPerfectModel.getModel().getImage();
                 if (untouchableImage != null) {
@@ -497,6 +519,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                     final String fileName = fileDialog.open();
                     if (fileName != null) {
                         executeInBackground("Saving pixel perfect", new Runnable() {
+                            @Override
                             public void run() {
                                 ImageLoader imageLoader = new ImageLoader();
                                 imageLoader.data = new ImageData[] {
@@ -522,6 +545,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void capturePSD(final Shell shell) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 final Window window = TreeViewModel.getModel().getWindow();
                 if (window != null) {
@@ -536,6 +560,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                     final String fileName = fileDialog.open();
                     if (fileName != null) {
                         executeInBackground("Saving window layers", new Runnable() {
+                            @Override
                             public void run() {
                                 PsdFile psdFile = DeviceBridge.captureLayers(window);
                                 if (psdFile != null) {
@@ -568,6 +593,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
         if (selectedNode != null) {
             executeInBackground("Invalidating view", new Runnable() {
+                @Override
                 public void run() {
                     DeviceBridge.invalidateView(selectedNode.viewNode);
                 }
@@ -579,6 +605,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
         if (selectedNode != null) {
             executeInBackground("Request layout", new Runnable() {
+                @Override
                 public void run() {
                     DeviceBridge.requestLayout(selectedNode.viewNode);
                 }
@@ -590,6 +617,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
         if (selectedNode != null) {
             executeInBackground("Dump displaylist", new Runnable() {
+                @Override
                 public void run() {
                     DeviceBridge.outputDisplayList(selectedNode.viewNode);
                 }
@@ -599,6 +627,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
 
     public void loadAllViews() {
         executeInBackground("Loading all views", new Runnable() {
+            @Override
             public void run() {
                 DrawableViewNode tree = TreeViewModel.getModel().getTree();
                 if (tree != null) {

@@ -164,6 +164,7 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             PixelPerfectModel.getModel().removeImageChangeListener(PixelPerfectControls.this);
         }
@@ -172,10 +173,12 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
     private SelectionListener overlaySliderSelectionListener = new SelectionListener() {
         private int oldValue;
 
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             int newValue = mOverlaySlider.getSelection();
             if (oldValue != newValue) {
@@ -190,10 +193,12 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
     private SelectionListener mRefreshSliderSelectionListener = new SelectionListener() {
         private int oldValue;
 
-        public void widgetDefaultSelected(SelectionEvent e) {
+        @Override
+        public void widgetDefaultSelected(final SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             int newValue = mAutoRefreshSlider.getSelection();
             if (oldValue != newValue) {
@@ -205,10 +210,12 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
     private SelectionListener mZoomSliderSelectionListener = new SelectionListener() {
         private int oldValue;
 
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             int newValue = mZoomSlider.getSelection();
             if (oldValue != newValue) {
@@ -220,20 +227,25 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
         }
     };
 
+    @Override
     public void crosshairMoved() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void imageChanged() {
         // pass
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 Image overlayImage = PixelPerfectModel.getModel().getOverlayImage();
                 mOverlaySlider.setEnabled(overlayImage != null);
@@ -245,8 +257,10 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
         });
     }
 
+    @Override
     public void overlayChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 Image overlayImage = PixelPerfectModel.getModel().getOverlayImage();
                 mOverlaySlider.setEnabled(overlayImage != null);
@@ -254,8 +268,10 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
         });
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mOverlaySlider.setSelection((int) (PixelPerfectModel.getModel()
                         .getOverlayTransparency() * 100));
@@ -263,12 +279,15 @@ public class PixelPerfectControls extends Composite implements IImageChangeListe
         });
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mZoomSlider.setSelection(PixelPerfectModel.getModel().getZoom());
             }

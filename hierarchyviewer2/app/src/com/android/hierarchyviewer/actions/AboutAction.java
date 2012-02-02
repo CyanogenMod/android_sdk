@@ -58,6 +58,7 @@ public class AboutAction extends Action implements ImageAction {
         new AboutDialog(mShell).open();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

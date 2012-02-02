@@ -55,6 +55,7 @@ public class LoadOverlayAction extends PixelPerfectEnabledAction implements Imag
         HierarchyViewerDirector.getDirector().loadOverlay(mShell);
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

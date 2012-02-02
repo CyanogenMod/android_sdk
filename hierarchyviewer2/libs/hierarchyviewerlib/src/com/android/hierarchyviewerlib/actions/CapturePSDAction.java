@@ -55,6 +55,7 @@ public class CapturePSDAction extends TreeViewEnabledAction implements ImageActi
         HierarchyViewerDirector.getDirector().capturePSD(mShell);
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }

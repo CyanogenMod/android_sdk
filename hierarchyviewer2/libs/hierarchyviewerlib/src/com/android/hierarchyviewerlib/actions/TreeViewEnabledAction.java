@@ -29,21 +29,26 @@ public class TreeViewEnabledAction extends Action implements ITreeChangeListener
         TreeViewModel.getModel().addTreeChangeListener(this);
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 setEnabled(TreeViewModel.getModel().getTree() != null);
             }
         });
     }
 
+    @Override
     public void viewportChanged() {
     }
 
+    @Override
     public void zoomChanged() {
     }
 }

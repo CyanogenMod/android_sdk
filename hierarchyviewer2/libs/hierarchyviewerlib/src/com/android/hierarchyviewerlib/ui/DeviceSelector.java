@@ -67,6 +67,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     private boolean mDoPixelPerfectStuff;
 
     private class ContentProvider implements ITreeContentProvider, ILabelProvider, IFontProvider {
+        @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement instanceof IDevice && mDoTreeViewStuff) {
                 Window[] list = mModel.getWindows((IDevice) parentElement);
@@ -77,6 +78,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return new Object[0];
         }
 
+        @Override
         public Object getParent(Object element) {
             if (element instanceof Window) {
                 return ((Window) element).getDevice();
@@ -84,6 +86,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             if (element instanceof IDevice && mDoTreeViewStuff) {
                 Window[] list = mModel.getWindows((IDevice) element);
@@ -94,6 +97,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return false;
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof DeviceSelectionModel) {
                 return mModel.getDevices();
@@ -101,14 +105,17 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return new Object[0];
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
 
+        @Override
         public Image getImage(Object element) {
             if (element instanceof IDevice) {
                 if (((IDevice) element).isEmulator()) {
@@ -119,6 +126,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return null;
         }
 
+        @Override
         public String getText(Object element) {
             if (element instanceof IDevice) {
                 return ((IDevice) element).toString();
@@ -128,6 +136,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return null;
         }
 
+        @Override
         public Font getFont(Object element) {
             if (element instanceof Window) {
                 int focusedWindow = mModel.getFocusedWindow(((Window) element).getDevice());
@@ -138,15 +147,18 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -202,6 +214,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeWindowChangeListener(DeviceSelector.this);
             mBoldFont.dispose();
@@ -238,6 +251,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
             this.mDoTreeViewStuff = doTreeViewStuff;
             this.mDoPixelPerfectStuff = doPixelPerfectStuff;
             Display.getDefault().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     mTreeViewer.refresh();
                     if (expandAll) {
@@ -248,8 +262,10 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         }
     }
 
+    @Override
     public void deviceConnected(final IDevice device) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mTreeViewer.refresh();
                 mTreeViewer.setExpandedState(device, true);
@@ -257,8 +273,10 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         });
     }
 
+    @Override
     public void deviceChanged(final IDevice device) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 TreeSelection selection = (TreeSelection) mTreeViewer.getSelection();
                 mTreeViewer.refresh(device);
@@ -270,16 +288,20 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         });
     }
 
+    @Override
     public void deviceDisconnected(final IDevice device) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mTreeViewer.refresh();
             }
         });
     }
 
+    @Override
     public void focusChanged(final IDevice device) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 TreeSelection selection = (TreeSelection) mTreeViewer.getSelection();
                 mTreeViewer.refresh(device);
@@ -291,10 +313,12 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         });
     }
 
+    @Override
     public void selectionChanged(IDevice device, Window window) {
         // pass
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object selection = ((TreeItem) e.item).getData();
         if (selection instanceof IDevice && mDoPixelPerfectStuff) {
@@ -304,6 +328,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         }
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Object selection = ((TreeItem) e.item).getData();
         if (selection instanceof IDevice) {

@@ -50,6 +50,7 @@ class ThreadData implements TimeLineView.Row {
         mStack.add(mRootCall);
     }
 
+    @Override
     public String getName() {
         return mName;
     }
@@ -154,6 +155,7 @@ class ThreadData implements TimeLineView.Row {
         return mName;
     }
 
+    @Override
     public int getId() {
         return mId;
     }

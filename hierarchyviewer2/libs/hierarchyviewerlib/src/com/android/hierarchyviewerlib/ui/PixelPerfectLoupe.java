@@ -97,6 +97,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
     }
 
     private DisposeListener mDisposeListener = new DisposeListener() {
+        @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeImageChangeListener(PixelPerfectLoupe.this);
             mCrosshairColor.dispose();
@@ -109,14 +110,17 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
 
     private MouseListener mMouseListener = new MouseListener() {
 
+        @Override
         public void mouseDoubleClick(MouseEvent e) {
             // pass
         }
 
+        @Override
         public void mouseDown(MouseEvent e) {
             handleMouseEvent(e);
         }
 
+        @Override
         public void mouseUp(MouseEvent e) {
             //
         }
@@ -124,6 +128,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
     };
 
     private MouseWheelListener mMouseWheelListener = new MouseWheelListener() {
+        @Override
         public void mouseScrolled(MouseEvent e) {
             int newZoom = -1;
             synchronized (PixelPerfectLoupe.this) {
@@ -164,6 +169,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
 
     private KeyListener mKeyListener = new KeyListener() {
 
+        @Override
         public void keyPressed(KeyEvent e) {
             boolean crosshairMoved = false;
             synchronized (PixelPerfectLoupe.this) {
@@ -201,6 +207,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
             }
         }
 
+        @Override
         public void keyReleased(KeyEvent e) {
             // pass
         }
@@ -208,6 +215,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
     };
 
     private PaintListener mPaintListener = new PaintListener() {
+        @Override
         public void paintControl(PaintEvent e) {
             synchronized (PixelPerfectLoupe.this) {
                 e.gc.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
@@ -277,6 +285,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
 
     private void doRedraw() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 redraw();
             }
@@ -295,8 +304,10 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
     }
 
     // Note the syncExec and then synchronized... It avoids deadlock
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     loadImage();
@@ -310,8 +321,10 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
         doRedraw();
     }
 
+    @Override
     public void imageChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     loadImage();
@@ -321,6 +334,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
         doRedraw();
     }
 
+    @Override
     public void crosshairMoved() {
         synchronized (this) {
             mCrosshairLocation = mModel.getCrosshairLocation();
@@ -328,16 +342,20 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
         doRedraw();
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 synchronized (this) {
                     if (mGrid != null) {
@@ -354,6 +372,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
         doRedraw();
     }
 
+    @Override
     public void overlayChanged() {
         synchronized (this) {
             mOverlayImage = mModel.getOverlayImage();
@@ -362,6 +381,7 @@ public class PixelPerfectLoupe extends Canvas implements IImageChangeListener {
         doRedraw();
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         synchronized (this) {
             mOverlayTransparency = mModel.getOverlayTransparency();

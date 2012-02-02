@@ -47,6 +47,7 @@ public class ActionButton implements IPropertyChangeListener, SelectionListener 
         mButton.setEnabled(this.mAction.isEnabled());
     }
 
+    @Override
     public void propertyChange(PropertyChangeEvent e) {
         if (e.getProperty().toUpperCase().equals("ENABLED")) { //$NON-NLS-1$
             mButton.setEnabled((Boolean) e.getNewValue());
@@ -59,10 +60,12 @@ public class ActionButton implements IPropertyChangeListener, SelectionListener 
         mButton.setLayoutData(data);
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         // pass
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (mAction.getStyle() == Action.AS_CHECK_BOX) {
             mAction.setChecked(mButton.getSelection());

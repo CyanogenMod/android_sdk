@@ -59,28 +59,35 @@ public class LoadViewHierarchyAction extends Action implements ImageAction, IWin
         HierarchyViewerDirector.getDirector().loadViewHierarchy();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }
 
+    @Override
     public void deviceChanged(IDevice device) {
         // pass
     }
 
+    @Override
     public void deviceConnected(IDevice device) {
         // pass
     }
 
+    @Override
     public void deviceDisconnected(IDevice device) {
         // pass
     }
 
+    @Override
     public void focusChanged(IDevice device) {
         // pass
     }
 
+    @Override
     public void selectionChanged(final IDevice device, final Window window) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 LoadViewHierarchyAction.getAction().setEnabled(window != null);
             }

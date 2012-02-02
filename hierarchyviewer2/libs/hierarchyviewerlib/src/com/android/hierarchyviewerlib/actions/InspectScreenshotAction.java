@@ -59,28 +59,35 @@ public class InspectScreenshotAction extends Action implements ImageAction, IWin
         HierarchyViewerDirector.getDirector().inspectScreenshot();
     }
 
+    @Override
     public Image getImage() {
         return mImage;
     }
 
+    @Override
     public void deviceChanged(IDevice device) {
         // pass
     }
 
+    @Override
     public void deviceConnected(IDevice device) {
         // pass
     }
 
+    @Override
     public void deviceDisconnected(IDevice device) {
         // pass
     }
 
+    @Override
     public void focusChanged(IDevice device) {
         // pass
     }
 
+    @Override
     public void selectionChanged(final IDevice device, final Window window) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 InspectScreenshotAction.getAction().setEnabled(device != null);
             }

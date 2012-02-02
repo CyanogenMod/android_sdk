@@ -45,10 +45,12 @@ public class AidlExecTask extends MultiFilesTask {
 
     private class AidlProcessor implements SourceProcessor {
 
+        @Override
         public String getSourceFileExtension() {
             return "aidl";
         }
 
+        @Override
         public void process(String filePath, String sourceFolder,
                 List<String> sourceFolders, Project taskProject) {
             ExecTask task = new ExecTask();
@@ -75,6 +77,7 @@ public class AidlExecTask extends MultiFilesTask {
             task.execute();
         }
 
+        @Override
         public void displayMessage(DisplayType type, int count) {
             switch (type) {
                 case FOUND:

@@ -128,6 +128,7 @@ public class CaptureDisplay {
 
     private static PaintListener sPaintListener = new PaintListener() {
 
+        @Override
         public void paintControl(PaintEvent e) {
             if (sOnWhite.getSelection()) {
                 e.gc.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
@@ -176,10 +177,12 @@ public class CaptureDisplay {
     };
 
     private static SelectionListener sWhiteSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             sOnWhite.setSelection(true);
             sOnBlack.setSelection(false);
@@ -188,10 +191,12 @@ public class CaptureDisplay {
     };
 
     private static SelectionListener sBlackSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             sOnBlack.setSelection(true);
             sOnWhite.setSelection(false);
@@ -200,10 +205,12 @@ public class CaptureDisplay {
     };
 
     private static SelectionListener sExtrasSelectionListener = new SelectionListener() {
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
             // pass
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             sCanvas.redraw();
         }
