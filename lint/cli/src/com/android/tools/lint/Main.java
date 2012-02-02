@@ -148,6 +148,16 @@ public class Main extends LintClient {
 
             if (arg.equals(ARG_HELP)
                     || arg.equals("-h") || arg.equals("-?")) { //$NON-NLS-1$ //$NON-NLS-2$
+                if (index < args.length - 1) {
+                    String topic = args[index + 1];
+                    if (topic.equals("suppress") || topic.equals("ignore")) {
+                        printHelpTopicSuppress();
+                        System.exit(ERRNO_HELP);
+                    } else {
+                        System.err.println(String.format("Unknown help topic \"%1$s\"", topic));
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                }
                 printUsage(System.out);
                 System.exit(ERRNO_HELP);
             } else if (arg.equals(ARG_LISTIDS)) {
@@ -468,6 +478,61 @@ public class Main extends LintClient {
         System.exit(mFatal ? ERRNO_ERRORS : 0);
     }
 
+    private void printHelpTopicSuppress() {
+        String help = wrap(
+            "Lint errors can be suppressed in a variety of ways:\n" +
+            "\n" +
+            "1. With a @SuppressLint annotation in the Java code\n" +
+            "2. With a lint.xml configuration file in the project\n" +
+            "3. With a lint.xml configuration file passed to lint " +
+                "via the " + ARG_CONFIG + " flag\n" +
+            "4. With the " + ARG_IGNORE + " flag passed to lint.\n" +
+            "\n" +
+            "To suppress a lint warning with an annotation, add " +
+            "a @SuppressLint(\"id\") annotation on the class, method " +
+            "or variable declaration closest to the warning instance " +
+            "you want to disable. The id can be one or more issue " +
+            "id's, such as \"UnusedResources\" or {\"UnusedResources\"," +
+            "\"UnusedIds\"}, or it can be \"all\" to suppress all lint " +
+            "warnings in the given scope.\n" +
+            "\n" +
+            "To suppress lint warnings with a configuration XML file, " +
+            "create a file named lint.xml and place it at the root " +
+            "directory of the project in which it applies. (If you " +
+            "use the Eclipse plugin's Lint view, you can suppress " +
+            "errors there via the toolbar and Eclipse will create the " +
+            "lint.xml file for you.).\n" +
+            "\n" +
+            "The format of the lint.xml file is something like the " +
+            "following:\n" +
+            "\n" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<lint>\n" +
+            "    <!-- Disable this given check in this project -->\n" +
+            "    <issue id=\"IconMissingDensityFolder\" severity=\"ignore\" />\n" +
+            "\n" +
+            "    <!-- Ignore the ObsoleteLayoutParam issue in the given files -->\n" +
+            "    <issue id=\"ObsoleteLayoutParam\">\n" +
+            "        <ignore path=\"res/layout/activation.xml\" />\n" +
+            "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n" +
+            "    </issue>\n" +
+            "\n" +
+            "    <!-- Ignore the UselessLeaf issue in the given file -->\n" +
+            "    <issue id=\"UselessLeaf\">\n" +
+            "        <ignore path=\"res/layout/main.xml\" />\n" +
+            "    </issue>\n" +
+            "\n" +
+            "    <!-- Change the severity of hardcoded strings to \"error\" -->\n" +
+            "    <issue id=\"HardcodedText\" severity=\"error\" />\n" +
+            "</lint>\n" +
+            "\n" +
+            "To suppress lint checks from the command line, pass the " + ARG_IGNORE +  " " +
+            "flag with a comma separated list of ids to be suppressed, such as:\n" +
+            "\"lint --ignore UnusedResources,UselessLeaf /my/project/path\"\n");
+
+        System.out.println(help);
+    }
+
     private void printVersion() {
         String binDir = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
         if (binDir != null && binDir.length() > 0) {
@@ -639,6 +704,7 @@ public class Main extends LintClient {
 
         printUsage(out, new String[] {
             ARG_HELP, "This message.",
+            ARG_HELP + " <topic>", "Help on the given topic, such as \"suppress\".",
             ARG_LISTIDS, "List the available issue id's and exit.",
             ARG_VERSION, "Output version information and exit.",
             ARG_SHOW, "List available issues along with full explanations.",

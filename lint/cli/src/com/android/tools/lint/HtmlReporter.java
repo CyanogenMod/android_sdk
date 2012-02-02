@@ -308,9 +308,12 @@ class HtmlReporter extends Reporter {
                 }
 
                 mWriter.write("<br/>");                                  //$NON-NLS-1$
-                mWriter.write("To suppress this error, run lint with <code>--ignore ");
+                mWriter.write("To suppress this error, see ");
+                mWriter.write("<code>lint --help suppress</code> ");     //$NON-NLS-1$
+                mWriter.write("and use id ");
+                mWriter.write("\"<code>");                               //$NON-NLS-1$
                 mWriter.write(issue.getId());
-                mWriter.write("</code><br/>");                           //$NON-NLS-1$
+                mWriter.write("</code>\"<br/>");                         //$NON-NLS-1$
 
                 mWriter.write("</div>");                                 //$NON-NLS-1$
             }
