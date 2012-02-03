@@ -145,14 +145,14 @@ class HtmlReporter extends Reporter {
                     previousCategory = issue.getCategory();
                     mWriter.write("\n<a name=\"");                       //$NON-NLS-1$
                     mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("\">\n");                              //$NON-NLS-1$
+                    mWriter.write("\"></a>\n");                          //$NON-NLS-1$
                     mWriter.write("<div class=\"category\">");           //$NON-NLS-1$
                     mWriter.write(issue.getCategory().getFullName());
                     mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
                     mWriter.write("</div>\n");                           //$NON-NLS-1$
                 }
 
-                mWriter.write("<a name=\"" + issue.getId() + "\">\n");  //$NON-NLS-1$ //$NON-NLS-2$
+                mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n"); //$NON-NLS-1$ //$NON-NLS-2$
                 mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
 
                 // Explain this issue
@@ -184,9 +184,9 @@ class HtmlReporter extends Reporter {
                     String url = null;
                     if (warning.path != null) {
                         url = writeLocation(warning.file, warning.path, warning.line);
+                        mWriter.write(':');
+                        mWriter.write(' ');
                     }
-                    mWriter.write(':');
-                    mWriter.write(' ');
 
                     // Is the URL for a single image? If so, place it here near the top
                     // of the error floating on the right. If there are multiple images,
@@ -294,6 +294,8 @@ class HtmlReporter extends Reporter {
             }
 
             writeMissingIssues(missing);
+
+            writeSuppressInfo();
         }
         mWriter.write("\n</body>\n</html>");                             //$NON-NLS-1$
         mWriter.close();
@@ -364,14 +366,25 @@ class HtmlReporter extends Reporter {
         }
 
         mWriter.write("<br/>");                                  //$NON-NLS-1$
-        mWriter.write("To suppress this error, see ");
-        mWriter.write("<code>lint --help suppress</code> ");     //$NON-NLS-1$
-        mWriter.write("and use id ");
-        mWriter.write("\"<code>");                               //$NON-NLS-1$
-        mWriter.write(issue.getId());
-        mWriter.write("</code>\"<br/>");                         //$NON-NLS-1$
+        mWriter.write(String.format(
+                "To suppress this error, use the issue id \"%1$s\" as explained in the " +
+                "%2$sSuppressing Warnings and Errors%3$s section.",
+                issue.getId(),
+                "<a href=\"#SuppressInfo\">", "</a>"));          //$NON-NLS-1$ //$NON-NLS-2$
+        mWriter.write("<br/>\n");
 
         mWriter.write("</div>");                                 //$NON-NLS-1$
+    }
+
+    private void writeSuppressInfo() throws IOException {
+        //getSuppressHelp
+        mWriter.write("\n<a name=\"SuppressInfo\"></a>\n");      //$NON-NLS-1$
+        mWriter.write("<div class=\"category\">");               //$NON-NLS-1$
+        mWriter.write("Suppressing Warnings and Errors");
+        mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
+        mWriter.write("</div>\n");                               //$NON-NLS-1$
+        appendEscapedText(Main.getSuppressHelp(), true /* preserve newlines*/);
+        mWriter.write('\n');
     }
 
     protected Map<Issue, String> computeMissingIssues(List<Warning> warnings) {
@@ -414,11 +427,11 @@ class HtmlReporter extends Reporter {
     }
 
     private void writeMissingIssues(Map<Issue, String> missing) throws IOException {
-        mWriter.write("\n<a name=\"MissingIssues\">\n");         //$NON-NLS-1$
+        mWriter.write("\n<a name=\"MissingIssues\"></a>\n");     //$NON-NLS-1$
         mWriter.write("<div class=\"category\">");               //$NON-NLS-1$
         mWriter.write("Disabled Checks");
         mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
-        mWriter.write("</div>\n");                               //$NON-NLS-1$
+        mWriter.write("</div>\n");//$NON-NLS-1$
 
         mWriter.write(
                 "The following issues were not run by lint, either " +
@@ -432,7 +445,7 @@ class HtmlReporter extends Reporter {
 
 
         for (Issue issue : list) {
-            mWriter.write("<a name=\"" + issue.getId() + "\">\n");  //$NON-NLS-1$ //$NON-NLS-2$
+            mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n"); //$NON-NLS-1$ //$NON-NLS-2$
             mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
 
             // Explain this issue

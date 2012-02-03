@@ -493,7 +493,11 @@ public class Main extends LintClient {
     }
 
     private void printHelpTopicSuppress() {
-        String help = wrap(
+        System.out.println(wrap(getSuppressHelp()));
+    }
+
+    static String getSuppressHelp() {
+        return
             "Lint errors can be suppressed in a variety of ways:\n" +
             "\n" +
             "1. With a @SuppressLint annotation in the Java code\n" +
@@ -542,9 +546,7 @@ public class Main extends LintClient {
             "\n" +
             "To suppress lint checks from the command line, pass the " + ARG_IGNORE +  " " +
             "flag with a comma separated list of ids to be suppressed, such as:\n" +
-            "\"lint --ignore UnusedResources,UselessLeaf /my/project/path\"\n");
-
-        System.out.println(help);
+            "\"lint --ignore UnusedResources,UselessLeaf /my/project/path\"\n";
     }
 
     private void printVersion() {

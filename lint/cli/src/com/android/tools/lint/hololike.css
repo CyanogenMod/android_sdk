@@ -1,8 +1,9 @@
 body {
     max-width: 800px;
     background-color: #000000;
+    background: -webkit-gradient(linear, left top, left bottom, from(#000000), to(#272d33));
+    background: -moz-linear-gradient(top, #000000, #272d33);
     color: #f3f3f3;
-    font-size: 14sp;
     font-family: 'Roboto', Sans-Serif;
 }
 .issue {
@@ -27,12 +28,10 @@ pre {
     background-color: #282828;
     margin: 5px 0px 5px 5px;
     padding: 5px 5px 5px 0px;
-    overflow: auto;
+    overflow: hidden;
 }
 .lineno {
     color: #4f4f4f;
-}
-.moreinfo {
 }
 .embedimage {
     max-width: 200px;
@@ -110,6 +109,20 @@ a:hover {
 a:active {
     text-decoration: underline;
     color: #f3f3f3;
+}
+.moreinfo a:link {
+    text-decoration: underline;
+    color: #33b5e5;
+}
+.moreinfo a:visited {
+    text-decoration: underline;
+    color: #33b5e5;
+}
+.issue a:link {
+    text-decoration: underline;
+}
+.issue a:visited {
+    text-decoration: underline;
 }
 button {
     color: #ffffff;
