@@ -30,7 +30,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.AnonymousTypeDeclaration2;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -231,7 +231,7 @@ class AddSuppressLintFix implements IMarkerResolution2 {
                 } else if (body instanceof FieldDeclaration) {
                     //name = ((FieldDeclaration) body).getName().toString();
                     target = "field";
-                } else if (body instanceof AnonymousTypeDeclaration2) {
+                } else if (body instanceof AnonymousClassDeclaration) {
                     target = "anonymous class";
                 } else if (body instanceof TypeDeclaration) {
                     name = ((TypeDeclaration) body).getName().toString();
