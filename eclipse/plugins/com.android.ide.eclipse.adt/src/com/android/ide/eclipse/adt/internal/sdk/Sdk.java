@@ -27,9 +27,9 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer;
+import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
@@ -555,7 +555,7 @@ public final class Sdk  {
                         }
 
                         if (javaProjectArray != null) {
-                            AndroidClasspathContainerInitializer.updateProjects(javaProjectArray);
+                            ProjectHelper.updateProjects(javaProjectArray);
                         }
 
                         return status;
@@ -1052,10 +1052,7 @@ public final class Sdk  {
                         IJavaProject javaProject = BaseProjectHelper.getJavaProject(
                                 file.getProject());
                         if (javaProject != null) {
-                            AndroidClasspathContainerInitializer.updateProjects(
-                                    new IJavaProject[] { javaProject });
-                            LibraryClasspathContainerInitializer.updateProjects(
-                                    new IJavaProject[] { javaProject });
+                            ProjectHelper.updateProject(javaProject);
                         }
 
                         // update the editors to reload with the new target

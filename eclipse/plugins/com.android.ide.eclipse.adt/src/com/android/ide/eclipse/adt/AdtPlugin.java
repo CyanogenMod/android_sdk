@@ -1225,7 +1225,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         if (list.size() > 0) {
                             IJavaProject[] array = list.toArray(
                                     new IJavaProject[list.size()]);
-                            AndroidClasspathContainerInitializer.updateProjects(array);
+                            ProjectHelper.updateProjects(array);
                         }
 
                         progress.worked(10);

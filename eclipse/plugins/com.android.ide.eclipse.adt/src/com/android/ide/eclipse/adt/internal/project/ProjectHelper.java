@@ -226,6 +226,23 @@ public final class ProjectHelper {
         return -1;
     }
 
+    public static boolean updateProject(IJavaProject project) {
+        return updateProjects(new IJavaProject[] { project});
+    }
+
+    /**
+     * Update the android-specific projects's classpath containers.
+     * @param projects the projects to update
+     * @return
+     */
+    public static boolean updateProjects(IJavaProject[] projects) {
+        boolean r = AndroidClasspathContainerInitializer.updateProjects(projects);
+        if (r) {
+            return LibraryClasspathContainerInitializer.updateProjects(projects);
+        }
+        return false;
+    }
+
     /**
      * Fix the project. This checks the SDK location.
      * @param project The project to fix.

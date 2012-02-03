@@ -127,7 +127,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
      * @param androidProjects the projects to update.
      * @return <code>true</code> if success, <code>false</code> otherwise.
      */
-    public static boolean updateProjects(IJavaProject[] androidProjects) {
+    static boolean updateProjects(IJavaProject[] androidProjects) {
         try {
             // Allocate a new AndroidClasspathContainer, and associate it to the android framework
             // container id for each projects.
@@ -222,7 +222,8 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                         // this is the case where there is a hashString but the SDK is not yet
                         // loaded and therefore we can't get the target yet.
                         // We check if there is a cache of the needed information.
-                        AndroidClasspathContainer container = getContainerFromCache(iProject, target);
+                        AndroidClasspathContainer container = getContainerFromCache(iProject,
+                                target);
 
                         if (container == null) {
                             // either the cache was wrong (ie folder does not exists anymore), or
@@ -862,5 +863,4 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             updateProjects(affected);
         }
     }
-
 }
