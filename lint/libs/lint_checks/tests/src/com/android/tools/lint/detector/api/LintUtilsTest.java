@@ -35,6 +35,8 @@ public class LintUtilsTest extends TestCase {
         assertEquals("foo... (5 more)",
                 LintUtils.formatList(
                         Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1));
+        assertEquals("foo, bar, baz",
+                LintUtils.formatList(Arrays.asList("foo", "bar", "baz"), 0));
     }
 
     public void testIsXmlFile() throws Exception {

@@ -74,6 +74,7 @@ public class Main extends LintClient {
     private static final String ARG_SHOW       = "--show";         //$NON-NLS-1$
     private static final String ARG_QUIET      = "--quiet";        //$NON-NLS-1$
     private static final String ARG_FULLPATH   = "--fullpath";     //$NON-NLS-1$
+    private static final String ARG_SHOWALL    = "--showall";      //$NON-NLS-1$
     private static final String ARG_HELP       = "--help";         //$NON-NLS-1$
     private static final String ARG_NOLINES    = "--nolines";      //$NON-NLS-1$
     private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
@@ -115,6 +116,8 @@ public class Main extends LintClient {
 
     private Configuration mDefaultConfiguration;
     private IssueRegistry mRegistry;
+    private LintDriver mDriver;
+    private boolean mShowAll;
 
     /** Creates a CLI driver */
     public Main() {
@@ -222,6 +225,8 @@ public class Main extends LintClient {
             } else if (arg.equals(ARG_FULLPATH)
                     || arg.equals(ARG_FULLPATH + "s")) { // allow "--fullpaths" too
                 mFullPath = true;
+            } else if (arg.equals(ARG_SHOWALL)) {
+                mShowAll = true;
             } else if (arg.equals(ARG_QUIET) || arg.equals("-q")) {
                 mQuiet = true;
             } else if (arg.equals(ARG_NOLINES)) {
@@ -466,13 +471,14 @@ public class Main extends LintClient {
             }
         }
 
-        LintDriver driver = new LintDriver(registry, this);
+        mDriver = new LintDriver(registry, this);
 
+        mDriver.setAbbreviating(!mShowAll);
         if (!mQuiet) {
-            driver.addLintListener(new ProgressPrinter());
+            mDriver.addLintListener(new ProgressPrinter());
         }
 
-        driver.analyze(files, null /* scope */);
+        mDriver.analyze(files, null /* scope */);
 
         Collections.sort(mWarnings);
 
@@ -736,6 +742,7 @@ public class Main extends LintClient {
                     "", "\nOutput Options:",
             ARG_QUIET, "Don't show progress.",
             ARG_FULLPATH, "Use full paths in the error output.",
+            ARG_SHOWALL, "Do not truncate long messages, lists of alternate locations, etc.",
             ARG_NOLINES, "Do not include the source file lines with errors " +
                 "in the output. By default, the error output includes snippets of source code " +
                 "on the line containing the error, but this flag turns it off.",
@@ -1059,6 +1066,11 @@ public class Main extends LintClient {
     /** Returns the issue registry used by this client */
     IssueRegistry getRegistry() {
         return mRegistry;
+    }
+
+    /** Returns the driver running the lint checks */
+    LintDriver getDriver() {
+        return mDriver;
     }
 
     /** Returns the configuration used by this client */

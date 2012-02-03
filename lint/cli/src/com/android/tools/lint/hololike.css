@@ -111,3 +111,13 @@ a:active {
     text-decoration: underline;
     color: #f3f3f3;
 }
+button {
+    color: #ffffff;
+    background-color: #353535;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-top: solid 1px #5b5b5b;
+    font-family: 'Roboto', Sans-Serif;
+    font-size: 12pt;
+}

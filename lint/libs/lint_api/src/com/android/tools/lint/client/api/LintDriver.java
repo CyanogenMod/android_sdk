@@ -111,6 +111,7 @@ public class LintDriver {
     private int mPhase;
     private List<Detector> mRepeatingDetectors;
     private EnumSet<Scope> mRepeatScope;
+    private boolean mAbbreviating = true;
 
     /**
      * Creates a new {@link LintDriver}
@@ -156,6 +157,24 @@ public class LintDriver {
      */
     public int getPhase() {
         return mPhase;
+    }
+
+    /**
+     * Sets whether lint should abbreviate output when appropriate.
+     *
+     * @param abbreviating true to abbreviate output, false to include everything
+     */
+    public void setAbbreviating(boolean abbreviating) {
+        mAbbreviating = abbreviating;
+    }
+
+    /**
+     * Returns whether lint should abbreviate output when appropriate.
+     *
+     * @return true if lint should abbreviate output, false when including everything
+     */
+    public boolean isAbbreviating() {
+        return mAbbreviating;
     }
 
     /**

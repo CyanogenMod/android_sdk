@@ -168,14 +168,14 @@ class HtmlReporter extends Reporter {
                 for (Warning warning : warnings) {
                     if (partialHide && count == SHOWN_COUNT) {
                         String id = warning.issue.getId() + "Div";       //$NON-NLS-1$
-                        mWriter.write("<input id=\"");                   //$NON-NLS-1$
+                        mWriter.write("<button id=\"");                  //$NON-NLS-1$
                         mWriter.write(id);
                         mWriter.write("Link\" onclick=\"reveal('");      //$NON-NLS-1$
                         mWriter.write(id);
-                        mWriter.write("');\" type=\"button\" value=\""); //$NON-NLS-1$
-                        mWriter.write(String.format("+ %1$d More...",
+                        mWriter.write("');\" />");                       //$NON-NLS-1$
+                        mWriter.write(String.format("+ %1$d More Occurrences...",
                                 warnings.size() - SHOWN_COUNT));
-                        mWriter.write("\" />\n");                        //$NON-NLS-1$
+                        mWriter.write("</button>\n");                    //$NON-NLS-1$
                         mWriter.write("<div id=\"");                     //$NON-NLS-1$
                         mWriter.write(id);
                         mWriter.write("\" style=\"display: none\">\n");  //$NON-NLS-1$
@@ -215,7 +215,7 @@ class HtmlReporter extends Reporter {
                     if (warning.location != null && warning.location.getSecondary() != null) {
                         mWriter.write("<ul>");
                         Location l = warning.location.getSecondary();
-                        boolean haveOtherLocations = false;
+                        int otherLocations = 0;
                         while (l != null) {
                             if (l.getMessage() != null && l.getMessage().length() > 0) {
                                 Position start = l.getStart();
@@ -240,13 +240,27 @@ class HtmlReporter extends Reporter {
                                     }
                                 }
                             } else {
-                                haveOtherLocations = true;
+                                otherLocations++;
                             }
 
                             l = l.getSecondary();
                         }
                         mWriter.write("</ul>");
-                        if (haveOtherLocations) {
+                        if (otherLocations > 0) {
+
+                            String id = "Location" + count + "Div";          //$NON-NLS-1$
+                            mWriter.write("<button id=\"");                  //$NON-NLS-1$
+                            mWriter.write(id);
+                            mWriter.write("Link\" onclick=\"reveal('");      //$NON-NLS-1$
+                            mWriter.write(id);
+                            mWriter.write("');\" />"); //$NON-NLS-1$
+                            mWriter.write(String.format("+ %1$d Additional Locations...",
+                                    otherLocations));
+                            mWriter.write("</button>\n");                    //$NON-NLS-1$
+                            mWriter.write("<div id=\"");                     //$NON-NLS-1$
+                            mWriter.write(id);
+                            mWriter.write("\" style=\"display: none\">\n");  //$NON-NLS-1$
+
                             mWriter.write("Additional locations: ");
                             mWriter.write("<ul>\n"); //$NON-NLS-1$
                             l = warning.location.getSecondary();
@@ -260,6 +274,8 @@ class HtmlReporter extends Reporter {
                                 l = l.getSecondary();
                             }
                             mWriter.write("</ul>\n"); //$NON-NLS-1$
+
+                            mWriter.write("</div><br/><br/>\n"); //$NON-NLS-1$
                         }
                     }
 

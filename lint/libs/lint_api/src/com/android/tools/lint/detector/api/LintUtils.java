@@ -62,7 +62,7 @@ public class LintUtils {
             }
             sb.append(strings.get(i));
 
-            if (i == maxItems - 1 && n > maxItems) {
+            if (maxItems > 0 && i == maxItems - 1 && n > maxItems) {
                 sb.append(String.format("... (%1$d more)", n - i - 1));
                 break;
             }

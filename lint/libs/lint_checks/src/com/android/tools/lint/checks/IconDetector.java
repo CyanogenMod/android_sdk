@@ -753,7 +753,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     Location.create(res),
                     String.format("Missing density variation folders in %1$s: %2$s",
                             context.getProject().getDisplayPath(res),
-                            LintUtils.formatList(missing, missing.size())),
+                            LintUtils.formatList(missing, -1)),
                     null);
             }
         }

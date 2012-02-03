@@ -314,9 +314,10 @@ public class TranslationDetector extends ResourceXmlDetector {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
+                        int maxCount = context.getDriver().isAbbreviating() ? 4 : -1;
                         context.report(MISSING, location,
                             String.format("Locale %1$s is missing translations for: %2$s",
-                                language, LintUtils.formatList(sorted, 4)), null);
+                                language, LintUtils.formatList(sorted, maxCount)), null);
                     }
                 }
 
@@ -326,9 +327,10 @@ public class TranslationDetector extends ResourceXmlDetector {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
+                        int maxCount = context.getDriver().isAbbreviating() ? 4 : -1;
                         context.report(EXTRA, location, String.format(
                               "Locale %1$s is translating names not found in default locale: %2$s",
-                              language, LintUtils.formatList(sorted, 4)), null);
+                              language, LintUtils.formatList(sorted, maxCount)), null);
                     }
                 }
             }
