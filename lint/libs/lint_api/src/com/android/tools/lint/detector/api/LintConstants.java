@@ -204,6 +204,11 @@ public class LintConstants {
     public static final String VALUE_DISABLED = "disabled";            //$NON-NLS-1$
     public static final String VALUE_CLAMP = "clamp";                  //$NON-NLS-1$
 
+    // Menus
+    public static final String ATTR_SHOW_AS_ACTION = "showAsAction";   //$NON-NLS-1$
+    public static final String VALUE_IF_ROOM = "ifRoom";               //$NON-NLS-1$
+    public static final String VALUE_ALWAYS = "always";                //$NON-NLS-1$
+
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
     public static final String PROGUARD_CFG = "proguard.cfg";          //$NON-NLS-1$

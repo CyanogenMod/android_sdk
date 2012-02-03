@@ -57,7 +57,7 @@ public class AccessibilityDetector extends LayoutDetector {
             AccessibilityDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link AccessibilityDetector} */
     public AccessibilityDetector() {
     }
 
