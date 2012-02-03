@@ -25,8 +25,8 @@ import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -88,6 +88,8 @@ public class Main extends LintClient {
     private static final String ARG_NOWARN1    = "-w";             //$NON-NLS-1$
     private static final String ARG_WARNALL    = "-Wall";          //$NON-NLS-1$
     private static final String ARG_ALLERROR   = "-Werror";        //$NON-NLS-1$
+
+    private static final String VALUE_NONE     = "none";           //$NON-NLS-1$
 
     private static final int ERRNO_ERRORS = -1;
     private static final int ERRNO_USAGE = -2;
@@ -445,18 +447,23 @@ public class Main extends LintClient {
                 }
             }
 
-            Map<String, String> map = new HashMap<String, String>();
-            String[] replace = urlMap.split(","); //$NON-NLS-1$
-            for (String s : replace) {
-                String[] v = s.split("="); //$NON-NLS-1$
-                if (v.length != 2) {
-                    System.err.println(
+            if (!urlMap.equals(VALUE_NONE)) {
+                Map<String, String> map = new HashMap<String, String>();
+                String[] replace = urlMap.split(","); //$NON-NLS-1$
+                for (String s : replace) {
+                    // Allow ='s in the suffix part
+                    int index = s.indexOf('=');
+                    if (index == -1) {
+                        System.err.println(
                             "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                    System.exit(ERRNO_INVALIDARGS);
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    String key = s.substring(0, index);
+                    String value = s.substring(index + 1);
+                    map.put(key, value);
                 }
-                map.put(v[0], v[1]);
+                mReporter.setUrlMap(map);
             }
-            mReporter.setUrlMap(map);
         }
 
         LintDriver driver = new LintDriver(registry, this);
@@ -738,7 +745,8 @@ public class Main extends LintClient {
             ARG_URL + " filepath=url", "Add links to HTML report, replacing local " +
                 "path prefixes with url prefix. The mapping can be a comma-separated list of " +
                 "path prefixes to corresponding URL prefixes, such as " +
-                "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1",
+                "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1.  To turn off linking " +
+                "to files, use " + ARG_URL + " " + VALUE_NONE,
             ARG_SIMPLEHTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
         });
