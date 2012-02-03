@@ -51,7 +51,6 @@ import java.util.EnumSet;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IllegalFormatException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -413,23 +412,28 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             // Check that the format string is valid by actually attempting to instantiate
             // it. We only do this if we haven't already complained about this string
             // for other reasons.
+            /* Check disabled for now: it had many false reports due to conversion
+             * errors (which is expected since we just pass in strings), but once those
+             * are eliminated there aren't really any other valid error messages returned
+             * (for example, calling the formatter with bogus formatting flags always just
+             * returns a "conversion" error. It looks like we'd need to actually pass compatible
+             * arguments to trigger other types of formatting errors such as precision errors.
             if (!warned && checkValid) {
                 try {
-                    // Pass lots of strings. This won't match for integers etc, and
-                    // could supply more arguments than necessary, but this is still
-                    // less work for the virtual machine than throwing exceptions and
-                    // complaining.
-                    formatter.format(formatString, "", "", "", "", "", "", "");
+                    formatter.format(formatString, "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "");
 
                 } catch (IllegalFormatException t) { // TODO: UnknownFormatConversionException
-                    Location location = handle.resolve();
-                    if (!t.getLocalizedMessage().contains(" != ")) {
+                    if (!t.getLocalizedMessage().contains(" != ")
+                            && !t.getLocalizedMessage().contains("Conversion")) {
+                        Location location = handle.resolve();
                         context.report(INVALID, location,
                                 String.format("Wrong format for %1$s: %2$s",
                                         name, t.getLocalizedMessage()), null);
                     }
                 }
             }
+            */
         }
     }
 

@@ -75,4 +75,12 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
                 "First: %1$s, Skip \\%2$s, Value=%2$d", 2));
     }
 
+    public void testWrongSyntax() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/values/formatstrings2.xml"
+                ));
+    }
 }
