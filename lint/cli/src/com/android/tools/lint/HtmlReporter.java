@@ -134,7 +134,7 @@ class HtmlReporter extends Reporter {
             mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
 
 
-            writeOverview(related, missing.size() > 0);
+            writeOverview(related, missing.size());
 
             Category previousCategory = null;
             for (List<Warning> warnings : related) {
@@ -456,7 +456,7 @@ class HtmlReporter extends Reporter {
         }
     }
 
-    private void writeOverview(List<List<Warning>> related, boolean hasMissing)
+    private void writeOverview(List<List<Warning>> related, int missingCount)
             throws IOException {
         // Write issue id summary
         mWriter.write("<table class=\"overview\">\n");                          //$NON-NLS-1$
@@ -518,10 +518,13 @@ class HtmlReporter extends Reporter {
             mWriter.write("</td></tr>\n");
         }
 
-        if (hasMissing) {
-            mWriter.write("<tr><td></td><td class=\"categoryColumn\">");//$NON-NLS-1$
+        if (missingCount > 0) {
+            mWriter.write("<tr><td></td>");                          //$NON-NLS-1$
+            mWriter.write("<td class=\"categoryColumn\">");          //$NON-NLS-1$
             mWriter.write("<a href=\"#MissingIssues\">");            //$NON-NLS-1$
-            mWriter.write("Disabled Checks");
+            mWriter.write(String.format("Disabled Checks (%1$d)",
+                    missingCount));
+
             mWriter.write("</a>\n");                                 //$NON-NLS-1$
             mWriter.write("</td></tr>");                             //$NON-NLS-1$
         }
