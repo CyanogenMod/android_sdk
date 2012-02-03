@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
+
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -54,9 +56,10 @@ import java.util.List;
  */
 public class ApiDetector extends LayoutDetector implements Detector.ClassScanner {
     private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
+    private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
 
     /** Accessing an unsupported API */
-    public static final Issue MISSING = Issue.create("NewApi", //$NON-NLS-1$
+    public static final Issue UNSUPPORTED = Issue.create("NewApi", //$NON-NLS-1$
             "Finds API accesses to APIs that are not supported in all targeted API versions",
 
             "This check scans through all the Android API calls in the application and " +
@@ -134,7 +137,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
             String message = String.format(
                     "View requires API level %1$d (current min is %2$d): <%3$s>",
                     api, minSdk, tag);
-            context.report(MISSING, location, message, null);
+            context.report(UNSUPPORTED, location, message, null);
         }
     }
 
@@ -292,7 +295,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
         if (annotations != null) {
             for (AnnotationNode annotation : (List<AnnotationNode>)annotations) {
                 String desc = annotation.desc;
-                if (desc.endsWith("/TargetApi;")) { //$NON-NLS-1$
+                if (desc.endsWith(TARGET_API_VMSIG)) {
                     if (annotation.values != null) {
                         for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                             String key = (String) annotation.values.get(i);
@@ -345,6 +348,6 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
             MethodNode method, String patternStart, String patternEnd) {
         int lineNumber = node != null ? findLineNumber(node) : -1;
         Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd);
-        context.report(MISSING, method, location, message, null);
+        context.report(UNSUPPORTED, method, location, message, null);
     }
 }

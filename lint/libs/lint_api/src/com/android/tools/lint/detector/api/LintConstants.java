@@ -256,7 +256,9 @@ public class LintConstants {
     public static final String R_ATTR_PREFIX = "R.attr.";                //$NON-NLS-1$
 
     // SuppressLint
-    public static final String SUPPRESS_LINT = "SuppressLint";           //$NON-NLS-1$
     public static final String SUPPRESS_ALL = "all";                     //$NON-NLS-1$
+    public static final String SUPPRESS_LINT = "SuppressLint";           //$NON-NLS-1$
+    public static final String TARGET_API = "TargetApi";                 //$NON-NLS-1$
     public static final String FQCN_SUPPRESS_LINT = "android.annotation." + SUPPRESS_LINT; //$NON-NLS-1$
+    public static final String FQCN_TARGET_API = "android.annotation." + TARGET_API; //$NON-NLS-1$
 }

@@ -59,7 +59,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MathDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(SdCardDetector.ISSUE);
-        issues.add(ApiDetector.MISSING);
+        issues.add(ApiDetector.UNSUPPORTED);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(WrongIdDetector.UNKNOWN_ID);
@@ -266,6 +266,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             sAdtFixes.add(TypographyDetector.OTHER);
             sAdtFixes.add(TypographyDetector.QUOTES);
             sAdtFixes.add(UseCompoundDrawableDetector.ISSUE);
+            sAdtFixes.add(ApiDetector.UNSUPPORTED);
         }
 
         return sAdtFixes.contains(issue);

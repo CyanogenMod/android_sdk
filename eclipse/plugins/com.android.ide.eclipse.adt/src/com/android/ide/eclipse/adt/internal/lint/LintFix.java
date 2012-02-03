@@ -156,7 +156,10 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(TypographyDetector.FRACTIONS.getId(), TypographyFix.class);
         sFixes.put(TypographyDetector.OTHER.getId(), TypographyFix.class);
         sFixes.put(TypographyDetector.QUOTES.getId(), TypographyFix.class);
-        sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(), UseCompoundDrawableDetectorFix.class);
+        sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(),
+                UseCompoundDrawableDetectorFix.class);
+        // ApiDetector.UNSUPPORTED is provided as a marker resolution rather than
+        // a quick assistant (the marker resolution adds a suitable @TargetApi annotation)
     }
 
     public static boolean hasFix(String id) {

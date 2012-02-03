@@ -17,15 +17,19 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import static com.android.tools.lint.detector.api.LintConstants.FQCN_SUPPRESS_LINT;
+import static com.android.tools.lint.detector.api.LintConstants.FQCN_TARGET_API;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
+import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 import static org.eclipse.jdt.core.dom.ArrayInitializer.EXPRESSIONS_PROPERTY;
 import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.tools.lint.checks.ApiDetector;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
@@ -38,9 +42,11 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
@@ -58,22 +64,29 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Marker resolution for adding {@code @SuppressLint} annotations in Java files
+ * Marker resolution for adding {@code @SuppressLint} annotations in Java files.
+ * It can also add {@code @TargetApi} annotations.
  */
 class AddSuppressLintFix implements IMarkerResolution2 {
     private final IMarker mMarker;
     private final String mId;
     private final BodyDeclaration mNode;
     private final String mDescription;
+    /** Should it create a {@code @TargetApi} annotation instead of {@code SuppressLint} ?
+     * If so pass a positive API number */
+    private final int mTargetApi;
 
     private AddSuppressLintFix(String id, IMarker marker, BodyDeclaration node,
-            String description) {
+            String description, int targetApi) {
         mId = id;
         mMarker = marker;
         mNode = node;
         mDescription = description;
+        mTargetApi = targetApi;
     }
 
     @Override
@@ -102,12 +115,34 @@ class AddSuppressLintFix implements IMarkerResolution2 {
         }
         IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
         ICompilationUnit compilationUnit = manager.getWorkingCopy(editorInput);
-        addAnnotation(document, compilationUnit, mNode);
+        try {
+            MultiTextEdit edit;
+            if (mTargetApi <= 0) {
+                edit = addSuppressAnnotation(document, compilationUnit, mNode);
+            } else {
+                edit = addTargetApiAnnotation(document, compilationUnit, mNode);
+            }
+            if (edit != null) {
+                edit.apply(document);
+
+                // Remove the marker now that the suppress annotation has been added
+                // (so the user doesn't have to re-run lint just to see it disappear,
+                // and besides we don't want to keep offering marker resolutions on this
+                // marker which could lead to duplicate annotations since the above code
+                // assumes that the current id isn't in the list of values, since otherwise
+                // lint shouldn't have complained here.
+                mMarker.delete();
+            }
+        } catch (Exception ex) {
+            AdtPlugin.log(ex, "Could not add suppress annotation");
+        }
     }
 
     @SuppressWarnings({"rawtypes"}) // Java AST API has raw types
-    private void addAnnotation(IDocument document, ICompilationUnit compilationUnit,
-            BodyDeclaration declaration) {
+    private MultiTextEdit addSuppressAnnotation(
+            IDocument document,
+            ICompilationUnit compilationUnit,
+            BodyDeclaration declaration) throws CoreException {
         List modifiers = declaration.modifiers();
         SingleMemberAnnotation existing = null;
         for (Object o : modifiers) {
@@ -121,69 +156,112 @@ class AddSuppressLintFix implements IMarkerResolution2 {
             }
         }
 
-        try {
-            ImportRewrite importRewrite = ImportRewrite.create(compilationUnit, true);
-            String local = importRewrite.addImport(FQCN_SUPPRESS_LINT);
-            AST ast = declaration.getAST();
-            ASTRewrite rewriter = ASTRewrite.create(ast);
-            if (existing == null) {
-                SingleMemberAnnotation newAnnotation = ast.newSingleMemberAnnotation();
-                newAnnotation.setTypeName(ast.newSimpleName(local));
+        ImportRewrite importRewrite = ImportRewrite.create(compilationUnit, true);
+        String local = importRewrite.addImport(FQCN_SUPPRESS_LINT);
+        AST ast = declaration.getAST();
+        ASTRewrite rewriter = ASTRewrite.create(ast);
+        if (existing == null) {
+            SingleMemberAnnotation newAnnotation = ast.newSingleMemberAnnotation();
+            newAnnotation.setTypeName(ast.newSimpleName(local));
+            StringLiteral value = ast.newStringLiteral();
+            value.setLiteralValue(mId);
+            newAnnotation.setValue(value);
+            ListRewrite listRewrite = rewriter.getListRewrite(declaration,
+                    declaration.getModifiersProperty());
+            listRewrite.insertFirst(newAnnotation, null);
+        } else {
+            Expression existingValue = existing.getValue();
+            if (existingValue instanceof StringLiteral) {
+                // Create a new array initializer holding the old string plus the new id
+                ArrayInitializer array = ast.newArrayInitializer();
+                StringLiteral old = ast.newStringLiteral();
+                StringLiteral stringLiteral = (StringLiteral) existingValue;
+                old.setLiteralValue(stringLiteral.getLiteralValue());
+                array.expressions().add(old);
                 StringLiteral value = ast.newStringLiteral();
                 value.setLiteralValue(mId);
-                newAnnotation.setValue(value);
-                ListRewrite listRewrite = rewriter.getListRewrite(declaration,
-                        declaration.getModifiersProperty());
-                listRewrite.insertFirst(newAnnotation, null);
+                array.expressions().add(value);
+                rewriter.set(existing, VALUE_PROPERTY, array, null);
+            } else if (existingValue instanceof ArrayInitializer) {
+                // Existing array: just append the new string
+                ArrayInitializer array = (ArrayInitializer) existingValue;
+                StringLiteral value = ast.newStringLiteral();
+                value.setLiteralValue(mId);
+                ListRewrite listRewrite = rewriter.getListRewrite(array, EXPRESSIONS_PROPERTY);
+                listRewrite.insertLast(value, null);
             } else {
-                Expression existingValue = existing.getValue();
-                if (existingValue instanceof StringLiteral) {
-                    // Create a new array initializer holding the old string plus the new id
-                    ArrayInitializer array = ast.newArrayInitializer();
-                    StringLiteral old = ast.newStringLiteral();
-                    StringLiteral stringLiteral = (StringLiteral) existingValue;
-                    old.setLiteralValue(stringLiteral.getLiteralValue());
-                    array.expressions().add(old);
-                    StringLiteral value = ast.newStringLiteral();
-                    value.setLiteralValue(mId);
-                    array.expressions().add(value);
-                    rewriter.set(existing, VALUE_PROPERTY, array, null);
-                } else if (existingValue instanceof ArrayInitializer) {
-                    // Existing array: just append the new string
-                    ArrayInitializer array = (ArrayInitializer) existingValue;
-                    StringLiteral value = ast.newStringLiteral();
-                    value.setLiteralValue(mId);
-                    ListRewrite listRewrite = rewriter.getListRewrite(array, EXPRESSIONS_PROPERTY);
-                    listRewrite.insertLast(value, null);
-                } else {
-                    assert false : existingValue;
-                    return;
+                assert false : existingValue;
+                return null;
+            }
+        }
+
+        TextEdit importEdits = importRewrite.rewriteImports(new NullProgressMonitor());
+        TextEdit annotationEdits = rewriter.rewriteAST(document, null);
+
+        // Apply to the document
+        MultiTextEdit edit = new MultiTextEdit();
+        // Create the edit to change the imports, only if
+        // anything changed
+        if (importEdits.hasChildren()) {
+            edit.addChild(importEdits);
+        }
+        edit.addChild(annotationEdits);
+
+        return edit;
+    }
+
+    @SuppressWarnings({"rawtypes"}) // Java AST API has raw types
+    private MultiTextEdit addTargetApiAnnotation(
+            IDocument document,
+            ICompilationUnit compilationUnit,
+            BodyDeclaration declaration) throws CoreException {
+        List modifiers = declaration.modifiers();
+        SingleMemberAnnotation existing = null;
+        for (Object o : modifiers) {
+            if (o instanceof SingleMemberAnnotation) {
+                SingleMemberAnnotation annotation = (SingleMemberAnnotation) o;
+                String type = annotation.getTypeName().getFullyQualifiedName();
+                if (type.equals(FQCN_TARGET_API) || type.endsWith(TARGET_API)) {
+                    existing = annotation;
+                    break;
                 }
             }
-
-            TextEdit importEdits = importRewrite.rewriteImports(new NullProgressMonitor());
-            TextEdit annotationEdits = rewriter.rewriteAST(document, null);
-
-            // Apply to the document
-            MultiTextEdit edit = new MultiTextEdit();
-            // Create the edit to change the imports, only if
-            // anything changed
-            if (importEdits.hasChildren()) {
-                edit.addChild(importEdits);
-            }
-            edit.addChild(annotationEdits);
-            edit.apply(document);
-
-            // Remove the marker now that the suppress annotation has been added
-            // (so the user doesn't have to re-run lint just to see it disappear,
-            // and besides we don't want to keep offering marker resolutions on this
-            // marker which could lead to duplicate annotations since the above code
-            // assumes that the current id isn't in the list of values, since otherwise
-            // lint shouldn't have complained here.
-            mMarker.delete();
-        } catch (Exception ex) {
-            AdtPlugin.log(ex, "Could not add suppress annotation");
         }
+
+        ImportRewrite importRewrite = ImportRewrite.create(compilationUnit, true);
+        String local = importRewrite.addImport(FQCN_TARGET_API);
+        AST ast = declaration.getAST();
+        ASTRewrite rewriter = ASTRewrite.create(ast);
+        if (existing == null) {
+            SingleMemberAnnotation newAnnotation = ast.newSingleMemberAnnotation();
+            newAnnotation.setTypeName(ast.newSimpleName(local));
+            NumberLiteral value = ast.newNumberLiteral(Integer.toString(mTargetApi));
+            //value.setLiteralValue(mId);
+            newAnnotation.setValue(value);
+            ListRewrite listRewrite = rewriter.getListRewrite(declaration,
+                    declaration.getModifiersProperty());
+            listRewrite.insertFirst(newAnnotation, null);
+        } else {
+            Expression existingValue = existing.getValue();
+            if (existingValue instanceof NumberLiteral) {
+                // Change the value to the new value
+                NumberLiteral value = ast.newNumberLiteral(Integer.toString(mTargetApi));
+                rewriter.set(existing, VALUE_PROPERTY, value, null);
+            } else {
+                assert false : existingValue;
+                return null;
+            }
+        }
+
+        TextEdit importEdits = importRewrite.rewriteImports(new NullProgressMonitor());
+        TextEdit annotationEdits = rewriter.rewriteAST(document, null);
+        MultiTextEdit edit = new MultiTextEdit();
+        if (importEdits.hasChildren()) {
+            edit.addChild(importEdits);
+        }
+        edit.addChild(annotationEdits);
+
+        return edit;
     }
 
     /**
@@ -215,6 +293,19 @@ class AddSuppressLintFix implements IMarkerResolution2 {
         if (root == null) {
             return;
         }
+
+        int api = -1;
+        if (id.equals(ApiDetector.UNSUPPORTED.getId())) {
+            String message = marker.getAttribute(IMarker.MESSAGE, null);
+            if (message != null) {
+                Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$
+                Matcher matcher = pattern.matcher(message);
+                if (matcher.find()) {
+                    api = Integer.parseInt(matcher.group(1));
+                }
+            }
+        }
+
         NodeFinder nodeFinder = new NodeFinder(root, offset, length);
         ASTNode coveringNode = nodeFinder.getCoveringNode();
         ASTNode body = coveringNode;
@@ -222,26 +313,37 @@ class AddSuppressLintFix implements IMarkerResolution2 {
             if (body instanceof BodyDeclaration) {
                 BodyDeclaration declaration = (BodyDeclaration) body;
 
-                //String name = declaration.
                 String target = null;
-                String name = null;
                 if (body instanceof MethodDeclaration) {
-                    name = ((MethodDeclaration) body).getName().toString();
-                    target = String.format("method %1$s", name);
+                    target = ((MethodDeclaration) body).getName().toString() + "()"; //$NON-NLS-1$
                 } else if (body instanceof FieldDeclaration) {
-                    //name = ((FieldDeclaration) body).getName().toString();
                     target = "field";
+                    FieldDeclaration field = (FieldDeclaration) body;
+                    if (field.fragments() != null && field.fragments().size() > 0) {
+                        ASTNode first = (ASTNode) field.fragments().get(0);
+                        if (first instanceof VariableDeclarationFragment) {
+                            VariableDeclarationFragment decl = (VariableDeclarationFragment) first;
+                            target = decl.getName().toString();
+                        }
+                    }
                 } else if (body instanceof AnonymousClassDeclaration) {
                     target = "anonymous class";
                 } else if (body instanceof TypeDeclaration) {
-                    name = ((TypeDeclaration) body).getName().toString();
-                    target = String.format("class %1$s", name);
+                    target = ((TypeDeclaration) body).getName().toString();
                 } else {
                     target = body.getClass().getSimpleName();
                 }
 
-                String desc = String.format("Add @SuppressLint(\"%1$s\") on the %2$s", id, target);
-                resolutions.add(new AddSuppressLintFix(id, marker, declaration, desc));
+                String desc = String.format("Add @SuppressLint '%1$s\' to '%2$s'", id, target);
+                resolutions.add(new AddSuppressLintFix(id, marker, declaration, desc, -1));
+
+                if (api != -1
+                        // @TargetApi is only valid on methods and classes, not fields etc
+                        && (body instanceof MethodDeclaration
+                                || body instanceof TypeDeclaration)) {
+                    desc = String.format("Add @TargetApi(%1$d) to '%2$s'", api, target);
+                    resolutions.add(new AddSuppressLintFix(id, marker, declaration, desc, api));
+                }
             }
 
             body = body.getParent();
