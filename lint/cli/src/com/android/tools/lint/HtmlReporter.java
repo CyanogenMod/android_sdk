@@ -16,7 +16,6 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
@@ -586,7 +585,7 @@ class HtmlReporter extends Reporter {
     }
 
     private boolean addImage(String url, Location location) throws IOException {
-        if (url != null && endsWith(url, DOT_PNG) && !endsWith(url, DOT_9PNG)) {
+        if (url != null && endsWith(url, DOT_PNG)) {
             if (location.getSecondary() != null) {
                 // Emit many images
                 // Add in linked images as well
