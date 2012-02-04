@@ -39,6 +39,24 @@ public class LintUtilsTest extends TestCase {
                 LintUtils.formatList(Arrays.asList("foo", "bar", "baz"), 0));
     }
 
+    public void testEndsWith() throws Exception {
+        assertTrue(LintUtils.endsWith("Foo", ""));
+        assertTrue(LintUtils.endsWith("Foo", "o"));
+        assertTrue(LintUtils.endsWith("Foo", "oo"));
+        assertTrue(LintUtils.endsWith("Foo", "Foo"));
+        assertTrue(LintUtils.endsWith("Foo", "FOO"));
+        assertTrue(LintUtils.endsWith("Foo", "fOO"));
+
+        assertFalse(LintUtils.endsWith("Foo", "f"));
+    }
+
+    public void testStartsWith() throws Exception {
+        assertTrue(LintUtils.startsWith("FooBar", "Bar", 3));
+        assertTrue(LintUtils.startsWith("FooBar", "BAR", 3));
+        assertTrue(LintUtils.startsWith("FooBar", "Foo", 0));
+        assertFalse(LintUtils.startsWith("FooBar", "Foo", 2));
+    }
+
     public void testIsXmlFile() throws Exception {
         assertTrue(LintUtils.isXmlFile(new File("foo.xml")));
         assertTrue(LintUtils.isXmlFile(new File("foo.Xml")));
@@ -116,5 +134,33 @@ public class LintUtilsTest extends TestCase {
         assertEquals(new File("/foo/bar"), LintUtils.getCommonParent(
                 Arrays.asList(new File("/foo/bar"), new File("/foo/bar/baz"),
                         new File("/foo/bar/foo2/foo3"))));
+    }
+
+    public void testStripIdPrefix() throws Exception {
+        assertEquals("foo", LintUtils.stripIdPrefix("@+id/foo"));
+        assertEquals("foo", LintUtils.stripIdPrefix("@id/foo"));
+        assertEquals("foo", LintUtils.stripIdPrefix("foo"));
+    }
+
+    public void testIdReferencesMatch() throws Exception {
+        assertTrue(LintUtils.idReferencesMatch("@+id/foo", "@+id/foo"));
+        assertTrue(LintUtils.idReferencesMatch("@id/foo", "@id/foo"));
+        assertTrue(LintUtils.idReferencesMatch("@id/foo", "@+id/foo"));
+        assertTrue(LintUtils.idReferencesMatch("@+id/foo", "@id/foo"));
+
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo", "@+id/bar"));
+        assertFalse(LintUtils.idReferencesMatch("@id/foo", "@+id/bar"));
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo", "@id/bar"));
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo", "@+id/bar"));
+
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo", "@+id/foo1"));
+        assertFalse(LintUtils.idReferencesMatch("@id/foo", "@id/foo1"));
+        assertFalse(LintUtils.idReferencesMatch("@id/foo", "@+id/foo1"));
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo", "@id/foo1"));
+
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo1", "@+id/foo"));
+        assertFalse(LintUtils.idReferencesMatch("@id/foo1", "@id/foo"));
+        assertFalse(LintUtils.idReferencesMatch("@id/foo1", "@+id/foo"));
+        assertFalse(LintUtils.idReferencesMatch("@+id/foo1", "@id/foo"));
     }
 }

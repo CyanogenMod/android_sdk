@@ -113,6 +113,9 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TypographyDetector.FRACTIONS);
         issues.add(TypographyDetector.ELLIPSIS);
         issues.add(TypographyDetector.OTHER);
+        issues.add(ButtonDetector.ORDER);
+        issues.add(ButtonDetector.CASE);
+        issues.add(ButtonDetector.BACKBUTTON);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(OverdrawDetector.ISSUE);
         issues.add(StringFormatDetector.INVALID);

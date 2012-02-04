@@ -118,6 +118,19 @@ public class LintUtils {
     }
 
     /**
+     * Case insensitive starts with
+     *
+     * @param string the string to be tested whether it starts with the given prefix
+     * @param prefix the prefix to check
+     * @param offset the offset to start checking with
+     * @return true if {@code string} starts with {@code prefix},
+     *         case-insensitively.
+     */
+    public static boolean startsWith(@NonNull String string, @NonNull String prefix, int offset) {
+        return string.regionMatches(true /* ignoreCase */, offset, prefix, 0, prefix.length());
+    }
+
+    /**
      * Returns the basename of the given filename, unless it's a dot-file such as ".svn".
      *
      * @param fileName the file name to extract the basename from
@@ -198,6 +211,41 @@ public class LintUtils {
         }
 
         return id;
+    }
+
+    /**
+     * Returns true if the given two id references match. This is similar to
+     * String equality, but it also considers "{@code @+id/foo == @id/foo}.
+     *
+     * @param id1 the first id to compare
+     * @param id2 the second id to compare
+     * @return true if the two id references refer to the same id
+     */
+    public static boolean idReferencesMatch(String id1, String id2) {
+        if (id1.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+            if (id2.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+                return id1.equals(id2);
+            } else {
+                assert id2.startsWith(ID_RESOURCE_PREFIX);
+                return ((id1.length() - id2.length())
+                            == (NEW_ID_RESOURCE_PREFIX.length() - ID_RESOURCE_PREFIX.length()))
+                        && id1.regionMatches(NEW_ID_RESOURCE_PREFIX.length(), id2,
+                                ID_RESOURCE_PREFIX.length(),
+                                id2.length() - ID_RESOURCE_PREFIX.length());
+            }
+        } else {
+            assert id1.startsWith(ID_RESOURCE_PREFIX);
+            if (id2.startsWith(ID_RESOURCE_PREFIX)) {
+                return id1.equals(id2);
+            } else {
+                assert id2.startsWith(NEW_ID_RESOURCE_PREFIX);
+                return (id2.length() - id1.length()
+                            == (NEW_ID_RESOURCE_PREFIX.length() - ID_RESOURCE_PREFIX.length()))
+                        && id2.regionMatches(NEW_ID_RESOURCE_PREFIX.length(), id1,
+                                ID_RESOURCE_PREFIX.length(),
+                                id1.length() - ID_RESOURCE_PREFIX.length());
+            }
+        }
     }
 
     /**

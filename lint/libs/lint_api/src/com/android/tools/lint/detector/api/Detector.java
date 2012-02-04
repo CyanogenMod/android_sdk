@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -42,7 +43,21 @@ import lombok.ast.VariableReference;
  * Each detector provides information about the issues it can find, such as an explanation
  * of how to fix the issue, the priority, the category, etc. It also has an id which is
  * used to persistently identify a particular type of error.
- * <p/>
+ * <p>
+ * Detectors will be called in a predefined order:
+ * <ol>
+ *   <li> Manifest file
+ *   <li> Resource files, in alphabetical order by resource type
+ *        (therefore, "layout" is checked before "values", "values-de" is checked before
+ *        "values-en" but after "values", and so on.
+ *   <li> Java sources
+ *   <li> Java classes
+ *   <li> Proguard files
+ * </ol>
+ * If a detector needs information when processing a file type that comes from a type of
+ * file later in the order above, they can request a second phase; see
+ * {@link LintDriver#requestRepeat}.
+ * <p>
  * NOTE: Detectors might be constructed just once and shared between lint runs, so
  * any per-detector state should be initialized and reset via the before/after
  * methods.
@@ -322,6 +337,11 @@ public abstract class Detector {
     /**
      * Analysis is about to be performed on a specific file, perform any setup
      * steps.
+     * <p>
+     * Note: When this method is called at the beginning of checking an XML
+     * file, the context is guaranteed to be an instance of {@link XmlContext},
+     * and similarly for a Java source file, the context will be a
+     * {@link JavaContext} and so on.
      *
      * @param context the context for the check referencing the file to be
      *            checked, the project, etc.
@@ -332,6 +352,11 @@ public abstract class Detector {
     /**
      * Analysis has just been finished for a specific file, perform any cleanup
      * or report issues found
+     * <p>
+     * Note: When this method is called at the end of checking an XML
+     * file, the context is guaranteed to be an instance of {@link XmlContext},
+     * and similarly for a Java source file, the context will be a
+     * {@link JavaContext} and so on.
      *
      * @param context the context for the check referencing the file to be
      *            checked, the project, etc.

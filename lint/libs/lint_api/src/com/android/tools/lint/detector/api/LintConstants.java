@@ -242,6 +242,7 @@ public class LintConstants {
     public static final String NULL_RESOURCE = "@null";                 //$NON-NLS-1$
     public static final String TRANSPARENT_COLOR = "@android:color/transparent";      //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/";     //$NON-NLS-1$
+    public static final String ANDROID_STRING_RESOURCE_PREFIX = "@android:string/";   //$NON-NLS-1$
 
     // Packages
     public static final String WIDGET_PKG_PREFIX = "android.widget.";   //$NON-NLS-1$
