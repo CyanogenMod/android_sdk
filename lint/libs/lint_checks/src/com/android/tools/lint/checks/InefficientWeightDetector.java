@@ -144,8 +144,9 @@ public class InefficientWeightDetector extends LayoutDetector {
             }
         }
 
-        if (context.isEnabled(BASELINE_WEIGHTS) && weightChild != null &&
-                !element.hasAttributeNS(ANDROID_URI, ATTR_BASELINE_ALIGNED)) {
+        if (context.isEnabled(BASELINE_WEIGHTS) && weightChild != null
+                && !VALUE_VERTICAL.equals(element.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION))
+                && !element.hasAttributeNS(ANDROID_URI, ATTR_BASELINE_ALIGNED)) {
             // See if all the children are layouts
             boolean allChildrenAreLayouts = children.size() > 0;
             for (Element child : children) {
