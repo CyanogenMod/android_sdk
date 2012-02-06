@@ -111,6 +111,13 @@ class HtmlReporter extends Reporter {
                 "<div class=\"titleSeparator\"></div>\n" +               //$NON-NLS-1$
                 "</h1>\n");                                              //$NON-NLS-1$
 
+        mWriter.write(String.format("Check performed at %1$s.",
+                new Date().toString()));
+        mWriter.write("<br/>");                                       //$NON-NLS-1$
+        mWriter.write(String.format("%1$d errors and %2$d warnings found:",
+                errorCount, warningCount));
+        mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
+
         Issue previousIssue = null;
         if (issues.size() > 0) {
             List<List<Warning>> related = new ArrayList<List<Warning>>();
@@ -124,14 +131,6 @@ class HtmlReporter extends Reporter {
                 assert currentList != null;
                 currentList.add(warning);
             }
-
-            mWriter.write(String.format("Check performed at %1$s.",
-                    new Date().toString()));
-            mWriter.write("<br/>");                                       //$NON-NLS-1$
-            mWriter.write(String.format("%1$d errors and %2$d warnings found:",
-                    errorCount, warningCount));
-            mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
-
 
             writeOverview(related, missing.size());
 
@@ -292,9 +291,13 @@ class HtmlReporter extends Reporter {
                 writeIssueMetadata(issue, first.severity, null);
             }
 
-            writeMissingIssues(missing);
+            if (!mClient.isCheckingSpecificIssues()) {
+                writeMissingIssues(missing);
+            }
 
             writeSuppressInfo();
+        } else {
+            mWriter.write("Congratulations!");
         }
         mWriter.write("\n</body>\n</html>");                             //$NON-NLS-1$
         mWriter.close();
@@ -355,6 +358,7 @@ class HtmlReporter extends Reporter {
         appendEscapedText(explanation, true /* preserve newlines*/);
         mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
         if (issue.getMoreInfo() != null) {
+            mWriter.write("<br/>");                                  //$NON-NLS-1$
             mWriter.write("<div class=\"moreinfo\">");           //$NON-NLS-1$
             mWriter.write("More info: ");
             mWriter.write("<a href=\"");                         //$NON-NLS-1$
@@ -546,7 +550,7 @@ class HtmlReporter extends Reporter {
             mWriter.write("</td></tr>\n");
         }
 
-        if (missingCount > 0) {
+        if (missingCount > 0 && !mClient.isCheckingSpecificIssues()) {
             mWriter.write("<tr><td></td>");                          //$NON-NLS-1$
             mWriter.write("<td class=\"categoryColumn\">");          //$NON-NLS-1$
             mWriter.write("<a href=\"#MissingIssues\">");            //$NON-NLS-1$

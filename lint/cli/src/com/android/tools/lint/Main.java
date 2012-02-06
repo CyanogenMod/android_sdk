@@ -952,6 +952,10 @@ public class Main extends LintClient {
         }
     }
 
+    boolean isCheckingSpecificIssues() {
+        return mCheck != null;
+    }
+
     /**
      * Consult the lint.xml file, but override with the --enable and --disable
      * flags supplied on the command line

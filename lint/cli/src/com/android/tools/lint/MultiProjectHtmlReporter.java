@@ -24,7 +24,6 @@ import com.google.common.io.Closeables;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -41,7 +40,6 @@ import java.util.Set;
 class MultiProjectHtmlReporter extends HtmlReporter {
     private static final String INDEX_NAME = "index.html"; //$NON-NLS-1$
     private final File mDir;
-    private List<String> mRoots;
 
     MultiProjectHtmlReporter(Main client, File dir) throws IOException {
         super(client, new File(dir, INDEX_NAME));
@@ -128,25 +126,27 @@ class MultiProjectHtmlReporter extends HtmlReporter {
             reporter.setStripPrefix(relative);
             reporter.write(projectErrorCount, projectWarningCount, issues);
 
-            projects.add(new ProjectEntry(project, fileName, projectErrorCount,
-                    projectWarningCount, relative));
+            projects.add(new ProjectEntry(fileName, projectErrorCount, projectWarningCount,
+                    relative));
         }
 
         // Write overview index?
-        if (projects.size() > 1) {
-            writeOverview(errorCount, warningCount, projects);
-        }
+        writeOverview(errorCount, warningCount, projects);
+        Closeables.closeQuietly(mWriter);
+
+        File index = new File(mDir, INDEX_NAME);
+        System.out.println();
+        System.out.println(String.format("Wrote overview index to %1$s", index));
     }
 
     private void writeOverview(int errorCount, int warningCount, List<ProjectEntry> projects)
             throws IOException {
-        Writer writer = mWriter;
-        writer.write(
+        mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
                 "<title>" + mTitle + "</title>\n");                      //$NON-NLS-1$//$NON-NLS-2$
         writeStyleSheet();
-        writer.write(
+        mWriter.write(
                 "</head>\n" +                                            //$NON-NLS-1$
                 "<body>\n" +                                             //$NON-NLS-1$
                 "<h1>" +                                                 //$NON-NLS-1$
@@ -158,12 +158,18 @@ class MultiProjectHtmlReporter extends HtmlReporter {
         // Sort project list in decreasing order of errors, warnings and names
         Collections.sort(projects);
 
-        writer.write(String.format("Check performed at %1$s.",
+        mWriter.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
-        writer.write("<br/>");                                          //$NON-NLS-1$
-        writer.write(String.format("%1$d errors and %2$d warnings found:\n",
+        mWriter.write("<br/>");                                          //$NON-NLS-1$
+        mWriter.write(String.format("%1$d errors and %2$d warnings found:\n",
                 errorCount, warningCount));
-        writer.write("<br/><br/>");                                     //$NON-NLS-1$
+
+        mWriter.write("<br/><br/>");                                     //$NON-NLS-1$
+
+        if (errorCount == 0 && warningCount == 0) {
+            mWriter.write("Congratulations!");
+            return;
+        }
 
         String errorUrl = null;
         String warningUrl = null;
@@ -172,59 +178,50 @@ class MultiProjectHtmlReporter extends HtmlReporter {
             warningUrl = addLocalResources(HtmlReporter.getWarningIconUrl());
         }
 
-        writer.write("<table class=\"overview\">\n");                   //$NON-NLS-1$
-        writer.write("<tr><th>");                                       //$NON-NLS-1$
-        writer.write("Project");
-        writer.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
+        mWriter.write("<table class=\"overview\">\n");                   //$NON-NLS-1$
+        mWriter.write("<tr><th>");                                       //$NON-NLS-1$
+        mWriter.write("Project");
+        mWriter.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
 
         if (errorUrl != null) {
             mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
             mWriter.write(errorUrl);
             mWriter.write("\" />\n");                          //$NON-NLS-1$
         }
-        writer.write("Errors");
-        writer.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
+        mWriter.write("Errors");
+        mWriter.write("</th><th class=\"countColumn\">");                   //$NON-NLS-1$
 
         if (warningUrl != null) {
             mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
             mWriter.write(warningUrl);
             mWriter.write("\" />\n");                          //$NON-NLS-1$
         }
-        writer.write("Warnings");
-        writer.write("</th></tr>\n");                                   //$NON-NLS-1$
+        mWriter.write("Warnings");
+        mWriter.write("</th></tr>\n");                                   //$NON-NLS-1$
 
         for (ProjectEntry entry : projects) {
-            writer.write("<tr><td>");                                   //$NON-NLS-1$
-            writer.write("<a href=\"");
-            writer.write(entry.fileName); // TODO: Escape?
-            writer.write("\">");                                        //$NON-NLS-1$
-            writer.write(entry.path);
-            writer.write("</a></td><td class=\"countColumn\">");        //$NON-NLS-1$
-            writer.write(Integer.toString(entry.errorCount));
-            writer.write("</td><td class=\"countColumn\">");            //$NON-NLS-1$
-            writer.write(Integer.toString(entry.warningCount));
-            writer.write("</td></tr>\n");                               //$NON-NLS-1$
+            mWriter.write("<tr><td>");                                   //$NON-NLS-1$
+            mWriter.write("<a href=\"");
+            mWriter.write(entry.fileName); // TODO: Escape?
+            mWriter.write("\">");                                        //$NON-NLS-1$
+            mWriter.write(entry.path);
+            mWriter.write("</a></td><td class=\"countColumn\">");        //$NON-NLS-1$
+            mWriter.write(Integer.toString(entry.errorCount));
+            mWriter.write("</td><td class=\"countColumn\">");            //$NON-NLS-1$
+            mWriter.write(Integer.toString(entry.warningCount));
+            mWriter.write("</td></tr>\n");                               //$NON-NLS-1$
         }
-        writer.write("</table>\n");                                     //$NON-NLS-1$
-
-        Closeables.closeQuietly(writer);
-
-        File index = new File(mDir, INDEX_NAME);
-        System.out.println();
-        System.out.println(String.format("Wrote overview index to %1$s", index));
+        mWriter.write("</table>\n");                                     //$NON-NLS-1$
     }
 
     private static class ProjectEntry implements Comparable<ProjectEntry> {
-        public Project project;
         public int errorCount;
         public int warningCount;
         public String fileName;
         public String path;
 
 
-        public ProjectEntry(Project project, String fileName, int errorCount, int warningCount,
-                String path) {
-            this.project = project;
+        public ProjectEntry(String fileName, int errorCount, int warningCount, String path) {
             this.fileName = fileName;
             this.errorCount = errorCount;
             this.warningCount = warningCount;
