@@ -31,8 +31,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -704,9 +706,16 @@ final class DeviceMonitor {
 
     private void processIncomingJdwpData(Device device, SocketChannel monitorSocket, int length)
             throws IOException {
+
+        // This methods reads @length bytes from the @monitorSocket channel.
+        // These bytes correspond to the pids of the current set of processes on the device.
+        // It takes this set of pids and compares them with the existing set of clients
+        // for the device. Clients that correspond to pids that are not alive anymore are
+        // dropped, and new clients are created for pids that don't have a corresponding Client.
+
         if (length >= 0) {
             // array for the current pids.
-            ArrayList<Integer> pidList = new ArrayList<Integer>();
+            Set<Integer> newPids = new HashSet<Integer>();
 
             // get the string data if there are any
             if (length > 0) {
@@ -718,7 +727,7 @@ final class DeviceMonitor {
 
                 for (String pid : pids) {
                     try {
-                        pidList.add(Integer.valueOf(pid));
+                        newPids.add(Integer.valueOf(pid));
                     } catch (NumberFormatException nfe) {
                         // looks like this pid is not really a number. Lets ignore it.
                         continue;
@@ -728,62 +737,35 @@ final class DeviceMonitor {
 
             MonitorThread monitorThread = MonitorThread.getInstance();
 
-            // Now we merge the current list with the old one.
-            // this is the same mechanism as the merging of the device list.
-
-            // For each client in the current list, we look for a matching the pid in the new list.
-            // * if we find it, we do nothing, except removing the pid from its list,
-            //   to mark it as "processed"
-            // * if we do not find any match, we remove the client from the current list.
-            // Once this is done, the new list contains pids for which we don't have clients yet,
-            // so we create clients for them, add them to the list, and start monitoring them.
-
             List<Client> clients = device.getClientList();
+            Map<Integer, Client> existingClients = new HashMap<Integer, Client>();
 
-            boolean changed = false;
-
-            // because MonitorThread#dropClient acquires first the monitorThread lock and then the
-            // Device client list lock (when removing the Client from the list), we have to make
-            // sure we acquire the locks in the same order, since another thread (MonitorThread),
-            // could call dropClient itself.
-            synchronized (monitorThread) {
-                synchronized (clients) {
-                    for (int c = 0 ; c < clients.size() ;) {
-                        Client client = clients.get(c);
-                        int pid = client.getClientData().getPid();
-
-                        // look for a matching pid
-                        Integer match = null;
-                        for (Integer matchingPid : pidList) {
-                            if (pid == matchingPid.intValue()) {
-                                match = matchingPid;
-                                break;
-                            }
-                        }
-
-                        if (match != null) {
-                            pidList.remove(match);
-                            c++; // move on to the next client.
-                        } else {
-                            // we need to drop the client. the client will remove itself from the
-                            // list of its device which is 'clients', so there's no need to
-                            // increment c.
-                            // We ask the monitor thread to not send notification, as we'll do
-                            // it once at the end.
-                            monitorThread.dropClient(client, false /* notify */);
-                            changed = true;
-                        }
-                    }
+            synchronized (clients) {
+                for (Client c : clients) {
+                    existingClients.put(
+                            Integer.valueOf(c.getClientData().getPid()),
+                            c);
                 }
             }
 
-            // at this point whatever pid is left in the list needs to be converted into Clients.
-            for (int newPid : pidList) {
-                openClient(device, newPid, getNextDebuggerPort(), monitorThread);
-                changed = true;
+            Set<Client> clientsToRemove = new HashSet<Client>();
+            for (Integer pid : existingClients.keySet()) {
+                if (!newPids.contains(pid)) {
+                    clientsToRemove.add(existingClients.get(pid));
+                }
             }
 
-            if (changed) {
+            Set<Integer> pidsToAdd = new HashSet<Integer>(newPids);
+            pidsToAdd.removeAll(existingClients.keySet());
+
+            monitorThread.dropClients(clientsToRemove, false);
+
+            // at this point whatever pid is left in the list needs to be converted into Clients.
+            for (int newPid : pidsToAdd) {
+                openClient(device, newPid, getNextDebuggerPort(), monitorThread);
+            }
+
+            if (pidsToAdd.size() > 0 || clientsToRemove.size() > 0) {
                 mServer.deviceChanged(device, Device.CHANGE_CLIENT_LIST);
             }
         }
