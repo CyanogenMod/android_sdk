@@ -20,7 +20,6 @@ import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
-import com.android.tools.lint.detector.api.XmlContext;
 
 import java.io.File;
 import java.util.List;
@@ -102,7 +101,7 @@ public class LombokParser implements IJavaParser {
     }
 
     @Override
-    public Handle createLocationHandle(XmlContext context, Node node) {
+    public Handle createLocationHandle(JavaContext context, Node node) {
         return new LocationHandle(context.file, node);
     }
 

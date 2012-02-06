@@ -21,13 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.XmlContext;
 
 import lombok.ast.Node;
 
 /**
- * A wrapper for XML parser. This allows tools integrating lint to map directly
- * to builtin services, such as already-parsed data structures in XML editors.
+ * A wrapper for a Java parser. This allows tools integrating lint to map directly
+ * to builtin services, such as already-parsed data structures in Java editors.
  * <p/>
  * <b>NOTE: This is not a or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
@@ -66,7 +65,7 @@ public interface IJavaParser {
      * @return a location handle
      */
     @NonNull
-    Location.Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node);
+    Location.Handle createLocationHandle(@NonNull JavaContext context, @NonNull Node node);
 
     /**
      * Dispose any data structures held for the given context.

@@ -809,7 +809,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         @Override
-        public Handle createLocationHandle(XmlContext context, lombok.ast.Node node) {
+        public Handle createLocationHandle(JavaContext context, lombok.ast.Node node) {
             return new LocationHandle(context.file, node);
         }
 
