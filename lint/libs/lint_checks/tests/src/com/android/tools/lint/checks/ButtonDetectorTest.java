@@ -91,7 +91,7 @@ public class ButtonDetectorTest extends AbstractCheckTest {
     }
 
     public void testOldApp() throws Exception {
-        // Target SDK < 11 - no warnings on button order
+        // Target SDK < 14 - no warnings on button order
         sTestIssue = ButtonDetector.ORDER;
         assertEquals(
                 "No warnings.",

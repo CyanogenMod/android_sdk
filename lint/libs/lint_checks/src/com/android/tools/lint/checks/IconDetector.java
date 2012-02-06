@@ -122,7 +122,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             // Still some potential false positives:
             .setEnabledByDefault(false)
             .setMoreInfo(
-            "http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size"); //$NON-NLS-1$
+            "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
 
     /** Inconsistent dip size across densities */
     public static final Issue ICON_DIP_SIZE = Issue.create(
@@ -1026,9 +1026,9 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 checkSize(context, folderName, file, 48, 48, true /*exact*/);
             } else if (name.startsWith("ic_action_")) { //$NON-NLS-1$
                 // Action Bar
-                checkSize(context, folderName, file, 24, 24, true /*exact*/);
+                checkSize(context, folderName, file, 32, 32, true /*exact*/);
             } else if (name.startsWith("ic_dialog_")) { //$NON-NLS-1$
-                // Action Bar
+                // Dialog
                 checkSize(context, folderName, file, 32, 32, true /*exact*/);
             } else if (name.startsWith("ic_tab_")) { //$NON-NLS-1$
                 // Tab icons

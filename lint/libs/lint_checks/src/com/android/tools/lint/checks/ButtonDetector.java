@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,12 @@ public class ButtonDetector extends ResourceXmlDetector {
             8,
             Severity.WARNING,
             ButtonDetector.class,
-            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            Scope.RESOURCE_FILE_SCOPE)
+            // Disabled by default until we automatically handle minSDK/targetSDK properly
+            // (e.g. we shouldn't complain if an app is targeting older than API 14 unless
+            // they don't provide an API 14 specific version that provides the right order!)
+            .setEnabledByDefault(false)
+            .setMoreInfo(
                 "http://developer.android.com/design/building-blocks/dialogs.html"); //$NON-NLS-1$
 
     /** The main issue discovered by this detector */
@@ -400,7 +405,7 @@ public class ButtonDetector extends ResourceXmlDetector {
      */
     private boolean guidelinesApply(XmlContext context) {
         int target = context.getProject().getTargetSdk();
-        return target < 1 || target >= 11;
+        return target < 1 || target >= 14;
     }
 
     /** Report the given OK/Cancel button as being in the wrong position */
