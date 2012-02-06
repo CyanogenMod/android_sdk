@@ -130,14 +130,17 @@ public class NewProjectCreator  {
         SdkConstants.FD_ASSETS + AdtConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
         AndroidConstants.FD_RES_DRAWABLE + AdtConstants.WS_SEP;
+    private static final String DRAWABLE_XHDPI_DIRECTORY =
+            AndroidConstants.FD_RES_DRAWABLE + '-' + Density.XHIGH.getResourceValue() +
+            AdtConstants.WS_SEP;
     private static final String DRAWABLE_HDPI_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.HIGH.getResourceValue() +   //$NON-NLS-1$
-        AdtConstants.WS_SEP;
+            AndroidConstants.FD_RES_DRAWABLE + '-' + Density.HIGH.getResourceValue() +
+            AdtConstants.WS_SEP;
     private static final String DRAWABLE_MDPI_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.MEDIUM.getResourceValue() + //$NON-NLS-1$
+        AndroidConstants.FD_RES_DRAWABLE + '-' + Density.MEDIUM.getResourceValue() +
         AdtConstants.WS_SEP;
     private static final String DRAWABLE_LDPI_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.LOW.getResourceValue() +    //$NON-NLS-1$
+        AndroidConstants.FD_RES_DRAWABLE + '-' + Density.LOW.getResourceValue() +
         AdtConstants.WS_SEP;
     private static final String LAYOUT_DIRECTORY =
         AndroidConstants.FD_RES_LAYOUT + AdtConstants.WS_SEP;
@@ -167,6 +170,7 @@ public class NewProjectCreator  {
     private static final String TEMPLATE_STRING = TEMPLATES_DIRECTORY
             + "string.template"; //$NON-NLS-1$
     private static final String PROJECT_ICON = "ic_launcher.png"; //$NON-NLS-1$
+    private static final String ICON_XHDPI = "ic_launcher_xhdpi.png"; //$NON-NLS-1$
     private static final String ICON_HDPI = "ic_launcher_hdpi.png"; //$NON-NLS-1$
     private static final String ICON_MDPI = "ic_launcher_mdpi.png"; //$NON-NLS-1$
     private static final String ICON_LDPI = "ic_launcher_ldpi.png"; //$NON-NLS-1$
@@ -182,6 +186,7 @@ public class NewProjectCreator  {
     private static final String[] RES_DIRECTORIES = new String[] {
             DRAWABLE_DIRECTORY, LAYOUT_DIRECTORY, VALUES_DIRECTORY };
     private static final String[] RES_DENSITY_ENABLED_DIRECTORIES = new String[] {
+            DRAWABLE_XHDPI_DIRECTORY,
             DRAWABLE_HDPI_DIRECTORY, DRAWABLE_MDPI_DIRECTORY, DRAWABLE_LDPI_DIRECTORY,
             LAYOUT_DIRECTORY, VALUES_DIRECTORY };
 
@@ -877,8 +882,15 @@ public class NewProjectCreator  {
                 addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_MDPI), monitor);
             }
         } else {
-            // do all 3 icons.
+            // do all 4 icons.
             IFile file;
+
+            // extra high density
+            file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                    + DRAWABLE_XHDPI_DIRECTORY + AdtConstants.WS_SEP + PROJECT_ICON);
+            if (!file.exists()) {
+                addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_XHDPI), monitor);
+            }
 
             // high density
             file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP

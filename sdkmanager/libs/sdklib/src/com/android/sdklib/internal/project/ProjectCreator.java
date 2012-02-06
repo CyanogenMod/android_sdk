@@ -1151,6 +1151,8 @@ public class ProjectCreator {
 
         boolean installedIcon = false;
 
+        installedIcon |= installIcon(templateFolder, "ic_launcher_xhdpi.png", resourceFolder,
+                "drawable-xhdpi");
         installedIcon |= installIcon(templateFolder, "ic_launcher_hdpi.png", resourceFolder,
                 "drawable-hdpi");
         installedIcon |= installIcon(templateFolder, "ic_launcher_mdpi.png", resourceFolder,
