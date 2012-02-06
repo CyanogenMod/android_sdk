@@ -121,6 +121,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ViewTypeDetector.ISSUE);
         issues.add(WrongImportDetector.ISSUE);
         issues.add(ViewConstructorDetector.ISSUE);
+        issues.add(AlwaysShowActionDetector.ISSUE);
 
         addCustomIssues(issues);
 
