@@ -140,6 +140,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
                 String otherName = otherFile.getParentFile().getName() + File.separator
                         + otherFile.getName();
+                // TODO: Find applicable scope?
                 context.report(INCONSISTENT, location,
                     String.format(
                      "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
@@ -155,7 +156,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     public void visitElement(XmlContext context, Element element) {
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.report(INCONSISTENT, context.getLocation(element),
+            context.report(INCONSISTENT, element, context.getLocation(element),
                 String.format("Missing name attribute in %1$s declaration", element.getTagName()),
                 null);
         } else {

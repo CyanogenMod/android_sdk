@@ -71,7 +71,7 @@ import java.util.regex.Pattern;
  * Marker resolution for adding {@code @SuppressLint} annotations in Java files.
  * It can also add {@code @TargetApi} annotations.
  */
-class AddSuppressLintFix implements IMarkerResolution2 {
+class AddSuppressAnnotation implements IMarkerResolution2 {
     private final IMarker mMarker;
     private final String mId;
     private final BodyDeclaration mNode;
@@ -80,7 +80,7 @@ class AddSuppressLintFix implements IMarkerResolution2 {
      * If so pass a positive API number */
     private final int mTargetApi;
 
-    private AddSuppressLintFix(String id, IMarker marker, BodyDeclaration node,
+    private AddSuppressAnnotation(String id, IMarker marker, BodyDeclaration node,
             String description, int targetApi) {
         mId = id;
         mMarker = marker;
@@ -335,14 +335,14 @@ class AddSuppressLintFix implements IMarkerResolution2 {
                 }
 
                 String desc = String.format("Add @SuppressLint '%1$s\' to '%2$s'", id, target);
-                resolutions.add(new AddSuppressLintFix(id, marker, declaration, desc, -1));
+                resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, -1));
 
                 if (api != -1
                         // @TargetApi is only valid on methods and classes, not fields etc
                         && (body instanceof MethodDeclaration
                                 || body instanceof TypeDeclaration)) {
                     desc = String.format("Add @TargetApi(%1$d) to '%2$s'", api, target);
-                    resolutions.add(new AddSuppressLintFix(id, marker, declaration, desc, api));
+                    resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, api));
                 }
             }
 

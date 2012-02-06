@@ -276,11 +276,16 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     }
                     String message = String.format("The resource %1$s appears to be unused",
                             resource);
-                    Issue issue = resource.startsWith(R_ID_PREFIX) ? ISSUE_IDS : ISSUE;
+                    Issue issue = getIssue(resource);
+                    // TODO: Compute applicable node scope
                     context.report(issue, location, message, resource);
                 }
             }
         }
+    }
+
+    private static Issue getIssue(String resource) {
+        return resource.startsWith(R_ID_PREFIX) ? ISSUE_IDS : ISSUE;
     }
 
     private void recordLocation(String resource, Location location) {
@@ -332,6 +337,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     } else {
                         assert context.getPhase() == 2;
                         if (mUnused.containsKey(resource)) {
+                            if (context.getDriver().isSuppressed(getIssue(resource), item)) {
+                                mUnused.remove(resource);
+                                return;
+                            }
                             recordLocation(resource, context.getLocation(item));
                         }
                     }
@@ -385,7 +394,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             if (context.getPhase() == 1) {
                 mDeclarations.add(resource);
             } else if (mUnused.containsKey(resource)) {
+                if (context.getDriver().isSuppressed(getIssue(resource), attribute)) {
+                    mUnused.remove(resource);
+                    return;
+                }
                 recordLocation(resource, context.getLocation(attribute));
+                return;
             }
         } else if (mReferences != null) {
             if (value.startsWith("@")              //$NON-NLS-1$

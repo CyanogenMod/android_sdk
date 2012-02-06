@@ -116,7 +116,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         List<IMarkerResolution> resolutions = new ArrayList<IMarkerResolution>();
 
         if (resource.getName().endsWith(DOT_JAVA)) {
-            AddSuppressLintFix.createFixes(marker, id, resolutions);
+            AddSuppressAnnotation.createFixes(marker, id, resolutions);
         }
 
         resolutions.add(new MoreInfoProposal(id, marker.getAttribute(IMarker.MESSAGE, null)));
@@ -164,6 +164,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                 for (IMarker marker : markers) {
                     String id = marker.getAttribute(EclipseLintRunner.MARKER_CHECKID_PROPERTY,
                             ""); //$NON-NLS-1$
+
                     // TODO: Allow for more than one fix?
                     ICompletionProposal fix = LintFix.getFix(id, marker);
                     if (fix != null) {
@@ -172,6 +173,11 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
                     String message = marker.getAttribute(IMarker.MESSAGE, null);
                     proposals.add(new MoreInfoProposal(id, message));
+
+                    fix = AddSuppressAttribute.createFix(editor, marker, id);
+                    if (fix != null) {
+                        proposals.add(fix);
+                    }
 
                     proposals.add(new SuppressProposal(file, id, false));
                     proposals.add(new SuppressProposal(file.getProject(), id, true /* all */));

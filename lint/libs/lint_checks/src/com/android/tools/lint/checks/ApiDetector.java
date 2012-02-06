@@ -137,7 +137,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
             String message = String.format(
                     "View requires API level %1$d (current min is %2$d): <%3$s>",
                     api, minSdk, tag);
-            context.report(UNSUPPORTED, location, message, null);
+            context.report(UNSUPPORTED, element, location, message, null);
         }
     }
 

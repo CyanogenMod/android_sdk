@@ -80,7 +80,7 @@ public class StyleCycleDetector extends ResourceXmlDetector {
             String name = element.getAttribute(ATTR_NAME);
             if (parent.endsWith(name) &&
                     parent.equals(STYLE_RESOURCE_PREFIX + name)) {
-                context.report(ISSUE, context.getLocation(parentNode),
+                context.report(ISSUE, parentNode, context.getLocation(parentNode),
                         String.format("Style %1$s should not extend itself", name), null);
             } else if (parent.startsWith(STYLE_RESOURCE_PREFIX)
                     && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length())

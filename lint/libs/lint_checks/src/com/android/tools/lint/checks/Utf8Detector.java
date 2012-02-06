@@ -91,7 +91,7 @@ public class Utf8Detector extends LayoutDetector {
                 String encoding = matcher.group(1);
                 Location location = Location.create(context.file, xml,
                         matcher.start(1), matcher.end(1));
-                context.report(ISSUE, location, String.format(
+                context.report(ISSUE, null, location, String.format(
                         "%1$s: Not using UTF-8 as the file encoding. This can lead to subtle " +
                                 "bugs with non-ascii characters", encoding), null);
             }

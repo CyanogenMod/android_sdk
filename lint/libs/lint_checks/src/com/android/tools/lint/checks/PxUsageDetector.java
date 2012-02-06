@@ -76,7 +76,7 @@ public class PxUsageDetector extends LayoutDetector {
                 // 0px is fine. 0px is 0dp regardless of density...
                 return;
             }
-            context.report(ISSUE, context.getLocation(attribute),
+            context.report(ISSUE, attribute, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead", null);
         }
     }

@@ -30,6 +30,11 @@ public class LintConstants {
     /** Namespace used in XML files for Android attributes */
     public static final String ANDROID_URI =
             "http://schemas.android.com/apk/res/android";              //$NON-NLS-1$
+    /** Namespace used in XML files for Android Tooling attributes */
+    public static final String TOOLS_URI =
+            "http://schemas.android.com/tools";                        //$NON-NLS-1$
+    /** Default prefix used for tools attributes */
+    public static final String TOOLS_PREFIX = "tools";                 //$NON-NLS-1$
     public static final String XMLNS_PREFIX = "xmlns:";                //$NON-NLS-1$
 
     // Tags: Manifest
@@ -260,6 +265,9 @@ public class LintConstants {
     public static final String R_LAYOUT_PREFIX = "R.layout.";            //$NON-NLS-1$
     public static final String R_DRAWABLE_PREFIX = "R.drawable.";        //$NON-NLS-1$
     public static final String R_ATTR_PREFIX = "R.attr.";                //$NON-NLS-1$
+
+    // Attributes related to tools
+    public final static String ATTR_IGNORE = "ignore";                   //$NON-NLS-1$
 
     // SuppressLint
     public static final String SUPPRESS_ALL = "all";                     //$NON-NLS-1$

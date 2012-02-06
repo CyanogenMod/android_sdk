@@ -37,6 +37,9 @@ public enum AttributeSortOrder {
 
     public final String key;
 
+    /**
+     * @return a comparator for use by this attribute sort order
+     */
     public Comparator<Attr> getAttributeComparator() {
         switch (this) {
             case ALPHABETICAL:
@@ -64,8 +67,9 @@ public enum AttributeSortOrder {
             }
 
             // Sort by preferred attribute order
-            return UiAttributeNode.compareAttributes(attr1.getLocalName(),
-                    attr2.getLocalName());
+            return UiAttributeNode.compareAttributes(
+                    attr1.getPrefix(), attr1.getLocalName(),
+                    attr2.getPrefix(), attr2.getLocalName());
         }
     };
 
@@ -100,7 +104,9 @@ public enum AttributeSortOrder {
                 return 1;
             }
 
-            return attr1.getLocalName().compareTo(attr2.getLocalName());
+            // Sort by name rather than localname to ensure we sort by namespaces first,
+            // then by names.
+            return attr1.getName().compareTo(attr2.getName());
         }
     };
 }

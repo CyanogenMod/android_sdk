@@ -145,7 +145,7 @@ public class PositionXmlParser {
                 // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
                 // just skip those up to the XML prolog beginning character, <
                 xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
-                return parse(xml, null, false);
+                return parse(xml, new InputSource(new StringReader(xml)), false);
             }
             throw e;
         }

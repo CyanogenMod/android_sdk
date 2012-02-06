@@ -77,13 +77,13 @@ public class AccessibilityDetector extends LayoutDetector {
     @Override
     public void visitElement(XmlContext context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
-            context.report(ISSUE, context.getLocation(element),
+            context.report(ISSUE, element, context.getLocation(element),
                     "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
-                context.report(ISSUE, context.getLocation(attributeNode),
+                context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
                         "[Accessibility] Empty contentDescription attribute on image", null);
             }
         }

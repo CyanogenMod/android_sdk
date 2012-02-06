@@ -86,7 +86,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                 ((second.getTagName().equals(IMAGE_VIEW) &&
                         first.getTagName().equals(TEXT_VIEW) &&
                         !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
-                context.report(ISSUE, context.getLocation(element),
+                context.report(ISSUE, element, context.getLocation(element),
                         "This tag and its children can be replaced by one <TextView/> and " +
                                 "a compound drawable", null);
             }

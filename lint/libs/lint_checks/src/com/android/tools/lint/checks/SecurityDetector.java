@@ -167,7 +167,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
                     permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
                     if (permission == null || permission.length() == 0) {
                         // No declared permission for this exported service: complain
-                        context.report(EXPORTED_SERVICE,
+                        context.report(EXPORTED_SERVICE, element,
                             context.getLocation(element),
                             "Exported service does not require permission", null);
                     }
@@ -183,14 +183,14 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
 
         String msg = "Content provider shares everything; this is potentially dangerous.";
         if (path != null && path.getValue().equals("/")) { //$NON-NLS-1$
-            context.report(OPEN_PROVIDER, context.getLocation(path), msg, null);
+            context.report(OPEN_PROVIDER, path, context.getLocation(path), msg, null);
         }
         if (prefix != null && prefix.getValue().equals("/")) { //$NON-NLS-1$
-            context.report(OPEN_PROVIDER, context.getLocation(prefix), msg, null);
+            context.report(OPEN_PROVIDER, prefix, context.getLocation(prefix), msg, null);
         }
         if (pattern != null && (pattern.getValue().equals("/")  //$NON-NLS-1$
                /* || pattern.getValue().equals(".*")*/)) {
-            context.report(OPEN_PROVIDER, context.getLocation(pattern), msg, null);
+            context.report(OPEN_PROVIDER, pattern, context.getLocation(pattern), msg, null);
         }
     }
 
