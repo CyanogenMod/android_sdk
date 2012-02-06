@@ -442,6 +442,16 @@ final class MonitorThread extends Thread {
         wakeup();
     }
 
+    /**
+     * Drops the provided list of clients from the monitor. This will lock the {@link Client}
+     * list of the {@link Device} running each of the clients.
+     */
+    synchronized void dropClients(Collection<? extends Client> clients, boolean notify) {
+        for (Client c : clients) {
+            dropClient(c, notify);
+        }
+    }
+
     /*
      * Process activity from one of the debugger sockets. This could be a new
      * connection or a data packet.
