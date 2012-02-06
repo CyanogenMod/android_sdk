@@ -51,7 +51,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "which version you need, which features you need, which libraries you " +
             "need, and so on. In the past there have been subtle bugs (such as " +
             "themes not getting applied correctly) when the <application> tag appears " +
-            "before some of these other elements, so it's best to order your" +
+            "before some of these other elements, so it's best to order your " +
             "manifest in the logical dependency order.",
             Category.CORRECTNESS,
             5,

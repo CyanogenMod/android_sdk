@@ -145,8 +145,10 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
                 // We didn't find any editor.
                 // We'll use the OtherXmlEditorDelegate as a catch-all editor.
                 AdtPlugin.log(IStatus.INFO,
-                        "No valid Android XML Editor Delegate found for file %1$s",
-                        file.getFullPath());
+                        "No valid Android XML Editor Delegate found for file %1$s [Res %2$s, type %3$s]",
+                        file.getFullPath(),
+                        resFolder,
+                        type);
                 mDelegate = new OtherXmlEditorDelegate(this);
             }
         }
