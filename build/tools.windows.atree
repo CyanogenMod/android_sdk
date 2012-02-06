@@ -98,3 +98,5 @@ bin/sdklauncher.exe                               "tools/lib/SDK Manager.exe"
 sdk/files/post_tools_install.bat                  tools/lib/post_tools_install.bat
 sdk/find_java/find_java.bat                       tools/lib/find_java.bat
 bin/find_java.exe                           strip tools/lib/find_java.exe
+bin/find_lock.exe                           strip tools/lib/find_lock.exe
+
