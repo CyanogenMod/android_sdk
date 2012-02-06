@@ -183,6 +183,14 @@ public class MockFileOp implements IFileOp {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setReadOnly(File file) {
+        // pass
+    }
+
+    /**
      * Copies a binary file.
      *
      * @param source the source file to copy.

@@ -535,7 +535,10 @@ public class ArchiveInstaller {
                 return false;
             }
 
-            if (!unzipFolder(archiveFile, newArchive.getSize(), destFolder, pkgName, monitor)) {
+            if (!unzipFolder(archiveInfo,
+                             archiveFile,
+                             destFolder,
+                             monitor)) {
                 return false;
             }
 
@@ -633,20 +636,20 @@ public class ArchiveInstaller {
      */
     @SuppressWarnings("unchecked")
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected boolean unzipFolder(File archiveFile,
-            long compressedSize,
+    protected boolean unzipFolder(
+            ArchiveReplacement archiveInfo,
+            File archiveFile,
             File unzipDestFolder,
-            String pkgName,
             ITaskMonitor monitor) {
+
+        Archive newArchive = archiveInfo.getNewArchive();
+        Package pkg = newArchive.getParentPackage();
+        String pkgName = pkg.getShortDescription();
+        long compressedSize = newArchive.getSize();
 
         ZipFile zipFile = null;
         try {
             zipFile = new ZipFile(archiveFile);
-
-            // figure if we'll need to set the unix permissions
-            boolean usingUnixPerm =
-                    SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ||
-                    SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX;
 
             // To advance the percent and the progress bar, we don't know the number of
             // items left to unzip. However we know the size of the archive and the size of
@@ -730,14 +733,7 @@ public class ArchiveInstaller {
                     }
                 }
 
-                // if needed set the permissions.
-                if (usingUnixPerm && mFileOp.isFile(destFile)) {
-                    // get the mode and test if it contains the executable bit
-                    int mode = entry.getUnixMode();
-                    if ((mode & 0111) != 0) {
-                        mFileOp.setExecutablePermission(destFile);
-                    }
-                }
+                pkg.postUnzipFileHook(newArchive, monitor, mFileOp, destFile, entry);
 
                 // Increment progress bar to match. We update only between files.
                 for(incTotal += entry.getCompressedSize(); incCurr < incTotal; incCurr += incStep) {

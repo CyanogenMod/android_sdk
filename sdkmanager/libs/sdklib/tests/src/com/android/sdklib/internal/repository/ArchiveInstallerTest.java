@@ -66,13 +66,11 @@ public class ArchiveInstallerTest extends TestCase {
             return file;
         }
 
-
         @Override
         protected boolean unzipFolder(
+                ArchiveReplacement archiveInfo,
                 File archiveFile,
-                long compressedSize,
                 File unzipDestFolder,
-                String pkgName,
                 ITaskMonitor monitor) {
             // Claim the unzip works if the input archiveFile is one we know about
             // and the destination actually exists.

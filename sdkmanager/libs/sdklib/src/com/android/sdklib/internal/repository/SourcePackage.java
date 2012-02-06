@@ -24,8 +24,10 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.SdkRepoConstants;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -266,6 +268,25 @@ public class SourcePackage extends Package implements IPackageVersion {
         File folder = new File(osSdkRoot, SdkConstants.FD_PKG_SOURCES);
         folder = new File(folder, "android-" + mVersion.getApiString());    //$NON-NLS-1$
         return folder;
+    }
+
+    /**
+     * Set all the files from a source package as read-only
+     * so that users don't end up modifying sources by mistake in Eclipse.
+     */
+    @Override
+    public void postUnzipFileHook(
+            Archive archive,
+            ITaskMonitor monitor,
+            IFileOp fileOp,
+            File unzippedFile,
+            ZipArchiveEntry zipEntry) {
+        super.postUnzipFileHook(archive, monitor, fileOp, unzippedFile, zipEntry);
+
+        if (fileOp.isFile(unzippedFile) &&
+                !SdkConstants.FN_SOURCE_PROP.equals(unzippedFile.getName())) {
+            fileOp.setReadOnly(unzippedFile);
+        }
     }
 
     @Override
