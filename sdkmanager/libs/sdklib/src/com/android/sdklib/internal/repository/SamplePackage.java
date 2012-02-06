@@ -23,9 +23,11 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -363,6 +365,26 @@ public class SamplePackage extends MinToolsPackage
         if (installFolder != null) {
             String h = computeContentHash(installFolder);
             saveContentHash(installFolder, h);
+        }
+    }
+
+    /**
+     * Set all the files from a sample package as read-only so that
+     * users don't end up modifying sources by mistake in Eclipse
+     * (samples are copied if using the NPW > Create from sample.)
+     */
+    @Override
+    public void postUnzipFileHook(
+            Archive archive,
+            ITaskMonitor monitor,
+            IFileOp fileOp,
+            File unzippedFile,
+            ZipArchiveEntry zipEntry) {
+        super.postUnzipFileHook(archive, monitor, fileOp, unzippedFile, zipEntry);
+
+        if (fileOp.isFile(unzippedFile) &&
+                !SdkConstants.FN_SOURCE_PROP.equals(unzippedFile.getName())) {
+            fileOp.setReadOnly(unzippedFile);
         }
     }
 
