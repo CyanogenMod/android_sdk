@@ -54,6 +54,13 @@ public interface IFileOp {
     public abstract void setExecutablePermission(File file) throws IOException;
 
     /**
+     * Sets the file or directory as read-only.
+     *
+     * @param file The file or directory to set permissions on.
+     */
+    public abstract void setReadOnly(File file);
+
+    /**
      * Copies a binary file.
      *
      * @param source the source file to copy.

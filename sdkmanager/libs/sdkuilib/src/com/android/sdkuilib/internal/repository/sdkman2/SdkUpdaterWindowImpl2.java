@@ -502,17 +502,19 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 // on a sub-thread but that doesn't seem cross-platform safe. We shouldn't
                 // have a lot of error logging, so this should be acceptable. If not, we could
                 // cache the visibility state.
-                mShell.getDisplay().syncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!mLogWindow.isVisible()) {
-                            // Don't toggle the window visibility directly.
-                            // Instead use the same action as the log-toggle button
-                            // so that the button's state be kept in sync.
-                            onToggleLogWindow();
+                if (mShell != null && !mShell.isDisposed()) {
+                    mShell.getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!mLogWindow.isVisible()) {
+                                // Don't toggle the window visibility directly.
+                                // Instead use the same action as the log-toggle button
+                                // so that the button's state be kept in sync.
+                                onToggleLogWindow();
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         };
 
@@ -606,8 +608,10 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     private void onToggleLogWindow() {
         // toggle visibility
-        mLogWindow.setVisible(!mLogWindow.isVisible());
-        mButtonShowLog.setState(mLogWindow.isVisible() ? 1 : 0);
+        if (!mButtonShowLog.isDisposed()) {
+            mLogWindow.setVisible(!mLogWindow.isVisible());
+            mButtonShowLog.setState(mLogWindow.isVisible() ? 1 : 0);
+        }
     }
 
     private void onStopSelected() {

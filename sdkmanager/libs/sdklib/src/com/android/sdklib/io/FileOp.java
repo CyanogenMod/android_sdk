@@ -170,6 +170,14 @@ public class FileOp implements IFileOp {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setReadOnly(File file) {
+        file.setReadOnly();
+    }
+
+    /**
      * Copies a binary file.
      *
      * @param source the source file to copy.

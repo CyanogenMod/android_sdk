@@ -19,16 +19,20 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -56,6 +60,13 @@ public abstract class Package implements IDescription, Comparable<Package> {
     private final String mReleaseUrl;
     private final Archive[] mArchives;
     private final SdkSource mSource;
+
+
+    // figure if we'll need to set the unix permissions
+    private static final boolean sUsingUnixPerm =
+                SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ||
+                SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX;
+
 
     /**
      * Enum for the result of {@link Package#canBeUpdatedBy(Package)}. This used so that we can
@@ -545,6 +556,38 @@ public abstract class Package implements IDescription, Comparable<Package> {
             String osSdkRoot, File installFolder) {
         // Nothing to do in base class.
         return true;
+    }
+
+    /**
+     * Hook called right after a file has been unzipped (during an install).
+     * <p/>
+     * The base class implementation makes sure to properly adjust set executable
+     * permission on Linux and MacOS system if the zip entry was marked as +x.
+     *
+     * @param archive The archive that is being installed.
+     * @param monitor The {@link ITaskMonitor} to display errors.
+     * @param fileOp The {@link IFileOp} used by the archive installer.
+     * @param unzippedFile The file that has just been unzipped in the install temp directory.
+     * @param zipEntry The {@link ZipArchiveEntry} that has just been unzipped.
+     */
+    public void postUnzipFileHook(
+            Archive archive,
+            ITaskMonitor monitor,
+            IFileOp fileOp,
+            File unzippedFile,
+            ZipArchiveEntry zipEntry) {
+
+        // if needed set the permissions.
+        if (sUsingUnixPerm && fileOp.isFile(unzippedFile)) {
+            // get the mode and test if it contains the executable bit
+            int mode = zipEntry.getUnixMode();
+            if ((mode & 0111) != 0) {
+                try {
+                    fileOp.setExecutablePermission(unzippedFile);
+                } catch (IOException ignore) {}
+            }
+        }
+
     }
 
     /**
