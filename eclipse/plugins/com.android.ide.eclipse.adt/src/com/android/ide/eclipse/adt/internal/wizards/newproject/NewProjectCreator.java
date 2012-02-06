@@ -36,6 +36,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.filesystem.IFileSystem;
 import org.eclipse.core.resources.IContainer;
@@ -1027,9 +1028,53 @@ public class NewProjectCreator  {
             IProgressMonitor monitor) throws CoreException {
         // Copy the sampleDir into the project directory recursively
         IFileSystem fileSystem = EFS.getLocalFileSystem();
-        IFileStore sourceDir = fileSystem.getStore(sampleDir.toURI());
-        IFileStore destDir = fileSystem.getStore(AdtUtils.getAbsolutePath(project));
+        IFileStore sourceDir = new ReadWriteFileStore(
+                                        fileSystem.getStore(sampleDir.toURI()));
+        IFileStore destDir   = new ReadWriteFileStore(
+                                        fileSystem.getStore(AdtUtils.getAbsolutePath(project)));
         sourceDir.copy(destDir, EFS.OVERWRITE, null);
+    }
+
+    /**
+     * In a sample we never duplicate source files as read-only.
+     * This creates a store that read files attributes and doesn't set the r-o flag.
+     */
+    private static class ReadWriteFileStore extends FileStoreAdapter {
+
+        public ReadWriteFileStore(IFileStore store) {
+            super(store);
+        }
+
+        // Override when reading attributes
+        @Override
+        public IFileInfo fetchInfo(int options, IProgressMonitor monitor) throws CoreException {
+            IFileInfo info = super.fetchInfo(options, monitor);
+            info.setAttribute(EFS.ATTRIBUTE_READ_ONLY, false);
+            return info;
+        }
+
+        // Override when writing attributes
+        @Override
+        public void putInfo(IFileInfo info, int options, IProgressMonitor storeMonitor)
+                throws CoreException {
+            info.setAttribute(EFS.ATTRIBUTE_READ_ONLY, false);
+            super.putInfo(info, options, storeMonitor);
+        }
+
+        @Deprecated
+        @Override
+        public IFileStore getChild(IPath path) {
+            IFileStore child = super.getChild(path);
+            if (!(child instanceof ReadWriteFileStore)) {
+                child = new ReadWriteFileStore(child);
+            }
+            return child;
+        }
+
+        @Override
+        public IFileStore getChild(String name) {
+            return new ReadWriteFileStore(super.getChild(name));
+        }
     }
 
     /**
