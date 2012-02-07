@@ -250,7 +250,7 @@ class LogWindow implements ILogUiProvider {
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("ERROR: %1$s", log);           //$NON-NLS-1$
+                mSecondaryLog.error(null, "%1$s", log);             //$NON-NLS-1$
             }
         }
     }

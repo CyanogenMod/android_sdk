@@ -52,11 +52,18 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
 
-            // Runs the updater window, directing all logs to the ADT console.
+            // Runs the updater window, directing only warning/errors logs to the ADT console
+            // (normal log is just dropped, which is fine since the SDK Manager has its own
+            // log window now.)
 
             SdkUpdaterWindow window = new SdkUpdaterWindow(
                     AdtPlugin.getDisplay().getActiveShell(),
-                    new AdtConsoleSdkLog(),
+                    new AdtConsoleSdkLog() {
+                        @Override
+                        public void printf(String msgFormat, Object... args) {
+                            // Do not show non-error/warning log in Eclipse.
+                        };
+                    },
                     sdk.getSdkLocation(),
                     SdkInvocationContext.IDE);
 
