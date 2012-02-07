@@ -200,7 +200,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
         for (int i = 0; i < calls.size(); i++) {
             GLCall c = calls.get(i);
             if (c.getFunction() == Function.eglSwapBuffers) {
-                glFrames.add(new GLFrame(frameIndex, startCallIndex, i));
+                glFrames.add(new GLFrame(frameIndex, startCallIndex, i + 1));
                 startCallIndex = i + 1;
                 frameIndex++;
             }
@@ -208,7 +208,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         // assign left over calls at the end to the last frame
         if (startCallIndex != mGLCalls.size()) {
-            glFrames.add(new GLFrame(frameIndex, startCallIndex, mGLCalls.size() - 1));
+            glFrames.add(new GLFrame(frameIndex, startCallIndex, mGLCalls.size()));
         }
 
         return glFrames;

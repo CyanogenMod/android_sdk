@@ -73,13 +73,7 @@ public class GLTrace {
         }
 
         GLFrame frame = mGLFrames.get(frameIndex);
-        int start = frame.getStartIndex();
-
-        // List.subList excludes the last index, while frame.getEndIndex is inclusive.
-        // So we add 1 to the end
-        int end = frame.getEndIndex() + 1;
-
-        return mGLCalls.subList(start, end);
+        return mGLCalls.subList(frame.getStartIndex(), frame.getEndIndex());
     }
 
     public Image getImage(GLCall c) {
