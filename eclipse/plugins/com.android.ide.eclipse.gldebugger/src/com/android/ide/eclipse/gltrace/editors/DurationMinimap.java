@@ -300,15 +300,25 @@ public class DurationMinimap extends Canvas {
         for (int i = mStartCallIndex; i < mEndCallIndex; i += callUnderScan) {
             boolean resetColor = false;
             GLCall c = mCalls.get(i);
+
             if (c.getFunction() == Function.glDrawArrays
-                    || c.getFunction() == Function.glDrawElements) {
+                    || c.getFunction() == Function.glDrawElements
+                    || c.getFunction() == Function.eglSwapBuffers) {
                 gc.setBackground(mGlDrawColor);
                 resetColor = true;
             }
+
+            long duration = c.getDuration();
+            if (c.getFunction() == Function.eglSwapBuffers) {
+                // egl swap buffers typically takes very little time, but since
+                // it is a significant call, we explicitly size it to the max length
+                duration = mPositionHelper.getMaxDuration();
+            }
+
             Rectangle bounds = mPositionHelper.getDurationBounds(
                     i - mStartCallIndex,
                     c.getContextId(),
-                    c.getDuration());
+                    duration);
             gc.fillRectangle(bounds);
 
             if (resetColor) {
@@ -444,6 +454,10 @@ public class DurationMinimap extends Canvas {
             int h = 1;
 
             return new Rectangle(x, y, w, h);
+        }
+
+        public long getMaxDuration() {
+            return mMaxDuration;
         }
 
         /** Get the bounds for calls spanning given range. */
