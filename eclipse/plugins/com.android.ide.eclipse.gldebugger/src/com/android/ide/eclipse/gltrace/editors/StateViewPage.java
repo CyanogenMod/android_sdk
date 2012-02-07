@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gldebugger.Activator;
+import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.GLState;
@@ -30,7 +31,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -121,18 +122,15 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
             return;
         }
 
-        if (!(selection instanceof IStructuredSelection)) {
+        if (!(selection instanceof TreeSelection)) {
             return;
         }
 
         GLCall selectedCall = null;
 
-        IStructuredSelection ssel = (IStructuredSelection) selection;
-        if (ssel.toList().size() > 0) {
-            Object data = ssel.toList().get(0);
-            if (data instanceof GLCall) {
-                selectedCall = (GLCall) data;
-            }
+        Object data = ((TreeSelection) selection).getFirstElement();
+        if (data instanceof GLCallNode) {
+            selectedCall = ((GLCallNode) data).getCall();
         }
 
         if (selectedCall == null) {
@@ -234,7 +232,11 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
         Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
 
         for (int i = fromIndex; i > toIndex; i--) {
-            for (IStateTransform f : mGLCalls.get(i).getStateTransformations()) {
+            List<IStateTransform> transforms = mGLCalls.get(i).getStateTransformations();
+            // When reverting transformations, iterate from the last to first so that the reversals
+            // are performed in the correct sequence.
+            for (int j = transforms.size() - 1; j >= 0; j--) {
+                IStateTransform f = transforms.get(j);
                 f.revert(mState);
 
                 IGLProperty changedProperty = f.getChangedProperty(mState);

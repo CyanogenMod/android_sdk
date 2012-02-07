@@ -59,6 +59,10 @@ public class GLTrace {
         return mGLFrames;
     }
 
+    public GLFrame getFrame(int i) {
+        return mGLFrames.get(i);
+    }
+
     public List<GLCall> getGLCalls() {
         return mGLCalls;
     }

@@ -20,6 +20,7 @@ import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
 import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
+import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
@@ -36,13 +37,17 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -51,15 +56,17 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IURIEditorInput;
@@ -94,7 +101,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Spinner mFrameSelectionSpinner;
 
     private GLTrace mTrace;
-    private TableViewer mFrameTableViewer;
+
+    private TreeViewer mFrameTreeViewer;
+    private List<GLCallNode> mTreeViewerNodes;
+
     private Text mFilterText;
     private GLCallFilter mGLCallFilter;
 
@@ -106,6 +116,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     private DurationMinimap mDurationMinimap;
     private ScrollBar mVerticalScrollBar;
+
+    private Combo mContextSwitchCombo;
+    private boolean mShowContextSwitcher;
+    private int mCurrentlyDisplayedContext = -1;
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
@@ -173,11 +187,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             return;
         }
 
+        mShowContextSwitcher = mTrace.getContexts().size() > 1;
+
         createFrameSelectionControls(c);
         createFilterBar(c);
         createFrameTraceView(c);
 
-        getSite().setSelectionProvider(mFrameTableViewer);
+        getSite().setSelectionProvider(mFrameTreeViewer);
 
         Display.getDefault().asyncExec(new Runnable() {
             @Override
@@ -258,24 +274,53 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
         final List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
-        mFrameTableViewer.setInput(glcalls);
-        mFrameTableViewer.refresh();
-
-        GLFrame f = mTrace.getFrames().get(selectedFrame - 1);
+        GLFrame f = mTrace.getFrame(selectedFrame - 1);
         mCallStartIndex = f.getStartIndex();
         mCallEndIndex = f.getEndIndex();
+
+        refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
+
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
+
+        if (glcalls.size() > 0) {
+            GLCall lastCallInFrame = glcalls.get(glcalls.size() - 1);
+            updateFbView(lastCallInFrame);
+        }
+    }
+
+    /**
+     * Show only calls from the given context
+     * @param context context id whose calls should be displayed. Illegal values will result in
+     *                calls from all contexts being displayed.
+     */
+    private void selectContext(int context) {
+        if (mCurrentlyDisplayedContext == context) {
+            return;
+        }
+
+        mCurrentlyDisplayedContext = context;
+        refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
+    }
+
+    private void refreshTree(int startCallIndex, int endCallIndex, int contextToDisplay) {
+        mTreeViewerNodes = GLCallGroups.constructCallHierarchy(mTrace,
+                startCallIndex, endCallIndex,
+                contextToDisplay);
+        mFrameTreeViewer.setInput(mTreeViewerNodes);
+        mFrameTreeViewer.refresh();
+        mFrameTreeViewer.expandAll();
+    }
+
+    private void updateFbView(final GLCall c) {
+        if (!c.hasFb()) {
+            return;
+        }
 
         // update framebuffer view
         Job job = new Job("Update Framebuffer view") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
-                if (glcalls.size() == 0) {
-                    return Status.OK_STATUS;
-                }
-
-                GLCall lastCallInFrame = glcalls.get(glcalls.size() - 1);
-                final Image image = mTrace.getImage(lastCallInFrame);
+                final Image image = mTrace.getImage(c);
 
                 Display.getDefault().syncExec(new Runnable() {
                     @Override
@@ -292,8 +337,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     private void createFilterBar(Composite parent) {
+        int numColumns = mShowContextSwitcher ? 3 : 2;
+
         Composite c = new Composite(parent, SWT.NONE);
-        c.setLayout(new GridLayout(2, false));
+        c.setLayout(new GridLayout(numColumns, false));
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         c.setLayoutData(gd);
 
@@ -309,11 +356,33 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                 updateAppliedFilters();
             }
         });
+
+        if (mShowContextSwitcher) {
+            mContextSwitchCombo = new Combo(c, SWT.BORDER | SWT.READ_ONLY);
+
+            // Setup the combo such that "All Contexts" is the first item,
+            // and then we have an item for each context.
+            mContextSwitchCombo.add("All Contexts");
+            mContextSwitchCombo.select(0);
+            mCurrentlyDisplayedContext = -1; // showing all contexts
+            for (int i = 0; i < mTrace.getContexts().size(); i++) {
+                mContextSwitchCombo.add("Context " + i);
+            }
+
+            mContextSwitchCombo.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    selectContext(mContextSwitchCombo.getSelectionIndex() - 1);
+                }
+            });
+        } else {
+            mCurrentlyDisplayedContext = 0;
+        }
     }
 
     private void updateAppliedFilters() {
         mGLCallFilter.setFilters(mFilterText.getText().trim());
-        mFrameTableViewer.refresh();
+        mFrameTreeViewer.refresh();
     }
 
     private void createFrameTraceView(Composite parent) {
@@ -322,47 +391,56 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         GridData gd = new GridData(GridData.FILL_BOTH);
         c.setLayoutData(gd);
 
-        final Table table = new Table(c, SWT.BORDER);
+        final Tree tree = new Tree(c, SWT.BORDER | SWT.FULL_SELECTION);
         gd = new GridData(GridData.FILL_BOTH);
-        table.setLayoutData(gd);
-        table.setLinesVisible(true);
-        table.setHeaderVisible(true);
+        tree.setLayoutData(gd);
+        tree.setLinesVisible(true);
+        tree.setHeaderVisible(true);
 
-        mFrameTableViewer = new TableViewer(table);
+        mFrameTreeViewer = new TreeViewer(tree);
         CellLabelProvider labelProvider = new GLFrameLabelProvider();
 
         // column showing the GL context id
-        TableViewerColumn tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        TreeViewerColumn tvc = new TreeViewerColumn(mFrameTreeViewer, SWT.NONE);
         tvc.setLabelProvider(labelProvider);
-        TableColumn column = tvc.getColumn();
-        column.setText("Context");
-        column.setWidth(30);
-
-        // column showing the GL function start time
-        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
-        tvc.setLabelProvider(labelProvider);
-        column = tvc.getColumn();
-        column.setText("Start");
-        column.setWidth(150);
+        TreeColumn column = tvc.getColumn();
+        column.setText("Function");
+        column.setWidth(700);
 
         // column showing the GL function duration
-        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        tvc = new TreeViewerColumn(mFrameTreeViewer, SWT.NONE);
         tvc.setLabelProvider(labelProvider);
         column = tvc.getColumn();
         column.setText("Duration");
         column.setWidth(150);
 
-        // column showing the GL function called
-        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
-        tvc.setLabelProvider(labelProvider);
-        column = tvc.getColumn();
-        column.setText("Function");
-        column.setWidth(500);
-
-        mFrameTableViewer.setContentProvider(new GLFrameContentProvider());
+        mFrameTreeViewer.setContentProvider(new GLFrameContentProvider());
 
         mGLCallFilter = new GLCallFilter();
-        mFrameTableViewer.addFilter(mGLCallFilter);
+        mFrameTreeViewer.addFilter(mGLCallFilter);
+        mFrameTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
+            public void selectionChanged(SelectionChangedEvent event) {
+                TreeSelection s = (TreeSelection) event.getSelection();
+                if (s.getFirstElement() instanceof GLCallNode) {
+                    GLCall call = ((GLCallNode) s.getFirstElement()).getCall();
+                    updateFbView(call);
+                }
+            }
+        });
+
+        // when the control is resized, give all the additional space
+        // to the function name column.
+        tree.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                int w = mFrameTreeViewer.getTree().getClientArea().width;
+                if (w > 100) {
+                    mFrameTreeViewer.getTree().getColumn(1).setWidth(100);
+                    mFrameTreeViewer.getTree().getColumn(0).setWidth(w - 100);
+                }
+            }
+        });
 
         mDurationMinimap = new DurationMinimap(c, mTrace);
         gd = new GridData(GridData.FILL_VERTICAL);
@@ -371,12 +449,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mDurationMinimap.addCallSelectionListener(new ICallSelectionListener() {
             @Override
             public void callSelected(int selectedCallIndex) {
-                table.select(selectedCallIndex);
-                table.setTopIndex(selectedCallIndex);
+                if (selectedCallIndex > 0 && selectedCallIndex < mTreeViewerNodes.size()) {
+                    TreeItem item = tree.getItem(selectedCallIndex);
+                    tree.select(item);
+                    tree.setTopItem(item);
+                }
             }
         });
 
-        mVerticalScrollBar = table.getVerticalBar();
+        mVerticalScrollBar = tree.getVerticalBar();
         mVerticalScrollBar.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -442,10 +523,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     @Override
     public void setFocus() {
-        mFrameTableViewer.getTable().setFocus();
+        mFrameTreeViewer.getTree().setFocus();
     }
 
-    private static class GLFrameContentProvider implements IStructuredContentProvider {
+    private static class GLFrameContentProvider implements ITreeContentProvider {
         @Override
         public void dispose() {
         }
@@ -455,12 +536,44 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         @Override
-        public Object[] getElements(Object model) {
-            if (model instanceof List<?>) {
-                return ((List<?>) model).toArray();
+        public Object[] getElements(Object inputElement) {
+            return getChildren(inputElement);
+        }
+
+        @Override
+        public Object[] getChildren(Object parentElement) {
+            if (parentElement instanceof List<?>) {
+                return ((List<?>) parentElement).toArray();
             }
 
-            return null;
+            if (!(parentElement instanceof GLCallNode)) {
+                return null;
+            }
+
+            GLCallNode parent = (GLCallNode) parentElement;
+            if (parent.hasChildren()) {
+                return parent.getChildren().toArray();
+            } else {
+                return new Object[0];
+            }
+        }
+
+        @Override
+        public Object getParent(Object element) {
+            if (!(element instanceof GLCallNode)) {
+                return null;
+            }
+
+            return ((GLCallNode) element).getParent();
+        }
+
+        @Override
+        public boolean hasChildren(Object element) {
+            if (!(element instanceof GLCallNode)) {
+                return false;
+            }
+
+            return ((GLCallNode) element).hasChildren();
         }
     }
 
@@ -468,11 +581,11 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         @Override
         public void update(ViewerCell cell) {
             Object element = cell.getElement();
-            if (!(element instanceof GLCall)) {
+            if (!(element instanceof GLCallNode)) {
                 return;
             }
 
-            GLCall c = (GLCall) element;
+            GLCall c = ((GLCallNode) element).getCall();
 
             if (c.getFunction() == Function.glDrawArrays
                     || c.getFunction() == Function.glDrawElements) {
@@ -485,18 +598,16 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         private String getColumnText(GLCall c, int columnIndex) {
             switch (columnIndex) {
             case 0:
-                return Integer.toString(c.getContextId());
-            case 1:
-                return Long.toString(c.getStartTime());
-            case 2:
-                return Integer.toString(c.getDuration());
-            default:
                 try {
                     return c.toString();
                 } catch (Exception e) {
                     // in case of any formatting errors, just return the function name.
                     return c.getFunction().toString();
                 }
+            case 1:
+                return Integer.toString(c.getDuration());
+            default:
+                return Integer.toString(c.getContextId());
             }
         }
     }
@@ -517,7 +628,11 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         @Override
         public boolean select(Viewer viewer, Object parentElement, Object element) {
-            GLCall call = (GLCall) element;
+            if (!(element instanceof GLCallNode)) {
+                return true;
+            }
+
+            GLCall call = ((GLCallNode) element).getCall();
             String text = call.getFunction().toString();
 
             if (mPatterns.size() == 0) {
@@ -539,15 +654,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     @Override
     public void addSelectionChangedListener(ISelectionChangedListener listener) {
-        if (mFrameTableViewer != null) {
-            mFrameTableViewer.addSelectionChangedListener(listener);
+        if (mFrameTreeViewer != null) {
+            mFrameTreeViewer.addSelectionChangedListener(listener);
         }
     }
 
     @Override
     public ISelection getSelection() {
-        if (mFrameTableViewer != null) {
-            return mFrameTableViewer.getSelection();
+        if (mFrameTreeViewer != null) {
+            return mFrameTreeViewer.getSelection();
         } else {
             return null;
         }
@@ -555,15 +670,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     @Override
     public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-        if (mFrameTableViewer != null) {
-            mFrameTableViewer.removeSelectionChangedListener(listener);
+        if (mFrameTreeViewer != null) {
+            mFrameTreeViewer.removeSelectionChangedListener(listener);
         }
     }
 
     @Override
     public void setSelection(ISelection selection) {
-        if (mFrameTableViewer != null) {
-            mFrameTableViewer.setSelection(selection);
+        if (mFrameTreeViewer != null) {
+            mFrameTreeViewer.setSelection(selection);
         }
     }
 
