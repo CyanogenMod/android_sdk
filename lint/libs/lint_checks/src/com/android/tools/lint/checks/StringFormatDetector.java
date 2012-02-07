@@ -94,7 +94,14 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             "(1) Formatting strings that are invalid, meaning that String.format will throw " +
             "exceptions at runtime when attempting to use the format string.\n" +
             "(2) Strings containing '%' that are not formatting strings getting passed to " +
-            "a String.format call. In this case the '%' will need to be escaped as '%%'.",
+            "a String.format call. In this case the '%' will need to be escaped as '%%'.\n" +
+            "\n" +
+            "NOTE: Not all Strings which look like formatting strings are intended for " +
+            "use by String.format; for example, they may contain date formats intended " +
+            "for android.text.format.Time#format(). Lint cannot always figure out that " +
+            "a String is a date format, so you may get false warnings in those scenarios. " +
+            "See the suppress help topic for information on how to suppress errors in " +
+            "that case.",
 
             Category.MESSAGES,
             9,
@@ -224,6 +231,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     private void checkTextNode(XmlContext context, Element element, String text) {
+        String name = null;
+        boolean found = false;
+
         // Look at the String and see if it's a format string (contains
         // positional %'s)
         for (int j = 0, m = text.length(); j < m; j++) {
@@ -232,7 +242,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 j++;
             }
             if (c == '%') {
-                String name = element.getAttribute(ATTR_NAME);
+                if (name == null) {
+                    name = element.getAttribute(ATTR_NAME);
+                }
 
                 // Also make sure this String isn't an unformatted String
                 String formatted = element.getAttribute("formatted"); //$NON-NLS-1$
@@ -241,36 +253,52 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                         Handle handle = context.parser.createLocationHandle(context, element);
                         mNotFormatStrings.put(name, handle);
                     }
-                    continue;
+                    return;
                 }
 
                 // See if it's not a format string, e.g. "Battery charge is 100%!".
                 // If so we want to record this name in a special list such that we can
                 // make sure you don't attempt to reference this string from a String.format
                 // call.
-                if (!FORMAT.matcher(text).find()) {
+                Matcher matcher = FORMAT.matcher(text);
+                if (!matcher.find(j)) {
                     if (!mNotFormatStrings.containsKey(name)) {
                         Handle handle = context.parser.createLocationHandle(context, element);
                         mNotFormatStrings.put(name, handle);
                     }
-                    continue;
+                    return;
                 }
 
-                // Record it for analysis when seen in Java code
-                if (mFormatStrings == null) {
-                    mFormatStrings = new HashMap<String, List<Pair<Handle,String>>>();
+                String conversion = matcher.group(6);
+                int conversionClass = getConversionClass(conversion.charAt(0));
+                if (conversionClass == CONVERSION_CLASS_UNKNOWN || matcher.group(5) != null) {
+                    if (!mNotFormatStrings.containsKey(name)) {
+                        Handle handle = context.parser.createLocationHandle(context, element);
+                        mNotFormatStrings.put(name, handle);
+                    }
+                    // Don't process any other strings here; some of them could
+                    // accidentally look like a string, e.g. "%H" is a hash code conversion
+                    // in String.format (and hour in Time formatting).
+                    return;
                 }
 
-                List<Pair<Handle, String>> list = mFormatStrings.get(name);
-                if (list == null) {
-                    list = new ArrayList<Pair<Handle, String>>();
-                    mFormatStrings.put(name, list);
-                }
-                Handle handle = context.parser.createLocationHandle(context, element);
-                list.add(Pair.of(handle, text));
-
-                break;
+                found = true;
             }
+        }
+
+        if (found && name != null) {
+            // Record it for analysis when seen in Java code
+            if (mFormatStrings == null) {
+                mFormatStrings = new HashMap<String, List<Pair<Handle,String>>>();
+            }
+
+            List<Pair<Handle, String>> list = mFormatStrings.get(name);
+            if (list == null) {
+                list = new ArrayList<Pair<Handle, String>>();
+                mFormatStrings.put(name, list);
+            }
+            Handle handle = context.parser.createLocationHandle(context, element);
+            list.add(Pair.of(handle, text));
         }
     }
 
@@ -311,7 +339,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             Handle handle = pair.getFirst();
             String formatString = pair.getSecond();
 
-            boolean warned = false;
+            //boolean warned = false;
             Matcher matcher = FORMAT.matcher(formatString);
             int index = 0;
             int prevIndex = 0;
@@ -354,7 +382,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                         "character in '%2$s' ?", name, str);
                                 context.report(INVALID, location,
                                         message, null);
-                                warned = true;
+                                //warned = true;
                                 continue;
                             }
                         }
@@ -381,7 +409,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     if (currentFormat == null) {
                         types.put(number, format);
                         typeDefinition.put(number, handle);
-                    } else if (!currentFormat.equals(format)) {
+                    } else if (!currentFormat.equals(format)
+                            && isIncompatible(currentFormat.charAt(0), format.charAt(0))) {
                         Location location = handle.resolve();
                         // Attempt to limit the location range to just the formatting
                         // string in question
@@ -399,7 +428,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                 str,
                                 currentFormat, format,
                                 f.getParentFile().getName() + File.separator + f.getName());
-                        warned = true;
+                        //warned = true;
                         // TODO: Compute applicable node scope
                         context.report(ARG_TYPES, location,
                                 message, null);
@@ -436,6 +465,73 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             }
             */
         }
+    }
+
+    /**
+     * Returns true if two String.format conversions are "incompatible" (meaning
+     * that using these two for the same argument across different translations
+     * is more likely an error than intentional. Some conversions are
+     * incompatible, e.g. "d" and "s" where one is a number and string, whereas
+     * others may work (e.g. float versus integer) but are probably not
+     * intentional.
+     */
+    private boolean isIncompatible(char conversion1, char conversion2) {
+        int class1 = getConversionClass(conversion1);
+        int class2 = getConversionClass(conversion2);
+        return class1 != class2
+                && class1 != CONVERSION_CLASS_UNKNOWN
+                && class2 != CONVERSION_CLASS_UNKNOWN;
+    }
+
+    private static final int CONVERSION_CLASS_UNKNOWN = 0;
+    private static final int CONVERSION_CLASS_STRING = 1;
+    private static final int CONVERSION_CLASS_CHARACTER = 2;
+    private static final int CONVERSION_CLASS_INTEGER = 3;
+    private static final int CONVERSION_CLASS_FLOAT = 4;
+    private static final int CONVERSION_CLASS_BOOLEAN = 5;
+    private static final int CONVERSION_CLASS_HASHCODE = 6;
+    private static final int CONVERSION_CLASS_PERCENT = 7;
+    private static final int CONVERSION_CLASS_NEWLINE = 8;
+    private static final int CONVERSION_CLASS_DATETIME = 9;
+
+    private static int getConversionClass(char conversion) {
+        // See http://developer.android.com/reference/java/util/Formatter.html
+        switch (conversion) {
+            case 't':   // Time/date conversion
+            case 'T':
+                return CONVERSION_CLASS_DATETIME;
+            case 's':   // string
+            case 'S':   // Uppercase string
+                return CONVERSION_CLASS_STRING;
+            case 'c':   // character
+            case 'C':   // Uppercase character
+                return CONVERSION_CLASS_CHARACTER;
+            case 'd':   // decimal
+            case 'o':   // octal
+            case 'x':   // hex
+            case 'X':
+                return CONVERSION_CLASS_INTEGER;
+            case 'f':   // decimal float
+            case 'e':   // exponential float
+            case 'E':
+            case 'g':   // decimal or exponential depending on size
+            case 'G':
+            case 'a':   // hex float
+            case 'A':
+                return CONVERSION_CLASS_FLOAT;
+            case 'b':   // boolean
+            case 'B':
+                return CONVERSION_CLASS_BOOLEAN;
+            case 'h':   // boolean
+            case 'H':
+                return CONVERSION_CLASS_HASHCODE;
+            case '%':   // literal
+                return CONVERSION_CLASS_PERCENT;
+            case 'n':   // literal
+                return CONVERSION_CLASS_NEWLINE;
+        }
+
+        return CONVERSION_CLASS_UNKNOWN;
     }
 
     private Location refineLocation(Context context, Location location, String formatString,
@@ -489,7 +585,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             for (int i = 1; i <= count; i++) {
                 if (!indices.contains(i)) {
                     Set<Integer> all = new HashSet<Integer>();
-                    for (int j = 0; j < count; j++) {
+                    for (int j = 1; j < count; j++) {
                         all.add(j);
                     }
                     all.removeAll(indices);
@@ -588,35 +684,50 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      */
     @VisibleForTesting
     static int getFormatArgumentCount(String s, Set<Integer> seenArguments) {
+        Matcher matcher = FORMAT.matcher(s);
+        int index = 0;
+        int prevIndex = 0;
+        int nextNumber = 1;
         int max = 0;
-        for (int i = 0, n = s.length(); i < n; i++) {
-            char c = s.charAt(i);
-            if (c == '\\') {
-                // Skip next char
-                i++;
-            } else if (c == '%') {
-                // Peek ahead: is this a format number like %(\d+)\$ ?
-                String argument = null;
-                for (int j = i + 1; j < n; j++) {
-                    char p = s.charAt(j);
-                    if (p == '$') {
-                        if (j > i + 1) {
-                            argument = s.substring(i + 1, j);
-                        }
-                        break;
-                    } else if (!Character.isDigit(p)) {
-                        break;
+        while (true) {
+            if (matcher.find(index)) {
+                int matchStart = matcher.start();
+                // Make sure this is not an escaped '%'
+                for (; prevIndex < matchStart; prevIndex++) {
+                    char c = s.charAt(prevIndex);
+                    if (c == '\\') {
+                        prevIndex++;
                     }
                 }
-                if (argument != null) {
-                    int number = Integer.parseInt(argument);
-                    if (number > max) {
-                        max = number;
-                    }
-                    if (seenArguments != null) {
-                        seenArguments.add(number);
-                    }
+                if (prevIndex > matchStart) {
+                    // We're in an escape, ignore this result
+                    index = prevIndex;
+                    continue;
                 }
+
+                // Shouldn't throw a number format exception since we've already
+                // matched the pattern in the regexp
+                int number;
+                String numberString = matcher.group(1);
+                if (numberString != null) {
+                    // Strip off trailing $
+                    numberString = numberString.substring(0, numberString.length() - 1);
+                    number = Integer.parseInt(numberString);
+                    nextNumber = number + 1;
+                } else {
+                    number = nextNumber++;
+                }
+
+                if (number > max) {
+                    max = number;
+                }
+                if (seenArguments != null) {
+                    seenArguments.add(number);
+                }
+
+                index = matcher.end();
+            } else {
+                break;
             }
         }
 

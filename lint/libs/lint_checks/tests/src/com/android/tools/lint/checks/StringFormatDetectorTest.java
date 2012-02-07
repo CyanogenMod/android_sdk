@@ -30,7 +30,7 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
 
     public void testAll() throws Exception {
         assertEquals(
-            "formatstrings.xml:5: Warning: Formatting string 'missing' is not referencing numbered arguments [0, 1, 2]\n" +
+            "formatstrings.xml:5: Warning: Formatting string 'missing' is not referencing numbered arguments [1, 2]\n" +
             "pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String\n" +
             "=> values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
             "pkg/StringFormatActivity.java:15: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
@@ -55,6 +55,8 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
                 "Skipping stuff: %11$s", null));
         assertEquals(1, StringFormatDetector.getFormatArgumentCount(
                 "First: %1$s, Skip \\%2$s", null));
+        assertEquals(1, StringFormatDetector.getFormatArgumentCount(
+                "First: %s, Skip \\%s", null));
 
         Set<Integer> indices = new HashSet<Integer>();
         assertEquals(11, StringFormatDetector.getFormatArgumentCount(
@@ -81,6 +83,26 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
 
             lintProject(
                     "res/values/formatstrings2.xml"
+                ));
+    }
+
+    public void testDateStrings() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/values/formatstrings-version1.xml=>res/values-tl/donottranslate-cldr.xml",
+                    "res/values/formatstrings-version2.xml=>res/values/donottranslate-cldr.xml"
+                ));
+    }
+
+    public void testUa() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/values/formatstrings-version1.xml=>res/values-tl/donottranslate-cldr.xml",
+                    "src/test/pkg/StringFormat2.java.txt=>src/test/pkg/StringFormat2.java"
                 ));
     }
 }
