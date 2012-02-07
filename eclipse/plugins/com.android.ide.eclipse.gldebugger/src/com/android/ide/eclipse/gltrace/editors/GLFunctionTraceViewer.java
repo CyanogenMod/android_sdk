@@ -24,12 +24,9 @@ import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
-import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
+import com.android.ide.eclipse.gltrace.views.FrameBufferViewPage;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -38,8 +35,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -53,7 +48,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -70,11 +64,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IURIEditorInput;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
 import java.io.File;
@@ -120,6 +110,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Combo mContextSwitchCombo;
     private boolean mShowContextSwitcher;
     private int mCurrentlyDisplayedContext = -1;
+
+    private FrameBufferViewPage mFrameBufferViewPage;
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
@@ -273,19 +265,18 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionScale.setSelection(selectedFrame);
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
-        final List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
         GLFrame f = mTrace.getFrame(selectedFrame - 1);
         mCallStartIndex = f.getStartIndex();
         mCallEndIndex = f.getEndIndex();
 
+        // update tree view in the editor
         refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
 
+        // update minimap view
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
 
-        if (glcalls.size() > 0) {
-            GLCall lastCallInFrame = glcalls.get(glcalls.size() - 1);
-            updateFbView(lastCallInFrame);
-        }
+        // update FB view
+        mFrameBufferViewPage.setSelectedFrame(selectedFrame - 1);
     }
 
     /**
@@ -309,31 +300,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameTreeViewer.setInput(mTreeViewerNodes);
         mFrameTreeViewer.refresh();
         mFrameTreeViewer.expandAll();
-    }
-
-    private void updateFbView(final GLCall c) {
-        if (!c.hasFb()) {
-            return;
-        }
-
-        // update framebuffer view
-        Job job = new Job("Update Framebuffer view") {
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                final Image image = mTrace.getImage(c);
-
-                Display.getDefault().syncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        displayFB(image);
-                    }
-                });
-
-                return Status.OK_STATUS;
-            }
-        };
-        job.setPriority(Job.SHORT);
-        job.schedule();
     }
 
     private void createFilterBar(Composite parent) {
@@ -418,16 +384,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         mGLCallFilter = new GLCallFilter();
         mFrameTreeViewer.addFilter(mGLCallFilter);
-        mFrameTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-            @Override
-            public void selectionChanged(SelectionChangedEvent event) {
-                TreeSelection s = (TreeSelection) event.getSelection();
-                if (s.getFirstElement() instanceof GLCallNode) {
-                    GLCall call = ((GLCallNode) s.getFirstElement()).getCall();
-                    updateFbView(call);
-                }
-            }
-        });
 
         // when the control is resized, give all the additional space
         // to the function name column.
@@ -486,39 +442,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         mDurationMinimap.setVisibleCallRange(visibleCallTopIndex, visibleCallBottomIndex);
-    }
-
-    private void displayFB(Image image) {
-        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window == null) {
-            return;
-        }
-
-        IWorkbenchPage page = window.getActivePage();
-        if (page == null) {
-            return;
-        }
-
-        final GLFramebufferView v = displayFBView(page);
-        if (v == null) {
-            return;
-        }
-
-        v.displayFB(image);
-    }
-
-    private GLFramebufferView displayFBView(IWorkbenchPage page) {
-        IViewPart view = page.findView(GLFramebufferView.ID);
-        if (view != null) {
-            page.bringToTop(view);
-            return (GLFramebufferView) view;
-        }
-
-        try {
-            return (GLFramebufferView) page.showView(GLFramebufferView.ID);
-        } catch (PartInitException e) {
-            return null;
-        }
     }
 
     @Override
@@ -688,5 +611,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     public StateViewPage getStateViewPage() {
         return new StateViewPage(mTrace);
+    }
+
+    public FrameBufferViewPage getFrameBufferViewPage() {
+        if (mFrameBufferViewPage == null) {
+            mFrameBufferViewPage = new FrameBufferViewPage(mTrace);
+        }
+
+        return mFrameBufferViewPage;
     }
 }

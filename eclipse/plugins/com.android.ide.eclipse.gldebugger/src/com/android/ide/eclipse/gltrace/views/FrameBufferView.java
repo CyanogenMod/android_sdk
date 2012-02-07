@@ -17,21 +17,18 @@
 package com.android.ide.eclipse.gltrace.views;
 
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
-import com.android.ide.eclipse.gltrace.editors.StateViewPage;
 
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * The StateView shows the GL state for the current active {@link GLFunctionTraceViewer}.
- * It behaves like the Eclipse Outline View: Each active editor provides the GL state content
- * to show via a {@link StateViewPage}. This class simply acts as a stack view showing the
- * state corresponding to whichever editor is active.
+ * The {@link FrameBufferView} displays the contents of the frame buffer for the
+ * currently displayed frame.
  */
-public class StateView extends GLPageBookView {
-    public static final String ID = "com.android.ide.eclipse.gltrace.views.State"; //$NON-NLS-1$
+public class FrameBufferView extends GLPageBookView {
+    public static final String ID = "com.android.ide.eclipse.gltrace.views.FrameBufferView"; //$NON-NLS-1$
 
-    public StateView() {
-        super("Open (or select) a GL Trace file to view the GL State.");
+    public FrameBufferView() {
+        super("Open a GL Trace file to view the framebuffer contents.");
     }
 
     @Override
@@ -41,7 +38,7 @@ public class StateView extends GLPageBookView {
         }
 
         GLFunctionTraceViewer viewer = (GLFunctionTraceViewer) part;
-        StateViewPage page = viewer.getStateViewPage();
+        FrameBufferViewPage page = viewer.getFrameBufferViewPage();
         initPage(page);
         page.createControl(getPageBook());
 
@@ -50,8 +47,8 @@ public class StateView extends GLPageBookView {
 
     @Override
     protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
-        StateViewPage v = (StateViewPage) pageRecord.page;
-        v.dispose();
+        FrameBufferViewPage page = (FrameBufferViewPage) pageRecord.page;
+        page.dispose();
         pageRecord.dispose();
     }
 }

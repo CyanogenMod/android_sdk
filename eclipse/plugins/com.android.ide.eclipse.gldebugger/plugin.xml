@@ -17,7 +17,7 @@
       </view>
       <view
             category="com.android.ide.eclipse.gltrace"
-            class="com.android.ide.eclipse.gltrace.views.GLFramebufferView"
+            class="com.android.ide.eclipse.gltrace.views.FrameBufferView"
             icon="icons/opengl.png"
             id="com.android.ide.eclipse.gltrace.views.GLFrameBuffer"
             name="Framebuffer"
