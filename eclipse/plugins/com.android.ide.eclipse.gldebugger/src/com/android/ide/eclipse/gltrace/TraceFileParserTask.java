@@ -108,8 +108,24 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 msg.getDuration(),
                                 StateTransformFactory.getTransformsFor(msg));
 
+        addProperties(c, msg);
+
         mGLCalls.add(c);
         mGLContextIds.add(Integer.valueOf(c.getContextId()));
+    }
+
+    /** Save important values from the {@link GLMessage} in the {@link GLCall} as properties. */
+    private void addProperties(GLCall c, GLMessage msg) {
+        switch (msg.getFunction()) {
+        case glPushGroupMarkerEXT:
+            // void PushGroupMarkerEXT(sizei length, const char *marker);
+            // save the marker name
+            c.addProperty(GLCall.PROPERTY_MARKERNAME,
+                    msg.getArgs(1).getCharValue(0).toStringUtf8());
+            break;
+        default:
+            break;
+        }
     }
 
     /**

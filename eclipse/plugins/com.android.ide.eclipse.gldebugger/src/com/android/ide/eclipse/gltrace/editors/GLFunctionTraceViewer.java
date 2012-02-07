@@ -521,6 +521,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         private String getColumnText(GLCall c, int columnIndex) {
             switch (columnIndex) {
             case 0:
+                if (c.getFunction() == Function.glPushGroupMarkerEXT) {
+                    Object marker = c.getProperty(GLCall.PROPERTY_MARKERNAME);
+                    if (marker instanceof String) {
+                        return ((String) marker);
+                    }
+                }
                 try {
                     return c.toString();
                 } catch (Exception e) {

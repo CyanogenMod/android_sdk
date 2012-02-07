@@ -19,6 +19,7 @@ package com.android.ide.eclipse.gltrace.model;
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
+import com.android.sdklib.util.SparseArray;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -34,6 +35,9 @@ import java.util.List;
  * specified offset.
  */
 public class GLCall {
+    /** Marker name provided by a {@link Function#glPushGroupMarkerEXT} call. */
+    public static final int PROPERTY_MARKERNAME = 0;
+
     /** Index of this call in the trace. */
     private int mIndex;
 
@@ -63,6 +67,9 @@ public class GLCall {
 
     /** List of state transformations performed by this call. */
     private final List<IStateTransform> mStateTransforms;
+
+    /** List of properties associated to this call. */
+    private SparseArray<Object> mProperties;
 
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
             Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration,
@@ -122,5 +129,29 @@ public class GLCall {
     @Override
     public String toString() {
         return mDisplayString;
+    }
+
+    /**
+     * Associate a certain value to the property name. Property names are defined
+     * as constants in {@link GLCall}.
+     */
+    public void addProperty(int propertyName, Object value) {
+        if (mProperties == null) {
+            mProperties = new SparseArray<Object>(1);
+        }
+
+        mProperties.put(propertyName, value);
+    }
+
+    /**
+     * Obtain the value for the given property. Returns null if no such property
+     * is associated with this {@link GLCall}.
+     */
+    public Object getProperty(int propertyName) {
+        if (mProperties == null) {
+            return null;
+        }
+
+        return mProperties.get(propertyName);
     }
 }
