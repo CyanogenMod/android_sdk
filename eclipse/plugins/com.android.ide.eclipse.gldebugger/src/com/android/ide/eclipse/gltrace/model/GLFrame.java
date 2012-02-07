@@ -25,6 +25,12 @@ public class GLFrame {
     private final int mStartCallIndex;
     private final int mEndCallIndex;
 
+    /**
+     * Construct a {@link GLFrame} given the range of {@link GLCall}s spanning this frame.
+     * @param frameIndex index of this frame in the trace.
+     * @param startCallIndex index of the first call in this frame (inclusive).
+     * @param endCallIndex index of the last call in this frame (exclusive).
+     */
     public GLFrame(int frameIndex, int startCallIndex, int endCallIndex) {
         mIndex = frameIndex;
         mStartCallIndex = startCallIndex;

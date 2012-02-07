@@ -144,7 +144,7 @@ public class GLCallGroups {
         Stack<GLTreeNode> hierarchyStack = new Stack<GLTreeNode>();
         List<GLCallNode> items = new ArrayList<GLCallNode>();
 
-        for (int i = start; i <= end; i++) {
+        for (int i = start; i < end; i++) {
             GLCall c = calls.get(i);
             if (c.getContextId() != contextToGroup) {
                 // skip this call if it is not part of the context we need to display
@@ -188,7 +188,7 @@ public class GLCallGroups {
         List<GLCallNode> items = new ArrayList<GLCallNode>();
 
         List<GLCall> calls = trace.getGLCalls();
-        for (int i = start; i <= end; i++) {
+        for (int i = start; i < end; i++) {
             items.add(new GLLeafNode(calls.get(i)));
         }
 
