@@ -9,6 +9,7 @@ WIN_SDK_TARGETS := \
 	emulator-arm \
 	emulator-x86 \
 	find_java \
+	find_lock \
 	mksdcard \
 	sdklauncher
 
