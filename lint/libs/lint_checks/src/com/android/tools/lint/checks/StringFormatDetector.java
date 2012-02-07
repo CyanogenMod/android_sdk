@@ -400,6 +400,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                 currentFormat, format,
                                 f.getParentFile().getName() + File.separator + f.getName());
                         warned = true;
+                        // TODO: Compute applicable node scope
                         context.report(ARG_TYPES, location,
                                 message, null);
                         break;
@@ -478,6 +479,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 String message = String.format(
                         "Inconsistent number of arguments in formatting string %1$s; " +
                         "found both %2$d and %3$d", name, prevCount, count);
+                // TODO: Compute applicable node scope
                 context.report(ARG_COUNT, location,
                         message, null);
 

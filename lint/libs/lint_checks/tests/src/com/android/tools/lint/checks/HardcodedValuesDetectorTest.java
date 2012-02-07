@@ -33,4 +33,15 @@ public class HardcodedValuesDetectorTest  extends AbstractCheckTest {
                 "should use @string resource",
             lintFiles("res/layout/accessibility.xml"));
     }
+
+    public void testSuppress() throws Exception {
+        // All but one errors in the file contain ignore attributes - direct, inherited
+        // and lists
+        assertEquals(
+            "ignores.xml:61: Warning: [I18N] Hardcoded string \"Hardcoded\", should use " +
+            "@string resource",
+
+            lintFiles("res/layout/ignores.xml"));
+    }
+
 }

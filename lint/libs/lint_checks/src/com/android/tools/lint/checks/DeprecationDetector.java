@@ -65,7 +65,7 @@ public class DeprecationDetector extends LayoutDetector {
 
     @Override
     public void visitElement(XmlContext context, Element element) {
-        context.report(ISSUE, context.getLocation(element),
+        context.report(ISSUE, element, context.getLocation(element),
                 String.format("%1$s is deprecated", element.getTagName()), null);
     }
 }

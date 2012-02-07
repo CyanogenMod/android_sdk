@@ -211,6 +211,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                             "Possible overdraw: Root element paints background %1$s with " +
                             "a theme that also paints a background (inferred theme is %2$s)",
                             drawable, theme);
+                    // TODO: Compute applicable scope node
                     context.report(ISSUE, location, message, null);
                 }
 

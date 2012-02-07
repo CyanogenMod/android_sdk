@@ -122,7 +122,7 @@ public class ExtraTextDetector extends ResourceXmlDetector {
                             location = Location.create(context.file, start, location.getEnd());
                         }
                     }
-                    context.report(ISSUE, location,
+                    context.report(ISSUE, node, location,
                             String.format("Unexpected text found in layout file: \"%1$s\"",
                                     snippet), null);
                     mFoundText = true;

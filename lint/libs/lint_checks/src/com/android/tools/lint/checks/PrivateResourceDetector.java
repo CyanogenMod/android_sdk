@@ -65,7 +65,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
     public void visitAttribute(XmlContext context, Attr attribute) {
         String value = attribute.getNodeValue();
         if (value.startsWith("@*android:")) { //$NON-NLS-1$
-            context.report(ISSUE, context.getLocation(attribute),
+            context.report(ISSUE, attribute, context.getLocation(attribute),
                     "Illegal resource reference: @*android resources are private and " +
                     "not always present", null);
         }

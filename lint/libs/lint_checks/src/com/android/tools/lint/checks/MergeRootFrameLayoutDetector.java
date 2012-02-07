@@ -122,6 +122,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
                 if (mWhitelistedLayouts.contains(layout)) {
                     Handle handle = pair.getSecond();
                     Location location = handle.resolve();
+                    // TODO: Compute applicable scope?
                     context.report(ISSUE, location,
                             "This <FrameLayout> can be replaced with a <merge> tag", null);
                 }

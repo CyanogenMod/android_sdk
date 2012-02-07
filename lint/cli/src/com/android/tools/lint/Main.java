@@ -501,10 +501,11 @@ public class Main extends LintClient {
             "Lint errors can be suppressed in a variety of ways:\n" +
             "\n" +
             "1. With a @SuppressLint annotation in the Java code\n" +
-            "2. With a lint.xml configuration file in the project\n" +
-            "3. With a lint.xml configuration file passed to lint " +
+            "2. With a tools:ignore attribute in the XML file\n" +
+            "3. With a lint.xml configuration file in the project\n" +
+            "4. With a lint.xml configuration file passed to lint " +
                 "via the " + ARG_CONFIG + " flag\n" +
-            "4. With the " + ARG_IGNORE + " flag passed to lint.\n" +
+            "5. With the " + ARG_IGNORE + " flag passed to lint.\n" +
             "\n" +
             "To suppress a lint warning with an annotation, add " +
             "a @SuppressLint(\"id\") annotation on the class, method " +
@@ -513,6 +514,14 @@ public class Main extends LintClient {
             "id's, such as \"UnusedResources\" or {\"UnusedResources\"," +
             "\"UnusedIds\"}, or it can be \"all\" to suppress all lint " +
             "warnings in the given scope.\n" +
+            "\n" +
+            "To suppress a lint warning in an XML file, add a " +
+            "tools:ignore=\"id\" attribute on the element containing " +
+            "the error, or one of its surrounding elements. You also " +
+            "need to define the namespace for the tools prefix on the " +
+            "root element in your document, next to the xmlns:android " +
+            "declaration:\n" +
+            "* xmlns:tools=\"http://schemas.android.com/tools\"\n" +
             "\n" +
             "To suppress lint warnings with a configuration XML file, " +
             "create a file named lint.xml and place it at the root " +

@@ -278,7 +278,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                             && isValidParamForParent(context, name, TABLE_ROW, parentTag)) {
                         return;
                     }
-                    context.report(ISSUE, context.getLocation(attribute),
+                    context.report(ISSUE, attribute, context.getLocation(attribute),
                             String.format("Invalid layout param in a %1$s: %2$s", parentTag, name),
                             null);
                 }
@@ -369,6 +369,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 }
                 String message = String.format("Invalid layout param '%1$s' (%2$s)",
                             name, sb.toString());
+                // TODO: Compute applicable scope node
                 context.report(ISSUE, location, message, null);
             }
         }

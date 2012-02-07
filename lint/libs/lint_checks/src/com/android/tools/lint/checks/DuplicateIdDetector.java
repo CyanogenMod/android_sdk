@@ -347,6 +347,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             secondLocation.setMessage(String.format("%1$s originally defined here", id));
             location.setSecondary(secondLocation);
         }
+        // TODO: Get applicable scope?
         context.report(CROSS_LAYOUT, location, msg, null);
     }
 
@@ -404,7 +405,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 location.setSecondary(secondLocation);
             }
 
-            context.report(WITHIN_LAYOUT, location,
+            context.report(WITHIN_LAYOUT, attribute, location,
                     String.format("Duplicate id %1$s, already defined earlier in this layout",
                             id), null);
         } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {

@@ -229,6 +229,7 @@ public class WrongIdDetector extends LayoutDetector {
                                 "The id \"%1$s\" is not defined anywhere.%2$s",
                                 id, suggestionMessage);
                     }
+                    // TODO: Compute applicable node scope
                     context.report(UNKNOWN_ID, location, message, null);
                 } else if (checkSameLayout && (!projectScope || isBound)) {
                     // The id was defined, but in a different layout. Usually not intentional
@@ -236,6 +237,7 @@ public class WrongIdDetector extends LayoutDetector {
                     // name.)
                     Handle handle = pair.getSecond();
                     Location location = handle.resolve();
+                    // TODO: Compute applicable node scope
                     context.report(UNKNOWN_ID_LAYOUT, location,
                             String.format(
                                     "The id \"%1$s\" is not referring to any views in this layout",

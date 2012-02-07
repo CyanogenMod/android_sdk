@@ -134,7 +134,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         mInsideWeight.put(parent, Boolean.FALSE);
                     } else if (inside) {
                         Attr sizeNode = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT);
-                        context.report(NESTED_WEIGHTS,
+                        context.report(NESTED_WEIGHTS, sizeNode,
                                 context.getLocation(sizeNode),
                                 "Nested weights are bad for performance", null);
                         // Don't warn again

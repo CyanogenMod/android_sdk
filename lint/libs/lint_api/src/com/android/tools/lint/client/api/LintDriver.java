@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
@@ -24,6 +25,7 @@ import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
+import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -53,6 +55,8 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -1359,7 +1363,7 @@ public class LintDriver {
      * @return true if there is a suppress annotation covering the specific
      *         issue in this class
      */
-    public boolean isSuppressed(Issue issue, Node scope) {
+    public boolean isSuppressed(@NonNull Issue issue, @Nullable Node scope) {
         while (scope != null) {
             Class<? extends Node> type = scope.getClass();
             // The Lombok AST uses a flat hierarchy of node type implementation classes
@@ -1455,6 +1459,45 @@ public class LintDriver {
                     }
                 }
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the given issue is suppressed in the given XML DOM node.
+     *
+     * @param issue the issue to be checked, or null to just check for "all"
+     * @param node the DOM node containing the issue
+     * @return true if there is a suppress annotation covering the specific
+     *         issue in this class
+     */
+    public boolean isSuppressed(@NonNull Issue issue, @Nullable org.w3c.dom.Node node) {
+        if (node instanceof Attr) {
+            node = ((Attr) node).getOwnerElement();
+        }
+        while (node != null) {
+            if (node.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                if (element.hasAttributeNS(TOOLS_URI, ATTR_IGNORE)) {
+                    String ignore = element.getAttributeNS(TOOLS_URI, ATTR_IGNORE);
+                    if (ignore.indexOf(',') == -1) {
+                        if (ignore.equalsIgnoreCase(SUPPRESS_ALL) || (issue != null
+                                && issue.getId().equalsIgnoreCase(ignore))) {
+                            return true;
+                        }
+                    } else {
+                        for (String id : ignore.split(",")) { //$NON-NLS-1$
+                            if (id.equalsIgnoreCase(SUPPRESS_ALL) || (issue != null
+                                    && issue.getId().equalsIgnoreCase(id))) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            node = node.getParentNode();
         }
 
         return false;

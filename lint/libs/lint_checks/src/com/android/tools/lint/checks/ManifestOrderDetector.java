@@ -105,7 +105,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
         } else if (mSeenApplication) {
-            context.report(ISSUE, context.getLocation(element),
+            context.report(ISSUE, element, context.getLocation(element),
                     String.format("<%1$s> tag appears after <application> tag", tag), null);
 
             // Don't complain for *every* element following the <application> tag

@@ -73,4 +73,48 @@ public class XmlContext extends Context {
 
         return Location.create(file);
     }
+
+    /**
+     * Reports an issue applicable to a given DOM node. The DOM node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue the issue to report
+     * @param scope the DOM node scope the error applies to. The lint infrastructure
+     *    will check whether there are suppress directives on this node (or its enclosing
+     *    nodes) and if so suppress the warning without involving the client.
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Node scope,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
+        if (scope != null && mDriver.isSuppressed(issue, scope)) {
+            return;
+        }
+        mDriver.getClient().report(this, issue, location, message, data);
+    }
+
+    @Override
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
+        // Warn if clients use the non-scoped form? No, there are cases where an
+        //  XML detector's error isn't applicable to one particular location (or it's
+        //  not feasible to compute it cheaply)
+        //mDriver.getClient().log(null, "Warning: Issue " + issue
+        //        + " was reported without a scope node: Can't be suppressed.");
+
+        // For now just check the document root itself
+        if (document != null && mDriver.isSuppressed(issue, document)) {
+            return;
+        }
+
+        super.report(issue, location, message, data);
+    }
 }

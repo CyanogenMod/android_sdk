@@ -86,7 +86,7 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
     public void visitAttribute(XmlContext context, Attr attribute) {
         if (attribute.getNamespaceURI().equals(ANDROID_URI)) {
         //if (attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
-            context.report(ISSUE, context.getLocation(attribute),
+            context.report(ISSUE, attribute, context.getLocation(attribute),
                     "Avoid hardcoding the debug mode; leaving it out allows debug and " +
                     "release builds to automatically assign one", null);
         }

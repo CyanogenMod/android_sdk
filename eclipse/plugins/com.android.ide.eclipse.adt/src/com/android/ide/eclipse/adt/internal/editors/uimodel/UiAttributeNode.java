@@ -23,7 +23,10 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.ATTR_COLOR;
+import static com.google.common.base.Strings.nullToEmpty;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 
@@ -196,15 +199,51 @@ public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
      * @return a negative number if name1 should be ordered before name2
      */
     public static int compareAttributes(String name1, String name2) {
-      int priority1 = getAttributePriority(name1);
-      int priority2 = getAttributePriority(name2);
-      if (priority1 != priority2) {
-          return priority1 - priority2;
-      }
+        int priority1 = getAttributePriority(name1);
+        int priority2 = getAttributePriority(name2);
+        if (priority1 != priority2) {
+            return priority1 - priority2;
+        }
 
-      // Sort remaining attributes alphabetically
-      return name1.compareTo(name2);
+        // Sort remaining attributes alphabetically
+        return name1.compareTo(name2);
     }
+
+    /**
+     * Returns {@link Comparator} values for ordering attributes in the following
+     * order:
+     * <ul>
+     *   <li> id
+     *   <li> style
+     *   <li> layout_width
+     *   <li> layout_height
+     *   <li> other layout params, sorted alphabetically
+     *   <li> other attributes, sorted alphabetically, first by namespace, then by name
+     * </ul>
+     * @param prefix1 the namespace prefix, if any, of {@code name1}
+     * @param name1 the first attribute name to compare
+     * @param prefix2  the namespace prefix, if any, of {@code name2}
+     * @param name2 the second attribute name to compare
+     * @return a negative number if name1 should be ordered before name2
+     */
+    public static int compareAttributes(
+            @Nullable String prefix1, @NonNull String name1,
+            @Nullable String prefix2, @NonNull String name2) {
+        int priority1 = getAttributePriority(name1);
+        int priority2 = getAttributePriority(name2);
+        if (priority1 != priority2) {
+            return priority1 - priority2;
+        }
+
+        int namespaceDelta = nullToEmpty(prefix1).compareTo(nullToEmpty(prefix2));
+        if (namespaceDelta != 0) {
+            return namespaceDelta;
+        }
+
+        // Sort remaining attributes alphabetically
+        return name1.compareTo(name2);
+    }
+
 
     /** Returns a sorting priority for the given attribute name */
     private static int getAttributePriority(String name) {

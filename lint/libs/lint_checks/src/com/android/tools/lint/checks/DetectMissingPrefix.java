@@ -99,7 +99,7 @@ public class DetectMissingPrefix extends LayoutDetector {
                 return;
             }
 
-            context.report(MISSING_NAMESPACE,
+            context.report(MISSING_NAMESPACE, attribute,
                     context.getLocation(attribute),
                     "Attribute is missing the Android namespace prefix",
                     null);
