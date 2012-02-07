@@ -317,7 +317,7 @@
                 enablesFor="1"
                 icon="icons/android.png"
                 id="com.android.ide.eclipse.adt.wizards.actions.AddCompatibilityJarAction"
-                label="Add Compatibility Library..."
+                label="Add Support Library..."
                 menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3"
                 tooltip="Add the Compatibility Library to the project">
             </action>

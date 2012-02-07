@@ -17,9 +17,10 @@
 package com.android.ide.eclipse.adt.internal;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.Messages;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
+import com.android.ide.eclipse.adt.Messages;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.repository.PkgProps;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -44,11 +45,18 @@ import java.util.regex.Pattern;
  */
 public final class VersionCheck {
     /**
+     * The minimum version of the SDK Tools that this version of ADT requires.
+     */
+    private final static int MIN_TOOLS_REV = 17;
+
+    /**
      * Pattern to get the minimum plugin version supported by the SDK. This is read from
      * the file <code>$SDK/tools/lib/plugin.prop</code>.
      */
     private final static Pattern sPluginVersionPattern = Pattern.compile(
             "^plugin.version=(\\d+)\\.(\\d+)\\.(\\d+).*$"); //$NON-NLS-1$
+    private final static Pattern sSourcePropPattern = Pattern.compile(
+            "^" + PkgProps.PKG_REVISION + "=(\\d+).*$"); //$NON-NLS-1$
 
     /**
      * Checks the plugin and the SDK have compatible versions.
@@ -64,8 +72,9 @@ public final class VersionCheck {
         int minMajorVersion = -1;
         int minMinorVersion = -1;
         int minMicroVersion = -1;
+        FileReader reader = null;
         try {
-            FileReader reader = new FileReader(osLibs + SdkConstants.FN_PLUGIN_PROP);
+            reader = new FileReader(osLibs + SdkConstants.FN_PLUGIN_PROP);
             BufferedReader bReader = new BufferedReader(reader);
             String line;
             while ((line = bReader.readLine()) != null) {
@@ -81,6 +90,15 @@ public final class VersionCheck {
             // the build id will be null, and this is handled by the builders.
         } catch (IOException e) {
             // the build id will be null, and this is handled by the builders.
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                } finally {
+                    reader = null;
+                }
+            }
         }
 
         // Failed to get the min plugin version number?
@@ -110,6 +128,43 @@ public final class VersionCheck {
             return errorHandler.handleError(
                     String.format(Messages.VersionCheck_Plugin_Too_Old,
                             minMajorVersion, minMinorVersion, minMicroVersion, versionString));
+        }
+
+        // now check whether the tools are new enough.
+        String osTools = osSdkPath + SdkConstants.OS_SDK_TOOLS_FOLDER;
+        int toolsRevision = Integer.MAX_VALUE;
+        try {
+            reader = new FileReader(osTools + SdkConstants.FN_SOURCE_PROP);
+            BufferedReader bReader = new BufferedReader(reader);
+            String line;
+            while ((line = bReader.readLine()) != null) {
+                Matcher m = sSourcePropPattern.matcher(line);
+                if (m.matches()) {
+                    toolsRevision = Integer.parseInt(m.group(1));
+                    break;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            // the build id will be null, and this is handled by the builders.
+        } catch (IOException e) {
+            // the build id will be null, and this is handled by the builders.
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                } finally {
+                    reader = null;
+                }
+            }
+        }
+
+        if (toolsRevision < MIN_TOOLS_REV) {
+            // this is a warning only as we need to parse the SDK to allow updating
+            // of the tools!
+            return errorHandler.handleWarning(
+                    String.format(Messages.VersionCheck_Tools_Too_Old,
+                            MIN_TOOLS_REV, toolsRevision));
         }
 
         return true; // no error!
