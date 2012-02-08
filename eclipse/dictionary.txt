@@ -298,6 +298,7 @@ uninstalling
 unset
 unweighted
 upcoming
+uppercase
 uri
 url
 urls
