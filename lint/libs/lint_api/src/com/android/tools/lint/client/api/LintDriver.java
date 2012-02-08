@@ -218,6 +218,8 @@ public class LintDriver {
                             mScope.add(Scope.MANIFEST);
                         } else if (name.endsWith(".xml")) {
                             mScope.add(Scope.RESOURCE_FILE);
+                        } else if (name.equals(PROGUARD_FILE) || name.equals(OLD_PROGUARD_FILE)) {
+                            mScope.add(Scope.PROGUARD_FILE);
                         } else if (name.equals(RES_FOLDER)
                                 || file.getParent().equals(RES_FOLDER)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
