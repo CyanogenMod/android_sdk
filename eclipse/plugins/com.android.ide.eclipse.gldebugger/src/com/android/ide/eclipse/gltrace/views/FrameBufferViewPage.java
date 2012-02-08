@@ -16,14 +16,12 @@
 
 package com.android.ide.eclipse.gltrace.views;
 
-import com.android.ide.eclipse.gldebugger.Activator;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -31,7 +29,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IPageSite;
@@ -50,9 +47,7 @@ public class FrameBufferViewPage extends Page implements ISelectionListener {
     public void createControl(Composite parent) {
         mImageCanvas = new ImageCanvas(parent);
 
-        IActionBars actionBars = getSite().getActionBars();
-        IToolBarManager toolbarManager = actionBars.getToolBarManager();
-
+        IToolBarManager toolbarManager = getSite().getActionBars().getToolBarManager();
         toolbarManager.add(new FitToCanvasAction(true, mImageCanvas));
     }
 
@@ -99,7 +94,6 @@ public class FrameBufferViewPage extends Page implements ISelectionListener {
         }
 
         if (selectedCall == null) {
-            System.out.println("null selection");
             return;
         }
 
@@ -120,24 +114,6 @@ public class FrameBufferViewPage extends Page implements ISelectionListener {
         if (lastCallIndex >= 0 && lastCallIndex < mTrace.getGLCalls().size()) {
             GLCall call = mTrace.getGLCalls().get(lastCallIndex);
             setImage(mTrace.getImage(call));
-        }
-    }
-
-    private static class FitToCanvasAction extends Action {
-        private ImageCanvas mImageCanvas;
-
-        public FitToCanvasAction(boolean fit, ImageCanvas canvas) {
-            super("Fit to Canvas", Activator.getImageDescriptor("/icons/zoomfit.png")); //$NON-NLS-2$
-            setToolTipText("Fit Image to Canvas");
-            mImageCanvas = canvas;
-
-            setChecked(fit);
-            mImageCanvas.setFitToCanvas(fit);
-        }
-
-        @Override
-        public void run() {
-            mImageCanvas.setFitToCanvas(isChecked());
         }
     }
 }

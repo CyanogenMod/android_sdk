@@ -19,7 +19,7 @@
             category="com.android.ide.eclipse.gltrace"
             class="com.android.ide.eclipse.gltrace.views.FrameBufferView"
             icon="icons/opengl.png"
-            id="com.android.ide.eclipse.gltrace.views.GLFrameBuffer"
+            id="com.android.ide.eclipse.gltrace.views.FrameBuffer"
             name="Framebuffer"
             restorable="true">
       </view>
@@ -33,10 +33,10 @@
       </view>
       <view
             category="com.android.ide.eclipse.gltrace"
-            class="com.android.ide.eclipse.gltrace.views.TextureView"
+            class="com.android.ide.eclipse.gltrace.views.DetailsView"
             icon="icons/opengl.png"
-            id="com.android.ide.eclipse.gltrace.views.Texture"
-            name="Texture"
+            id="com.android.ide.eclipse.gltrace.views.Details"
+            name="Details"
             restorable="true">
       </view>
    </extension>
