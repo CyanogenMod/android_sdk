@@ -34,8 +34,6 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -53,8 +51,6 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
     private Tree mTree;
 
     private DrawableViewNode mSelectedNode;
-
-    private Font mSmallFont;
 
     private class ContentProvider implements ITreeContentProvider, ITableLabelProvider {
 
@@ -213,10 +209,7 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         mTreeViewer.setInput(mModel);
         mModel.addTreeChangeListener(this);
 
-        loadResources();
         addDisposeListener(mDisposeListener);
-
-        mTree.setFont(mSmallFont);
 
         new TreeColumnResizer(this, propertyColumn, valueColumn);
 
@@ -225,22 +218,10 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         treeChanged();
     }
 
-    public void loadResources() {
-        Display display = Display.getDefault();
-        Font systemFont = display.getSystemFont();
-        FontData[] fontData = systemFont.getFontData();
-        FontData[] newFontData = new FontData[fontData.length];
-        for (int i = 0; i < fontData.length; i++) {
-            newFontData[i] = new FontData(fontData[i].getName(), 8, fontData[i].getStyle());
-        }
-        mSmallFont = new Font(Display.getDefault(), newFontData);
-    }
-
     private DisposeListener mDisposeListener = new DisposeListener() {
         @Override
         public void widgetDisposed(DisposeEvent e) {
             mModel.removeTreeChangeListener(PropertyViewer.this);
-            mSmallFont.dispose();
         }
     };
 
