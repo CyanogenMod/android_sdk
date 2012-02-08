@@ -51,4 +51,11 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
 
             lintFiles("res/layout/useless3.xml"));
     }
+
+    public void testUselessLeafRoot() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/breadcrumbs_in_fragment.xml"));
+    }
 }
