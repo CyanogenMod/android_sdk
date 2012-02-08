@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STRING_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
@@ -52,6 +53,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,6 +62,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Check which looks at the order of buttons in dialogs and makes sure that
@@ -74,6 +78,8 @@ import java.util.Set;
  * Cancel/OK dialogs? Similarly, consider "Abort" a synonym for "Cancel" ?
  */
 public class ButtonDetector extends ResourceXmlDetector {
+    private final static Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
+
     /** Name of cancel value ("Cancel") */
     private static final String CANCEL_LABEL = "Cancel";
     /** Name of OK value ("Cancel") */
@@ -111,10 +117,6 @@ public class ButtonDetector extends ResourceXmlDetector {
             Severity.WARNING,
             ButtonDetector.class,
             Scope.RESOURCE_FILE_SCOPE)
-            // Disabled by default until we automatically handle minSDK/targetSDK properly
-            // (e.g. we shouldn't complain if an app is targeting older than API 14 unless
-            // they don't provide an API 14 specific version that provides the right order!)
-            .setEnabledByDefault(false)
             .setMoreInfo(
                 "http://developer.android.com/design/building-blocks/dialogs.html"); //$NON-NLS-1$
 
@@ -399,55 +401,106 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
     }
 
-    /**
-     * If your app is not targeting Honeycomb or higher, don't insist on the
-     * button order.
-     */
-    private boolean guidelinesApply(XmlContext context) {
-        int target = context.getProject().getTargetSdk();
-        return target < 1 || target >= 14;
-    }
-
     /** Report the given OK/Cancel button as being in the wrong position */
     private void report(XmlContext context, Element element, boolean isCancel) {
-        if (guidelinesApply(context) && context.isEnabled(ORDER)) {
-            if (mIgnore != null && mIgnore.contains(element)) {
-                return;
-            }
-
-            List<Element> buttons = LintUtils.getChildren(element.getParentNode());
-
-            if (mIgnore == null) {
-                mIgnore = new HashSet<Element>();
-            }
-            for (Element button : buttons) {
-                // Mark all the siblings in the ignore list to ensure that we don't
-                // report *both* the Cancel and the OK button in "OK | Cancel"
-                mIgnore.add(button);
-            }
-
-            String message;
-            if (isCancel) {
-                message = "Cancel button should be on the left";
-            } else {
-                message = "OK button should be on the right";
-            }
-
-            // Show existing button order? We can only do that for LinearLayouts
-            // since in for example a RelativeLayout the order of the elements may
-            // not be the same as the visual order
-            String layout = element.getParentNode().getNodeName();
-            if (layout.equals(LINEAR_LAYOUT) || layout.equals(TABLE_ROW)) {
-                List<String> labelList = getLabelList(buttons);
-                String wrong = describeButtons(labelList);
-                sortButtons(labelList);
-                String right = describeButtons(labelList);
-                message += String.format(" (was \"%1$s\", should be \"%2$s\")", wrong, right);
-            }
-
-            Location location = context.getLocation(element);
-            context.report(ORDER, location, message, null);
+        if (!context.isEnabled(ORDER)) {
+            return;
         }
+
+        if (mIgnore != null && mIgnore.contains(element)) {
+            return;
+        }
+
+        int target = context.getProject().getTargetSdk();
+        if (target < 14) {
+            // If you're only targeting pre-ICS UI's, this is not an issue
+            return;
+        }
+
+        boolean mustCreateIcsLayout = false;
+        if (context.getProject().getMinSdk() < 14) {
+            // If you're *also* targeting pre-ICS UIs, then this reverse button
+            // order is correct for layouts intended for pre-ICS and incorrect for
+            // ICS layouts.
+            //
+            // Therefore, we need to know if this layout is an ICS layout or
+            // a pre-ICS layout.
+            String[] qualifiers = context.file.getParentFile().getName().split("-"); //$NON-NLS-1$
+            boolean isIcsLayout = false;
+            for (String qualifier : qualifiers) {
+                Matcher matcher = sVersionPattern.matcher(qualifier);
+                if (matcher.matches()) {
+                    int api = Integer.parseInt(matcher.group(1));
+                    if (api >= 14) {
+                        isIcsLayout = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isIcsLayout) {
+                // This layout is not an ICS layout. However, there *must* also be
+                // an ICS layout here, or this button order will be wrong:
+                File res = context.file.getParentFile().getParentFile();
+                File[] resFolders = res.listFiles();
+                String fileName = context.file.getName();
+                if (resFolders != null) {
+                    for (File folder : resFolders) {
+                        String folderName = folder.getName();
+                        if (folderName.startsWith(FD_RES_LAYOUT)
+                                && folderName.contains("-v14")) { //$NON-NLS-1$
+                            File layout = new File(folder, fileName);
+                            if (layout.exists()) {
+                                // Yes, a v14 specific layout is available so this pre-ICS
+                                // layout order is not a problem
+                                return;
+                            }
+                        }
+                    }
+                }
+                mustCreateIcsLayout = true;
+            }
+        }
+
+        List<Element> buttons = LintUtils.getChildren(element.getParentNode());
+
+        if (mIgnore == null) {
+            mIgnore = new HashSet<Element>();
+        }
+        for (Element button : buttons) {
+            // Mark all the siblings in the ignore list to ensure that we don't
+            // report *both* the Cancel and the OK button in "OK | Cancel"
+            mIgnore.add(button);
+        }
+
+        String message;
+        if (isCancel) {
+            message = "Cancel button should be on the left";
+        } else {
+            message = "OK button should be on the right";
+        }
+
+        if (mustCreateIcsLayout) {
+            message = String.format(
+                    "Layout uses the wrong button order for API >= 14: Create a " +
+                    "layout-v14/%1$s file with opposite order: %2$s",
+                    context.file.getName(), message);
+        }
+
+        // Show existing button order? We can only do that for LinearLayouts
+        // since in for example a RelativeLayout the order of the elements may
+        // not be the same as the visual order
+        String layout = element.getParentNode().getNodeName();
+        if (layout.equals(LINEAR_LAYOUT) || layout.equals(TABLE_ROW)) {
+            List<String> labelList = getLabelList(buttons);
+            String wrong = describeButtons(labelList);
+            sortButtons(labelList);
+            String right = describeButtons(labelList);
+            message += String.format(" (was \"%1$s\", should be \"%2$s\")", wrong, right);
+        }
+
+        Location location = context.getLocation(element);
+        context.report(ORDER, location, message, null);
     }
 
     /**

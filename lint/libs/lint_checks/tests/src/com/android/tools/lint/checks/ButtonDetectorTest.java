@@ -45,7 +45,78 @@ public class ButtonDetectorTest extends AbstractCheckTest {
             "buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
             "buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
 
-            lintProject("res/layout/buttonbar.xml", "res/values/buttonbar-values.xml"));
+            lintProject(
+                    "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
+    public void testButtonOrder2() throws Exception {
+        // If the layout is in v14, it had better have the right order
+        sTestIssue = ButtonDetector.ORDER;
+        assertEquals(
+            "buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\")\n" +
+            "buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\")\n" +
+            "buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\")\n" +
+            "buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
+
+            lintProject(
+                    "minsdk5targetsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml=>res/layout-v14/buttonbar.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
+    public void testButtonOrder3() throws Exception {
+        // Similar to test 3, but also complain if the -v version is *higher* than 14
+        sTestIssue = ButtonDetector.ORDER;
+        assertEquals(
+            "buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\")\n" +
+            "buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\")\n" +
+            "buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\")\n" +
+            "buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
+
+            lintProject(
+                    "minsdk5targetsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml=>res/layout-v16/buttonbar.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
+    public void testButtonOrder4() throws Exception {
+        // Targeting 14 but using a layout that also needs to work for older platforms:
+        sTestIssue = ButtonDetector.ORDER;
+        assertEquals(
+            "buttonbar.xml:124: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:12: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:140: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\")\n" +
+            "buttonbar.xml:156: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\")\n" +
+            "buttonbar.xml:177: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\")\n" +
+            "buttonbar.xml:44: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
+            "buttonbar.xml:92: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
+
+            lintProject(
+                    "minsdk5targetsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
+    public void testButtonOrder5() throws Exception {
+        // If the layout is in a non-ICS folder and has the wrong button order,
+        // but there is a v14 version of the layout, don't complain about the non-v14 version
+        sTestIssue = ButtonDetector.ORDER;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "minsdk5targetsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml",
+                    "res/layout/layout1.xml=>res/layout-v14/buttonbar.xml",
+                    "res/values/buttonbar-values.xml"));
     }
 
     public void testButtonOrderRelativeLayout() throws Exception {
@@ -61,7 +132,10 @@ public class ButtonDetectorTest extends AbstractCheckTest {
         assertEquals(
             "buttonbar3.xml:27: Warning: Cancel button should be on the left",
 
-            lintProject("res/layout/buttonbar3.xml", "res/values/buttonbar-values.xml"));
+            lintProject(
+                    "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar3.xml",
+                    "res/values/buttonbar-values.xml"));
     }
 
     public void testButtonOrderRelativeLayout3() throws Exception {
@@ -113,7 +187,9 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                 "buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
                 "buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
 
-                lintProject("res/layout/buttonbar.xml=>res/layout-en-rGB/buttonbar.xml",
+                lintProject(
+                        "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                        "res/layout/buttonbar.xml=>res/layout-en-rGB/buttonbar.xml",
                         "res/values/buttonbar-values.xml=>res/values-en-rGB/buttonbar-values.xml"));
     }
 
@@ -124,7 +200,9 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                 "buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")\n" +
                 "buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\")",
 
-                lintProject("res/layout/buttonbar.xml=>res/layout-de/buttonbar.xml",
+                lintProject(
+                        "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                        "res/layout/buttonbar.xml=>res/layout-de/buttonbar.xml",
                         "res/values/buttonbar-values.xml=>res/values-de/buttonbar-values.xml"));
     }
 
