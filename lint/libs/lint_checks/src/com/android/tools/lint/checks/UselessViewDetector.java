@@ -217,6 +217,7 @@ public class UselessViewDetector extends LayoutDetector {
         // - The node has no background
         // - The node has no children
         // - The node has no style
+        // - The node is not a root
 
         if (element.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             return;
@@ -227,6 +228,10 @@ public class UselessViewDetector extends LayoutDetector {
         }
 
         if (element.hasAttribute(ATTR_STYLE)) {
+            return;
+        }
+
+        if (element == context.document.getDocumentElement()) {
             return;
         }
 
