@@ -95,7 +95,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(PrivateResourceDetector.ISSUE);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(HardcodedDebugModeDetector.ISSUE);
-        issues.add(ManifestOrderDetector.ISSUE);
+        issues.add(ManifestOrderDetector.ORDER);
+        issues.add(ManifestOrderDetector.USES_SDK);
         issues.add(SecurityDetector.EXPORTED_SERVICE);
         issues.add(SecurityDetector.OPEN_PROVIDER);
         issues.add(SecurityDetector.WORLD_WRITEABLE);

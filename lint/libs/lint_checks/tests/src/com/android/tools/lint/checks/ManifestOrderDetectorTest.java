@@ -35,9 +35,33 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
 
     public void testBrokenOrder() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> tag",
+                "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> " +
+                "tag\n" +
+                "AndroidManifest.xml:16: Warning: <uses-sdk> tag should specify a target API " +
+                "level (the highest verified version; when running on later versions, " +
+                "compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"",
+
                 lintProject(
                         "broken-manifest.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    public void testMissingUsesSdk() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml: Warning: Manifest should specify a minimum API level " +
+                "with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all " +
+                "versions of Android set it to 1.",
+                lintProject(
+                        "missingusessdk.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    public void testMissingMinSdk() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API " +
+                "level with android:minSdkVersion=\"?\"",
+                lintProject(
+                        "missingmin.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
     }
 }
