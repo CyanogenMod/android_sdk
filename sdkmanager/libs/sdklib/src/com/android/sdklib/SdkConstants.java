@@ -114,41 +114,45 @@ public final class SdkConstants {
     /** dx.jar file */
     public static final String FN_DX_JAR = "dx.jar";                                  //$NON-NLS-1$
 
-    /** dx executable (with extension for the current OS)  */
-    public final static String FN_DX = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "dx.bat" : "dx";                                            //$NON-NLS-1$ //$NON-NLS-2$
+    /** dx executable (with extension for the current OS) */
+    public final static String FN_DX =
+        "dx" + ext(".bat", "");                           //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** aapt executable (with extension for the current OS)  */
-    public final static String FN_AAPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aapt.exe" : "aapt";                                        //$NON-NLS-1$ //$NON-NLS-2$
+    /** aapt executable (with extension for the current OS) */
+    public final static String FN_AAPT =
+        "aapt" + ext(".exe", "");                         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** aidl executable (with extension for the current OS)  */
-    public final static String FN_AIDL = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aidl.exe" : "aidl";                                        //$NON-NLS-1$ //$NON-NLS-2$
+    /** aidl executable (with extension for the current OS) */
+    public final static String FN_AIDL =
+        "aidl" + ext(".exe", "");                         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** renderscript executable (with extension for the current OS)  */
-    public final static String FN_RENDERSCRIPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "llvm-rs-cc.exe" : "llvm-rs-cc";                            //$NON-NLS-1$ //$NON-NLS-2$
+    /** renderscript executable (with extension for the current OS) */
+    public final static String FN_RENDERSCRIPT =
+        "llvm-rs-cc" + ext(".exe", "");                   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** adb executable (with extension for the current OS)  */
-    public final static String FN_ADB = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "adb.exe" : "adb";                                          //$NON-NLS-1$ //$NON-NLS-2$
+    /** adb executable (with extension for the current OS) */
+    public final static String FN_ADB =
+        "adb" + ext(".exe", "");                          //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     /** emulator executable for the current OS */
-    public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "emulator.exe" : "emulator";                                //$NON-NLS-1$ //$NON-NLS-2$
+    public final static String FN_EMULATOR =
+        "emulator" + ext(".exe", "");                     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** zipalign executable (with extension for the current OS)  */
-    public final static String FN_ZIPALIGN = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "zipalign.exe" : "zipalign";                                //$NON-NLS-1$ //$NON-NLS-2$
+    /** zipalign executable (with extension for the current OS) */
+    public final static String FN_ZIPALIGN =
+        "zipalign" + ext(".exe", "");                     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** dexdump executable (with extension for the current OS)  */
-    public final static String FN_DEXDUMP = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "dexdump.exe" : "dexdump";                                  //$NON-NLS-1$ //$NON-NLS-2$
+    /** dexdump executable (with extension for the current OS) */
+    public final static String FN_DEXDUMP =
+        "dexdump" + ext(".exe", "");                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** zipalign executable (with extension for the current OS)  */
-    public final static String FN_PROGUARD = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "proguard.bat" : "proguard.sh";                             //$NON-NLS-1$ //$NON-NLS-2$
+    /** proguard executable (with extension for the current OS) */
+    public final static String FN_PROGUARD =
+        "proguard" + ext(".bat", ".sh");                  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+    /** find_lock for Windows (with extension for the current OS) */
+    public final static String FN_FIND_LOCK =
+        "find_lock" + ext(".exe", "");                    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     /** properties file for SDK Updater packages */
     public final static String FN_SOURCE_PROP = "source.properties";                  //$NON-NLS-1$
@@ -475,5 +479,13 @@ public final class SdkConstants {
         }
 
         return "Other";
+    }
+
+    private static String ext(String windowsExtension, String nonWindowsExtension) {
+        if (CURRENT_PLATFORM == PLATFORM_WINDOWS) {
+            return windowsExtension;
+        } else {
+            return nonWindowsExtension;
+        }
     }
 }
