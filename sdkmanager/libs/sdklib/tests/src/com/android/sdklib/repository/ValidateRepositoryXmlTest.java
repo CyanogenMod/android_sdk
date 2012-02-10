@@ -298,12 +298,11 @@ public class ValidateRepositoryXmlTest extends TestCase {
         fail();
     }
 
-    /** A document a slash in an extra path. */
+    /** The latest XSD repository-6 should fail when an 'extra' is present. */
     public void testExtraPathWithSlash() throws Exception {
-        // we define a license named "lic1" and then reference "lic2" instead
         String document = "<?xml version=\"1.0\"?>" +
             OPEN_TAG_REPO +
-            "<r:extra> <r:revision>1</r:revision> <r:path>path/cannot\\contain\\segments</r:path> " +
+            "<r:extra> <r:revision>1</r:revision> <r:path>path</r:path> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:extra>" +
             CLOSE_TAG_REPO;
@@ -316,7 +315,7 @@ public class ValidateRepositoryXmlTest extends TestCase {
             validator.validate(source);
         } catch (SAXParseException e) {
             // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-pattern-valid: Value 'path/cannot\\\\contain\\\\segments' is not facet-valid with respect to pattern.*",
+            assertRegex("cvc-complex-type.2.4.a: Invalid content was found starting with element 'r:extra'.*",
                     e.getMessage());
             return;
         }

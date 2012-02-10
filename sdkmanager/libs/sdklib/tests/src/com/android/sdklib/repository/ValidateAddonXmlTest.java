@@ -170,4 +170,29 @@ public class ValidateAddonXmlTest extends TestCase {
         // If we get here, the validator has not failed as we expected it to.
         fail();
     }
+
+    /** A document with a slash in an extra path. */
+    public void testExtraPathWithSlash() throws Exception {
+        String document = "<?xml version=\"1.0\"?>" +
+            OPEN_TAG_ADDON +
+            "<r:extra> <r:revision>1</r:revision> <r:path>path/cannot\\contain\\segments</r:path> " +
+            "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
+            "<r:url>url</r:url> </r:archive> </r:archives> </r:extra>" +
+            CLOSE_TAG_ADDON;
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getAddonValidator(SdkAddonConstants.NS_LATEST_VERSION, null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-pattern-valid: Value 'path/cannot\\\\contain\\\\segments' is not facet-valid with respect to pattern.*",
+                    e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
 }
