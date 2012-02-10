@@ -41,6 +41,15 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                     "res/values/strings.xml"));
     }
 
+    public void testBroken3() throws Exception {
+        // Not defining exported, but have intent-filters
+        assertEquals(
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
+            lintProject(
+                    "exportservice5.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
+    }
+
     public void testOk1() throws Exception {
         // Defines a permission on the <service> element
         assertEquals(

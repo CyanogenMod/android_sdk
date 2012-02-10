@@ -41,7 +41,7 @@ public class LintConstants {
     public static final String TAG_SERVICE = "service";                //$NON-NLS-1$
     public static final String TAG_USES_PERMISSION = "uses-permission";//$NON-NLS-1$
     public static final String TAG_APPLICATION = "application";        //$NON-NLS-1$
-    public static final String TAG_INTENT_FILTER = " intent-filter";   //$NON-NLS-1$
+    public static final String TAG_INTENT_FILTER = "intent-filter";    //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
     public static final String TAG_ACTIVITY = "activity";              //$NON-NLS-1$
     public static final String TAG_GRANT_PERMISSION = "grant-uri-permission"; //$NON-NLS-1$
