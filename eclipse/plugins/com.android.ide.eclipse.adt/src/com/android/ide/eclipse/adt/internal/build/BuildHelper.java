@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -38,6 +39,8 @@ import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.internal.build.SignedJarBuilder;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -59,11 +62,9 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -1187,46 +1188,20 @@ public class BuildHelper {
      * @return the process return code.
      * @throws InterruptedException
      */
-    public final static int grabProcessOutput(final IProject project, final Process process,
+    public final static int grabProcessOutput(
+            final IProject project,
+            final Process process,
             final ArrayList<String> results)
             throws InterruptedException {
-        // Due to the limited buffer size on windows for the standard io (stderr, stdout), we
-        // *need* to read both stdout and stderr all the time. If we don't and a process output
-        // a large amount, this could deadlock the process.
 
-        // read the lines as they come. if null is returned, it's
-        // because the process finished
-        new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                // create a buffer to read the stderr output
-                InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                BufferedReader errReader = new BufferedReader(is);
+        return GrabProcessOutput.grabProcessOutput(
+                process,
+                false /*waitForReaders*/,
+                new IProcessOutput() {
 
-                try {
-                    while (true) {
-                        String line = errReader.readLine();
-                        if (line != null) {
-                            results.add(line);
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        }.start();
-
-        new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                InputStreamReader is = new InputStreamReader(process.getInputStream());
-                BufferedReader outReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = outReader.readLine();
+                    @SuppressWarnings("unused")
+                    @Override
+                    public void out(String line) {
                         if (line != null) {
                             // If benchmarking always print the lines that
                             // correspond to benchmarking info returned by ADT
@@ -1237,18 +1212,15 @@ public class BuildHelper {
                                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
                                         project, line);
                             }
-                        } else {
-                            break;
                         }
                     }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
 
-        }.start();
-
-        // get the return code from the process
-        return process.waitFor();
+                    @Override
+                    public void err(String line) {
+                        if (line != null) {
+                            results.add(line);
+                        }
+                    }
+                });
     }
 }

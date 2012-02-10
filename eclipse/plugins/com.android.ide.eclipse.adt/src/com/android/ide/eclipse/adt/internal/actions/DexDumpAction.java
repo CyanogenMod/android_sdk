@@ -20,6 +20,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -43,12 +45,10 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Iterator;
 
 /**
@@ -159,7 +159,43 @@ public class DexDumpAction implements IObjectActionDelegate {
             command[1] = classesDexFile.getAbsolutePath();
 
             try {
-                int err = grabProcessOutput(project, command, dstFile);
+                final Process process = Runtime.getRuntime().exec(command);
+
+                final BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
+
+                String sep = System.getProperty("line.separator");                  //$NON-NLS-1$
+                if (sep == null || sep.length() < 1) {
+                    if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                        sep = "\r\n";                                               //$NON-NLS-1$
+                    } else {
+                        sep = "\n";                                                 //$NON-NLS-1$
+                    }
+                }
+                final String lineSep = sep;
+
+                int err = GrabProcessOutput.grabProcessOutput(
+                        process,
+                        true /*waitForReaders*/,
+                        new IProcessOutput() {
+                            @Override
+                            public void out(String line) {
+                                if (line != null) {
+                                    try {
+                                        writer.write(line);
+                                        writer.write(lineSep);
+                                    } catch (IOException ignore) {}
+                                }
+                            }
+
+                            @Override
+                            public void err(String line) {
+                                if (line != null) {
+                                    AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
+                                            project, line);
+                                }
+                            }
+                        });
+
                 if (err == 0) {
                     // The command worked. In this case we don't remove the
                     // temp file in the finally block.
@@ -232,108 +268,4 @@ public class DexDumpAction implements IObjectActionDelegate {
             }
         }
     }
-
-
-    /**
-     * Get the stdout+stderr output of a process and return when the process is done.
-     * @param command The command line for the process to run.
-     * @param dstFile The file where to write the stdout.
-     * @return the process return code.
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    private final int grabProcessOutput(
-            final IProject project,
-            String[] command,
-            final File dstFile)
-            throws InterruptedException, IOException {
-
-        final BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
-
-        String sep = System.getProperty("line.separator");                  //$NON-NLS-1$
-        if (sep == null || sep.length() < 1) {
-            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                sep = "\r\n";                                               //$NON-NLS-1$
-            } else {
-                sep = "\n";                                                 //$NON-NLS-1$
-            }
-        }
-        final String lineSep = sep;
-
-        final Process process = Runtime.getRuntime().exec(command);
-
-        try {
-            // read the lines as they come. if null is returned, it's
-            // because the process finished
-            Thread t1 = new Thread("") { //$NON-NLS-1$
-                @Override
-                public void run() {
-                    // create a buffer to read the stderr output
-                    InputStreamReader is = new InputStreamReader(process.getInputStream());
-                    BufferedReader outReader = new BufferedReader(is);
-
-                    try {
-                        while (true) {
-                            String line = outReader.readLine();
-                            if (line != null) {
-                                writer.write(line);
-                                writer.write(lineSep);
-                            } else {
-                                break;
-                            }
-                        }
-                    } catch (IOException e) {
-                        // do nothing.
-                    }
-                }
-            };
-
-            Thread t2 = new Thread("") { //$NON-NLS-1$
-                @Override
-                public void run() {
-                    InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                    BufferedReader errReader = new BufferedReader(is);
-
-                    try {
-                        while (true) {
-                            String line = errReader.readLine();
-                            if (line != null) {
-                                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
-                                        project, line);
-                            } else {
-                                break;
-                            }
-                        }
-                    } catch (IOException e) {
-                        // do nothing.
-                    }
-                }
-
-            };
-
-            t1.start();
-            t2.start();
-
-            // it looks like on windows process#waitFor() can return
-            // before the thread have filled the arrays, so we wait for both threads and the
-            // process itself.
-            try {
-                t1.join();
-            } catch (InterruptedException e) {
-            }
-            try {
-                t2.join();
-            } catch (InterruptedException e) {
-            }
-
-            // get the return code from the process
-            return process.waitFor();
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException ignore) {
-            }
-        }
-    }
-
 }

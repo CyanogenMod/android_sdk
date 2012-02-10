@@ -18,11 +18,11 @@ package com.android.sdklib.internal.build;
 
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
@@ -56,7 +56,7 @@ public final class KeystoreHelper {
             String keyPassword,
             String description,
             int validityYears,
-            IKeyGenOutput output)
+            final IKeyGenOutput output)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableEntryException, IOException, KeytoolException {
 
@@ -104,9 +104,35 @@ public final class KeystoreHelper {
         // launch the command line process
         int result = 0;
         try {
-            result = grabProcessOutput(Runtime.getRuntime().exec(commandArray), output);
+            Process process = Runtime.getRuntime().exec(commandArray);
+            result = GrabProcessOutput.grabProcessOutput(
+                    process,
+                    true /*waitForReaders*/,
+                    new IProcessOutput() {
+                        @Override
+                        public void out(String line) {
+                            if (line != null) {
+                                if (output != null) {
+                                    output.out(line);
+                                } else {
+                                    System.out.println(line);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void err(String line) {
+                            if (line != null) {
+                                if (output != null) {
+                                    output.err(line);
+                                } else {
+                                    System.err.println(line);
+                                }
+                            }
+                        }
+                    });
         } catch (Exception e) {
-            // create the command line as one string
+            // create the command line as one string for debugging purposes
             StringBuilder builder = new StringBuilder();
             boolean firstArg = true;
             for (String arg : commandArray) {
@@ -138,90 +164,5 @@ public final class KeystoreHelper {
         }
 
         return true;
-    }
-
-    /**
-     * Get the stderr/stdout outputs of a process and return when the process is done.
-     * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the ouput from
-     * @return the process return code.
-     */
-    private static int grabProcessOutput(final Process process, final IKeyGenOutput output) {
-        // read the lines as they come. if null is returned, it's
-        // because the process finished
-        Thread t1 = new Thread("") {
-            @Override
-            public void run() {
-                // create a buffer to read the stderr output
-                InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                BufferedReader errReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = errReader.readLine();
-                        if (line != null) {
-                            if (output != null) {
-                                output.err(line);
-                            } else {
-                                System.err.println(line);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        Thread t2 = new Thread("") {
-            @Override
-            public void run() {
-                InputStreamReader is = new InputStreamReader(process.getInputStream());
-                BufferedReader outReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = outReader.readLine();
-                        if (line != null) {
-                            if (output != null) {
-                                output.out(line);
-                            } else {
-                                System.out.println(line);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        t1.start();
-        t2.start();
-
-        // it looks like on windows process#waitFor() can return
-        // before the thread have filled the arrays, so we wait for both threads and the
-        // process itself.
-        try {
-            t1.join();
-        } catch (InterruptedException e) {
-        }
-        try {
-            t2.join();
-        } catch (InterruptedException e) {
-        }
-
-        // get the return code from the process
-        try {
-            return process.waitFor();
-        } catch (InterruptedException e) {
-            // since we're waiting for the output thread above, we should never actually wait
-            // on the process to end, since it'll be done by the time we call waitFor()
-            return 0;
-        }
     }
 }

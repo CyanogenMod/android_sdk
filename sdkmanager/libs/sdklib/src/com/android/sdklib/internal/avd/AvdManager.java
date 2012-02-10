@@ -26,9 +26,10 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.util.Pair;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,7 +37,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1393,10 +1393,27 @@ public class AvdManager {
             command[2] = location;
             Process process = Runtime.getRuntime().exec(command);
 
-            ArrayList<String> errorOutput = new ArrayList<String>();
-            ArrayList<String> stdOutput = new ArrayList<String>();
-            int status = grabProcessOutput(process, errorOutput, stdOutput,
-                    true /* waitForReaders */);
+            final ArrayList<String> errorOutput = new ArrayList<String>();
+            final ArrayList<String> stdOutput = new ArrayList<String>();
+
+            int status = GrabProcessOutput.grabProcessOutput(
+                    process,
+                    true /*waitForReaders*/,
+                    new IProcessOutput() {
+                        @Override
+                        public void out(String line) {
+                            if (line != null) {
+                                stdOutput.add(line);
+                            }
+                        }
+
+                        @Override
+                        public void err(String line) {
+                            if (line != null) {
+                                errorOutput.add(line);
+                            }
+                        }
+                    });
 
             if (status == 0) {
                 return true;
@@ -1414,89 +1431,6 @@ public class AvdManager {
 
         log.error(null, "Failed to create the SD card.");
         return false;
-    }
-
-    /**
-     * Gets the stderr/stdout outputs of a process and returns when the process is done.
-     * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the ouput from
-     * @param errorOutput The array to store the stderr output. cannot be null.
-     * @param stdOutput The array to store the stdout output. cannot be null.
-     * @param waitforReaders if true, this will wait for the reader threads.
-     * @return the process return code.
-     * @throws InterruptedException
-     */
-    private int grabProcessOutput(final Process process, final ArrayList<String> errorOutput,
-            final ArrayList<String> stdOutput, boolean waitforReaders)
-            throws InterruptedException {
-        assert errorOutput != null;
-        assert stdOutput != null;
-        // read the lines as they come. if null is returned, it's
-        // because the process finished
-        Thread t1 = new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                // create a buffer to read the stderr output
-                InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                BufferedReader errReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = errReader.readLine();
-                        if (line != null) {
-                            errorOutput.add(line);
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        Thread t2 = new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                InputStreamReader is = new InputStreamReader(process.getInputStream());
-                BufferedReader outReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = outReader.readLine();
-                        if (line != null) {
-                            stdOutput.add(line);
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        t1.start();
-        t2.start();
-
-        // it looks like on windows process#waitFor() can return
-        // before the thread have filled the arrays, so we wait for both threads and the
-        // process itself.
-        if (waitforReaders) {
-            try {
-                t1.join();
-            } catch (InterruptedException e) {
-                // nothing to do here
-            }
-            try {
-                t2.join();
-            } catch (InterruptedException e) {
-                // nothing to do here
-            }
-        }
-
-        // get the return code from the process
-        return process.waitFor();
     }
 
     /**
