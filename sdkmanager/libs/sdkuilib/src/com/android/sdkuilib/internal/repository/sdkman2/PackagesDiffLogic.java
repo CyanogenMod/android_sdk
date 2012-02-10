@@ -328,9 +328,11 @@ class PackagesDiffLogic {
                     PkgItem item = itemIt.next();
                     if (mItemsToRemove.contains(item)) {
                         itemIt.remove();
+                        hasChanged  = true;
                     } else if (item.hasUpdatePkg() &&
                             mUpdatesToRemove.containsKey(item.getUpdatePkg())) {
                         item.removeUpdate();
+                        hasChanged  = true;
                     }
                 }
             }
@@ -471,6 +473,14 @@ class PackagesDiffLogic {
         return hasChanged;
     }
 
+    /**
+     * {@link PkgState}s to check in {@link #processSource(UpdateOp, SdkSource, Package[])}.
+     * The order matters.
+     * When installing the diff will have both the new and the installed item and we
+     * need to merge with the installed one before the new one.
+     */
+    private final static PkgState[] PKG_STATES = { PkgState.INSTALLED, PkgState.NEW };
+
     /** Process all remote packages. Returns true if something changed. */
     private boolean processSource(UpdateOp op, SdkSource source, Package[] packages) {
         boolean hasChanged = false;
@@ -478,7 +488,7 @@ class PackagesDiffLogic {
 
         nextPkg: for (Package newPkg : packages) {
             for (PkgCategory cat : cats) {
-                for (PkgState state : PkgState.values()) {
+                for (PkgState state : PKG_STATES) {
                     for (Iterator<PkgItem> currItemIt = cat.getItems().iterator();
                                            currItemIt.hasNext(); ) {
                         PkgItem currItem = currItemIt.next();
@@ -528,7 +538,7 @@ class PackagesDiffLogic {
                             }
                             break;
                         case INSTALLED:
-                            // if newPkg.revision <= mainPkg.revision: it's already installed, ignore.
+                            // if newPkg.revision<=mainPkg.revision: it's already installed, ignore.
                             if (newPkg.getRevision() > mainPkg.getRevision()) {
                                 // This is a new update for the main package.
                                 if (currItem.mergeUpdate(newPkg)) {

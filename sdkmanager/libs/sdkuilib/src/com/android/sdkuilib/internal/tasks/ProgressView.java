@@ -25,6 +25,7 @@ import com.android.sdkuilib.ui.GridDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -160,8 +161,9 @@ public final class ProgressView implements IProgressUiProvider {
 
                     // Process the app's event loop whilst we wait for the thread to finish
                     while (!mProgressBar.isDisposed() && t.isAlive()) {
-                        if (!mProgressBar.getDisplay().readAndDispatch()) {
-                            mProgressBar.getDisplay().sleep();
+                        Display display = mProgressBar.getDisplay();
+                        if (!mProgressBar.isDisposed() && !display.readAndDispatch()) {
+                            display.sleep();
                         }
                     }
                 }

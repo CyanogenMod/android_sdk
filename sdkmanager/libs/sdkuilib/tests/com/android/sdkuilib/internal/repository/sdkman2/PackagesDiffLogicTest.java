@@ -240,7 +240,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 new MockEmptyPackage(src1, "type1", 1)
         }));
 
-        assertFalse(m.updateEnd(true /*sortByApi*/));
+        assertTrue(m.updateEnd(true /*sortByApi*/));
 
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +

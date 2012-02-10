@@ -40,8 +40,8 @@ public class PkgItem implements Comparable<PkgItem> {
      * a given remote package and the local repository.
      */
     public enum PkgState {
-        // Implementation detail: order matters. Installed items must be dealt with before
-        // new items and the order of PkgState.values() matters.
+        // Implementation detail: if this is changed then PackageDiffLogic#STATES
+        // and PackageDiffLogic#processSource() need to be changed accordingly.
 
         /**
          * Package is locally installed and may or may not have an update.
