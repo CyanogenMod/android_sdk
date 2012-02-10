@@ -87,6 +87,11 @@ public final class LanguageQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean isValid() {
         return mValue != null;
     }

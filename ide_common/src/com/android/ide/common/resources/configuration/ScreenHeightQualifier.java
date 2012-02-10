@@ -56,6 +56,11 @@ public final class ScreenHeightQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 13;
+    }
+
+    @Override
     public boolean hasFakeValue() {
         return false;
     }

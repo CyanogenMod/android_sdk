@@ -56,6 +56,11 @@ public final class ScreenWidthQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 13;
+    }
+
+    @Override
     public boolean hasFakeValue() {
         return false;
     }

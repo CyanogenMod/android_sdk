@@ -16,6 +16,9 @@
 
 package com.android.ide.common.resources.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 public class FolderConfigurationTest extends TestCase {
@@ -34,5 +37,74 @@ public class FolderConfigurationTest extends TestCase {
         for (int i = 0 ; i < count ; i++) {
             assertNotNull(defaultConfig.getQualifier(i));
         }
+    }
+
+    public void testSimpleResMatch() {
+        runConfigMatchTest(
+                "en-rGB-port-hdpi-notouch-12key",
+                3,
+                "",
+                "en",
+                "fr-rCA",
+                "en-port",
+                "en-notouch-12key",
+                "port-ldpi",
+                "port-notouch-12key");
+    }
+
+    public void testVersionResMatch() {
+        runConfigMatchTest(
+                "en-rUS-w600dp-h1024dp-large-port-mdpi-finger-nokeys-v12",
+                3,
+                "",
+                "large",
+                "w540dp");
+    }
+
+
+    // --- helper methods
+
+    private final static class MockConfigurable implements Configurable {
+
+        private final FolderConfiguration mConfig;
+
+        MockConfigurable(String config) {
+            mConfig = FolderConfiguration.getConfig(getFolderSegments(config));
+        }
+
+        @Override
+        public FolderConfiguration getConfiguration() {
+            return mConfig;
+        }
+
+        @Override
+        public String toString() {
+            return mConfig.toString();
+        }
+    }
+
+    private void runConfigMatchTest(String refConfig, int resultIndex, String... configs) {
+        FolderConfiguration reference = FolderConfiguration.getConfig(getFolderSegments(refConfig));
+        assertNotNull(reference);
+
+        List<? extends Configurable> list = getConfigurable(configs);
+
+        Configurable match = reference.findMatchingConfigurable(list);
+        System.out.println(match.toString());
+        assertEquals(resultIndex, list.indexOf(match));
+    }
+
+    private List<? extends Configurable> getConfigurable(String... configs) {
+        ArrayList<MockConfigurable> list = new ArrayList<MockConfigurable>();
+
+        for (String config : configs) {
+            list.add(new MockConfigurable(config));
+        }
+
+        return list;
+    }
+
+    private static String[] getFolderSegments(String config) {
+        return (config.length() > 0 ? "foo-" + config : "foo").split("-");
     }
 }

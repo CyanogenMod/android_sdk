@@ -32,7 +32,6 @@ import junit.framework.TestCase;
 /**
  * Test ResourceHelper
  */
-@SuppressWarnings("javadoc")
 public class ResourceHelperTest extends TestCase {
 
     /**
@@ -90,6 +89,10 @@ public class ResourceHelperTest extends TestCase {
             return false;
         }
 
+        @Override
+        public int since() {
+            return 0;
+        }
     }
 
     public void testGetIcon() throws Exception {

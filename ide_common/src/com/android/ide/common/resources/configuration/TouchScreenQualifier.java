@@ -57,6 +57,11 @@ public final class TouchScreenQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         TouchScreen type = TouchScreen.getEnum(value);
         if (type != null) {

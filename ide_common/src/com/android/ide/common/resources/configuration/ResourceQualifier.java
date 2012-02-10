@@ -35,6 +35,18 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
     public abstract String getShortName();
 
     /**
+     * Returns when this qualifier was added to Android.
+     */
+    public abstract int since();
+
+    /**
+     * Whether this qualifier is deprecated.
+     */
+    public boolean deprecated() {
+        return false;
+    }
+
+    /**
      * Returns whether the qualifier has a valid filter value.
      */
     public abstract boolean isValid();

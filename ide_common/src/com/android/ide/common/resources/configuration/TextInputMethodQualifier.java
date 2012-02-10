@@ -57,6 +57,11 @@ public final class TextInputMethodQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         Keyboard method = Keyboard.getEnum(value);
         if (method != null) {

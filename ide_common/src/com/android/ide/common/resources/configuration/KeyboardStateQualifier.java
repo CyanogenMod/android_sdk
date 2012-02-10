@@ -56,6 +56,11 @@ public final class KeyboardStateQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         KeyboardState orientation = KeyboardState.getEnum(value);
         if (orientation != null) {

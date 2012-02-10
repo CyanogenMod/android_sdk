@@ -56,6 +56,11 @@ public final class NavigationStateQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         NavigationState state = NavigationState.getEnum(value);
         if (state != null) {

@@ -56,6 +56,11 @@ public final class NightModeQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 8;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         NightMode mode = NightMode.getEnum(value);
         if (mode != null) {

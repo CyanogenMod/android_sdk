@@ -94,6 +94,11 @@ public final class NetworkCodeQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean isValid() {
         return mCode != DEFAULT_CODE;
     }

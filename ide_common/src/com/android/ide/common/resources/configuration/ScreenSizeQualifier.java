@@ -56,6 +56,11 @@ public class ScreenSizeQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 4;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         ScreenSize size = ScreenSize.getEnum(value);
         if (size != null) {

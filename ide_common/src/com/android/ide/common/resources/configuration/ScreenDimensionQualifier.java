@@ -71,6 +71,16 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
+    public boolean deprecated() {
+        return true;
+    }
+
+    @Override
     public boolean isValid() {
         return mValue1 != DEFAULT_SIZE && mValue2 != DEFAULT_SIZE;
     }

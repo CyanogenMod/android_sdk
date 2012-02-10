@@ -56,6 +56,11 @@ public final class UiModeQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 8;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         UiMode mode = UiMode.getEnum(value);
         if (mode != null) {

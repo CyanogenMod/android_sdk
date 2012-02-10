@@ -55,6 +55,11 @@ public final class ScreenOrientationQualifier extends EnumBasedResourceQualifier
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         ScreenOrientation orientation = ScreenOrientation.getEnum(value);
         if (orientation != null) {

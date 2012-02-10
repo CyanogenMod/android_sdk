@@ -23,23 +23,25 @@ package com.android.resources;
  * as well as other places needing to know the density values.
  */
 public enum Density implements ResourceEnum {
-    XHIGH("xhdpi", "X-High Density", 320), //$NON-NLS-1$
-    HIGH("hdpi", "High Density", 240), //$NON-NLS-1$
-    TV("tvdpi", "TV Density", 213), //$NON-NLS-1$
-    MEDIUM("mdpi", "Medium Density", 160), //$NON-NLS-1$
-    LOW("ldpi", "Low Density", 120), //$NON-NLS-1$
-    NODPI("nodpi", "No Density", 0); //$NON-NLS-1$
+    XHIGH("xhdpi", "X-High Density", 320, 8), //$NON-NLS-1$
+    HIGH("hdpi", "High Density", 240, 4), //$NON-NLS-1$
+    TV("tvdpi", "TV Density", 213, 13), //$NON-NLS-1$
+    MEDIUM("mdpi", "Medium Density", 160, 4), //$NON-NLS-1$
+    LOW("ldpi", "Low Density", 120, 4), //$NON-NLS-1$
+    NODPI("nodpi", "No Density", 0, 4); //$NON-NLS-1$
 
     public final static int DEFAULT_DENSITY = 160;
 
     private final String mValue;
     private final String mDisplayValue;
     private final int mDensity;
+    private final int mSince;
 
-    private Density(String value, String displayValue, int density) {
+    private Density(String value, String displayValue, int density, int since) {
         mValue = value;
         mDisplayValue = displayValue;
         mDensity = density;
+        mSince = since;
     }
 
     /**
@@ -79,6 +81,10 @@ public enum Density implements ResourceEnum {
 
     public int getDpiValue() {
         return mDensity;
+    }
+
+    public int since() {
+        return mSince;
     }
 
     public String getLegacyValue() {

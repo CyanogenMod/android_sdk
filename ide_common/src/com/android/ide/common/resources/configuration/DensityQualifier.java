@@ -60,6 +60,11 @@ public final class DensityQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 4;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         Density density = Density.getEnum(value);
         if (density == null) {

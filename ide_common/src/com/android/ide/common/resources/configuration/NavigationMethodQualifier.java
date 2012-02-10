@@ -56,6 +56,11 @@ public final class NavigationMethodQualifier extends EnumBasedResourceQualifier 
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
         Navigation method = Navigation.getEnum(value);
         if (method != null) {

@@ -95,6 +95,11 @@ public final class VersionQualifier extends ResourceQualifier {
     }
 
     @Override
+    public int since() {
+        return 1;
+    }
+
+    @Override
     public boolean isValid() {
         return mVersion != DEFAULT_VERSION;
     }
