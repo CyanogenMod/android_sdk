@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Location;
@@ -161,6 +162,7 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
     private class LocationHandle implements Handle {
         private File mFile;
         private Node mNode;
+        private Object mClientData;
 
         public LocationHandle(File file, Node node) {
             mFile = file;
@@ -175,6 +177,17 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
             }
 
             return null;
+        }
+
+        @Override
+        public void setClientData(@Nullable Object clientData) {
+            mClientData = clientData;
+        }
+
+        @Override
+        @Nullable
+        public Object getClientData() {
+            return mClientData;
         }
     }
 }

@@ -797,7 +797,7 @@ public class Main extends LintClient {
     }
 
     @Override
-    public void log(Throwable exception, String format, Object... args) {
+    public void log(Severity severity, Throwable exception, String format, Object... args) {
         System.out.flush();
         if (!mQuiet) {
             // Place the error message on a line of its own since we're printing '.' etc

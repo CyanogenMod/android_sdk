@@ -82,6 +82,7 @@ public class Project {
     private List<File> mFiles;
     private List<File> mJavaSourceFolders;
     private List<File> mJavaClassFolders;
+    private List<File> mJavaLibraries;;
     private List<Project> mDirectLibraries;
     private List<Project> mAllLibraries;
 
@@ -265,6 +266,28 @@ public class Project {
             mJavaClassFolders = mClient.getJavaClassFolders(this);
         }
         return mJavaClassFolders;
+    }
+
+    /**
+     * Returns the list of Java libraries (typically .jar files) that this
+     * project depends on. Note that this refers to jar libraries, not Android
+     * library projects which are processed in a separate pass with their own
+     * source and class folders.
+     *
+     * @return a list of .jar files (or class folders) that this project depends
+     *         on.
+     */
+    @NonNull
+    public List<File> getJavaLibraries() {
+        if (mJavaLibraries == null) {
+            // AOSP builds already merge libraries and class folders into
+            // the single classes.jar file, so these have already been processed
+            // in getJavaClassFolders.
+
+            mJavaLibraries = mClient.getJavaLibraries(this);
+        }
+
+        return mJavaLibraries;
     }
 
     /**

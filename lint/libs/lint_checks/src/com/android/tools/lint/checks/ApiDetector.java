@@ -76,7 +76,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
             6,
             Severity.ERROR,
             ApiDetector.class,
-            EnumSet.of(Scope.CLASS_FILE, Scope.JAVA_LIBRARIES, Scope.RESOURCE_FILE));
+            EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE));
 
     private ApiLookup mApiDatabase;
     private int mMinApi = -1;

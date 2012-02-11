@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
@@ -92,14 +93,31 @@ public abstract class LintClient {
             @Nullable Object data);
 
     /**
-     * Send an exception to the log
+     * Send an exception or error message (with warning severity) to the log
      *
      * @param exception the exception, possibly null
      * @param format the error message using {@link String#format} syntax, possibly null
      *    (though in that case the exception should not be null)
      * @param args any arguments for the format string
      */
+    public void log(
+            @Nullable Throwable exception,
+            @Nullable String format,
+            @Nullable Object... args) {
+        log(Severity.WARNING, exception, format, args);
+    }
+
+    /**
+     * Send an exception or error message to the log
+     *
+     * @param severity the severity of the warning
+     * @param exception the exception, possibly null
+     * @param format the error message using {@link String#format} syntax, possibly null
+     *    (though in that case the exception should not be null)
+     * @param args any arguments for the format string
+     */
     public abstract void log(
+            @NonNull Severity severity,
             @Nullable Throwable exception,
             @Nullable String format,
             @Nullable Object... args);
@@ -159,12 +177,24 @@ public abstract class LintClient {
 
     /**
      * Returns the list of output folders for class files
+     *
      * @param project the project to look up class file locations for
      * @return a list of output folders to search for .class files
      */
     @NonNull
     public List<File> getJavaClassFolders(@NonNull Project project) {
         return getEclipseClasspath(project, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    /**
+     * Returns the list of Java libraries
+     *
+     * @param project the project to look up jar dependencies for
+     * @return a list of jar dependencies containing .class files
+     */
+    @NonNull
+    public List<File> getJavaLibraries(@NonNull Project project) {
+        return getEclipseClasspath(project, "lib"); //$NON-NLS-1$
     }
 
     /**

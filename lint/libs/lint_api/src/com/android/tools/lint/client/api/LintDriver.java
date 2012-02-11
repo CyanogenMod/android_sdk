@@ -731,11 +731,23 @@ public class LintDriver {
             return;
         }
 
+        if (mScope.contains(Scope.JAVA_LIBRARIES)) {
+            List<Detector> detectors = mScopeDetectors.get(Scope.JAVA_LIBRARIES);
+            if (detectors != null && detectors.size() > 0) {
+                List<File> libraries = project.getJavaLibraries();
+                checkClasses(project, main, libraries, detectors, true /* isLibrary */);
+            }
+        }
+
+        if (mCanceled) {
+            return;
+        }
+
         if (mScope.contains(Scope.CLASS_FILE)) {
             List<Detector> detectors = mScopeDetectors.get(Scope.CLASS_FILE);
             if (detectors != null && detectors.size() > 0) {
-                List<File> binFolders = project.getJavaClassFolders();
-                checkClasses(project, main, binFolders, detectors);
+                List<File> classFolders = project.getJavaClassFolders();
+                checkClasses(project, main, classFolders, detectors, false /* isLibrary */);
             }
         }
 
@@ -789,14 +801,15 @@ public class LintDriver {
     private void checkClasses(
             @NonNull Project project,
             @Nullable Project main,
-            @NonNull List<File> binFolders,
-            @NonNull List<Detector> checks) {
-        if (binFolders.size() == 0) {
+            @NonNull List<File> classFolders,
+            @NonNull List<Detector> checks,
+            boolean isLibrary) {
+        if (classFolders.size() == 0) {
             //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
             //        "output folders found. Does the project need to be built first?");
         }
 
-        for (File classPathEntry : binFolders) {
+        for (File classPathEntry : classFolders) {
             if (classPathEntry.getName().endsWith(DOT_JAR)) {
                 File jarFile = classPathEntry;
                 try {
@@ -810,7 +823,7 @@ public class LintDriver {
                             try {
                                 File file = new File(entry.getName());
                                 checkClassFile(b, project, main, file, jarFile, jarFile,
-                                        checks);
+                                        checks, isLibrary);
                             } catch (Exception e) {
                                 mClient.log(e, null);
                                 continue;
@@ -839,7 +852,7 @@ public class LintDriver {
                     byte[] bytes = Files.toByteArray(file);
                     if (bytes != null) {
                         checkClassFile(bytes, project, main, file, null /*jarFile*/, binDir,
-                                checks);
+                                checks, isLibrary);
                     }
                 } catch (IOException e) {
                     mClient.log(e, null);
@@ -860,7 +873,8 @@ public class LintDriver {
             @NonNull File file,
             @NonNull File jarFile,
             @NonNull File binDir,
-            @NonNull List<Detector> checks) {
+            @NonNull List<Detector> checks,
+            boolean fromLibrary) {
         ClassReader reader = new ClassReader(bytes);
         ClassNode classNode = new ClassNode();
         reader.accept(classNode, 0 /*flags*/);
@@ -871,7 +885,7 @@ public class LintDriver {
         }
 
         ClassContext context = new ClassContext(this, project, main, file, jarFile,
-                binDir, bytes, classNode);
+                binDir, bytes, classNode, fromLibrary);
         for (Detector detector : checks) {
             if (detector.appliesTo(context, file)) {
                 fireEvent(EventType.SCANNING_FILE, context);
@@ -1161,8 +1175,8 @@ public class LintDriver {
 
 
         @Override
-        public void log(@Nullable Throwable exception, @Nullable String format,
-                @Nullable Object... args) {
+        public void log(@NonNull Severity severity, @Nullable Throwable exception,
+                @Nullable String format, @Nullable Object... args) {
             mDelegate.log(exception, format, args);
         }
 
@@ -1182,6 +1196,11 @@ public class LintDriver {
         @NonNull
         public List<File> getJavaClassFolders(@NonNull Project project) {
             return mDelegate.getJavaClassFolders(project);
+        }
+
+        @Override
+        public List<File> getJavaLibraries(Project project) {
+            return mDelegate.getJavaLibraries(project);
         }
 
         @Override

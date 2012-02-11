@@ -77,7 +77,8 @@ public enum Scope {
     PROGUARD_FILE,
 
     /**
-     * The analysis considers classes in the libraries for this project.
+     * The analysis considers classes in the libraries for this project. These
+     * will be analyzed before the classes themselves.
      */
     JAVA_LIBRARIES;
 
