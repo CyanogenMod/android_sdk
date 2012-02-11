@@ -103,13 +103,6 @@ public class ArchiveInstaller {
         File archiveFile = null;
         String name = pkg.getShortDescription();
 
-        if (pkg instanceof ExtraPackage && !((ExtraPackage) pkg).isPathValid()) {
-            monitor.log("Skipping %1$s: %2$s is not a valid install path.",
-                    name,
-                    ((ExtraPackage) pkg).getPath());
-            return false;
-        }
-
         if (newArchive.isLocal()) {
             // This should never happen.
             monitor.log("Skipping already installed archive: %1$s for %2$s",

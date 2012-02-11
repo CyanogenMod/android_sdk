@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.NullSdkLog;
@@ -42,18 +43,22 @@ public class ExtraPackage extends MinToolsPackage
     implements IMinApiLevelDependency {
 
     /**
-     * The vendor folder name. It must be a non-empty single-segment path.
-     * <p/>
-     * The paths "add-ons", "platforms", "platform-tools", "tools" and "docs" are reserved and
-     * cannot be used.
-     * This limitation cannot be written in the XML Schema and must be enforced here by using
-     * the method {@link #isPathValid()} *before* installing the package.
+     * The extra display name. Used in the UI to represent the package. It can be anything.
      */
-    private final String mVendor;
+    private final String mDisplayName;
 
     /**
-     * The sub-folder name. It must be a non-empty single-segment path and has the same
-     * rules as {@link #mVendor}.
+     * The vendor id name. It is a simple alphanumeric string [a-zA-Z0-9_-].
+     */
+    private final String mVendorId;
+
+    /**
+     * The vendor display name. Used in the UI to represent the vendor. It can be anything.
+     */
+    private final String mVendorDisplay;
+
+    /**
+     * The sub-folder name. It must be a non-empty single-segment path.
      */
     private final String mPath;
 
@@ -85,14 +90,49 @@ public class ExtraPackage extends MinToolsPackage
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    ExtraPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    ExtraPackage(
+            SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
         mPath   = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_PATH);
-        mVendor = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR);
 
-        mMinApiLevel = XmlParserUtils.getXmlInt(packageNode, RepoConstants.NODE_MIN_API_LEVEL,
-                MIN_API_LEVEL_NOT_SPECIFIED);
+        // Read name-display, vendor-display and vendor-id, introduced in addon-4.xsd.
+        // These are not optional, they are mandatory in addon-4 but we still treat them
+        // as optional so that we can fallback on using <vendor> which was the only one
+        // defined in addon-3.xsd.
+        String name  = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_NAME_DISPLAY);
+        String vname = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_DISPLAY);
+        String vid   = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_ID);
+
+        if (vid.length() == 0) {
+            // If vid is missing, use the old <vendor> attribute.
+            // Note that in a valid XML, vendor-id cannot be an empty string.
+            // The only reason vid can be empty is when <vendor-id> is missing, which
+            // happens in an addon-3 schema, in which case the old <vendor> needs to be used.
+            String vendor = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR);
+            vid = sanitizeLegacyVendor(vendor);
+            if (vname.length() == 0) {
+                vname = vendor;
+            }
+        }
+        if (vname.length() == 0) {
+            // The vendor-display name can be empty, in which case we use the vendor-id.
+            vname = vid;
+        }
+        mVendorDisplay = vname;
+        mVendorId      = vid;
+
+        if (name.length() == 0) {
+            // If name is missing, use the <path> attribute as done in an addon-3 schema.
+            name = getPrettyName();
+        }
+        mDisplayName   = name;
+
+        mMinApiLevel = XmlParserUtils.getXmlInt(
+                packageNode, RepoConstants.NODE_MIN_API_LEVEL, MIN_API_LEVEL_NOT_SPECIFIED);
 
         mProjectFiles = parseProjectFiles(
                 XmlParserUtils.getFirstChild(packageNode, RepoConstants.NODE_PROJECT_FILES));
@@ -146,30 +186,18 @@ public class ExtraPackage extends MinToolsPackage
             String archiveOsPath) {
         ExtraPackage ep = new ExtraPackage(source, props, vendor, path, revision, license,
                 description, descUrl, archiveOs, archiveArch, archiveOsPath);
-
-        if (ep.isPathValid()) {
-            return ep;
-        } else {
-            String shortDesc = ep.getShortDescription() + " [*]";  //$NON-NLS-1$
-
-            String longDesc = String.format(
-                    "Broken Extra Package: %1$s\n" +
-                    "[*] Package cannot be used due to error: Invalid install path %2$s",
-                    description,
-                    ep.getPath());
-
-            BrokenPackage ba = new BrokenPackage(props, shortDesc, longDesc,
-                    ep.getMinApiLevel(),
-                    IExactApiLevelDependency.API_LEVEL_INVALID,
-                    archiveOsPath);
-            return ba;
-        }
+        return ep;
     }
 
+    /**
+     * Constructor used to create a mock {@link ExtraPackage}.
+     * Most of the attributes here are optional.
+     * When not defined, they will be extracted from the {@code props} properties.
+     */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected ExtraPackage(SdkSource source,
             Properties props,
-            String vendor,
+            String vendorId,
             String path,
             int revision,
             String license,
@@ -188,14 +216,35 @@ public class ExtraPackage extends MinToolsPackage
                 archiveArch,
                 archiveOsPath);
 
-        // The vendor argument is not supposed to be empty. However this attribute did not
-        // exist prior to schema repo-v3 and tools r8, which means we need to cope with a
-        // lack of it when reading back old local repositories. In this case we allow an
-        // empty string.
-        mVendor = vendor != null ? vendor : getProperty(props, PkgProps.EXTRA_VENDOR, "");
-
         // The path argument comes before whatever could be in the properties
         mPath   = path != null ? path : getProperty(props, PkgProps.EXTRA_PATH, path);
+
+        String name  = getProperty(props, PkgProps.EXTRA_NAME_DISPLAY, "");
+        String vname = getProperty(props, PkgProps.EXTRA_VENDOR_DISPLAY, "");
+        String vid   = vendorId != null ? vendorId :
+                                          getProperty(props, PkgProps.EXTRA_VENDOR_ID, "");
+
+        if (vid.length() == 0) {
+            // If vid is missing, use the old <vendor> attribute.
+            // <vendor> did not exist prior to schema repo-v3 and tools r8.
+            String vendor = getProperty(props, PkgProps.EXTRA_VENDOR, "");
+            vid = sanitizeLegacyVendor(vendor);
+            if (vname.length() == 0) {
+                vname = vendor;
+            }
+        }
+        if (vname.length() == 0) {
+            // The vendor-display name can be empty, in which case we use the vendor-id.
+            vname = vid;
+        }
+        mVendorDisplay = vname;
+        mVendorId      = vid;
+
+        if (name.length() == 0) {
+            // If name is missing, use the <path> attribute as done in an addon-3 schema.
+            name = getPrettyName();
+        }
+        mDisplayName   = name;
 
         mOldPaths = getProperty(props, PkgProps.EXTRA_OLD_PATHS, null);
 
@@ -226,9 +275,9 @@ public class ExtraPackage extends MinToolsPackage
         super.saveProperties(props);
 
         props.setProperty(PkgProps.EXTRA_PATH, mPath);
-        if (mVendor != null) {
-            props.setProperty(PkgProps.EXTRA_VENDOR, mVendor);
-        }
+        props.setProperty(PkgProps.EXTRA_NAME_DISPLAY, mDisplayName);
+        props.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, mVendorDisplay);
+        props.setProperty(PkgProps.EXTRA_VENDOR_ID, mVendorId);
 
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
             props.setProperty(PkgProps.EXTRA_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
@@ -296,32 +345,9 @@ public class ExtraPackage extends MinToolsPackage
     }
 
     /**
-     * Static helper to check if a given vendor and path is acceptable for an "extra" package.
-     */
-    public boolean isPathValid() {
-        return isSegmentValid(mVendor) && isSegmentValid(mPath);
-    }
-
-    private boolean isSegmentValid(String segment) {
-        if (SdkConstants.FD_ADDONS.equals(segment) ||
-                SdkConstants.FD_PLATFORMS.equals(segment) ||
-                SdkConstants.FD_PLATFORM_TOOLS.equals(segment) ||
-                SdkConstants.FD_TOOLS.equals(segment) ||
-                SdkConstants.FD_DOCS.equals(segment) ||
-                RepoConstants.FD_TEMP.equals(segment)) {
-            return false;
-        }
-        return segment != null && segment.indexOf('/') == -1 && segment.indexOf('\\') == -1;
-    }
-
-    /**
      * Returns the sanitized path folder name. It is a single-segment path.
      * <p/>
      * The package is installed in SDK/extras/vendor_name/path_name.
-     * <p/>
-     * The paths "add-ons", "platforms", "tools" and "docs" are reserved and cannot be used.
-     * This limitation cannot be written in the XML Schema and must be enforced here by using
-     * the method {@link #isPathValid()} *before* installing the package.
      */
     public String getPath() {
         // The XSD specifies the XML vendor and path should only contain [a-zA-Z0-9]+
@@ -339,20 +365,28 @@ public class ExtraPackage extends MinToolsPackage
     }
 
     /**
-     * Returns the sanitized vendor folder name. It is a single-segment path.
-     * <p/>
-     * The package is installed in SDK/extras/vendor_name/path_name.
-     * <p/>
-     * An empty string is returned in case of error.
+     * Returns the vendor id.
      */
-    public String getVendor() {
+    public String getVendorId() {
+        return mVendorId;
+    }
 
+    public String getVendorDisplay() {
+        return mVendorDisplay;
+    }
+
+    public String getDisplayName() {
+        return mDisplayName;
+    }
+
+    /** Transforms the legacy vendor name into a usable vendor id. */
+    private String sanitizeLegacyVendor(String vendorDisplay) {
         // The XSD specifies the XML vendor and path should only contain [a-zA-Z0-9]+
         // and cannot be empty. Let's be defensive and enforce that anyway since things
         // like "____" are still valid values that we don't want to allow.
 
-        if (mVendor != null && mVendor.length() > 0) {
-            String vendor = mVendor;
+        if (vendorDisplay != null && vendorDisplay.length() > 0) {
+            String vendor = vendorDisplay.trim();
             // Sanitize the vendor
             vendor = vendor.replaceAll("[^a-zA-Z0-9-]+", "_");      //$NON-NLS-1$
             if (vendor.equals("_")) {                               //$NON-NLS-1$
@@ -364,17 +398,22 @@ public class ExtraPackage extends MinToolsPackage
         }
 
         return ""; //$NON-NLS-1$
+
     }
 
+    /**
+     * Used to produce a suitable name-display based on the current {@link #mPath}
+     * and {@link #mVendorDisplay} in addon-3 schemas.
+     */
     private String getPrettyName() {
         String name = mPath;
 
         // In the past, we used to save the extras in a folder vendor-path,
         // and that "vendor" would end up in the path when we reload the extra from
         // disk. Detect this and compensate.
-        if (mVendor != null && mVendor.length() > 0) {
-            if (name.startsWith(mVendor + "-")) {  //$NON-NLS-1$
-                name = name.substring(mVendor.length() + 1);
+        if (mVendorDisplay != null && mVendorDisplay.length() > 0) {
+            if (name.startsWith(mVendorDisplay + "-")) {  //$NON-NLS-1$
+                name = name.substring(mVendorDisplay.length() + 1);
             }
         }
 
@@ -383,11 +422,11 @@ public class ExtraPackage extends MinToolsPackage
             name = name.replaceAll("[ _\t\f-]+", " ").trim();   //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (name == null || name.length() == 0) {
-            name = "Unkown Extra";
+            name = "Unknown Extra";
         }
 
-        if (mVendor != null && mVendor.length() > 0) {
-            name = mVendor + " " + name;  //$NON-NLS-1$
+        if (mVendorDisplay != null && mVendorDisplay.length() > 0) {
+            name = mVendorDisplay + " " + name;  //$NON-NLS-1$
             name = name.replaceAll("[ _\t\f-]+", " ").trim();   //$NON-NLS-1$ //$NON-NLS-2$
         }
 
@@ -422,7 +461,7 @@ public class ExtraPackage extends MinToolsPackage
     @Override
     public String installId() {
         return String.format("extra-%1$s-%2$s",     //$NON-NLS-1$
-                getVendor(),
+                getVendorId(),
                 getPath());
     }
 
@@ -433,8 +472,8 @@ public class ExtraPackage extends MinToolsPackage
      */
     @Override
     public String getListDescription() {
-        String s = String.format("%1$s package%2$s",
-                getPrettyName(),
+        String s = String.format("%1$s%2$s",
+                getDisplayName(),
                 isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
 
         return s;
@@ -445,9 +484,8 @@ public class ExtraPackage extends MinToolsPackage
      */
     @Override
     public String getShortDescription() {
-
-        String s = String.format("%1$s package, revision %2$d%3$s",
-                getPrettyName(),
+        String s = String.format("%1$s, revision %2$d%3$s",
+                getDisplayName(),
                 getRevision(),
                 isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
 
@@ -462,15 +500,15 @@ public class ExtraPackage extends MinToolsPackage
      */
     @Override
     public String getLongDescription() {
-        String s = getDescription();
-        if (s == null || s.length() == 0) {
-            s = String.format("Extra %1$s package by %2$s", getPath(), getVendor());
-        }
+        String s = String.format("%1$s, revision %2$d%3$s\nBy %4$s",
+                getDisplayName(),
+                getRevision(),
+                isObsolete() ? " (Obsolete)" : "",  //$NON-NLS-2$
+                getVendorDisplay());
 
-        if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
-                    isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
+        String d = getDescription();
+        if (d != null && d.length() > 0) {
+            s += "\n" + d;                              //$NON-NLS-1$
         }
 
         if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
@@ -481,11 +519,15 @@ public class ExtraPackage extends MinToolsPackage
             s += String.format("\nRequires SDK Platform Android API %1$s", getMinApiLevel());
         }
 
-        // For a local archive, also put the install path in the long description.
-        // This should help users locate the extra on their drive.
         File localPath = getLocalArchivePath();
         if (localPath != null) {
+            // For a local archive, also put the install path in the long description.
+            // This should help users locate the extra on their drive.
             s += String.format("\nLocation: %1$s", localPath.getAbsolutePath());
+        } else {
+            // For a non-installed archive, indicate where it would be installed.
+            s += String.format("\nInstall path: %1$s",
+                    getInstallSubFolder(null/*sdk root*/).getPath());
         }
 
         return s;
@@ -497,7 +539,7 @@ public class ExtraPackage extends MinToolsPackage
      * <p/>
      * A "tool" package should always be located in SDK/tools.
      *
-     * @param osSdkRoot The OS path of the SDK root folder.
+     * @param osSdkRoot The OS path of the SDK root folder. Must NOT be null.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
      *                   Not used in this implementation.
      * @return A new {@link File} corresponding to the directory to use to install this package.
@@ -521,10 +563,22 @@ public class ExtraPackage extends MinToolsPackage
             }
         }
 
+        return getInstallSubFolder(osSdkRoot);
+    }
+
+    /**
+     * Computes the "sub-folder" install path, relative to the given SDK root.
+     * For an extra package, this is generally ".../extra/vendor-id/path".
+     *
+     * @param osSdkRoot The OS path of the SDK root folder if known.
+     *   This CAN be null, in which case the path will start at /extra.
+     * @return Either /extra/vendor/path or sdk-root/extra/vendor-id/path.
+     */
+    private File getInstallSubFolder(@Nullable String osSdkRoot) {
         // The /extras dir at the root of the SDK
         File path = new File(osSdkRoot, SdkConstants.FD_EXTRAS);
 
-        String vendor = getVendor();
+        String vendor = getVendorId();
         if (vendor != null && vendor.length() > 0) {
             path = new File(path, vendor);
         }
@@ -547,8 +601,8 @@ public class ExtraPackage extends MinToolsPackage
             int lenEpOldPaths = epOldPaths.length;
             for (int indexEp = -1; indexEp < lenEpOldPaths; indexEp++) {
                 if (sameVendorAndPath(
-                        mVendor,    mPath,
-                        ep.mVendor, indexEp   < 0 ? ep.mPath : epOldPaths[indexEp])) {
+                        mVendorId,    mPath,
+                        ep.mVendorId, indexEp   < 0 ? ep.mPath : epOldPaths[indexEp])) {
                     return true;
                 }
             }
@@ -557,8 +611,8 @@ public class ExtraPackage extends MinToolsPackage
             int lenThisOldPaths = thisOldPaths.length;
             for (int indexThis = -1; indexThis < lenThisOldPaths; indexThis++) {
                 if (sameVendorAndPath(
-                        mVendor,    indexThis < 0 ? mPath    : thisOldPaths[indexThis],
-                        ep.mVendor, ep.mPath)) {
+                        mVendorId,    indexThis < 0 ? mPath    : thisOldPaths[indexThis],
+                        ep.mVendorId, ep.mPath)) {
                     return true;
                 }
             }
@@ -617,7 +671,7 @@ public class ExtraPackage extends MinToolsPackage
         int pos = s.indexOf("|r:");         //$NON-NLS-1$
         assert pos > 0;
         s = s.substring(0, pos) +
-            "|ve:" + getVendor() +          //$NON-NLS-1$
+            "|ve:" + getVendorId() +          //$NON-NLS-1$
             "|pa:" + getPath() +            //$NON-NLS-1$
             s.substring(pos);
         return s;
@@ -648,7 +702,7 @@ public class ExtraPackage extends MinToolsPackage
         result = prime * result + mMinApiLevel;
         result = prime * result + ((mPath == null) ? 0 : mPath.hashCode());
         result = prime * result + Arrays.hashCode(mProjectFiles);
-        result = prime * result + ((mVendor == null) ? 0 : mVendor.hashCode());
+        result = prime * result + ((mVendorDisplay == null) ? 0 : mVendorDisplay.hashCode());
         return result;
     }
 
@@ -677,11 +731,11 @@ public class ExtraPackage extends MinToolsPackage
         if (!Arrays.equals(mProjectFiles, other.mProjectFiles)) {
             return false;
         }
-        if (mVendor == null) {
-            if (other.mVendor != null) {
+        if (mVendorDisplay == null) {
+            if (other.mVendorDisplay != null) {
                 return false;
             }
-        } else if (!mVendor.equals(other.mVendor)) {
+        } else if (!mVendorDisplay.equals(other.mVendorDisplay)) {
             return false;
         }
         return true;

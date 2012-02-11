@@ -47,7 +47,12 @@ public class PkgProps {
     // AddonPackage
 
     public static final String ADDON_NAME               = "Addon.Name";             //$NON-NLS-1$
+    public static final String ADDON_NAME_ID            = "Addon.NameId";           //$NON-NLS-1$
+    public static final String ADDON_NAME_DISPLAY       = "Addon.NameDisplay";      //$NON-NLS-1$
+
     public static final String ADDON_VENDOR             = "Addon.Vendor";           //$NON-NLS-1$
+    public static final String ADDON_VENDOR_ID          = "Addon.VendorId";         //$NON-NLS-1$
+    public static final String ADDON_VENDOR_DISPLAY     = "Addon.VendorDisplay";    //$NON-NLS-1$
 
     // DocPackage
 
@@ -55,9 +60,12 @@ public class PkgProps {
 
     public static final String EXTRA_PATH               = "Extra.Path";             //$NON-NLS-1$
     public static final String EXTRA_OLD_PATHS          = "Extra.OldPaths";         //$NON-NLS-1$
-    public static final String EXTRA_VENDOR             = "Extra.Vendor";           //$NON-NLS-1$
     public static final String EXTRA_MIN_API_LEVEL      = "Extra.MinApiLevel";      //$NON-NLS-1$
     public static final String EXTRA_PROJECT_FILES      = "Extra.ProjectFiles";     //$NON-NLS-1$
+    public static final String EXTRA_VENDOR             = "Extra.Vendor";           //$NON-NLS-1$
+    public static final String EXTRA_VENDOR_ID          = "Extra.VendorId";         //$NON-NLS-1$
+    public static final String EXTRA_VENDOR_DISPLAY     = "Extra.VendorDisplay";    //$NON-NLS-1$
+    public static final String EXTRA_NAME_DISPLAY       = "Extra.NameDisplay";      //$NON-NLS-1$
 
     // ILayoutlibVersion
 

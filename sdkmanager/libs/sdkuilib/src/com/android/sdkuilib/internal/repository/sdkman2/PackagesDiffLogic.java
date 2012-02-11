@@ -221,8 +221,8 @@ class PackagesDiffLogic {
                 Package p = item.getMainPackage();
                 if (p instanceof ExtraPackage && item.getState() == PkgState.NEW) {
                     ExtraPackage ep = (ExtraPackage) p;
-                    if (ep.getVendor().equals("google") &&          //$NON-NLS-1$
-                            ep.getPath().equals("usb_driver")) {    //$NON-NLS-1$
+                    if (ep.getVendorId().equals("google") &&            //$NON-NLS-1$
+                            ep.getPath().equals("usb_driver")) {        //$NON-NLS-1$
                         item.setChecked(true);
                     }
                 }

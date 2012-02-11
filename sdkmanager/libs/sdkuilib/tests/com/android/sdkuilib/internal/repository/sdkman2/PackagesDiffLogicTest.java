@@ -326,8 +326,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 5>\n" +
-                "-- <INSTALLED, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 5>\n" +
+                "-- <INSTALLED, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
 
         assertEquals(
@@ -335,8 +335,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "PkgCategorySource <source=repo2 (example.com), #items=2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 5>\n" +
-                "-- <INSTALLED, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 5>\n" +
+                "-- <INSTALLED, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
@@ -371,8 +371,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
 
         // Next update adds platforms and addon, sorted in a category based on their API level
@@ -430,8 +430,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
                 "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
 
         // Reloading the same thing should have no impact except for the update methods
@@ -486,8 +486,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
                 "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
     }
 
@@ -714,8 +714,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategorySource <source=repo1 (1.example.com), #items=4>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         // Next update adds platforms and addon, sorted in a category based on their API level
@@ -766,8 +766,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
                 "-- <NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n" +
                 "PkgCategorySource <source=repo2 (2.example.com), #items=4>\n" +
                 "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
@@ -820,8 +820,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
                 "-- <NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
-                "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
+                "-- <INSTALLED, pkg:Android USB Driver, revision 4, updated by:Android USB Driver, revision 5>\n" +
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n" +
                 "PkgCategorySource <source=repo2 (2.example.com), #items=4>\n" +
                 "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
@@ -975,8 +975,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n" +
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (1.example.com), #items=7>\n" +
@@ -986,11 +986,11 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- < * NEW, pkg:ARM EABI System Image, Android API 2, revision 1>\n" +
                 "-- < * NEW, pkg:Intel x86 Atom System Image, Android API 2, revision 1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n" +
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n" +
                 "PkgCategorySource <source=repo2 (2.example.com), #items=3>\n" +
                 "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
-                "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                "-- <NEW, pkg:Carrier Custom Rom, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         // We don't install the USB driver by default on Mac or Linux, only on Windows
@@ -1005,11 +1005,11 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (1.example.com), #items=1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         m.clear();
@@ -1023,11 +1023,11 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (1.example.com), #items=1>\n" +
-                "-- <NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- <NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         m.clear();
@@ -1041,11 +1041,11 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
-                "-- < * NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- < * NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (1.example.com), #items=1>\n" +
-                "-- < * NEW, pkg:Google USB Driver package, revision 5>\n",
+                "-- < * NEW, pkg:Google USB Driver, revision 5>\n",
                 getTree(m, false /*displaySortByApi*/));
 
     }
@@ -1254,13 +1254,13 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
-                "-- <NEW, pkg:Vendor1 New Path2 package, revision 2>\n" +
-                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
+                "-- <NEW, pkg:Vendor1 New Path2, revision 2>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
-                "-- <NEW, pkg:Vendor1 New Path2 package, revision 2>\n" +
-                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
+                "-- <NEW, pkg:Vendor1 New Path2, revision 2>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         // Now, start again, but this time the new package uses the old-path attribute
@@ -1280,11 +1280,11 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
-                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
+                "-- <INSTALLED, pkg:Vendor1 Old Path1, revision 1, updated by:Vendor1 New Path2, revision 2>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
-                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
+                "-- <INSTALLED, pkg:Vendor1 Old Path1, revision 1, updated by:Vendor1 New Path2, revision 2>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 

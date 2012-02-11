@@ -235,7 +235,7 @@ public class LocalSdkParser {
                                 dir.getName(),              //path
                                 0,                          //revision
                                 null,                       //license
-                                "Tools",                    //description
+                                null,                       //description
                                 null,                       //descUrl
                                 Os.getCurrentOs(),          //archiveOs
                                 Arch.getCurrentArch(),      //archiveArch
