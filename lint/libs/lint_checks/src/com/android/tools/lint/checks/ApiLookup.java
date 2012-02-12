@@ -546,6 +546,22 @@ public class ApiLookup {
     }
 
     /**
+     * Quick determination whether a given class name is possibly interesting; this
+     * is a quick package prefix check to determine whether we need to consider
+     * the class at all. This let's us do less actual searching for the vast majority
+     * of APIs (in libraries, application code etc) that have nothing to do with the
+     * APIs in our packages.
+     * @param name the class name in VM format (e.g. using / instead of .)
+     * @return true if the owner is <b>possibly</b> relevant
+     */
+    public boolean isRelevantClass(String name) {
+        // TODO: Add quick switching here. This is tied to the database file so if
+        // we end up with unexpected prefixes there, this could break. For that reason,
+        // for now we consider everything relevant.
+        return true;
+    }
+
+    /**
      * Returns the API version required by the given class reference,
      * or -1 if this is not a known API class. Note that it may return -1
      * for classes introduced in version 1; internally the database only
@@ -558,6 +574,10 @@ public class ApiLookup {
      *         it's unknown <b>or version 1</b>.
      */
     public int getClassVersion(@NonNull String className) {
+        if (!isRelevantClass(className)) {
+            return -1;
+        }
+
         if (mData != null) {
             int classNumber = findClass(className);
             if (classNumber != -1) {
@@ -601,6 +621,10 @@ public class ApiLookup {
             @NonNull String owner,
             @NonNull String name,
             @NonNull String desc) {
+        if (!isRelevantClass(owner)) {
+            return -1;
+        }
+
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber != -1) {
@@ -637,6 +661,10 @@ public class ApiLookup {
     public int getFieldVersion(
             @NonNull String owner,
             @NonNull String name) {
+        if (!isRelevantClass(owner)) {
+            return -1;
+        }
+
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber != -1) {

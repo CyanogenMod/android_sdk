@@ -79,7 +79,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
         private Button mRemoveExtracted;
         private Button mSetStyle;
         private Button mRemoveAll;
-        private Button mExtend;;
+        private Button mExtend;
         private CheckboxTableViewer mCheckedView;
 
         private String mParentStyle;

@@ -146,6 +146,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testInheritLocal() throws Exception {
+        // Test virtual dispatch in a local class which extends some other local class (which
+        // in turn extends an Android API)
+        assertEquals(
+            "ApiCallTest3.java:10: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar",
+
+            lintProject(
+                "apicheck/classpath=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/Intermediate.java.txt=>src/test/pkg/Intermediate.java",
+                "apicheck/ApiCallTest3.java.txt=>src/test/pkg/ApiCallTest3.java",
+                "apicheck/ApiCallTest3.class.data=>bin/classes/test/pkg/ApiCallTest3.class",
+                "apicheck/Intermediate.class.data=>bin/classes/test/pkg/Intermediate.class"
+                ));
+    }
+
     // Test suppressing errors -- on classes, methods etc.
 
     public void testSuppress() throws Exception {

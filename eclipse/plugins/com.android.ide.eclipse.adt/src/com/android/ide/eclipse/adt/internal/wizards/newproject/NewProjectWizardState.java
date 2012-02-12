@@ -215,7 +215,7 @@ public class NewProjectWizardState {
         }
 
         if (newPackageName != null && newPackageName.length() > 0) {
-            packageName = newPackageName;;
+            packageName = newPackageName;
         }
 
         if (activity != null) {

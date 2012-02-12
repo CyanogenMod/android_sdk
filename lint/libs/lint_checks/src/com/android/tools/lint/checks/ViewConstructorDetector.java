@@ -92,40 +92,55 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
             return;
         }
 
-        String superName = classNode.superName;
-        if (superName.equals("android/view/View")                //$NON-NLS-1$
-                || superName.equals("android/view/ViewGroup")    //$NON-NLS-1$
-                || superName.startsWith("android/widget/")       //$NON-NLS-1$
-                && !((superName.endsWith("Adapter")              //$NON-NLS-1$
-                        || superName.endsWith("Controller")      //$NON-NLS-1$
-                        || superName.endsWith("Service")         //$NON-NLS-1$
-                        || superName.endsWith("Provider")        //$NON-NLS-1$
-                        || superName.endsWith("Filter")))) {     //$NON-NLS-1$
+        if (isViewClass(context, classNode)) {
+            checkConstructors(context, classNode);
+        }
+    }
 
-            // Look through constructors
-            @SuppressWarnings("rawtypes")
-            List methods = classNode.methods;
-            for (Object methodObject : methods) {
-                MethodNode method = (MethodNode) methodObject;
-                if (method.name.equals("<init>")) { //$NON-NLS-1$
-                    String desc = method.desc;
-                    if (desc.equals(SIG1) || desc.equals(SIG2) || desc.equals(SIG3)) {
-                        return;
-                    }
-                }
+    private static boolean isViewClass(ClassContext context, ClassNode node) {
+        String superName = node.superName;
+        while (superName != null) {
+            if (superName.equals("android/view/View")                //$NON-NLS-1$
+                    || superName.equals("android/view/ViewGroup")    //$NON-NLS-1$
+                    || superName.startsWith("android/widget/")       //$NON-NLS-1$
+                    && !((superName.endsWith("Adapter")              //$NON-NLS-1$
+                            || superName.endsWith("Controller")      //$NON-NLS-1$
+                            || superName.endsWith("Service")         //$NON-NLS-1$
+                            || superName.endsWith("Provider")        //$NON-NLS-1$
+                            || superName.endsWith("Filter")))) {     //$NON-NLS-1$
+                return true;
             }
 
-            // If we get this far, none of the expected constructors were found.
-
-            // Use location of one of the constructors?
-            String message = String.format(
-                    "Custom view %1$s is missing constructor used by tools: " +
-                    "(Context) or (Context,AttributeSet) or (Context,AttributeSet,int)",
-                    classNode.name);
-            File sourceFile = context.getSourceFile();
-            Location location = Location.create(sourceFile != null
-                    ? sourceFile : context.file);
-            context.report(ISSUE, location, message, null /*data*/);
+            superName = context.getDriver().getSuperClass(superName);
         }
+
+        return false;
+    }
+
+    private void checkConstructors(ClassContext context, ClassNode classNode) {
+        // Look through constructors
+        @SuppressWarnings("rawtypes")
+        List methods = classNode.methods;
+        for (Object methodObject : methods) {
+            MethodNode method = (MethodNode) methodObject;
+            if (method.name.equals("<init>")) { //$NON-NLS-1$
+                String desc = method.desc;
+                if (desc.equals(SIG1) || desc.equals(SIG2) || desc.equals(SIG3)) {
+                    return;
+                }
+            }
+        }
+
+        // If we get this far, none of the expected constructors were found.
+
+        // Use location of one of the constructors?
+        String message = String.format(
+                "Custom view %1$s is missing constructor used by tools: " +
+                "(Context) or (Context,AttributeSet) or (Context,AttributeSet,int)",
+                classNode.name);
+        File sourceFile = context.getSourceFile();
+        Location location = Location.create(sourceFile != null
+                ? sourceFile : context.file);
+        context.report(ISSUE, location, message, null /*data*/);
     }
 }
