@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
@@ -113,6 +114,7 @@ public class LombokParser implements IJavaParser {
     private class LocationHandle implements Handle {
         private File mFile;
         private Node mNode;
+        private Object mClientData;
 
         public LocationHandle(File file, Node node) {
             mFile = file;
@@ -123,6 +125,18 @@ public class LombokParser implements IJavaParser {
         public Location resolve() {
             Position pos = mNode.getPosition();
             return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
+        }
+
+
+        @Override
+        public void setClientData(@Nullable Object clientData) {
+            mClientData = clientData;
+        }
+
+        @Override
+        @Nullable
+        public Object getClientData() {
+            return mClientData;
         }
     }
 }

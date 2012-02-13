@@ -35,6 +35,7 @@ public class Location {
     private final Position mEnd;
     private String mMessage;
     private Location mSecondary;
+    private Object mClientData;
 
     /**
      * (Private constructor, use one of the factory methods
@@ -143,6 +144,28 @@ public class Location {
         return mMessage;
     }
 
+    /**
+     * Sets the client data associated with this location. This is an optional
+     * field which can be used by the creator of the {@link Location} to store
+     * temporary state associated with the location.
+     *
+     * @param clientData the data to store with this location
+     */
+    public void setClientData(@Nullable Object clientData) {
+        mClientData = clientData;
+    }
+
+    /**
+     * Returns the client data associated with this location - an optional field
+     * which can be used by the creator of the {@link Location} to store
+     * temporary state associated with the location.
+     *
+     * @return the data associated with this location
+     */
+    @Nullable
+    public Object getClientData() {
+        return mClientData;
+    }
 
     @Override
     public String toString() {
@@ -352,6 +375,25 @@ public class Location {
          */
         @NonNull
         Location resolve();
+
+        /**
+         * Sets the client data associated with this location. This is an optional
+         * field which can be used by the creator of the {@link Location} to store
+         * temporary state associated with the location.
+         *
+         * @param clientData the data to store with this location
+         */
+        public void setClientData(@Nullable Object clientData);
+
+        /**
+         * Returns the client data associated with this location - an optional field
+         * which can be used by the creator of the {@link Location} to store
+         * temporary state associated with the location.
+         *
+         * @return the data associated with this location
+         */
+        @Nullable
+        public Object getClientData();
     }
 
     /** A default {@link Handle} implementation for simple file offsets */
@@ -360,6 +402,7 @@ public class Location {
         private String mContents;
         private int mStartOffset;
         private int mEndOffset;
+        private Object mClientData;
 
         /**
          * Constructs a new {@link DefaultLocationHandle}
@@ -379,6 +422,17 @@ public class Location {
         @NonNull
         public Location resolve() {
             return Location.create(mFile, mContents, mStartOffset, mEndOffset);
+        }
+
+        @Override
+        public void setClientData(@Nullable Object clientData) {
+            mClientData = clientData;
+        }
+
+        @Override
+        @Nullable
+        public Object getClientData() {
+            return mClientData;
         }
     }
 }

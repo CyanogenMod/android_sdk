@@ -213,7 +213,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         }
 
         @Override
-        public void log(Throwable exception, String format, Object... args) {
+        public void log(Severity severity, Throwable exception, String format, Object... args) {
         }
 
         @Override

@@ -41,6 +41,21 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testLibraries() throws Exception {
+        // This tests the infrastructure: it makes sure that we *don't* run this
+        // check in jars that are on the jar library dependency path (testJar() checks
+        // that it *does* work for local jar classes)
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/classpath-lib=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.jar.data=>libs/library.jar"
+                ));
+    }
+
     public void testJar() throws Exception {
         assertEquals(
             "GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1)\n" +

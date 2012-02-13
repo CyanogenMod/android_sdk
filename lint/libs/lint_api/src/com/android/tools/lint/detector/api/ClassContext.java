@@ -52,21 +52,27 @@ public class ClassContext extends Context {
     private boolean mSearchedForSource;
     /** If the file is a relative path within a jar file, this is the jar file, otherwise null */
     private final File mJarFile;
+    /** Whether this class is part of a library (rather than corresponding to one of the
+     * source files in this project */
+    private final boolean mFromLibrary;
 
     /**
      * Construct a new {@link ClassContext}
      *
      * @param driver the driver running through the checks
      * @param project the project containing the file being checked
-     * @param main the main project if this project is a library project, or null if this
-     *            is not a library project. The main project is the root project of all
-     *            library projects, not necessarily the directly including project.
+     * @param main the main project if this project is a library project, or
+     *            null if this is not a library project. The main project is the
+     *            root project of all library projects, not necessarily the
+     *            directly including project.
      * @param file the file being checked
-     * @param jarFile If the file is a relative path within a jar file, this is the jar
-     *            file, otherwise null
+     * @param jarFile If the file is a relative path within a jar file, this is
+     *            the jar file, otherwise null
      * @param binDir the root binary directory containing this .class file.
      * @param bytes the bytecode raw data
      * @param classNode the bytecode object model
+     * @param fromLibrary whether this class is from a library rather than part
+     *            of this project
      */
     public ClassContext(
             @NonNull LintDriver driver,
@@ -76,12 +82,14 @@ public class ClassContext extends Context {
             @Nullable File jarFile,
             @NonNull File binDir,
             @NonNull byte[] bytes,
-            @NonNull ClassNode classNode) {
+            @NonNull ClassNode classNode,
+            boolean fromLibrary) {
         super(driver, project, main, file);
         mJarFile = jarFile;
         mBinDir = binDir;
         mBytes = bytes;
         mClassNode = classNode;
+        mFromLibrary = fromLibrary;
     }
 
     /**
@@ -113,6 +121,15 @@ public class ClassContext extends Context {
     @Nullable
     public File getJarFile() {
         return mJarFile;
+    }
+
+    /**
+     * Returns whether this class is part of a library (not this project).
+     *
+     * @return true if this class is part of a library
+     */
+    public boolean isFromClassLibrary() {
+        return mFromLibrary;
     }
 
     /**

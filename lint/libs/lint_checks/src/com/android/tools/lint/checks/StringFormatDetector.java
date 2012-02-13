@@ -149,6 +149,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      * defined multiple times, usually for different translations.
      */
     private Map<String, List<Pair<Handle, String>>> mFormatStrings;
+
     /**
      * List of strings that contain percents that aren't formatting strings; these
      * should not be passed to String.format.

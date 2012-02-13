@@ -124,7 +124,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     // ----- Extends LintClient -----
 
     @Override
-    public void log(Throwable exception, String format, Object... args) {
+    public void log(Severity severity, Throwable exception, String format, Object... args) {
         if (exception == null) {
             AdtPlugin.log(IStatus.WARNING, format, args);
         } else {
@@ -821,6 +821,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         private class LocationHandle implements Handle {
             private File mFile;
             private lombok.ast.Node mNode;
+            private Object mClientData;
 
             public LocationHandle(File file, lombok.ast.Node node) {
                 mFile = file;
@@ -831,6 +832,17 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             public Location resolve() {
                 lombok.ast.Position pos = mNode.getPosition();
                 return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
+            }
+
+            @Override
+            public void setClientData(@Nullable Object clientData) {
+                mClientData = clientData;
+            }
+
+            @Override
+            @Nullable
+            public Object getClientData() {
+                return mClientData;
             }
         }
     }
