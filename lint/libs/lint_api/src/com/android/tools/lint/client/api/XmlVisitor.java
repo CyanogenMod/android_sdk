@@ -181,7 +181,11 @@ class XmlVisitor {
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
-                List<Detector.XmlScanner> list = mAttributeToCheck.get(attribute.getLocalName());
+                String name = attribute.getLocalName();
+                if (name == null) {
+                    name = attribute.getName();
+                }
+                List<Detector.XmlScanner> list = mAttributeToCheck.get(name);
                 if (list != null) {
                     for (int j = 0, max = list.size(); j < max; j++) {
                         Detector.XmlScanner check = list.get(j);
