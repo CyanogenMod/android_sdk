@@ -669,7 +669,7 @@ public class Hyperlinks {
     private static FolderConfiguration getConfiguration() {
         IEditorPart editor = getEditor();
         if (editor != null) {
-            LayoutEditorDelegate delegate = (LayoutEditorDelegate) editor;
+            LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(editor);
             GraphicalEditorPart graphicalEditor =
                 delegate == null ? null : delegate.getGraphicalEditor();
 
