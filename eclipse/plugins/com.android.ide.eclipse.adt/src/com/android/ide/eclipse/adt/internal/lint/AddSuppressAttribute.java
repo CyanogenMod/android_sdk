@@ -35,7 +35,6 @@ import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.OverdrawDetector;
 import com.android.tools.lint.checks.StringFormatDetector;
 import com.android.tools.lint.checks.TranslationDetector;
-import com.android.tools.lint.checks.WrongIdDetector;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -183,9 +182,7 @@ class AddSuppressAttribute implements ICompletionProposal {
                 || id.equals(StringFormatDetector.ARG_TYPES.getId())
                 || id.equals(StringFormatDetector.ARG_COUNT.getId())
                 || id.equals(TranslationDetector.MISSING.getId())
-                || id.equals(TranslationDetector.EXTRA.getId())
-                || id.equals(WrongIdDetector.UNKNOWN_ID.getId())
-                || id.equals(WrongIdDetector.UNKNOWN_ID_LAYOUT.getId())) {
+                || id.equals(TranslationDetector.EXTRA.getId())) {
             node = document.getDocumentElement();
         }
 

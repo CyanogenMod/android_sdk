@@ -179,6 +179,7 @@ public class WrongIdDetector extends LayoutDetector {
                                 XmlContext xmlContext = (XmlContext) context;
                                 IDomParser parser = xmlContext.parser;
                                 Handle handle = parser.createLocationHandle(xmlContext, attr);
+                                handle.setClientData(attr);
 
                                 if (mHandles == null) {
                                     mHandles = new ArrayList<Pair<String,Handle>>();
@@ -205,7 +206,6 @@ public class WrongIdDetector extends LayoutDetector {
                 boolean isBound = idDefined(mGlobalIds, id);
                 if (!isBound && checkExists && projectScope) {
                     Handle handle = pair.getSecond();
-                    Location location = handle.resolve();
                     boolean isDeclared = idDefined(mDeclaredIds, id);
                     id = stripIdPrefix(id);
                     String suggestionMessage;
@@ -229,23 +229,31 @@ public class WrongIdDetector extends LayoutDetector {
                                 "The id \"%1$s\" is not defined anywhere.%2$s",
                                 id, suggestionMessage);
                     }
-                    // TODO: Compute applicable node scope
-                    context.report(UNKNOWN_ID, location, message, null);
+                    report(context, UNKNOWN_ID, handle, message);
                 } else if (checkSameLayout && (!projectScope || isBound)) {
                     // The id was defined, but in a different layout. Usually not intentional
                     // (might be referring to a random other view that happens to have the same
                     // name.)
                     Handle handle = pair.getSecond();
-                    Location location = handle.resolve();
-                    // TODO: Compute applicable node scope
-                    context.report(UNKNOWN_ID_LAYOUT, location,
+                    report(context, UNKNOWN_ID_LAYOUT, handle,
                             String.format(
                                     "The id \"%1$s\" is not referring to any views in this layout",
-                                    stripIdPrefix(id)),
-                            null);
+                                    stripIdPrefix(id)));
                 }
             }
         }
+    }
+
+    private void report(Context context, Issue issue, Handle handle, String message) {
+        Location location = handle.resolve();
+        Object clientData = handle.getClientData();
+        if (clientData instanceof Attr) {
+            if (context.getDriver().isSuppressed(issue, (Attr) clientData)) {
+                return;
+            }
+        }
+
+        context.report(issue, location, message, null);
     }
 
     @Override
