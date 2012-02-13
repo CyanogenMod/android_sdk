@@ -46,4 +46,22 @@ public class ViewConstructorDetectorTest extends AbstractCheckTest {
                 "bytecode/CustomView3.class.data=>bin/classes/test/bytecode/CustomView3.class"
                 ));
     }
+
+    public void testInheritLocal() throws Exception {
+        assertEquals(
+            "CustomViewTest.java: Warning: Custom view test/pkg/CustomViewTest is missing " +
+            "constructor used by tools: (Context) or (Context,AttributeSet) or " +
+            "(Context,AttributeSet,int)",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "apicheck/Intermediate.java.txt=>src/test/pkg/Intermediate.java.txt",
+                "src/test/pkg/CustomViewTest.java.txt=>src/test/pkg/CustomViewTest.java",
+                "bytecode/CustomViewTest.class.data=>bin/classes/test/pkg/CustomViewTest.class",
+                "apicheck/Intermediate.class.data=>bin/classes/test/pkg/Intermediate.class",
+                "apicheck/Intermediate$IntermediateCustomV.class.data=>" +
+                        "bin/classes/test/pkg/Intermediate$IntermediateCustomV.class"
+                ));
+    }
 }

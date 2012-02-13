@@ -82,7 +82,7 @@ public class Project {
     private List<File> mFiles;
     private List<File> mJavaSourceFolders;
     private List<File> mJavaClassFolders;
-    private List<File> mJavaLibraries;;
+    private List<File> mJavaLibraries;
     private List<Project> mDirectLibraries;
     private List<Project> mAllLibraries;
 

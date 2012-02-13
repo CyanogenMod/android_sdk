@@ -26,6 +26,7 @@ import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
 import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static org.objectweb.asm.Opcodes.ASM4;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -51,6 +52,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -731,25 +733,7 @@ public class LintDriver {
             return;
         }
 
-        if (mScope.contains(Scope.JAVA_LIBRARIES)) {
-            List<Detector> detectors = mScopeDetectors.get(Scope.JAVA_LIBRARIES);
-            if (detectors != null && detectors.size() > 0) {
-                List<File> libraries = project.getJavaLibraries();
-                checkClasses(project, main, libraries, detectors, true /* isLibrary */);
-            }
-        }
-
-        if (mCanceled) {
-            return;
-        }
-
-        if (mScope.contains(Scope.CLASS_FILE)) {
-            List<Detector> detectors = mScopeDetectors.get(Scope.CLASS_FILE);
-            if (detectors != null && detectors.size() > 0) {
-                List<File> classFolders = project.getJavaClassFolders();
-                checkClasses(project, main, classFolders, detectors, false /* isLibrary */);
-            }
-        }
+        checkClasses(project, main);
 
         if (mCanceled) {
             return;
@@ -772,6 +756,32 @@ public class LintDriver {
                 }
             }
         }
+    }
+
+    /**
+     * Map from VM class name to corresponding super class VM name, if available.
+     * This map is typically null except <b>during</b> class processing.
+     */
+    private Map<String, String> mSuperClassMap;
+
+    /**
+     * Returns the super class for the given class name,
+     * which should be in VM format (e.g. java/lang/Integer, not java.lang.Integer).
+     * If the super class is not known, returns null. This can happen if
+     * the given class is not a known class according to the project or its
+     * libraries, for example because it refers to one of the core libraries which
+     * are not analyzed by lint.
+     *
+     * @param name the fully qualified class name
+     * @return the corresponding super class name (in VM format), or null if not known
+     */
+    @Nullable
+    public String getSuperClass(@NonNull String name) {
+        if (mSuperClassMap == null) {
+            throw new IllegalStateException("Only callable during ClassScanner#checkClass");
+        }
+        assert name.indexOf('.') == -1 : "Use VM signatures, e.g. java/lang/Integer";
+        return mSuperClassMap.get(name);
     }
 
     @Nullable
@@ -798,18 +808,120 @@ public class LintDriver {
         }
     }
 
-    private void checkClasses(
-            @NonNull Project project,
-            @Nullable Project main,
-            @NonNull List<File> classFolders,
-            @NonNull List<Detector> checks,
-            boolean isLibrary) {
+    /** Check the classes in this project (and if applicable, in any library projects */
+    private void checkClasses(Project project, Project main) {
+        if (!(mScope.contains(Scope.CLASS_FILE) || mScope.contains(Scope.JAVA_LIBRARIES))) {
+            return;
+        }
+
+        // We need to read in all the classes up front such that we can initialize
+        // the parent chains (such that for example for a virtual dispatch, we can
+        // also check the super classes).
+
+        List<File> libraries = project.getJavaLibraries();
+        List<ClassEntry> libraryEntries;
+        if (libraries.size() > 0) {
+            libraryEntries = new ArrayList<ClassEntry>(64);
+            findClasses(libraryEntries, libraries);
+        } else {
+            libraryEntries = Collections.emptyList();
+        }
+
+        List<File> classFolders = project.getJavaClassFolders();
+        List<ClassEntry> classEntries;
         if (classFolders.size() == 0) {
             //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
             //        "output folders found. Does the project need to be built first?");
+            classEntries = Collections.emptyList();
+        } else {
+            classEntries = new ArrayList<ClassEntry>(64);
+            findClasses(classEntries, classFolders);
         }
 
-        for (File classPathEntry : classFolders) {
+        if (getPhase() == 1) {
+            mSuperClassMap = getSuperMap(libraryEntries, classEntries);
+        }
+
+        // Actually run the detectors. Libraries should be called before the
+        // main classes.
+        runClassDetectors(Scope.JAVA_LIBRARIES, libraryEntries, project, main);
+
+        if (mCanceled) {
+            return;
+        }
+
+        runClassDetectors(Scope.CLASS_FILE, classEntries, project, main);
+    }
+
+    private void runClassDetectors(Scope scope, List<ClassEntry> entries,
+            Project project, Project main) {
+        if (mScope.contains(scope)) {
+            List<Detector> classDetectors = mScopeDetectors.get(scope);
+            if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
+                for (ClassEntry entry : entries) {
+                    ClassReader reader = new ClassReader(entry.bytes);
+                    ClassNode classNode = new ClassNode();
+                    reader.accept(classNode, 0 /* flags */);
+                    if (isSuppressed(null, classNode)) {
+                        // Class was annotated with suppress all -- no need to look any further
+                        continue;
+                    }
+
+                    ClassContext context = new ClassContext(this, project, main,
+                            entry.file, entry.jarFile, entry.binDir, entry.bytes,
+                            classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/);
+                    runClassDetectors(context, classDetectors);
+
+                    if (mCanceled) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private Map<String, String> getSuperMap(List<ClassEntry> libraryEntries,
+            List<ClassEntry> classEntries) {
+        int size = libraryEntries.size() + classEntries.size();
+        Map<String, String> map = new HashMap<String, String>(size);
+
+        SuperclassVisitor visitor = new SuperclassVisitor(map);
+        addSuperClasses(visitor, libraryEntries);
+        addSuperClasses(visitor, classEntries);
+
+        return map;
+    }
+
+    private void addSuperClasses(SuperclassVisitor visitor, List<ClassEntry> entries) {
+        for (ClassEntry entry : entries) {
+            ClassReader reader = new ClassReader(entry.bytes);
+            int flags = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
+            reader.accept(visitor, flags);
+        }
+    }
+
+    /** Visitor skimming classes and initializing a map of super classes */
+    private static class SuperclassVisitor extends ClassVisitor {
+        private final Map<String, String> mMap;
+
+        public SuperclassVisitor(Map<String, String> map) {
+            super(ASM4);
+            mMap = map;
+        }
+
+        @Override
+        public void visit(int version, int access, String name, String signature, String superName,
+                String[] interfaces) {
+            if (superName != null) {
+                mMap.put(name, superName);
+            }
+        }
+    }
+
+    private void findClasses(
+            @NonNull List<ClassEntry> entries,
+            @NonNull List<File> classPath) {
+        for (File classPathEntry : classPath) {
             if (classPathEntry.getName().endsWith(DOT_JAR)) {
                 File jarFile = classPathEntry;
                 try {
@@ -819,11 +931,12 @@ public class LintDriver {
                     while (entry != null) {
                         String name = entry.getName();
                         if (name.endsWith(DOT_CLASS)) {
-                            byte[] b = ByteStreams.toByteArray(zis);
                             try {
-                                File file = new File(entry.getName());
-                                checkClassFile(b, project, main, file, jarFile, jarFile,
-                                        checks, isLibrary);
+                                byte[] bytes = ByteStreams.toByteArray(zis);
+                                if (bytes != null) {
+                                    File file = new File(entry.getName());
+                                    entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
+                                }
                             } catch (Exception e) {
                                 mClient.log(e, null);
                                 continue;
@@ -841,64 +954,52 @@ public class LintDriver {
                 }
 
                 continue;
-            }
+            } else if (classPathEntry.isDirectory()) {
+                File binDir = classPathEntry;
+                List<File> classFiles = new ArrayList<File>();
+                addClassFiles(binDir, classFiles);
 
-            File binDir = classPathEntry;
-            List<File> classFiles = new ArrayList<File>();
-            addClassFiles(binDir, classFiles);
-
-            for (File file : classFiles) {
-                try {
-                    byte[] bytes = Files.toByteArray(file);
-                    if (bytes != null) {
-                        checkClassFile(bytes, project, main, file, null /*jarFile*/, binDir,
-                                checks, isLibrary);
+                for (File file : classFiles) {
+                    try {
+                        byte[] bytes = Files.toByteArray(file);
+                        if (bytes != null) {
+                            entries.add(new ClassEntry(file, null /* jarFile*/, binDir, bytes));
+                        }
+                    } catch (IOException e) {
+                        mClient.log(e, null);
+                        continue;
                     }
-                } catch (IOException e) {
-                    mClient.log(e, null);
-                    continue;
+
+                    if (mCanceled) {
+                        return;
+                    }
+                }
+            } else {
+                mClient.log(null, "Ignoring class path entry %1$s", classPathEntry);
+            }
+        }
+    }
+
+    private void runClassDetectors(ClassContext context, @NonNull List<Detector> checks) {
+        try {
+            File file = context.file;
+            ClassNode classNode = context.getClassNode();
+            for (Detector detector : checks) {
+                if (detector.appliesTo(context, file)) {
+                    fireEvent(EventType.SCANNING_FILE, context);
+                    detector.beforeCheckFile(context);
+
+                    Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
+                    scanner.checkClass(context, classNode);
+                    detector.afterCheckFile(context);
                 }
 
                 if (mCanceled) {
                     return;
                 }
             }
-        }
-    }
-
-    private void checkClassFile(
-            byte[] bytes,
-            @NonNull Project project,
-            @Nullable Project main,
-            @NonNull File file,
-            @NonNull File jarFile,
-            @NonNull File binDir,
-            @NonNull List<Detector> checks,
-            boolean fromLibrary) {
-        ClassReader reader = new ClassReader(bytes);
-        ClassNode classNode = new ClassNode();
-        reader.accept(classNode, 0 /*flags*/);
-
-        if (isSuppressed(null, classNode)) {
-            // Class was annotated with suppress all -- no need to look any further
-            return;
-        }
-
-        ClassContext context = new ClassContext(this, project, main, file, jarFile,
-                binDir, bytes, classNode, fromLibrary);
-        for (Detector detector : checks) {
-            if (detector.appliesTo(context, file)) {
-                fireEvent(EventType.SCANNING_FILE, context);
-                detector.beforeCheckFile(context);
-
-                Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
-                scanner.checkClass(context, classNode);
-                detector.afterCheckFile(context);
-            }
-
-            if (mCanceled) {
-                return;
-            }
+        } catch (Exception e) {
+            mClient.log(e, null);
         }
     }
 
@@ -1520,5 +1621,21 @@ public class LintDriver {
         }
 
         return false;
+    }
+
+    /** A pending class to be analyzed by {@link #checkClasses} */
+    private static class ClassEntry {
+        public final File file;
+        public final File jarFile;
+        public final File binDir;
+        public final byte[] bytes;
+
+        public ClassEntry(File file, File jarFile, File binDir, byte[] bytes) {
+            super();
+            this.file = file;
+            this.jarFile = jarFile;
+            this.binDir = binDir;
+            this.bytes = bytes;
+        }
     }
 }

@@ -151,7 +151,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
 
     // ---- Implements ClassScanner ----
 
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings("rawtypes")
     @Override
     public void checkClass(final ClassContext context, ClassNode classNode) {
         if (mApiDatabase == null) {
@@ -165,7 +165,7 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
         // Workaround for the fact that beforeCheckProject is too early
         int classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
         if (classMinSdk == -1) {
-            classMinSdk = getMinSdk(context);;
+            classMinSdk = getMinSdk(context);
         }
 
         List methodList = classNode.methods;
@@ -232,24 +232,31 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
                     String owner = node.owner;
                     String desc = node.desc;
 
-                    // Handle inherited methods. This does not work if there are multiple
-                    // local classes in the inheritance chain. To solve this in general we'll
-                    // need to make two passes: the first one to gather inheritance information
-                    // for local classes, and then perform the check here resolving up to
-                    // the API classes.
+                    // No need to check methods in this local class; we know they
+                    // won't be an API match
                     if (node.getOpcode() == Opcodes.INVOKEVIRTUAL
                             && owner.equals(classNode.name)) {
                         owner = classNode.superName;
                     }
 
-                    int api = mApiDatabase.getCallVersion(owner, name, desc);
-                    if (api > minSdk) {
-                        String fqcn = owner.replace('/', '.') + '#' + name;
-                        String message = String.format(
-                                "Call requires API level %1$d (current min is %2$d): %3$s",
-                                api, minSdk, fqcn);
-                        report(context, message, node, method, name, null);
-                    }
+                    do {
+                        int api = mApiDatabase.getCallVersion(owner, name, desc);
+                        if (api > minSdk) {
+                            String fqcn = owner.replace('/', '.') + '#' + name;
+                            String message = String.format(
+                                    "Call requires API level %1$d (current min is %2$d): %3$s",
+                                    api, minSdk, fqcn);
+                            report(context, message, node, method, name, null);
+                        }
+
+                        // For virtual dispatch, walk up the inheritance chain checking
+                        // each inherited method
+                        if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+                            owner = context.getDriver().getSuperClass(owner);
+                        } else {
+                            owner = null;
+                        }
+                    } while (owner != null);
                 } else if (type == AbstractInsnNode.FIELD_INSN) {
                     FieldInsnNode node = (FieldInsnNode) instruction;
                     String name = node.name;
