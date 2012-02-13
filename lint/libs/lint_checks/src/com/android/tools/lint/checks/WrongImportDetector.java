@@ -62,7 +62,7 @@ public class WrongImportDetector extends Detector implements Detector.JavaScanne
             WrongImportDetector.class,
             Scope.JAVA_FILE_SCOPE);
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link WrongImportDetector} check */
     public WrongImportDetector() {
     }
 

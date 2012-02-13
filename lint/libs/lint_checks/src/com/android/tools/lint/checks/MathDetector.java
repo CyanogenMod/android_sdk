@@ -63,7 +63,7 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
                //"http://developer.android.com/reference/android/util/FloatMath.html"); //$NON-NLS-1$
                "http://developer.android.com/guide/practices/design/performance.html#avoidfloat"); //$NON-NLS-1$
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link MathDetector} check */
     public MathDetector() {
     }
 

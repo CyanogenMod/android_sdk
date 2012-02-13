@@ -54,7 +54,7 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
             Scope.JAVA_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal"); //$NON-NLS-1$
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link SdCardDetector} check */
     public SdCardDetector() {
     }
 

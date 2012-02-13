@@ -75,7 +75,8 @@ import lombok.ast.VariableDefinitionEntry;
 import lombok.ast.VariableReference;
 
 /**
- * Check which looks for accessibility problems like missing content descriptions
+ * Check which looks for problems with formatting strings such as inconsistencies between
+ * translations or between string declaration and string usage in Java.
  */
 public class StringFormatDetector extends ResourceXmlDetector implements Detector.JavaScanner {
     /** The name of the String.format method */
@@ -156,7 +157,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      */
     private Map<String, Handle> mNotFormatStrings = new HashMap<String, Handle>();
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link StringFormatDetector} check */
     public StringFormatDetector() {
     }
 

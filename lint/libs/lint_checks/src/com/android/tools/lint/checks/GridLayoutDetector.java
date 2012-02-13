@@ -55,7 +55,7 @@ public class GridLayoutDetector extends LayoutDetector {
             GridLayoutDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link GridLayoutDetector} check */
     public GridLayoutDetector() {
     }
 

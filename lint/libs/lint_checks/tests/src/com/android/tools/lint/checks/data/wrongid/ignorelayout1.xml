@@ -18,7 +18,7 @@
         android:layout_alignRight="@+id/my_id3"
         android:layout_alignTop="@+id/my_id1"
         android:text="Button"
-        tools:ignore="UnknownIdInLayout" />
+        tools:ignore="UnknownIdInLayout,UnknownId" />
 
     <Button
         android:id="@+id/button2"
