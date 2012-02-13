@@ -81,7 +81,7 @@ class ProjectLintConfiguration extends DefaultConfiguration {
     @Override
     public Severity getSeverity(Issue issue) {
         Severity severity = super.getSeverity(issue);
-        if (mFatalOnly && severity != Severity.ERROR) {
+        if (mFatalOnly && severity != Severity.FATAL) {
             return Severity.IGNORE;
         }
         return severity;

@@ -334,7 +334,7 @@ class HtmlReporter extends Reporter {
         mWriter.write("</div>\n");                               //$NON-NLS-1$
 
         mWriter.write("Severity: ");
-        if (severity == Severity.ERROR) {
+        if (severity == Severity.ERROR || severity == Severity.FATAL) {
             mWriter.write("<span class=\"error\">");             //$NON-NLS-1$
         } else if (severity == Severity.WARNING) {
             mWriter.write("<span class=\"warning\">");           //$NON-NLS-1$
@@ -507,7 +507,7 @@ class HtmlReporter extends Reporter {
 
             boolean isError = false;
             for (Warning warning : warnings) {
-                if (warning.severity == Severity.ERROR) {
+                if (warning.severity == Severity.ERROR || warning.severity == Severity.FATAL) {
                     isError = true;
                     break;
                 }

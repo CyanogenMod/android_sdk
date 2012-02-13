@@ -81,7 +81,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
             Category.MESSAGES,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             TranslationDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 

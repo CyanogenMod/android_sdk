@@ -97,7 +97,7 @@ public class WrongIdDetector extends LayoutDetector {
             "it.",
             Category.CORRECTNESS,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             WrongIdDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 

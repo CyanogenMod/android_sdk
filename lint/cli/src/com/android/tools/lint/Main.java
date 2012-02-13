@@ -853,8 +853,13 @@ public class Main extends LintClient {
         if (severity == Severity.IGNORE) {
             return;
         }
-        if (severity == Severity.ERROR){
+        if (severity == Severity.FATAL) {
             mFatal = true;
+            // From here on, treat the fatal error as an error such that we don't display
+            // both "Fatal:" and "Error:" etc in the error output.
+            severity = Severity.ERROR;
+        }
+        if (severity == Severity.ERROR) {
             mErrorCount++;
         } else {
             mWarningCount++;

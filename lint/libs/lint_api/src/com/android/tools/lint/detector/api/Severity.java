@@ -28,8 +28,13 @@ import com.google.common.annotations.Beta;
 @Beta
 public enum Severity {
     /**
-     * Errors: Use sparingly because a warning marked as an error will be
-     * considered fatal and will abort Export APK etc in ADT
+     * Fatal: Use sparingly because a warning marked as fatal will be
+     * considered critical and will abort Export APK etc in ADT
+     */
+    FATAL("Fatal"),
+
+    /**
+     * Errors: The issue is known to be a real error that must be addressed.
      */
     ERROR("Error"),
 

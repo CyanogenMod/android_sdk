@@ -46,7 +46,7 @@ public class ProguardDetector extends Detector {
             "not Java (such as possibly CustomViews) can get deleted.",
             Category.CORRECTNESS,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             ProguardDetector.class,
             EnumSet.of(Scope.PROGUARD_FILE)).setMoreInfo(
             "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$

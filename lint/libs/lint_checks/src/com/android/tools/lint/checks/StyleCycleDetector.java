@@ -48,7 +48,7 @@ public class StyleCycleDetector extends ResourceXmlDetector {
             "exceptions.",
             Category.CORRECTNESS,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             StyleCycleDetector.class,
             Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/ui/themes.html#Inheritance"); //$NON-NLS-1$
