@@ -48,4 +48,23 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
 
             lintFiles("wrongid/layout1.xml=>res/layout/layout1.xml"));
     }
+
+    public void testSuppressed() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "wrongid/ignorelayout1.xml=>res/layout/layout1.xml",
+                    "wrongid/layout2.xml=>res/layout/layout2.xml",
+                    "wrongid/ids.xml=>res/values/ids.xml"
+        ));
+    }
+
+    public void testSuppressedSingleFile() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("wrongid/ignorelayout1.xml=>res/layout/layout1.xml"));
+    }
+
 }
