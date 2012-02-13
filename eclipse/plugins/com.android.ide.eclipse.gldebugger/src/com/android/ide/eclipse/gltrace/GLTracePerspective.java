@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.gltrace;
 
+import com.android.ide.eclipse.gltrace.views.DetailsView;
 import com.android.ide.eclipse.gltrace.views.FrameBufferView;
 import com.android.ide.eclipse.gltrace.views.StateView;
-import com.android.ide.eclipse.gltrace.views.TextureView;
 
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
@@ -44,7 +44,7 @@ public class GLTracePerspective implements IPerspectiveFactory {
         // Add the Texture View in the 3rd column
         IFolderLayout column3 = layout.createFolder(FB_FOLDER_ID, IPageLayout.RIGHT, 0.6f,
                 STATE_FOLDER_ID);
-        column3.addView(TextureView.ID);
+        column3.addView(DetailsView.ID);
 
         // Add the OpenGL Framebuffer view below the texture view (bottom of 3rd column)
         IFolderLayout column3bottom = layout.createFolder(TEXTURE_VIEW_FOLDER_ID,

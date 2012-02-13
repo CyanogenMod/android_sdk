@@ -24,6 +24,7 @@ import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
+import com.android.ide.eclipse.gltrace.views.DetailsPage;
 import com.android.ide.eclipse.gltrace.views.FrameBufferViewPage;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -276,7 +277,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
 
         // update FB view
-        mFrameBufferViewPage.setSelectedFrame(selectedFrame - 1);
+        if (mFrameBufferViewPage != null) {
+            mFrameBufferViewPage.setSelectedFrame(selectedFrame - 1);
+        }
     }
 
     /**
@@ -625,5 +628,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         return mFrameBufferViewPage;
+    }
+
+    public DetailsPage getDetailsPage() {
+        return new DetailsPage(mTrace);
     }
 }
