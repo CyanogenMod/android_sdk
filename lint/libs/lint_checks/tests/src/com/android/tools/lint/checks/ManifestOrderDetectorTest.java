@@ -64,4 +64,17 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                         "missingmin.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
     }
+
+    public void testMultipleSdk() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"\n" +
+                "AndroidManifest.xml:9: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\"\n" +
+                "ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together\n" +
+                "=> ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:7: Also appears here\n" +
+                "=> ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:9: Also appears here",
+
+                lintProject(
+                        "multiplesdk.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
 }

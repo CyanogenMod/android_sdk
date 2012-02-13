@@ -35,6 +35,7 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue USES_SDK = Issue.create(
-            "UsesSdk", //$NON-NLS-1$
+            "UsesSdkMinTarget", //$NON-NLS-1$
             "Checks that the minimum SDK and target SDK attributes are defined",
 
             "The manifest should contain a <uses-sdk> element which defines the " +
@@ -80,12 +81,31 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             EnumSet.of(Scope.MANIFEST)).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
 
+    /** Missing a {@code <uses-sdk>} element */
+    public static final Issue MULTIPLE_USES_SDK = Issue.create(
+            "MultipleUsesSdk", //$NON-NLS-1$
+            "Checks that the <uses-sdk> element appears at most once",
+
+            "The <uses-sdk> element should appear just once; the tools will *not* merge the " +
+            "contents of all the elements so if you split up the atttributes across multiple " +
+            "elements, only one of them will take effect. To fix this, just merge all the " +
+            "attributes from the various elements into a single <uses-sdk> element.",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            ManifestOrderDetector.class,
+            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
+
     /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
     }
 
     private boolean mSeenApplication;
-    private boolean mSeenUsesSdk;
+
+    /** Number of times we've seen the <uses-sdk> element */
+    private int mSeenUsesSdk;
 
     @Override
     public Speed getSpeed() {
@@ -100,12 +120,12 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     @Override
     public void beforeCheckFile(Context context) {
         mSeenApplication = false;
-        mSeenUsesSdk = false;
+        mSeenUsesSdk = 0;
     }
 
     @Override
     public void afterCheckFile(Context context) {
-        if (!mSeenUsesSdk) {
+        if (mSeenUsesSdk == 0) {
             context.report(USES_SDK, Location.create(context.file),
                     "Manifest should specify a minimum API level with " +
                     "<uses-sdk android:minSdkVersion=\"?\" />; if it really supports " +
@@ -136,7 +156,31 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     public void visitElement(XmlContext context, Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_USES_SDK)) {
-            mSeenUsesSdk = true;
+            mSeenUsesSdk++;
+
+            if (mSeenUsesSdk == 2) { // Only warn when we encounter the first one
+                Location location = context.getLocation(element);
+
+                // Link up *all* encountered locations in the document
+                NodeList elements = element.getOwnerDocument().getElementsByTagName(TAG_USES_SDK);
+                Location secondary = null;
+                for (int i = elements.getLength() - 1; i >= 0; i--) {
+                    Element e = (Element) elements.item(i);
+                    if (e != element) {
+                        Location l = context.getLocation(e);
+                        l.setSecondary(secondary);
+                        l.setMessage("Also appears here");
+                        secondary = l;
+                    }
+                }
+                location.setSecondary(secondary);
+
+                context.report(MULTIPLE_USES_SDK, element, location,
+                        "There should only be a single <uses-sdk> element in the manifest:" +
+                        " merge these together", null);
+                return;
+            }
+
             if (!element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
                 context.report(USES_SDK, element, context.getLocation(element),
                         "<uses-sdk> tag should specify a minimum API level with " +
