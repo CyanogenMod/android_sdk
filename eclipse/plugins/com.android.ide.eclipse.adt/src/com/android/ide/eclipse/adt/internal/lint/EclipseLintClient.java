@@ -261,7 +261,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             }
         }
 
-        if (s == Severity.ERROR) {
+        if (s == Severity.FATAL) {
             mWasFatal = true;
         }
     }
@@ -369,6 +369,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 return IMarker.SEVERITY_INFO;
             case WARNING:
                 return IMarker.SEVERITY_WARNING;
+            case FATAL:
             case ERROR:
             default:
                 return IMarker.SEVERITY_ERROR;

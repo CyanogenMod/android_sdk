@@ -103,7 +103,7 @@ class MultiProjectHtmlReporter extends HtmlReporter {
             int projectErrorCount = 0;
             int projectWarningCount = 0;
             for (Warning warning: issues) {
-                if (warning.severity == Severity.ERROR) {
+                if (warning.severity == Severity.ERROR || warning.severity == Severity.FATAL) {
                     projectErrorCount++;
                 } else if (warning.severity == Severity.WARNING) {
                     projectWarningCount++;

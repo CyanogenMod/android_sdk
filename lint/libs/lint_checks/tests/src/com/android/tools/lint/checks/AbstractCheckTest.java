@@ -298,6 +298,10 @@ public abstract class AbstractCheckTest extends TestCase {
             }
 
             Severity severity = context.getConfiguration().getSeverity(issue);
+            if (severity == Severity.FATAL) {
+                // Treat fatal errors like errors in the golden files.
+                severity = Severity.ERROR;
+            }
             sb.append(severity.getDescription());
             sb.append(": ");
 

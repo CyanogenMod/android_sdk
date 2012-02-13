@@ -51,7 +51,7 @@ public class GridLayoutDetector extends LayoutDetector {
             "of a GridLayout's rowCount or columnCount is usually an unintentional error.",
             Category.CORRECTNESS,
             4,
-            Severity.ERROR,
+            Severity.FATAL,
             GridLayoutDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 

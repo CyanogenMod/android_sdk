@@ -147,7 +147,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             mCheckExportCheckbox.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false,
                     2, 1));
             mCheckExportCheckbox.setSelection(true);
-            mCheckExportCheckbox.setText("Run full error check when exporting app");
+            mCheckExportCheckbox.setText("Run full error check when exporting app and abort if fatal errors are found");
 
             Label separator = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
             separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
@@ -227,7 +227,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
         mSeverityCombo = new Combo(container, SWT.READ_ONLY);
         mSeverityCombo.setItems(new String[] {
-                "(Default)", "Error", "Warning", "Information", "Ignore"
+                "(Default)", "Fatal", "Error", "Warning", "Information", "Ignore"
         });
         GridData gdSeverityCombo = new GridData(SWT.FILL, SWT.TOP, false, false, 1, 1);
         gdSeverityCombo.widthHint = 90;
@@ -679,6 +679,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
                 ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
                 switch (severity) {
+                    case FATAL:
                     case ERROR:
                         return sharedImages.getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
                     case WARNING:

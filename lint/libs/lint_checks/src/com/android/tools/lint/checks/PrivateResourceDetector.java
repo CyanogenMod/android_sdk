@@ -43,7 +43,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
             "resources under $ANDROID_SK/platforms/android-$VERSION/data/res/.",
             Category.CORRECTNESS,
             3,
-            Severity.ERROR,
+            Severity.FATAL,
             PrivateResourceDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
