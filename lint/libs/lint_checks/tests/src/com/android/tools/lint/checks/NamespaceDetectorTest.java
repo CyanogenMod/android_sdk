@@ -19,13 +19,39 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
-public class TypoDetectorTest extends AbstractCheckTest {
+public class NamespaceDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
-        return new TypoDetector();
+        return new NamespaceDetector();
     }
 
-    public void test() throws Exception {
+    public void testCustom() throws Exception {
+        assertEquals(
+            "customview.xml:16: Error: Using a custom namespace attributes in a library project does not yet work",
+
+            lintProject(
+                    "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                    "multiproject/library.properties=>project.properties",
+                    "res/layout/customview.xml"
+            ));
+    }
+
+    public void testCustomOk() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "multiproject/library-manifest.xml=>AndroidManifest.xml",
+
+                    // Use a standard project properties instead: no warning since it's
+                    // not a library project:
+                    //"multiproject/library.properties=>project.properties",
+
+                    "res/layout/customview.xml"
+            ));
+    }
+
+    public void testTypo() throws Exception {
         assertEquals(
                 "wrong_namespace.xml:2: Warning: Unexpected namespace URI bound to the " +
                 "\"android\" prefix, was http://schemas.android.com/apk/res/andriod, " +
@@ -34,7 +60,7 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 lintProject("res/layout/wrong_namespace.xml"));
     }
 
-    public void test2() throws Exception {
+    public void testTypo2() throws Exception {
         assertEquals(
                 "wrong_namespace2.xml:2: Warning: URI is case sensitive: was " +
                 "\"http://schemas.android.com/apk/res/Android\", expected " +
@@ -43,7 +69,7 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 lintProject("res/layout/wrong_namespace2.xml"));
     }
 
-    public void test3() throws Exception {
+    public void testTypo3() throws Exception {
         assertEquals(
                 "wrong_namespace3.xml:2: Warning: Unexpected namespace URI bound to the " +
                 "\"android\" prefix, was http://schemas.android.com/apk/res/androi, " +
@@ -52,10 +78,25 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 lintProject("res/layout/wrong_namespace3.xml"));
     }
 
-    public void testOk() throws Exception {
+    public void testTypoOk() throws Exception {
         assertEquals(
                 "No warnings.",
 
                 lintProject("res/layout/wrong_namespace4.xml"));
+    }
+
+    public void testUnused() throws Exception {
+        assertEquals(
+                "unused_namespace.xml:3: Warning: Unused namespace unused1\n" +
+                "unused_namespace.xml:4: Warning: Unused namespace unused2",
+
+                lintProject("res/layout/unused_namespace.xml"));
+    }
+
+    public void testUnusedOk() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintProject("res/layout/layout1.xml"));
     }
 }

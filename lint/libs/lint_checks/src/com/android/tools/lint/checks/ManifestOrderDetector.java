@@ -66,7 +66,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue USES_SDK = Issue.create(
-            "UsesSdkMinTarget", //$NON-NLS-1$
+            "UsesMinSdkAttributes", //$NON-NLS-1$
             "Checks that the minimum SDK and target SDK attributes are defined",
 
             "The manifest should contain a <uses-sdk> element which defines the " +
