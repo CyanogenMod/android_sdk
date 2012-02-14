@@ -264,6 +264,9 @@ public class Main extends LintClient {
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 File output = new File(args[++index]);
+                // Get an absolute path such that we can ask its parent directory for
+                // write permission etc.
+                output = output.getAbsoluteFile();
                 if (output.isDirectory() ||
                         (!output.exists() && output.getName().indexOf('.') == -1)) {
                     if (!output.exists()) {
@@ -293,7 +296,7 @@ public class Main extends LintClient {
                         System.exit(ERRNO_EXISTS);
                     }
                 }
-                if (!output.getParentFile().canWrite()) {
+                if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write HTML output file " + output);
                     System.exit(ERRNO_EXISTS);
                 }
