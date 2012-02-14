@@ -82,6 +82,9 @@ public class StateListDetector extends ResourceXmlDetector {
                 NamedNodeMap attributes = child.getAttributes();
                 for (int j = 0; j < attributes.getLength(); j++) {
                     Attr attribute = (Attr) attributes.item(j);
+                    if (attribute.getLocalName() == null) {
+                        continue;
+                    }
                     if (attribute.getLocalName().startsWith("state_")) {
                         hasState = true;
                         break;
