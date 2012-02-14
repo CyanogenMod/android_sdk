@@ -146,9 +146,16 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         private final JavaContext mContext;
         /** Whether allocations should be "flagged" in the current method */
         private boolean mFlagAllocations;
+        private boolean mCheckMaps;
+        private boolean mCheckAllocations;
+
 
         public PerformanceVisitor(JavaContext context) {
             mContext = context;
+
+            mCheckAllocations = context.isEnabled(PAINT_ALLOC);
+            mCheckMaps = context.isEnabled(USE_SPARSEARRAY);
+            assert mCheckAllocations  || mCheckMaps; // enforced by infrastructure
         }
 
         @Override
@@ -160,16 +167,18 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
 
         @Override
         public boolean visitConstructorInvocation(ConstructorInvocation node) {
-            TypeReference reference = node.astTypeReference();
-            String typeName = reference.astParts().last().astIdentifier().astValue();
-            // TODO: Should we handle factory method constructions of HashMaps as well,
-            // e.g. via Guava? This is a bit trickier since we need to infer the type
-            // arguments from the calling context.
-            if (typeName.equals(HASH_MAP)) {
-                checkSparseArray(node, reference);
+            if (mCheckMaps) {
+                TypeReference reference = node.astTypeReference();
+                String typeName = reference.astParts().last().astIdentifier().astValue();
+                // TODO: Should we handle factory method constructions of HashMaps as well,
+                // e.g. via Guava? This is a bit trickier since we need to infer the type
+                // arguments from the calling context.
+                if (typeName.equals(HASH_MAP)) {
+                    checkSparseArray(node, reference);
+                }
             }
 
-            if (mFlagAllocations && !(node.getParent() instanceof Throw)) {
+            if (mFlagAllocations && !(node.getParent() instanceof Throw) && mCheckAllocations) {
                 // Make sure we're still inside the method declaration that marked
                 // mInDraw as true, in case we've left it and we're in a static
                 // block or something:
