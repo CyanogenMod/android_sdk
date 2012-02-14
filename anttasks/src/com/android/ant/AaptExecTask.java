@@ -487,7 +487,7 @@ public final class AaptExecTask extends SingleDependencyTask {
         }
 
         // filters if needed
-        if (mResourceFilter != null) {
+        if (mResourceFilter != null && mResourceFilter.length() > 0) {
             task.createArg().setValue("-c");
             task.createArg().setValue(mResourceFilter);
         }
@@ -511,7 +511,7 @@ public final class AaptExecTask extends SingleDependencyTask {
             }
         }
 
-        if (extraPackages != null) {
+        if (extraPackages != null && extraPackages.length() > 0) {
             task.createArg().setValue("--extra-packages");
             task.createArg().setValue(extraPackages);
         }
@@ -526,13 +526,13 @@ public final class AaptExecTask extends SingleDependencyTask {
             task.createArg().setValue(Integer.toString(mVersionCode));
         }
 
-        if ((mVersionName != null) && (mVersionName.length() > 0)) {
+        if (mVersionName != null && mVersionName.length() > 0) {
             task.createArg().setValue("--version-name");
             task.createArg().setValue(mVersionName);
         }
 
         // manifest location
-        if (mManifest != null) {
+        if (mManifest != null && mManifest.length() > 0) {
             task.createArg().setValue("-M");
             task.createArg().setValue(mManifest);
         }
