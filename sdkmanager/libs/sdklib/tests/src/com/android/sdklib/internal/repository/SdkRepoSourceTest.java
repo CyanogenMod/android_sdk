@@ -225,14 +225,14 @@ public class SdkRepoSourceTest extends TestCase {
 
         assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
                      "Found Documentation for Android SDK, API 1, revision 1\n" +
-                     "Found My First add-on by John Doe, Android API 1, revision 1\n" +
+                     "Found My First add-on, Android API 1, revision 1\n" +
                      "Found SDK Platform Android 1.1, API 2, revision 12\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
                      "Found SDK Platform Android Pastry Preview, revision 3\n" +
                      "Found Android SDK Tools, revision 1\n" +
                      "Found Documentation for Android SDK, API 2, revision 42\n" +
                      "Found Android SDK Tools, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found Usb Driver, revision 43\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
@@ -303,14 +303,14 @@ public class SdkRepoSourceTest extends TestCase {
 
         assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
                      "Found Documentation for Android SDK, API 1, revision 1\n" +
-                     "Found My First add-on by John Doe, Android API 1, revision 1\n" +
+                     "Found My First add-on, Android API 1, revision 1\n" +
                      "Found SDK Platform Android 1.1, API 2, revision 12\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
                      "Found SDK Platform Android Pastry Preview, revision 3\n" +
                      "Found Android SDK Tools, revision 1\n" +
                      "Found Documentation for Android SDK, API 2, revision 42\n" +
                      "Found Android SDK Tools, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found Usb Driver, revision 43 (Obsolete)\n" +
                      "Found Extra API Dep, revision 2 (Obsolete)\n" +
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n",

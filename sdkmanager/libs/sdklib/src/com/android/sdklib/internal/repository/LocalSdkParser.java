@@ -308,11 +308,16 @@ public class LocalSdkParser {
             if (dir.isDirectory() && !visited.contains(dir)) {
                 Pair<Map<String, String>, String> infos =
                     SdkManager.parseAddonProperties(dir, sdkManager.getTargets(), log);
+                Properties sourceProps =
+                    parseProperties(new File(dir, SdkConstants.FN_SOURCE_PROP));
 
-                Map<String, String> props = infos.getFirst();
+                Map<String, String> addonProps = infos.getFirst();
                 String error = infos.getSecond();
                 try {
-                    Package pkg = AddonPackage.createBroken(dir.getAbsolutePath(), props, error);
+                    Package pkg = AddonPackage.createBroken(dir.getAbsolutePath(),
+                                                            sourceProps,
+                                                            addonProps,
+                                                            error);
                     packages.add(pkg);
                     visited.add(dir);
                 } catch (Exception e) {

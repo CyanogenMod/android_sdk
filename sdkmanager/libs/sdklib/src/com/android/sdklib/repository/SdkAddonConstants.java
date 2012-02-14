@@ -26,8 +26,10 @@ import java.io.InputStream;
  */
 public class SdkAddonConstants extends RepoConstants {
 
-    /** The default name looked for by {@link SdkSource} when trying to load an
-     * sdk-addon XML if the URL doesn't match an existing resource. */
+    /**
+     * The default name looked for by {@link SdkSource} when trying to load an
+     * sdk-addon XML if the URL doesn't match an existing resource.
+     */
     public static final String URL_DEFAULT_FILENAME = "addon.xml";         //$NON-NLS-1$
 
     /** The base of our sdk-addon XML namespace. */
@@ -40,8 +42,10 @@ public class SdkAddonConstants extends RepoConstants {
      */
     public static final String NS_PATTERN = NS_BASE + "([1-9][0-9]*)";     //$NON-NLS-1$
 
-    /** The latest version of the sdk-addon XML Schema.
-     *  Valid version numbers are between 1 and this number, included. */
+    /**
+     * The latest version of the sdk-addon XML Schema.
+     * Valid version numbers are between 1 and this number, included.
+     */
     public static final int NS_LATEST_VERSION = 4;
 
     /** The XML namespace of the latest sdk-addon XML. */
@@ -54,7 +58,7 @@ public class SdkAddonConstants extends RepoConstants {
     public static final String NODE_ADD_ON          = "add-on";            //$NON-NLS-1$
 
     /** An extra package. */
-    public static final String NODE_EXTRA         = "extra";                    //$NON-NLS-1$
+    public static final String NODE_EXTRA           = "extra";             //$NON-NLS-1$
 
     /**
      * List of possible nodes in a repository XML. Used to populate options automatically

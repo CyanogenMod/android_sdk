@@ -122,14 +122,14 @@ public class ExtraPackage extends MinToolsPackage
             // The vendor-display name can be empty, in which case we use the vendor-id.
             vname = vid;
         }
-        mVendorDisplay = vname;
-        mVendorId      = vid;
+        mVendorDisplay = vname.trim();
+        mVendorId      = vid.trim();
 
         if (name.length() == 0) {
             // If name is missing, use the <path> attribute as done in an addon-3 schema.
             name = getPrettyName();
         }
-        mDisplayName   = name;
+        mDisplayName   = name.trim();
 
         mMinApiLevel = XmlParserUtils.getXmlInt(
                 packageNode, RepoConstants.NODE_MIN_API_LEVEL, MIN_API_LEVEL_NOT_SPECIFIED);
@@ -219,15 +219,15 @@ public class ExtraPackage extends MinToolsPackage
         // The path argument comes before whatever could be in the properties
         mPath   = path != null ? path : getProperty(props, PkgProps.EXTRA_PATH, path);
 
-        String name  = getProperty(props, PkgProps.EXTRA_NAME_DISPLAY, "");
-        String vname = getProperty(props, PkgProps.EXTRA_VENDOR_DISPLAY, "");
+        String name  = getProperty(props, PkgProps.EXTRA_NAME_DISPLAY, "");     //$NON-NLS-1$
+        String vname = getProperty(props, PkgProps.EXTRA_VENDOR_DISPLAY, "");   //$NON-NLS-1$
         String vid   = vendorId != null ? vendorId :
-                                          getProperty(props, PkgProps.EXTRA_VENDOR_ID, "");
+                              getProperty(props, PkgProps.EXTRA_VENDOR_ID, ""); //$NON-NLS-1$
 
         if (vid.length() == 0) {
             // If vid is missing, use the old <vendor> attribute.
             // <vendor> did not exist prior to schema repo-v3 and tools r8.
-            String vendor = getProperty(props, PkgProps.EXTRA_VENDOR, "");
+            String vendor = getProperty(props, PkgProps.EXTRA_VENDOR, "");      //$NON-NLS-1$
             vid = sanitizeLegacyVendor(vendor);
             if (vname.length() == 0) {
                 vname = vendor;
@@ -237,14 +237,14 @@ public class ExtraPackage extends MinToolsPackage
             // The vendor-display name can be empty, in which case we use the vendor-id.
             vname = vid;
         }
-        mVendorDisplay = vname;
-        mVendorId      = vid;
+        mVendorDisplay = vname.trim();
+        mVendorId      = vid.trim();
 
         if (name.length() == 0) {
             // If name is missing, use the <path> attribute as done in an addon-3 schema.
             name = getPrettyName();
         }
-        mDisplayName   = name;
+        mDisplayName   = name.trim();
 
         mOldPaths = getProperty(props, PkgProps.EXTRA_OLD_PATHS, null);
 
@@ -508,7 +508,7 @@ public class ExtraPackage extends MinToolsPackage
 
         String d = getDescription();
         if (d != null && d.length() > 0) {
-            s += "\n" + d;                              //$NON-NLS-1$
+            s += '\n' + d;
         }
 
         if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {

@@ -68,22 +68,15 @@
             <xsd:documentation>An SDK add-on package.</xsd:documentation>
         </xsd:annotation>
         <xsd:all>
-            <!-- The name of the add-on. -->
-            <xsd:element name="name"         type="xsd:normalizedString" />
-            <!-- The vendor of the add-on. -->
-            <xsd:element name="vendor"       type="xsd:normalizedString" />
-
-            <!-- TODO The next CL will deal with addon properties.
-            <!- - The internal name id of the add-on. Must be unique per vendor. - ->
+            <!-- The internal name id of the add-on. Must be unique per vendor. -->
             <xsd:element name="name-id"         type="sdk:idType" />
-            <!- - The displayed name of the add-on. - ->
+            <!-- The displayed name of the add-on. -->
             <xsd:element name="name-display"    type="xsd:normalizedString" />
 
-            <!- - The internal vendor id of the add-on. Must be unique amongst vendors. - ->
+            <!-- The internal vendor id of the add-on. Must be unique amongst vendors. -->
             <xsd:element name="vendor-id"       type="sdk:idType" />
-            <!- - The displayed vendor name of the add-on. - ->
+            <!-- The displayed vendor name of the add-on. -->
             <xsd:element name="vendor-display"  type="xsd:normalizedString" />
-            -->
 
             <!-- The Android API Level for the add-on. An int > 0. -->
             <xsd:element name="api-level"    type="xsd:positiveInteger"  />
