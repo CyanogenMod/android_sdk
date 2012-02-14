@@ -564,8 +564,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                 return true;
             }
 
-            GLCall call = ((GLCallNode) element).getCall();
-            String text = call.getFunction().toString();
+            String text = getTextUnderNode((GLCallNode) element);
 
             if (mPatterns.size() == 0) {
                 // match if there are no regex filters
@@ -581,6 +580,23 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             }
 
             return false;
+        }
+
+        /** Obtain a string representation of all functions under a given tree node. */
+        private String getTextUnderNode(GLCallNode element) {
+            String func = element.getCall().getFunction().toString();
+            if (!element.hasChildren()) {
+                return func;
+            }
+
+            StringBuilder sb = new StringBuilder(100);
+            sb.append(func);
+
+            for (GLCallNode child : element.getChildren()) {
+                sb.append(getTextUnderNode(child));
+            }
+
+            return sb.toString();
         }
     }
 
