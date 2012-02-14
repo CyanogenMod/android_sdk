@@ -250,6 +250,7 @@ public class LintConstants {
     public static final String ANDROID_STRING_RESOURCE_PREFIX = "@android:string/";   //$NON-NLS-1$
 
     // Packages
+    public static final String ANDROID_PKG_PREFIX = "android.";         //$NON-NLS-1$
     public static final String WIDGET_PKG_PREFIX = "android.widget.";   //$NON-NLS-1$
     public static final String VIEW_PKG_PREFIX = "android.view.";       //$NON-NLS-1$
 
