@@ -137,31 +137,31 @@ public final class Category implements Comparable<Category> {
     }
 
     /** Issues related to correctness */
-    public static final Category CORRECTNESS = Category.create("Correctness", 10);
+    public static final Category CORRECTNESS = Category.create("Correctness", 100);
 
     /** Issues related to security */
-    public static final Category SECURITY = Category.create("Security", 9);
+    public static final Category SECURITY = Category.create("Security", 90);
 
     /** Issues related to performance */
-    public static final Category PERFORMANCE = Category.create("Performance", 8);
+    public static final Category PERFORMANCE = Category.create("Performance", 80);
 
     /** Issues related to usability */
-    public static final Category USABILITY = Category.create("Usability", 7);
+    public static final Category USABILITY = Category.create("Usability", 70);
 
     /** Issues related to accessibility */
-    public static final Category A11Y = Category.create("Accessibility", 6);
+    public static final Category A11Y = Category.create("Accessibility", 60);
 
     /** Issues related to internationalization */
-    public static final Category I18N = Category.create("Internationalization", 5);
+    public static final Category I18N = Category.create("Internationalization", 50);
 
     // Sub categories
 
     /** Issues related to icons */
-    public static final Category ICONS = Category.create(USABILITY, "Icons", null, 7);
+    public static final Category ICONS = Category.create(USABILITY, "Icons", null, 73);
 
     /** Issues related to typography */
-    public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 8);
+    public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 76);
 
     /** Issues related to messages/strings */
-    public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 10);
+    public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 40);
 }

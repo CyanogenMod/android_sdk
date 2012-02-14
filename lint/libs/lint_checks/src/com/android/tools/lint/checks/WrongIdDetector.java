@@ -280,7 +280,7 @@ public class WrongIdDetector extends LayoutDetector {
 
     @Override
     public void visitAttribute(XmlContext context, Attr attribute) {
-        assert attribute.getLocalName().equals(ATTR_ID);
+        assert attribute.getName().equals(ATTR_ID) || attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         mFileIds.add(id);
         mGlobalIds.add(id);
