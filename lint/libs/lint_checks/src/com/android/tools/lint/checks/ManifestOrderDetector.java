@@ -80,7 +80,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             EnumSet.of(Scope.MANIFEST)).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
     }
 

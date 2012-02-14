@@ -67,7 +67,7 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
             ViewConstructorDetector.class,
             EnumSet.of(Scope.CLASS_FILE));
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link ViewConstructorDetector} check */
     public ViewConstructorDetector() {
     }
 

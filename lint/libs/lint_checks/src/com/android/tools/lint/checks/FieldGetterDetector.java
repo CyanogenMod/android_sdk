@@ -68,7 +68,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             setEnabledByDefault(false).setMoreInfo(
            "http://developer.android.com/guide/practices/design/performance.html#internal_get_set"); //$NON-NLS-1$
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link FieldGetterDetector} check */
     public FieldGetterDetector() {
     }
 

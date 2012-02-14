@@ -107,7 +107,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             SecurityDetector.class,
             Scope.JAVA_FILE_SCOPE);
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link SecurityDetector} check */
     public SecurityDetector() {
     }
 

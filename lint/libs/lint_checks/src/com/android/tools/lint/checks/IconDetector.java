@@ -253,7 +253,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
 
     private String mApplicationIcon;
 
-    /** Constructs a new accessibility check */
+    /** Constructs a new {@link IconDetector} check */
     public IconDetector() {
     }
 

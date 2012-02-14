@@ -53,7 +53,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        List<Issue> issues = new ArrayList<Issue>(60);
+        List<Issue> issues = new ArrayList<Issue>(75);
 
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
@@ -127,6 +127,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ViewConstructorDetector.ISSUE);
         issues.add(TypoDetector.ISSUE);
         issues.add(AlwaysShowActionDetector.ISSUE);
+        issues.add(JavaPerformanceDetector.PAINT_ALLOC);
+        issues.add(JavaPerformanceDetector.USE_SPARSEARRAY);
 
         addCustomIssues(issues);
 
