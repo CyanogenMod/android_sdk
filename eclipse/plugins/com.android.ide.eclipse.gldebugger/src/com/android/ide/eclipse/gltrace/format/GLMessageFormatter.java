@@ -115,7 +115,7 @@ public class GLMessageFormatter {
     }
 
     private String formatPointer(DataType var, Type typeSpec) {
-        if (var.getType() != typeSpec) {
+        if (var.getType() != typeSpec && !isEnumTypeWithIntData(var, typeSpec)) {
             // the type of the data in the message does not match expected specification.
             // in such a case, just print the data as a pointer and don't try to interpret it.
             if (var.getIntValueCount() > 0) {
@@ -126,7 +126,7 @@ public class GLMessageFormatter {
         }
 
         // Display as array if possible
-        switch (var.getType()) {
+        switch (typeSpec) {
             case BOOL:
                 return var.getBoolValueList().toString();
             case FLOAT:
@@ -135,6 +135,15 @@ public class GLMessageFormatter {
                 return var.getIntValueList().toString();
             case CHAR:
                 return var.getCharValueList().get(0).toStringUtf8();
+            case ENUM:
+                List<Integer> vals = var.getIntValueList();
+                StringBuilder sb = new StringBuilder(vals.size() * 5);
+                sb.append('[');
+                for (Integer v: vals) {
+                    sb.append(GLEnum.valueOf(v.intValue()));
+                }
+                sb.append(']');
+                return sb.toString();
         }
 
         // We have a pointer, but we don't have the data pointed to.
@@ -144,5 +153,9 @@ public class GLMessageFormatter {
         } else {
             return String.format("0x%x", var.getIntValue(0));       //$NON-NLS-1$
         }
+    }
+
+    private boolean isEnumTypeWithIntData(DataType var, Type typeSpec) {
+        return var.getType() == Type.INT && typeSpec == Type.ENUM;
     }
 }
