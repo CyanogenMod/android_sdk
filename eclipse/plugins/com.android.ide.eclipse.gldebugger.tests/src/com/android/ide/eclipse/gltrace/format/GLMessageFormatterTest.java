@@ -39,6 +39,7 @@ public class GLMessageFormatterTest {
             "const GLchar*, glGetString, GLenum name",
             "void, glMultMatrixf, const GLfloat* m",
             "GLenum, eglBindAPI, GLEnum arg",
+            "void, glGetActiveAttrib, GLenum* type",
             "void, glTexImage2D, GLint level, GLsizei width, const GLvoid* pixels");
     private static GLMessageFormatter sGLMessageFormatter;
 
@@ -121,6 +122,19 @@ public class GLMessageFormatterTest {
                 createIntegerDataType(0xbadc0ffe));
 
         String expected = "glMultMatrixf(m = 0xbadc0ffe)";
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testMessageWithEnumPointer() {
+        //void, glGetActiveAttrib, GLenum* type
+        GLMessage msg = constructGLMessage(null,
+                Function.glGetActiveAttrib,
+                createIntegerPointerDataType(GLEnum.GL_FLOAT_MAT4.value));
+
+        String expected = "glGetActiveAttrib(type = [GL_FLOAT_MAT4])";
         String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
