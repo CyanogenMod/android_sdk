@@ -63,12 +63,25 @@ public class SdkRepoSource extends SdkSource {
         return false;
     }
 
+    private static String[] sDefaults = null; // lazily allocated in getDefaultXmlFileUrls
+
     @Override
     protected String[] getDefaultXmlFileUrls() {
-        return new String[] {
-                SdkRepoConstants.URL_DEFAULT_FILENAME2,
-                SdkRepoConstants.URL_DEFAULT_FILENAME
-        };
+        if (sDefaults == null) {
+            sDefaults = new String[SdkRepoConstants.NS_LATEST_VERSION
+                                   - SdkRepoConstants.NS_SERVER_MIN_VERSION
+                                   + 2];
+            int k = 0;
+            for (int i  = SdkRepoConstants.NS_LATEST_VERSION;
+                     i >= SdkRepoConstants.NS_SERVER_MIN_VERSION;
+                     i--) {
+                sDefaults[k++] = String.format(SdkRepoConstants.URL_FILENAME_PATTERN, i);
+            }
+            sDefaults[k++] = SdkRepoConstants.URL_DEFAULT_FILENAME;
+            assert k == sDefaults.length;
+        }
+
+        return sDefaults;
     }
 
     @Override
