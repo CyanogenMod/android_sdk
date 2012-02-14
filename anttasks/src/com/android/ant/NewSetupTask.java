@@ -528,6 +528,8 @@ public class NewSetupTask extends Task {
 
         System.out.println("------------------\n");
 
+        boolean hasLibraries = jarsPath.list().length > 0;
+
         if (androidTarget.getVersion().getApiLevel() <= 15) {
             System.out.println("API<=15: Adding annotations.jar to the classpath.\n");
 
@@ -545,7 +547,7 @@ public class NewSetupTask extends Task {
         antProject.addReference(mProjectLibrariesLibsOut, libsPath);
 
         // the rest is done only if there's a library.
-        if (jarsPath.list().length > 0) {
+        if (hasLibraries) {
             antProject.addReference(mProjectLibrariesRootOut, rootPath);
             antProject.addReference(mProjectLibrariesResOut, resPath);
             antProject.setProperty(mProjectLibrariesPackageOut, packageStrBuilder.toString());
