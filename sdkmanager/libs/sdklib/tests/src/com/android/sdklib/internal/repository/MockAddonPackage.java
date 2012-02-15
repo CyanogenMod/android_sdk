@@ -23,8 +23,10 @@ import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A mock {@link AddonPackage} for testing.
@@ -60,7 +62,21 @@ public class MockAddonPackage extends AddonPackage {
             int revision) {
         super(source,
               new MockAddonTarget(name, basePlatform.getTarget(), revision),
-              null /*props*/);
+              createProperties(name, basePlatform.getTarget()));
+    }
+
+    private static Properties createProperties(String name, IAndroidTarget baseTarget) {
+        String vendor = baseTarget.getVendor();
+        Properties props = new Properties();
+        props.setProperty(PkgProps.ADDON_NAME_ID, name);
+        props.setProperty(PkgProps.ADDON_NAME_DISPLAY,
+                String.format("The %1$s from %2$s",                  //$NON-NLS-1$
+                        name, vendor));
+        props.setProperty(PkgProps.ADDON_VENDOR_ID,
+                String.format("vendor-id-%1$s", vendor));                   //$NON-NLS-1$
+        props.setProperty(PkgProps.ADDON_VENDOR_DISPLAY,
+                String.format("The %1$s", vendor));                  //$NON-NLS-1$
+        return props;
     }
 
     /**

@@ -26,6 +26,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
 
@@ -44,8 +45,10 @@ import java.util.Properties;
 public class AddonPackage extends Package
     implements IPackageVersion, IPlatformDependency, IExactApiLevelDependency, ILayoutlibVersion {
 
-    private final String mVendor;
-    private final String mName;
+    private final String mVendorId;
+    private final String mVendorDisplay;
+    private final String mNameId;
+    private final String mDisplayName;
     private final AndroidVersion mVersion;
 
     /**
@@ -122,14 +125,74 @@ public class AddonPackage extends Package
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    AddonPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    AddonPackage(
+            SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
-        mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VENDOR);
-        mName     = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_NAME);
-        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+
+        // --- name id/display ---
+        // addon-4.xsd introduces the name-id, name-display, vendor-id and vendor-display.
+        // These are not optional but we still need to support a fallback for older addons
+        // that only provide name and vendor. If the addon provides neither set of fields,
+        // it will simply not work as expected.
+
+        String nameId   = XmlParserUtils.getXmlString(packageNode,
+                                                      SdkRepoConstants.NODE_NAME_ID);
+        String nameDisp = XmlParserUtils.getXmlString(packageNode,
+                                                      SdkRepoConstants.NODE_NAME_DISPLAY);
+        String name     = XmlParserUtils.getXmlString(packageNode,
+                                                      SdkRepoConstants.NODE_NAME);
+
+        // The old <name> is equivalent to the new <name-display>
+        if (nameDisp.length() == 0) {
+            nameDisp = name;
+        }
+
+        // For a missing id, we simply use a sanitized version of the display name
+        if (nameId.length() == 0) {
+            nameId = sanitizeDisplayToNameId(name.length() > 0 ? name : nameDisp);
+        }
+
+        assert nameId.length() > 0;
+        assert nameDisp.length() > 0;
+
+        mNameId = nameId.trim();
+        mDisplayName = nameDisp.trim();
+
+        // --- vendor id/display ---
+        // Same processing for vendor id vs display
+
+        String vendorId   = XmlParserUtils.getXmlString(packageNode,
+                                                        SdkAddonConstants.NODE_VENDOR_ID);
+        String vendorDisp = XmlParserUtils.getXmlString(packageNode,
+                                                        SdkAddonConstants.NODE_VENDOR_DISPLAY);
+        String vendor     = XmlParserUtils.getXmlString(packageNode,
+                                                        SdkAddonConstants.NODE_VENDOR);
+
+        // The old <vendor> is equivalent to the new <vendor-display>
+        if (vendorDisp.length() == 0) {
+            vendorDisp = vendor;
+        }
+
+        // For a missing id, we simply use a sanitized version of the display vendor
+        if (vendorId.length() == 0) {
+            vendorId = sanitizeDisplayToNameId(vendor.length() > 0 ? vendor : vendorDisp);
+        }
+
+        assert vendorId.length() > 0;
+        assert vendorDisp.length() > 0;
+
+        mVendorId      = vendorId.trim();
+        mVendorDisplay = vendorDisp.trim();
+
+        // --- other attributes
+
+        int apiLevel = XmlParserUtils.getXmlInt(packageNode, SdkAddonConstants.NODE_API_LEVEL, 0);
         mVersion = new AndroidVersion(apiLevel, null /*codeName*/);
 
-        mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepoConstants.NODE_LIBS));
+        mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkAddonConstants.NODE_LIBS));
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }
@@ -164,9 +227,58 @@ public class AddonPackage extends Package
                 target.getLocation()        //archiveOsPath
                 );
 
+        // --- name id/display ---
+        // addon-4.xsd introduces the name-id, name-display, vendor-id and vendor-display.
+        // These are not optional but we still need to support a fallback for older addons
+        // that only provide name and vendor. If the addon provides neither set of fields,
+        // it will simply not work as expected.
+
+        String nameId   = getProperty(props, PkgProps.ADDON_NAME_ID, "");           //$NON-NLS-1$
+        String nameDisp = getProperty(props, PkgProps.ADDON_NAME_DISPLAY, "");      //$NON-NLS-1$
+        String name     = getProperty(props, PkgProps.ADDON_NAME, target.getName());
+
+        // The old <name> is equivalent to the new <name-display>
+        if (nameDisp.length() == 0) {
+            nameDisp = name;
+        }
+
+        // For a missing id, we simply use a sanitized version of the display name
+        if (nameId.length() == 0) {
+            nameId = sanitizeDisplayToNameId(name.length() > 0 ? name : nameDisp);
+        }
+
+        assert nameId.length() > 0;
+        assert nameDisp.length() > 0;
+
+        mNameId = nameId.trim();
+        mDisplayName = nameDisp.trim();
+
+        // --- vendor id/display ---
+        // Same processing for vendor id vs display
+
+        String vendorId   = getProperty(props, PkgProps.ADDON_VENDOR_ID, "");       //$NON-NLS-1$
+        String vendorDisp = getProperty(props, PkgProps.ADDON_VENDOR_DISPLAY, "");  //$NON-NLS-1$
+        String vendor     = getProperty(props, PkgProps.ADDON_VENDOR, target.getVendor());
+
+        // The old <vendor> is equivalent to the new <vendor-display>
+        if (vendorDisp.length() == 0) {
+            vendorDisp = vendor;
+        }
+
+        // For a missing id, we simply use a sanitized version of the display vendor
+        if (vendorId.length() == 0) {
+            vendorId = sanitizeDisplayToNameId(vendor.length() > 0 ? vendor : vendorDisp);
+        }
+
+        assert vendorId.length() > 0;
+        assert vendorDisp.length() > 0;
+
+        mVendorId = vendorId.trim();
+        mVendorDisplay = vendorDisp.trim();
+
+        // --- other attributes
+
         mVersion = target.getVersion();
-        mName     = target.getName();
-        mVendor   = target.getVendor();
         mLayoutlibVersion = new LayoutlibVersionMixin(props);
 
         IOptionalLibrary[] optLibs = target.getOptionalLibraries();
@@ -184,14 +296,27 @@ public class AddonPackage extends Package
      * Creates a broken addon which we know failed to load properly.
      *
      * @param archiveOsPath The absolute OS path of the addon folder.
-     * @param props The properties parsed from the addon manifest (not the source.properties).
+     * @param sourceProps The properties parsed from the addon's source.properties. Can be null.
+     * @param addonProps The properties parsed from the addon manifest (NOT the source.properties).
      * @param error The error indicating why this addon failed to be loaded.
      */
-    static Package createBroken(String archiveOsPath, Map<String, String> props, String error) {
-        String name     = props.get(SdkManager.ADDON_NAME);
-        String vendor   = props.get(SdkManager.ADDON_VENDOR);
-        String api      = props.get(SdkManager.ADDON_API);
-        String revision = props.get(SdkManager.ADDON_REVISION);
+    static Package createBroken(
+            String archiveOsPath,
+            Properties sourceProps,
+            Map<String, String> addonProps,
+            String error) {
+        String name     = getProperty(sourceProps,
+                                      PkgProps.ADDON_NAME_DISPLAY,
+                                      getProperty(sourceProps,
+                                                  PkgProps.ADDON_NAME,
+                                                  addonProps.get(SdkManager.ADDON_NAME)));
+        String vendor   = getProperty(sourceProps,
+                                      PkgProps.ADDON_VENDOR_DISPLAY,
+                                      getProperty(sourceProps,
+                                                  PkgProps.ADDON_VENDOR,
+                                                  addonProps.get(SdkManager.ADDON_VENDOR)));
+        String api      = addonProps.get(SdkManager.ADDON_API);
+        String revision = addonProps.get(SdkManager.ADDON_REVISION);
 
         String shortDesc = String.format("%1$s by %2$s, Android API %3$s, revision %4$s [*]",
                 name,
@@ -235,12 +360,10 @@ public class AddonPackage extends Package
         mVersion.saveProperties(props);
         mLayoutlibVersion.saveProperties(props);
 
-        if (mName != null) {
-            props.setProperty(PkgProps.ADDON_NAME, mName);
-        }
-        if (mVendor != null) {
-            props.setProperty(PkgProps.ADDON_VENDOR, mVendor);
-        }
+        props.setProperty(PkgProps.ADDON_NAME_ID,        mNameId);
+        props.setProperty(PkgProps.ADDON_NAME_DISPLAY,   mDisplayName);
+        props.setProperty(PkgProps.ADDON_VENDOR_ID,      mVendorId);
+        props.setProperty(PkgProps.ADDON_VENDOR_DISPLAY, mVendorDisplay);
     }
 
     /**
@@ -274,14 +397,24 @@ public class AddonPackage extends Package
                        XmlParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_DESCRIPTION));
     }
 
-    /** Returns the vendor, a string, for add-on packages. */
-    public String getVendor() {
-        return mVendor;
+    /** Returns the vendor id, a string, for add-on packages. */
+    public String getVendorId() {
+        return mVendorId;
     }
 
-    /** Returns the name, a string, for add-on packages or for libraries. */
-    public String getName() {
-        return mName;
+    /** Returns the vendor, a string for display purposes. */
+    public String getDisplayVendor() {
+        return mVendorDisplay;
+    }
+
+    /** Returns the name id, a string, for add-on packages or for libraries. */
+    public String getNameId() {
+        return mNameId;
+    }
+
+    /** Returns the name, a string for display purposes. */
+    public String getDisplayName() {
+        return mDisplayName;
     }
 
     /**
@@ -334,9 +467,8 @@ public class AddonPackage extends Package
      */
     @Override
     public String getListDescription() {
-        return String.format("%1$s by %2$s%3$s",
-                getName(),
-                getVendor(),
+        return String.format("%1$s%2$s",
+                getDisplayName(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -345,9 +477,8 @@ public class AddonPackage extends Package
      */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s by %2$s, Android API %3$s, revision %4$s%5$s",
-                getName(),
-                getVendor(),
+        return String.format("%1$s, Android API %2$s, revision %3$s%4$s",
+                getDisplayName(),
                 mVersion.getApiString(),
                 getRevision(),
                 isObsolete() ? " (Obsolete)" : "");
@@ -361,15 +492,16 @@ public class AddonPackage extends Package
      */
     @Override
     public String getLongDescription() {
-        String s = getDescription();
-        if (s == null || s.length() == 0) {
-            s = getShortDescription();
-        }
+        String s = String.format("%1$s, Android API %2$s, revision %3$s%4$s\nBy %5$s",
+                getDisplayName(),
+                mVersion.getApiString(),
+                getRevision(),
+                isObsolete() ? " (Obsolete)" : "",  //$NON-NLS-2$
+                getDisplayVendor());
 
-        if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
-                    isObsolete() ? " (Obsolete)" : "");
+        String d = getDescription();
+        if (d != null && d.length() > 0) {
+            s += '\n' + d;
         }
 
         s += String.format("\nRequires SDK Platform Android API %1$s",
@@ -396,11 +528,17 @@ public class AddonPackage extends Package
 
         // First find if this add-on is already installed. If so, reuse the same directory.
         for (IAndroidTarget target : sdkManager.getTargets()) {
-            if (!target.isPlatform() &&
-                    target.getVersion().equals(mVersion) &&
-                    target.getName().equals(getName()) &&
-                    target.getVendor().equals(getVendor())) {
-                return new File(target.getLocation());
+            if (!target.isPlatform() && target.getVersion().equals(mVersion)) {
+                // Starting with addon-4.xsd, the addon source.properties differentiate
+                // between ids and display strings. However the addon target which relies
+                // on the manifest.ini does not so we need to cover both cases.
+                // TODO fix when we get rid of manifest.ini for addons
+                if ((target.getName().equals(getNameId()) &&
+                     target.getVendor().equals(getVendorId())) ||
+                    (target.getName().equals(getDisplayName()) &&
+                     target.getVendor().equals(getDisplayVendor()))) {
+                    return new File(target.getLocation());
+                }
             }
         }
 
@@ -421,8 +559,22 @@ public class AddonPackage extends Package
 
     private String encodeAddonName() {
         String name = String.format("addon-%s-%s-%s",     //$NON-NLS-1$
-                                    getName(), getVendor(), mVersion.getApiString());
+                                    getNameId(), getVendorId(), mVersion.getApiString());
         name = name.toLowerCase(Locale.US);
+        name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
+        name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+        return name;
+    }
+
+    /**
+     * Computes a sanitized name-id based on an addon name-display.
+     * This is used to provide compatibility with older addons that lacks the new fields.
+     *
+     * @param displayName A name-display field or a old-style name field.
+     * @return A non-null sanitized name-id that fits in the {@code [a-zA-Z0-9_-]+} pattern.
+     */
+    private String sanitizeDisplayToNameId(String displayName) {
+        String name = displayName.toLowerCase(Locale.US);
         name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
         return name;
@@ -434,8 +586,8 @@ public class AddonPackage extends Package
             AddonPackage newPkg = (AddonPackage)pkg;
 
             // check they are the same add-on.
-            return getName().equals(newPkg.getName()) &&
-                    getVendor().equals(newPkg.getVendor()) &&
+            return getNameId().equals(newPkg.getNameId()) &&
+                    getVendorId().equals(newPkg.getVendorId()) &&
                     getVersion().equals(newPkg.getVersion());
         }
 
@@ -448,8 +600,8 @@ public class AddonPackage extends Package
         int result = super.hashCode();
         result = prime * result + ((mLayoutlibVersion == null) ? 0 : mLayoutlibVersion.hashCode());
         result = prime * result + Arrays.hashCode(mLibs);
-        result = prime * result + ((mName == null) ? 0 : mName.hashCode());
-        result = prime * result + ((mVendor == null) ? 0 : mVendor.hashCode());
+        result = prime * result + ((mDisplayName == null) ? 0 : mDisplayName.hashCode());
+        result = prime * result + ((mVendorDisplay == null) ? 0 : mVendorDisplay.hashCode());
         result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
         return result;
     }
@@ -476,18 +628,18 @@ public class AddonPackage extends Package
         if (!Arrays.equals(mLibs, other.mLibs)) {
             return false;
         }
-        if (mName == null) {
-            if (other.mName != null) {
+        if (mNameId == null) {
+            if (other.mNameId != null) {
                 return false;
             }
-        } else if (!mName.equals(other.mName)) {
+        } else if (!mNameId.equals(other.mNameId)) {
             return false;
         }
-        if (mVendor == null) {
-            if (other.mVendor != null) {
+        if (mVendorId == null) {
+            if (other.mVendorId != null) {
                 return false;
             }
-        } else if (!mVendor.equals(other.mVendor)) {
+        } else if (!mVendorId.equals(other.mVendorId)) {
             return false;
         }
         if (mVersion == null) {
@@ -512,8 +664,8 @@ public class AddonPackage extends Package
         int pos = s.indexOf("|r:");         //$NON-NLS-1$
         assert pos > 0;
         s = s.substring(0, pos) +
-            "|ve:" + getVendor() +          //$NON-NLS-1$
-            "|na:" + getName() +            //$NON-NLS-1$
+            "|vid:" + getVendorId() +          //$NON-NLS-1$
+            "|nid:" + getNameId() +            //$NON-NLS-1$
             s.substring(pos);
         return s;
     }

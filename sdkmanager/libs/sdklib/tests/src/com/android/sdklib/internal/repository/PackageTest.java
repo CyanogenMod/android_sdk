@@ -187,7 +187,7 @@ public class PackageTest extends TestCase {
                 "[Android SDK Tools, revision 7, " +
                  "SDK Platform Android android-1, API 1, revision 2, " +
                  "Intel x86 Atom System Image, Android API 1, revision 4, " +
-                 "addon by vendor 1, Android API 1, revision 3, " +
+                 "addon, Android API 1, revision 3, " +
                  "Broken package for API 1, " +
                  "Vendor Path, revision 5]",
                 Arrays.toString(list.toArray()));

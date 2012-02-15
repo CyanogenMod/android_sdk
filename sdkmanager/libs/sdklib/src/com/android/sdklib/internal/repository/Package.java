@@ -142,8 +142,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
         mLicense     = getProperty(props, PkgProps.PKG_LICENSE,      license);
         mDescription = getProperty(props, PkgProps.PKG_DESC,         description);
         mDescUrl     = getProperty(props, PkgProps.PKG_DESC_URL,     descUrl);
-        mReleaseNote = getProperty(props, PkgProps.PKG_RELEASE_NOTE, "");
-        mReleaseUrl  = getProperty(props, PkgProps.PKG_RELEASE_URL,  "");
+        mReleaseNote = getProperty(props, PkgProps.PKG_RELEASE_NOTE, "");       //$NON-NLS-1$
+        mReleaseUrl  = getProperty(props, PkgProps.PKG_RELEASE_URL,  "");       //$NON-NLS-1$
         mObsolete    = getProperty(props, PkgProps.PKG_OBSOLETE,     null);
 
         // If source is null and we can find a source URL in the properties, generate

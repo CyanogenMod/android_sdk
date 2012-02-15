@@ -171,9 +171,9 @@ public class SdkAddonSourceTest extends TestCase {
         // Get the packages
         assertTrue(mSource._parsePackages(doc, uri, monitor));
 
-        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+        assertEquals("Found My First add-on, Android API 1, revision 1\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found G USB Driver, revision 43 (Obsolete)\n" +
                      "Found Android Vendor Extra API Dep, revision 2 (Obsolete)\n" +
                      "Found Unknown Extra, revision 2 (Obsolete)\n",
@@ -247,9 +247,9 @@ public class SdkAddonSourceTest extends TestCase {
         // Get the packages
         assertTrue(mSource._parsePackages(doc, uri, monitor));
 
-        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+        assertEquals("Found My First add-on, Android API 1, revision 1\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found G USB Driver, revision 43 (Obsolete)\n" +
                      "Found Android Vendor Extra API Dep, revision 2 (Obsolete)\n" +
                      "Found Unknown Extra, revision 2 (Obsolete)\n",
@@ -341,9 +341,9 @@ public class SdkAddonSourceTest extends TestCase {
         // Get the packages
         assertTrue(mSource._parsePackages(doc, uri, monitor));
 
-        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+        assertEquals("Found My First add-on, Android API 1, revision 1\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found G USB Driver, revision 43 (Obsolete)\n" +
                      "Found Android Vendor Extra API Dep, revision 2 (Obsolete)\n" +
                      "Found Unknown Extra, revision 2 (Obsolete)\n",
@@ -450,9 +450,9 @@ public class SdkAddonSourceTest extends TestCase {
         // Get the packages
         assertTrue(mSource._parsePackages(doc, uri, monitor));
 
-        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
-                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
-                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+        assertEquals("Found My First add-on, Android API 1, revision 1\n" +
+                     "Found My Second add-on, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries, Android API 4, revision 3\n" +
                      "Found Random name, not an id!, revision 43 (Obsolete)\n" +
                      "Found Yet another extra, by Android, revision 2\n" +
                      "Found . -..- - .-. .-, revision 2 (Obsolete)\n",
@@ -472,6 +472,29 @@ public class SdkAddonSourceTest extends TestCase {
             assertTrue(p.getArchives().length >= 1);
         }
 
+        // Check the addon packages: vendor/name id vs display
+        ArrayList<String> addonNames   = new ArrayList<String>();
+        ArrayList<String> addonVendors = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof AddonPackage) {
+                AddonPackage ap = (AddonPackage) p;
+                addonNames.add(ap.getNameId() + "/" + ap.getDisplayName());
+                addonVendors.add(ap.getVendorId() + "/" + ap.getDisplayVendor());
+            }
+        }
+        // Addons are sorted by addon/vendor id and thus their order differs from the
+        // XML or the parsed package list.
+        assertEquals(
+                "[no_libs/This add-on has no libraries, " +
+                 "My_Second_add-on/My Second add-on, " +
+                 "My_First_add-on/My First add-on]",
+                Arrays.toString(addonNames.toArray()));
+        assertEquals(
+                "[Joe_Bar/Joe Bar, " +
+                 "John_Deer/John Deer, " +
+                 "John_Doe/John Doe]",
+                Arrays.toString(addonVendors.toArray()));
+
         // Check the layoutlib of the platform packages.
         ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
         for (Package p : pkgs) {
@@ -487,7 +510,6 @@ public class SdkAddonSourceTest extends TestCase {
 
 
         // Check the extra packages: path, vendor, install folder, old-paths
-
         final String osSdkPath = "SDK";
         final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
 

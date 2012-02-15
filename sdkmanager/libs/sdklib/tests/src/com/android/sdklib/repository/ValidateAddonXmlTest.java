@@ -160,7 +160,9 @@ public class ValidateAddonXmlTest extends TestCase {
             OPEN_TAG_ADDON +
             "<r:license id=\"lic1\"> some license </r:license> " +
             "<r:add-on> <r:uses-license ref=\"lic1\" /> <r:revision>1</r:revision> " +
-            "<r:name>AddonName</r:name> <r:vendor>AddonVendor</r:vendor> <r:api-level>42</r:api-level> " +
+            "<r:name-id>AddonName</r:name-id> <r:name-display>The Addon Name</r:name-display> " +
+            "<r:vendor-id>AddonVendor</r:vendor-id> <r:vendor-display>The Addon Vendor</r:vendor-display> " +
+            "<r:api-level>42</r:api-level> " +
             "<r:codename>Addons do not support codenames</r:codenames> " +
             "<r:libs><r:lib><r:name>com.example.LibName</r:name></r:lib></r:libs> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
