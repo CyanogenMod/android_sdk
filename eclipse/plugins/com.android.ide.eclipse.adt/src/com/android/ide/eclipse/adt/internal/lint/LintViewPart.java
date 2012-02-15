@@ -15,10 +15,14 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.preferences.LintPreferencePage;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.tools.lint.detector.api.LintUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -86,8 +90,10 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     private static final String EXPAND_ICON = "expandall";                            //$NON-NLS-1$
     private static final String COLUMNS_ICON = "columns";                             //$NON-NLS-1$
     private static final String OPTIONS_ICON = "options";                             //$NON-NLS-1$
-    private static final String IGNORE_THIS_ICON = "ignore-file";                     //$NON-NLS-1$
-    private static final String IGNORE_THIS_DISABLED_ICON = "ignore-file-disabled";   //$NON-NLS-1$
+    private static final String IGNORE_THIS_ICON = "ignore-this";                     //$NON-NLS-1$
+    private static final String IGNORE_THIS_DISABLED_ICON = "ignore-this-disabled";   //$NON-NLS-1$
+    private static final String IGNORE_FILE_ICON = "ignore-file";                     //$NON-NLS-1$
+    private static final String IGNORE_FILE_DISABLED_ICON = "ignore-file-disabled";   //$NON-NLS-1$
     private static final String IGNORE_PRJ_ICON = "ignore-project";                   //$NON-NLS-1$
     private static final String IGNORE_PRJ_DISABLED_ICON = "ignore-project-disabled"; //$NON-NLS-1$
     private static final String IGNORE_ALL_ICON = "ignore-all";                   //$NON-NLS-1$
@@ -100,6 +106,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     private Action mFixAction;
     private Action mRemoveAction;
     private Action mIgnoreAction;
+    private Action mAlwaysIgnoreAction;
     private Action mIgnoreFileAction;
     private Action mIgnoreProjectAction;
     private Action mRemoveAllAction;
@@ -202,13 +209,17 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                 iconFactory.getImageDescriptor(QUICKFIX_ICON),
                 iconFactory.getImageDescriptor(QUICKFIX_DISABLED_ICON));
 
-        mIgnoreFileAction = new LintViewAction("Ignore in this file", ACTION_IGNORE_THIS,
+        mIgnoreAction = new LintViewAction("Suppress this error with an annotation/attribute",
+                ACTION_IGNORE_THIS,
                 iconFactory.getImageDescriptor(IGNORE_THIS_ICON),
                 iconFactory.getImageDescriptor(IGNORE_THIS_DISABLED_ICON));
+        mIgnoreFileAction = new LintViewAction("Ignore in this file", ACTION_IGNORE_FILE,
+                iconFactory.getImageDescriptor(IGNORE_FILE_ICON),
+                iconFactory.getImageDescriptor(IGNORE_FILE_DISABLED_ICON));
         mIgnoreProjectAction = new LintViewAction("Ignore in this project", ACTION_IGNORE_TYPE,
                 iconFactory.getImageDescriptor(IGNORE_PRJ_ICON),
                 iconFactory.getImageDescriptor(IGNORE_PRJ_DISABLED_ICON));
-        mIgnoreAction = new LintViewAction("Always Ignore", ACTION_IGNORE_ALL,
+        mAlwaysIgnoreAction = new LintViewAction("Always Ignore", ACTION_IGNORE_ALL,
                 iconFactory.getImageDescriptor(IGNORE_ALL_ICON),
                 iconFactory.getImageDescriptor(IGNORE_ALL_DISABLED_ICON));
 
@@ -248,9 +259,10 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         IToolBarManager toolbarManager = getViewSite().getActionBars().getToolBarManager();
         toolbarManager.add(mRefreshAction);
         toolbarManager.add(mFixAction);
+        toolbarManager.add(mIgnoreAction);
         toolbarManager.add(mIgnoreFileAction);
         toolbarManager.add(mIgnoreProjectAction);
-        toolbarManager.add(mIgnoreAction);
+        toolbarManager.add(mAlwaysIgnoreAction);
         toolbarManager.add(new Separator());
         toolbarManager.add(mRemoveAction);
         toolbarManager.add(mRemoveAllAction);
@@ -334,18 +346,24 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         }
 
         boolean haveFile = false;
+        boolean isJavaOrXml = true;
         for (IMarker marker : markers) {
             IResource resource = marker.getResource();
             if (resource instanceof IFile || resource instanceof IFolder) {
                 haveFile = true;
+                String name = resource.getName();
+                if (!LintUtils.endsWith(name, DOT_XML) && !LintUtils.endsWith(name, DOT_JAVA)) {
+                    isJavaOrXml = false;
+                }
                 break;
             }
         }
 
         mFixAction.setEnabled(canFix);
+        mIgnoreAction.setEnabled(hasSelection && haveFile && isJavaOrXml);
         mIgnoreFileAction.setEnabled(hasSelection && haveFile);
         mIgnoreProjectAction.setEnabled(hasSelection);
-        mIgnoreAction.setEnabled(hasSelection);
+        mAlwaysIgnoreAction.setEnabled(hasSelection);
         mRemoveAction.setEnabled(hasSelection);
 
         if (updateWidgets) {
@@ -415,14 +433,15 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     private static final int ACTION_REFRESH = 1;
     private static final int ACTION_FIX = 2;
     private static final int ACTION_IGNORE_THIS = 3;
-    private static final int ACTION_IGNORE_TYPE = 4;
-    private static final int ACTION_IGNORE_ALL = 5;
-    private static final int ACTION_REMOVE = 6;
-    private static final int ACTION_REMOVE_ALL = 7;
-    private static final int ACTION_COLLAPSE = 8;
-    private static final int ACTION_EXPAND = 9;
-    private static final int ACTION_COLUMNS = 10;
-    private static final int ACTION_OPTIONS = 11;
+    private static final int ACTION_IGNORE_FILE = 4;
+    private static final int ACTION_IGNORE_TYPE = 5;
+    private static final int ACTION_IGNORE_ALL = 6;
+    private static final int ACTION_REMOVE = 7;
+    private static final int ACTION_REMOVE_ALL = 8;
+    private static final int ACTION_COLLAPSE = 9;
+    private static final int ACTION_EXPAND = 10;
+    private static final int ACTION_COLUMNS = 11;
+    private static final int ACTION_OPTIONS = 12;
 
     private class LintViewAction extends Action {
 
@@ -523,8 +542,8 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     assert false;
                     break;
                 case ACTION_IGNORE_TYPE:
-                case ACTION_IGNORE_THIS: {
-                    boolean ignoreInFile = mAction == ACTION_IGNORE_THIS;
+                case ACTION_IGNORE_FILE: {
+                    boolean ignoreInFile = mAction == ACTION_IGNORE_FILE;
                     for (IMarker marker : mLintView.getSelectedMarkers()) {
                         String id = EclipseLintClient.getId(marker);
                         if (id != null) {
@@ -533,6 +552,12 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                                     ignoreInFile ? resource : resource.getProject(),
                                     ignoreInFile);
                         }
+                    }
+                    break;
+                }
+                case ACTION_IGNORE_THIS: {
+                    for (IMarker marker : mLintView.getSelectedMarkers()) {
+                        LintFixGenerator.addSuppressAnnotation(marker);
                     }
                     break;
                 }

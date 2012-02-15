@@ -43,6 +43,9 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -122,9 +125,28 @@ class AddSuppressAttribute implements ICompletionProposal {
 
                 UiElementNode rootUiNode = mEditor.getUiRootNode();
                 if (rootUiNode != null) {
-                    UiElementNode uiNode = rootUiNode.findXmlNode(mElement);
+                    final UiElementNode uiNode = rootUiNode.findXmlNode(mElement);
                     if (uiNode != null) {
                         mEditor.scheduleNodeReformat(uiNode, true /*attributesOnly*/);
+
+                        // Update editor selection after format
+                        Display display = AdtPlugin.getDisplay();
+                        if (display != null) {
+                            display.asyncExec(new Runnable() {
+                                @SuppressWarnings("restriction") // DOM model
+                                @Override
+                                public void run() {
+                                    Node xmlNode = uiNode.getXmlNode();
+                                    Attr attribute = ((Element) xmlNode).getAttributeNodeNS(
+                                            TOOLS_URI, ATTR_IGNORE);
+                                    if (attribute instanceof IndexedRegion) {
+                                        IndexedRegion region = (IndexedRegion) attribute;
+                                        mEditor.getStructuredTextEditor().selectAndReveal(
+                                                region.getStartOffset(), region.getLength());
+                                    }
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -159,13 +181,24 @@ class AddSuppressAttribute implements ICompletionProposal {
         }
 
         int offset = marker.getAttribute(IMarker.CHAR_START, -1);
-        Node node = DomUtilities.getNode(editor.getStructuredDocument(), offset);
+        Node node;
+        if (offset == -1) {
+            node = DomUtilities.getNode(editor.getStructuredDocument(), 0);
+            if (node != null) {
+                node = node.getOwnerDocument().getDocumentElement();
+            }
+        } else {
+            node = DomUtilities.getNode(editor.getStructuredDocument(), offset);
+        }
         if (node == null) {
             return null;
         }
         Document document = node.getOwnerDocument();
         while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
             node = node.getParentNode();
+        }
+        if (node == null) {
+            return null;
         }
 
         // Some issues cannot find a specific node scope associated with the error

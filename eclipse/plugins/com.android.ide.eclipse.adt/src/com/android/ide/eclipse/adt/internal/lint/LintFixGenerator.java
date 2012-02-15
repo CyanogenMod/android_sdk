@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -36,6 +37,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
@@ -44,11 +47,16 @@ import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolution2;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -226,6 +234,71 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         if (updateMarkers) {
             EclipseLintClient.removeMarkers(resource, id);
+        }
+    }
+
+    /**
+     * Adds a suppress lint annotation or attribute depending on whether the
+     * error is in a Java or XML file.
+     *
+     * @param marker the marker pointing to the error to be suppressed
+     */
+    @SuppressWarnings("restriction") // XML model
+    public static void addSuppressAnnotation(IMarker marker) {
+        String id = EclipseLintClient.getId(marker);
+        if (id != null) {
+            IResource resource = marker.getResource();
+            if (!(resource instanceof IFile)) {
+                return;
+            }
+            IFile file = (IFile) resource;
+            boolean isJava = file.getName().endsWith(DOT_JAVA);
+            boolean isXml = AdtUtils.endsWith(file.getName(), DOT_XML);
+            if (!isJava && !isXml) {
+                return;
+            }
+
+            try {
+                IEditorPart activeEditor = AdtUtils.getActiveEditor();
+                IEditorPart part = null;
+                if (activeEditor != null) {
+                    IEditorInput input = activeEditor.getEditorInput();
+                    if (input instanceof FileEditorInput
+                            && ((FileEditorInput)input).getFile().equals(file)) {
+                        part = activeEditor;
+                    }
+                }
+                if (part == null) {
+                    IRegion region = null;
+                    int start = marker.getAttribute(IMarker.CHAR_START, -1);
+                    int end = marker.getAttribute(IMarker.CHAR_END, -1);
+                    if (start != -1 && end != -1) {
+                        region = new Region(start, end - start);
+                    }
+                    part = AdtPlugin.openFile(file, region, true /* showEditor */);
+                }
+
+                if (isJava) {
+                    List<IMarkerResolution> resolutions = new ArrayList<IMarkerResolution>();
+                    AddSuppressAnnotation.createFixes(marker, id, resolutions);
+                    if (resolutions.size() > 0) {
+                        resolutions.get(0).run(marker);
+                    }
+                } else {
+                    assert isXml;
+                    if (part instanceof AndroidXmlEditor) {
+                        AndroidXmlEditor editor = (AndroidXmlEditor) part;
+                        AddSuppressAttribute fix = AddSuppressAttribute.createFix(editor,
+                                marker, id);
+                        if (fix != null) {
+                            IStructuredDocument document = editor.getStructuredDocument();
+                            fix.apply(document);
+                        }
+                    }
+                }
+            } catch (PartInitException pie) {
+                AdtPlugin.log(pie, null);
+            }
         }
     }
 
