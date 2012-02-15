@@ -347,11 +347,37 @@ public class SdkUpdaterNoWindow {
         @Override
         public boolean displayPrompt(final String title, final String message) {
             // TODO Make it interactive if mForce==false
-            mSdkLog.printf("\n%s\n%s\n[y/n] => %s\n",
+            mSdkLog.printf("\n%1$s\n%2$s\n%3$s",        //$NON-NLS-1$
                     title,
                     message,
-                    mForce ? "yes" : "no (use --force to override)");
-            return mForce;
+                    mForce ? "--force used, will reply yes\n" :
+                             "Note: you  can use --force to override to yes.\n");
+            if (mForce) {
+                return true;
+            }
+
+            while (true) {
+                mSdkLog.printf("%1$s", "[y/n] =>");     //$NON-NLS-1$
+                try {
+                    byte[] readBuffer = new byte[2048];
+                    String reply = readLine(readBuffer).trim();
+                    mSdkLog.printf("\n");               //$NON-NLS-1$
+                    if (reply.length() > 0 && reply.length() <= 3) {
+                        char c = reply.charAt(0);
+                        if (c == 'y' || c == 'Y') {
+                            return true;
+                        } else if (c == 'n' || c == 'N') {
+                            return false;
+                        }
+                    }
+                    mSdkLog.printf("Unknown reply '%s'. Please use y[es]/n[o].\n");  //$NON-NLS-1$
+
+                } catch (IOException e) {
+                    // Exception. Be conservative and say no.
+                    mSdkLog.printf("\n");               //$NON-NLS-1$
+                    return false;
+                }
+            }
         }
 
         /**
@@ -417,6 +443,14 @@ public class SdkUpdaterNoWindow {
             return new UserCredentials(login, password, workstation, domain);
         }
 
+        /**
+         * Reads current console input in the given buffer.
+         *
+         * @param buffer Buffer to hold the user input. Must be larger than the largest
+         *   expected input. Cannot be null.
+         * @return A new string. May be empty but not null.
+         * @throws IOException in case the buffer isn't long enough.
+         */
         private String readLine(byte[] buffer) throws IOException {
             int count = System.in.read(buffer);
 

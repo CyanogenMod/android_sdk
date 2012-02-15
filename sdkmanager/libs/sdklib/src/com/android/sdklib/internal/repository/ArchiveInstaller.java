@@ -23,6 +23,8 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.RepoConstants;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -37,10 +39,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 /**
  * Performs the work of installing a given {@link Archive}.
@@ -503,18 +508,11 @@ public class ArchiveInstaller {
                                 destFolder.getPath(), oldDestFolder.getPath());
 
                         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                            String msg = String.format(
-                                    "-= Warning ! =-\n" +
-                                    "A folder failed to be moved. On Windows this " +
-                                    "typically means that a program is using that folder (for " +
-                                    "example Windows Explorer or your anti-virus software.)\n" +
-                                    "Please momentarily deactivate your anti-virus software or " +
-                                    "close any running programs that may be accessing the " +
-                                    "directory '%1$s'.\n" +
-                                    "When ready, press YES to try again.",
-                                    destFolder.getPath());
+                            boolean tryAgain = true;
 
-                            if (monitor.displayPrompt("SDK Manager: failed to install", msg)) {
+                            tryAgain = windowsDestDirLocked(osSdkRoot, destFolder, monitor);
+
+                            if (tryAgain) {
                                 // loop, trying to rename the temp dir into the destination
                                 continue;
                             } else {
@@ -584,6 +582,93 @@ public class ArchiveInstaller {
             // Cleanup if the unzip folder is still set.
             mFileOp.deleteFileOrFolder(oldDestFolder);
         }
+    }
+
+    private boolean windowsDestDirLocked(
+            String osSdkRoot,
+            File destFolder,
+            final ITaskMonitor monitor) {
+        String msg = null;
+
+        assert SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
+
+        File findLockExe = FileOp.append(
+                osSdkRoot, SdkConstants.FD_TOOLS, SdkConstants.FD_LIB, SdkConstants.FN_FIND_LOCK);
+
+        if (mFileOp.exists(findLockExe)) {
+            try {
+                final StringBuilder result = new StringBuilder();
+                String command[] = new String[] {
+                        findLockExe.getAbsolutePath(),
+                        destFolder.getAbsolutePath()
+                };
+                Process process = Runtime.getRuntime().exec(command);
+                int retCode = GrabProcessOutput.grabProcessOutput(
+                        process,
+                        true /*waitForReaders*/,
+                        new IProcessOutput() {
+                            @Override
+                            public void out(String line) {
+                                if (line != null) {
+                                    result.append(line).append("\n");
+                                }
+                            }
+
+                            @Override
+                            public void err(String line) {
+                                if (line != null) {
+                                    monitor.logError("[find_lock] Error: %1$s", line);
+                                }
+                            }
+                        });
+
+                if (retCode == 0 && result.length() > 0) {
+                    // TODO create a better dialog
+
+                    String found = result.toString().trim();
+                    monitor.logError("[find_lock] Directory locked by %1$s", found);
+
+                    TreeSet<String> apps = new TreeSet<String>(Arrays.asList(
+                            found.split(Pattern.quote(";"))));  //$NON-NLS-1$
+                    StringBuilder appStr = new StringBuilder();
+                    for (String app : apps) {
+                        appStr.append("\n  - ").append(app.trim());                //$NON-NLS-1$
+                    }
+
+                    msg = String.format(
+                            "-= Warning ! =-\n" +
+                            "The following processes: %1$s\n" +
+                            "are locking the following directory: \n" +
+                            "  %2$s\n" +
+                            "Please close these applications so that the installation can continue.\n" +
+                            "When ready, press YES to try again.",
+                            appStr.toString(),
+                            destFolder.getPath());
+                }
+
+            } catch (Exception e) {
+                monitor.error(e, "[find_lock failed]");
+            }
+
+
+        }
+
+        if (msg == null) {
+            // Old way: simply display a generic text and let user figure it out.
+            msg = String.format(
+                "-= Warning ! =-\n" +
+                "A folder failed to be moved. On Windows this " +
+                "typically means that a program is using that folder (for " +
+                "example Windows Explorer or your anti-virus software.)\n" +
+                "Please momentarily deactivate your anti-virus software or " +
+                "close any running programs that may be accessing the " +
+                "directory '%1$s'.\n" +
+                "When ready, press YES to try again.",
+                destFolder.getPath());
+        }
+
+        boolean tryAgain = monitor.displayPrompt("SDK Manager: failed to install", msg);
+        return tryAgain;
     }
 
     /**
