@@ -14,7 +14,31 @@ Revision 17:
 * Lint supports library projects, so for example the unused resource
   check will properly handle resources declared in a library project
   and referenced in a downstream project.
+* Lint warnings can be suppressed in Java code with the new
+  @SuppressLint annotation, and in XML files with the new tools:
+  namespace and ignore-attribute.
 * New lint checks:
+  * Find Android API calls that require a version of Android higher
+    than the minimum supported version. You can use the new @TargetApi
+    annotation to specify local overrides for conditionally loaded
+    code.
+  * Find object allocations within onDraw, onMeasure and onLayout
+    calls
+  * Find usages of HashMap<Integer,X> which can be replaced by the
+    more efficient SparseArray, SparseIntArray or SparseBooleanArray
+  * Find typos in XML namespace declarations, as well as unused custom
+    namespace declarations and usages of custom namespaces in library
+    projects which do not yet work
+  * Find manifest files which declare more than one <uses-sdk>
+    elements, or which fail to declare minSdkVersion or
+    targetSdkVersion
+  * Check dialog button order such that OK/Cancel are in the right
+    order (depending on the target version of Android), that they are
+    using the standard case ("OK", not "Ok" or "ok" etc), and that
+    there aren't any Back buttons.
+  * Check menus to ensure that they are using "ifRoom" instead of
+    "always" for the showAsAction attribute (unless it's used
+    sparingly)
   * Find hardcoded android:debuggable attributes on <application>
     elements. This can lead to accidentally leaving debug information
     in published applications.

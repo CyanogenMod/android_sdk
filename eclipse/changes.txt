@@ -29,6 +29,7 @@
   unused resources since layouts aren't usually manipulated via code,
   or referenced from XML. (The RelativeLayout editor automatically
   assigns ids to views without ids when pointing to them.)
+* Export Screenshot from the Layout Editor
 * Layout editor fix for SlidingDrawer which on some platforms could
   not be dragged into the layout. Also fix preview rendering for
   SlidingDrawer and TabHost (issue 23022).
