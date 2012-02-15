@@ -28,7 +28,7 @@ public class SdkRepoConstants extends RepoConstants {
 
     /** The latest version of the sdk-repository XML Schema.
      *  Valid version numbers are between 1 and this number, included. */
-    public static final int NS_LATEST_VERSION = 5;
+    public static final int NS_LATEST_VERSION = 6;
 
     /** The URL of the official Google sdk-repository site.
      *  The URL ends with a /, allowing easy concatenation. */
