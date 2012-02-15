@@ -163,5 +163,5 @@ public final class Category implements Comparable<Category> {
     public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 76);
 
     /** Issues related to messages/strings */
-    public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 40);
+    public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 95);
 }
