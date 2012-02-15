@@ -718,7 +718,7 @@ public final class AaptParser {
             IResource r = project.findMember(file);
 
             // if the resource is valid, we add the marker
-            if (r.exists()) {
+            if (r != null && r.exists()) {
                 return r;
             }
         }
