@@ -19,6 +19,8 @@ package com.android.ide.eclipse.gltrace.state;
 import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLIntegerProperty.DisplayRadix;
 
+import java.util.Collections;
+
 public class GLState {
     /** # of texture units modelled in the GL State. */
     public static final int TEXTURE_UNIT_COUNT = 8;
@@ -252,12 +254,37 @@ public class GLState {
         IGLProperty attachedShaders = new GLSparseArrayProperty(GLStateType.ATTACHED_SHADERS,
                 attachedShaderId);
 
+        IGLProperty attributeName = new GLStringProperty(GLStateType.ATTRIBUTE_NAME, "");
+        IGLProperty attributeType = new GLEnumProperty(GLStateType.ATTRIBUTE_TYPE,
+                GLEnum.GL_FLOAT_MAT4);
+        IGLProperty attributeSize = new GLIntegerProperty(GLStateType.ATTRIBUTE_SIZE,
+                Integer.valueOf(1));
+        IGLProperty attributeValue = new GLObjectProperty(GLStateType.ATTRIBUTE_VALUE,
+                Collections.emptyList());
+        IGLProperty perAttributeProperty = new GLCompositeProperty(GLStateType.PER_ATTRIBUTE_STATE,
+                attributeName, attributeType, attributeSize, attributeValue);
+        IGLProperty attributes = new GLSparseArrayProperty(GLStateType.ACTIVE_ATTRIBUTES,
+                perAttributeProperty);
+
+        IGLProperty uniformName = new GLStringProperty(GLStateType.UNIFORM_NAME, "");
+        IGLProperty uniformType = new GLEnumProperty(GLStateType.UNIFORM_TYPE,
+                GLEnum.GL_FLOAT_MAT4);
+        IGLProperty uniformSize = new GLIntegerProperty(GLStateType.UNIFORM_SIZE,
+                Integer.valueOf(1));
+        IGLProperty uniformValue = new GLObjectProperty(GLStateType.UNIFORM_VALUE,
+                Collections.emptyList());
+        IGLProperty perUniformProperty = new GLCompositeProperty(GLStateType.PER_UNIFORM_STATE,
+                uniformName, uniformType, uniformSize, uniformValue);
+        IGLProperty uniforms = new GLSparseArrayProperty(GLStateType.ACTIVE_UNIFORMS,
+                perUniformProperty);
+
         IGLProperty perProgramState = new GLCompositeProperty(GLStateType.PER_PROGRAM_STATE,
-                attachedShaders);
+                attachedShaders, attributes, uniforms);
 
         IGLProperty programs = new GLSparseArrayProperty(GLStateType.PROGRAMS, perProgramState);
 
-        return new GLCompositeProperty(GLStateType.PROGRAM_STATE, currentProgram, programs);
+        return new GLCompositeProperty(GLStateType.PROGRAM_STATE,
+                currentProgram, programs);
     }
 
     private IGLProperty createShaderState() {

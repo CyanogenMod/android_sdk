@@ -206,9 +206,9 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     }
 
     private void disableGLTrace(IDevice device) {
-        // The only way to disable is by enabling tracing with an empty package name
+        // The only way to disable is by enabling tracing with an invalid package name
         try {
-            setGLTraceOn(device, "");
+            setGLTraceOn(device, "no.such.package"); //$NON-NLS-1$
         } catch (Exception e) {
             // ignore any exception
         }

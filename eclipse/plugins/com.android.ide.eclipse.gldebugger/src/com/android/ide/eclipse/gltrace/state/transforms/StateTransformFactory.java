@@ -105,6 +105,34 @@ public class StateTransformFactory {
                 return transformsForGlAttachShader(msg);
             case glDetachShader:
                 return transformsForGlDetachShader(msg);
+            case glGetActiveAttrib:
+                return transformsForGlGetActiveAttrib(msg);
+            case glGetActiveUniform:
+                return transformsForGlGetActiveUniform(msg);
+            case glUniform1i:
+            case glUniform2i:
+            case glUniform3i:
+            case glUniform4i:
+                return transformsForGlUniform(msg, false);
+            case glUniform1f:
+            case glUniform2f:
+            case glUniform3f:
+            case glUniform4f:
+                return transformsForGlUniform(msg, true);
+            case glUniform1iv:
+            case glUniform2iv:
+            case glUniform3iv:
+            case glUniform4iv:
+                return transformsForGlUniformv(msg, false);
+            case glUniform1fv:
+            case glUniform2fv:
+            case glUniform3fv:
+            case glUniform4fv:
+                return transformsForGlUniformv(msg, true);
+            case glUniformMatrix2fv:
+            case glUniformMatrix3fv:
+            case glUniformMatrix4fv:
+                return transformsForGlUniformMatrix(msg);
 
             // Shader State Transformations
             case glCreateShader:
@@ -861,6 +889,155 @@ public class StateTransformFactory {
                                                 GLStateType.ATTACHED_SHADERS),
                 Integer.valueOf(shader));
         return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlGetActiveAttribOrUniform(
+            GLMessage msg, boolean isAttrib) {
+        // void glGetActive[Attrib|Uniform](GLuint program, GLuint index, GLsizei bufsize,
+        //                  GLsizei* length, GLint* size, GLenum* type, GLchar* name);
+        int program = msg.getArgs(0).getIntValue(0);
+        int size = msg.getArgs(4).getIntValue(0);
+        GLEnum type = GLEnum.valueOf(msg.getArgs(5).getIntValue(0));
+        String name = msg.getArgs(6).getCharValue(0).toStringUtf8();
+
+        // The 2nd argument (index) does not give the correct location of the
+        // attribute/uniform in device. The actual location is obtained from
+        // the getAttribLocation or getUniformLocation calls. The trace library
+        // appends this value as an additional last argument to this call.
+        int location = msg.getArgs(7).getIntValue(0);
+
+        GLStateType activeInput;
+        GLStateType inputName;
+        GLStateType inputType;
+        GLStateType inputSize;
+
+        if (isAttrib) {
+            activeInput = GLStateType.ACTIVE_ATTRIBUTES;
+            inputName = GLStateType.ATTRIBUTE_NAME;
+            inputType = GLStateType.ATTRIBUTE_TYPE;
+            inputSize = GLStateType.ATTRIBUTE_SIZE;
+        } else {
+            activeInput = GLStateType.ACTIVE_UNIFORMS;
+            inputName = GLStateType.UNIFORM_NAME;
+            inputType = GLStateType.UNIFORM_TYPE;
+            inputSize = GLStateType.UNIFORM_SIZE;
+        }
+
+        IStateTransform addAttribute = new SparseArrayElementAddTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                activeInput),
+                Integer.valueOf(location));
+        IStateTransform setAttributeName = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                activeInput,
+                                                Integer.valueOf(location),
+                                                inputName),
+                name);
+        IStateTransform setAttributeType = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                activeInput,
+                                                Integer.valueOf(location),
+                                                inputType),
+                type);
+        IStateTransform setAttributeSize = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.PROGRAM_STATE,
+                                                GLStateType.PROGRAMS,
+                                                Integer.valueOf(program),
+                                                activeInput,
+                                                Integer.valueOf(location),
+                                                inputSize),
+                Integer.valueOf(size));
+        return Arrays.asList(addAttribute, setAttributeName, setAttributeType, setAttributeSize);
+    }
+
+    private static List<IStateTransform> transformsForGlGetActiveAttrib(GLMessage msg) {
+        return transformsForGlGetActiveAttribOrUniform(msg, true);
+    }
+
+    private static List<IStateTransform> transformsForGlGetActiveUniform(GLMessage msg) {
+        return transformsForGlGetActiveAttribOrUniform(msg, false);
+    }
+
+    private static List<IStateTransform> transformsForGlUniformMatrix(GLMessage msg) {
+        // void glUniformMatrix[2|3|4]fv(GLint location, GLsizei count, GLboolean transpose,
+        //                                  const GLfloat *value);
+        int location = msg.getArgs(0).getIntValue(0);
+        List<Float> uniforms = msg.getArgs(3).getFloatValueList();
+
+        IStateTransform setValues = new PropertyChangeTransform(
+                new CurrentProgramPropertyAccessor(msg.getContextId(),
+                                                   GLStateType.ACTIVE_UNIFORMS,
+                                                   location,
+                                                   GLStateType.UNIFORM_VALUE),
+                uniforms);
+
+        return Collections.singletonList(setValues);
+    }
+
+    private static List<IStateTransform> transformsForGlUniformv(GLMessage msg, boolean isFloats) {
+        // void glUniform1fv(GLint location, GLsizei count, const GLfloat *value);
+        int location = msg.getArgs(0).getIntValue(0);
+        List<?> uniforms;
+        if (isFloats) {
+            uniforms = msg.getArgs(2).getFloatValueList();
+        } else {
+            uniforms = msg.getArgs(2).getIntValueList();
+        }
+
+        IStateTransform setValues = new PropertyChangeTransform(
+                new CurrentProgramPropertyAccessor(msg.getContextId(),
+                                                   GLStateType.ACTIVE_UNIFORMS,
+                                                   location,
+                                                   GLStateType.UNIFORM_VALUE),
+                uniforms);
+
+        return Collections.singletonList(setValues);
+    }
+
+    private static List<IStateTransform> transformsForGlUniform(GLMessage msg, boolean isFloats) {
+        // void glUniform1f(GLint location, GLfloat v0);
+        // void glUniform2f(GLint location, GLfloat v0, GLfloat v1);
+        // ..            3f
+        // ..            4f
+        // void glUniform1i(GLint location, GLfloat v0);
+        // void glUniform2i(GLint location, GLfloat v0, GLfloat v1);
+        // ..            3i
+        // ..            4i
+
+        int location = msg.getArgs(0).getIntValue(0);
+        List<?> uniforms;
+        if (isFloats) {
+            List<Float> args = new ArrayList<Float>(msg.getArgsCount() - 1);
+            for (int i = 1; i < msg.getArgsCount(); i++) {
+                args.add(Float.valueOf(msg.getArgs(1).getFloatValue(0)));
+            }
+            uniforms = args;
+        } else {
+            List<Integer> args = new ArrayList<Integer>(msg.getArgsCount() - 1);
+            for (int i = 1; i < msg.getArgsCount(); i++) {
+                args.add(Integer.valueOf(msg.getArgs(1).getIntValue(0)));
+            }
+            uniforms = args;
+        }
+
+        IStateTransform setValues = new PropertyChangeTransform(
+                new CurrentProgramPropertyAccessor(msg.getContextId(),
+                                                   GLStateType.ACTIVE_UNIFORMS,
+                                                   location,
+                                                   GLStateType.UNIFORM_VALUE),
+                uniforms);
+
+        return Collections.singletonList(setValues);
     }
 
     private static List<IStateTransform> transformsForGlCreateShader(GLMessage msg) {

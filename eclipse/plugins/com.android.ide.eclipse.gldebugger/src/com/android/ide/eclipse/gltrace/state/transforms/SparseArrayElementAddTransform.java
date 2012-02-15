@@ -21,11 +21,12 @@ import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 /**
  * A {@link SparseArrayElementAddTransform} changes given state by adding an
- * element to a sparse array.
+ * element to a sparse array, if there is no item with the same key already.
  */
 public class SparseArrayElementAddTransform implements IStateTransform {
     private IGLPropertyAccessor mAccessor;
     private int mKey;
+    private IGLProperty mOldValue;
 
     public SparseArrayElementAddTransform(IGLPropertyAccessor accessor, int key) {
         mAccessor = accessor;
@@ -36,7 +37,11 @@ public class SparseArrayElementAddTransform implements IStateTransform {
     public void apply(IGLProperty currentState) {
         GLSparseArrayProperty propertyArray = getArray(currentState);
         if (propertyArray != null) {
-            propertyArray.add(mKey);
+            mOldValue = propertyArray.getProperty(mKey);
+            if (mOldValue == null) {
+                // add only if there is no item with this key already present
+                propertyArray.add(mKey);
+            }
         }
     }
 
@@ -44,7 +49,10 @@ public class SparseArrayElementAddTransform implements IStateTransform {
     public void revert(IGLProperty currentState) {
         GLSparseArrayProperty propertyArray = getArray(currentState);
         if (propertyArray != null) {
-            propertyArray.delete(mKey);
+            if (mOldValue == null) {
+                // delete only if we actually added this key
+                propertyArray.delete(mKey);
+            }
         }
     }
 
