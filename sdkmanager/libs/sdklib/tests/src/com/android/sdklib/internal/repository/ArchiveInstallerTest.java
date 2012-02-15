@@ -108,7 +108,7 @@ public class ArchiveInstallerTest extends TestCase {
 
     /** Test we can install a simple new archive. */
     public void testInstall_NewArchive() throws Exception {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://repo.example.com/url", "repo1");
         MockEmptyPackage p = createRemoteEmptyPackage(src1, "testPkg");
         ArchiveReplacement ar = new ArchiveReplacement(p.getArchives()[0], null /*replaced*/);
 
@@ -133,7 +133,7 @@ public class ArchiveInstallerTest extends TestCase {
               "Archive.Os=ANY\n" +
               "Pkg.Revision=0\n" +
               "Archive.Arch=ANY\n" +
-              "Pkg.SourceUrl=http\\://repo.com/url\n" +
+              "Pkg.SourceUrl=http\\://repo.example.com/url\n" +
               "'>]",
               stripDate(Arrays.toString(mFile.getOutputStreams())));
 
@@ -145,7 +145,7 @@ public class ArchiveInstallerTest extends TestCase {
 
     /** Test we can replace and rename an Extra package. */
     public void testInstall_InstallExtraArchive() throws Exception {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://repo.example.com/url", "repo1");
 
         MockExtraPackage newPkg = createRemoteExtraPackage(src1, "vendor1", "oldPath", 2, 1);
         MockExtraPackage oldPkg = new MockExtraPackage(src1, "vendor1", "oldPath", 1, 1);
@@ -181,26 +181,28 @@ public class ArchiveInstallerTest extends TestCase {
                 "[</sdk/extras/vendor1/oldPath/source.properties: " +
                      "'### Android Tool: Source of this archive.\n" +
                 "#...date...\n" +
-                "Extra.Vendor=vendor1\n" +
+                "Extra.VendorDisplay=vendor1\n" +
                 "Pkg.Desc=desc\n" +
-                "Pkg.DescUrl=url\n" +
-                "Archive.Os=ANY\n" +
-                "Pkg.Revision=2\n" +
-                "Archive.Arch=ANY\n" +
                 "Extra.Path=oldPath\n" +
-                "Pkg.SourceUrl=http\\://repo.com/url\n" +
+                "Archive.Arch=ANY\n" +
+                "Pkg.DescUrl=url\n" +
+                "Extra.NameDisplay=Vendor1 OldPath\n" +
+                "Archive.Os=ANY\n" +
+                "Pkg.SourceUrl=http\\://repo.example.com/url\n" +
+                "Pkg.Revision=2\n" +
+                "Extra.VendorId=vendor1\n" +
                 "'>]"),
                 stripDate(Arrays.toString(mFile.getOutputStreams())));
 
         assertEquals(
-                "Installing Vendor1 OldPath package, revision 2\n" +
-                "Installed Vendor1 OldPath package, revision 2\n",
+                "Installing Vendor1 OldPath, revision 2\n" +
+                "Installed Vendor1 OldPath, revision 2\n",
                 mMon.getCapturedLog());
     }
 
     /** Test we can replace and rename an Extra package. */
     public void testInstall_InstallRenamedExtraArchive() throws Exception {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://repo.example.com/url", "repo1");
 
         MockExtraPackage newPkg = createRemoteExtraPackage(
                 src1,
@@ -254,21 +256,23 @@ public class ArchiveInstallerTest extends TestCase {
                 "[</sdk/extras/vendor1/newPath/source.properties: " +
                      "'### Android Tool: Source of this archive.\n" +
                 "#...date...\n" +
+                "Extra.VendorDisplay=vendor1\n" +
                 "Pkg.Desc=desc\n" +
                 "Extra.OldPaths=oldPath\n" +
-                "Extra.Vendor=vendor1\n" +
                 "Extra.Path=newPath\n" +
                 "Archive.Arch=ANY\n" +
                 "Pkg.DescUrl=url\n" +
+                "Extra.NameDisplay=Vendor1 NewPath\n" +
                 "Archive.Os=ANY\n" +
-                "Pkg.SourceUrl=http\\://repo.com/url\n" +
+                "Pkg.SourceUrl=http\\://repo.example.com/url\n" +
                 "Pkg.Revision=2\n" +
+                "Extra.VendorId=vendor1\n" +
                 "'>]"),
                 stripDate(Arrays.toString(mFile.getOutputStreams())));
 
         assertEquals(
-                "Installing Vendor1 NewPath package, revision 2\n" +
-                "Installed Vendor1 NewPath package, revision 2\n",
+                "Installing Vendor1 NewPath, revision 2\n" +
+                "Installed Vendor1 NewPath, revision 2\n",
                 mMon.getCapturedLog());
     }
 

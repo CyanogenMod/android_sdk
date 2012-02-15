@@ -189,7 +189,7 @@ public class PackageTest extends TestCase {
                  "Intel x86 Atom System Image, Android API 1, revision 4, " +
                  "addon by vendor 1, Android API 1, revision 3, " +
                  "Broken package for API 1, " +
-                 "Vendor Path package, revision 5]",
+                 "Vendor Path, revision 5]",
                 Arrays.toString(list.toArray()));
     }
 }

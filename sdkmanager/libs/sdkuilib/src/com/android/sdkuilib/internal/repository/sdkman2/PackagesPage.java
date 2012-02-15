@@ -519,7 +519,9 @@ public class PackagesPage extends UpdaterPage
                 value = button.getSelection();
             }
 
-            item.setSelection(value);
+            if (!item.isDisposed()) {
+                item.setSelection(value);
+            }
         }
 
     }
@@ -1564,12 +1566,25 @@ public class PackagesPage extends UpdaterPage
             if (element instanceof IDescription) {
                 String s = ((IDescription) element).getLongDescription();
                 if (element instanceof Package) {
-                    SdkSource src = ((Package) element).getParentSource();
+                    Package p = (Package) element;
+
+                    if (!p.isLocal()) {
+                        // For non-installed item, try to find a download size
+                        for (Archive a : p.getArchives()) {
+                            if (!a.isLocal() && a.isCompatible()) {
+                                s += '\n' + a.getSizeDescription();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Display info about where this package comes/came from
+                    SdkSource src = p.getParentSource();
                     if (src != null) {
                         try {
                             URL url = new URL(src.getUrl());
                             String host = url.getHost();
-                            if (((Package) element).isLocal()) {
+                            if (p.isLocal()) {
                                 s += String.format("\nInstalled from %1$s", host);
                             } else {
                                 s += String.format("\nProvided by %1$s", host);

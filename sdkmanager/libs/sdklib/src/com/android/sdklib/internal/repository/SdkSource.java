@@ -826,7 +826,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                         if (SdkAddonConstants.NODE_ADD_ON.equals(name)) {
                             p = new AddonPackage(this, child, nsUri, licenses);
 
-                        } else if (RepoConstants.NODE_EXTRA.equals(name)) {
+                        } else if (SdkAddonConstants.NODE_EXTRA.equals(name)) {
                             p = new ExtraPackage(this, child, nsUri, licenses);
 
                         } else if (!isAddonSource()) {

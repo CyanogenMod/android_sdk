@@ -120,7 +120,7 @@ public class ValidateAddonXmlTest extends TestCase {
         handler.verify();
     }
 
-    /** Validate a valid sample using namespace version 2 using an InputStream */
+    /** Validate a valid sample using namespace version 3 using an InputStream */
     public void testValidateLocalAddonFile3() throws Exception {
         InputStream xmlStream = this.getClass().getResourceAsStream(
                     "/com/android/sdklib/testdata/addon_sample_3.xml");
@@ -128,6 +128,18 @@ public class ValidateAddonXmlTest extends TestCase {
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
         Validator validator = getAddonValidator(3, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Validate a valid sample using namespace version 4 using an InputStream */
+    public void testValidateLocalAddonFile4() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/addon_sample_4.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getAddonValidator(4, handler);
         validator.validate(source);
         handler.verify();
     }

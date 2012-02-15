@@ -42,7 +42,7 @@ public class SdkAddonConstants extends RepoConstants {
 
     /** The latest version of the sdk-addon XML Schema.
      *  Valid version numbers are between 1 and this number, included. */
-    public static final int NS_LATEST_VERSION = 3;
+    public static final int NS_LATEST_VERSION = 4;
 
     /** The XML namespace of the latest sdk-addon XML. */
     public static final String NS_URI = getSchemaUri(NS_LATEST_VERSION);
@@ -52,6 +52,9 @@ public class SdkAddonConstants extends RepoConstants {
 
     /** An add-on package. */
     public static final String NODE_ADD_ON          = "add-on";            //$NON-NLS-1$
+
+    /** An extra package. */
+    public static final String NODE_EXTRA         = "extra";                    //$NON-NLS-1$
 
     /**
      * List of possible nodes in a repository XML. Used to populate options automatically

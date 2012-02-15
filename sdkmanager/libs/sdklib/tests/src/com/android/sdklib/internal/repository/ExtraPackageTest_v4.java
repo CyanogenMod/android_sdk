@@ -24,7 +24,11 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class ExtraPackageTest extends MinToolsPackageTest {
+/**
+ * Tests {@link ExtraPackage} using anddon-4.xsd:
+ * it has name-display, vendor-id and vendor-display.
+ */
+public class ExtraPackageTest_v4 extends MinToolsPackageTest {
 
     private static final char PS = File.pathSeparatorChar;
 
@@ -50,7 +54,9 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         Properties props = super.createProps();
 
         // ExtraPackage properties
-        props.setProperty(PkgProps.EXTRA_VENDOR, "vendor");
+        props.setProperty(PkgProps.EXTRA_VENDOR_ID, "the_vendor");
+        props.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, "The Company, Inc.");
+        props.setProperty(PkgProps.EXTRA_NAME_DISPLAY, "Some Extra Package");
         props.setProperty(PkgProps.EXTRA_PATH, "the_path");
         props.setProperty(PkgProps.EXTRA_OLD_PATHS, "old_path1;oldpath2");
         props.setProperty(PkgProps.EXTRA_MIN_API_LEVEL, "11");
@@ -64,7 +70,9 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         super.testCreatedPackage(p);
 
         // Package properties
-        assertEquals("vendor", p.getVendor());
+        assertEquals("the_vendor", p.getVendorId());
+        assertEquals("The Company, Inc.", p.getVendorDisplay());
+        assertEquals("Some Extra Package", p.getDisplayName());
         assertEquals("the_path", p.getPath());
         assertEquals("[old_path1, oldpath2]", Arrays.toString(p.getOldPaths()));
         assertEquals(11, p.getMinApiLevel());
@@ -101,7 +109,8 @@ public class ExtraPackageTest extends MinToolsPackageTest {
 
         // different vendor, same path
         Properties props2 = new Properties(props1);
-        props2.setProperty(PkgProps.EXTRA_VENDOR, "vendor2");
+        props2.setProperty(PkgProps.EXTRA_VENDOR_ID, "vendor2");
+        props2.setProperty(PkgProps.EXTRA_VENDOR_DISPLAY, "Another Vendor Name");
         ExtraPackage p2 = createExtraPackage(props2);
         assertFalse(p1.sameItemAs(p2));
         assertFalse(p2.sameItemAs(p1));
@@ -147,6 +156,6 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         Properties props = createProps();
         ExtraPackage p = createExtraPackage(props);
 
-        assertEquals("extra-vendor-the_path", p.installId());
+        assertEquals("extra-the_vendor-the_path", p.installId());
     }
 }

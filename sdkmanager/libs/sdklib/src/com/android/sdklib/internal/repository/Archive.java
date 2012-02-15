@@ -354,6 +354,13 @@ public class Archive implements IDescription, Comparable<Archive> {
      */
     @Override
     public String getLongDescription() {
+        return String.format("%1$s\n%2$s\n%3$s",
+                getShortDescription(),
+                getSizeDescription(),
+                getSha1Description());
+    }
+
+    public String getSizeDescription() {
         long size = getSize();
         String sizeStr;
         if (size < 1024) {
@@ -368,8 +375,11 @@ public class Archive implements IDescription, Comparable<Archive> {
                     Math.round(10.0 * size / (1024 * 1024 * 1024.0))/ 10.0);
         }
 
-        return String.format("%1$s\nSize: %2$s\nSHA1: %3$s",
-                getShortDescription(), sizeStr, getChecksum());
+        return String.format("Size: %1$s", sizeStr);
+    }
+
+    public String getSha1Description() {
+        return String.format("SHA1: %1$s", getChecksum());
     }
 
     /**

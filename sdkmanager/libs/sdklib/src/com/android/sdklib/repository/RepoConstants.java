@@ -25,9 +25,6 @@ import java.io.InputStream;
  */
 public class RepoConstants {
 
-    /** An extra package. */
-    public static final String NODE_EXTRA         = "extra";                    //$NON-NLS-1$
-
     /** The license definition. */
     public static final String NODE_LICENSE       = "license";                  //$NON-NLS-1$
     /** The optional uses-license for all packages or for a lib. */
@@ -60,10 +57,20 @@ public class RepoConstants {
     public static final String NODE_API_LEVEL = "api-level";                    //$NON-NLS-1$
     /** The codename, a string, for platform packages. */
     public static final String NODE_CODENAME = "codename";                      //$NON-NLS-1$
-    /** The vendor, a string, for add-on and extra packages. */
+    /** The *old* vendor, a string, for add-on and extra packages.
+     *  Replaced by {@link #NODE_VENDOR_DISPLAY} and {@link #NODE_VENDOR_ID} in addon-v4.xsd. */
     public static final String NODE_VENDOR    = "vendor";                       //$NON-NLS-1$
-    /** The name, a string, for add-on packages or for libraries. */
+    /** The vendor display string, for add-on and extra packages. */
+    public static final String NODE_VENDOR_DISPLAY    = "vendor-display";       //$NON-NLS-1$
+    /** The unique vendor id string, for add-on and extra packages. */
+    public static final String NODE_VENDOR_ID    = "vendor-id";                 //$NON-NLS-1$
+    /** The name, a string, for add-on packages or for libraries.
+     *  Replaced by {@link #NODE_NAME_DISPLAY} and {@link #NODE_NAME_ID} in addon-v4.xsd. */
     public static final String NODE_NAME      = "name";                         //$NON-NLS-1$
+    /** The name display string, for add-on packages or for libraries. */
+    public static final String NODE_NAME_DISPLAY      = "name-display";         //$NON-NLS-1$
+    /** The unique name id string, for add-on packages or for libraries. */
+    public static final String NODE_NAME_ID      = "name-id";                   //$NON-NLS-1$
 
 
     /** A layoutlib package. */
