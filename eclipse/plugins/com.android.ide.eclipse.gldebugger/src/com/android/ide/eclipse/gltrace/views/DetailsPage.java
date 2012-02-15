@@ -50,6 +50,7 @@ public class DetailsPage extends Page implements ISelectionListener {
 
     private List<IStateDetailsProvider> mStateDetailProviders = Arrays.asList(
             new ShaderSourceDetailsProvider(),
+            new ShaderUniformDetailsProvider(),
             new TextureImageDetailsProvider());
 
     public DetailsPage(GLTrace trace) {
