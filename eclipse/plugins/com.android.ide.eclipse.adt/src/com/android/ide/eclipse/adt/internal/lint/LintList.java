@@ -43,10 +43,12 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -78,9 +80,9 @@ import org.eclipse.ui.progress.WorkbenchJob;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,7 +104,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
     private final TreeViewer mTreeViewer;
     private final Tree mTree;
     private ContentProvider mContentProvider;
-
+    private String mSelectedId;
     private List<? extends IResource> mResources;
     private Configuration mConfiguration;
     private final boolean mSingleFile;
@@ -163,6 +165,18 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             public void paintControl(PaintEvent e) {
                 treePainted = true;
                 mTreeViewer.getTree().removePaintListener(this);
+            }
+        });
+
+        // Remember the most recently selected id category such that we can
+        // attempt to reselect it after a refresh
+        mTree.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                List<IMarker> markers = getSelectedMarkers();
+                if (markers.size() > 0) {
+                    mSelectedId = EclipseLintClient.getId(markers.get(0));
+                }
             }
         });
     }
@@ -282,6 +296,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
     private class ContentProvider extends TreeNodeContentProvider {
         private Map<Object, Object[]> mChildren;
         private Map<IMarker, Integer> mTypeCount;
+        private IMarker[] mTopLevels;
 
         @Override
         public Object[] getElements(Object inputElement) {
@@ -311,28 +326,24 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             List<IMarker> topLevel = new ArrayList<IMarker>(ids.size());
             for (String id : ids) {
                 Collection<IMarker> markers = types.get(id);
-
-                Iterator<IMarker> iterator = markers.iterator();
-                assert iterator.hasNext() : id;
-
                 int childCount = markers.size();
-                IMarker topMarker = iterator.next();
+
+                // Must sort the list items in order to have a stable first item
+                // (otherwise preserving expanded paths etc won't work)
+                TableComparator sorter = getTableSorter();
+                IMarker[] array = markers.toArray(new IMarker[markers.size()]);
+                sorter.sort(mTreeViewer, array);
+
+                IMarker topMarker = array[0];
                 mTypeCount.put(topMarker, childCount);
-                childCount--;
-
-                IMarker[] children = new IMarker[childCount];
-                for (int i = 0; i < childCount; i++) {
-                    children[i] = iterator.next();
-                }
-
                 topLevel.add(topMarker);
+
+                IMarker[] children = Arrays.copyOfRange(array, 1, array.length);
                 mChildren.put(topMarker, children);
             }
 
-            // Sort top level: Sort by severity, then priority, then category:
-
-            IMarker[] array = topLevel.toArray(new IMarker[topLevel.size()]);
-            return array;
+            mTopLevels = topLevel.toArray(new IMarker[topLevel.size()]);
+            return mTopLevels;
         }
 
         @Override
@@ -365,6 +376,10 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             }
 
             return -1;
+        }
+
+        IMarker[] getTopMarkers() {
+            return mTopLevels;
         }
     }
 
@@ -463,6 +478,10 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             if (mTree.isDisposed()) {
                 return Status.CANCEL_STATUS;
             }
+
+            Object[] expandedElements = mTreeViewer.getExpandedElements();
+            TreePath[] expandedTreePaths = mTreeViewer.getExpandedTreePaths();
+
             mTreeViewer.setInput(null);
             List<IMarker> markerList = getMarkers();
             if (markerList.size() == 0) {
@@ -484,6 +503,19 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             mTree.notifyListeners(SWT.Selection, updateEvent);
             mTreeViewer.setInput(markerList);
             mTreeViewer.refresh();
+
+            mTreeViewer.setExpandedElements(expandedElements);
+            mTreeViewer.setExpandedTreePaths(expandedTreePaths);
+
+            if (mSelectedId != null) {
+                IMarker[] topMarkers = mContentProvider.getTopMarkers();
+                for (IMarker marker : topMarkers) {
+                    if (mSelectedId.equals(EclipseLintClient.getId(marker))) {
+                        mTreeViewer.setSelection(new StructuredSelection(marker), true /*reveal*/);
+                        break;
+                    }
+                }
+            }
 
             return Status.OK_STATUS;
         }

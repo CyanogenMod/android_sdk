@@ -382,9 +382,12 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             job.addJobChangeListener(new JobChangeAdapter() {
                 @Override
                 public void done(IJobChangeEvent event) {
-                    LayoutActionBar bar = getGraphicalEditor().getLayoutActionBar();
-                    if (!bar.isDisposed()) {
-                        bar.updateErrorIndicator();
+                    GraphicalEditorPart graphicalEditor = getGraphicalEditor();
+                    if (graphicalEditor != null) {
+                        LayoutActionBar bar = graphicalEditor.getLayoutActionBar();
+                        if (!bar.isDisposed()) {
+                            bar.updateErrorIndicator();
+                        }
                     }
                 }
             });
