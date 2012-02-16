@@ -18,6 +18,7 @@ package com.android.ide.eclipse.hierarchyviewer.views;
 
 import com.android.hierarchyviewerlib.actions.CapturePSDAction;
 import com.android.hierarchyviewerlib.actions.DisplayViewAction;
+import com.android.hierarchyviewerlib.actions.DumpDisplayListAction;
 import com.android.hierarchyviewerlib.actions.InvalidateAction;
 import com.android.hierarchyviewerlib.actions.RefreshViewAction;
 import com.android.hierarchyviewerlib.actions.RequestLayoutAction;
@@ -75,6 +76,7 @@ public class TreeViewView extends ViewPart {
         mm.add(new Separator());
         mm.add(InvalidateAction.getAction());
         mm.add(RequestLayoutAction.getAction());
+        mm.add(DumpDisplayListAction.getAction());
 
         IToolBarManager tm = actionBars.getToolBarManager();
         tm.removeAll();
@@ -86,6 +88,7 @@ public class TreeViewView extends ViewPart {
         tm.add(new Separator());
         tm.add(InvalidateAction.getAction());
         tm.add(RequestLayoutAction.getAction());
+        tm.add(DumpDisplayListAction.getAction());
     }
 
 
