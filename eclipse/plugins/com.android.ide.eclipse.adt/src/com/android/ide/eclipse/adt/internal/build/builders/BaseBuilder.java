@@ -38,6 +38,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.xml.sax.SAXException;
 
@@ -385,5 +386,10 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
                 rootResource.getLocation().toFile().delete();
             }
         }
+    }
+
+    protected void launchJob(Job newJob) {
+        newJob.setPriority(Job.BUILD);
+        newJob.schedule();
     }
 }

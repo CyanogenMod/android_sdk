@@ -38,7 +38,10 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -75,7 +78,7 @@ public class ResourceManagerBuilder extends BaseBuilder {
     protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
             throws CoreException {
         // Get the project.
-        IProject project = getProject();
+        final IProject project = getProject();
         IJavaProject javaProject = JavaCore.create(project);
 
         // Clear the project of the generic markers
@@ -210,6 +213,23 @@ public class ResourceManagerBuilder extends BaseBuilder {
             // if it doesn't arrive in time then refresh the whole project as usual.
             genFolder.refreshLocal(IResource.DEPTH_ZERO, new SubProgressMonitor(monitor, 10));
             project.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 10));
+
+            // it seems like doing this fails to properly rebuild the project. the Java builder
+            // running right after this builder will not see the gen folder, and will not be
+            // restarted after this build. Therefore in this particular case, we start another
+            // build asynchronously so that it's rebuilt after this build.
+            launchJob(new Job("rebuild") {
+                @Override
+                protected IStatus run(IProgressMonitor m) {
+                    try {
+                        project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, m);
+                        return Status.OK_STATUS;
+                    } catch (CoreException e) {
+                        return e.getStatus();
+                    }
+                }
+            });
+
         }
 
         // convert older projects which use bin as the eclipse output folder into projects
@@ -232,7 +252,19 @@ public class ResourceManagerBuilder extends BaseBuilder {
             // set the java output to this project.
             javaProject.setOutputLocation(newJavaOutput.getFullPath(), monitor);
 
-            project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
+            // need to do a full build. Can't build while we're already building, so launch a
+            // job to build it right after this build
+            launchJob(new Job("rebuild") {
+                @Override
+                protected IStatus run(IProgressMonitor jobMonitor) {
+                    try {
+                        project.build(IncrementalProjectBuilder.CLEAN_BUILD, jobMonitor);
+                        return Status.OK_STATUS;
+                    } catch (CoreException e) {
+                        return e.getStatus();
+                    }
+                }
+            });
         }
 
         // check that we have bin/res/
