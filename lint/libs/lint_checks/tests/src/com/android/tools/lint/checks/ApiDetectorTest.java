@@ -27,13 +27,19 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testXmlApi1() throws Exception {
         assertEquals(
+                "colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
                 "layout.xml:15: Error: View requires API level 11 (current min is 1): <CalendarView>\n" +
                 "layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout>\n" +
-                "layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge>",
+                "layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1)\n" +
+                "layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
+                "layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge>\n" +
+                "themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)",
 
                 lintProject(
                     "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                    "apicheck/layout.xml=>res/layout/layout.xml"
+                    "apicheck/layout.xml=>res/layout/layout.xml",
+                    "apicheck/themes.xml=>res/values/themes.xml",
+                    "apicheck/themes.xml=>res/color/colors.xml"
                     ));
     }
 
@@ -43,7 +49,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
                 lintProject(
                     "apicheck/minsdk14.xml=>AndroidManifest.xml",
-                    "apicheck/layout.xml=>res/layout/layout.xml"
+                    "apicheck/layout.xml=>res/layout/layout.xml",
+                    "apicheck/themes.xml=>res/values/themes.xml",
+                    "apicheck/themes.xml=>res/color/colors.xml"
                     ));
     }
 

@@ -672,7 +672,7 @@ public class LintDriver {
         // Look up manifest information (but not for library projects)
         File manifestFile = project.getManifestFile();
         if (!project.isLibrary() && manifestFile != null) {
-            XmlContext context = new XmlContext(this, project, main, manifestFile);
+            XmlContext context = new XmlContext(this, project, main, manifestFile, null);
             IDomParser parser = mClient.getDomParser();
             context.document = parser.parseXml(context);
             if (context.document != null) {
@@ -1139,7 +1139,7 @@ public class LintDriver {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
                     if (LintUtils.isXmlFile(file)) {
-                        XmlContext context = new XmlContext(this, project, main, file);
+                        XmlContext context = new XmlContext(this, project, main, file, type);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {
@@ -1179,7 +1179,7 @@ public class LintDriver {
                 if (type != null) {
                     XmlVisitor visitor = getVisitor(type, xmlDetectors);
                     if (visitor != null) {
-                        XmlContext context = new XmlContext(this, project, main, file);
+                        XmlContext context = new XmlContext(this, project, main, file, type);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                     }

@@ -16,16 +16,18 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -42,7 +44,10 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.Collection;
@@ -53,7 +58,7 @@ import java.util.List;
  * Looks for usages of APIs that are not supported in all the versions targeted
  * by this application (according to its minimum API requirement in the manifest).
  */
-public class ApiDetector extends LayoutDetector implements Detector.ClassScanner {
+public class ApiDetector extends ResourceXmlDetector implements Detector.ClassScanner {
     private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
     private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
 
@@ -90,11 +95,6 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
-        return folderType == ResourceFolderType.LAYOUT;
-    }
-
-    @Override
     public Speed getSpeed() {
         return Speed.SLOW;
     }
@@ -111,32 +111,109 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
     // ---- Implements XmlScanner ----
 
     @Override
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        return true;
+    }
+
+    @Override
     public Collection<String> getApplicableElements() {
         return ALL;
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
-        // Check widgets to make sure they're available in this version of the SDK.
-        String tag = element.getTagName();
-        if (mApiDatabase == null || tag.indexOf('.') != -1) {
-            // Custom views aren't in the index
+    public Collection<String> getApplicableAttributes() {
+        return ALL;
+    }
+
+    @Override
+    public void visitAttribute(XmlContext context, Attr attribute) {
+        if (mApiDatabase == null) {
             return;
         }
-        // TODO: Consider other widgets outside of android.widget.*
-        int api = mApiDatabase.getCallVersion("android/widget/" + tag,  //$NON-NLS-1$
-                "<init>", //$NON-NLS-1$
-                // Not all views provided this constructor right away, for example,
-                // LinearLayout added it in API 11 yet LinearLayout is much older:
-                // "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"); //$NON-NLS-1$
-                "(Landroid/content/Context;)"); //$NON-NLS-1$
-        int minSdk = getMinSdk(context);
-        if (api > minSdk) {
-            Location location = context.getLocation(element);
-            String message = String.format(
-                    "View requires API level %1$d (current min is %2$d): <%3$s>",
-                    api, minSdk, tag);
-            context.report(UNSUPPORTED, element, location, message, null);
+
+        String value = attribute.getValue();
+        if (value.startsWith(ANDROID_RESOURCE_PREFIX)) {
+            // Convert @android:type/foo into android/R$type and "foo"
+            int index = value.indexOf('/', ANDROID_RESOURCE_PREFIX.length());
+            if (index != -1) {
+                String owner = "android/R$"    //$NON-NLS-1$
+                        + value.substring(ANDROID_RESOURCE_PREFIX.length(), index);
+                String name = value.substring(index + 1);
+                int api = mApiDatabase.getFieldVersion(owner, name);
+                int minSdk = getMinSdk(context);
+                if (api > minSdk) {
+                    Location location = context.getLocation(attribute);
+                    String message = String.format(
+                            "%1$s requires API level %2$d (current min is %3$d)",
+                            value, api, minSdk);
+                    context.report(UNSUPPORTED, attribute, location, message, null);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void visitElement(XmlContext context, Element element) {
+        if (mApiDatabase == null) {
+            return;
+        }
+
+        String tag = element.getTagName();
+
+        ResourceFolderType folderType = context.getResourceFolderType();
+        if (folderType != ResourceFolderType.LAYOUT) {
+            if (element.getParentNode().getNodeType() != Node.ELEMENT_NODE) {
+                // Root node
+                return;
+            }
+            NodeList childNodes = element.getChildNodes();
+            for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                Node textNode = childNodes.item(i);
+                if (textNode.getNodeType() == Node.TEXT_NODE) {
+                    String text = textNode.getNodeValue();
+                    if (text.indexOf(ANDROID_RESOURCE_PREFIX) != -1) {
+                        text = text.trim();
+                        // Convert @android:type/foo into android/R$type and "foo"
+                        int index = text.indexOf('/', ANDROID_RESOURCE_PREFIX.length());
+                        if (index != -1) {
+                            String owner = "android/R$"    //$NON-NLS-1$
+                                    + text.substring(ANDROID_RESOURCE_PREFIX.length(), index);
+                            String name = text.substring(index + 1);
+                            int api = mApiDatabase.getFieldVersion(owner, name);
+                            int minSdk = getMinSdk(context);
+                            if (api > minSdk) {
+                                Location location = context.getLocation(textNode);
+                                String message = String.format(
+                                        "%1$s requires API level %2$d (current min is %3$d)",
+                                        text, api, minSdk);
+                                context.report(UNSUPPORTED, element, location, message, null);
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (folderType == ResourceFolderType.LAYOUT) {
+            // Check widgets to make sure they're available in this version of the SDK.
+            if (tag.indexOf('.') != -1 ||
+                    folderType != ResourceFolderType.LAYOUT) {
+                // Custom views aren't in the index
+                return;
+            }
+            // TODO: Consider other widgets outside of android.widget.*
+            int api = mApiDatabase.getCallVersion("android/widget/" + tag,  //$NON-NLS-1$
+                    "<init>", //$NON-NLS-1$
+                    // Not all views provided this constructor right away, for example,
+                    // LinearLayout added it in API 11 yet LinearLayout is much older:
+                    // "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"); //$NON-NLS-1$
+                    "(Landroid/content/Context;)"); //$NON-NLS-1$
+            int minSdk = getMinSdk(context);
+            if (api > minSdk) {
+                Location location = context.getLocation(element);
+                String message = String.format(
+                        "View requires API level %1$d (current min is %2$d): <%3$s>",
+                        api, minSdk, tag);
+                context.report(UNSUPPORTED, element, location, message, null);
+            }
         }
     }
 

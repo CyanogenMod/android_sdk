@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
@@ -39,6 +40,7 @@ public class XmlContext extends Context {
     public IDomParser parser;
     /** The XML document */
     public Document document;
+    private final ResourceFolderType mFolderType;
 
     /**
      * Construct a new {@link XmlContext}
@@ -50,13 +52,16 @@ public class XmlContext extends Context {
      *            the root project of all library projects, not necessarily the
      *            directly including project.
      * @param file the file being checked
+     * @param folderType the {@link ResourceFolderType} of this file, if any
      */
     public XmlContext(
             @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
-            @NonNull File file) {
+            @NonNull File file,
+            @Nullable ResourceFolderType folderType) {
         super(driver, project, main, file);
+        mFolderType = folderType;
     }
 
     /**
@@ -116,5 +121,15 @@ public class XmlContext extends Context {
         }
 
         super.report(issue, location, message, data);
+    }
+
+    /**
+     * Returns the resource folder type of this XML file, if any.
+     *
+     * @return the resource folder type or null
+     */
+    @Nullable
+    public ResourceFolderType getResourceFolderType() {
+        return mFolderType;
     }
 }
