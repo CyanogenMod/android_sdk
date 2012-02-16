@@ -270,8 +270,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 for (String resource : sorted) {
                     Location location = mUnused.get(resource);
                     if (location != null) {
-                        // We were prepending locations, but we want to prefer the base
-                        // folders
+                        // We were prepending locations, but we want to prefer the base folders
                         location = Location.reverse(location);
                     }
                     String message = String.format("The resource %1$s appears to be unused",

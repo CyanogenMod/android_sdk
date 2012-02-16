@@ -198,7 +198,7 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     @Override
     public void afterCheckProject(Context context) {
-        int phase = context.getDriver().getPhase();
+        int phase = context.getPhase();
         if (phase == 1 && mApplicableResources != null) {
             // We found resources for the string "Cancel"; perform a second pass
             // where we check layout text attributes against these strings.
@@ -229,7 +229,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         // found in the value files, then it requests a *second* phase,
         // where it looks only for <Button>'s whose text matches one of the
         // cancel string resources.
-        int phase = context.getDriver().getPhase();
+        int phase = context.getPhase();
         String tagName = element.getTagName();
         if (phase == 1 && tagName.equals(TAG_STRING)) {
             NodeList childNodes = element.getChildNodes();

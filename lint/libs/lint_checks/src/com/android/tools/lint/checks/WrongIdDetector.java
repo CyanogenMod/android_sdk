@@ -247,8 +247,8 @@ public class WrongIdDetector extends LayoutDetector {
     private void report(Context context, Issue issue, Handle handle, String message) {
         Location location = handle.resolve();
         Object clientData = handle.getClientData();
-        if (clientData instanceof Attr) {
-            if (context.getDriver().isSuppressed(issue, (Attr) clientData)) {
+        if (clientData instanceof Node) {
+            if (context.getDriver().isSuppressed(issue, (Node) clientData)) {
                 return;
             }
         }

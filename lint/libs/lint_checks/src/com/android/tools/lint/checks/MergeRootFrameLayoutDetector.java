@@ -45,6 +45,7 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -121,8 +122,15 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
                 String layout = pair.getFirst();
                 if (mWhitelistedLayouts.contains(layout)) {
                     Handle handle = pair.getSecond();
+
+                    Object clientData = handle.getClientData();
+                    if (clientData instanceof Node) {
+                        if (context.getDriver().isSuppressed(ISSUE, (Node) clientData)) {
+                            return;
+                        }
+                    }
+
                     Location location = handle.resolve();
-                    // TODO: Compute applicable scope?
                     context.report(ISSUE, location,
                             "This <FrameLayout> can be replaced with a <merge> tag", null);
                 }
@@ -156,6 +164,8 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
                     && !hasPadding(element)) {
                 String layout = LintUtils.getLayoutName(context.file);
                 Handle handle = context.parser.createLocationHandle(context, element);
+                handle.setClientData(element);
+
                 if (mPending == null) {
                     mPending = new ArrayList<Pair<String,Handle>>();
                 }

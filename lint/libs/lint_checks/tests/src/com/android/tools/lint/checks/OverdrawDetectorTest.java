@@ -60,4 +60,33 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 "overdraw/src/test/pkg/ThirdActivity.java.txt=>src/test/pkg/ThirdActivity.java"
             ));
     }
+
+    public void testSuppressed() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "overdraw/.classpath=>.classpath",
+                "overdraw/.project=>.project",
+                "overdraw/AndroidManifest.xml=>AndroidManifest.xml",
+                "overdraw/project.properties=>project.properties",
+                "overdraw/res/drawable/custombg.xml=>res/drawable/custombg.xml",
+                "overdraw/res/drawable/custombg2.xml=>res/drawable/custombg2.xml",
+                "overdraw/res/drawable-hdpi/ic_launcher.png=>res/drawable-hdpi/ic_launcher.png",
+                "overdraw/res/drawable-ldpi/ic_launcher.png=>res/drawable-ldpi/ic_launcher.png",
+                "overdraw/res/drawable-mdpi/ic_launcher.png=>res/drawable-mdpi/ic_launcher.png",
+                "overdraw/res/layout/main_ignore.xml=>res/layout/main.xml",
+                "overdraw/res/values/strings.xml=>res/values/strings.xml",
+                "overdraw/res/values/styles.xml=>res/values/styles.xml",
+
+                // Java files must be renamed in source tree
+                "overdraw/gen/test/pkg/BuildConfig.java.txt=>gen/test/pkg/BuildConfig.java",
+                "overdraw/gen/test/pkg/R.java.txt=>gen/test/pkg/R.java",
+                "overdraw/src/test/pkg/FourthActivity.java.txt=>src/test/pkg/FourthActivity.java",
+                "overdraw/src/test/pkg/OverdrawActivity.java.txt=>src/test/pkg/OverdrawActivity.java",
+                "overdraw/src/test/pkg/SecondActivity.java.txt=>src/test/pkg/SecondActivity.java",
+                "overdraw/src/test/pkg/ThirdActivity.java.txt=>src/test/pkg/ThirdActivity.java"
+            ));
+    }
+
 }

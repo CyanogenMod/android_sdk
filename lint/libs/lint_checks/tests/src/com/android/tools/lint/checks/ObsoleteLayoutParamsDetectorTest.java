@@ -63,4 +63,12 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
 
             lintProject("res/layout/wrongparams5.xml", "res/layout/wrongparams6.xml"));
     }
+
+    public void testIgnore() throws Exception {
+        assertEquals(
+             // Ignoring all but one of the warnings
+            "wrongparams.xml:12: Warning: Invalid layout param in a FrameLayout: layout_weight",
+
+            lintProject("res/layout/wrongparams_ignore.xml=>res/layout/wrongparams.xml"));
+    }
 }

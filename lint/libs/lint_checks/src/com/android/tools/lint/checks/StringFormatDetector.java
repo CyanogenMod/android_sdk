@@ -253,6 +253,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 if (formatted.length() > 0 && !Boolean.parseBoolean(formatted)) {
                     if (!mNotFormatStrings.containsKey(name)) {
                         Handle handle = context.parser.createLocationHandle(context, element);
+                        handle.setClientData(element);
                         mNotFormatStrings.put(name, handle);
                     }
                     return;
@@ -266,6 +267,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 if (!matcher.find(j)) {
                     if (!mNotFormatStrings.containsKey(name)) {
                         Handle handle = context.parser.createLocationHandle(context, element);
+                        handle.setClientData(element);
                         mNotFormatStrings.put(name, handle);
                     }
                     return;
@@ -276,6 +278,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 if (conversionClass == CONVERSION_CLASS_UNKNOWN || matcher.group(5) != null) {
                     if (!mNotFormatStrings.containsKey(name)) {
                         Handle handle = context.parser.createLocationHandle(context, element);
+                        handle.setClientData(element);
                         mNotFormatStrings.put(name, handle);
                     }
                     // Don't process any other strings here; some of them could
@@ -300,6 +303,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 mFormatStrings.put(name, list);
             }
             Handle handle = context.parser.createLocationHandle(context, element);
+            handle.setClientData(element);
             list.add(Pair.of(handle, text));
         }
     }
@@ -378,12 +382,19 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                             // formats (d, o, x, X). If that's not the case, make a
                             // dedicated error message
                             if (last != 'd' && last != 'o' && last != 'x' && last != 'X') {
+                                Object clientData = handle.getClientData();
+                                if (clientData instanceof Node) {
+                                    if (context.getDriver().isSuppressed(INVALID,
+                                            (Node) clientData)) {
+                                        return;
+                                    }
+                                }
+
                                 Location location = handle.resolve();
                                 String message = String.format(
                                         "Incorrect formatting string %1$s; missing conversion " +
                                         "character in '%2$s' ?", name, str);
-                                context.report(INVALID, location,
-                                        message, null);
+                                context.report(INVALID, location, message, null);
                                 //warned = true;
                                 continue;
                             }
@@ -413,6 +424,14 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                         typeDefinition.put(number, handle);
                     } else if (!currentFormat.equals(format)
                             && isIncompatible(currentFormat.charAt(0), format.charAt(0))) {
+
+                        Object clientData = handle.getClientData();
+                        if (clientData instanceof Node) {
+                            if (context.getDriver().isSuppressed(ARG_TYPES, (Node) clientData)) {
+                                return;
+                            }
+                        }
+
                         Location location = handle.resolve();
                         // Attempt to limit the location range to just the formatting
                         // string in question
@@ -431,9 +450,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                 currentFormat, format,
                                 f.getParentFile().getName() + File.separator + f.getName());
                         //warned = true;
-                        // TODO: Compute applicable node scope
-                        context.report(ARG_TYPES, location,
-                                message, null);
+                        context.report(ARG_TYPES, location, message, null);
                         break;
                     }
                 } else {
@@ -569,23 +586,34 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         for (Pair<Handle, String> pair : list) {
             Set<Integer> indices = new HashSet<Integer>();
             int count = getFormatArgumentCount(pair.getSecond(), indices);
+            Handle handle = pair.getFirst();
             if (prevCount != -1 && prevCount != count) {
-                Location location = pair.getFirst().resolve();
+                Object clientData = handle.getClientData();
+                if (clientData instanceof Node) {
+                    if (context.getDriver().isSuppressed(ARG_COUNT, (Node) clientData)) {
+                        return;
+                    }
+                }
+                Location location = handle.resolve();
                 Location secondary = list.get(0).getFirst().resolve();
                 secondary.setMessage("Conflicting number of arguments here");
                 location.setSecondary(secondary);
                 String message = String.format(
                         "Inconsistent number of arguments in formatting string %1$s; " +
                         "found both %2$d and %3$d", name, prevCount, count);
-                // TODO: Compute applicable node scope
-                context.report(ARG_COUNT, location,
-                        message, null);
-
+                context.report(ARG_COUNT, location, message, null);
                 break;
             }
 
             for (int i = 1; i <= count; i++) {
                 if (!indices.contains(i)) {
+                    Object clientData = handle.getClientData();
+                    if (clientData instanceof Node) {
+                        if (context.getDriver().isSuppressed(ARG_COUNT, (Node) clientData)) {
+                            return;
+                        }
+                    }
+
                     Set<Integer> all = new HashSet<Integer>();
                     for (int j = 1; j < count; j++) {
                         all.add(j);
@@ -593,12 +621,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     all.removeAll(indices);
                     List<Integer> sorted = new ArrayList<Integer>(all);
                     Collections.sort(sorted);
-                    Location location = pair.getFirst().resolve();
+                    Location location = handle.resolve();
                     String message = String.format(
                             "Formatting string '%1$s' is not referencing numbered arguments %2$s",
                             name, sorted);
-                    context.report(ARG_COUNT, location,
-                            message, null);
+                    context.report(ARG_COUNT, location, message, null);
                     break;
                 }
             }
@@ -792,13 +819,19 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
 
         if (mNotFormatStrings.containsKey(name)) {
-            Location location = mNotFormatStrings.get(name).resolve();
+            Handle handle = mNotFormatStrings.get(name);
+            Object clientData = handle.getClientData();
+            if (clientData instanceof Node) {
+                if (context.getDriver().isSuppressed(INVALID, (Node) clientData)) {
+                    return;
+                }
+            }
+            Location location = handle.resolve();
             String message = String.format(
                     "Format string '%1$s' is not a valid format string so it should not be " +
                     "passed to String.format",
                     name);
-            context.report(INVALID, location,
-                    message, null);
+            context.report(INVALID, location, message, null);
             return;
         }
 
@@ -807,9 +840,10 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             for (Pair<Handle, String> pair : list) {
                 String s = pair.getSecond();
                 int count = getFormatArgumentCount(s, null);
+                Handle handle = pair.getFirst();
                 if (count != args.size() - 1) {
                     Location location = context.parser.getLocation(context, call);
-                    Location secondary = pair.getFirst().resolve();
+                    Location secondary = handle.resolve();
                     secondary.setMessage(String.format("This definition requires %1$d arguments",
                             count));
                     location.setSecondary(secondary);
@@ -817,8 +851,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                             "Wrong argument count, format string %1$s requires %2$d but format " +
                             "call supplies %3$d",
                             name, count, args.size() - 1);
-                    context.report(ARG_TYPES, method, location,
-                            message, null);
+                    context.report(ARG_TYPES, method, location, message, null);
                 } else {
                     for (int i = 1; i <= count; i++) {
                         Class<?> type = tracker.getArgumentType(i);
@@ -879,7 +912,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                 IJavaParser parser = context.parser;
                                 Expression argument = tracker.getArgument(i);
                                 Location location = parser.getLocation(context, argument);
-                                Location secondary = pair.getFirst().resolve();
+                                Location secondary = handle.resolve();
                                 secondary.setMessage("Conflicting argument declaration here");
                                 location.setSecondary(secondary);
 
@@ -887,8 +920,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                         "Wrong argument type for formatting argument '#%1$d' " +
                                         "in %2$s: conversion is '%3$s', received %4$s",
                                         i, name, formatType, type.getSimpleName());
-                                context.report(ARG_TYPES, method, location,
-                                        message, null);
+                                context.report(ARG_TYPES, method, location, message, null);
                             }
                         }
                     }

@@ -23,6 +23,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_INTEGER_ARRA
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -37,6 +38,7 @@ import com.android.util.Pair;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -78,6 +80,12 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
     private Map<File, Pair<String, Integer>> mFileToArrayCount;
 
+    /** Locations for each array name. Populated during phase 2, if necessary */
+    private Map<String, Location> mLocations;
+
+    /** Error messages for each array name. Populated during phase 2, if necessary */
+    private Map<String, String> mDescriptions;
+
     /** Constructs a new {@link ArraySizeDetector} */
     public ArraySizeDetector() {
     }
@@ -103,66 +111,147 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckProject(Context context) {
-        mFileToArrayCount = new HashMap<File, Pair<String,Integer>>(30);
+        if (context.getPhase() == 1) {
+            mFileToArrayCount = new HashMap<File, Pair<String,Integer>>(30);
+        }
     }
 
     @Override
     public void afterCheckProject(Context context) {
-        // Check that all arrays for the same name have the same number of translations
+        if (context.getPhase() == 1) {
+            // Check that all arrays for the same name have the same number of translations
 
-        Set<String> alreadyReported = new HashSet<String>();
-        Map<String, Integer> countMap = new HashMap<String, Integer>();
-        Map<String, File> fileMap = new HashMap<String, File>();
+            Set<String> alreadyReported = new HashSet<String>();
+            Map<String, Integer> countMap = new HashMap<String, Integer>();
+            Map<String, File> fileMap = new HashMap<String, File>();
 
-        // Process the file in sorted file order to ensure stable output
-        List<File> keys = new ArrayList<File>(mFileToArrayCount.keySet());
-        Collections.sort(keys);
+            // Process the file in sorted file order to ensure stable output
+            List<File> keys = new ArrayList<File>(mFileToArrayCount.keySet());
+            Collections.sort(keys);
 
-        for (File file : keys) {
-            Pair<String, Integer> pair = mFileToArrayCount.get(file);
-            String name = pair.getFirst();
-            if (alreadyReported.contains(name)) {
-                continue;
+            for (File file : keys) {
+                Pair<String, Integer> pair = mFileToArrayCount.get(file);
+                String name = pair.getFirst();
+                if (alreadyReported.contains(name)) {
+                    continue;
+                }
+                Integer count = pair.getSecond();
+
+                Integer current = countMap.get(name);
+                if (current == null) {
+                    countMap.put(name, count);
+                    fileMap.put(name, file);
+                } else if (!count.equals(current)) {
+                    alreadyReported.add(name);
+
+                    if (mLocations == null) {
+                        mLocations = new HashMap<String, Location>();
+                        mDescriptions = new HashMap<String, String>();
+                    }
+                    mLocations.put(name, null);
+
+                    String thisName = file.getParentFile().getName() + File.separator
+                            + file.getName();
+                    File otherFile = fileMap.get(name);
+                    String otherName = otherFile.getParentFile().getName() + File.separator
+                            + otherFile.getName();
+                    String message = String.format(
+                         "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
+                         name, count, thisName, current, otherName);
+                     mDescriptions.put(name,  message);
+                }
             }
-            Integer count = pair.getSecond();
 
-            Integer current = countMap.get(name);
-            if (current == null) {
-                countMap.put(name, count);
-                fileMap.put(name, file);
-            } else if (!count.equals(current)) {
-                String thisName = file.getParentFile().getName() + File.separator + file.getName();
-                File otherFile = fileMap.get(name);
-                Location location = Location.create(otherFile);
-                Location secondary = Location.create(file);
-                secondary.setMessage("Declaration with conflicting size");
-                location.setSecondary(secondary);
-
-                String otherName = otherFile.getParentFile().getName() + File.separator
-                        + otherFile.getName();
-                // TODO: Find applicable scope?
-                context.report(INCONSISTENT, location,
-                    String.format(
-                     "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
-                     name, count, thisName, current, otherName), null);
-                alreadyReported.add(name);
+            if (mLocations != null) {
+                // Request another scan through the resources such that we can
+                // gather the actual locations
+                context.getDriver().requestRepeat(this, Scope.ALL_RESOURCES_SCOPE);
             }
+            mFileToArrayCount = null;
+        } else {
+            if (mLocations != null) {
+                List<String> names = new ArrayList<String>(mLocations.keySet());
+                Collections.sort(names);
+                for (String name : names) {
+                    Location location = mLocations.get(name);
+                    // We were prepending locations, but we want to prefer the base folders
+                    location = Location.reverse(location);
+
+                    // Make sure we still have a conflict, in case one or more of the
+                    // elements were marked with tools:ignore
+                    int count = -1;
+                    Location curr = location;
+                    LintDriver driver = context.getDriver();
+                    boolean foundConflict = false;
+                    for (curr = location; curr != null; curr = curr.getSecondary()) {
+                        Object clientData = curr.getClientData();
+                        if (clientData instanceof Node) {
+                            Node node = (Node) clientData;
+                            if (driver.isSuppressed(INCONSISTENT, node)) {
+                                continue;
+                            }
+                            int newCount = LintUtils.getChildCount(node);
+                            if (newCount != count) {
+                                if (count == -1) {
+                                    count = newCount; // first number encountered
+                                } else {
+                                    foundConflict = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            foundConflict = true;
+                            break;
+                        }
+                    }
+
+                    // Through one or more tools:ignore, there is no more conflict so
+                    // ignore this element
+                    if (!foundConflict) {
+                        continue;
+                    }
+
+                    String message = mDescriptions.get(name);
+                    context.report(INCONSISTENT, location, message, null);
+                }
+            }
+
+            mLocations = null;
+            mDescriptions = null;
         }
-
-        mFileToArrayCount = null;
     }
 
     @Override
     public void visitElement(XmlContext context, Element element) {
+        int phase = context.getPhase();
+
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
+            if (phase != 1) {
+                return;
+            }
             context.report(INCONSISTENT, element, context.getLocation(element),
                 String.format("Missing name attribute in %1$s declaration", element.getTagName()),
                 null);
         } else {
             String name = attribute.getValue();
-            int childCount = LintUtils.getChildCount(element);
-            mFileToArrayCount.put(context.file, Pair.of(name, childCount));
+            if (phase == 1) {
+                int childCount = LintUtils.getChildCount(element);
+                mFileToArrayCount.put(context.file, Pair.of(name, childCount));
+            } else {
+                assert phase == 2;
+                if (mLocations.containsKey(name)) {
+                    if (context.getDriver().isSuppressed(INCONSISTENT, element)) {
+                        return;
+                    }
+                    Location location = context.getLocation(element);
+                    location.setClientData(element);
+                    location.setMessage(String.format("Declaration with array size (%1$d)",
+                                    LintUtils.getChildCount(element)));
+                    location.setSecondary(mLocations.get(name));
+                    mLocations.put(name, location);
+                }
+            }
         }
     }
 }

@@ -70,6 +70,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -253,6 +254,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     if (context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
                         IDomParser parser = context.parser;
                         Location.Handle handle = parser.createLocationHandle(context, attribute);
+                        handle.setClientData(attribute);
                         mPending.add(Pair.of(name, handle));
                     }
 
@@ -267,6 +269,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     if (context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
                         IDomParser parser = context.parser;
                         Location.Handle handle = parser.createLocationHandle(context, attribute);
+                        handle.setClientData(attribute);
                         mPending.add(Pair.of(name, handle));
                     }
 
@@ -323,7 +326,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
         }
 
         for (Pair<String, Location.Handle> pending : mPending) {
-            Location location = pending.getSecond().resolve();
+            Handle handle = pending.getSecond();
+            Location location = handle.resolve();
             File file = location.getFile();
             String layout = file.getName();
             if (layout.endsWith(DOT_XML)) {
@@ -356,6 +360,13 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             }
 
             if (!isValid) {
+                Object clientData = handle.getClientData();
+                if (clientData instanceof Node) {
+                    if (context.getDriver().isSuppressed(ISSUE, (Node) clientData)) {
+                        return;
+                    }
+                }
+
                 StringBuilder sb = new StringBuilder();
                 for (Pair<File, String> include : includes) {
                     if (sb.length() > 0) {

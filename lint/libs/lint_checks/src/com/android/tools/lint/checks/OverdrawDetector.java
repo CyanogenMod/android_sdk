@@ -199,6 +199,13 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             for (Pair<Location, String> pair : mRootAttributes) {
                 Location location = pair.getFirst();
 
+                Object clientData = location.getClientData();
+                if (clientData instanceof Node) {
+                    if (context.getDriver().isSuppressed(ISSUE, (Node) clientData)) {
+                        return;
+                    }
+                }
+
                 String layoutName = location.getFile().getName();
                 if (endsWith(layoutName, DOT_XML)) {
                     layoutName = layoutName.substring(0, layoutName.length() - DOT_XML.length());
@@ -282,6 +289,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             }
 
             Location location = context.getLocation(attribute);
+            location.setClientData(attribute);
             if (mRootAttributes == null) {
                 mRootAttributes = new ArrayList<Pair<Location,String>>();
             }

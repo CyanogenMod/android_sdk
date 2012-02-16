@@ -105,4 +105,17 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
                     "src/test/pkg/StringFormat2.java.txt=>src/test/pkg/StringFormat2.java"
                 ));
     }
+
+    public void testSuppressed() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/values/formatstrings_ignore.xml=>res/values/formatstrings.xml",
+                    "res/values-es/formatstrings_ignore.xml=>res/values-es/formatstrings.xml",
+                    "src/test/pkg/StringFormatActivity_ignore.java.txt=>src/test/pkg/StringFormatActivity.java"
+                ));
+    }
+
+
 }

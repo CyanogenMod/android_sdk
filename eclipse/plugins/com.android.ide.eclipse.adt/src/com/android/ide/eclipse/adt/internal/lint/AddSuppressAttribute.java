@@ -28,12 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.tools.lint.checks.ArraySizeDetector;
 import com.android.tools.lint.checks.DuplicateIdDetector;
-import com.android.tools.lint.checks.MergeRootFrameLayoutDetector;
-import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
-import com.android.tools.lint.checks.OverdrawDetector;
-import com.android.tools.lint.checks.StringFormatDetector;
 import com.android.tools.lint.checks.TranslationDetector;
 
 import org.eclipse.core.resources.IMarker;
@@ -207,13 +202,7 @@ class AddSuppressAttribute implements ICompletionProposal {
         // available). Until that's resolved, we need to filter these out such that
         // we don't add misleading annotations on individual elements; the fallback
         // path is the DOM document itself instead.
-        if (id.equals(ArraySizeDetector.INCONSISTENT.getId())
-                || id.equals(DuplicateIdDetector.CROSS_LAYOUT.getId())
-                || id.equals(MergeRootFrameLayoutDetector.ISSUE.getId())
-                || id.equals(ObsoleteLayoutParamsDetector.ISSUE.getId())
-                || id.equals(OverdrawDetector.ISSUE.getId())
-                || id.equals(StringFormatDetector.ARG_TYPES.getId())
-                || id.equals(StringFormatDetector.ARG_COUNT.getId())
+        if (id.equals(DuplicateIdDetector.CROSS_LAYOUT.getId())
                 || id.equals(TranslationDetector.MISSING.getId())
                 || id.equals(TranslationDetector.EXTRA.getId())) {
             node = document.getDocumentElement();

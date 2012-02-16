@@ -44,6 +44,15 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
                         ));
     }
 
+    public void testMergeRefFromIncludeSuppressed() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        "res/layout/simple_ignore.xml=>res/layout/simple.xml",
+                        "res/layout/simpleinclude.xml"
+                        ));
+    }
+
     public void testNotIncluded() throws Exception {
         assertEquals(
                 "No warnings.",
