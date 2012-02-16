@@ -27,12 +27,14 @@ public class OnClickDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
+            "OnClickActivity.java:27: Error: On click handler wrong5(View) must be public\n" +
+            "OnClickActivity.java:31: Error: On click handler wrong6(View) should not be static\n" +
             "onclick.xml:10: Error: Corresponding method handler 'public void nonexistent(android.view.View)' not found\n" +
             "onclick.xml:16: Error: Corresponding method handler 'public void wrong1(android.view.View)' not found\n" +
             "onclick.xml:22: Error: Corresponding method handler 'public void wrong2(android.view.View)' not found\n" +
             "onclick.xml:28: Error: Corresponding method handler 'public void wrong3(android.view.View)' not found\n" +
             "onclick.xml:34: Error: Corresponding method handler 'public void wrong4(android.view.View)' not found\n" +
-            "onclick.xml:46: Error: Corresponding method handler 'public void simple_typo(android.view.View)' not found (did you mean test.pkg.OnClickActivity#simple_tyop(Landroid/view/View;)V ?)",
+            "onclick.xml:58: Error: Corresponding method handler 'public void simple_typo(android.view.View)' not found (did you mean void test.pkg.OnClickActivity#simple_tyop(android.view.View) ?)",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
