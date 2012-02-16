@@ -133,6 +133,7 @@ public class LintConstants {
     public static final String ATTR_LABEL = "label";                   //$NON-NLS-1$
     public static final String ATTR_HINT = "hint";                     //$NON-NLS-1$
     public static final String ATTR_PROMPT = "prompt";                 //$NON-NLS-1$
+    public static final String ATTR_ON_CLICK = "onClick";              //$NON-NLS-1$
     public static final String ATTR_INPUT_TYPE = "inputType";          //$NON-NLS-1$
     public static final String ATTR_INPUT_METHOD = "inputMethod";      //$NON-NLS-1$
     public static final String ATTR_LAYOUT_GRAVITY = "layout_gravity"; //$NON-NLS-1$
