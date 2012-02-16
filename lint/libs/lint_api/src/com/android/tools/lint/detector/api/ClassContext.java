@@ -24,8 +24,11 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
@@ -223,8 +226,12 @@ public class ClassContext extends Context {
         File sourceFile = getSourceFile();
         if (sourceFile != null) {
             // ASM line numbers are 1-based, and lint line numbers are 0-based
-            return Location.create(sourceFile, getSourceContents(), line - 1,
-                    patternStart, patternEnd);
+            if (line != -1) {
+                return Location.create(sourceFile, getSourceContents(), line - 1,
+                        patternStart, patternEnd);
+            } else {
+                return Location.create(sourceFile);
+            }
         }
 
         return Location.create(file);
@@ -301,5 +308,102 @@ public class ClassContext extends Context {
             return;
         }
         report(issue, location, message, data); // also checks the class node
+    }
+
+    /**
+     * Finds the line number closest to the given node
+     *
+     * @param node the instruction node to get a line number for
+     * @return the closest line number, or -1 if not known
+     */
+    public static int findLineNumber(AbstractInsnNode node) {
+        AbstractInsnNode curr = node;
+
+        // First search backwards
+        while (curr != null) {
+            if (curr.getType() == AbstractInsnNode.LINE) {
+                return ((LineNumberNode) curr).line;
+            }
+            curr = curr.getPrevious();
+        }
+
+        // Then search forwards
+        curr = node;
+        while (curr != null) {
+            if (curr.getType() == AbstractInsnNode.LINE) {
+                return ((LineNumberNode) curr).line;
+            }
+            curr = curr.getNext();
+        }
+
+        return -1;
+    }
+
+    /**
+     * Finds the line number closest to the given method declaration
+     *
+     * @param node the method node to get a line number for
+     * @return the closest line number, or -1 if not known
+     */
+    public static int findLineNumber(MethodNode node) {
+        if (node.instructions != null && node.instructions.size() > 0) {
+            return findLineNumber(node.instructions.get(0));
+        }
+
+        return -1;
+    }
+
+    /**
+     * Computes a user-readable type signature from the given class owner, name
+     * and description
+     *
+     * @param owner the class name
+     * @param name the method name
+     * @param desc the method description
+     * @return a user-readable string
+     */
+    public static String createSignature(String owner, String name, String desc) {
+        StringBuilder sb = new StringBuilder();
+
+        if (desc != null) {
+            Type returnType = Type.getReturnType(desc);
+            sb.append(getTypeString(returnType));
+            sb.append(' ');
+        }
+
+        if (owner != null) {
+            sb.append(owner.replace('/', '.').replace('$','.'));
+        }
+        if (name != null) {
+            sb.append('#');
+            sb.append(name);
+            if (desc != null) {
+                Type[] argumentTypes = Type.getArgumentTypes(desc);
+                if (argumentTypes != null && argumentTypes.length > 0) {
+                    sb.append('(');
+                    boolean first = true;
+                    for (Type type : argumentTypes) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            sb.append(", ");
+                        }
+                        sb.append(getTypeString(type));
+                    }
+                    sb.append(')');
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private static String getTypeString(Type type) {
+        String s = type.getClassName();
+        if (s.startsWith("java.lang.")) {           //$NON-NLS-1$
+            s = s.substring("java.lang.".length()); //$NON-NLS-1$
+        }
+
+        return s;
     }
 }

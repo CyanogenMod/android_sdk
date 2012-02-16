@@ -39,7 +39,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -328,32 +327,9 @@ public class ApiDetector extends LayoutDetector implements Detector.ClassScanner
         return -1;
     }
 
-    private static int findLineNumber(AbstractInsnNode node) {
-        AbstractInsnNode curr = node;
-
-        // First search backwards
-        while (curr != null) {
-            if (curr.getType() == AbstractInsnNode.LINE) {
-                return ((LineNumberNode) curr).line;
-            }
-            curr = curr.getPrevious();
-        }
-
-        // Then search forwards
-        curr = node;
-        while (curr != null) {
-            if (curr.getType() == AbstractInsnNode.LINE) {
-                return ((LineNumberNode) curr).line;
-            }
-            curr = curr.getNext();
-        }
-
-        return -1;
-    }
-
     private void report(final ClassContext context, String message, AbstractInsnNode node,
             MethodNode method, String patternStart, String patternEnd) {
-        int lineNumber = node != null ? findLineNumber(node) : -1;
+        int lineNumber = node != null ? ClassContext.findLineNumber(node) : -1;
         Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd);
         context.report(UNSUPPORTED, method, location, message, null);
     }

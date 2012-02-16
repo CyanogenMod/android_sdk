@@ -53,7 +53,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 77;
+        final int initialCapacity = 78;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -83,6 +83,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TooManyViewsDetector.TOO_MANY);
         issues.add(TooManyViewsDetector.TOO_DEEP);
         issues.add(GridLayoutDetector.ISSUE);
+        issues.add(OnClickDetector.ISSUE);
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
         issues.add(HardcodedValuesDetector.ISSUE);
