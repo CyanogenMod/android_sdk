@@ -412,12 +412,7 @@ public class NewSetupTask extends Task {
                 antProject.setProperty(mTargetApiOut, value);
 
                 int projectApiLevel = androidVersion.getApiLevel();
-                if (minSdkValue < projectApiLevel) {
-                    System.out.println(String.format(
-                            "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is lower than the project target API level (%3$d)",
-                            AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
-                            minSdkValue, projectApiLevel));
-                } else if (minSdkValue > androidVersion.getApiLevel()) {
+                if (minSdkValue > androidVersion.getApiLevel()) {
                     System.out.println(String.format(
                             "WARNING: Attribute %1$s in AndroidManifest.xml (%2$d) is higher than the project target API level (%3$d)",
                             AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,

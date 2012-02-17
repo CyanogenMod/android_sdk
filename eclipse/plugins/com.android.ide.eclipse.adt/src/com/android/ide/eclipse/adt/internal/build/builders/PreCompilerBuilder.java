@@ -205,9 +205,11 @@ public class PreCompilerBuilder extends BaseBuilder {
     }
 
     // build() returns a list of project from which this project depends for future compilation.
-    @SuppressWarnings("unchecked")
     @Override
-    protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
+    protected IProject[] build(
+            int kind,
+            @SuppressWarnings("rawtypes") Map args,
+            IProgressMonitor monitor)
             throws CoreException {
         // get a project object
         IProject project = getProject();
@@ -411,15 +413,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                         BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
-                    } else if (minSdkValue < targetVersion.getApiLevel()) {
-                        // integer minSdk is not high enough for the target => warning
-                        String msg = String.format(
-                                "Attribute %1$s (%2$d) is lower than the project target API level (%3$d)",
-                                AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
-                                minSdkValue, targetVersion.getApiLevel());
-                        AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
-                                msg, IMarker.SEVERITY_WARNING);
                     } else if (minSdkValue > targetVersion.getApiLevel()) {
                         // integer minSdk is too high for the target => warning
                         String msg = String.format(
@@ -650,8 +643,8 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void handleBuildConfig(Map args) throws IOException, CoreException {
+    private void handleBuildConfig(@SuppressWarnings("rawtypes") Map args)
+            throws IOException, CoreException {
         boolean debugMode = !args.containsKey(RELEASE_REQUESTED);
 
         BuildConfigGenerator generator = new BuildConfigGenerator(
@@ -793,7 +786,10 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // launch aapt: create the command line
         ArrayList<String> array = new ArrayList<String>();
+
+        @SuppressWarnings("deprecation")
         String aaptPath = projectTarget.getPath(IAndroidTarget.AAPT);
+
         array.add(aaptPath);
         array.add("package"); //$NON-NLS-1$
         array.add("-m"); //$NON-NLS-1$
