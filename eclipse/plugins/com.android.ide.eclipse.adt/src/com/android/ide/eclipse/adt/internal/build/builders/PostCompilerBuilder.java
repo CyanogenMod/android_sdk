@@ -237,9 +237,11 @@ public class PostCompilerBuilder extends BaseBuilder {
     }
 
     // build() returns a list of project from which this project depends for future compilation.
-    @SuppressWarnings({"unchecked"})
     @Override
-    protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
+    protected IProject[] build(
+            int kind,
+            @SuppressWarnings("rawtypes") Map args,
+            IProgressMonitor monitor)
             throws CoreException {
         // get a project object
         IProject project = getProject();
