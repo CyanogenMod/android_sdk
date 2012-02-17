@@ -308,7 +308,7 @@ public class DurationMinimap extends Canvas {
                 resetColor = true;
             }
 
-            long duration = c.getDuration();
+            long duration = c.getWallDuration();
             if (c.getFunction() == Function.eglSwapBuffers) {
                 // egl swap buffers typically takes very little time, but since
                 // it is a significant call, we explicitly size it to the max length

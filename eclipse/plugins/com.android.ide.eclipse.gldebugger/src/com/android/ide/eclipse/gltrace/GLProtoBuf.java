@@ -1019,7 +1019,8 @@ public final class GLProtoBuf {
             @Override
             public Function findValueByNumber(int number) {
                 return Function.valueOf(number);
-            }};
+            }
+      };
 
       private final int index;
       private final int value;
@@ -2231,6 +2232,13 @@ public final class GLProtoBuf {
     public boolean hasFb() { return hasFb; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer getFb() { return fb_; }
 
+    // optional int32 threadtime = 8;
+    public static final int THREADTIME_FIELD_NUMBER = 8;
+    private boolean hasThreadtime;
+    private int threadtime_ = 0;
+    public boolean hasThreadtime() { return hasThreadtime; }
+    public int getThreadtime() { return threadtime_; }
+
     private void initFields() {
       function_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function.invalid;
       returnValue_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
@@ -2279,6 +2287,9 @@ public final class GLProtoBuf {
       if (hasFb()) {
         output.writeMessage(7, getFb());
       }
+      if (hasThreadtime()) {
+        output.writeInt32(8, getThreadtime());
+      }
     }
 
     private int memoizedSerializedSize = -1;
@@ -2315,6 +2326,10 @@ public final class GLProtoBuf {
       if (hasFb()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getFb());
+      }
+      if (hasThreadtime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(8, getThreadtime());
       }
       memoizedSerializedSize = size;
       return size;
@@ -2498,6 +2513,9 @@ public final class GLProtoBuf {
         if (other.hasFb()) {
           mergeFb(other.getFb());
         }
+        if (other.hasThreadtime()) {
+          setThreadtime(other.getThreadtime());
+        }
         return this;
       }
 
@@ -2559,6 +2577,10 @@ public final class GLProtoBuf {
               }
               input.readMessage(subBuilder, extensionRegistry);
               setFb(subBuilder.buildPartial());
+              break;
+            }
+            case 64: {
+              setThreadtime(input.readInt32());
               break;
             }
           }
@@ -2763,6 +2785,24 @@ public final class GLProtoBuf {
       public Builder clearFb() {
         result.hasFb = false;
         result.fb_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance();
+        return this;
+      }
+
+      // optional int32 threadtime = 8;
+      public boolean hasThreadtime() {
+        return result.hasThreadtime();
+      }
+      public int getThreadtime() {
+        return result.getThreadtime();
+      }
+      public Builder setThreadtime(int value) {
+        result.hasThreadtime = true;
+        result.threadtime_ = value;
+        return this;
+      }
+      public Builder clearThreadtime() {
+        result.hasThreadtime = false;
+        result.threadtime_ = 0;
         return this;
       }
 

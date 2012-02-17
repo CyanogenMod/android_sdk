@@ -49,7 +49,7 @@ import java.util.List;
 /** Dialog displaying all the trace options before the user initiates tracing. */
 public class GLTraceOptionsDialog extends TitleAreaDialog {
     private static final String TITLE = "OpenGL ES Trace Options";
-    private static final String DEFAULT_MESSAGE = "Provide the application and activity to be traced. The application needs to have INTERNET permission for tracing.";
+    private static final String DEFAULT_MESSAGE = "Provide the application and activity to be traced.";
 
     private static final String PREF_APPNAME = "gl.trace.appname";
     private static final String PREF_TRACEFILE = "gl.trace.destfile";

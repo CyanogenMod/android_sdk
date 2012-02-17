@@ -62,8 +62,11 @@ public class GLCall {
     /** GL Context identifier corresponding to the context of this call. */
     private final int mContextId;
 
-    /** Duration of this call. */
-    private final int mDuration;
+    /** Duration of this call (MONOTONIC/wall clock time). */
+    private final int mWallDuration;
+
+    /** Duration of this call (THREAD time). */
+    private final int mThreadDuration;
 
     /** List of state transformations performed by this call. */
     private final List<IStateTransform> mStateTransforms;
@@ -72,7 +75,8 @@ public class GLCall {
     private SparseArray<Object> mProperties;
 
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
-            Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration,
+            Image thumbnailImage, Function function, boolean hasFb, int contextId,
+            int wallTime, int threadTime,
             List<IStateTransform> stateTransforms) {
         mIndex = index;
         mStartTime = startTime;
@@ -82,7 +86,8 @@ public class GLCall {
         mFunction = function;
         mHasFb = hasFb;
         mContextId = contextId;
-        mDuration = duration;
+        mWallDuration = wallTime;
+        mThreadDuration = threadTime;
         mStateTransforms = stateTransforms;
     }
 
@@ -118,8 +123,12 @@ public class GLCall {
         return mStartTime;
     }
 
-    public int getDuration() {
-        return mDuration;
+    public int getWallDuration() {
+        return mWallDuration;
+    }
+
+    public int getThreadDuration() {
+        return mThreadDuration;
     }
 
     public List<IStateTransform> getStateTransformations() {
