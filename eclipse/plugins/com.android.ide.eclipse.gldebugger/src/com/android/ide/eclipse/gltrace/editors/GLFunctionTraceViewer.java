@@ -374,14 +374,23 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         tvc.setLabelProvider(labelProvider);
         TreeColumn column = tvc.getColumn();
         column.setText("Function");
-        column.setWidth(700);
+        column.setWidth(500);
 
-        // column showing the GL function duration
+        // column showing the GL function duration (wall clock time)
         tvc = new TreeViewerColumn(mFrameTreeViewer, SWT.NONE);
         tvc.setLabelProvider(labelProvider);
         column = tvc.getColumn();
-        column.setText("Duration");
+        column.setText("Wall Time (ns)");
         column.setWidth(150);
+        column.setAlignment(SWT.RIGHT);
+
+        // column showing the GL function duration (thread time)
+        tvc = new TreeViewerColumn(mFrameTreeViewer, SWT.NONE);
+        tvc.setLabelProvider(labelProvider);
+        column = tvc.getColumn();
+        column.setText("Thread Time (ns)");
+        column.setWidth(150);
+        column.setAlignment(SWT.RIGHT);
 
         mFrameTreeViewer.setContentProvider(new GLFrameContentProvider());
 
@@ -394,9 +403,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             @Override
             public void controlResized(ControlEvent e) {
                 int w = mFrameTreeViewer.getTree().getClientArea().width;
-                if (w > 100) {
+                if (w > 200) {
+                    mFrameTreeViewer.getTree().getColumn(2).setWidth(100);
                     mFrameTreeViewer.getTree().getColumn(1).setWidth(100);
-                    mFrameTreeViewer.getTree().getColumn(0).setWidth(w - 100);
+                    mFrameTreeViewer.getTree().getColumn(0).setWidth(w - 200);
                 }
             }
         });
@@ -537,10 +547,18 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                     return c.getFunction().toString();
                 }
             case 1:
-                return Integer.toString(c.getDuration());
+                return formatDuration(c.getWallDuration());
+            case 2:
+                return formatDuration(c.getThreadDuration());
             default:
                 return Integer.toString(c.getContextId());
             }
+        }
+
+        private String formatDuration(int time) {
+            // Max duration is in the 10s of milliseconds, so xx,xxx,xxx ns
+            // So we require a format specifier that is 10 characters wide
+            return String.format("%,10d", time);            //$NON-NLS-1$
         }
     }
 

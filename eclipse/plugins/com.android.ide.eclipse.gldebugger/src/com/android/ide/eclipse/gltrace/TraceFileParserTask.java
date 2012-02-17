@@ -106,6 +106,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 msg.hasFb(),
                                 msg.getContextId(),
                                 msg.getDuration(),
+                                msg.getThreadtime(),
                                 StateTransformFactory.getTransformsFor(msg));
 
         addProperties(c, msg);
