@@ -25,9 +25,31 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
         return new DeprecationDetector();
     }
 
-    public void testAbsoluteLayout() throws Exception {
+    public void testApi1() throws Exception {
         assertEquals(
-                "deprecation.xml:2: Warning: AbsoluteLayout is deprecated",
-                lintProject("res/layout/deprecation.xml"));
+            "deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable\n" +
+            "deprecation.xml:19: Warning: android:enabled is deprecated: Use state_enabled instead\n" +
+            "deprecation.xml:2: Warning: AbsoluteLayout is deprecated",
+
+            lintProject(
+                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                    "res/layout/deprecation.xml"));
+    }
+
+    public void testApi4() throws Exception {
+        assertEquals(
+            "deprecation.xml:16: Warning: android:autoText is deprecated: Use inputType instead\n" +
+            "deprecation.xml:17: Warning: android:capitalize is deprecated: Use inputType instead\n" +
+            "deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable\n" +
+            "deprecation.xml:19: Warning: android:enabled is deprecated: Use state_enabled instead\n" +
+            "deprecation.xml:20: Warning: android:inputMethod is deprecated: Use inputType instead\n" +
+            "deprecation.xml:21: Warning: android:numeric is deprecated: Use inputType instead\n" +
+            "deprecation.xml:22: Warning: android:password is deprecated: Use inputType instead\n" +
+            "deprecation.xml:23: Warning: android:phoneNumber is deprecated: Use inputType instead\n" +
+            "deprecation.xml:2: Warning: AbsoluteLayout is deprecated",
+
+            lintProject(
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "res/layout/deprecation.xml"));
     }
 }

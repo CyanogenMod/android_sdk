@@ -78,9 +78,11 @@ public class LintConstants {
     public static final String TAB_HOST = "TabHost";                   //$NON-NLS-1$
     public static final String RADIO_GROUP = "RadioGroup";             //$NON-NLS-1$
     public static final String RADIO_BUTTON = "RadioButton";           //$NON-NLS-1$
+    public static final String SWITCH = "Switch";                      //$NON-NLS-1$
     public static final String EDIT_TEXT = "EditText";                 //$NON-NLS-1$
     public static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     public static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
+    public static final String CHECKED_TEXT_VIEW = "CheckedTextView";  //$NON-NLS-1$
     public static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
     public static final String SURFACE_VIEW = "SurfaceView";           //$NON-NLS-1$
     public static final String ABSOLUTE_LAYOUT = "AbsoluteLayout";     //$NON-NLS-1$
@@ -153,8 +155,26 @@ public class LintConstants {
     public static final String ATTR_LAYOUT = "layout";                 //$NON-NLS-1$
     public static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
-    public static final String ATTR_BASELINE_ALIGNED = "baselineAligned"; //$NON-NLS-1$
+    public static final String ATTR_BASELINE_ALIGNED = "baselineAligned";       //$NON-NLS-1$
     public static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
+    public static final String ATTR_IME_ACTION_LABEL = "imeActionLabel";        //$NON-NLS-1$
+    public static final String ATTR_PRIVATE_IME_OPTIONS = "privateImeOptions";  //$NON-NLS-1$
+    public static final String VALUE_NONE = "none";                    //$NON-NLS-1$
+    public static final String ATTR_NUMERIC = "numeric";               //$NON-NLS-1$
+    public static final String ATTR_IME_ACTION_ID = "imeActionId";     //$NON-NLS-1$
+    public static final String ATTR_IME_OPTIONS = "imeOptions";        //$NON-NLS-1$
+    public static final String ATTR_FREEZES_TEXT = "freezesText";      //$NON-NLS-1$
+    public static final String ATTR_EDITOR_EXTRAS = "editorExtras";    //$NON-NLS-1$
+    public static final String ATTR_EDITABLE = "editable";             //$NON-NLS-1$
+    public static final String ATTR_DIGITS = "digits";                 //$NON-NLS-1$
+    public static final String ATTR_CURSOR_VISIBLE = "cursorVisible";  //$NON-NLS-1$
+    public static final String ATTR_CAPITALIZE = "capitalize";         //$NON-NLS-1$
+    public static final String ATTR_PHONE_NUMBER = "phoneNumber";      //$NON-NLS-1$
+    public static final String ATTR_PASSWORD = "password";             //$NON-NLS-1$
+    public static final String ATTR_BUFFER_TYPE = "bufferType";        //$NON-NLS-1$
+    public static final String ATTR_AUTO_TEXT = "autoText";            //$NON-NLS-1$
+    public static final String ATTR_ENABLED = "enabled";               //$NON-NLS-1$
+    public static final String ATTR_SINGLE_LINE = "singleLine";        //$NON-NLS-1$
 
     // AbsoluteLayout layout params
     public static final String ATTR_LAYOUT_Y = "layout_y";             //$NON-NLS-1$
@@ -203,6 +223,7 @@ public class LintConstants {
     public static final String VALUE_MATCH_PARENT = "match_parent";     //$NON-NLS-1$
     public static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
     public static final String VALUE_TRUE = "true";                     //$NON-NLS-1$
+    public static final String VALUE_EDITABLE = "editable";             //$NON-NLS-1$
 
 
     // Values: Resources
