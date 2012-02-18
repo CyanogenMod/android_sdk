@@ -197,7 +197,7 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put("MultiAutoCompleteTextView",          //$NON-NLS-1$
                 "AutoCompleteTextView");                  //$NON-NLS-1$
 
-        assert PARENTS.size() == CLASS_COUNT : PARENTS.size();
+        assert PARENTS.size() <= CLASS_COUNT : PARENTS.size();
 
         /*
         // Check that all widgets lead to the root view

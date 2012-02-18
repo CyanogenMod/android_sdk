@@ -415,7 +415,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                 return;
             }
             String name = attribute.getValue();
-            if (mMissingLocations.containsKey(name)) {
+            if (mMissingLocations != null && mMissingLocations.containsKey(name)) {
                 String language = getLanguage(context.file.getParentFile().getName());
                 if (language == null) {
                     if (context.getDriver().isSuppressed(MISSING, element)) {
@@ -429,7 +429,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                     mMissingLocations.put(name, location);
                 }
             }
-            if (mExtraLocations.containsKey(name)) {
+            if (mExtraLocations != null && mExtraLocations.containsKey(name)) {
                 if (context.getDriver().isSuppressed(EXTRA, element)) {
                     mExtraLocations.remove(name);
                     return;

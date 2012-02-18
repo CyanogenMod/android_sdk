@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG;
+import static com.android.tools.lint.detector.api.LintConstants.R_CLASS;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaScanner;
@@ -1112,18 +1115,36 @@ public class JavaVisitor {
         @Override
         public boolean visitVariableReference(@NonNull VariableReference node) {
             if (mVisitResources) {
-                if (node.astIdentifier().getDescription().equals("R") && //$NON-NLS-1$
+                String identifier = node.astIdentifier().getDescription();
+                if (identifier.equals(R_CLASS) &&
                         node.getParent() instanceof Select &&
                         node.getParent().getParent() instanceof Select) {
-                    for (VisitingDetector v : mResourceFieldDetectors) {
-                        Select parentSelect = (Select) node.getParent();
-                        Select grandParentSelect = (Select) parentSelect.getParent();
-                        String type = parentSelect.astIdentifier().astValue();
-                        String name = grandParentSelect.astIdentifier().astValue();
+                    Select parentSelect = (Select) node.getParent();
+                    Select grandParentSelect = (Select) parentSelect.getParent();
+                    String type = parentSelect.astIdentifier().astValue();
+                    String name = grandParentSelect.astIdentifier().astValue();
 
+                    for (VisitingDetector v : mResourceFieldDetectors) {
                         JavaScanner detector = v.getJavaScanner();
                         detector.visitResourceReference(mContext, v.getVisitor(), node,
-                                type, name);
+                                type, name, false /* isFramework */);
+                    }
+                } else if (identifier.equals(ANDROID_PKG)
+                            && node.getParent() instanceof Select) {
+                    Select parentSelect = (Select) node.getParent();
+                    if (parentSelect.astIdentifier().astValue().equals(R_CLASS)
+                            && parentSelect.getParent() instanceof Select
+                            && parentSelect.getParent().getParent() instanceof Select) {
+                        Select p2 = (Select) parentSelect.getParent();
+                        Select p3 = (Select) p2.getParent();
+                        String type = p2.astIdentifier().astValue();
+                        String name = p3.astIdentifier().astValue();
+
+                        for (VisitingDetector v : mResourceFieldDetectors) {
+                            JavaScanner detector = v.getJavaScanner();
+                            detector.visitResourceReference(mContext, v.getVisitor(), node,
+                                    type, name, true /* isFramework */);
+                        }
                     }
                 }
             }

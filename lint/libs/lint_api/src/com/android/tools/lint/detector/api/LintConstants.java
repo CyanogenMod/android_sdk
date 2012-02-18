@@ -36,6 +36,8 @@ public class LintConstants {
     /** Default prefix used for tools attributes */
     public static final String TOOLS_PREFIX = "tools";                 //$NON-NLS-1$
     public static final String XMLNS_PREFIX = "xmlns:";                //$NON-NLS-1$
+    public static final String R_CLASS = "R";                          //$NON-NLS-1$
+    public static final String ANDROID_PKG = "android";                //$NON-NLS-1$
 
     // Tags: Manifest
     public static final String TAG_SERVICE = "service";                //$NON-NLS-1$
@@ -265,6 +267,7 @@ public class LintConstants {
     public static final String STYLE_RESOURCE_PREFIX = "@style/";       //$NON-NLS-1$
     public static final String STRING_RESOURCE_PREFIX = "@string/";     //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ID = "id";                  //$NON-NLS-1$
+    public static final String RESOURCE_CLZ_COLOR = "color";            //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ARRAY = "array";            //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ATTR = "attr";              //$NON-NLS-1$
     public static final String RESOURCE_CLR_STYLEABLE = "styleable";    //$NON-NLS-1$

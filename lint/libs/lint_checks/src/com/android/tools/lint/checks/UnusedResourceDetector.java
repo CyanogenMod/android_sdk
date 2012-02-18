@@ -28,6 +28,7 @@ import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARR
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.R_ATTR_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.R_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.R_ID_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.R_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
@@ -434,8 +435,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     @Override
     public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            VariableReference node, String type, String name) {
-        if (mReferences != null) {
+            VariableReference node, String type, String name, boolean isFramework) {
+        if (mReferences != null && !isFramework) {
             String reference = R_PREFIX + type + '.' + name;
             mReferences.add(reference);
         }
@@ -457,7 +458,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         // and store them in mReferences
         @Override
         public boolean visitVariableReference(VariableReference node) {
-            if (node.astIdentifier().getDescription().equals("R") &&
+            if (node.astIdentifier().getDescription().equals(R_CLASS) &&
                     node.getParent() instanceof Select &&
                     node.getParent().getParent() instanceof Select) {
                 String reference = node.getParent().getParent().toString();
@@ -472,7 +473,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             // Look for declarations of R class fields and store them in
             // mDeclarations
             String description = node.getDescription();
-            if (description.equals("R")) { //$NON-NLS-1$
+            if (description.equals(R_CLASS)) {
                 // This is an R class. We can process this class very deliberately.
                 // The R class has a very specific AST format:
                 // ClassDeclaration ("R")

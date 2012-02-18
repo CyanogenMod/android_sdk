@@ -182,13 +182,16 @@ public abstract class Detector {
          * @param type the resource type, such as "layout" or "string"
          * @param name the resource name, such as "main" from
          *            {@code R.layout.main}
+         * @param isFramework whether the resource is a framework resource
+         *            (android.R) or a local project resource (R)
          */
         void visitResourceReference(
                 @NonNull JavaContext context,
                 @Nullable AstVisitor visitor,
                 @NonNull VariableReference node,
                 @NonNull String type,
-                @NonNull String name);
+                @NonNull String name,
+                boolean isFramework);
     }
 
     /** Specialized interface for detectors that scan Java class files */
@@ -441,7 +444,7 @@ public abstract class Detector {
 
     @SuppressWarnings("javadoc")
     public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
-            @NonNull VariableReference node, @NonNull String type, @NonNull String name) {
+            @NonNull VariableReference node, @NonNull String type, @NonNull String name, boolean isFramework) {
     }
 
     // ---- Dummy implementations to make implementing a ClassScanner easier: ----
