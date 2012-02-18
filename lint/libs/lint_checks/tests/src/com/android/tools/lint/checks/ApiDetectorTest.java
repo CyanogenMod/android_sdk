@@ -55,6 +55,34 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     ));
     }
 
+    public void testXmlApiFolderVersion11() throws Exception {
+        assertEquals(
+                "colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
+                "layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout>\n" +
+                "layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1)\n" +
+                "layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
+                "themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)",
+
+                lintProject(
+                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                    "apicheck/layout.xml=>res/layout-v11/layout.xml",
+                    "apicheck/themes.xml=>res/values-v11/themes.xml",
+                    "apicheck/themes.xml=>res/color-v11/colors.xml"
+                    ));
+    }
+
+    public void testXmlApiFolderVersion14() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                    "apicheck/layout.xml=>res/layout-v14/layout.xml",
+                    "apicheck/themes.xml=>res/values-v14/themes.xml",
+                    "apicheck/themes.xml=>res/color-v14/colors.xml"
+                    ));
+    }
+
     public void testApi1() throws Exception {
         assertEquals(
             "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar\n" +
