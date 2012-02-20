@@ -136,6 +136,9 @@ public final class Category implements Comparable<Category> {
         return other.mPriority - mPriority;
     }
 
+    /** Issues related to running lint itself */
+    public static final Category LINT = Category.create("Lint", 110);
+
     /** Issues related to correctness */
     public static final Category CORRECTNESS = Category.create("Correctness", 100);
 

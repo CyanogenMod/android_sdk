@@ -830,8 +830,12 @@ public class LintDriver {
         List<File> classFolders = project.getJavaClassFolders();
         List<ClassEntry> classEntries;
         if (classFolders.size() == 0) {
-            //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
-            //        "output folders found. Does the project need to be built first?");
+            String message = String.format("No .class files were found in project \"%1$s\", "
+                    + "so none of the classfile based checks could be run. "
+                    + "Does the project need to be built first?", project.getName());
+            Location location = Location.create(project.getDir());
+            mClient.report(new Context(this, project, main, project.getDir()),
+                    IssueRegistry.LINT_ERROR, location, message, null);
             classEntries = Collections.emptyList();
         } else {
             classEntries = new ArrayList<ClassEntry>(64);
@@ -1247,7 +1251,7 @@ public class LintDriver {
                 @Nullable Object data) {
             Configuration configuration = context.getConfiguration();
             if (!configuration.isEnabled(issue)) {
-                if (issue != IssueRegistry.PARSER_ERROR) {
+                if (issue != IssueRegistry.PARSER_ERROR && issue != IssueRegistry.LINT_ERROR) {
                     mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
                             issue.toString());
                 }

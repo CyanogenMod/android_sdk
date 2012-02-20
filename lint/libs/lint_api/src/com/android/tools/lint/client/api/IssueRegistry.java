@@ -61,6 +61,27 @@ public abstract class IssueRegistry {
             Scope.RESOURCE_FILE_SCOPE);
 
     /**
+     * Issue reported by lint for various other issues which prevents lint from
+     * running normally when it's not necessarily an error in the user's code base.
+     */
+    @NonNull
+    public static final Issue LINT_ERROR = Issue.create(
+            "LintError", //$NON-NLS-1$
+            "Isues related to running lint itself, such as failure to read files, etc",
+            "This issue type represents a problem running lint itself. Examples include " +
+            "failure to find bytecode for source files (which means certain detectors " +
+            "could not be run), parsing errors in lint configuration files, etc." +
+            "\n" +
+            "These errors are not errors in your own code, but they are shown to make " +
+            "it clear that some checks were not completed.",
+
+            Category.LINT,
+            10,
+            Severity.ERROR,
+            null,
+            Scope.RESOURCE_FILE_SCOPE);
+
+    /**
      * Returns the list of issues that can be found by all known detectors.
      *
      * @return the list of issues to be checked (including those that may be
@@ -213,6 +234,7 @@ public abstract class IssueRegistry {
             }
 
             sIdToIssue.put(PARSER_ERROR.getId(), PARSER_ERROR);
+            sIdToIssue.put(LINT_ERROR.getId(), LINT_ERROR);
         }
         return sIdToIssue.get(id);
     }

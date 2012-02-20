@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
+import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
@@ -1030,7 +1032,7 @@ public class Main extends LintClient {
                 }
             }
 
-            if (mCheck != null) {
+            if (mCheck != null && issue != LINT_ERROR && issue != PARSER_ERROR) {
                 return Severity.IGNORE;
             }
 
@@ -1081,6 +1083,9 @@ public class Main extends LintClient {
                 chop++;
             }
             path = path.substring(chop);
+            if (path.length() == 0) {
+                path = file.getName();
+            }
         }
 
         return path;

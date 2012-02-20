@@ -125,7 +125,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     @Override
     public void afterCheckFile(Context context) {
-        if (mSeenUsesSdk == 0) {
+        if (mSeenUsesSdk == 0 && context.isEnabled(USES_SDK)) {
             context.report(USES_SDK, Location.create(context.file),
                     "Manifest should specify a minimum API level with " +
                     "<uses-sdk android:minSdkVersion=\"?\" />; if it really supports " +
@@ -175,34 +175,42 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                 }
                 location.setSecondary(secondary);
 
-                context.report(MULTIPLE_USES_SDK, element, location,
+                if (context.isEnabled(MULTIPLE_USES_SDK)) {
+                    context.report(MULTIPLE_USES_SDK, element, location,
                         "There should only be a single <uses-sdk> element in the manifest:" +
                         " merge these together", null);
+                }
                 return;
             }
 
             if (!element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
-                context.report(USES_SDK, element, context.getLocation(element),
+                if (context.isEnabled(USES_SDK)) {
+                    context.report(USES_SDK, element, context.getLocation(element),
                         "<uses-sdk> tag should specify a minimum API level with " +
                         "android:minSdkVersion=\"?\"", null);
+                }
             } else if (context.getProject().getMinSdk() <= 9
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
                 // Warn if not setting target SDK -- but only if the min SDK is somewhat
                 // old so there's some compatibility stuff kicking in (such as the menu
                 // button etc)
-                context.report(USES_SDK, element, context.getLocation(element),
+                if (context.isEnabled(USES_SDK)) {
+                    context.report(USES_SDK, element, context.getLocation(element),
                         "<uses-sdk> tag should specify a target API level (the " +
                         "highest verified version; when running on later versions, " +
                         "compatibility behaviors may be enabled) with " +
                         "android:targetSdkVersion=\"?\"", null);
+                }
             }
         }
 
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
         } else if (mSeenApplication) {
-            context.report(ORDER, element, context.getLocation(element),
+            if (context.isEnabled(ORDER)) {
+                context.report(ORDER, element, context.getLocation(element),
                     String.format("<%1$s> tag appears after <application> tag", tag), null);
+            }
 
             // Don't complain for *every* element following the <application> tag
             mSeenApplication = false;
