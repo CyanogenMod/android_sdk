@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ABS_SEEK_BAR;
 import static com.android.tools.lint.detector.api.LintConstants.ABS_SPINNER;
 import static com.android.tools.lint.detector.api.LintConstants.ADAPTER_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.BUTTON;
+import static com.android.tools.lint.detector.api.LintConstants.CHECKED_TEXT_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.CHECK_BOX;
 import static com.android.tools.lint.detector.api.LintConstants.COMPOUND_BUTTON;
 import static com.android.tools.lint.detector.api.LintConstants.EDIT_TEXT;
@@ -42,6 +43,7 @@ import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.SEEK_BAR;
 import static com.android.tools.lint.detector.api.LintConstants.SPINNER;
 import static com.android.tools.lint.detector.api.LintConstants.SURFACE_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.SWITCH;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.TAB_HOST;
@@ -126,7 +128,7 @@ class DefaultSdkInfo extends SdkInfo {
         return false;
     }
 
-    private static final int CLASS_COUNT = 57;
+    private static final int CLASS_COUNT = 59;
 
     @NonNull
     private static final Map<String, String> PARENTS = new HashMap<String, String>(CLASS_COUNT);
@@ -140,6 +142,7 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(VIEW_GROUP, VIEW);
 
         PARENTS.put(TEXT_VIEW, VIEW);
+        PARENTS.put(CHECKED_TEXT_VIEW, TEXT_VIEW);
         PARENTS.put(RADIO_BUTTON, COMPOUND_BUTTON);
         PARENTS.put(SPINNER, ABS_SPINNER);
         PARENTS.put(IMAGE_BUTTON, IMAGE_VIEW);
@@ -151,6 +154,7 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(BUTTON, TEXT_VIEW);
         PARENTS.put(SEEK_BAR, ABS_SEEK_BAR);
         PARENTS.put(CHECK_BOX, COMPOUND_BUTTON);
+        PARENTS.put(SWITCH, COMPOUND_BUTTON);
         PARENTS.put(GALLERY, ABS_SPINNER);
         PARENTS.put(SURFACE_VIEW, VIEW);
         PARENTS.put(ABSOLUTE_LAYOUT, VIEW_GROUP);
