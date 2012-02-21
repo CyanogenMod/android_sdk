@@ -307,8 +307,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             getEditor().removePage(i);
         }
 
-        // set the current input.
-        setInputWithNotify(editorInput);
+        // set the current input. We're in the delegate, the input must
+        // be set into the actual editor instance.
+        getEditor().setInputWithNotify(editorInput);
 
         // re-create or reload the pages with the default page shown as the previous active page.
         getEditor().createAndroidPages();

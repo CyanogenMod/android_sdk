@@ -271,7 +271,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     }
 
     @Override
-    protected void setInputWithNotify(IEditorInput input) {
+    public void setInputWithNotify(IEditorInput input) {
         super.setInputWithNotify(input);
         if (mDelegate instanceof LayoutEditorDelegate) {
             ((LayoutEditorDelegate) mDelegate).setInputWithNotify(input);
