@@ -25,7 +25,7 @@ import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.DetailsPage;
-import com.android.ide.eclipse.gltrace.views.FrameBufferViewPage;
+import com.android.ide.eclipse.gltrace.views.FrameSummaryViewPage;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -112,7 +112,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private boolean mShowContextSwitcher;
     private int mCurrentlyDisplayedContext = -1;
 
-    private FrameBufferViewPage mFrameBufferViewPage;
+    private FrameSummaryViewPage mFrameSummaryViewPage;
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
@@ -276,9 +276,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         // update minimap view
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
 
-        // update FB view
-        if (mFrameBufferViewPage != null) {
-            mFrameBufferViewPage.setSelectedFrame(selectedFrame - 1);
+        // update the frame summary view
+        if (mFrameSummaryViewPage != null) {
+            mFrameSummaryViewPage.setSelectedFrame(selectedFrame - 1);
         }
     }
 
@@ -656,12 +656,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         return new StateViewPage(mTrace);
     }
 
-    public FrameBufferViewPage getFrameBufferViewPage() {
-        if (mFrameBufferViewPage == null) {
-            mFrameBufferViewPage = new FrameBufferViewPage(mTrace);
+    public FrameSummaryViewPage getFrameSummaryViewPage() {
+        if (mFrameSummaryViewPage == null) {
+            mFrameSummaryViewPage = new FrameSummaryViewPage(mTrace);
         }
 
-        return mFrameBufferViewPage;
+        return mFrameSummaryViewPage;
     }
 
     public DetailsPage getDetailsPage() {

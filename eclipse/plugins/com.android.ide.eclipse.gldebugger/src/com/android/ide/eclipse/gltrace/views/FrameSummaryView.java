@@ -21,13 +21,12 @@ import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * The {@link FrameBufferView} displays the contents of the frame buffer for the
- * currently displayed frame.
+ * The {@link FrameSummaryView} is a page book view with pages of type {@link FrameSummaryViewPage}.
  */
-public class FrameBufferView extends GLPageBookView {
+public class FrameSummaryView extends GLPageBookView {
     public static final String ID = "com.android.ide.eclipse.gltrace.views.FrameBuffer"; //$NON-NLS-1$
 
-    public FrameBufferView() {
+    public FrameSummaryView() {
         super("Open a GL Trace file to view the framebuffer contents.");
     }
 
@@ -38,7 +37,7 @@ public class FrameBufferView extends GLPageBookView {
         }
 
         GLFunctionTraceViewer viewer = (GLFunctionTraceViewer) part;
-        FrameBufferViewPage page = viewer.getFrameBufferViewPage();
+        FrameSummaryViewPage page = viewer.getFrameSummaryViewPage();
         initPage(page);
         page.createControl(getPageBook());
 
@@ -47,7 +46,7 @@ public class FrameBufferView extends GLPageBookView {
 
     @Override
     protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
-        FrameBufferViewPage page = (FrameBufferViewPage) pageRecord.page;
+        FrameSummaryViewPage page = (FrameSummaryViewPage) pageRecord.page;
         page.dispose();
         pageRecord.dispose();
     }
