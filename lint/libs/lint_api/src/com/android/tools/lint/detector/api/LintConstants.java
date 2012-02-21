@@ -44,6 +44,8 @@ public class LintConstants {
     public static final String TAG_INTENT_FILTER = "intent-filter";    //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
     public static final String TAG_ACTIVITY = "activity";              //$NON-NLS-1$
+    public static final String TAG_RECEIVER = "receiver";              //$NON-NLS-1$
+    public static final String TAG_PROVIDER = "provider";              //$NON-NLS-1$
     public static final String TAG_GRANT_PERMISSION = "grant-uri-permission"; //$NON-NLS-1$
 
     // Tags: Resources

@@ -355,7 +355,8 @@ public class ClassContext extends Context {
 
     /**
      * Computes a user-readable type signature from the given class owner, name
-     * and description
+     * and description. For example, for owner="foo/bar/Foo$Baz", name="foo",
+     * description="(I)V", it returns "void foo.bar.Foo.Bar#foo(int)".
      *
      * @param owner the class name
      * @param name the method name
@@ -405,5 +406,31 @@ public class ClassContext extends Context {
         }
 
         return s;
+    }
+
+    /**
+     * Computes the internal class name of the given fully qualified class name.
+     * For example, it converts foo.bar.Foo.Bar into foo/bar/Foo$Bar
+     *
+     * @param fqcn the fully qualified class name
+     * @return the internal class name
+     */
+    public static String getInternalName(String fqcn) {
+        String[] parts = fqcn.split("\\."); //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder();
+        String prev = null;
+        for (String part : parts) {
+            if (prev != null) {
+                if (Character.isUpperCase(prev.charAt(0))) {
+                    sb.append('$');
+                } else {
+                    sb.append('/');
+                }
+            }
+            sb.append(part);
+            prev = part;
+        }
+
+        return sb.toString();
     }
 }
