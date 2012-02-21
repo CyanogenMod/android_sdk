@@ -137,29 +137,11 @@ public class SdkStatsService {
      * @param id of the local installation
      * @throws IOException if the ping failed
      */
-    @SuppressWarnings("deprecation")
     private static void actuallySendPing(String app, String version, long id)
                 throws IOException {
-        // Detect and report the host OS.
-        String os = System.getProperty("os.name");          //$NON-NLS-1$
-        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
-            os = "mac";                                     //$NON-NLS-1$
-            String osVers = getVersion();
-            if (osVers != null) {
-                os = os + "-" + osVers;                     //$NON-NLS-1$
-            }
-        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
-            os = "win";                                     //$NON-NLS-1$
-            String osVers = getVersion();
-            if (osVers != null) {
-                os = os + "-" + osVers;                     //$NON-NLS-1$
-            }
-        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
-            os = "linux";                                   //$NON-NLS-1$
-        } else {
-            // Unknown -- surprising -- send it verbatim so we can see it.
-            os = URLEncoder.encode(os);
-        }
+        String osName  = URLEncoder.encode(getOsName(),  "UTF-8");
+        String osArch  = URLEncoder.encode(getOsArch(),  "UTF-8");
+        String jvmArch = URLEncoder.encode(getJvmInfo(), "UTF-8");
 
         // Include the application's name as part of the as= value.
         // Share the user ID for all apps, to allow unified activity reports.
@@ -170,7 +152,9 @@ public class SdkStatsService {
             "/service/update?as=androidsdk_" + app +        //$NON-NLS-1$
                 "&id=" + Long.toHexString(id) +             //$NON-NLS-1$
                 "&version=" + version +                     //$NON-NLS-1$
-                "&os=" + os);                               //$NON-NLS-1$
+                "&os=" + osName +                           //$NON-NLS-1$
+                "&osa=" + osArch +                          //$NON-NLS-1$
+                "&vma=" + jvmArch);                         //$NON-NLS-1$
 
         // Discard the actual response, but make sure it reads OK
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -185,21 +169,185 @@ public class SdkStatsService {
     }
 
     /**
-     * Returns the version of the os if it is defined as X.Y, or null otherwise.
+     * Detects and reports the host OS: "linux", "win" or "mac".
+     * For Windows and Mac also append the version, so for example
+     * Win XP will return win-5.1.
+     */
+    private static String getOsName() {
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+
+        if (os == null || os.length() == 0) {
+            return "unknown";                               //$NON-NLS-1$
+        }
+
+        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+            os = "mac";                                     //$NON-NLS-1$
+            String osVers = getOsVersion();
+            if (osVers != null) {
+                os = os + '-' + osVers;
+            }
+        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
+            os = "win";                                     //$NON-NLS-1$
+            String osVers = getOsVersion();
+            if (osVers != null) {
+                os = os + '-' + osVers;
+            }
+        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+            os = "linux";                                   //$NON-NLS-1$
+
+        } else if (os.length() > 32) {
+            // Unknown -- send it verbatim so we can see it
+            // but protect against arbitrarily long values
+            os = os.substring(0, 32);
+        }
+        return os;
+    }
+
+    /**
+     * Detects and returns the OS architecture: x86, x86_64, ppc.
+     * This may differ or be equal to the JVM architecture in the sense that
+     * a 64-bit OS can run a 32-bit JVM.
+     */
+    private static String getOsArch() {
+        String arch = getJvmArch();
+
+        if ("x86_64".equals(arch)) {                                    //$NON-NLS-1$
+            // This is a simple case: the JVM runs in 64-bit so the
+            // OS must be a 64-bit one.
+            return arch;
+
+        } else if ("x86".equals(arch)) {                                //$NON-NLS-1$
+            // This is the misleading case: the JVM is 32-bit but the OS
+            // might be either 32 or 64. We can't tell just from this
+            // property.
+            // Macs are always on 64-bit, so we just need to figure it
+            // out for Windows and Linux.
+
+            String os = getOsName();
+            if (os.startsWith("win")) {                                 //$NON-NLS-1$
+                // When WOW64 emulates a 32-bit environment under a 64-bit OS,
+                // it sets PROCESSOR_ARCHITEW6432 to AMD64 or IA64 accordingly.
+                // Ref: http://msdn.microsoft.com/en-us/library/aa384274(v=vs.85).aspx
+
+                String w6432 = System.getenv("PROCESSOR_ARCHITEW6432"); //$NON-NLS-1$
+                if (w6432 != null && w6432.indexOf("64") != -1) {       //$NON-NLS-1$
+                    return "x86_64";                                    //$NON-NLS-1$
+                }
+            } else if (os.startsWith("linux")) {                        //$NON-NLS-1$
+                // Let's try the obvious. This works in Ubuntu and Debian
+                String s = System.getenv("HOSTTYPE");                   //$NON-NLS-1$
+
+                s = sanitizeOsArch(s);
+                if (s.indexOf("86") != -1) {
+                    arch = s;
+                }
+            }
+        }
+
+        return arch;
+    }
+
+    /**
+     * Returns the version of the OS version if it is defined as X.Y, or null otherwise.
      * <p/>
      * Example of returned versions can be found at http://lopica.sourceforge.net/os.html
      * <p/>
      * This method removes any exiting micro versions.
      */
-    private static String getVersion() {
+    private static String getOsVersion() {
         Pattern p = Pattern.compile("(\\d+)\\.(\\d+).*"); //$NON-NLS-1$
         String osVers = System.getProperty("os.version"); //$NON-NLS-1$
         Matcher m = p.matcher(osVers);
         if (m.matches()) {
-            return m.group(1) + "." + m.group(2);         //$NON-NLS-1$
+            return m.group(1) + '.' + m.group(2);
         }
 
         return null;
+    }
+
+    /**
+     * Detects and returns the JVM info: version + architecture.
+     * Examples: 1.4-ppc, 1.6-x86, 1.7-x86_64
+     */
+    private static String getJvmInfo() {
+        return getJvmVersion() + '-' + getJvmArch();
+    }
+
+    /**
+     * Returns the major.minor Java version.
+     * <p/>
+     * The "java.version" property returns something like "1.6.0_20"
+     * of which we want to return "1.6".
+     */
+    private static String getJvmVersion() {
+        String version = System.getProperty("java.version");    //$NON-NLS-1$
+
+        if (version == null || version.length() == 0) {
+            return "unknown";                                   //$NON-NLS-1$
+        }
+
+        Pattern p = Pattern.compile("(\\d+)\\.(\\d+).*");       //$NON-NLS-1$
+        Matcher m = p.matcher(version);
+        if (m.matches()) {
+            return m.group(1) + '.' + m.group(2);
+        }
+
+        // Unknown version. Send it as-is within a reasonable size limit.
+        if (version.length() > 8) {
+            version = version.substring(0, 8);
+        }
+        return version;
+    }
+
+    /**
+     * Detects and returns the JVM architecture.
+     * <p/>
+     * The HotSpot JVM has a private property for this, "sun.arch.data.model",
+     * which returns either "32" or "64". However it's not in any kind of spec.
+     * <p/>
+     * What we want is to know whether the JVM is running in 32-bit or 64-bit and
+     * the best indicator is to use the "os.arch" property.
+     * - On a 32-bit system, only a 32-bit JVM can run so it will be x86 or ppc.<br/>
+     * - On a 64-bit system, a 32-bit JVM will also return x86 since the OS needs
+     *   to masquerade as a 32-bit OS for backward compatibility.<br/>
+     * - On a 64-bit system, a 64-bit JVM will properly return x86_64.
+     * <pre>
+     * JVM:       Java 32-bit   Java 64-bit
+     * Windows:   x86           x86_64
+     * Linux:     x86           x86_64
+     * Mac        untested      x86_64
+     * </pre>
+     */
+    private static String getJvmArch() {
+        String arch = System.getProperty("os.arch");        //$NON-NLS-1$
+        return sanitizeOsArch(arch);
+    }
+
+    private static String sanitizeOsArch(String arch) {
+        if (arch == null || arch.length() == 0) {
+            return "unknown";                               //$NON-NLS-1$
+        }
+
+        if (arch.equalsIgnoreCase("x86_64") ||              //$NON-NLS-1$
+                arch.equalsIgnoreCase("ia64") ||            //$NON-NLS-1$
+                arch.equalsIgnoreCase("amd64")) {           //$NON-NLS-1$
+            return "x86_64";                                //$NON-NLS-1$
+        }
+
+        if (arch.length() == 4 && arch.charAt(0) == 'i' && arch.lastIndexOf("86") == 2) {
+            // Any variation of iX86 counts as x86 (i386, i486, i686).
+            return "x86";                                   //$NON-NLS-1$
+        }
+
+        if (arch.equalsIgnoreCase("PowerPC")) {             //$NON-NLS-1$
+            return "ppc";                                   //$NON-NLS-1$
+        }
+
+        // Unknown arch. Send it as-is but protect against arbitrarily long values.
+        if (arch.length() > 32) {
+            arch = arch.substring(0, 32);
+        }
+        return arch;
     }
 
     /**
@@ -210,25 +358,25 @@ public class SdkStatsService {
      */
     private static String normalizeVersion(String app, String version) {
         // Application name must contain only word characters (no punctuation)
-        if (!app.matches("\\w+")) {
-            throw new IllegalArgumentException("Bad app name: " + app);
+        if (!app.matches("\\w+")) {                                             //$NON-NLS-1$
+            throw new IllegalArgumentException("Bad app name: " + app);         //$NON-NLS-1$
         }
 
         // Version must be between 1 and 4 dotted numbers
-        String[] numbers = version.split("\\.");
+        String[] numbers = version.split("\\.");                                //$NON-NLS-1$
         if (numbers.length > 4) {
-            throw new IllegalArgumentException("Bad version: " + version);
+            throw new IllegalArgumentException("Bad version: " + version);      //$NON-NLS-1$
         }
         for (String part: numbers) {
-            if (!part.matches("\\d+")) {
-                throw new IllegalArgumentException("Bad version: " + version);
+            if (!part.matches("\\d+")) {                                        //$NON-NLS-1$
+                throw new IllegalArgumentException("Bad version: " + version);  //$NON-NLS-1$
             }
         }
 
         // Always output 4 numbers, even if fewer were supplied (pad with .0)
         StringBuffer normal = new StringBuffer(numbers[0]);
         for (int i = 1; i < 4; i++) {
-            normal.append(".").append(i < numbers.length ? numbers[i] : "0");
+            normal.append('.').append(i < numbers.length ? numbers[i] : "0");   //$NON-NLS-1$
         }
         return normal.toString();
     }
