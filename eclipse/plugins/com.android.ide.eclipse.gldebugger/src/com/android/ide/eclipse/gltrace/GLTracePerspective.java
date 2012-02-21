@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import com.android.ide.eclipse.gltrace.views.DetailsView;
 import com.android.ide.eclipse.gltrace.views.FrameSummaryView;
 import com.android.ide.eclipse.gltrace.views.StateView;
+import com.android.ide.eclipse.gltrace.views.detail.DetailsView;
 
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;

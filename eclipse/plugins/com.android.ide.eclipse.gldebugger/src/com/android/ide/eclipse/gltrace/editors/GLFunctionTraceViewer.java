@@ -24,8 +24,8 @@ import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
-import com.android.ide.eclipse.gltrace.views.DetailsPage;
 import com.android.ide.eclipse.gltrace.views.FrameSummaryViewPage;
+import com.android.ide.eclipse.gltrace.views.detail.DetailsPage;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;

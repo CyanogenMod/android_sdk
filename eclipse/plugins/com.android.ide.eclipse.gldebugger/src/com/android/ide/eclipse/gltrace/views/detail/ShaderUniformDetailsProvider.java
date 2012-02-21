@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Text;
 import java.util.Collections;
 import java.util.List;
 
-public class ShaderUniformDetailsProvider implements IStateDetailsProvider {
+public class ShaderUniformDetailsProvider implements IStateDetailProvider {
     private Text mTextControl;
     private static final Joiner JOINER = Joiner.on(", ");
 

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
+import com.android.ide.eclipse.gltrace.views.GLPageBookView;
 
 import org.eclipse.ui.IWorkbenchPart;
 

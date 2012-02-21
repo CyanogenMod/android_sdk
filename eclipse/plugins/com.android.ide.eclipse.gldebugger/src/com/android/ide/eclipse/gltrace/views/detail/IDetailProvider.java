@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
-
-import com.android.ide.eclipse.gltrace.state.IGLProperty;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.swt.widgets.Composite;
@@ -24,10 +22,7 @@ import org.eclipse.swt.widgets.Control;
 
 import java.util.List;
 
-public interface IStateDetailsProvider {
-    /** Is this provider applicable for given GL state property? */
-    boolean isApplicable(IGLProperty state);
-
+public interface IDetailProvider {
     /** Create the controls to display the details. */
     void createControl(Composite parent);
 
@@ -37,8 +32,6 @@ public interface IStateDetailsProvider {
     /** Obtain the top level control used by this detail provider. */
     Control getControl();
 
-    /** Update the detail view for given GL state property. */
-    void updateControl(IGLProperty state);
 
     /** Obtain a list of tool bar items to be displayed when this provider is active. */
     List<IContributionItem> getToolBarItems();

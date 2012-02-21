@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Text;
 import java.util.Collections;
 import java.util.List;
 
-public class ShaderSourceDetailsProvider implements IStateDetailsProvider {
+public class ShaderSourceDetailsProvider implements IStateDetailProvider {
     private Text mTextControl;
 
     @Override

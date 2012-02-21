@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.GLStringProperty;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.android.ide.eclipse.gltrace.views.FitToCanvasAction;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
 import org.eclipse.jface.action.ActionContributionItem;
@@ -32,7 +33,7 @@ import org.eclipse.swt.widgets.Display;
 import java.util.Collections;
 import java.util.List;
 
-public class TextureImageDetailsProvider implements IStateDetailsProvider {
+public class TextureImageDetailsProvider implements IStateDetailProvider {
     private ImageCanvas mImageCanvas;
     private FitToCanvasAction mFitToCanvasAction;
     private List<IContributionItem> mToolBarItems;
