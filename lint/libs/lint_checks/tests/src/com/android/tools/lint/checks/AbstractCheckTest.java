@@ -258,6 +258,10 @@ public abstract class AbstractCheckTest extends TestCase {
         return false;
     }
 
+    protected boolean includeParentPath() {
+        return false;
+    }
+
     public class TestLintClient extends Main {
         private List<String> mErrors = new ArrayList<String>();
 
@@ -270,12 +274,16 @@ public abstract class AbstractCheckTest extends TestCase {
                 Object data) {
             StringBuilder sb = new StringBuilder();
 
+            if (issue == IssueRegistry.LINT_ERROR) {
+                return;
+            }
+
             if (location != null && location.getFile() != null) {
                 // Include parent directory for locations that have alternates, since
                 // frequently the file name is the same across different resource folders
                 // and we want to make sure in the tests that we're indeed passing the
                 // right files in as secondary locations
-                if (location.getSecondary() != null) {
+                if (location.getSecondary() != null || includeParentPath()) {
                     sb.append(location.getFile().getParentFile().getName() + "/"
                             + location.getFile().getName());
                 } else {

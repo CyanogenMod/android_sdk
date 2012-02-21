@@ -25,18 +25,21 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         return new TranslationDetector();
     }
 
+    @Override
+    protected boolean includeParentPath() {
+        return true;
+    }
+
     public void testTranslation() throws Exception {
         TranslationDetector.COMPLETE_REGIONS = false;
         assertEquals(
             // Sample files from the Home app
-            "values-cs: Error: Locale cs is missing translations for: menu_settings\n" +
-            "values-de-rDE: Error: Locale de-rDE is missing translations for: menu_settings\n" +
-            "values-de-rDE: Warning: Locale de-rDE is translating names not found in default locale: continue_skip_label\n" +
-            "values-es-rUS: Error: Locale es-rUS is missing translations for: menu_settings\n" +
-            "values-es-rUS: Warning: Locale es-rUS is translating names not found in default locale: security_questions\n" +
-            "values-es: Error: Locale es is missing translations for: menu_settings\n" +
-            "values-es: Warning: Locale es is translating names not found in default locale: security_questions\n" +
-            "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
+            "values-cs/arrays.xml:3: Warning: \"security_questions\" is translated here but not found in default locale\n" +
+            "=> values-es/strings.xml:12: Also translated here\n" +
+            "values-de-rDE/strings.xml:11: Warning: \"continue_skip_label\" is translated here but not found in default locale\n" +
+            "values/strings.xml:20: Error: \"show_all_apps\" is not translated in nl-rNL\n" +
+            "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in nl-rNL\n" +
+            "values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es, es-rUS, nl-rNL",
 
             lintProject(
                  "res/values/strings.xml",
@@ -45,6 +48,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-es/strings.xml",
                  "res/values-es-rUS/strings.xml",
                  "res/values-land/strings.xml",
+                 "res/values-cs/arrays.xml",
                  "res/values-es/donottranslate.xml",
                  "res/values-nl-rNL/strings.xml"));
     }
@@ -53,11 +57,12 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         TranslationDetector.COMPLETE_REGIONS = true;
         assertEquals(
             // Sample files from the Home app
-            "values-cs: Error: Locale cs is missing translations for: menu_settings\n" +
-            "values-de-rDE: Error: Locale de-rDE is missing translations for: menu_settings\n" +
-            "values-de-rDE: Warning: Locale de-rDE is translating names not found in default locale: continue_skip_label\n" +
-            "values-es-rUS: Error: Locale es-rUS is missing translations for: home_title, menu_settings, menu_wallpaper, show_all_apps... (1 more)\n" +
-            "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
+            "values-de-rDE/strings.xml:11: Warning: \"continue_skip_label\" is translated here but not found in default locale\n" +
+            "values/strings.xml:19: Error: \"home_title\" is not translated in es-rUS\n" +
+            "values/strings.xml:20: Error: \"show_all_apps\" is not translated in es-rUS, nl-rNL\n" +
+            "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in es-rUS, nl-rNL\n" +
+            "values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es-rUS, nl-rNL\n" +
+            "values/strings.xml:29: Error: \"wallpaper_instructions\" is not translated in es-rUS",
 
             lintProject(
                  "res/values/strings.xml",
@@ -87,5 +92,16 @@ public class TranslationDetectorTest extends AbstractCheckTest {
             lintProject(
                  "res/values/translatedarrays.xml",
                  "res/values-cs/translatedarrays.xml"));
+    }
+
+    public void testTranslationSuppresss() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = false;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/values/strings_ignore.xml=>res/values/strings.xml",
+                    "res/values-es/strings_ignore.xml=>res/values-es/strings.xml",
+                    "res/values-nl-rNL/strings.xml=>res/values-nl-rNL/strings.xml"));
     }
 }

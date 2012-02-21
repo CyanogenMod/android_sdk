@@ -29,7 +29,6 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.tools.lint.checks.DuplicateIdDetector;
-import com.android.tools.lint.checks.TranslationDetector;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -48,6 +47,7 @@ import org.w3c.dom.Node;
 /**
  * Fix for adding {@code tools:ignore="id"} attributes in XML files.
  */
+@SuppressWarnings("restriction") // DOM model
 class AddSuppressAttribute implements ICompletionProposal {
     private final AndroidXmlEditor mEditor;
     private final String mId;
@@ -128,7 +128,6 @@ class AddSuppressAttribute implements ICompletionProposal {
                         Display display = AdtPlugin.getDisplay();
                         if (display != null) {
                             display.asyncExec(new Runnable() {
-                                @SuppressWarnings("restriction") // DOM model
                                 @Override
                                 public void run() {
                                     Node xmlNode = uiNode.getXmlNode();
@@ -202,9 +201,7 @@ class AddSuppressAttribute implements ICompletionProposal {
         // available). Until that's resolved, we need to filter these out such that
         // we don't add misleading annotations on individual elements; the fallback
         // path is the DOM document itself instead.
-        if (id.equals(DuplicateIdDetector.CROSS_LAYOUT.getId())
-                || id.equals(TranslationDetector.MISSING.getId())
-                || id.equals(TranslationDetector.EXTRA.getId())) {
+        if (id.equals(DuplicateIdDetector.CROSS_LAYOUT.getId())) {
             node = document.getDocumentElement();
         }
 
