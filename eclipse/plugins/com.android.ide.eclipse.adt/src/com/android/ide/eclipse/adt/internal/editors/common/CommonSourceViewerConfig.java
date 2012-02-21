@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.source.ISourceViewer;

@@ -642,11 +642,10 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      *
      * @return A new list of {@link UiElementNode} with at least one item or null.
      */
-    @SuppressWarnings("unchecked")
     private ArrayList<UiElementNode> filterSelection(ITreeSelection selection) {
         ArrayList<UiElementNode> selected = new ArrayList<UiElementNode>();
 
-        for (Iterator it = selection.iterator(); it.hasNext(); ) {
+        for (Iterator<Object> it = selection.iterator(); it.hasNext(); ) {
             Object selectedObj = it.next();
 
             if (selectedObj instanceof UiElementNode) {

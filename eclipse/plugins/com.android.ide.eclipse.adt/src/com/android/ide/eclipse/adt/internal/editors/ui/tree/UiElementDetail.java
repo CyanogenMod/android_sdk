@@ -346,9 +346,9 @@ class UiElementDetail implements IDetailsPage {
 
             final IUiUpdateListener updateListener = new IUiUpdateListener() {
                 @Override
-                public void uiElementNodeUpdated(UiElementNode ui_node, UiUpdateState state) {
+                public void uiElementNodeUpdated(UiElementNode uiNode, UiUpdateState state) {
                     if (state == UiUpdateState.ATTR_UPDATED) {
-                        updateUnknownAttributesSection(ui_node, unknownTable, managedForm,
+                        updateUnknownAttributesSection(uiNode, unknownTable, managedForm,
                                 reference);
                     }
                 }

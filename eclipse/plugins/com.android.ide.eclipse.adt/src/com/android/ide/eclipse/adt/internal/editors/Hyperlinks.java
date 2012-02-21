@@ -710,7 +710,7 @@ public class Hyperlinks {
                 if (refDelegate != null) {
                     IProject refProject = refDelegate.getEditor().getProject();
                     if (project == null || project == refProject) {
-                        GraphicalEditorPart refGraphicalEditor = delegate.getGraphicalEditor();
+                        GraphicalEditorPart refGraphicalEditor = refDelegate.getGraphicalEditor();
                         if (refGraphicalEditor != null) {
                             return refGraphicalEditor.getConfiguration();
                         }

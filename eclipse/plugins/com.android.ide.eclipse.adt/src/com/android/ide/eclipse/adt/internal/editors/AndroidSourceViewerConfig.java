@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.editors;
 
 
-import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormatter;
 import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormattingStrategy;
 
