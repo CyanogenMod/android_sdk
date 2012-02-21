@@ -31,6 +31,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -196,6 +197,15 @@ public class DefaultConfiguration extends Configuration {
         }
     }
 
+    private void formatError(String message, Object... args) {
+        if (args != null && args.length > 0) {
+            message = String.format(message, args);
+        }
+        message = "Failed to parse lint.xml configuration file: " + message;
+        mClient.report(new Context(null, mProject, mProject, mConfigFile),
+                IssueRegistry.LINT_ERROR, Location.create(mConfigFile), message, null);
+    }
+
     private void readConfig() {
         mSuppressed = new HashMap<String, List<String>>();
         mSeverity = new HashMap<String, Severity>();
@@ -218,8 +228,7 @@ public class DefaultConfiguration extends Configuration {
                 Element element = (Element) node;
                 String id = element.getAttribute(ATTR_ID);
                 if (id.length() == 0) {
-                    mClient.log(null,
-                            "Invalid lint config file: Missing required issue id attribute");
+                    formatError("Invalid lint config file: Missing required issue id attribute");
                     continue;
                 }
 
@@ -238,7 +247,7 @@ public class DefaultConfiguration extends Configuration {
                             }
                         }
                     } else {
-                        mClient.log(null,  "Unexpected attribute %1$s", name);
+                        formatError("Unexpected attribute \"%1$s\"", name);
                     }
                 }
 
@@ -251,7 +260,7 @@ public class DefaultConfiguration extends Configuration {
                             Element ignore = (Element) child;
                             String path = ignore.getAttribute(ATTR_PATH);
                             if (path.length() == 0) {
-                                mClient.log(null,  "Missing required %1$s attribute under %2$s",
+                                formatError("Missing required %1$s attribute under %2$s",
                                     ATTR_PATH, id);
                             } else {
                                 List<String> paths = mSuppressed.get(id);
@@ -265,6 +274,8 @@ public class DefaultConfiguration extends Configuration {
                     }
                 }
             }
+        } catch (SAXParseException e) {
+            formatError(e.getMessage());
         } catch (Exception e) {
             mClient.log(e, null);
         }
