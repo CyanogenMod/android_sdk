@@ -193,8 +193,10 @@ public class EclipseLintRunner {
                 }
                 for (IProject project : projects) {
                     ProjectState state = Sdk.getProjectState(project);
-                    for (IProject library : state.getFullLibraryProjects()) {
-                        allProjects.put(library, library);
+                    if (state != null) {
+                        for (IProject library : state.getFullLibraryProjects()) {
+                            allProjects.put(library, library);
+                        }
                     }
                 }
                 for (IProject project : allProjects.keySet()) {

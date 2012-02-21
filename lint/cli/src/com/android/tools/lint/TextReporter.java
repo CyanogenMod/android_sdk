@@ -38,8 +38,10 @@ class TextReporter extends Reporter {
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.size() == 0) {
+            mWriter.write('\n');
             mWriter.write("No issues found.");
             mWriter.write('\n');
+            mWriter.flush();
         } else {
             for (Warning warning : issues) {
                 int startLength = output.length();
