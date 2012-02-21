@@ -17,10 +17,10 @@
       </view>
       <view
             category="com.android.ide.eclipse.gltrace"
-            class="com.android.ide.eclipse.gltrace.views.FrameBufferView"
+            class="com.android.ide.eclipse.gltrace.views.FrameSummaryView"
             icon="icons/opengl.png"
             id="com.android.ide.eclipse.gltrace.views.FrameBuffer"
-            name="Framebuffer"
+            name="Frame Summary"
             restorable="true">
       </view>
       <view

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gltrace.views.DetailsView;
-import com.android.ide.eclipse.gltrace.views.FrameBufferView;
+import com.android.ide.eclipse.gltrace.views.FrameSummaryView;
 import com.android.ide.eclipse.gltrace.views.StateView;
 
 import org.eclipse.ui.IFolderLayout;
@@ -51,6 +51,6 @@ public class GLTracePerspective implements IPerspectiveFactory {
                 IPageLayout.BOTTOM,
                 0.5f,
                 FB_FOLDER_ID);
-        column3bottom.addView(FrameBufferView.ID);
+        column3bottom.addView(FrameSummaryView.ID);
     }
 }
