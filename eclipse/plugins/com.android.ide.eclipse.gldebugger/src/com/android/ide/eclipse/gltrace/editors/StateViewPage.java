@@ -27,6 +27,7 @@ import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ILock;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -57,6 +58,7 @@ import java.util.Set;
  */
 public class StateViewPage extends Page implements ISelectionListener, ISelectionProvider {
     public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
+    private static final ILock sGlStateLock = Job.getJobManager().newLock();
 
     private final GLTrace mTrace;
     private final List<GLCall> mGLCalls;
@@ -138,41 +140,43 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
         }
 
         final int selectedCallIndex = selectedCall.getIndex();
-        if (selectedCall.getIndex() != mCurrentStateIndex) {
-            // Creation of texture images takes a few seconds on the first run. So run
-            // the update task as an Eclipse job.
-            Job job = new Job("Updating GL State") {
-                @Override
-                protected IStatus run(IProgressMonitor monitor) {
-                    Set<IGLProperty> changedProperties = null;
 
-                    try {
-                        changedProperties = updateState(mCurrentStateIndex,
+        // Creation of texture images takes a few seconds on the first run. So run
+        // the update task as an Eclipse job.
+        Job job = new Job("Updating GL State") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                Set<IGLProperty> changedProperties = null;
+
+                try {
+                    sGlStateLock.acquire();
+                    changedProperties = updateState(mCurrentStateIndex,
                             selectedCallIndex);
-                    } catch (Exception e) {
-                        return new Status(Status.ERROR,
-                                Activator.PLUGIN_ID,
-                                "Unexpected error while updating GL State.",
-                                e);
-                    }
                     mCurrentStateIndex = selectedCallIndex;
-
-                    mLabelProvider.setChangedProperties(changedProperties);
-                    Display.getDefault().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!mTreeViewer.getTree().isDisposed()) {
-                                mTreeViewer.refresh();
-                            }
-                        }
-                    });
-
-                    return Status.OK_STATUS;
+                } catch (Exception e) {
+                    return new Status(Status.ERROR,
+                            Activator.PLUGIN_ID,
+                            "Unexpected error while updating GL State.",
+                            e);
+                } finally {
+                    sGlStateLock.release();
                 }
-            };
-            job.setPriority(Job.SHORT);
-            job.schedule();
-        }
+
+                mLabelProvider.setChangedProperties(changedProperties);
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!mTreeViewer.getTree().isDisposed()) {
+                            mTreeViewer.refresh();
+                        }
+                    }
+                });
+
+                return Status.OK_STATUS;
+            }
+        };
+        job.setPriority(Job.SHORT);
+        job.schedule();
     }
 
     @Override
