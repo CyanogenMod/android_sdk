@@ -102,7 +102,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     private final IDocument mDocument;
     private boolean mWasFatal;
     private boolean mFatalOnly;
-    private Configuration mConfiguration;
     private EclipseJavaParser mJavaParser;
 
     /**
@@ -199,18 +198,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     @Override
     public Configuration getConfiguration(Project project) {
-        if (mConfiguration == null) {
-            if (project != null) {
-                IProject eclipseProject = getProject(project);
-                if (eclipseProject != null) {
-                    mConfiguration = ProjectLintConfiguration.get(this, eclipseProject, mFatalOnly);
-                    return mConfiguration;
-                }
+        if (project != null) {
+            IProject eclipseProject = getProject(project);
+            if (eclipseProject != null) {
+                return ProjectLintConfiguration.get(this, eclipseProject, mFatalOnly);
             }
-
-            mConfiguration = GlobalLintConfiguration.get();
         }
-        return mConfiguration;
+
+        return GlobalLintConfiguration.get();
     }
 
     @Override
@@ -483,6 +478,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
         sb.append("Issue: ");
         sb.append(summary);
+        sb.append('\n');
+        sb.append("Id: ");
+        sb.append(issue.getId());
         sb.append('\n').append('\n');
         sb.append(explanation);
 

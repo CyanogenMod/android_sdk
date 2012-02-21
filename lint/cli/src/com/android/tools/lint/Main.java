@@ -1023,7 +1023,7 @@ public class Main extends LintClient {
                 // Detectors shouldn't be returning ignore as a default severity,
                 // but in case they do, force it up to warning here to ensure that
                 // it's run
-                if (severity == Severity.IGNORE) {
+                if (severity == Severity.IGNORE && severity == issue.getDefaultSeverity()) {
                     return Severity.WARNING;
                 } else {
                     return severity;

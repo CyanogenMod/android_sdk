@@ -19,8 +19,8 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
 
