@@ -69,7 +69,7 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
      * Create the various form pages.
      */
     @Override
-    public void createFormPages() {
+    public void delegateCreateFormPages() {
         try {
             getEditor().addPage(new OtherXmlTreePage(getEditor()));
         } catch (PartInitException e) {
@@ -83,9 +83,9 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
-    public void xmlModelChanged(Document xml_doc) {
+    public void delegateXmlModelChanged(Document xml_doc) {
         // init the ui root on demand
-        initUiRootNode(false /*force*/);
+        delegateInitUiRootNode(false /*force*/);
 
         getUiRootNode().loadFromXmlNode(xml_doc);
     }
@@ -95,7 +95,7 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
      * @param force if true, a new UiRootNode is recreated even if it already exists.
      */
     @Override
-    public void initUiRootNode(boolean force) {
+    public void delegateInitUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
         if (getUiRootNode() == null || force) {
             Document doc = null;

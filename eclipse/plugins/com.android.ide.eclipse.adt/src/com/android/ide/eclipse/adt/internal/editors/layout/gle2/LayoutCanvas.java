@@ -306,7 +306,7 @@ public class LayoutCanvas extends Canvas {
         // --- setup outline ---
         // Get the outline associated with this editor, if any and of the right type.
         Object outline = editorDelegate == null ? null :
-                           editorDelegate.getAdapter(IContentOutlinePage.class);
+                           editorDelegate.delegateGetAdapter(IContentOutlinePage.class);
         if (outline instanceof OutlinePage) {
             mOutlinePage = (OutlinePage) outline;
         }

@@ -102,7 +102,7 @@ import java.util.Set;
 /**
  * An outline page for the layout canvas view.
  * <p/>
- * The page is created by {@link LayoutEditorDelegate#getAdapter(Class)}. This means
+ * The page is created by {@link LayoutEditorDelegate#delegateGetAdapter(Class)}. This means
  * we have *one* instance of the outline page per open canvas editor.
  * <p/>
  * It sets itself as a listener on the site's selection service in order to be

@@ -168,7 +168,7 @@ import java.util.Set;
  * <p/>
  * This part is also an {@link ISelectionListener}. It listens to the site's selection
  * service and thus receives selection changes from itself as well as the associated
- * outline and property sheet (these are registered by {@link LayoutEditorDelegate#getAdapter(Class)}).
+ * outline and property sheet (these are registered by {@link LayoutEditorDelegate#delegateGetAdapter(Class)}).
  *
  * @since GLE2
  */
@@ -826,7 +826,7 @@ public class GraphicalEditorPart extends EditorPart
 
             // recreate the ui root node always, this will also call onTargetChange
             // on the config composite
-            mEditorDelegate.initUiRootNode(true /*force*/);
+            mEditorDelegate.delegateInitUiRootNode(true /*force*/);
         }
 
         private IProject getProject() {

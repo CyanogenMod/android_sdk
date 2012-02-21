@@ -107,7 +107,7 @@ public abstract class CommonXmlDelegate {
     }
 
     /** Called to compute the initial {@code UiRootNode}. */
-    public abstract void initUiRootNode(boolean force);
+    public abstract void delegateInitUiRootNode(boolean force);
 
     /**
      * Returns true, indicating the "save as" operation is supported by this editor.
@@ -119,16 +119,16 @@ public abstract class CommonXmlDelegate {
     /**
      * Create the various form pages.
      */
-    public abstract void createFormPages();
+    public abstract void delegateCreateFormPages();
 
-    public void postCreatePages() {
+    public void delegatePostCreatePages() {
         // pass
     }
 
     /**
      * Changes the tab/title name to include the project name.
      */
-    public void setInput(IEditorInput input) {
+    public void delegateSetInput(IEditorInput input) {
         if (input instanceof FileEditorInput) {
             FileEditorInput fileInput = (FileEditorInput) input;
             IFile file = fileInput.getFile();
@@ -141,13 +141,13 @@ public abstract class CommonXmlDelegate {
      *
      * @param xml_doc The XML document, if available, or null if none exists.
      */
-    public abstract void xmlModelChanged(Document xml_doc);
+    public abstract void delegateXmlModelChanged(Document xml_doc);
 
-    public void pageChange(int newPageIndex) {
+    public void delegatePageChange(int newPageIndex) {
         // pass
     }
 
-    public void postPageChange(int newPageIndex) {
+    public void delegatePostPageChange(int newPageIndex) {
         // pass
     }
     /**
@@ -160,7 +160,7 @@ public abstract class CommonXmlDelegate {
      * Here we just need to tell the graphical editor that the model has
      * been saved.
      */
-    public void doSave(IProgressMonitor monitor) {
+    public void delegateDoSave(IProgressMonitor monitor) {
         // pass
     }
 
@@ -168,7 +168,7 @@ public abstract class CommonXmlDelegate {
      * Tells the editor to start a Lint check.
      * It's up to the caller to check whether this should be done depending on preferences.
      */
-    public Job runLint() {
+    public Job delegateRunLint() {
         return getEditor().startLintJob();
     }
 
@@ -176,7 +176,7 @@ public abstract class CommonXmlDelegate {
     /**
      * Returns the custom IContentOutlinePage or IPropertySheetPage when asked for it.
      */
-    public Object getAdapter(Class<?> adapter) {
+    public Object delegateGetAdapter(Class<?> adapter) {
         return null;
     }
 
@@ -196,7 +196,7 @@ public abstract class CommonXmlDelegate {
      * @return false since editors do not support automatically formatting XML
      *         affected by GUI changes unless they explicitly opt in to it.
      */
-    public boolean supportsFormatOnGuiEdit() {
+    public boolean delegateSupportsFormatOnGuiEdit() {
         return false;
     }
 }

@@ -77,7 +77,7 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
      * Create the various form pages.
      */
     @Override
-    public void createFormPages() {
+    public void delegateCreateFormPages() {
         try {
             getEditor().addPage(new ValuesTreePage(getEditor()));
         } catch (PartInitException e) {
@@ -92,9 +92,9 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
-    public void xmlModelChanged(Document xml_doc) {
+    public void delegateXmlModelChanged(Document xml_doc) {
         // init the ui root on demand
-        initUiRootNode(false /*force*/);
+        delegateInitUiRootNode(false /*force*/);
 
         getUiRootNode().setXmlDocument(xml_doc);
         if (xml_doc != null) {
@@ -122,7 +122,7 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
      * @param force if true, a new UiRootNode is recreated even if it already exists.
      */
     @Override
-    public void initUiRootNode(boolean force) {
+    public void delegateInitUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
         if (getUiRootNode() == null || force) {
             ElementDescriptor resources_desc =

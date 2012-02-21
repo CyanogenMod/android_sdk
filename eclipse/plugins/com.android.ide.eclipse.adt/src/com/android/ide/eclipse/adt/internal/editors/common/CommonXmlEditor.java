@@ -195,14 +195,14 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
      * all data to the XML model and then having the Structured XML Editor
      * save the XML.
      * <p/>
-     * Here we just need to tell the graphical editor that the model has
+     * Here we just need to tell the delegate that the model has
      * been saved.
      */
     @Override
     public void doSave(IProgressMonitor monitor) {
         super.doSave(monitor);
         if (mDelegate != null) {
-            mDelegate.doSave(monitor);
+            mDelegate.delegateDoSave(monitor);
         }
     }
 
@@ -225,7 +225,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     @Override
     protected void createFormPages() {
         if (mDelegate != null) {
-            mDelegate.createFormPages();
+            mDelegate.delegateCreateFormPages();
         }
     }
 
@@ -234,7 +234,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         super.postCreatePages();
 
         if (mDelegate != null) {
-            mDelegate.postCreatePages();
+            mDelegate.delegatePostCreatePages();
         }
     }
 
@@ -266,7 +266,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         super.setInput(input);
         assert mDelegate != null;
         if (mDelegate != null) {
-            mDelegate.setInput(input);
+            mDelegate.delegateSetInput(input);
         }
     }
 
@@ -274,7 +274,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     public void setInputWithNotify(IEditorInput input) {
         super.setInputWithNotify(input);
         if (mDelegate instanceof LayoutEditorDelegate) {
-            ((LayoutEditorDelegate) mDelegate).setInputWithNotify(input);
+            ((LayoutEditorDelegate) mDelegate).delegateSetInputWithNotify(input);
         }
     }
 
@@ -286,14 +286,14 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     @Override
     protected void xmlModelChanged(Document xml_doc) {
         if (mDelegate != null) {
-            mDelegate.xmlModelChanged(xml_doc);
+            mDelegate.delegateXmlModelChanged(xml_doc);
         }
     }
 
     @Override
     protected Job runLint() {
         if (mDelegate != null) {
-            return mDelegate.runLint();
+            return mDelegate.delegateRunLint();
         }
         return null;
     }
@@ -304,7 +304,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     @Override
     public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
         if (mDelegate != null) {
-            Object value = mDelegate.getAdapter(adapter);
+            Object value = mDelegate.delegateGetAdapter(adapter);
             if (value != null) {
                 return value;
             }
@@ -317,20 +317,20 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     @Override
     protected void pageChange(int newPageIndex) {
         if (mDelegate != null) {
-            mDelegate.pageChange(newPageIndex);
+            mDelegate.delegatePageChange(newPageIndex);
         }
 
         super.pageChange(newPageIndex);
 
         if (mDelegate != null) {
-            mDelegate.postPageChange(newPageIndex);
+            mDelegate.delegatePostPageChange(newPageIndex);
         }
     }
 
     @Override
     public void initUiRootNode(boolean force) {
         if (mDelegate != null) {
-            mDelegate.initUiRootNode(force);
+            mDelegate.delegateInitUiRootNode(force);
         }
     }
 
@@ -345,7 +345,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     @Override
     public boolean supportsFormatOnGuiEdit() {
         if (mDelegate != null) {
-            return mDelegate.supportsFormatOnGuiEdit();
+            return mDelegate.delegateSupportsFormatOnGuiEdit();
         }
         return super.supportsFormatOnGuiEdit();
     }

@@ -65,7 +65,7 @@ public class ColorEditorDelegate extends CommonXmlDelegate {
     }
 
     @Override
-    public void createFormPages() {
+    public void delegateCreateFormPages() {
         /* Disabled for now; doesn't work quite right
         try {
             addPage(new ColorTreePage(this));
@@ -77,16 +77,16 @@ public class ColorEditorDelegate extends CommonXmlDelegate {
     }
 
     @Override
-    public void xmlModelChanged(Document xmlDoc) {
+    public void delegateXmlModelChanged(Document xmlDoc) {
         // create the ui root node on demand.
-        initUiRootNode(false /*force*/);
+        delegateInitUiRootNode(false /*force*/);
 
         Element rootElement = xmlDoc.getDocumentElement();
         getUiRootNode().loadFromXmlNode(rootElement);
     }
 
     @Override
-    public void initUiRootNode(boolean force) {
+    public void delegateInitUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
         if (getUiRootNode() == null || force) {
             ElementDescriptor descriptor;

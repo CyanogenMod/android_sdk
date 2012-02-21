@@ -191,16 +191,16 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     /**
      * Save the XML.
      * <p/>
-     * The actual save operation is done in the super class by committing
-     * all data to the XML model and then having the Structured XML Editor
-     * save the XML.
+     * Clients must NOT call this directly. Instead they should always
+     * call {@link CommonXmlEditor#doSave(IProgressMonitor)} so that th
+     * editor super class can commit the data properly.
      * <p/>
      * Here we just need to tell the graphical editor that the model has
      * been saved.
      */
     @Override
-    public void doSave(IProgressMonitor monitor) {
-        super.doSave(monitor);
+    public void delegateDoSave(IProgressMonitor monitor) {
+        super.delegateDoSave(monitor);
         if (mGraphicalEditor != null) {
             mGraphicalEditor.doSave(monitor);
         }
@@ -210,7 +210,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      * Create the various form pages.
      */
     @Override
-    public void createFormPages() {
+    public void delegateCreateFormPages() {
         try {
             // get the file being edited so that it can be passed to the layout editor.
             IFile editedFile = null;
@@ -254,7 +254,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     }
 
     @Override
-    public void postCreatePages() {
+    public void delegatePostCreatePages() {
         // Optional: set the default page. Eventually a default page might be
         // restored by selectDefaultPage() later based on the last page used by the user.
         // For example, to make the last page the default one (rather than the first page),
@@ -266,7 +266,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      * Change the tab/title name to include the name of the layout.
      */
     @Override
-    public void setInput(IEditorInput input) {
+    public void delegateSetInput(IEditorInput input) {
         handleNewInput(input);
     }
 
@@ -274,7 +274,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      * (non-Javadoc)
      * @see org.eclipse.ui.part.EditorPart#setInputWithNotify(org.eclipse.ui.IEditorInput)
      */
-    public void setInputWithNotify(IEditorInput input) {
+    public void delegateSetInputWithNotify(IEditorInput input) {
         handleNewInput(input);
     }
 
@@ -289,29 +289,30 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             return;
         }
 
-        // save the current editor input.
-        doSave(new NullProgressMonitor());
+        // Save the current editor input. This must be called on the editor itself
+        // since it's the base editor that commits pending changes.
+        getEditor().doSave(new NullProgressMonitor());
 
-        // get the current page
+        // Get the current page
         int currentPage = getEditor().getActivePage();
 
-        // remove the pages, except for the graphical editor, which will be dynamically adapted
+        // Remove the pages, except for the graphical editor, which will be dynamically adapted
         // to the new model.
         // page after the graphical editor:
         int count = getEditor().getPageCount();
         for (int i = count - 1 ; i > mGraphicalEditorIndex ; i--) {
             getEditor().removePage(i);
         }
-        // pages before the graphical editor
+        // Pages before the graphical editor
         for (int i = mGraphicalEditorIndex - 1 ; i >= 0 ; i--) {
             getEditor().removePage(i);
         }
 
-        // set the current input. We're in the delegate, the input must
+        // Set the current input. We're in the delegate, the input must
         // be set into the actual editor instance.
         getEditor().setInputWithNotify(editorInput);
 
-        // re-create or reload the pages with the default page shown as the previous active page.
+        // Re-create or reload the pages with the default page shown as the previous active page.
         getEditor().createAndroidPages();
         getEditor().selectDefaultPage(Integer.toString(currentPage));
 
@@ -324,7 +325,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     public void refreshXmlModel() {
         Document xmlDoc = mUiDocRootNode.getXmlDocument();
 
-        initUiRootNode(true /*force*/);
+        delegateInitUiRootNode(true /*force*/);
         mUiDocRootNode.loadFromXmlNode(xmlDoc);
 
         // Update the model first, since it is used by the viewers.
@@ -342,9 +343,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
-    public void xmlModelChanged(Document xml_doc) {
+    public void delegateXmlModelChanged(Document xml_doc) {
         // init the ui root on demand
-        initUiRootNode(false /*force*/);
+        delegateInitUiRootNode(false /*force*/);
 
         mUiDocRootNode.loadFromXmlNode(xml_doc);
 
@@ -371,13 +372,13 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      *         affected by GUI changes
      */
     @Override
-    public boolean supportsFormatOnGuiEdit() {
+    public boolean delegateSupportsFormatOnGuiEdit() {
         return true;
     }
 
     @Override
-    public Job runLint() {
-        Job job = super.runLint();
+    public Job delegateRunLint() {
+        Job job = super.delegateRunLint();
 
         if (job != null) {
             job.addJobChangeListener(new JobChangeAdapter() {
@@ -401,7 +402,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      * Returns the custom IContentOutlinePage or IPropertySheetPage when asked for it.
      */
     @Override
-    public Object getAdapter(Class<?> adapter) {
+    public Object delegateGetAdapter(Class<?> adapter) {
         // For the outline, force it to come from the Graphical Editor.
         // This fixes the case where a layout file is opened in XML view first and the outline
         // gets stuck in the XML outline.
@@ -423,11 +424,11 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         }
 
         // return default
-        return super.getAdapter(adapter);
+        return super.delegateGetAdapter(adapter);
     }
 
     @Override
-    public void pageChange(int newPageIndex) {
+    public void delegatePageChange(int newPageIndex) {
         if (getEditor().getCurrentPage() == getEditor().getTextPageIndex() &&
                 newPageIndex == mGraphicalEditorIndex) {
             // You're switching from the XML editor to the WYSIWYG editor;
@@ -443,7 +444,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             }
         }
 
-        super.pageChange(newPageIndex);
+        super.delegatePageChange(newPageIndex);
 
         if (mGraphicalEditor != null) {
             if (newPageIndex == mGraphicalEditorIndex) {
@@ -535,7 +536,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     }
 
     @Override
-    public void initUiRootNode(boolean force) {
+    public void delegateInitUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
         if (mUiDocRootNode == null || force) {
             // get the target data from the opened file (and its project)

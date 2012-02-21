@@ -71,7 +71,7 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
     }
 
     @Override
-    public void createFormPages() {
+    public void delegateCreateFormPages() {
         /* Disabled for now; doesn't work quite right
         try {
             addPage(new DrawableTreePage(this));
@@ -83,13 +83,13 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
      }
 
     @Override
-    public void xmlModelChanged(Document xmlDoc) {
+    public void delegateXmlModelChanged(Document xmlDoc) {
         Element rootElement = xmlDoc.getDocumentElement();
         if (rootElement != null) {
             mRootTag = rootElement.getTagName();
         }
 
-        initUiRootNode(false /*force*/);
+        delegateInitUiRootNode(false /*force*/);
 
         if (mRootTag != null
                 && !mRootTag.equals(getUiRootNode().getDescriptor().getXmlLocalName())) {
@@ -118,7 +118,7 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
     }
 
     @Override
-    public void initUiRootNode(boolean force) {
+    public void delegateInitUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
         if (getUiRootNode() == null || force) {
             ElementDescriptor descriptor;
