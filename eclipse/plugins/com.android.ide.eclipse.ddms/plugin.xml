@@ -79,6 +79,14 @@
             icon="icons/heap.png"
             id="com.android.ide.eclipse.ddms.views.AllocTrackerView"
             name="%view.name.Allocation_Tracker"/>
+      <view
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.NetworkStatisticsView"
+            icon="icons/networkstats.png"
+            id="com.android.ide.eclipse.ddms.views.NetworkStatsView"
+            name="%view.name.Network_Stats"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
