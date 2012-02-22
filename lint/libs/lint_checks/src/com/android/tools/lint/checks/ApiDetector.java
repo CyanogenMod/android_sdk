@@ -141,7 +141,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 String name = value.substring(index + 1);
                 int api = mApiDatabase.getFieldVersion(owner, name);
                 int minSdk = getMinSdk(context);
-                if (api > minSdk) {
+                if (api > minSdk && api > context.getFolderVersion()) {
                     Location location = context.getLocation(attribute);
                     String message = String.format(
                             "%1$s requires API level %2$d (current min is %3$d)",
@@ -181,7 +181,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             String name = text.substring(index + 1);
                             int api = mApiDatabase.getFieldVersion(owner, name);
                             int minSdk = getMinSdk(context);
-                            if (api > minSdk) {
+                            if (api > minSdk && api > context.getFolderVersion()) {
                                 Location location = context.getLocation(textNode);
                                 String message = String.format(
                                         "%1$s requires API level %2$d (current min is %3$d)",
@@ -207,7 +207,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     // "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"); //$NON-NLS-1$
                     "(Landroid/content/Context;)"); //$NON-NLS-1$
             int minSdk = getMinSdk(context);
-            if (api > minSdk) {
+            if (api > minSdk && api > context.getFolderVersion()) {
                 Location location = context.getLocation(element);
                 String message = String.format(
                         "View requires API level %1$d (current min is %2$d): <%3$s>",

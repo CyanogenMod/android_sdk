@@ -27,6 +27,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A {@link Context} used when checking XML files.
@@ -131,5 +133,26 @@ public class XmlContext extends Context {
     @Nullable
     public ResourceFolderType getResourceFolderType() {
         return mFolderType;
+    }
+
+
+    private final static Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
+
+    /**
+     * Returns the folder version. For example, for the file values-v14/foo.xml,
+     * it returns 14.
+     *
+     * @return the folder version, or -1 if no specific version was specified
+     */
+    public int getFolderVersion() {
+        String[] qualifiers = file.getParentFile().getName().split("-"); //$NON-NLS-1$
+        for (String qualifier : qualifiers) {
+            Matcher matcher = sVersionPattern.matcher(qualifier);
+            if (matcher.matches()) {
+                return Integer.parseInt(matcher.group(1));
+            }
+        }
+
+        return -1;
     }
 }

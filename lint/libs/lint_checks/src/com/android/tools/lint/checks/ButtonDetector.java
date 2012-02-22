@@ -62,8 +62,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Check which looks at the order of buttons in dialogs and makes sure that
@@ -78,8 +76,6 @@ import java.util.regex.Pattern;
  * Cancel/OK dialogs? Similarly, consider "Abort" a synonym for "Cancel" ?
  */
 public class ButtonDetector extends ResourceXmlDetector {
-    private final static Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
-
     /** Name of cancel value ("Cancel") */
     private static final String CANCEL_LABEL = "Cancel";
     /** Name of OK value ("Cancel") */
@@ -425,19 +421,7 @@ public class ButtonDetector extends ResourceXmlDetector {
             //
             // Therefore, we need to know if this layout is an ICS layout or
             // a pre-ICS layout.
-            String[] qualifiers = context.file.getParentFile().getName().split("-"); //$NON-NLS-1$
-            boolean isIcsLayout = false;
-            for (String qualifier : qualifiers) {
-                Matcher matcher = sVersionPattern.matcher(qualifier);
-                if (matcher.matches()) {
-                    int api = Integer.parseInt(matcher.group(1));
-                    if (api >= 14) {
-                        isIcsLayout = true;
-                        break;
-                    }
-                }
-            }
-
+            boolean isIcsLayout = context.getFolderVersion() >= 14;
             if (!isIcsLayout) {
                 // This layout is not an ICS layout. However, there *must* also be
                 // an ICS layout here, or this button order will be wrong:
