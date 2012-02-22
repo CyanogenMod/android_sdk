@@ -27,24 +27,60 @@ public class ProguardDetectorTest extends AbstractCheckTest {
 
     public void testProguard() throws Exception {
         assertEquals(
-                "proguard.cfg:21: Error: Obsolete proguard file; use -keepclasseswithmembers " +
+                "proguard.cfg:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers " +
                     "instead of -keepclasseswithmembernames",
                 lintFiles("proguard.cfg"));
     }
 
     public void testProguardNewPath() throws Exception {
         assertEquals(
-                "proguard-project.txt:21: Error: Obsolete proguard file; use " +
+                "proguard-project.txt:21: Error: Obsolete ProGuard file; use " +
                         "-keepclasseswithmembers instead of -keepclasseswithmembernames",
                 lintFiles("proguard.cfg=>proguard-project.txt"));
     }
 
     public void testProguardRandomName() throws Exception {
         assertEquals(
-                "myfile.txt:21: Error: Obsolete proguard file; use " +
-                        "-keepclasseswithmembers instead of -keepclasseswithmembernames",
+                "myfile.txt:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers " +
+                "instead of -keepclasseswithmembernames\n" +
+                "myfile.txt:8: Warning: Local ProGuard configuration contains general " +
+                "Android configuration: Inherit these settings instead? Modify " +
+                "project.properties to define proguard.config=${sdk.dir}/tools/proguard/" +
+                "proguard-android.txt:myfile.txt and then keep only project-specific " +
+                "configuration here",
                 lintProject(
                         "proguard.cfg=>myfile.txt",
                         "proguard.properties=>project.properties"));
+    }
+
+    public void testSilent() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintFiles(
+                        "proguard.pro=>proguard.cfg",
+                        "project.properties1=>project.properties"));
+    }
+
+    public void testSilent2() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintFiles(
+                        "proguard.pro=>proguard.cfg",
+                        "project.properties3=>project.properties"));
+    }
+
+    public void testSplit() throws Exception {
+        assertEquals(
+                "proguard.cfg:14: Warning: Local ProGuard configuration contains general " +
+                "Android configuration: Inherit these settings instead? Modify " +
+                "project.properties to define " +
+                "proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard.cfg " +
+                "and then keep only project-specific configuration here",
+
+                lintFiles(
+                        "proguard.pro=>proguard.cfg",
+                        "project.properties2=>project.properties"));
     }
 }
