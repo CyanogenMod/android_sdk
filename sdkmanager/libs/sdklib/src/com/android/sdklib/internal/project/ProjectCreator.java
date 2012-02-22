@@ -369,8 +369,8 @@ public class ProjectCreator {
                     keywords);
 
             // install the proguard config file.
-            installTemplate(SdkConstants.FN_PROGUARD_CFG,
-                    new File(projectFolder, SdkConstants.FN_PROGUARD_CFG),
+            installTemplate(SdkConstants.FN_PROJECT_PROGUARD_FILE,
+                    new File(projectFolder, SdkConstants.FN_PROJECT_PROGUARD_FILE),
                     null /*keywords*/);
         } catch (Exception e) {
             mLog.error(e, null);
@@ -751,8 +751,10 @@ public class ProjectCreator {
 
         if (hasProguard == false) {
             try {
-                installTemplate(SdkConstants.FN_PROGUARD_CFG,
-                        new File(projectFolder, SdkConstants.FN_PROGUARD_CFG),
+                installTemplate(SdkConstants.FN_PROJECT_PROGUARD_FILE,
+                        // Write ProGuard config files with the extension .pro which
+                        // is what is used in the ProGuard documentation and samples
+                        new File(projectFolder, SdkConstants.FN_PROJECT_PROGUARD_FILE),
                         null /*placeholderMap*/);
             } catch (ProjectCreateException e) {
                 mLog.error(e, null);

@@ -166,8 +166,10 @@ public final class SdkConstants {
      */
     public final static String FN_GDBSERVER = "gdbserver";              //$NON-NLS-1$
 
-    /** default proguard config file */
-    public final static String FN_PROGUARD_CFG = "proguard.cfg";        //$NON-NLS-1$
+    /** global Android proguard config file */
+    public final static String FN_ANDROID_PROGUARD_FILE = "proguard-android.txt";   //$NON-NLS-1$
+    /** default proguard config file with new file extension (for project specific stuff) */
+    public final static String FN_PROJECT_PROGUARD_FILE = "proguard-project.txt";   //$NON-NLS-1$
 
     /* Folder Names for Android Projects . */
 
@@ -384,7 +386,6 @@ public final class SdkConstants {
 
     /** SDK property: default skin */
     public final static String PROP_SDK_DEFAULT_SKIN = "sdk.skin.default"; //$NON-NLS-1$
-
 
     /* Android Class Constants */
     public final static String CLASS_ACTIVITY = "android.app.Activity"; //$NON-NLS-1$

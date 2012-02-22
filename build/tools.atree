@@ -65,7 +65,8 @@ bin/lint            tools/lint
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
-sdk/files/proguard.cfg              tools/lib/proguard.cfg
+sdk/files/proguard-project.txt      tools/lib/proguard-project.txt
+sdk/files/proguard-android.txt      tools/proguard/proguard-android.txt
 
 # Ant Build Rules
 sdk/files/ant                       tools/ant

@@ -23,6 +23,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CONFIG;
 import static com.android.tools.lint.detector.api.LintConstants.PROJECT_PROPERTIES;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_TRUE;
@@ -71,6 +72,7 @@ public class Project {
     private int mTargetSdk = -1;
     private boolean mLibrary;
     private String mName;
+    private String mProguardPath;
 
     /** The SDK info, if any */
     private SdkInfo mSdkInfo;
@@ -121,6 +123,7 @@ public class Project {
                     properties.load(is);
                     String value = properties.getProperty(ANDROID_LIBRARY);
                     mLibrary = VALUE_TRUE.equals(value);
+                    mProguardPath = properties.getProperty(PROGUARD_CONFIG);
 
                     for (int i = 1; i < 1000; i++) {
                         String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
@@ -542,6 +545,17 @@ public class Project {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the proguard path configured for this project, or null if ProGuard is
+     * not configured.
+     *
+     * @return the proguard path, or null
+     */
+    @Nullable
+    public String getProguardPath() {
+        return mProguardPath;
     }
 
     /**

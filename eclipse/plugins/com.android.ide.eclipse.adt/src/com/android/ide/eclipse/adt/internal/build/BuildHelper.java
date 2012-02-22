@@ -512,7 +512,7 @@ public class BuildHelper {
         return compiledPaths;
     }
 
-    public void runProguard(File proguardConfig, File inputJar, String[] jarFiles,
+    public void runProguard(List<File> proguardConfigs, File inputJar, String[] jarFiles,
                             File obfuscatedJar, File logOutput)
             throws ProguardResultException, ProguardExecException, IOException {
         IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
@@ -521,7 +521,10 @@ public class BuildHelper {
         List<String> command = new ArrayList<String>();
         command.add(AdtPlugin.getOsAbsoluteProguard());
 
-        command.add("@" + quotePath(proguardConfig.getAbsolutePath())); //$NON-NLS-1$
+        for (File configFile : proguardConfigs) {
+            command.add("-include"); //$NON-NLS-1$
+            command.add(quotePath(configFile.getAbsolutePath()));
+        }
 
         command.add("-injars"); //$NON-NLS-1$
         StringBuilder sb = new StringBuilder(quotePath(inputJar.getAbsolutePath()));

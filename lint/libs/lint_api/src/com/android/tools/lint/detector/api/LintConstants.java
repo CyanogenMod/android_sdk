@@ -242,7 +242,9 @@ public class LintConstants {
 
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
-    public static final String PROGUARD_CFG = "proguard.cfg";          //$NON-NLS-1$
+    public static final String OLD_PROGUARD_FILE = "proguard.cfg";     //$NON-NLS-1$
+    public static final String PROGUARD_FILE = "proguard-project.txt"; //$NON-NLS-1$
+
     public static final String RES_FOLDER = "res";                     //$NON-NLS-1$
     public static final String DOT_XML = ".xml";                       //$NON-NLS-1$
     public static final String DOT_GIF = ".gif";                       //$NON-NLS-1$
@@ -283,6 +285,7 @@ public class LintConstants {
 
     // Project properties
     public static final String ANDROID_LIBRARY = "android.library";     //$NON-NLS-1$
+    public static final String PROGUARD_CONFIG = "proguard.config";     //$NON-NLS-1$
     public static final String ANDROID_LIBRARY_REFERENCE_FORMAT = "android.library.reference.%1$d";//$NON-NLS-1$
     public static final String PROJECT_PROPERTIES = "project.properties";//$NON-NLS-1$
 

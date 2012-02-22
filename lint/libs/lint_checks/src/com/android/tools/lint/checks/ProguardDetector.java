@@ -36,8 +36,8 @@ public class ProguardDetector extends Detector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "Proguard", //$NON-NLS-1$
-            "Looks for problems in proguard.cfg files",
-            "Using -keepclasseswithmembernames in a proguard.cfg file is not " +
+            "Looks for problems in proguard config files",
+            "Using -keepclasseswithmembernames in a proguard config file is not " +
             "correct; it can cause some symbols to be renamed which should not be.\n" +
             "Earlier versions of ADT used to create proguard.cfg files with the " +
             "wrong format. Instead of -keepclasseswithmembernames use " +
@@ -69,7 +69,7 @@ public class ProguardDetector extends Detector {
 
     @Override
     public boolean appliesTo(Context context, File file) {
-        return file.getName().equals("proguard.cfg"); //$NON-NLS-1$
+        return true;
     }
 
     @Override
