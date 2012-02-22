@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.welcome;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.wizard.WizardPage;
@@ -262,14 +263,18 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
                     AdtPlugin.getDefault().checkSdkLocationAndId(path,
                             new AdtPlugin.CheckSdkErrorHandler() {
                         @Override
-                        public boolean handleError(String message) {
+                        public boolean handleError(
+                                CheckSdkErrorHandler.Solution solution,
+                                String message) {
                             message = message.replaceAll("\n", " "); //$NON-NLS-1$ //$NON-NLS-2$
                             errorReference.set(message);
                             return false;  // Apply/OK must be disabled
                         }
 
                         @Override
-                        public boolean handleWarning(String message) {
+                        public boolean handleWarning(
+                                CheckSdkErrorHandler.Solution solution,
+                                String message) {
                             message = message.replaceAll("\n", " "); //$NON-NLS-1$ //$NON-NLS-2$
                             warningReference.set(message);
                             return true;  // Apply/OK must be enabled

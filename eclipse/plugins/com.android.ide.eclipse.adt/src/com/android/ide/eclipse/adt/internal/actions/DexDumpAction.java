@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -175,7 +176,7 @@ public class DexDumpAction implements IObjectActionDelegate {
 
                 int err = GrabProcessOutput.grabProcessOutput(
                         process,
-                        true /*waitForReaders*/,
+                        Wait.WAIT_FOR_READERS,
                         new IProcessOutput() {
                             @Override
                             public void out(String line) {

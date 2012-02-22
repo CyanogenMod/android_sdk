@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.welcome;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsService;
@@ -83,12 +84,16 @@ public class AdtStartup implements IStartup {
             boolean ok = AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
                     new AdtPlugin.CheckSdkErrorHandler() {
                 @Override
-                public boolean handleError(String message) {
+                public boolean handleError(
+                        CheckSdkErrorHandler.Solution solution,
+                        String message) {
                     return false;
                 }
 
                 @Override
-                public boolean handleWarning(String message) {
+                public boolean handleWarning(
+                        CheckSdkErrorHandler.Solution  solution,
+                        String message) {
                     return true;
                 }
             });

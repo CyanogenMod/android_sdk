@@ -28,6 +28,7 @@ import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.util.Pair;
 
 import java.io.File;
@@ -1398,7 +1399,7 @@ public class AvdManager {
 
             int status = GrabProcessOutput.grabProcessOutput(
                     process,
-                    true /*waitForReaders*/,
+                    Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
                         public void out(String line) {

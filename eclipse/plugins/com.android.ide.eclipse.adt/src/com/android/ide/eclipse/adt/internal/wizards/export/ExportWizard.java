@@ -24,6 +24,7 @@ import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.KeystoreHelper;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -543,7 +544,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
             int status = GrabProcessOutput.grabProcessOutput(
                     process,
-                    true /*waitForReaders*/,
+                    Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
                         public void out(String line) {
