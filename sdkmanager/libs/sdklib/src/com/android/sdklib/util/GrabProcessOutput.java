@@ -25,6 +25,35 @@ import java.io.InputStreamReader;
 
 public class GrabProcessOutput {
 
+    public enum Wait {
+        /**
+         * Doesn't wait for the exec to complete.
+         * This still monitors the output but does not wait for the process to finish.
+         * In this mode the process return code is unknown and always 0.
+         */
+        ASYNC,
+        /**
+         * This waits for the process to finish.
+         * In this mode, {@link GrabProcessOutput#grabProcessOutput} returns the
+         * error code from the process.
+         * In some rare cases and depending on the OS, the process might not have
+         * finished dumping data into stdout/stderr.
+         * <p/>
+         * Use this when you don't particularly care for the output but instead
+         * care for the return code of the executed process.
+         */
+        WAIT_FOR_PROCESS,
+        /**
+         * This waits for the process to finish <em>and</em> for the stdout/stderr
+         * threads to complete.
+         * In this mode, {@link GrabProcessOutput#grabProcessOutput} returns the
+         * error code from the process.
+         * <p/>
+         * Use this one when capturing all the output from the process is important.
+         */
+        WAIT_FOR_READERS,
+    }
+
     public interface IProcessOutput {
         /**
          * Processes an stdout message line.
@@ -46,13 +75,13 @@ public class GrabProcessOutput {
      * @param output Optional object to capture stdout/stderr.
      *      Note that on Windows capturing the output is not optional. If output is null
      *      the stdout/stderr will be captured and discarded.
-     * @param waitForReaders True to wait for the reader threads to finish.
+     * @param waitMode Whether to wait for the process and/or the readers to finish.
      * @return the process return code.
      * @throws InterruptedException if {@link Process#waitFor()} was interrupted.
      */
     public static int grabProcessOutput(
             @NonNull final Process process,
-            boolean waitForReaders,
+            Wait waitMode,
             @Nullable final IProcessOutput output) throws InterruptedException {
         // read the lines as they come. if null is returned, it's
         // because the process finished
@@ -104,10 +133,14 @@ public class GrabProcessOutput {
         threadErr.start();
         threadOut.start();
 
+        if (waitMode == Wait.ASYNC) {
+            return 0;
+        }
+
         // it looks like on windows process#waitFor() can return
         // before the thread have filled the arrays, so we wait for both threads and the
         // process itself.
-        if (waitForReaders) {
+        if (waitMode == Wait.WAIT_FOR_READERS) {
             try {
                 threadErr.join();
             } catch (InterruptedException e) {

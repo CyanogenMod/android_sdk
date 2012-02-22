@@ -20,7 +20,9 @@ import com.android.AndroidConstants;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
+import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
+import com.android.ide.eclipse.adt.internal.actions.SdkManagerAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
@@ -42,6 +44,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.core.commands.Command;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
@@ -59,8 +62,10 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -78,11 +83,14 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
+import org.eclipse.ui.dialogs.PreferencesUtil;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
@@ -162,15 +170,23 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * checkSdkLocationAndId.
      */
     public static abstract class CheckSdkErrorHandler {
+
+        public enum Solution {
+            NONE,
+            OPEN_SDK_MANAGER,
+            OPEN_ANDROID_PREFS,
+            OPEN_P2_UPDATE
+        }
+
         /** Handle an error message during sdk location check. Returns whatever
          * checkSdkLocationAndId() should returns.
          */
-        public abstract boolean handleError(String message);
+        public abstract boolean handleError(Solution solution, String message);
 
         /** Handle a warning message during sdk location check. Returns whatever
          * checkSdkLocationAndId() should returns.
          */
-        public abstract boolean handleWarning(String message);
+        public abstract boolean handleWarning(Solution solution, String message);
     }
 
     /**
@@ -1064,16 +1080,132 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         }
 
         return checkSdkLocationAndId(sdkLocation, new CheckSdkErrorHandler() {
+            private String mTitle = "Android SDK Verification";
             @Override
-            public boolean handleError(String message) {
-                AdtPlugin.displayError("Android SDK Verification", message);
+            public boolean handleError(Solution solution, String message) {
+                displayMessage(solution, message, MessageDialog.ERROR);
                 return false;
             }
 
             @Override
-            public boolean handleWarning(String message) {
-                AdtPlugin.displayWarning("Android SDK Verification", message);
+            public boolean handleWarning(Solution solution, String message) {
+                displayMessage(solution, message, MessageDialog.WARNING);
                 return true;
+            }
+
+            private void displayMessage(
+                    final Solution solution,
+                    final String message,
+                    final int dialogImageType) {
+                final Display disp = getDisplay();
+                disp.asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        Shell shell = disp.getActiveShell();
+                        if (shell == null) {
+                            return;
+                        }
+
+                        String customLabel = null;
+                        switch(solution) {
+                        case OPEN_ANDROID_PREFS:
+                            customLabel = "Open Preferences";
+                            break;
+                        case OPEN_P2_UPDATE:
+                            customLabel = "Check for Updates";
+                            break;
+                        case OPEN_SDK_MANAGER:
+                            customLabel = "Open SDK Manager";
+                            break;
+                        }
+
+                        String btnLabels[] = new String[customLabel == null ? 1 : 2];
+                        btnLabels[0] = customLabel;
+                        btnLabels[btnLabels.length - 1] = IDialogConstants.CLOSE_LABEL;
+
+                        MessageDialog dialog = new MessageDialog(
+                                shell, // parent
+                                mTitle,
+                                null, // dialogTitleImage
+                                message,
+                                dialogImageType,
+                                btnLabels,
+                                btnLabels.length - 1);
+                        int index = dialog.open();
+
+                        if (customLabel != null && index == 0) {
+                            switch(solution) {
+                            case OPEN_ANDROID_PREFS:
+                                openAndroidPrefs();
+                                break;
+                            case OPEN_P2_UPDATE:
+                                openP2Update();
+                                break;
+                            case OPEN_SDK_MANAGER:
+                                openSdkManager();
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+
+            private void openSdkManager() {
+                // Windows only: open the standalone external SDK Manager since we know
+                // that ADT on Windows is bound to be locking some SDK folders.
+                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                    if (SdkManagerAction.openExternalSdkManager()) {
+                        return;
+                    }
+                }
+
+                // Otherwise open the regular SDK Manager bundled within ADT
+                if (!SdkManagerAction.openAdtSdkManager()) {
+                    // We failed because the SDK location is undefined. In this case
+                    // let's open the preferences instead.
+                    openAndroidPrefs();
+                }
+            }
+
+            private void openP2Update() {
+                Display disp = getDisplay();
+                if (disp == null) {
+                    return;
+                }
+                disp.asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        String cmdId = "org.eclipse.equinox.p2.ui.sdk.update";  //$NON-NLS-1$
+                        IWorkbench wb = PlatformUI.getWorkbench();
+                        if (wb == null) {
+                            return;
+                        }
+
+                        ICommandService cs = (ICommandService) wb.getService(ICommandService.class);
+                        IHandlerService is = (IHandlerService) wb.getService(IHandlerService.class);
+                        if (cs == null || is == null) {
+                            return;
+                        }
+
+                        Command cmd = cs.getCommand(cmdId);
+                        if (cmd != null && cmd.isDefined()) {
+                            try {
+                                is.executeCommand(cmdId, null/*event*/);
+                            } catch (Exception ignore) {
+                                AdtPlugin.log(ignore, "Failed to execute command %s", cmdId);
+                            }
+                        }
+                    }
+                });
+            }
+
+            private void openAndroidPrefs() {
+                PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(
+                        getDisplay().getActiveShell(),
+                        "com.android.ide.eclipse.preferences.main", //$NON-NLS-1$ preferencePageId
+                        null,  // displayedIds
+                        null); // data
+                dialog.open();
             }
         });
     }
@@ -1093,6 +1225,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         File osSdkFolder = new File(osSdkLocation);
         if (osSdkFolder.isDirectory() == false) {
             return errorHandler.handleError(
+                    Solution.OPEN_ANDROID_PREFS,
                     String.format(Messages.Could_Not_Find_Folder, osSdkLocation));
         }
 
@@ -1100,6 +1233,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         File toolsFolder = new File(osTools);
         if (toolsFolder.isDirectory() == false) {
             return errorHandler.handleError(
+                    Solution.OPEN_ANDROID_PREFS,
                     String.format(Messages.Could_Not_Find_Folder_In_SDK,
                             SdkConstants.FD_TOOLS, osSdkLocation));
         }
@@ -1113,13 +1247,17 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // check that we have both the tools component and the platform-tools component.
         String platformTools = osSdkLocation + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER;
         if (checkFolder(platformTools) == false) {
-            return errorHandler.handleWarning("SDK Platform Tools component is missing!\n" +
+            return errorHandler.handleWarning(
+                    Solution.OPEN_SDK_MANAGER,
+                    "SDK Platform Tools component is missing!\n" +
                     "Please use the SDK Manager to install it.");
         }
 
         String tools = osSdkLocation + SdkConstants.OS_SDK_TOOLS_FOLDER;
         if (checkFolder(tools) == false) {
-            return errorHandler.handleError("SDK Tools component is missing!\n" +
+            return errorHandler.handleError(
+                    Solution.OPEN_SDK_MANAGER,
+                    "SDK Tools component is missing!\n" +
                     "Please use the SDK Manager to install it.");
         }
 
@@ -1131,7 +1269,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         };
         for (String file : filesToCheck) {
             if (checkFile(file) == false) {
-                return errorHandler.handleError(String.format(Messages.Could_Not_Find, file));
+                return errorHandler.handleError(
+                        Solution.OPEN_ANDROID_PREFS,
+                        String.format(Messages.Could_Not_Find, file));
             }
         }
 

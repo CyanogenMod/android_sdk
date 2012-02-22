@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
+import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.repository.PkgProps;
@@ -103,7 +104,9 @@ public final class VersionCheck {
 
         // Failed to get the min plugin version number?
         if (minMajorVersion == -1 || minMinorVersion == -1 || minMicroVersion ==-1) {
-            return errorHandler.handleWarning(Messages.VersionCheck_Plugin_Version_Failed);
+            return errorHandler.handleWarning(
+                    Solution.OPEN_SDK_MANAGER,
+                    Messages.VersionCheck_Plugin_Version_Failed);
         }
 
         // test the plugin number
@@ -126,6 +129,7 @@ public final class VersionCheck {
 
         if (valid == false) {
             return errorHandler.handleError(
+                    Solution.OPEN_P2_UPDATE,
                     String.format(Messages.VersionCheck_Plugin_Too_Old,
                             minMajorVersion, minMinorVersion, minMicroVersion, versionString));
         }
@@ -163,6 +167,7 @@ public final class VersionCheck {
             // this is a warning only as we need to parse the SDK to allow updating
             // of the tools!
             return errorHandler.handleWarning(
+                    Solution.OPEN_SDK_MANAGER,
                     String.format(Messages.VersionCheck_Tools_Too_Old,
                             MIN_TOOLS_REV, toolsRevision));
         }

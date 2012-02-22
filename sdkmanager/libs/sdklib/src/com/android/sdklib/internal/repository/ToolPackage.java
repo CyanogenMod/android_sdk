@@ -25,6 +25,7 @@ import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import org.w3c.dom.Node;
 
@@ -276,7 +277,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
             final String tag = scriptName;
             status = GrabProcessOutput.grabProcessOutput(
                     proc,
-                    false /*waitForReaders*/,
+                    Wait.WAIT_FOR_PROCESS,
                     new IProcessOutput() {
                         @Override
                         public void out(String line) {

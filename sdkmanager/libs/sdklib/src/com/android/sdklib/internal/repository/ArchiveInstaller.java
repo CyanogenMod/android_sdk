@@ -25,6 +25,7 @@ import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -598,7 +599,7 @@ public class ArchiveInstaller {
                 Process process = Runtime.getRuntime().exec(command);
                 int retCode = GrabProcessOutput.grabProcessOutput(
                         process,
-                        true /*waitForReaders*/,
+                        Wait.WAIT_FOR_READERS,
                         new IProcessOutput() {
                             @Override
                             public void out(String line) {

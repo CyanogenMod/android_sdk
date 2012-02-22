@@ -20,6 +20,7 @@ import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +108,7 @@ public final class KeystoreHelper {
             Process process = Runtime.getRuntime().exec(commandArray);
             result = GrabProcessOutput.grabProcessOutput(
                     process,
-                    true /*waitForReaders*/,
+                    Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
                         public void out(String line) {

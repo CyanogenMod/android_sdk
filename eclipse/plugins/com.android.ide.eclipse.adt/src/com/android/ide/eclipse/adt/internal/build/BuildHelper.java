@@ -41,6 +41,7 @@ import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -1196,7 +1197,7 @@ public class BuildHelper {
 
         return GrabProcessOutput.grabProcessOutput(
                 process,
-                false /*waitForReaders*/,
+                Wait.WAIT_FOR_PROCESS,
                 new IProcessOutput() {
 
                     @SuppressWarnings("unused")
