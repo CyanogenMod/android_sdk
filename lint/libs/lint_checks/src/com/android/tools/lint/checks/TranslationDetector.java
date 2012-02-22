@@ -29,7 +29,6 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -52,7 +51,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -65,7 +63,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     static boolean COMPLETE_REGIONS =
             System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null; //$NON-NLS-1$
 
-    private static final Pattern lANGUAGE_PATTERN = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
+    private static final Pattern LANGUAGE_PATTERN = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
     private static final Pattern REGION_PATTERN = Pattern.compile("^r([A-Z]{2})$"); //$NON-NLS-1$
 
     /** Are all translations complete? */
@@ -103,6 +101,15 @@ public class TranslationDetector extends ResourceXmlDetector {
     private boolean mIgnoreFile;
     private Map<File, Set<String>> mFileToNames;
 
+    /** Locations for each untranslated string name. Populated during phase 2, if necessary */
+    private Map<String, Location> mMissingLocations;
+
+    /** Locations for each extra translated string name. Populated during phase 2, if necessary */
+    private Map<String, Location> mExtraLocations;
+
+    /** Error messages for each untranslated string name. Populated during phase 2, if necessary */
+    private Map<String, String> mDescriptions;
+
     /** Constructs a new {@link TranslationDetector} */
     public TranslationDetector() {
     }
@@ -127,12 +134,16 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckProject(Context context) {
-        mFileToNames = new HashMap<File, Set<String>>();
+        if (context.getDriver().getPhase() == 1) {
+            mFileToNames = new HashMap<File, Set<String>>();
+        }
     }
 
     @Override
     public void beforeCheckFile(Context context) {
-        mNames = new HashSet<String>();
+        if (context.getPhase() == 1) {
+            mNames = new HashSet<String>();
+        }
 
         // Convention seen in various projects
         mIgnoreFile = context.file.getName().startsWith("donottranslate"); //$NON-NLS-1$
@@ -140,21 +151,52 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     @Override
     public void afterCheckFile(Context context) {
-        // Store this layout's set of ids for full project analysis in afterCheckProject
-        mFileToNames.put(context.file, mNames);
+        if (context.getPhase() == 1) {
+            // Store this layout's set of ids for full project analysis in afterCheckProject
+            mFileToNames.put(context.file, mNames);
 
-        mNames = null;
+            mNames = null;
+        }
     }
 
     @Override
     public void afterCheckProject(Context context) {
-        // NOTE - this will look for the presence of translation strings.
-        // If you create a resource folder but don't actually place a file in it
-        // we won't detect that, but it seems like a smaller problem.
+        if (context.getPhase() == 1) {
+            // NOTE - this will look for the presence of translation strings.
+            // If you create a resource folder but don't actually place a file in it
+            // we won't detect that, but it seems like a smaller problem.
 
-        checkTranslations(context);
+            checkTranslations(context);
 
-        mFileToNames = null;
+            mFileToNames = null;
+
+            if (mMissingLocations != null || mExtraLocations != null) {
+                context.getDriver().requestRepeat(this, Scope.ALL_RESOURCES_SCOPE);
+            }
+        } else {
+            assert context.getPhase() == 2;
+
+            reportMap(context, MISSING, mMissingLocations);
+            reportMap(context, EXTRA, mExtraLocations);
+            mMissingLocations = null;
+            mExtraLocations = null;
+            mDescriptions = null;
+        }
+    }
+
+    private void reportMap(Context context, Issue issue, Map<String, Location> map) {
+        if (map != null) {
+            for (Map.Entry<String, Location> entry : map.entrySet()) {
+                Location location = entry.getValue();
+                String name = entry.getKey();
+                String message = mDescriptions.get(name);
+
+                // We were prepending locations, but we want to prefer the base folders
+                location = Location.reverse(location);
+
+                context.report(issue, location, message, null);
+            }
+        }
     }
 
     private void checkTranslations(Context context) {
@@ -184,33 +226,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             String name = parent.getName();
 
             // Look up the language for this folder.
-
-            String[] segments = name.split("-"); //$NON-NLS-1$
-
-            // TODO: To get an accurate answer, this should later do a
-            //   FolderConfiguration.getConfig(String[] folderSegments)
-            // to obtain a FolderConfiguration, then call
-            // getLanguageQualifier() on it, and if not null, call getValue() to get the
-            // actual language value.
-            // However, we don't have ide_common on the build path for lint, so for now
-            // use a simple guess about what constitutes a language qualifier here:
-
-            String language = null;
-            for (String segment : segments) {
-                // Language
-                if (language == null && segment.length() == 2
-                        && lANGUAGE_PATTERN.matcher(segment).matches()) {
-                    language = segment;
-                }
-
-                // Add in region
-                if (language != null && segment.length() == 3
-                        && REGION_PATTERN.matcher(segment).matches()) {
-                    language = language + '-' + segment;
-                    break;
-                }
-            }
-
+            String language = getLanguage(name);
             if (language == null) {
                 language = defaultLanguage;
             }
@@ -311,44 +327,78 @@ public class TranslationDetector extends ResourceXmlDetector {
                 if (reportMissing) {
                     Set<String> difference = Sets.difference(defaultStrings, strings);
                     if (difference.size() > 0) {
-                        List<String> sorted = new ArrayList<String>(difference);
-                        Collections.sort(sorted);
-                        Location location = getLocation(language, parentFolderToLanguage);
-                        int maxCount = context.getDriver().isAbbreviating() ? 4 : -1;
-                        // TODO: Compute applicable node scope
-                        context.report(MISSING, location,
-                            String.format("Locale %1$s is missing translations for: %2$s",
-                                language, LintUtils.formatList(sorted, maxCount)), null);
+                        if (mMissingLocations == null) {
+                            mMissingLocations = new HashMap<String, Location>();
+                        }
+                        if (mDescriptions == null) {
+                            mDescriptions = new HashMap<String, String>();
+                        }
+
+                        for (String s : difference) {
+                            mMissingLocations.put(s, null);
+                            String message = mDescriptions.get(s);
+                            if (message == null) {
+                                message = String.format("\"%1$s\" is not translated in %2$s",
+                                        s, language);
+                            } else {
+                                message = message + ", " + language;
+                            }
+                            mDescriptions.put(s, message);
+                        }
                     }
                 }
 
                 if (reportExtra) {
                     Set<String> difference = Sets.difference(strings, defaultStrings);
                     if (difference.size() > 0) {
-                        List<String> sorted = new ArrayList<String>(difference);
-                        Collections.sort(sorted);
-                        Location location = getLocation(language, parentFolderToLanguage);
-                        int maxCount = context.getDriver().isAbbreviating() ? 4 : -1;
-                        // TODO: Compute applicable node scope
-                        context.report(EXTRA, location, String.format(
-                              "Locale %1$s is translating names not found in default locale: %2$s",
-                              language, LintUtils.formatList(sorted, maxCount)), null);
+                        if (mExtraLocations == null) {
+                            mExtraLocations = new HashMap<String, Location>();
+                        }
+                        if (mDescriptions == null) {
+                            mDescriptions = new HashMap<String, String>();
+                        }
+
+                        for (String s : difference) {
+                            mExtraLocations.put(s, null);
+                            String message = String.format(
+                                "\"%1$s\" is translated here but not found in default locale", s);
+                            mDescriptions.put(s, message);
+                        }
                     }
                 }
             }
         }
     }
 
-    private Location getLocation(String language, Map<File, String> parentFolderToLanguage) {
-        Location location = null;
-        for (Entry<File, String> e : parentFolderToLanguage.entrySet()) {
-            if (e.getValue().equals(language)) {
-                // Use the location of the parent folder for this language
-                location = Location.create(e.getKey());
+    /** Look up the language for the given folder name */
+    private static String getLanguage(String name) {
+        String[] segments = name.split("-"); //$NON-NLS-1$
+
+        // TODO: To get an accurate answer, this should later do a
+        //   FolderConfiguration.getConfig(String[] folderSegments)
+        // to obtain a FolderConfiguration, then call
+        // getLanguageQualifier() on it, and if not null, call getValue() to get the
+        // actual language value.
+        // However, we don't have ide_common on the build path for lint, so for now
+        // use a simple guess about what constitutes a language qualifier here:
+
+        String language = null;
+        for (String segment : segments) {
+            // Language
+            if (language == null && segment.length() == 2
+                    && LANGUAGE_PATTERN.matcher(segment).matches()) {
+                language = segment;
+            }
+
+            // Add in region
+            if (language != null && segment.length() == 3
+                    && REGION_PATTERN.matcher(segment).matches()) {
+                language = language + '-' + segment;
                 break;
             }
         }
-        return location;
+
+        return language;
     }
 
     @Override
@@ -358,6 +408,42 @@ public class TranslationDetector extends ResourceXmlDetector {
         }
 
         Attr attribute = element.getAttributeNode(ATTR_NAME);
+
+        if (context.getPhase() == 2) {
+            // Just locating names requested in the {@link #mLocations} map
+            if (attribute == null) {
+                return;
+            }
+            String name = attribute.getValue();
+            if (mMissingLocations.containsKey(name)) {
+                String language = getLanguage(context.file.getParentFile().getName());
+                if (language == null) {
+                    if (context.getDriver().isSuppressed(MISSING, element)) {
+                        mMissingLocations.remove(name);
+                        return;
+                    }
+
+                    Location location = context.getLocation(element);
+                    location.setClientData(element);
+                    location.setSecondary(mMissingLocations.get(name));
+                    mMissingLocations.put(name, location);
+                }
+            }
+            if (mExtraLocations.containsKey(name)) {
+                if (context.getDriver().isSuppressed(EXTRA, element)) {
+                    mExtraLocations.remove(name);
+                    return;
+                }
+                Location location = context.getLocation(element);
+                location.setClientData(element);
+                location.setMessage("Also translated here");
+                location.setSecondary(mExtraLocations.get(name));
+                mExtraLocations.put(name, location);
+            }
+            return;
+        }
+
+        assert context.getPhase() == 1;
         if (attribute == null || attribute.getValue().length() == 0) {
             context.report(MISSING, element, context.getLocation(element),
                     "Missing name attribute in <string> declaration", null);
