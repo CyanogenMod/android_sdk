@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.views.detail;
 
 import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.android.ide.eclipse.gltrace.views.StateView;
 
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IToolBarManager;
@@ -48,10 +49,11 @@ public class DetailsPage extends Page implements ISelectionListener {
     private StackLayout mStackLayout;
     private Composite mBlankComposite;
 
-    private List<IStateDetailsProvider> mStateDetailProviders = Arrays.asList(
+    private List<IDetailProvider> mDetailProviders = Arrays.asList(
             new ShaderSourceDetailsProvider(),
             new ShaderUniformDetailsProvider(),
-            new TextureImageDetailsProvider());
+            new TextureImageDetailsProvider(),
+            new GlDrawCallDetailProvider());
 
     public DetailsPage(GLTrace trace) {
         mTrace = trace;
@@ -68,7 +70,7 @@ public class DetailsPage extends Page implements ISelectionListener {
 
         mToolBarManager = getSite().getActionBars().getToolBarManager();
 
-        for (IStateDetailsProvider provider : mStateDetailProviders) {
+        for (IDetailProvider provider : mDetailProviders) {
             provider.createControl(mTopComposite);
 
             for (IContributionItem item: provider.getToolBarItems()) {
@@ -79,7 +81,7 @@ public class DetailsPage extends Page implements ISelectionListener {
         setDetailsProvider(null);
     }
 
-    private void setDetailsProvider(IStateDetailsProvider provider) {
+    private void setDetailsProvider(IDetailProvider provider) {
         for (IContributionItem item: mToolBarManager.getItems()) {
             item.setVisible(false);
         }
@@ -117,7 +119,7 @@ public class DetailsPage extends Page implements ISelectionListener {
     public void dispose() {
         getSite().getPage().removeSelectionListener(this);
 
-        for (IStateDetailsProvider provider : mStateDetailProviders) {
+        for (IDetailProvider provider : mDetailProviders) {
             provider.disposeControl();
         }
 
@@ -152,10 +154,15 @@ public class DetailsPage extends Page implements ISelectionListener {
     }
 
     private void stateVariableSelected(IGLProperty property) {
-        for (IStateDetailsProvider p : mStateDetailProviders) {
-            if (p.isApplicable(property)) {
-                p.updateControl(property);
-                setDetailsProvider(p);
+        for (IDetailProvider p : mDetailProviders) {
+            if (!(p instanceof IStateDetailProvider)) {
+                continue;
+            }
+
+            IStateDetailProvider sp = (IStateDetailProvider) p;
+            if (sp.isApplicable(property)) {
+                sp.updateControl(property);
+                setDetailsProvider(sp);
                 return;
             }
         }
@@ -165,6 +172,21 @@ public class DetailsPage extends Page implements ISelectionListener {
     }
 
     private void callSelected(GLCall selectedCall) {
+        for (IDetailProvider p : mDetailProviders) {
+            if (!(p instanceof ICallDetailProvider)) {
+                continue;
+            }
+
+            ICallDetailProvider cp = (ICallDetailProvider) p;
+            if (cp.isApplicable(selectedCall)) {
+                cp.updateControl(mTrace, selectedCall);
+                setDetailsProvider(cp);
+                return;
+            }
+        }
+
+        setDetailsProvider(null);
+        return;
     }
 
     private GLCall getSelectedCall(GLFunctionTraceViewer part, ISelection selection) {
