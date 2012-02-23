@@ -25,6 +25,9 @@ public class GLState {
     /** # of texture units modelled in the GL State. */
     public static final int TEXTURE_UNIT_COUNT = 8;
 
+    /** # of vertex attributes */
+    private static final int MAX_VERTEX_ATTRIBS = 8;
+
     private static GLState sGLState = new GLState();
 
     private IGLProperty createBufferBindings() {
@@ -32,11 +35,11 @@ public class GLState {
 
         array      = new GLIntegerProperty(GLStateType.ARRAY_BUFFER_BINDING, 0);
         eArray     = new GLIntegerProperty(GLStateType.ELEMENT_ARRAY_BUFFER_BINDING, 0);
+
         vArray     = new GLIntegerProperty(
                 GLStateType.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_PER_INDEX, 0);
-
         IGLProperty vArray8 = new GLListProperty(GLStateType.VERTEX_ATTRIB_ARRAY_BUFFER_BINDINGS,
-                vArray, 8);
+                vArray, MAX_VERTEX_ATTRIBS);
 
         return new GLCompositeProperty(
                 GLStateType.BUFFER_BINDINGS,
@@ -67,14 +70,36 @@ public class GLState {
         return new GLListProperty(
                 GLStateType.VERTEX_ATTRIB_ARRAY,
                 perVertexAttribArrayState,
-                8);
+                MAX_VERTEX_ATTRIBS);
+    }
+
+    private IGLProperty createGenericVertexAttributeState() {
+        IGLProperty v0 = new GLFloatProperty(GLStateType.GENERIC_VERTEX_ATTRIB_V0,
+                Float.valueOf(0));
+        IGLProperty v1 = new GLFloatProperty(GLStateType.GENERIC_VERTEX_ATTRIB_V1,
+                Float.valueOf(0));
+        IGLProperty v2 = new GLFloatProperty(GLStateType.GENERIC_VERTEX_ATTRIB_V2,
+                Float.valueOf(0));
+        IGLProperty v3 = new GLFloatProperty(GLStateType.GENERIC_VERTEX_ATTRIB_V3,
+                Float.valueOf(0));
+
+        IGLProperty perGenericVertexAttribState = new GLCompositeProperty(
+                GLStateType.GENERIC_VERTEX_ATTRIBUTE_DATA_COMPOSITE,
+                v0, v1, v2, v3);
+
+        return new GLListProperty(
+                GLStateType.GENERIC_VERTEX_ATTRIBUTES,
+                perGenericVertexAttribState,
+                MAX_VERTEX_ATTRIBS);
     }
 
     private IGLProperty createVertexArrayData() {
         IGLProperty vertexAttribArrays = createVertexAttribArrays();
         IGLProperty bufferBindings = createBufferBindings();
+        IGLProperty genericAttribs = createGenericVertexAttributeState();
 
         return new GLCompositeProperty(GLStateType.VERTEX_ARRAY_DATA,
+                genericAttribs,
                 vertexAttribArrays,
                 bufferBindings);
     }

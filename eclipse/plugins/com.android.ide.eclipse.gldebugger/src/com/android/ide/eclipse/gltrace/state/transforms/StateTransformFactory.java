@@ -41,14 +41,38 @@ public class StateTransformFactory {
         switch (msg.getFunction()) {
             case eglCreateContext:
                 return transformsForEglCreateContext(msg);
-            case glVertexAttribPointer:
-                return transformsForGlVertexAttribPointer(msg);
             case glBindFramebuffer:
                 return transformsForGlBindFramebuffer(msg);
+
+            // vertex data
+            case glVertexAttribPointer:
+                return transformsForGlVertexAttribPointer(msg);
+            case glVertexAttrib1f:
+            case glVertexAttrib2f:
+            case glVertexAttrib3f:
+            case glVertexAttrib4f:
+                return transformsForGlVertexAttribxf(msg);
+            case glVertexAttrib1fv:
+            case glVertexAttrib2fv:
+            case glVertexAttrib3fv:
+            case glVertexAttrib4fv:
+                return transformsForGlVertexAttribxfv(msg);
+            case glEnableVertexAttribArray:
+                return transformsForGlEnableVertexAttribArray(msg);
+            case glDisableVertexAttribArray:
+                return transformsForGlDisableVertexAttribArray(msg);
+
+            // VBO's
+            case glBindBuffer:
+                return transformsForGlBindBuffer(msg);
+
+            // transformation state
             case glViewport:
                 return transformsForGlViewport(msg);
             case glDepthRangef:
                 return transformsForGlDepthRangef(msg);
+
+            // rasterization
             case glLineWidth:
                 return transformsForGlLineWidth(msg);
             case glCullFace:
@@ -57,6 +81,8 @@ public class StateTransformFactory {
                 return transformsForGlFrontFace(msg);
             case glPolygonOffset:
                 return transformsForGlPolygonOffset(msg);
+
+            // pixel operations
             case glScissor:
                 return transformsForGlScissor(msg);
             case glStencilFunc:
@@ -192,6 +218,124 @@ public class StateTransformFactory {
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_POINTER),
                 Integer.valueOf(pointer)));
         return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlVertexAttrib(int context,
+            int index, float v0, float v1, float v2, float v3) {
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>(4);
+        transforms.add(new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(context,
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.GENERIC_VERTEX_ATTRIBUTES,
+                                                Integer.valueOf(index),
+                                                GLStateType.GENERIC_VERTEX_ATTRIB_V0),
+                Float.valueOf(v0)));
+        transforms.add(new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(context,
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.GENERIC_VERTEX_ATTRIBUTES,
+                                                Integer.valueOf(index),
+                                                GLStateType.GENERIC_VERTEX_ATTRIB_V1),
+                Float.valueOf(v1)));
+        transforms.add(new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(context,
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.GENERIC_VERTEX_ATTRIBUTES,
+                                                Integer.valueOf(index),
+                                                GLStateType.GENERIC_VERTEX_ATTRIB_V2),
+                Float.valueOf(v2)));
+        transforms.add(new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(context,
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.GENERIC_VERTEX_ATTRIBUTES,
+                                                Integer.valueOf(index),
+                                                GLStateType.GENERIC_VERTEX_ATTRIB_V3),
+                Float.valueOf(v3)));
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlVertexAttribxf(GLMessage msg) {
+        // void glVertexAttrib1f(GLuint index, GLfloat v0);
+        // void glVertexAttrib2f(GLuint index, GLfloat v0, GLfloat v1);
+        // void glVertexAttrib3f(GLuint index, GLfloat v0, GLfloat v1, GLfloat v2);
+        // void glVertexAttrib4f(GLuint index, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+
+        int index = msg.getArgs(0).getIntValue(0);
+        float v0 = msg.getArgs(1).getFloatValue(0);
+        float v1 = msg.getArgsCount() > 2 ? msg.getArgs(2).getFloatValue(0) : 0;
+        float v2 = msg.getArgsCount() > 3 ? msg.getArgs(3).getFloatValue(0) : 0;
+        float v3 = msg.getArgsCount() > 4 ? msg.getArgs(4).getFloatValue(0) : 0;
+
+        return transformsForGlVertexAttrib(msg.getContextId(), index, v0, v1, v2, v3);
+    }
+
+    private static List<IStateTransform> transformsForGlVertexAttribxfv(GLMessage msg) {
+        // void glVertexAttrib1fv(GLuint index, const GLfloat *v);
+        // void glVertexAttrib2fv(GLuint index, const GLfloat *v);
+        // void glVertexAttrib3fv(GLuint index, const GLfloat *v);
+        // void glVertexAttrib4fv(GLuint index, const GLfloat *v);
+
+        int index = msg.getArgs(0).getIntValue(0);
+        float v[] = new float[4];
+
+        for (int i = 0; i < msg.getArgs(1).getFloatValueList().size(); i++) {
+            v[i] = msg.getArgs(1).getFloatValue(i);
+        }
+
+        return transformsForGlVertexAttrib(msg.getContextId(), index, v[0], v[1], v[2], v[3]);
+    }
+
+    private static List<IStateTransform> transformsForGlEnableVertexAttribArray(GLMessage msg) {
+        // void glEnableVertexAttribArray(GLuint index);
+        // void glDisableVertexAttribArray(GLuint index);
+
+        int index = msg.getArgs(0).getIntValue(0);
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.VERTEX_ATTRIB_ARRAY,
+                                                Integer.valueOf(index),
+                                                GLStateType.VERTEX_ATTRIB_ARRAY_ENABLED),
+                Boolean.TRUE);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlDisableVertexAttribArray(GLMessage msg) {
+        // void glEnableVertexAttribArray(GLuint index);
+        // void glDisableVertexAttribArray(GLuint index);
+
+        int index = msg.getArgs(0).getIntValue(0);
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.VERTEX_ATTRIB_ARRAY,
+                                                Integer.valueOf(index),
+                                                GLStateType.VERTEX_ATTRIB_ARRAY_ENABLED),
+                Boolean.FALSE);
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlBindBuffer(GLMessage msg) {
+        // void glBindBuffer(GLenum target, GLuint buffer);
+        // target is one of GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER.
+
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        int buffer = msg.getArgs(1).getIntValue(0);
+        GLStateType bufferType;
+
+        if (target == GLEnum.GL_ARRAY_BUFFER) {
+            bufferType = GLStateType.ARRAY_BUFFER_BINDING;
+        } else {
+            bufferType = GLStateType.ELEMENT_ARRAY_BUFFER_BINDING;
+        }
+
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
+                                                GLStateType.BUFFER_BINDINGS,
+                                                bufferType),
+                Integer.valueOf(buffer));
+        return Collections.singletonList(transform);
     }
 
     private static List<IStateTransform> transformsForGlBindFramebuffer(GLMessage msg) {

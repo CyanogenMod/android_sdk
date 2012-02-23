@@ -25,6 +25,13 @@ public enum GLStateType {
         GL_STATE_ES2("OpenGL ES 2.0 State"),
 
     VERTEX_ARRAY_DATA("Vertex Array Data"),
+        GENERIC_VERTEX_ATTRIBUTES("Generic Vertex Attributes"),
+            GENERIC_VERTEX_ATTRIBUTE_DATA_COMPOSITE("Generic Vertex Attribute Data"),
+                GENERIC_VERTEX_ATTRIB_V0("x"),
+                GENERIC_VERTEX_ATTRIB_V1("y"),
+                GENERIC_VERTEX_ATTRIB_V2("z"),
+                GENERIC_VERTEX_ATTRIB_V3("w"),
+
         VERTEX_ATTRIB_ARRAY("Vertex Attrib Array Properties"),
         VERTEX_ATTRIB_ARRAY_COMPOSITE("Vertex Attrib Array #n Properties"),
             VERTEX_ATTRIB_ARRAY_ENABLED("Vertex Attrib Array Enable"),
