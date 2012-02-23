@@ -32,7 +32,6 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,14 +60,7 @@ public class ProjectResources extends ResourceRepository {
     /** Map of (int[], name) for styleable resources coming from R.java */
     private Map<IntArrayWrapper, String> mStyleableValueToNameMap;
 
-    /**
-     * This list is used by {@link #getResourceId(String, String)} when the resource
-     * query is an ID that doesn't exist (for example for ID automatically generated in
-     * layout files that are not saved yet).
-     */
-    private final Map<String, Integer> mDynamicIds = new HashMap<String, Integer>();
-    private final Map<Integer, String> mRevDynamicIds = new HashMap<Integer, String>();
-    private int mDynamicSeed = DYNAMIC_ID_SEED_START;
+    private final DynamicIdMap mDynamicIdMap = new DynamicIdMap(DYNAMIC_ID_SEED_START);
 
     private final IProject mProject;
 
@@ -182,9 +174,8 @@ public class ProjectResources extends ResourceRepository {
         }
 
         if (result == null) {
-            String name = mRevDynamicIds.get(id);
-            if (name != null) {
-                result = Pair.of(ResourceType.ID, name);
+            synchronized (mDynamicIdMap) {
+                result = mDynamicIdMap.resolveId(id);
             }
         }
 
@@ -218,8 +209,10 @@ public class ProjectResources extends ResourceRepository {
             }
         }
 
-        if (result == null && ResourceType.ID == type) {
-            result = getDynamicId(name);
+        if (result == null) {
+            synchronized (mDynamicIdMap) {
+                result = mDynamicIdMap.getId(type, name);
+            }
         }
 
         return result;
@@ -233,38 +226,14 @@ public class ProjectResources extends ResourceRepository {
      * change.
      */
     public void resetDynamicIds() {
-        synchronized (mDynamicIds) {
-            mDynamicIds.clear();
-            mRevDynamicIds.clear();
-            mDynamicSeed = DYNAMIC_ID_SEED_START;
+        synchronized (mDynamicIdMap) {
+            mDynamicIdMap.reset(DYNAMIC_ID_SEED_START);
         }
     }
 
     @Override
     protected ResourceItem createResourceItem(String name) {
         return new ResourceItem(name);
-    }
-
-    /**
-     * Returns a dynamic integer for the given resource name, creating it if it doesn't
-     * already exist.
-     *
-     * @param name the name of the resource
-     * @return an integer.
-     *
-     * @see #resetDynamicIds()
-     */
-    private Integer getDynamicId(String name) {
-        synchronized (mDynamicIds) {
-            Integer value = mDynamicIds.get(name);
-            if (value == null) {
-                value = Integer.valueOf(++mDynamicSeed);
-                mDynamicIds.put(name, value);
-                mRevDynamicIds.put(value, name);
-            }
-
-            return value;
-        }
     }
 
     /**
@@ -283,5 +252,7 @@ public class ProjectResources extends ResourceRepository {
         mResourceValueMap = resourceValueMap;
         mResIdValueToNameMap = resIdValueToNameMap;
         mStyleableValueToNameMap = styleableValueMap;
+
+        resetDynamicIds();
     }
 }
