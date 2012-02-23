@@ -201,7 +201,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         private void reportAllocation(Node node) {
             mContext.report(PAINT_ALLOC, node, mContext.getLocation(node),
                 "Avoid object allocations during draw/layout operations (preallocate and " +
-                "reuse insteaD)", null);
+                "reuse instead)", null);
         }
 
         @Override
