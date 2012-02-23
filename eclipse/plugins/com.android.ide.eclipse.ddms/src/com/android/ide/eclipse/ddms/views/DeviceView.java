@@ -471,6 +471,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
         placeActions();
 
+        // disabling all action buttons
+        selectionChanged(null, null);
+
         ClientData.setHprofDumpHandler(new HProfHandler(mParentShell));
         AndroidDebugBridge.addClientChangeListener(this);
         ClientData.setMethodProfilingHandler(new MethodProfilingHandler(mParentShell) {
