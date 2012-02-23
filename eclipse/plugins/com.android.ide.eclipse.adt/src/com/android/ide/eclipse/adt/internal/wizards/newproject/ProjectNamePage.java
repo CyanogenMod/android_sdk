@@ -183,24 +183,29 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         super.setVisible(visible);
 
         if (visible) {
-            if (mValues.projectName != null) {
-                mProjectNameText.setText(mValues.projectName);
-                mProjectNameText.setFocus();
-            }
-            if (mValues.mode == Mode.ANY || mValues.mode == Mode.TEST) {
-                if (mValues.useExisting) {
-                    mCreateExistingRadioButton.setSelection(true);
-                } else {
-                    mCreateNewButton.setSelection(true);
+            try {
+                mIgnore = true;
+                if (mValues.projectName != null) {
+                        mProjectNameText.setText(mValues.projectName);
+                    mProjectNameText.setFocus();
                 }
-            } else if (mValues.mode == Mode.SAMPLE) {
-                mCreateSampleRadioButton.setSelection(true);
+                if (mValues.mode == Mode.ANY || mValues.mode == Mode.TEST) {
+                    if (mValues.useExisting) {
+                        mCreateExistingRadioButton.setSelection(true);
+                    } else {
+                        mCreateNewButton.setSelection(true);
+                    }
+                } else if (mValues.mode == Mode.SAMPLE) {
+                    mCreateSampleRadioButton.setSelection(true);
+                }
+                if (mValues.projectLocation != null) {
+                    mLocationText.setText(mValues.projectLocation.getPath());
+                }
+                mUseDefaultCheckBox.setSelection(mValues.useDefaultLocation);
+                updateLocationState();
+            } finally {
+                mIgnore = false;
             }
-            if (mValues.projectLocation != null) {
-                mLocationText.setText(mValues.projectLocation.getPath());
-            }
-            mUseDefaultCheckBox.setSelection(mValues.useDefaultLocation);
-            updateLocationState();
         }
 
         validatePage();
@@ -252,7 +257,9 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
             mValues.testProjectName =
                     ApplicationInfoPage.suggestTestProjectName(mValues.projectName);
         }
-        updateLocationPathField(null);
+        if (!mValues.projectLocationModifiedByUser) {
+            updateLocationPathField(null);
+        }
     }
 
     @Override
@@ -265,12 +272,20 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
 
         if (source == mCreateNewButton && mCreateNewButton.getSelection()) {
             mValues.useExisting = false;
-            mValues.mode = Mode.ANY;
+            if (mValues.mode == Mode.SAMPLE) {
+                // Only reset the mode if we're toggling from sample back to create new
+                // or create existing. We can only come to the sample state when we're in
+                // ANY mode. (In particular, we don't want to switch to ANY if you're
+                // in test mode.
+                mValues.mode = Mode.ANY;
+            }
             updateLocationState();
         } else if (source == mCreateExistingRadioButton
                 && mCreateExistingRadioButton.getSelection()) {
             mValues.useExisting = true;
-            mValues.mode = Mode.ANY;
+            if (mValues.mode == Mode.SAMPLE) {
+                mValues.mode = Mode.ANY;
+            }
             if (!mValues.activityNameModifiedByUser) {
                 mValues.createActivity = false;
             }

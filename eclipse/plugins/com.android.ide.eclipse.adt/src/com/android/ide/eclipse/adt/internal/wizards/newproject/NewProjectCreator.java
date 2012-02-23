@@ -364,7 +364,7 @@ public class NewProjectCreator  {
         parameters.put(PARAM_PACKAGE, pkg);
         parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
         parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
-        parameters.put(PARAM_IS_NEW_PROJECT, true);
+        parameters.put(PARAM_IS_NEW_PROJECT, !mValues.useExisting);
         parameters.put(PARAM_SRC_FOLDER, mValues.sourceFolder);
         parameters.put(PARAM_SDK_TARGET, mValues.target);
         parameters.put(PARAM_MIN_SDK_VERSION, mValues.minSdk);
@@ -402,7 +402,8 @@ public class NewProjectCreator  {
             description.setLocation(path);
         }
 
-        if (!mValues.useDefaultLocation && !validateNewProjectLocationIsEmpty(path)) {
+        if (!mValues.useExisting && !mValues.useDefaultLocation &&
+                !validateNewProjectLocationIsEmpty(path)) {
             return null;
         }
 

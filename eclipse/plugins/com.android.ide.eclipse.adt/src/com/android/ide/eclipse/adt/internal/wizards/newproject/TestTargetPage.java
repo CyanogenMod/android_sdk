@@ -60,7 +60,7 @@ class TestTargetPage extends WizardPage implements SelectionListener {
      */
     TestTargetPage(NewProjectWizardState values) {
         super("testTargetPage"); //$NON-NLS-1$
-        setTitle("Select TestTarget");
+        setTitle("Select Test Target");
         setDescription("Choose a project to test");
         mValues = values;
     }
