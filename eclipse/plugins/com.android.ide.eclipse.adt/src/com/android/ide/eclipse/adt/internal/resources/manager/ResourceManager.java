@@ -167,6 +167,19 @@ public final class ResourceManager {
      *            as a place to stash errors encountered
      */
     public void processDelta(IResourceDelta delta, IdeScanningContext context) {
+        doProcessDelta(delta, context);
+
+        context.getRepository().postUpdateCleanUp();
+    }
+
+    /**
+     * Update the resource repository with a delta
+     *
+     * @param delta the resource changed delta to process.
+     * @param context a context object with state for the current update, such
+     *            as a place to stash errors encountered
+     */
+    private void doProcessDelta(IResourceDelta delta, IdeScanningContext context) {
         // Skip over deltas that don't fit our mask
         int mask = IResourceDelta.ADDED | IResourceDelta.REMOVED | IResourceDelta.CHANGED;
         int kind = delta.getKind();
