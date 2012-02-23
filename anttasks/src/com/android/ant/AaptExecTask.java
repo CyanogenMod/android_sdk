@@ -50,6 +50,7 @@ import java.util.Set;
  * <tr><td>-0 extension</td><td>&lt;nocompress extension=""&gt;<br>&lt;nocompress&gt;</td><td>nested element(s)<br>with attribute (String)</td></tr>
  * <tr><td>-F apk-file</td><td>apkfolder<br>outfolder<br>apkbasename<br>basename</td><td>attribute (Path)<br>attribute (Path) deprecated<br>attribute (String)<br>attribute (String) deprecated</td></tr>
  * <tr><td>-J R-file-dir</td><td>rfolder</td><td>attribute (Path)<br>-m always enabled</td></tr>
+ * <tr><td>--rename-manifest-package package-name</td><td>manifestpackage</td><td>attribute (String)</td></tr>
  * <tr><td></td><td></td><td></td></tr>
  * </table>
  */
@@ -83,6 +84,7 @@ public final class AaptExecTask extends SingleDependencyTask {
     private int mVersionCode = 0;
     private String mVersionName;
     private String mManifest;
+    private String mManifestPackage;
     private ArrayList<Path> mResources;
     private String mAssets;
     private String mAndroidJar;
@@ -209,6 +211,20 @@ public final class AaptExecTask extends SingleDependencyTask {
      */
     public void setManifest(Path manifest) {
         mManifest = TaskHelper.checkSinglePath("manifest", manifest);
+    }
+
+    /**
+     * Sets a custom manifest package ID to be used during packaging.<p>
+     * The manifest will be rewritten so that its package ID becomes the value given here.
+     * Relative class names in the manifest (e.g. ".Foo") will be rewritten to absolute names based
+     * on the existing package name, meaning that no code changes need to be made.
+     * 
+     * @param packageName The package ID the APK should have.
+     */
+    public void setManifestpackage(String packageName) {
+        if (packageName != null && packageName.length() != 0) {
+            mManifestPackage = packageName;
+        }
     }
 
     /**
@@ -535,6 +551,12 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (mManifest != null && mManifest.length() > 0) {
             task.createArg().setValue("-M");
             task.createArg().setValue(mManifest);
+        }
+
+        // Rename manifest package
+        if (mManifestPackage != null) {
+            task.createArg().setValue("--rename-manifest-package");
+            task.createArg().setValue(mManifestPackage);
         }
 
         // resources locations.
