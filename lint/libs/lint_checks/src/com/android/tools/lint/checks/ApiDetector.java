@@ -219,7 +219,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
     private int getMinSdk(Context context) {
         if (mMinApi == -1) {
-            mMinApi = context.getProject().getMinSdk();
+            mMinApi = context.getMainProject().getMinSdk();
         }
 
         return mMinApi;

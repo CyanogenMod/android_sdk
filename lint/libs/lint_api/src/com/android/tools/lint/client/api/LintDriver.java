@@ -676,14 +676,14 @@ public class LintDriver {
     private void runFileDetectors(@NonNull Project project, @Nullable Project main) {
         // Look up manifest information (but not for library projects)
         File manifestFile = project.getManifestFile();
-        if (!project.isLibrary() && manifestFile != null) {
+        if (manifestFile != null) {
             XmlContext context = new XmlContext(this, project, main, manifestFile, null);
             IDomParser parser = mClient.getDomParser();
             context.document = parser.parseXml(context);
             if (context.document != null) {
                 project.readManifest(context.document);
 
-                if (mScope.contains(Scope.MANIFEST)) {
+                if (!project.isLibrary() && mScope.contains(Scope.MANIFEST)) {
                     List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
                     if (detectors != null) {
                         XmlVisitor v = new XmlVisitor(parser, detectors);

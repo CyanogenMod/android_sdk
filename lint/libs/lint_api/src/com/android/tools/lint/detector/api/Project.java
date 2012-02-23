@@ -421,7 +421,6 @@ public class Project {
      * @param document the DOM document for the manifest XML document
      */
     public void readManifest(@NonNull Document document) {
-        assert !mLibrary; // Should call readManifest on the master project, not the library
         Element root = document.getDocumentElement();
         if (root == null) {
             return;
