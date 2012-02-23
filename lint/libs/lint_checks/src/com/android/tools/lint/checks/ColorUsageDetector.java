@@ -49,7 +49,7 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
             "an RGB triple, not the actual color resource id. You must call " +
             "getResources().getColor(resource) to resolve the actual color value first.",
 
-            Category.PERFORMANCE,
+            Category.CORRECTNESS,
             7,
             Severity.ERROR,
             ColorUsageDetector.class,
