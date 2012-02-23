@@ -598,9 +598,9 @@ public abstract class ResourceRepository {
 
 
     /**
-     * Called after a resource change event, when the resource delta has been processed.
+     * Cleans up the repository of resource items that have no source file anymore.
      */
-    protected void postUpdate() {
+    public void postUpdateCleanUp() {
         // Since removed files/folders remove source files from existing ResourceItem, loop through
         // all resource items and remove the ones that have no source files.
 
