@@ -188,6 +188,17 @@
     <!-- properties for packaging -->
     <property name="build.packaging.nocrunch" value="true" />
 
+    <!-- whether we need to fork javac.
+         This is only needed on Windows when running Java < 7 -->
+    <condition else="false" property="need.javac.fork">
+        <and>
+            <matches pattern="1\.[56]" string="${java.specification.version}"/>
+            <not>
+                <os family="unix"/>
+            </not>
+        </and>
+    </condition>
+
     <!-- ******************************************************* -->
     <!-- ************************ Macros *********************** -->
     <!-- ******************************************************* -->
@@ -657,7 +668,8 @@
                     bootclasspathref="android.target.classpath"
                     verbose="${verbose}"
                     classpath="${extensible.classpath}"
-                    classpathref="jar.libs.ref">
+                    classpathref="jar.libs.ref"
+                    fork="${need.javac.fork}">
                 <src path="${source.absolute.dir}" />
                 <src path="${gen.absolute.dir}" />
                 <classpath>
