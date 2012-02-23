@@ -134,6 +134,11 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"      type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"       type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -194,6 +199,15 @@
 
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"  type="sdk:archivesType" />
+
+            <!-- An optional element indicating the package is obsolete.
+                 The string content is however currently not defined and ignored. -->
+            <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -245,6 +259,15 @@
 
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"  type="sdk:archivesType" />
+
+            <!-- An optional element indicating the package is obsolete.
+                 The string content is however currently not defined and ignored. -->
+            <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -272,13 +295,19 @@
             <xsd:element name="release-url"  type="xsd:token"       minOccurs="0" />
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"     type="sdk:archivesType" />
-            <!-- An optional element indicating the package is obsolete.
-                 The string content is however currently not defined and ignored. -->
-            <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
 
             <!-- The minimal revision of platform-tools required by this package.
                  Mandatory. Must be an int > 0. -->
             <xsd:element name="min-platform-tools-rev" type="xsd:positiveInteger" />
+
+            <!-- An optional element indicating the package is obsolete.
+                 The string content is however currently not defined and ignored. -->
+            <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -310,6 +339,11 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -343,9 +377,15 @@
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"     type="sdk:archivesType" />
 
+
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -382,9 +422,15 @@
                  Optional. If present, must be an int > 0. -->
             <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
 
+
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
+
+            <!-- An optional element indicating the package is a beta/preview.
+                 When present, it indicates the release-candidate number.
+                 When the element is absent, it indicates this is a released package. -->
+            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
