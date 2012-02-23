@@ -97,7 +97,7 @@ import lombok.ast.grammar.Source;
 @SuppressWarnings("restriction") // DOM model
 public class EclipseLintClient extends LintClient implements IDomParser {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
-    private static final String DOCUMENT_PROPERTY = "document"; //$NON-NLS-1$
+    private static final String MODEL_PROPERTY = "model";       //$NON-NLS-1$
     private final List<? extends IResource> mResources;
     private final IDocument mDocument;
     private boolean mWasFatal;
@@ -162,7 +162,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             IModelManager modelManager = StructuredModelManager.getModelManager();
             model = modelManager.getModelForRead(file);
             if (model instanceof IDOMModel) {
-                context.setProperty(DOCUMENT_PROPERTY, model.getStructuredDocument());
+                context.setProperty(MODEL_PROPERTY, model);
                 IDOMModel domModel = (IDOMModel) model;
                 return domModel.getDocument();
             }
@@ -170,11 +170,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             AdtPlugin.log(e, "Cannot read XML file");
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
-        } finally {
-            if (model != null) {
-                // TODO: This may be too early...
-                model.releaseFromRead();
-            }
         }
 
         return null;
@@ -585,14 +580,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     @Override
     public Location getLocation(XmlContext context, Node node) {
-        IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
-        return new LazyLocation(context.file, doc, (IndexedRegion) node);
+        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+        return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
     }
 
     @Override
     public Handle createLocationHandle(final XmlContext context, final Node node) {
-        IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
-        return new LazyLocation(context.file, doc, (IndexedRegion) node);
+        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+        return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
     }
 
     /**
@@ -611,7 +606,11 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     @Override
     public void dispose(XmlContext context, Document document) {
-        // TODO: Consider leaving read-lock on the document in parse() and freeing it here.
+        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+        assert model != null : context.file;
+        if (model != null) {
+            model.releaseFromRead();
+        }
     }
 
     private static class LazyLocation extends Location implements Location.Handle {

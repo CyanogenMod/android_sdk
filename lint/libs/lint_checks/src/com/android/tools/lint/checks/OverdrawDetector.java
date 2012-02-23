@@ -402,6 +402,10 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         // Look for theme definitions, and record themes that provide a null background.
         String styleName = element.getAttribute(ATTR_NAME);
         String parent = element.getAttribute(ATTR_PARENT);
+        if (parent == null) {
+            // Eclipse DOM workaround
+            parent = "";
+        }
 
         if (parent.length() == 0) {
             int index = styleName.lastIndexOf('.');
