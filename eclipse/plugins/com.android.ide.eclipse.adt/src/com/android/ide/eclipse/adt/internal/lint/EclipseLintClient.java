@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
@@ -43,8 +44,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -572,7 +571,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     private String readPlainFile(File file) {
         try {
-            return Files.toString(file, Charsets.UTF_8);
+            return LintUtils.getEncodedString(file);
         } catch (IOException e) {
             return ""; //$NON-NLS-1$
         }

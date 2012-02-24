@@ -33,14 +33,12 @@ import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.util.PositionXmlParser;
-import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -959,13 +957,7 @@ public class Main extends LintClient {
     @Override
     public String readFile(File file) {
         try {
-            // For XML files, apply special logic to pick up encoding information within the file
-            if (endsWith(file.getName(), DOT_XML)) {
-                byte[] data = Files.toByteArray(file);
-                return PositionXmlParser.getXmlString(data);
-            }
-
-            return Files.toString(file, Charsets.UTF_8);
+            return LintUtils.getEncodedString(file);
         } catch (IOException e) {
             return ""; //$NON-NLS-1$
         }

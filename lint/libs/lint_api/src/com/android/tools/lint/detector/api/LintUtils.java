@@ -25,13 +25,17 @@ import com.android.annotations.Nullable;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.util.PositionXmlParser;
 import com.google.common.annotations.Beta;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -373,5 +377,116 @@ public class LintUtils {
             }
         }
         return null;
+    }
+
+    private static final String UTF_8 = "UTF-8";                 //$NON-NLS-1$
+    private static final String UTF_16 = "UTF_16";               //$NON-NLS-1$
+    private static final String UTF_16LE = "UTF_16LE";           //$NON-NLS-1$
+
+    /**
+     * Returns the encoded String for the given file. This is usually the
+     * same as {@code Files.toString(file, Charsets.UTF8}, but if there's a UTF byte order mark
+     * (for UTF8, UTF_16 or UTF_16LE), use that instead.
+     *
+     * @param file the file to read from
+     * @return the string
+     * @throws IOException if the file cannot be read properly
+     */
+    public static String getEncodedString(File file) throws IOException {
+        byte[] bytes = Files.toByteArray(file);
+        if (endsWith(file.getName(), DOT_XML)) {
+            return PositionXmlParser.getXmlString(bytes);
+        }
+
+        return LintUtils.getEncodedString(bytes);
+    }
+
+    /**
+     * Returns the String corresponding to the given data. This is usually the
+     * same as {@code new String(data)}, but if there's a UTF byte order mark
+     * (for UTF8, UTF_16 or UTF_16LE), use that instead.
+     * <p>
+     * NOTE: For XML files, there is the additional complication that there
+     * could be a {@code encoding=} attribute in the prologue. For those files,
+     * use {@link PositionXmlParser#getXmlString(byte[])} instead.
+     *
+     * @param data the byte array to construct the string from
+     * @return the string
+     */
+    public static String getEncodedString(byte[] data) {
+        if (data == null) {
+            return "";
+        }
+
+        int offset = 0;
+        String defaultCharset = UTF_8;
+        String charset = null;
+        // Look for the byte order mark, to see if we need to remove bytes from
+        // the input stream (and to determine whether files are big endian or little endian) etc
+        // for files which do not specify the encoding.
+        // See http://unicode.org/faq/utf_bom.html#BOM for more.
+        if (data.length > 4) {
+            if (data[0] == (byte)0xef && data[1] == (byte)0xbb && data[2] == (byte)0xbf) {
+                // UTF-8
+                defaultCharset = charset = UTF_8;
+                offset += 3;
+            } else if (data[0] == (byte)0xfe && data[1] == (byte)0xff) {
+                //  UTF-16, big-endian
+                defaultCharset = charset = UTF_16;
+                offset += 2;
+            } else if (data[0] == (byte)0x0 && data[1] == (byte)0x0
+                    && data[2] == (byte)0xfe && data[3] == (byte)0xff) {
+                // UTF-32, big-endian
+                defaultCharset = charset = "UTF_32";    //$NON-NLS-1$
+                offset += 4;
+            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe
+                    && data[2] == (byte)0x0 && data[3] == (byte)0x0) {
+                // UTF-32, little-endian. We must check for this *before* looking for
+                // UTF_16LE since UTF_32LE has the same prefix!
+                defaultCharset = charset = "UTF_32LE";  //$NON-NLS-1$
+                offset += 4;
+            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe) {
+                //  UTF-16, little-endian
+                defaultCharset = charset = UTF_16LE;
+                offset += 2;
+            }
+        }
+        int length = data.length - offset;
+
+        // Guess encoding by searching for an encoding= entry in the first line.
+        boolean seenOddZero = false;
+        boolean seenEvenZero = false;
+        for (int lineEnd = offset; lineEnd < data.length; lineEnd++) {
+            if (data[lineEnd] == 0) {
+                if ((lineEnd - offset) % 1 == 0) {
+                    seenEvenZero = true;
+                } else {
+                    seenOddZero = true;
+                }
+            } else if (data[lineEnd] == '\n' || data[lineEnd] == '\r') {
+                break;
+            }
+        }
+
+        if (charset == null) {
+            charset = seenOddZero ? UTF_16 : seenEvenZero ? UTF_16LE : UTF_8;
+        }
+
+        String text = null;
+        try {
+            text = new String(data, offset, length, charset);
+        } catch (UnsupportedEncodingException e) {
+            try {
+                if (charset != defaultCharset) {
+                    text = new String(data, offset, length, defaultCharset);
+                }
+            } catch (UnsupportedEncodingException u) {
+                // Just use the default encoding below
+            }
+        }
+        if (text == null) {
+            text = new String(data, offset, length);
+        }
+        return text;
     }
 }

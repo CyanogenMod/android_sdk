@@ -26,10 +26,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
@@ -85,8 +86,66 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
-            method.accept(new MyMethodVisitor(context, method));
+            InsnList nodes = method.instructions;
+            for (int i = 0, n = nodes.size(); i < n; i++) {
+                AbstractInsnNode instruction = nodes.get(i);
+                int type = instruction.getType();
+                if (type == AbstractInsnNode.METHOD_INSN) {
+                    MethodInsnNode node = (MethodInsnNode) instruction;
+                    String name = node.name;
+                    String owner = node.owner;
+
+                    if (sFloatMethods.contains(name)
+                            && owner.equals("java/lang/Math")) { //$NON-NLS-1$
+                        boolean paramFromFloat = getPrevOpcode(nodes, i) == Opcodes.F2D;
+                        boolean returnToFloat = getNextOpcode(nodes, i) == Opcodes.D2F;
+                        if (paramFromFloat || returnToFloat) {
+                            String message;
+                            if (paramFromFloat) {
+                                message = String.format(
+                                        "Use android.util.FloatMath#%1$s() instead of " +
+                                        "java.lang.Math#%1$s to avoid argument float to " +
+                                        "double conversion", name);
+                            } else {
+                                message = String.format(
+                                        "Use android.util.FloatMath#%1$s() instead of " +
+                                        "java.lang.Math#%1$s to avoid double to float return " +
+                                        "value conversion", name);
+                            }
+                            int lineNumber = ClassContext.findLineNumber(instruction);
+                            Location location = context.getLocationForLine(lineNumber, name, null);
+                            context.report(ISSUE, method, location, message, null /*data*/);
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    private int getPrevOpcode(InsnList nodes, int i) {
+        for (i--; i >= 0; i--) {
+            AbstractInsnNode node = nodes.get(i);
+            int type = node.getType();
+            if (type == AbstractInsnNode.LINE || type == AbstractInsnNode.LABEL) {
+                continue;
+            }
+            return node.getOpcode();
+        }
+
+        return Opcodes.NOP;
+    }
+
+    private int getNextOpcode(InsnList nodes, int i) {
+        for (i++; i < nodes.size(); i++) {
+            AbstractInsnNode node = nodes.get(i);
+            int type = node.getType();
+            if (type == AbstractInsnNode.LINE || type == AbstractInsnNode.LABEL) {
+                continue;
+            }
+            return node.getOpcode();
+        }
+
+        return Opcodes.NOP;
     }
 
     /** Methods on java.lang.Math that we want to find and suggest replacements for */
@@ -97,101 +156,5 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
         sFloatMethods.add("ceil");  //$NON-NLS-1$
         sFloatMethods.add("sqrt");  //$NON-NLS-1$
         sFloatMethods.add("floor"); //$NON-NLS-1$
-    }
-
-    private static class MyMethodVisitor extends MethodVisitor {
-        private final ClassContext mContext;
-        private final MethodNode mMethod;
-        private int mCurrentLine;
-        private int mLastInsn;
-        private String mPendingMethod;
-
-        public MyMethodVisitor(ClassContext context, MethodNode method) {
-            super(Opcodes.ASM4);
-            mContext = context;
-            mMethod = method;
-        }
-
-        private Location getCurrentLocation() {
-            // Make utility method!
-            File file = mContext.file; // The binary .class file. Try to find source instead.
-            int line = 0;
-
-            // Determine package
-            File source = mContext.getSourceFile();
-            if (source != null) {
-                file = source;
-                line = mCurrentLine;
-
-                if (line > 0) {
-                    String contents = mContext.getSourceContents();
-                    if (contents != null) {
-                        // bytecode line numbers are 1-based
-                        return Location.create(file, contents, line - 1);
-                    }
-                }
-            }
-
-            return Location.create(file);
-        }
-
-        @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-            if (sFloatMethods.contains(name) && owner.equals("java/lang/Math")) { //$NON-NLS-1$
-                if (mLastInsn != Opcodes.F2D) {
-                    mPendingMethod = name;
-                    return;
-                }
-                String message = String.format(
-                        "Use android.util.FloatMath#%1$s() instead of java.lang.Math#%1$s to " +
-                        "avoid argument float to double conversion", name);
-                mContext.report(ISSUE, mMethod, getCurrentLocation(), message, null /*data*/);
-            }
-        }
-
-        @Override
-        public void visitInsn(int opcode) {
-            if (opcode == Opcodes.D2F) {
-                if (mPendingMethod != null) {
-                    String message = String.format(
-                            "Use android.util.FloatMath#%1$s() instead of java.lang.Math#%1$s " +
-                            "to avoid double to float return value conversion", mPendingMethod);
-                    mContext.report(ISSUE, mMethod, getCurrentLocation(), message, null /*data*/);
-
-                }
-                mPendingMethod = null;
-            }
-            mLastInsn = opcode;
-        }
-
-        @Override
-        public void visitLineNumber(int line, Label start) {
-            mCurrentLine = line;
-        }
-
-        @Override
-        public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-            mLastInsn = opcode;
-        }
-
-        @Override
-        public void visitIntInsn(int opcode, int operand) {
-            mLastInsn = opcode;
-        }
-
-        @Override
-        public void visitJumpInsn(int opcode, Label label) {
-            mLastInsn = opcode;
-        }
-
-        @Override
-        public void visitTypeInsn(int opcode, String type) {
-            mLastInsn = opcode;
-        }
-
-        @Override
-        public void visitVarInsn(int opcode, int var) {
-            mLastInsn = opcode;
-        }
     }
 }

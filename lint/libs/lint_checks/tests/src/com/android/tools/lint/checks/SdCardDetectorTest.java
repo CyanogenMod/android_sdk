@@ -49,4 +49,11 @@ public class SdCardDetectorTest extends AbstractCheckTest {
             // on fields, methods, variable declarations etc
             lintProject("src/test/pkg/SuppressTest5.java.txt=>src/test/pkg/SuppressTest5.java"));
     }
+
+    public void testUtf8Bom() throws Exception {
+        assertEquals(
+            "Utf8BomTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+
+            lintProject("src/test/pkg/Utf8BomTest.java.data=>src/test/pkg/Utf8BomTest.java"));
+    }
 }

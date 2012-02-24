@@ -16,7 +16,10 @@
 
 package com.android.tools.lint.detector.api;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
@@ -163,4 +166,83 @@ public class LintUtilsTest extends TestCase {
         assertFalse(LintUtils.idReferencesMatch("@id/foo1", "@+id/foo"));
         assertFalse(LintUtils.idReferencesMatch("@+id/foo1", "@id/foo"));
     }
+
+    private static void checkEncoding(String encoding, boolean writeBom, String lineEnding)
+            throws Exception {
+        StringBuilder sb = new StringBuilder();
+
+        // Norwegian extra vowel characters such as "latin small letter a with ring above"
+        String value = "\u00e6\u00d8\u00e5";
+        String expected = "First line." + lineEnding + "Second line." + lineEnding
+                + "Third line." + lineEnding + value + lineEnding;
+        sb.append(expected);
+        File file = File.createTempFile("getEncodingTest" + encoding + writeBom, ".txt");
+        file.deleteOnExit();
+        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
+        OutputStreamWriter writer = new OutputStreamWriter(stream, encoding);
+
+        if (writeBom) {
+            String normalized = encoding.toLowerCase().replace("-", "_");
+            if (normalized.equals("utf_8")) {
+                stream.write(0xef);
+                stream.write(0xbb);
+                stream.write(0xbf);
+            } else if (normalized.equals("utf_16")) {
+                stream.write(0xfe);
+                stream.write(0xff);
+            } else if (normalized.equals("utf_16le")) {
+                stream.write(0xff);
+                stream.write(0xfe);
+            } else if (normalized.equals("utf_32")) {
+                stream.write(0x0);
+                stream.write(0x0);
+                stream.write(0xfe);
+                stream.write(0xff);
+            } else if (normalized.equals("utf_32le")) {
+                stream.write(0xff);
+                stream.write(0xfe);
+                stream.write(0x0);
+                stream.write(0x0);
+            } else {
+                fail("Can't write BOM for encoding " + encoding);
+            }
+        }
+        writer.write(sb.toString());
+        writer.close();
+
+        String s = LintUtils.getEncodedString(file);
+        assertEquals(expected, s);
+    }
+
+    public void testGetEncodedString() throws Exception {
+        checkEncoding("utf-8", false /*bom*/, "\n");
+        checkEncoding("UTF-8", false /*bom*/, "\n");
+        checkEncoding("UTF_16", false /*bom*/, "\n");
+        checkEncoding("UTF-16", false /*bom*/, "\n");
+        checkEncoding("UTF_16LE", false /*bom*/, "\n");
+
+        // Try BOM's
+        checkEncoding("utf-8", true /*bom*/, "\n");
+        checkEncoding("UTF-8", true /*bom*/, "\n");
+        checkEncoding("UTF_16", true /*bom*/, "\n");
+        checkEncoding("UTF-16", true /*bom*/, "\n");
+        checkEncoding("UTF_16LE", true /*bom*/, "\n");
+        checkEncoding("UTF_32", true /*bom*/, "\n");
+        checkEncoding("UTF_32LE", true /*bom*/, "\n");
+
+        // Make sure this works for \r and \r\n as well
+        checkEncoding("UTF-16", false /*bom*/, "\r");
+        checkEncoding("UTF_16LE", false /*bom*/, "\r");
+        checkEncoding("UTF-16", false /*bom*/, "\r\n");
+        checkEncoding("UTF_16LE", false /*bom*/, "\r\n");
+        checkEncoding("UTF-16", true /*bom*/, "\r");
+        checkEncoding("UTF_16LE", true /*bom*/, "\r");
+        checkEncoding("UTF_32", true /*bom*/, "\r");
+        checkEncoding("UTF_32LE", true /*bom*/, "\r");
+        checkEncoding("UTF-16", true /*bom*/, "\r\n");
+        checkEncoding("UTF_16LE", true /*bom*/, "\r\n");
+        checkEncoding("UTF_32", true /*bom*/, "\r\n");
+        checkEncoding("UTF_32LE", true /*bom*/, "\r\n");
+    }
+
 }
