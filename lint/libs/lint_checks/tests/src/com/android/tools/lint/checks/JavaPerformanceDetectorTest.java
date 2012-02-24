@@ -26,15 +26,15 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "JavaPerformanceTest.java:103: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:109: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:112: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:113: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
+            "JavaPerformanceTest.java:103: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:109: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:112: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:113: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
             "JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect\n" +
-            "JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:28: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
-            "JavaPerformanceTest.java:29: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse insteaD)\n" +
+            "JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:28: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:29: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
             "JavaPerformanceTest.java:70: Warning: Use new SparseArray<String>(...) instead for better performance\n" +
             "JavaPerformanceTest.java:72: Warning: Use new SparseBooleanArray(...) instead for better performance\n" +
             "JavaPerformanceTest.java:74: Warning: Use new SparseIntArray(...) instead for better performance",
