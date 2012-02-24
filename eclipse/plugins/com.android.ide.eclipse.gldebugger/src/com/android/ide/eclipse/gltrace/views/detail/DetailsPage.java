@@ -53,6 +53,7 @@ public class DetailsPage extends Page implements ISelectionListener {
             new ShaderSourceDetailsProvider(),
             new ShaderUniformDetailsProvider(),
             new TextureImageDetailsProvider(),
+            new VboDetailProvider(),
             new GlDrawCallDetailProvider());
 
     public DetailsPage(GLTrace trace) {

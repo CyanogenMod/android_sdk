@@ -144,6 +144,11 @@ public class GLMessageFormatter {
                 }
                 sb.append(']');
                 return sb.toString();
+            case VOID:
+                if (var.getRawBytesList().size() > 0) {
+                    return String.format("[ %d bytes ]", var.getRawBytesList().get(0).size()); //$NON-NLS-1$
+                }
+                return "[]"; //$NON-NLS-1$
         }
 
         // We have a pointer, but we don't have the data pointed to.
