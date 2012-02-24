@@ -169,7 +169,12 @@ public final class ResourceManager {
     public void processDelta(IResourceDelta delta, IdeScanningContext context) {
         doProcessDelta(delta, context);
 
-        context.getRepository().postUpdateCleanUp();
+        // when a project is added to the workspace it is possible this is called before the
+        // repo is actually created so this will return null.
+        ResourceRepository repo = context.getRepository();
+        if (repo != null) {
+            repo.postUpdateCleanUp();
+        }
     }
 
     /**
