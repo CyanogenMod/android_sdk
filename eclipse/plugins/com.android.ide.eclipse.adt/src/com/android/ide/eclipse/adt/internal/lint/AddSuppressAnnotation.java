@@ -27,6 +27,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.tools.lint.checks.ApiDetector;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Scope;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -306,10 +308,12 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
             }
         }
 
+        Issue issue = EclipseLintClient.getRegistry().getIssue(id);
+        boolean isClassDetector = issue != null && issue.getScope().contains(Scope.CLASS_FILE);
+
         NodeFinder nodeFinder = new NodeFinder(root, offset, length);
         ASTNode coveringNode = nodeFinder.getCoveringNode();
-        ASTNode body = coveringNode;
-        while (body != null) {
+        for (ASTNode body = coveringNode; body != null; body = body.getParent()) {
             if (body instanceof BodyDeclaration) {
                 BodyDeclaration declaration = (BodyDeclaration) body;
 
@@ -334,6 +338,15 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
                     target = body.getClass().getSimpleName();
                 }
 
+                // In class files, detectors can only find annotations on methods
+                // and on classes, not on variable declarations
+                if (isClassDetector && !(body instanceof MethodDeclaration
+                            || body instanceof TypeDeclaration
+                            || body instanceof AnonymousClassDeclaration
+                            || body instanceof FieldDeclaration)) {
+                    continue;
+                }
+
                 String desc = String.format("Add @SuppressLint '%1$s\' to '%2$s'", id, target);
                 resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, -1));
 
@@ -345,8 +358,6 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
                     resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, api));
                 }
             }
-
-            body = body.getParent();
         }
     }
 }

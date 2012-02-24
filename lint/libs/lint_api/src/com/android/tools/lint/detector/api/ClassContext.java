@@ -257,6 +257,33 @@ public class ClassContext extends Context {
         if (mDriver.isSuppressed(issue, mClassNode)) {
             return;
         }
+        ClassNode curr = mClassNode;
+        while (curr != null) {
+            curr = mDriver.getOuterClassNode(curr);
+            if (curr != null) {
+                if (mClassNode.outerMethod != null) {
+                    @SuppressWarnings("rawtypes") // ASM API
+                    List methods = curr.methods;
+                    for (Object m : methods) {
+                        MethodNode method = (MethodNode) m;
+                        if (method.name.equals(mClassNode.outerMethod)
+                                && method.desc.equals(mClassNode.outerMethodDesc)) {
+                            // Found the outer method for this anonymous class; continue
+                            // reporting on it (which will also work its way up the parent
+                            // class hierarchy)
+                            if (method != null && mDriver.isSuppressed(issue, method)) {
+                                return;
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (mDriver.isSuppressed(issue, curr)) {
+                    return;
+                }
+            }
+        }
+
         super.report(issue, location, message, data);
     }
 

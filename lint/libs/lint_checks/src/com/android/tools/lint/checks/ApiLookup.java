@@ -76,7 +76,7 @@ public class ApiLookup {
     private static final int BINARY_FORMAT_VERSION = 1;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
-    private static final boolean WRITE_STATS = LintUtils.assertionsEnabled();
+    private static final boolean WRITE_STATS = false;
     /** Default size to reserve for each API entry when creating byte buffer to build up data */
     private static final int BYTES_PER_ENTRY = 40;
 
