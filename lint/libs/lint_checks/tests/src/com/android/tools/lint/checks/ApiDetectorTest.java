@@ -236,6 +236,26 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testSuppressInnerClasses() throws Exception {
+        assertEquals(
+            // These errors are correctly -not- suppressed because they
+            // appear outside the middle inner class suppressing its own errors
+            // and its child's errors
+            "ApiCallTest4.java:38: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init>\n" +
+            "ApiCallTest4.java:9: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init>",
+
+            lintProject(
+                "apicheck/classpath=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/ApiCallTest4.java.txt=>src/test/pkg/ApiCallTest4.java",
+                "apicheck/ApiCallTest4.class.data=>bin/classes/test/pkg/ApiCallTest4.class",
+                "apicheck/ApiCallTest4$1.class.data=>bin/classes/test/pkg/ApiCallTest4$1.class",
+                "apicheck/ApiCallTest4$InnerClass1.class.data=>bin/classes/test/pkg/ApiCallTest4$InnerClass1.class",
+                "apicheck/ApiCallTest4$InnerClass2.class.data=>bin/classes/test/pkg/ApiCallTest4$InnerClass2.class",
+                "apicheck/ApiCallTest4$InnerClass1$InnerInnerClass1.class.data=>bin/classes/test/pkg/ApiCallTest4$InnerClass1$InnerInnerClass1.class"
+                ));
+    }
+
     public void testApiTargetAnnotation() throws Exception {
         assertEquals(
             "ApiTargetTest.java:13: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +

@@ -56,13 +56,7 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Command line driver for the rules framework
- * <p>
- * TODO:
- * <ul>
- * <li>Offer priority or category sorting
- * <li>Offer suppressing violations
- * </ul>
+ * Command line driver for the lint framework
  */
 public class Main extends LintClient {
     static final int MAX_LINE_WIDTH = 78;

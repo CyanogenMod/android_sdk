@@ -31,6 +31,7 @@ import static org.objectweb.asm.Opcodes.ASM4;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.Category;
@@ -66,10 +67,12 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -860,6 +863,7 @@ public class LintDriver {
         if (libraries.size() > 0) {
             libraryEntries = new ArrayList<ClassEntry>(64);
             findClasses(libraryEntries, libraries);
+            Collections.sort(libraryEntries);
         } else {
             libraryEntries = Collections.emptyList();
         }
@@ -877,6 +881,7 @@ public class LintDriver {
         } else {
             classEntries = new ArrayList<ClassEntry>(64);
             findClasses(classEntries, classFolders);
+            Collections.sort(classEntries);
         }
 
         if (getPhase() == 1) {
@@ -894,15 +899,35 @@ public class LintDriver {
         runClassDetectors(Scope.CLASS_FILE, classEntries, project, main);
     }
 
+    /**
+     * Stack of {@link ClassNode} nodes for outer classes of the currently
+     * processed class, including that class itself. Populated by
+     * {@link #runClassDetectors(Scope, List, Project, Project)} and used by
+     * {@link #getOuterClassNode(ClassNode)}
+     */
+    private Deque<ClassNode> mOuterClasses;
+
     private void runClassDetectors(Scope scope, List<ClassEntry> entries,
             Project project, Project main) {
         if (mScope.contains(scope)) {
             List<Detector> classDetectors = mScopeDetectors.get(scope);
             if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
+                mOuterClasses = new ArrayDeque<ClassNode>();
                 for (ClassEntry entry : entries) {
                     ClassReader reader = new ClassReader(entry.bytes);
                     ClassNode classNode = new ClassNode();
                     reader.accept(classNode, 0 /* flags */);
+
+                    ClassNode peek;
+                    while ((peek = mOuterClasses.peek()) != null) {
+                        if (classNode.name.startsWith(peek.name)) {
+                            break;
+                        } else {
+                            mOuterClasses.pop();
+                        }
+                    }
+                    mOuterClasses.push(classNode);
+
                     if (isSuppressed(null, classNode)) {
                         // Class was annotated with suppress all -- no need to look any further
                         continue;
@@ -917,8 +942,31 @@ public class LintDriver {
                         return;
                     }
                 }
+
+                mOuterClasses = null;
             }
         }
+    }
+
+    /** Returns the outer class node of the given class node
+     * @param classNode the inner class node
+     * @return the outer class node */
+    public ClassNode getOuterClassNode(@NonNull ClassNode classNode) {
+        String outerName = classNode.outerClass;
+
+        Iterator<ClassNode> iterator = mOuterClasses.iterator();
+        while (iterator.hasNext()) {
+            ClassNode node = iterator.next();
+            if (outerName != null) {
+                if (node.name.equals(outerName)) {
+                    return node;
+                }
+            } else if (node == classNode) {
+                return iterator.hasNext() ? iterator.next() : null;
+            }
+        }
+
+        return null;
     }
 
     private Map<String, String> getSuperMap(List<ClassEntry> libraryEntries,
@@ -1665,7 +1713,8 @@ public class LintDriver {
     }
 
     /** A pending class to be analyzed by {@link #checkClasses} */
-    private static class ClassEntry {
+    @VisibleForTesting
+    static class ClassEntry implements Comparable<ClassEntry> {
         public final File file;
         public final File jarFile;
         public final File binDir;
@@ -1677,6 +1726,37 @@ public class LintDriver {
             this.jarFile = jarFile;
             this.binDir = binDir;
             this.bytes = bytes;
+        }
+
+        @Override
+        public int compareTo(ClassEntry other) {
+            String p1 = file.getPath();
+            String p2 = other.file.getPath();
+            int m1 = p1.length();
+            int m2 = p2.length();
+            int m = Math.min(m1, m2);
+
+            for (int i = 0; i < m; i++) {
+                char c1 = p1.charAt(i);
+                char c2 = p2.charAt(i);
+                if (c1 != c2) {
+                    // Sort Foo$Bar.class *after* Foo.class, even though $ < .
+                    if (c1 == '.' && c2 == '$') {
+                        return -1;
+                    }
+                    if (c1 == '$' && c2 == '.') {
+                        return 1;
+                    }
+                    return c1 - c2;
+                }
+            }
+
+            return (m == m1) ? -1 : 1;
+        }
+
+        @Override
+        public String toString() {
+            return file.getPath();
         }
     }
 }
