@@ -258,7 +258,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
                     for (Field f : inner.getDeclaredFields()) {
                         // only process static final fields.
                         int modifiers = f.getModifiers();
-                        if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+                        if (Modifier.isStatic(modifiers)) {
                             Class<?> type = f.getType();
                             if (type.isArray() && type.getComponentType() == int.class) {
                                 // if the object is an int[] we put it in the styleable map
