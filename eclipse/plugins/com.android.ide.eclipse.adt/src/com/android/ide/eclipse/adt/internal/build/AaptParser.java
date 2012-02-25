@@ -204,7 +204,7 @@ public final class AaptParser {
             return parseOutput(results.toArray(new String[size]), project);
         }
 
-        return true;
+        return false;
     }
 
     /**
