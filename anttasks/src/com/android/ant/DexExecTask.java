@@ -16,6 +16,10 @@
 
 package com.android.ant;
 
+import com.android.sdklib.build.JarListSanitizer;
+import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
+import com.android.sdklib.build.JarListSanitizer.Sha1Exception;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.FileSet;
@@ -162,8 +166,12 @@ public class DexExecTask extends SingleDependencyTask {
         task.createArg().setValue(mOutput);
 
 
+        paths = sanitizePaths(paths);
+
         for (File f : paths) {
-            task.createArg().setValue(f.getAbsolutePath());
+            String absPath = f.getAbsolutePath();
+            System.out.println("Input: " + absPath);
+            task.createArg().setValue(absPath);
         }
 
         // execute it.
@@ -176,5 +184,38 @@ public class DexExecTask extends SingleDependencyTask {
     @Override
     protected String getExecTaskName() {
         return "dx";
+    }
+
+    // private helper methods.
+
+    private List<File> sanitizePaths(List<File> paths) {
+        // first get the non-files.
+        List<File> results = new ArrayList<File>();
+        for (int i = 0 ; i < paths.size() ;) {
+            File f = paths.get(i);
+            // TEMP WORKAROUND: ignore classes.jar as all the output of libraries are
+            // called the same (in Ant) but are not actually the same jar file.
+            // TODO: Be aware of library output vs. regular jar dependency.
+            if (f.isFile() && f.getName().equals("classes.jar") == false) {
+                i++;
+            } else {
+                results.add(f);
+                paths.remove(i);
+            }
+        }
+
+        File outputFile = new File(mOutput);
+        JarListSanitizer sanitizer = new JarListSanitizer(outputFile.getParentFile());
+
+        try {
+            results.addAll(sanitizer.sanitize(paths));
+        } catch (DifferentLibException e) {
+            throw new BuildException(e.getMessage(), e);
+        } catch (Sha1Exception e) {
+            throw new BuildException(
+                    "Failed to compute sha1 for " + e.getJarFile().getAbsolutePath(), e);
+        }
+
+        return results;
     }
 }
