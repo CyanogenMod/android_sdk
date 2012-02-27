@@ -182,7 +182,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
             for (IResource resource : mResources) {
                 IProject p = resource.getProject();
-                if (project.getDir().equals(AdtUtils.getAbsolutePath(p))) {
+                if (project.getDir().equals(AdtUtils.getAbsolutePath(p).toFile())) {
                     return p;
                 }
             }
