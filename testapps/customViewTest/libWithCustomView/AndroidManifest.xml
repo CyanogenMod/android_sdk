@@ -4,4 +4,15 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <permission
+        android:name="com.foo.mypermission"
+        android:description="@string/app_name"
+        android:label="@string/app_name" >
+    </permission>
+    <permission
+        android:name="com.foo.mypermission2"
+        android:description="@string/app_name"
+        android:label="@string/app_name" >
+    </permission>
+
 </manifest>

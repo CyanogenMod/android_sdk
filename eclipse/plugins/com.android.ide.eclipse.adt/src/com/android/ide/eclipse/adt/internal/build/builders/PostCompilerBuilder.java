@@ -35,6 +35,7 @@ import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerIni
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkCreationException;
@@ -42,6 +43,7 @@ import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdklib.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -436,9 +438,14 @@ public class PostCompilerBuilder extends BaseBuilder {
                     if (DEBUG) {
                         System.out.println("\tupdating jar!");
                     }
+
+                    // resource to the AndroidManifest.xml file
+                    IFile manifestFile = project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
+                    String appPackage = AndroidManifest.getPackage(new IFileWrapper(manifestFile));
+
                     IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
 
-                    writeLibraryPackage(jarIFile, project, javaOutputFolder,
+                    writeLibraryPackage(jarIFile, project, appPackage, javaOutputFolder,
                             referencedJavaProjects);
                     saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
 
@@ -786,12 +793,16 @@ public class PostCompilerBuilder extends BaseBuilder {
     private static class JarBuilder implements IArchiveBuilder {
 
         private static Pattern R_PATTERN = Pattern.compile("R(\\$.*)?\\.class"); //$NON-NLS-1$
+        private static Pattern MANIFEST_PATTERN = Pattern.compile("Manifest(\\$.*)?\\.class"); //$NON-NLS-1$
+        private static String BUILD_CONFIG_CLASS = "BuildConfig.class"; //$NON-NLS-1$
 
         private final byte[] buffer = new byte[1024];
         private final JarOutputStream mOutputStream;
+        private final String mAppPackage;
 
-        JarBuilder(JarOutputStream outputStream) {
+        JarBuilder(JarOutputStream outputStream, String appPackage) {
             mOutputStream = outputStream;
+            mAppPackage = appPackage.replace('.', '/');
         }
 
         public void addFile(IFile file, IFolder rootFolder) throws ApkCreationException {
@@ -800,9 +811,15 @@ public class PostCompilerBuilder extends BaseBuilder {
                 return;
             }
 
-            // we don't package any R[$*] classes.
+            IPath packageApp = file.getParent().getFullPath().makeRelativeTo(
+                    rootFolder.getFullPath());
+
             String name = file.getName();
-            if (R_PATTERN.matcher(name).matches()) {
+            // we don't package any R[$*] classes or buildconfig
+            if (mAppPackage.equals(packageApp.toString()) &&
+                    (BUILD_CONFIG_CLASS.equals(name) ||
+                            MANIFEST_PATTERN.matcher(name).matches() ||
+                            R_PATTERN.matcher(name).matches())) {
                 return;
             }
 
@@ -881,8 +898,8 @@ public class PostCompilerBuilder extends BaseBuilder {
         return true;
     }
 
-    private void writeLibraryPackage(IFile jarIFile, IProject project, IFolder javaOutputFolder,
-            List<IJavaProject> referencedJavaProjects) {
+    private void writeLibraryPackage(IFile jarIFile, IProject project, String appPackage,
+            IFolder javaOutputFolder, List<IJavaProject> referencedJavaProjects) {
 
         JarOutputStream jos = null;
         try {
@@ -893,7 +910,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             jos = new JarOutputStream(
                     new FileOutputStream(jarIFile.getLocation().toFile()), manifest);
 
-            JarBuilder jarBuilder = new JarBuilder(jos);
+            JarBuilder jarBuilder = new JarBuilder(jos, appPackage);
 
             // write the class files
             writeClassFilesIntoJar(jarBuilder, javaOutputFolder, javaOutputFolder);
