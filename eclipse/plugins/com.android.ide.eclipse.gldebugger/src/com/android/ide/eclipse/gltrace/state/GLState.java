@@ -93,15 +93,29 @@ public class GLState {
                 MAX_VERTEX_ATTRIBS);
     }
 
+    private IGLProperty createVboState() {
+        IGLProperty size = new GLIntegerProperty(GLStateType.BUFFER_SIZE, Integer.valueOf(0));
+        IGLProperty usage = new GLEnumProperty(GLStateType.BUFFER_USAGE, GLEnum.GL_STATIC_DRAW);
+        IGLProperty data = new GLObjectProperty(GLStateType.BUFFER_DATA, new byte[0]);
+        IGLProperty type = new GLEnumProperty(GLStateType.BUFFER_TYPE, GLEnum.GL_ARRAY_BUFFER);
+
+        IGLProperty perVboState = new GLCompositeProperty(GLStateType.VBO_COMPOSITE,
+                size, usage, data, type);
+
+        return new GLSparseArrayProperty(GLStateType.VBO, perVboState);
+    }
+
     private IGLProperty createVertexArrayData() {
         IGLProperty vertexAttribArrays = createVertexAttribArrays();
         IGLProperty bufferBindings = createBufferBindings();
         IGLProperty genericAttribs = createGenericVertexAttributeState();
+        IGLProperty vboState = createVboState();
 
         return new GLCompositeProperty(GLStateType.VERTEX_ARRAY_DATA,
                 genericAttribs,
                 vertexAttribArrays,
-                bufferBindings);
+                bufferBindings,
+                vboState);
     }
 
     private IGLProperty createTransformationState() {

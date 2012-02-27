@@ -84,7 +84,7 @@
             class="com.android.ide.eclipse.gltrace.GLTracePerspective"
             icon="icons/opengl.png"
             id="com.android.ide.eclipse.gltrace.perspective"
-            name="Android OpenGL Trace">
+            name="OpenGL Trace">
       </perspective>
    </extension>
    <extension

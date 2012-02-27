@@ -47,6 +47,13 @@ public enum GLStateType {
             VERTEX_ATTRIB_ARRAY_BUFFER_BINDINGS("Attribute Array Buffer Bindings"),
             VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_PER_INDEX("Attribute Array Buffer Binding"),
 
+        VBO("Vertex Buffer Objects"),
+            VBO_COMPOSITE("Per VBO State"),
+                BUFFER_SIZE("Size"),
+                BUFFER_USAGE("Usage"),
+                BUFFER_DATA("Data"),
+                BUFFER_TYPE("Type"),
+
     TRANSFORMATION_STATE("Transformation State"),
         VIEWPORT("Viewport"),
             VIEWPORT_X("Lower Left X"),

@@ -65,6 +65,14 @@ public class StateTransformFactory {
             // VBO's
             case glBindBuffer:
                 return transformsForGlBindBuffer(msg);
+            case glGenBuffers:
+                return transformsForGlGenBuffers(msg);
+            case glDeleteBuffers:
+                return transformsForGlDeleteBuffers(msg);
+            case glBufferData:
+                return transformsForGlBufferData(msg);
+            case glBufferSubData:
+                return transformsForGlBufferSubData(msg);
 
             // transformation state
             case glViewport:
@@ -335,6 +343,91 @@ public class StateTransformFactory {
                                                 GLStateType.BUFFER_BINDINGS,
                                                 bufferType),
                 Integer.valueOf(buffer));
+        return Collections.singletonList(transform);
+    }
+
+    private static List<IStateTransform> transformsForGlGenBuffers(GLMessage msg) {
+        // void glGenBuffers(GLsizei n, GLuint * buffers);
+        int n = msg.getArgs(0).getIntValue(0);
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>();
+
+        for (int i = 0; i < n; i++) {
+            transforms.add(new SparseArrayElementAddTransform(
+                    GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                    GLStateType.VERTEX_ARRAY_DATA,
+                                                    GLStateType.VBO),
+                    msg.getArgs(1).getIntValue(i)));
+        }
+
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlDeleteBuffers(GLMessage msg) {
+        // void glDeleteBuffers(GLsizei n, const GLuint * buffers);
+        int n = msg.getArgs(0).getIntValue(0);
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>();
+
+        for (int i = 0; i < n; i++) {
+            transforms.add(new SparseArrayElementRemoveTransform(
+                    GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                    GLStateType.VERTEX_ARRAY_DATA,
+                                                    GLStateType.VBO),
+                    msg.getArgs(1).getIntValue(i)));
+        }
+
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlBufferData(GLMessage msg) {
+        // void glBufferData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        int size = msg.getArgs(1).getIntValue(0);
+        byte[] data = null;
+        GLEnum usage = GLEnum.valueOf(msg.getArgs(3).getIntValue(0));
+
+        if (msg.getArgs(2).getRawBytesList().size() > 0) {
+            data = msg.getArgs(2).getRawBytesList().get(0).toByteArray();
+        } else {
+            data = new byte[size];
+        }
+
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>();
+
+        transforms.add(new PropertyChangeTransform(
+                new CurrentVboPropertyAccessor(msg.getContextId(),
+                                               target,
+                                               GLStateType.BUFFER_SIZE),
+                Integer.valueOf(size)));
+        transforms.add(new PropertyChangeTransform(
+                new CurrentVboPropertyAccessor(msg.getContextId(),
+                                               target,
+                                               GLStateType.BUFFER_DATA),
+                data));
+        transforms.add(new PropertyChangeTransform(
+                new CurrentVboPropertyAccessor(msg.getContextId(),
+                                               target,
+                                               GLStateType.BUFFER_USAGE),
+                usage));
+        transforms.add(new PropertyChangeTransform(
+                new CurrentVboPropertyAccessor(msg.getContextId(),
+                                               target,
+                                               GLStateType.BUFFER_TYPE),
+                target));
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlBufferSubData(GLMessage msg) {
+        // void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data);
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        int offset = msg.getArgs(1).getIntValue(0);
+        byte[] data = msg.getArgs(3).getRawBytesList().get(0).toByteArray();
+
+        IStateTransform transform = new BufferSubDataTransform(
+                new CurrentVboPropertyAccessor(msg.getContextId(),
+                        target,
+                        GLStateType.BUFFER_SIZE),
+                offset, data);
+
         return Collections.singletonList(transform);
     }
 
