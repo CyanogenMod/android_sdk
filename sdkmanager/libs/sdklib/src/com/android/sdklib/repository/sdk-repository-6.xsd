@@ -55,7 +55,7 @@
             - <platform> element now has a mandatory <layoutlib> that indicates the API
               and revision of that layout library for this particular platform.
 
-         - v5 is used by the SDK Updater in Tools R14:
+         - v5 is used by the SDK Manager in Tools r14:
             - <extra> now has an <old-paths> element, a ;-separated list of old paths that
               should be detected and migrated to the new <path> for that package.
             - <platform> has a new optional <abi-included> that describes the ABI of the
@@ -63,7 +63,11 @@
             - New <system-image> package type, to store system images outside of <platform>s.
             - New <source> package type.
 
-         - v6 removed 'extra' packages. They are served only by the addon XML.
+         - v6 is used by the SDK Manager in Tools r18:
+            - <extra> packages are removed. They are served only by the addon XML.
+            - <platform>, <system-image>, <source>, <tool>, <platform-tool>, <doc>
+              and <sample> get a new optional field <beta-rc> which can be used to indicate
+              the package is a Beta Release Candidate and not a final release. 
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />

@@ -41,9 +41,18 @@
             - <addon> element now has an optional <layoutlib> that indicates the API
               and revision of the layout library for this particular add-on, if any.
 
-         - v3 is used by the SDK Updater in Tools R14:
+         - v3 is used by the SDK Manager in Tools r14:
             - <extra> now has an <old-paths> element, a ;-separated list of old paths that
               should be detected and migrated to the new <path> for that package.
+
+         - v4 is used by the SDK Manager in Tools r18:
+            - <extra> and <addon> are not in the Repository XSD v6 anymore.
+            - <extra> get a new field <name-display>, which is used by the SDK Manager to
+              customize the name of the extra in the list display. The single <vendor>
+              field becomes <vendor-id> and <vendor-display>, the id being used internally
+              and the display in the UI.
+            - <addon> does the same, where <name> is replaced by <name-id> and <name-display>
+              and <vendor> is replaced by <vendor-id> and <vendor-display>.
     -->
 
     <xsd:element name="sdk-addon" type="sdk:repositoryType" />
