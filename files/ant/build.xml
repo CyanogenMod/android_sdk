@@ -108,6 +108,10 @@
             classname="com.android.ant.IfElseTask"
             classpathref="android.antlibs" />
 
+    <taskdef name="propertybyreplace"
+            classname="com.android.ant.PropertyByReplaceTask"
+            classpathref="android.antlibs" />
+
     <!-- Emma configuration -->
     <property name="emma.dir" value="${sdk.dir}/tools/lib" />
     <path id="emma.lib">
@@ -690,8 +694,12 @@
                             <echo>Custom jar packaging exclusion: ${android.package.excludes}</echo>
                         </then>
                     </if>
+
+                    <propertybyreplace name="manifest.package.path" input="${manifest.package}" replace="." with="/" />
+
                     <jar destfile="${out.library.jar.file}">
-                        <fileset dir="${out.classes.absolute.dir}" excludes="**/R.class **/R$*.class"/>
+                        <fileset dir="${out.classes.absolute.dir}"
+                                excludes="${manifest.package.path}/R.class ${manifest.package.path}/R$*.class ${manifest.package.path}/Manifest.class ${manifest.package.path}/Manifest$*.class ${manifest.package.path}/BuildConfig.class"/>
                         <fileset dir="${source.absolute.dir}" excludes="**/*.java ${android.package.excludes}" />
                     </jar>
                 </then>
