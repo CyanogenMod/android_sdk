@@ -485,8 +485,10 @@ public class PaletteControl extends Composite {
                     if (mPaletteMode.isPreview() && mBackground != null) {
                         wrapper.setBackground(mBackground);
                     }
-                    composite = super.createChildContainer(wrapper, header,
-                            style | SWT.NO_BACKGROUND);
+                    composite = super.createChildContainer(wrapper, header, style);
+                    if (mBackground != null) {
+                        composite.setBackground(mBackground);
+                    }
                     composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
                     Button refreshButton = new Button(wrapper, SWT.PUSH | SWT.FLAT);
