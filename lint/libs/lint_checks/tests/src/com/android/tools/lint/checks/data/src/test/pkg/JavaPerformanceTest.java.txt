@@ -139,7 +139,20 @@ public class JavaPerformanceTest extends Button {
         if (!initialized || mOverlay == null) {
             new String("foo");
         }
-}
+    }
+
+    void factories() {
+        Integer i1 = new Integer(42);
+        Long l1 = new Long(42L);
+        Boolean b1 = new Boolean(true);
+        Character c1 = new Character('c');
+        Float f1 = new Float(1.0f);
+        Double d1 = new Double(1.0);
+
+        // The following should not generate errors:
+        Object i2 = new foo.bar.Integer(42);
+        Integer i3 = Integer.valueOf(42);
+    }
 
     private boolean mAllowCrop;
     private Canvas mOverlayCanvas;
