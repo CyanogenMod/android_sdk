@@ -89,6 +89,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
         private Map<Attr, Integer> mFrequencyCount;
         private Set<Attr> mShown;
         private List<Attr> mInitialChecked;
+        private List<Attr> mAllChecked;
         private List<Map.Entry<String, List<Attr>>> mRoot;
         private Map<String, List<Attr>> mAvailableAttributes;
 
@@ -192,7 +193,8 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     // Select "all" (but not conflicting settings)
-                    mCheckedView.setCheckedElements(initialSelection);
+                    mCheckedView.setCheckedElements(mAllChecked.toArray());
+                    validatePage();
                 }
             });
             Button uncheckAllButton = new Button(buttonForm, SWT.FLAT);
@@ -201,6 +203,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     mCheckedView.setAllChecked(false);
+                    validatePage();
                 }
             });
 
@@ -256,6 +259,10 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
 
             // The list of initially checked attributes.
             mInitialChecked = new ArrayList<Attr>();
+
+            // The list of attributes to be checked if "Select All" is chosen (this is not
+            // the same as *all* attributes, since we need to exclude any conflicts)
+            mAllChecked = new ArrayList<Attr>();
 
             // All attributes.
             mAllAttributes = new ArrayList<Attr>();
@@ -327,6 +334,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 mAllAttributes.addAll(uniqueValueAttrs);
                 mShown.addAll(uniqueValueAttrs);
                 Attr first = uniqueValueAttrs.get(0);
+                mAllChecked.add(first);
                 if (mInSelection.contains(first)) {
                     mInitialChecked.add(first);
                 }
