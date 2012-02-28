@@ -842,14 +842,14 @@ public class Main extends LintClient {
     }
 
     @Override
-    public void report(Context context, Issue issue, Location location, String message,
-            Object data) {
+    public void report(Context context, Issue issue, Severity severity, Location location,
+            String message, Object data) {
         assert context.isEnabled(issue);
 
-        Severity severity = context.getConfiguration().getSeverity(issue);
         if (severity == Severity.IGNORE) {
             return;
         }
+
         if (severity == Severity.FATAL) {
             mFatal = true;
             // From here on, treat the fatal error as an error such that we don't display

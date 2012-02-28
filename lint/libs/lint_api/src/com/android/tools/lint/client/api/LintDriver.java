@@ -123,6 +123,7 @@ public class LintDriver {
     private int mPhase;
     private List<Detector> mRepeatingDetectors;
     private EnumSet<Scope> mRepeatScope;
+    private Project[] mCurrentProjects;
     private boolean mAbbreviating = true;
 
     /**
@@ -169,6 +170,31 @@ public class LintDriver {
      */
     public int getPhase() {
         return mPhase;
+    }
+
+    /**
+     * Returns the project containing a given file, or null if not found. This searches
+     * only among the currently checked project and its library projects, not among all
+     * possible projects being scanned sequentially.
+     *
+     * @param file the file to be checked
+     * @return the corresponding project, or null if not found
+     */
+    @Nullable
+    public Project findProjectFor(@NonNull File file) {
+        if (mCurrentProjects != null) {
+            if (mCurrentProjects.length == 1) {
+                return mCurrentProjects[0];
+            }
+            String path = file.getPath();
+            for (Project project : mCurrentProjects) {
+                if (path.startsWith(project.getDir().getPath())) {
+                    return project;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -620,13 +646,18 @@ public class LintDriver {
         Context projectContext = new Context(this, project, null, projectDir);
         fireEvent(EventType.SCANNING_PROJECT, projectContext);
 
+        List<Project> allLibraries = project.getAllLibraries();
+        Set<Project> allProjects = new HashSet<Project>(allLibraries.size() + 1);
+        allProjects.add(project);
+        allProjects.addAll(allLibraries);
+        mCurrentProjects = allProjects.toArray(new Project[allProjects.size()]);
+
         for (Detector check : mApplicableDetectors) {
             check.beforeCheckProject(projectContext);
             if (mCanceled) {
                 return;
             }
         }
-
 
         runFileDetectors(project, project);
 
@@ -671,9 +702,12 @@ public class LintDriver {
                 // is valid
                 Issue.create("Lint", "", "", Category.PERFORMANCE, 0, Severity.INFORMATIONAL, //$NON-NLS-1$
                         null, EnumSet.noneOf(Scope.class)),
+                Severity.INFORMATIONAL,
                 null /*range*/,
                 "Lint canceled by user", null);
         }
+
+        mCurrentProjects = null;
     }
 
     private void runFileDetectors(@NonNull Project project, @Nullable Project main) {
@@ -876,7 +910,9 @@ public class LintDriver {
                     + "Does the project need to be built first?", project.getName());
             Location location = Location.create(project.getDir());
             mClient.report(new Context(this, project, main, project.getDir()),
-                    IssueRegistry.LINT_ERROR, location, message, null);
+                    IssueRegistry.LINT_ERROR,
+                    project.getConfiguration().getSeverity(IssueRegistry.LINT_ERROR),
+                    location, message, null);
             classEntries = Collections.emptyList();
         } else {
             classEntries = new ArrayList<ClassEntry>(64);
@@ -1331,6 +1367,7 @@ public class LintDriver {
         public void report(
                 @NonNull Context context,
                 @NonNull Issue issue,
+                @NonNull Severity severity,
                 @Nullable Location location,
                 @NonNull String message,
                 @Nullable Object data) {
@@ -1347,12 +1384,11 @@ public class LintDriver {
                 return;
             }
 
-            Severity severity = configuration.getSeverity(issue);
             if (severity == Severity.IGNORE) {
                 return;
             }
 
-            mDelegate.report(context, issue, location, message, data);
+            mDelegate.report(context, issue, severity, location, message, data);
         }
 
         // Everything else just delegates to the embedding lint client

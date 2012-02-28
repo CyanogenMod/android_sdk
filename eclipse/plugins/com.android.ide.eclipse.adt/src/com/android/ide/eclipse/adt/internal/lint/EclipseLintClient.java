@@ -203,12 +203,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public void report(Context context, Issue issue, Location location, String message,
-            Object data) {
-        assert context.isEnabled(issue);
-        assert context.getConfiguration().getSeverity(issue) != Severity.IGNORE;
-        Severity s = context.getConfiguration().getSeverity(issue);
-
+    public void report(Context context, Issue issue, Severity s, Location location,
+            String message, Object data) {
         int severity = getMarkerSeverity(s);
         IMarker marker = null;
         if (location != null) {

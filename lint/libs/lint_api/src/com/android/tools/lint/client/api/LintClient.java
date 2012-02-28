@@ -76,6 +76,7 @@ public abstract class LintClient {
      *
      * @param context the context used by the detector when the issue was found
      * @param issue the issue that was found
+     * @param severity the severity of the issue
      * @param location the location of the issue
      * @param message the associated user message
      * @param data optional extra data for a discovered issue, or null. The
@@ -88,6 +89,7 @@ public abstract class LintClient {
     public abstract void report(
             @NonNull Context context,
             @NonNull Issue issue,
+            @NonNull Severity severity,
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data);

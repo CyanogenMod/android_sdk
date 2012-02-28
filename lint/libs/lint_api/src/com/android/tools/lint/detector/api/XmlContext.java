@@ -102,7 +102,7 @@ public class XmlContext extends Context {
         if (scope != null && mDriver.isSuppressed(issue, scope)) {
             return;
         }
-        mDriver.getClient().report(this, issue, location, message, data);
+        super.report(issue, location, message, data);
     }
 
     @Override
