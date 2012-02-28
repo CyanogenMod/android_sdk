@@ -421,13 +421,14 @@
         <if>
             <condition>
                 <isreference refid="project.libraries" />
+                <not><isset property="dont.do.deps" /></not>
             </condition>
             <then>
                 <subant
                         buildpathref="project.libraries"
                         antfile="build.xml"
                         failonerror="true">
-                    <target name="all" />
+                    <target name="nodeps" />
                     <target name="clean" />
                 </subant>
             </then>
