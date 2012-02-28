@@ -37,6 +37,7 @@ final class Device implements IDevice {
 
     private final static int INSTALL_TIMEOUT = 2*60*1000; //2min
     private static final int BATTERY_TIMEOUT = 2*1000; //2 seconds
+    private static final int GETPROP_TIMEOUT = 2*1000; //2 seconds
 
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
@@ -258,7 +259,7 @@ final class Device implements IDevice {
     public String getPropertySync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
         CollectingOutputReceiver receiver = new CollectingOutputReceiver();
-        executeShellCommand(String.format("getprop '%s'", name), receiver);
+        executeShellCommand(String.format("getprop '%s'", name), receiver, GETPROP_TIMEOUT);
         String value = receiver.getOutput().trim();
         if (value.isEmpty()) {
             return null;
