@@ -203,7 +203,9 @@ public class DefaultConfiguration extends Configuration {
         }
         message = "Failed to parse lint.xml configuration file: " + message;
         mClient.report(new Context(null, mProject, mProject, mConfigFile),
-                IssueRegistry.LINT_ERROR, Location.create(mConfigFile), message, null);
+                IssueRegistry.LINT_ERROR,
+                mProject.getConfiguration().getSeverity(IssueRegistry.LINT_ERROR),
+                Location.create(mConfigFile), message, null);
     }
 
     private void readConfig() {

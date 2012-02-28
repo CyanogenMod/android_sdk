@@ -257,7 +257,33 @@ public class Context {
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data) {
-        mDriver.getClient().report(this, issue, location, message, data);
+        Configuration configuration = mConfiguration;
+
+        // If this error was computed for a context where the context corresponds to
+        // a project instead of a file, the actual error may be in a different project (e.g.
+        // a library project), so adjust the configuration as necessary.
+        if (location != null && location.getFile() != null) {
+            Project project = mDriver.findProjectFor(location.getFile());
+            if (project != null) {
+                configuration = project.getConfiguration();
+            }
+        }
+
+        // If an error occurs in a library project, but you've disabled that check in the
+        // main project, disable it in the library project too. (In some cases you don't
+        // control the lint.xml of a library project, and besides, if you're not interested in
+        // a check for your main project you probably don't care about it in the library either.)
+        if (configuration != mConfiguration
+                && mConfiguration.getSeverity(issue) == Severity.IGNORE) {
+            return;
+        }
+
+        Severity severity = configuration.getSeverity(issue);
+        if (severity == Severity.IGNORE) {
+            return;
+        }
+
+        mDriver.getClient().report(this, issue, severity, location, message, data);
     }
 
     /**

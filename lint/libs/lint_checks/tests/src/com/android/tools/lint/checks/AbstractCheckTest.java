@@ -270,8 +270,8 @@ public abstract class AbstractCheckTest extends TestCase {
         }
 
         @Override
-        public void report(Context context, Issue issue, Location location, String message,
-                Object data) {
+        public void report(Context context, Issue issue, Severity severity, Location location,
+                String message, Object data) {
             StringBuilder sb = new StringBuilder();
 
             if (issue == IssueRegistry.LINT_ERROR) {
@@ -305,7 +305,6 @@ public abstract class AbstractCheckTest extends TestCase {
                 sb.append(' ');
             }
 
-            Severity severity = context.getConfiguration().getSeverity(issue);
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.
                 severity = Severity.ERROR;

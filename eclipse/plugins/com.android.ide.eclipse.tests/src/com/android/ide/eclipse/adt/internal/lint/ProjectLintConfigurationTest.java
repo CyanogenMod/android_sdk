@@ -208,8 +208,8 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
 
     private static class TestClient extends LintClient {
         @Override
-        public void report(Context context, Issue issue, Location location, String message,
-                Object data) {
+        public void report(Context context, Issue issue, Severity severity, Location location,
+                String message, Object data) {
         }
 
         @Override

@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
@@ -153,8 +154,8 @@ public class LintCliXmlParserTest extends TestCase {
 
     private static class TestClient extends Main {
         @Override
-        public void report(Context context, Issue issue, Location location, String message,
-                Object data) {
+        public void report(Context context, Issue issue, Severity severity, Location location,
+                String message, Object data) {
             System.out.println(location + ":" + message);
         }
     }
