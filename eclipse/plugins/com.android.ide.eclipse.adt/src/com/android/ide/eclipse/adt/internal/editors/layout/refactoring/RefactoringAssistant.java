@@ -87,6 +87,9 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         }
 
         IFile file = xmlEditor.getInputFile();
+        if (file == null) {
+            return null;
+        }
         int offset = invocationContext.getOffset();
 
         // Ensure that we are over a tag name (for element-based refactoring

@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescript
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.w3c.dom.Document;
 
@@ -38,7 +37,6 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
         @SuppressWarnings("unchecked")
         public OtherXmlEditorDelegate createForFile(
                 CommonXmlEditor delegator,
-                IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.XML == type) {
                 return new OtherXmlEditorDelegate(delegator);

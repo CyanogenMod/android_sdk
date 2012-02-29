@@ -164,6 +164,9 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         AndroidXmlEditor editor = AndroidXmlEditor.fromTextViewer(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
+            if (file == null) {
+                return null;
+            }
             IDocument document = sourceViewer.getDocument();
             List<IMarker> markers = AdtUtils.findMarkersOnLine(AdtConstants.MARKER_LINT,
                     file, document, invocationContext.getOffset());

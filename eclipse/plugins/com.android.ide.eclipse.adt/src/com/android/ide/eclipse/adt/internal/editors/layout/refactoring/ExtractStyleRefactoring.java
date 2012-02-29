@@ -370,6 +370,9 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
 
         if (rootEdit.hasChildren()) {
             IFile sourceFile = mDelegate.getEditor().getInputFile();
+            if (sourceFile == null) {
+                return changes;
+            }
             TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
             change.setTextType(EXT_XML);
             changes.add(change);

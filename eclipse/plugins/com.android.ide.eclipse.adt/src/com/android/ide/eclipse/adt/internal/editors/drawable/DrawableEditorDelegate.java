@@ -25,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,7 +41,6 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
         @SuppressWarnings("unchecked")
         public DrawableEditorDelegate createForFile(
                 CommonXmlEditor delegator,
-                IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.DRAWABLE == type) {
                 return new DrawableEditorDelegate(delegator);

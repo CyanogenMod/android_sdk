@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.resources;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 
 import org.eclipse.core.resources.IFile;
@@ -49,7 +50,12 @@ public class CyclicDependencyValidator implements IInputValidator {
      * @return a validator which checks whether resource ids are valid or whether they
      *         could result in a cyclic dependency
      */
-    public static IInputValidator create(IFile file) {
+    @Nullable
+    public static IInputValidator create(@Nullable IFile file) {
+        if (file == null) {
+            return null;
+        }
+
         IProject project = file.getProject();
         IncludeFinder includeFinder = IncludeFinder.get(project);
         final Collection<String> invalid =

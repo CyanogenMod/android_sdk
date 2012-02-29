@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.animator;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -25,8 +26,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,7 +42,6 @@ public class AnimationEditorDelegate extends CommonXmlDelegate {
         @SuppressWarnings("unchecked")
         public AnimationEditorDelegate createForFile(
                 CommonXmlEditor delegator,
-                IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.ANIM == type || ResourceFolderType.ANIMATOR == type) {
                 return new AnimationEditorDelegate(delegator);
@@ -152,10 +150,9 @@ public class AnimationEditorDelegate extends CommonXmlDelegate {
     }
 
     private ResourceFolderType getFolderType() {
-        IFile inputFile = getEditor().getInputFile();
-        if (inputFile != null) {
-            String folderName = inputFile.getParent().getName();
-            return  ResourceFolderType.getFolderType(folderName);
+        String folderName = AdtUtils.getParentFolderName(getEditor().getEditorInput());
+        if (folderName.length() > 0) {
+            return ResourceFolderType.getFolderType(folderName);
         }
         return ResourceFolderType.ANIMATOR;
     }

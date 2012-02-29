@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors;
 
 import static org.eclipse.wst.sse.ui.internal.actions.StructuredTextEditorActionConstants.ACTION_NAME_FORMAT_DOCUMENT;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -56,8 +57,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
-import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -474,26 +475,9 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     /**
-     * Initializes the editor part with a site and input.
-     * <p/>
-     * Checks that the input is an instance of {@link IFileEditorInput}.
-     *
-     * @see FormEditor
-     */
-    @Override
-    public void init(IEditorSite site, IEditorInput editorInput) throws PartInitException {
-        if (!(editorInput instanceof IFileEditorInput))
-            throw new PartInitException("Invalid Input: Must be IFileEditorInput");
-        super.init(site, editorInput);
-    }
-
-    /**
      * Returns the {@link IFile} matching the editor's input or null.
-     * <p/>
-     * By construction, the editor input has to be an {@link IFileEditorInput} so it must
-     * have an associated {@link IFile}. Null can only be returned if this editor has no
-     * input somehow.
      */
+    @Nullable
     public IFile getInputFile() {
         IEditorInput input = getEditorInput();
         if (input instanceof IFileEditorInput) {
@@ -581,9 +565,15 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      *
      * @see EclipseLintRunner#startLint(java.util.List, IDocument, boolean, boolean)
      */
+    @Nullable
     public Job startLintJob() {
-        return EclipseLintRunner.startLint(Collections.singletonList(getInputFile()),
-                getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
+        IFile file = getInputFile();
+        if (file != null) {
+            return EclipseLintRunner.startLint(Collections.singletonList(file),
+                    getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
+        }
+
+        return null;
     }
 
     /* (non-Javadoc)
@@ -1179,6 +1169,26 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
 
                 if (target != null) {
                     return currentSdk.getTargetData(target);
+                }
+            }
+        }
+
+        IEditorInput input = getEditorInput();
+        if (input instanceof IURIEditorInput) {
+            IURIEditorInput urlInput = (IURIEditorInput) input;
+            Sdk currentSdk = Sdk.getCurrent();
+            if (currentSdk != null) {
+                try {
+                    String path = AdtUtils.getFile(urlInput.getURI().toURL()).getPath();
+                    IAndroidTarget[] targets = currentSdk.getTargets();
+                    for (IAndroidTarget target : targets) {
+                        if (path.startsWith(target.getLocation())) {
+                            return currentSdk.getTargetData(target);
+                        }
+                    }
+                } catch (MalformedURLException e) {
+                    // File might be in some other weird random location we can't
+                    // handle: Just ignore these
                 }
             }
         }

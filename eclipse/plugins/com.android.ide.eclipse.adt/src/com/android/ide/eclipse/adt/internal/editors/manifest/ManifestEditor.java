@@ -453,7 +453,7 @@ public final class ManifestEditor extends AndroidXmlEditor {
                     Node node = usesPermission.createXmlNode();
                     if (show && !shown) {
                         shown = true;
-                        if (node instanceof IndexedRegion) {
+                        if (node instanceof IndexedRegion && getInputFile() != null) {
                             IndexedRegion indexedRegion = (IndexedRegion) node;
                             IRegion region = new Region(indexedRegion.getStartOffset(),
                                     indexedRegion.getEndOffset() - indexedRegion.getStartOffset());

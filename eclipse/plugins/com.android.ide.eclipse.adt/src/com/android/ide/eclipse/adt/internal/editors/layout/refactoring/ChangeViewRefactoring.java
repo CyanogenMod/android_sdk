@@ -155,6 +155,9 @@ public class ChangeViewRefactoring extends VisualRefactoring {
 
         IFile file = mDelegate.getEditor().getInputFile();
         List<Change> changes = new ArrayList<Change>();
+        if (file == null) {
+            return changes;
+        }
         TextFileChange change = new TextFileChange(file.getName(), file);
         MultiTextEdit rootEdit = new MultiTextEdit();
         change.setEdit(rootEdit);

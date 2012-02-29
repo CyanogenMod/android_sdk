@@ -23,6 +23,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -58,7 +59,7 @@ public final class AnimationContentAssist extends AndroidContentAssist {
 
     @Override
     protected int getRootDescriptorId() {
-        String folderName = mEditor.getInputFile().getParent().getName();
+        String folderName = AdtUtils.getParentFolderName(mEditor.getEditorInput());
         ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
         if (folderType == ResourceFolderType.ANIM) {
             return AndroidTargetData.DESCRIPTOR_ANIM;

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.common;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
@@ -44,6 +45,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IShowEditorInput;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.IDE;
 import org.w3c.dom.Document;
@@ -135,7 +137,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
             ResourceFolderType type = resFolder == null ? null : resFolder.getType();
 
             for (IDelegateCreator creator : DELEGATES) {
-                mDelegate = creator.createForFile(this, fileInput, type);
+                mDelegate = creator.createForFile(this, type);
                 if (mDelegate != null) {
                     break;
                 }
@@ -151,12 +153,39 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
                         type);
                 mDelegate = new OtherXmlEditorDelegate(this);
             }
+        } else if (editorInput instanceof IURIEditorInput) {
+            String folderName = AdtUtils.getParentFolderName(editorInput);
+            ResourceFolderType type = ResourceFolderType.getFolderType(folderName);
+            if (type == ResourceFolderType.LAYOUT) {
+                // The layout editor has a lot of hardcoded requirements for real IFiles
+                // and IProjects so for now just use a plain XML editor for project-less layout
+                // files
+                mDelegate = new OtherXmlEditorDelegate(this);
+            } else {
+                for (IDelegateCreator creator : DELEGATES) {
+                    mDelegate = creator.createForFile(this, type);
+                    if (mDelegate != null) {
+                        break;
+                    }
+                }
+            }
+
+            if (mDelegate == null) {
+                // We didn't find any editor.
+                // We'll use the OtherXmlEditorDelegate as a catch-all editor.
+                AdtPlugin.log(IStatus.INFO,
+                        "No valid Android XML Editor Delegate found for file %1$s [Res %2$s, type %3$s]",
+                        ((IURIEditorInput) editorInput).getURI().toString(),
+                        folderName,
+                        type);
+                mDelegate = new OtherXmlEditorDelegate(this);
+            }
         }
 
         if (mDelegate == null) {
             // We can't do anything if we don't have a valid file.
             AdtPlugin.log(IStatus.INFO,
-                    "Android XML Editor cannot process non-file input %1$s" +   //$NON-NLS-1$
+                    "Android XML Editor cannot process non-file input %1$s",   //$NON-NLS-1$
                     (editorInput == null ? "null" : editorInput.toString()));   //$NON-NLS-1$
             throw new PartInitException("Android XML Editor cannot process this input.");
         } else {
@@ -292,7 +321,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
 
     @Override
     protected Job runLint() {
-        if (mDelegate != null) {
+        if (mDelegate != null && getEditorInput() instanceof IFileEditorInput) {
             return mDelegate.delegateRunLint();
         }
         return null;

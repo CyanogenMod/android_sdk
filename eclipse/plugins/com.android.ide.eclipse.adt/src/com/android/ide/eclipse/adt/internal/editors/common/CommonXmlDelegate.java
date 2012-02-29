@@ -28,7 +28,7 @@ import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.part.EditorActionBarContributor;
 import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
@@ -59,14 +59,12 @@ public abstract class CommonXmlDelegate {
          * based on its resource path (e.g. ResourceManager#getResourceFolder).
          *
          * @param delegator The non-null instance of {@link CommonXmlEditor}.
-         * @param input A non-null input file.
          * @param type The {@link ResourceFolderType} of the folder containing the file,
          *   if it can be determined. Null otherwise.
          * @return A new delegate that can handle that file or null.
          */
         public @Nullable <T extends CommonXmlDelegate> T createForFile(
                             @NonNull CommonXmlEditor delegator,
-                            @NonNull IFileEditorInput input,
                             @Nullable ResourceFolderType type);
     }
 
@@ -132,7 +130,11 @@ public abstract class CommonXmlDelegate {
         if (input instanceof FileEditorInput) {
             FileEditorInput fileInput = (FileEditorInput) input;
             IFile file = fileInput.getFile();
-            getEditor().setPartName(String.format("%1$s", file.getName()));
+            getEditor().setPartName(file.getName());
+        } else if (input instanceof IURIEditorInput) {
+            IURIEditorInput uriInput = (IURIEditorInput) input;
+            String name = uriInput.getName();
+            getEditor().setPartName(name);
         }
     }
 

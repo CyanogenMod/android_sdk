@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 
@@ -37,6 +38,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -418,5 +420,33 @@ public class AdtUtils {
                 return project.isAccessible();
             }
         });
+    }
+
+    /**
+     * Returns the name of the parent folder for the given editor input
+     *
+     * @param editorInput the editor input to check
+     * @return the parent folder, which is never null but may be ""
+     */
+    @NonNull
+    public static String getParentFolderName(@Nullable IEditorInput editorInput) {
+        if (editorInput instanceof IFileEditorInput) {
+             IFile file = ((IFileEditorInput) editorInput).getFile();
+             return file.getParent().getName();
+        }
+
+        if (editorInput instanceof IURIEditorInput) {
+            IURIEditorInput urlEditorInput = (IURIEditorInput) editorInput;
+            String path = urlEditorInput.getURI().toString();
+            int lastIndex = path.lastIndexOf('/');
+            if (lastIndex != -1) {
+                int lastLastIndex = path.lastIndexOf('/', lastIndex - 1);
+                if (lastLastIndex != -1) {
+                    return path.substring(lastLastIndex + 1, lastIndex);
+                }
+            }
+        }
+
+        return "";
     }
 }
