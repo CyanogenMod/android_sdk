@@ -33,8 +33,14 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
             "JavaPerformanceTest.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
             "JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect\n" +
             "JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:145: Warning: Use Integer.valueOf(42) instead\n" +
+            "JavaPerformanceTest.java:147: Warning: Use Boolean.valueOf(true) instead\n" +
+            "JavaPerformanceTest.java:148: Warning: Use Character.valueOf('c') instead\n" +
+            "JavaPerformanceTest.java:149: Warning: Use Float.valueOf(1.0f) instead\n" +
+            "JavaPerformanceTest.java:150: Warning: Use Double.valueOf(1.0) instead\n" +
             "JavaPerformanceTest.java:28: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
             "JavaPerformanceTest.java:29: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
+            "JavaPerformanceTest.java:33: Warning: Use Integer.valueOf(5) instead\n" +
             "JavaPerformanceTest.java:70: Warning: Use new SparseArray<String>(...) instead for better performance\n" +
             "JavaPerformanceTest.java:72: Warning: Use new SparseBooleanArray(...) instead for better performance\n" +
             "JavaPerformanceTest.java:74: Warning: Use new SparseIntArray(...) instead for better performance",

@@ -101,6 +101,22 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             JavaPerformanceDetector.class,
             Scope.JAVA_FILE_SCOPE);
 
+    /** Using {@code new Integer()} instead of the more efficient {@code Integer.valueOf} */
+    public static final Issue USE_VALUEOF = Issue.create(
+            "UseValueOf", //$NON-NLS-1$
+            "Looks for usages of \"new\" for wrapper classes which should use \"valueOf\" instead",
+
+            "You should not call the constructor for wrapper classes directly, such as" +
+            "\"new Integer(42)\". Instead, call the \"valueOf\" factory method, such as " +
+            "Integer.valueOf(42). This will typically use less memory because common integers " +
+            "such as 0 and 1 will share a single instance.",
+
+            Category.PERFORMANCE,
+            4,
+            Severity.WARNING,
+            JavaPerformanceDetector.class,
+            Scope.JAVA_FILE_SCOPE);
+
     private static final String INT = "int";                                //$NON-NLS-1$
     private static final String INTEGER = "Integer";                        //$NON-NLS-1$
     private static final String BOOL = "boolean";                           //$NON-NLS-1$
@@ -148,14 +164,15 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         private boolean mFlagAllocations;
         private boolean mCheckMaps;
         private boolean mCheckAllocations;
-
+        private boolean mCheckValueOf;
 
         public PerformanceVisitor(JavaContext context) {
             mContext = context;
 
             mCheckAllocations = context.isEnabled(PAINT_ALLOC);
             mCheckMaps = context.isEnabled(USE_SPARSEARRAY);
-            assert mCheckAllocations  || mCheckMaps; // enforced by infrastructure
+            mCheckValueOf = context.isEnabled(USE_VALUEOF);
+            assert mCheckAllocations || mCheckMaps || mCheckValueOf; // enforced by infrastructure
         }
 
         @Override
@@ -167,14 +184,34 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
 
         @Override
         public boolean visitConstructorInvocation(ConstructorInvocation node) {
+            String typeName = null;
             if (mCheckMaps) {
                 TypeReference reference = node.astTypeReference();
-                String typeName = reference.astParts().last().astIdentifier().astValue();
+                typeName = reference.astParts().last().astIdentifier().astValue();
                 // TODO: Should we handle factory method constructions of HashMaps as well,
                 // e.g. via Guava? This is a bit trickier since we need to infer the type
                 // arguments from the calling context.
                 if (typeName.equals(HASH_MAP)) {
                     checkSparseArray(node, reference);
+                }
+            }
+
+            if (mCheckValueOf) {
+                if (typeName == null) {
+                    TypeReference reference = node.astTypeReference();
+                    typeName = reference.astParts().last().astIdentifier().astValue();
+                }
+                if ((typeName.equals("Integer")             //$NON-NLS-1$
+                        || typeName.equals("Boolean")       //$NON-NLS-1$
+                        || typeName.equals("Float")         //$NON-NLS-1$
+                        || typeName.equals("Character")     //$NON-NLS-1$
+                        || typeName.equals("Double"))       //$NON-NLS-1$
+                        && node.astTypeReference().astParts().size() == 1
+                        && node.astArguments().size() == 1) {
+                    String argument = node.astArguments().first().toString();
+                    mContext.report(USE_VALUEOF, node, mContext.getLocation(node),
+                            String.format("Use %1$s.valueOf(%2$s) instead", typeName, argument),
+                            null);
                 }
             }
 
