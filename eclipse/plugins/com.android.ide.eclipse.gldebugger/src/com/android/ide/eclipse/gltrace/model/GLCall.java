@@ -38,6 +38,15 @@ public class GLCall {
     /** Marker name provided by a {@link Function#glPushGroupMarkerEXT} call. */
     public static final int PROPERTY_MARKERNAME = 0;
 
+    /** Size argument in a {@link Function#glVertexAttribPointerData} call. */
+    public static final int PROPERTY_VERTEX_ATTRIB_POINTER_SIZE = 1;
+
+    /** Type argument in a {@link Function#glVertexAttribPointerData} call. */
+    public static final int PROPERTY_VERTEX_ATTRIB_POINTER_TYPE = 2;
+
+    /** Data argument in a {@link Function#glVertexAttribPointerData} call. */
+    public static final int PROPERTY_VERTEX_ATTRIB_POINTER_DATA = 3;
+
     /** Index of this call in the trace. */
     private int mIndex;
 

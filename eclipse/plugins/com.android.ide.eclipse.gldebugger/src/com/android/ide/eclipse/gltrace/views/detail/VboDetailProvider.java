@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.gltrace.views.detail;
 
+import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLUtils;
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
@@ -32,10 +34,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -156,7 +154,8 @@ public class VboDetailProvider implements IStateDetailProvider {
 
     private void updateContents() {
         if (mBufferData != null) {
-            mTextControl.setText(formatData(mBufferData));
+            mTextControl.setText(GLUtils.formatData(mBufferData,
+                    GLEnum.valueOf(mDisplayFormatCombo.getText())));
             mTextControl.setEnabled(true);
             mDisplayFormatCombo.setEnabled(true);
         } else {
@@ -164,92 +163,6 @@ public class VboDetailProvider implements IStateDetailProvider {
             mTextControl.setEnabled(false);
             mDisplayFormatCombo.setEnabled(false);
         }
-    }
-
-    private String formatData(byte[] data) {
-        DisplayFormat format = DisplayFormat.valueOf(mDisplayFormatCombo.getText());
-
-        switch (format) {
-            case GL_BYTE:
-                return formatBytes(data, false);
-            case GL_UNSIGNED_BYTE:
-                return formatBytes(data, true);
-            case GL_SHORT:
-                return formatShorts(data, false);
-            case GL_UNSIGNED_SHORT:
-                return formatShorts(data, true);
-            case GL_FIXED:
-                return formatInts(data);
-            case GL_FLOAT:
-                return formatFloats(data);
-            default:
-                return ""; //$NON-NLS-1$
-        }
-    }
-
-    private String formatFloats(byte[] data) {
-        FloatBuffer bb = ByteBuffer.wrap(data).asFloatBuffer();
-
-        StringBuilder sb = new StringBuilder(bb.capacity() * 3);
-
-        while (bb.remaining() > 0) {
-            sb.append(String.format("%.4f", bb.get()));
-            sb.append(',');
-            sb.append('\n');
-        }
-
-        return sb.toString();
-    }
-
-    private String formatInts(byte[] data) {
-        IntBuffer bb = ByteBuffer.wrap(data).asIntBuffer();
-
-        StringBuilder sb = new StringBuilder(bb.capacity() * 3);
-
-        while (bb.remaining() > 0) {
-            sb.append(bb.get());
-            sb.append(',');
-            sb.append('\n');
-        }
-
-        return sb.toString();
-    }
-
-    private String formatShorts(byte[] data, boolean unsigned) {
-        ShortBuffer bb = ByteBuffer.wrap(data).asShortBuffer();
-
-        StringBuilder sb = new StringBuilder(bb.capacity() * 3);
-
-        while (bb.remaining() > 0) {
-            if (unsigned) {
-                sb.append(bb.get() & 0xffff);
-            } else {
-                sb.append(bb.get());
-            }
-            sb.append(',');
-            sb.append('\n');
-        }
-
-        return sb.toString();
-    }
-
-    private String formatBytes(byte[] data, boolean unsigned) {
-        ByteBuffer bb = ByteBuffer.wrap(data);
-
-        StringBuilder sb = new StringBuilder(bb.capacity() * 3);
-
-        while (bb.remaining() > 0) {
-            if (unsigned) {
-                sb.append(bb.get() & 0xff);
-            } else {
-                sb.append(bb.get());
-            }
-
-            sb.append(',');
-            sb.append('\n');
-        }
-
-        return sb.toString();
     }
 
     @Override
