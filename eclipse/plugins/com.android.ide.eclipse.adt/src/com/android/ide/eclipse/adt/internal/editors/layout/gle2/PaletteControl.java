@@ -486,7 +486,7 @@ public class PaletteControl extends Composite {
                         wrapper.setBackground(mBackground);
                     }
                     composite = super.createChildContainer(wrapper, header, style);
-                    if (mBackground != null) {
+                    if (mPaletteMode.isPreview() && mBackground != null) {
                         composite.setBackground(mBackground);
                     }
                     composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));

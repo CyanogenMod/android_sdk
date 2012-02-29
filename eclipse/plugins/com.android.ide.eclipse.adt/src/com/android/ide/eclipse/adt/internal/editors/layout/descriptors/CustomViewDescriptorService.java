@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 
 import com.android.ide.common.resources.platform.ViewClassInfo;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -33,9 +34,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.ui.ISharedImages;
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 
 import java.util.HashMap;
@@ -321,13 +319,7 @@ public final class CustomViewDescriptorService {
 
         @Override
         public Image getGenericIcon() {
-            // Java source file icon. We could use the Java class icon here
-            // (IMG_OBJS_CLASS), but it does not work well on anything but
-            // white backgrounds
-            ISharedImages sharedImages = JavaUI.getSharedImages();
-            String key = ISharedImages.IMG_OBJS_CUNIT;
-            ImageDescriptor descriptor = sharedImages.getImageDescriptor(key);
-            return descriptor.createImage();
+            return IconFactory.getInstance().getIcon("customView"); //$NON-NLS-1$
         }
     }
 }
