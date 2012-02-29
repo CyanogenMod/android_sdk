@@ -32,14 +32,18 @@ public interface ISourceRevealer {
 
     /**
      * Reveal a particular line given the file name and line number.
+     * @param perspective If not null, switch to this perspective before
+     *                            revealing the source
      * @return true if the source was revealed.
      */
-    boolean revealLine(String fileName, int lineNumber);
+    boolean revealLine(String fileName, int lineNumber, String perspective);
 
     /**
      * Reveal a particular Java method.
      * @param fqmn fully qualified method name
+     * @param perspective If not null, switch to this perspective before
+     *                            revealing the source
      * @return true if the source was revealed.
      */
-    boolean revealMethod(String fqmn);
+    boolean revealMethod(String fqmn, String perspective);
 }

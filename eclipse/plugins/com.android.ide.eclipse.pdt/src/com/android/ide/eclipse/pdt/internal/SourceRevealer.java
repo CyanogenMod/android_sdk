@@ -41,11 +41,13 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
@@ -115,14 +117,14 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
     }
 
     @Override
-    public boolean revealLine(String fileName, int lineNumber) {
+    public boolean revealLine(String fileName, int lineNumber, String perspective) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
                 fileName,
                 IJavaSearchConstants.CLASS,
                 IJavaSearchConstants.DECLARATIONS,
                 SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        LineSearchRequestor requestor = new LineSearchRequestor(lineNumber);
+        LineSearchRequestor requestor = new LineSearchRequestor(lineNumber, perspective);
         try {
             se.search(searchPattern,
                     new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
@@ -137,14 +139,14 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
     }
 
     @Override
-    public boolean revealMethod(String fqmn) {
+    public boolean revealMethod(String fqmn, String perspective) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
                 fqmn,
                 IJavaSearchConstants.METHOD,
                 IJavaSearchConstants.DECLARATIONS,
                 SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        MethodSearchRequestor requestor = new MethodSearchRequestor();
+        MethodSearchRequestor requestor = new MethodSearchRequestor(perspective);
         try {
             se.search(searchPattern,
                     new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
@@ -161,9 +163,11 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
     private static class LineSearchRequestor extends SearchRequestor {
         private boolean mFoundMatch = false;
         private int mLineNumber;
+        private final String mPerspective;
 
-        public LineSearchRequestor(int lineNumber) {
+        public LineSearchRequestor(int lineNumber, String perspective) {
             mLineNumber = lineNumber;
+            mPerspective = perspective;
         }
 
         public boolean didMatch() {
@@ -173,6 +177,10 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         @Override
         public void acceptSearchMatch(SearchMatch match) throws CoreException {
             if (match.getResource() instanceof IFile && !mFoundMatch) {
+                if (mPerspective != null) {
+                    SourceRevealer.switchToPerspective(mPerspective);
+                }
+
                 IFile matchedFile = (IFile) match.getResource();
                 IMarker marker = matchedFile.createMarker(IMarker.TEXT);
                 marker.setAttribute(IMarker.LINE_NUMBER, mLineNumber);
@@ -187,6 +195,11 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
 
     private static class MethodSearchRequestor extends SearchRequestor {
         private boolean mFoundMatch = false;
+        private final String mPerspective;
+
+        public MethodSearchRequestor(String perspective) {
+            mPerspective = perspective;
+        }
 
         public boolean didMatch() {
             return mFoundMatch;
@@ -196,9 +209,28 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         public void acceptSearchMatch(SearchMatch match) throws CoreException {
             Object element = match.getElement();
             if (element instanceof IMethod && !mFoundMatch) {
+                if (mPerspective != null) {
+                    SourceRevealer.switchToPerspective(mPerspective);
+                }
+
                 IMethod method = (IMethod) element;
                 JavaUI.openInEditor(method);
                 mFoundMatch = true;
+            }
+        }
+    }
+
+    public static void switchToPerspective(String perspectiveId) {
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+        IPerspectiveRegistry perspectiveRegistry = workbench.getPerspectiveRegistry();
+        if (perspectiveId != null
+                && perspectiveId.length() > 0
+                && perspectiveRegistry.findPerspectiveWithId(perspectiveId) != null) {
+            try {
+                workbench.showPerspective(perspectiveId, window);
+            } catch (WorkbenchException e) {
+                // ignore exception, perspective won't be switched
             }
         }
     }

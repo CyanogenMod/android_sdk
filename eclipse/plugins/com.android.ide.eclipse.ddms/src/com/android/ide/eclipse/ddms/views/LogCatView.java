@@ -112,45 +112,21 @@ public class LogCatView extends SelectionDependentViewPart {
         IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
         String jumpToLocation = store.getString(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM);
 
-        boolean revealed = false;
+        String perspectiveId = null;
+        if (store.getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE)) {
+            perspectiveId = store.getString(PreferenceInitializer.ATTR_PERSPECTIVE_ID);
+        }
+
+
         if (jumpToLocation.equals(CHOICE_ERROR_LINE)) {
             String fileName = mStackTraceParser.getFileName(msg);
             int lineNumber = mStackTraceParser.getLineNumber(msg);
-            revealed = JavaSourceRevealer.revealLine(fileName, lineNumber);
+            JavaSourceRevealer.revealLine(fileName, lineNumber, perspectiveId);
         } else {
             String methodName = mStackTraceParser.getMethodName(msg);
-            revealed = JavaSourceRevealer.revealMethod(methodName);
-        }
-
-        if (revealed) {
-            switchPerspective();
+            JavaSourceRevealer.revealMethod(methodName, perspectiveId);
         }
     }
-
-    /**
-      * Switch to perspective specified by user when opening a source file.
-      * User preferences control whether the perspective should be switched,
-      * and if so, what the target perspective is.
-      */
-     private void switchPerspective() {
-         IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
-         if (store.getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE)) {
-             IWorkbench workbench = PlatformUI.getWorkbench();
-             IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-             IPerspectiveRegistry perspectiveRegistry = workbench.getPerspectiveRegistry();
-             String perspectiveId = store.getString(PreferenceInitializer.ATTR_PERSPECTIVE_ID);
-             if (perspectiveId != null
-                     && perspectiveId.length() > 0
-                     && perspectiveRegistry.findPerspectiveWithId(perspectiveId) != null) {
-                 try {
-                     workbench.showPerspective(perspectiveId, window);
-                 } catch (WorkbenchException e) {
-                     Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
-                     DdmsPlugin.getDefault().getLog().log(s);
-                 }
-             }
-         }
-     }
 
     public void selectTransientAppFilter(String appName) {
         mLogCatPanel.selectTransientAppFilter(appName);
