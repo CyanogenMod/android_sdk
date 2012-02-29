@@ -238,6 +238,9 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         String newFileName = mLayoutName + DOT_XML;
         IProject project = mDelegate.getEditor().getProject();
         IFile sourceFile = mDelegate.getEditor().getInputFile();
+        if (sourceFile == null) {
+            return changes;
+        }
 
         // Replace extracted elements by <include> tag
         handleIncludingFile(changes, sourceFile, mSelectionStart, mSelectionEnd,

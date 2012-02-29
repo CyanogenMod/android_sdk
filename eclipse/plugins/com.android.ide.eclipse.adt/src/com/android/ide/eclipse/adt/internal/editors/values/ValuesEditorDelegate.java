@@ -26,7 +26,6 @@ import com.android.resources.ResourceFolderType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -45,7 +44,6 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
         @SuppressWarnings("unchecked")
         public ValuesEditorDelegate createForFile(
                 CommonXmlEditor delegator,
-                IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.VALUES == type) {
                 return new ValuesEditorDelegate(delegator);

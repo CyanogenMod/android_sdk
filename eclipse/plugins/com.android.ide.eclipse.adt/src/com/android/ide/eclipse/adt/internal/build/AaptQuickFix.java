@@ -167,6 +167,9 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         AndroidXmlEditor editor = AndroidXmlEditor.fromTextViewer(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
+            if (file == null) {
+                return null;
+            }
             IDocument document = sourceViewer.getDocument();
             List<IMarker> markers = AdtUtils.findMarkersOnLine(AdtConstants.MARKER_AAPT_COMPILE,
                     file, document, invocationContext.getOffset());

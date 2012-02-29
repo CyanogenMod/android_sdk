@@ -461,7 +461,9 @@ public class LayoutActionBar extends Composite {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IFile file = mEditor.getEditorDelegate().getEditor().getInputFile();
-                EclipseLintClient.showErrors(getShell(), file);
+                if (file != null) {
+                    EclipseLintClient.showErrors(getShell(), file);
+                }
             }
         });
 

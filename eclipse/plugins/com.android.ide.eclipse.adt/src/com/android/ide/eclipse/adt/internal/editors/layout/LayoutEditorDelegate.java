@@ -82,7 +82,6 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         @SuppressWarnings("unchecked")
         public LayoutEditorDelegate createForFile(
                 CommonXmlEditor delegator,
-                IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.LAYOUT == type) {
                 return new LayoutEditorDelegate(delegator);

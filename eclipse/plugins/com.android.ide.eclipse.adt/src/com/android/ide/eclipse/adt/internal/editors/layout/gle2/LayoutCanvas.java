@@ -615,7 +615,10 @@ public class LayoutCanvas extends Canvas {
 
         // Clear the zoom setting if it is almost identical to 1.0
         String zoomValue = (Math.abs(scale - 1.0) < 0.0001) ? null : Double.toString(scale);
-        AdtPlugin.setFileProperty(mEditorDelegate.getEditor().getInputFile(), NAME_ZOOM, zoomValue);
+        IFile file = mEditorDelegate.getEditor().getInputFile();
+        if (file != null) {
+            AdtPlugin.setFileProperty(file, NAME_ZOOM, zoomValue);
+        }
     }
 
     /**

@@ -745,6 +745,21 @@ public class Hyperlinks {
     private static ResourceRepository getResources(IProject project, boolean framework) {
         if (framework) {
             IAndroidTarget target = getTarget(project);
+
+            if (target == null && project == null && framework) {
+                // No current project: probably jumped into some of the framework XML resource
+                // files and attempting to jump around. Attempt to figure out which target
+                // we're dealing with and continue looking within the same framework.
+                IEditorPart editor = getEditor();
+                Sdk sdk = Sdk.getCurrent();
+                if (sdk != null && editor instanceof AndroidXmlEditor) {
+                    AndroidTargetData data = ((AndroidXmlEditor) editor).getTargetData();
+                    if (data != null) {
+                        return data.getFrameworkResources();
+                    }
+                }
+            }
+
             if (target == null) {
                 return null;
             }
@@ -1081,6 +1096,10 @@ public class Hyperlinks {
         String name = resource.getSecond();
 
         boolean isFramework = url.startsWith("@android"); //$NON-NLS-1$
+        if (project == null) {
+            // Local reference *within* a framework
+            isFramework = true;
+        }
 
         ResourceRepository resources = getResources(project, isFramework);
         if (resources == null) {

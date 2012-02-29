@@ -192,6 +192,9 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         String androidNsPrefix = getAndroidNamespacePrefix();
         IFile file = mDelegate.getEditor().getInputFile();
         List<Change> changes = new ArrayList<Change>();
+        if (file == null) {
+            return changes;
+        }
         TextFileChange change = new TextFileChange(file.getName(), file);
         MultiTextEdit rootEdit = new MultiTextEdit();
         change.setTextType(EXT_XML);
