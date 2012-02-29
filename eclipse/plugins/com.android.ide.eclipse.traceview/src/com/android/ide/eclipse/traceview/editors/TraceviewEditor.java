@@ -311,6 +311,6 @@ public class TraceviewEditor extends EditorPart implements MethodHandler {
         String className = method.getClassName().replaceAll("/", ".");  //$NON-NLS-1$ //$NON-NLS-2$
         String fqmn = className + "." + methodName; //$NON-NLS-1$
 
-        JavaSourceRevealer.revealMethod(fqmn);
+        JavaSourceRevealer.revealMethod(fqmn, null);
     }
 }
