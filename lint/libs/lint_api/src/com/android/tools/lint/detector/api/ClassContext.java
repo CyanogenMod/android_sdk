@@ -259,15 +259,16 @@ public class ClassContext extends Context {
         }
         ClassNode curr = mClassNode;
         while (curr != null) {
+            ClassNode prev = curr;
             curr = mDriver.getOuterClassNode(curr);
             if (curr != null) {
-                if (mClassNode.outerMethod != null) {
+                if (prev.outerMethod != null) {
                     @SuppressWarnings("rawtypes") // ASM API
                     List methods = curr.methods;
                     for (Object m : methods) {
                         MethodNode method = (MethodNode) m;
-                        if (method.name.equals(mClassNode.outerMethod)
-                                && method.desc.equals(mClassNode.outerMethodDesc)) {
+                        if (method.name.equals(prev.outerMethod)
+                                && method.desc.equals(prev.outerMethodDesc)) {
                             // Found the outer method for this anonymous class; continue
                             // reporting on it (which will also work its way up the parent
                             // class hierarchy)

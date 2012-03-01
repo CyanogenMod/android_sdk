@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -238,8 +239,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             return;
         }
 
-        // Workaround for the fact that beforeCheckProject is too early
-        int classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
+        int classMinSdk = getClassMinSdk(context, classNode);
         if (classMinSdk == -1) {
             classMinSdk = getMinSdk(context);
         }
@@ -364,6 +364,53 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 }
             }
         }
+    }
+
+    /**
+     * Return the {@code @TargeTApi} level to use for the given {@code classNode};
+     * this will be the {@code @TargetApi} annotation on the class, or any outer
+     * methods (for anonymous inner classes) or outer classes (for inner classes)
+     * of the given class.
+     */
+    private int getClassMinSdk(ClassContext context, ClassNode classNode) {
+        int classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
+        if (classMinSdk != -1) {
+            return classMinSdk;
+        }
+
+        LintDriver driver = context.getDriver();
+        while (classNode != null) {
+            ClassNode prev = classNode;
+            classNode = driver.getOuterClassNode(classNode);
+            if (classNode != null) {
+                // TODO: Should this be "curr" instead?
+                if (prev.outerMethod != null) {
+                    @SuppressWarnings("rawtypes") // ASM API
+                    List methods = classNode.methods;
+                    for (Object m : methods) {
+                        MethodNode method = (MethodNode) m;
+                        if (method.name.equals(prev.outerMethod)
+                                && method.desc.equals(prev.outerMethodDesc)) {
+                            // Found the outer method for this anonymous class; check method
+                            // annotations on it, then continue up the class hierarchy
+                            int methodMinSdk = getLocalMinSdk(method.invisibleAnnotations);
+                            if (methodMinSdk != -1) {
+                                return methodMinSdk;
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
+                if (classMinSdk != -1) {
+                    return classMinSdk;
+                }
+            }
+        }
+
+        return -1;
     }
 
     /**

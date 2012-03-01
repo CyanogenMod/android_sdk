@@ -198,6 +198,7 @@ public class JavaVisitor {
                 // with details, location, etc.
                 return;
             }
+            context.compilationUnit = compilationUnit;
 
             for (VisitingDetector v : mAllDetectors) {
                 v.setContext(context);
