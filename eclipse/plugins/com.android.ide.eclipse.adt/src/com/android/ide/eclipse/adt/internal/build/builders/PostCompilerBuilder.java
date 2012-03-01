@@ -445,10 +445,8 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                     IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
 
-                    writeLibraryPackage(jarIFile, project, appPackage, javaOutputFolder,
-                            referencedJavaProjects);
+                    writeLibraryPackage(jarIFile, project, appPackage, javaOutputFolder);
                     saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
-
 
                     // refresh the bin folder content with no recursion to update the library
                     // jar file.
@@ -900,8 +898,15 @@ public class PostCompilerBuilder extends BaseBuilder {
         return true;
     }
 
+    /**
+     * Writes the library jar file.
+     * @param jarIFile the destination file
+     * @param project the library project
+     * @param appPackage the library android package
+     * @param javaOutputFolder the JDT output folder.
+     */
     private void writeLibraryPackage(IFile jarIFile, IProject project, String appPackage,
-            IFolder javaOutputFolder, List<IJavaProject> referencedJavaProjects) {
+            IFolder javaOutputFolder) {
 
         JarOutputStream jos = null;
         try {
@@ -919,26 +924,6 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // now write the standard Java resources
             BuildHelper.writeResources(jarBuilder, JavaCore.create(project));
-
-            // do the same for all the referencedJava project
-            for (IJavaProject javaProject : referencedJavaProjects) {
-                // in case an Android project was referenced (which won't work), the
-                // best thing is to ignore this project.
-                if (javaProject.getProject().hasNature(AdtConstants.NATURE_DEFAULT)) {
-                    continue;
-                }
-
-                IFolder refProjectOutput = BaseProjectHelper.getJavaOutputFolder(
-                        javaProject.getProject());
-
-                if (refProjectOutput != null) {
-                    // write the class files
-                    writeClassFilesIntoJar(jarBuilder, refProjectOutput, refProjectOutput);
-
-                    // now write the standard Java resources
-                    BuildHelper.writeResources(jarBuilder, javaProject);
-                }
-            }
 
             saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex);
         } catch (Exception e) {

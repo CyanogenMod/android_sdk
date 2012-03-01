@@ -40,6 +40,8 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class LibraryClasspathContainerInitializer extends ClasspathContainerInitializer {
@@ -60,7 +62,7 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
             IClasspathContainer[] containers = new IClasspathContainer[projectCount];
             for (int i = 0 ; i < projectCount; i++) {
-                containers[i] = allocateAndroidContainer(androidProjects[i]);
+                containers[i] = allocateLibraryContainer(androidProjects[i]);
             }
 
             // give each project their new container in one call.
@@ -97,7 +99,7 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
     @Override
     public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
         if (AdtConstants.CONTAINER_LIBRARIES.equals(containerPath.toString())) {
-            IClasspathContainer container = allocateAndroidContainer(project);
+            IClasspathContainer container = allocateLibraryContainer(project);
             if (container != null) {
                 JavaCore.setClasspathContainer(new Path(AdtConstants.CONTAINER_LIBRARIES),
                         new IJavaProject[] { project },
@@ -107,7 +109,7 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
         }
     }
 
-    private static IClasspathContainer allocateAndroidContainer(IJavaProject javaProject) {
+    private static IClasspathContainer allocateLibraryContainer(IJavaProject javaProject) {
         final IProject iProject = javaProject.getProject();
 
         AdtPlugin plugin = AdtPlugin.getDefault();
@@ -158,6 +160,8 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
+        HashSet<IProject> refProjects = new HashSet<IProject>();
+
         List<IProject> libProjects = state.getFullLibraryProjects();
         for (IProject libProject : libProjects) {
             // get the project output
@@ -186,6 +190,25 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
                 entries.add(entry);
             }
+
+            // get project dependencies
+            try {
+                IProject[] refs = libProject.getReferencedProjects();
+                refProjects.addAll(Arrays.asList(refs));
+            } catch (CoreException e) {
+            }
+        }
+
+        for (IProject p : refProjects) {
+            // ignore if it's an Android project, or if it's not a Java Project
+            try {
+                if (p.hasNature(JavaCore.NATURE_ID) &&
+                        p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                    entries.add(JavaCore.newProjectEntry(p.getFullPath()));
+                }
+            } catch (CoreException e) {
+                // can't get the nature? ignore the project.
+            }
         }
 
         // annotations support for older version of android
@@ -205,7 +228,7 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
         return new AndroidClasspathContainer(
                 entries.toArray(new IClasspathEntry[entries.size()]),
                 new Path(AdtConstants.CONTAINER_LIBRARIES),
-                "Library Projects",
+                "Android Dependencies",
                 IClasspathContainer.K_APPLICATION);
     }
 

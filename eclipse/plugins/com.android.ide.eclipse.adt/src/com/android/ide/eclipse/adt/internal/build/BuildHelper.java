@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.build;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -746,6 +745,12 @@ public class BuildHelper {
             // set a temporary prefix on the print streams.
             mOutStream.setPrefix(CONSOLE_PREFIX_DX);
             mErrStream.setPrefix(CONSOLE_PREFIX_DX);
+
+            if (mVerbose) {
+                for (String input : inputPaths) {
+                    mOutStream.println("Input: " + input);
+                }
+            }
 
             int res = wrapper.run(osOutFilePath,
                     inputPaths,
