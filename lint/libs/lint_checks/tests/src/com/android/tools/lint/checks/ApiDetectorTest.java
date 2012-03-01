@@ -271,6 +271,21 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testTargetAnnotationInner() throws Exception {
+        assertEquals(
+            "ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): android.widget.GridLayout#<init>",
+
+            lintProject(
+                "apicheck/classpath=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/ApiTargetTest2.java.txt=>src/test/pkg/ApiTargetTest2.java",
+                "apicheck/ApiTargetTest2.class.data=>bin/classes/test/pkg/ApiTargetTest2.class",
+                "apicheck/ApiTargetTest2$1.class.data=>bin/classes/test/pkg/ApiTargetTest2$1.class",
+                "apicheck/ApiTargetTest2$1$2.class.data=>bin/classes/test/pkg/ApiTargetTest2$1$2.class",
+                "apicheck/ApiTargetTest2$1$1.class.data=>bin/classes/test/pkg/ApiTargetTest2$1$1.class"
+                ));
+    }
+
     public void testSkipAndroidSupportInAospHalf() throws Exception {
         String expected;
         if (System.getenv("ANDROID_BUILD_TOP") != null) {
