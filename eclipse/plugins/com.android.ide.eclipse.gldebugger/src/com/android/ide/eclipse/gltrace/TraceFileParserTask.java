@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace;
 
+import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.format.GLAPISpec;
@@ -123,6 +124,17 @@ public class TraceFileParserTask implements IRunnableWithProgress {
             // save the marker name
             c.addProperty(GLCall.PROPERTY_MARKERNAME,
                     msg.getArgs(1).getCharValue(0).toStringUtf8());
+            break;
+        case glVertexAttribPointerData:
+            // void glVertexAttribPointerData(GLuint indx, GLint size, GLenum type,
+            //         GLboolean normalized, GLsizei stride, const GLvoid* ptr,
+            //         int minIndex, int maxIndex)
+            c.addProperty(GLCall.PROPERTY_VERTEX_ATTRIB_POINTER_SIZE,
+                    Integer.valueOf(msg.getArgs(1).getIntValue(0)));
+            c.addProperty(GLCall.PROPERTY_VERTEX_ATTRIB_POINTER_TYPE,
+                    GLEnum.valueOf(msg.getArgs(2).getIntValue(0)));
+            c.addProperty(GLCall.PROPERTY_VERTEX_ATTRIB_POINTER_DATA,
+                    msg.getArgs(5).getRawBytes(0).toByteArray());
             break;
         default:
             break;

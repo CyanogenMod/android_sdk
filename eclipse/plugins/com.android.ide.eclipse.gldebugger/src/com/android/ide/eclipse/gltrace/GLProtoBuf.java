@@ -511,7 +511,7 @@ public final class GLProtoBuf {
       eglGetSystemTimeFrequencyNV(481, 2044),
       eglGetSystemTimeNV(482, 2045),
       invalid(483, 3000),
-      frameBufferContents(484, 3001),
+      glVertexAttribPointerData(484, 3001),
       ;
 
       public static final Function glGetnUniformivEXT = glGetnUniformfvEXT;
@@ -1004,7 +1004,7 @@ public final class GLProtoBuf {
           case 2044: return eglGetSystemTimeFrequencyNV;
           case 2045: return eglGetSystemTimeNV;
           case 3000: return invalid;
-          case 3001: return frameBufferContents;
+          case 3001: return glVertexAttribPointerData;
           default: return null;
         }
       }
