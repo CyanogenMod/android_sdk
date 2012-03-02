@@ -210,6 +210,10 @@ public class DexExecTask extends SingleDependencyTask {
         try {
             results.addAll(sanitizer.sanitize(paths));
         } catch (DifferentLibException e) {
+            String[] details = e.getDetails();
+            for (String s : details) {
+                System.err.println(s);
+            }
             throw new BuildException(e.getMessage(), e);
         } catch (Sha1Exception e) {
             throw new BuildException(

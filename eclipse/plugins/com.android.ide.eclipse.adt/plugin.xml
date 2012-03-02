@@ -57,6 +57,35 @@
         <super type="org.eclipse.core.resources.textmarker" />
         <persistent value="true" />
     </extension>
+    <extension
+        id="com.android.ide.eclipse.adt.adtProblem"
+        name="Android ADT Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension
+        id="com.android.ide.eclipse.adt.targetProblem"
+        name="Android Target Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <persistent value="false" />
+    </extension>
+    <extension
+        id="com.android.ide.eclipse.adt.dependencyProblem"
+        name="Android Dependency Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <persistent value="false" />
+    </extension>
+    <extension
+        id="com.android.ide.eclipse.adt.packagingProblem"
+        name="Android Packaging Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <persistent value="true" />
+    </extension>
     <extension point="org.eclipse.ui.ide.markerResolution">
         <markerResolutionGenerator
             markerType="com.android.ide.eclipse.adt.lintProblem"
@@ -384,28 +413,6 @@
     </extension>
     <extension point="org.eclipse.core.runtime.preferences">
         <initializer class="com.android.ide.eclipse.adt.internal.preferences.AdtPrefs" />
-    </extension>
-    <extension
-        id="com.android.ide.eclipse.adt.adtProblem"
-        name="Android ADT Problem"
-        point="org.eclipse.core.resources.markers">
-        <super type="org.eclipse.core.resources.problemmarker" />
-        <super type="org.eclipse.core.resources.textmarker" />
-        <persistent value="true" />
-    </extension>
-    <extension
-        id="com.android.ide.eclipse.adt.targetProblem"
-        name="Android Target Problem"
-        point="org.eclipse.core.resources.markers">
-        <super type="org.eclipse.core.resources.problemmarker" />
-        <persistent value="false" />
-    </extension>
-    <extension
-        id="com.android.ide.eclipse.adt.packagingProblem"
-        name="Android Packaging Problem"
-        point="org.eclipse.core.resources.markers">
-        <super type="org.eclipse.core.resources.problemmarker" />
-        <persistent value="true" />
     </extension>
     <extension point="org.eclipse.ui.perspectiveExtensions">
         <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
