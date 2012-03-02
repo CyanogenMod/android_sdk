@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
@@ -28,6 +29,7 @@ import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_VIEWTAG;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
 import com.android.annotations.VisibleForTesting;
@@ -496,12 +498,25 @@ public class OutlinePage extends ContentOutlinePage
                     Image img = null;
                     // Special case for the common case of vertical linear layouts:
                     // show vertical linear icon (the default icon shows horizontal orientation)
-                    if (desc.getUiName().equals(LINEAR_LAYOUT)) {
+                    String uiName = desc.getUiName();
+                    if (uiName.equals(LINEAR_LAYOUT)) {
                         Element e = (Element) node.getXmlNode();
                         if (VALUE_VERTICAL.equals(e.getAttributeNS(ANDROID_URI,
                                 ATTR_ORIENTATION))) {
                             IconFactory factory = IconFactory.getInstance();
                             img = factory.getIcon("VerticalLinearLayout"); //$NON-NLS-1$
+                        }
+                    } else if (uiName.equals(VIEW_VIEWTAG)) {
+                        Node xmlNode = node.getXmlNode();
+                        if (xmlNode instanceof Element) {
+                            String className = ((Element) xmlNode).getAttribute(ATTR_CLASS);
+                            if (className != null && className.length() > 0) {
+                                int index = className.lastIndexOf('.');
+                                if (index != -1) {
+                                    className = className.substring(index + 1);
+                                }
+                                img = IconFactory.getInstance().getIcon(className);
+                            }
                         }
                     }
                     if (img == null) {
