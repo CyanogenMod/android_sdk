@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_PADDING;
@@ -24,6 +25,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
@@ -366,6 +368,15 @@ public class UiElementPullParser extends BasePullParser {
             }
 
             Node attribute = xmlNode.getAttributes().getNamedItemNS(namespace, localName);
+
+            // Auto-convert http://schemas.android.com/apk/res-auto resources. The lookup
+            // will be for the current application's resource package, e.g.
+            // http://schemas.android.com/apk/res/foo.bar, but the XML document will
+            // be using http://schemas.android.com/apk/res-auto in library projects:
+            if (attribute == null && namespace != null && !namespace.equals(ANDROID_URI)) {
+                attribute = xmlNode.getAttributes().getNamedItemNS(AUTO_URI, localName);
+            }
+
             if (attribute != null) {
                 String value = attribute.getNodeValue();
                 if (mIncreaseExistingPadding && ATTR_PADDING.equals(localName) &&
