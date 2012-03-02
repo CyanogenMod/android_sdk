@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
 
 import com.android.tools.lint.detector.api.Category;
@@ -74,11 +75,13 @@ public class NamespaceDetector extends LayoutDetector {
     /** Using custom namespace attributes in a library project */
     public static final Issue CUSTOMVIEW = Issue.create(
             "LibraryCustomView", //$NON-NLS-1$
-            "Flags custom views in libraries, which currently do not work",
+            "Flags custom attributes in libraries, which must use the res-auto-namespace instead",
 
-            "Using a custom view in a library project (where the custom view " +
-            "requires XML attributes from a custom namespace) does not yet " +
-            "work.",
+            "When using a custom view with custom attributes in a library project, the layout " +
+            "must use the special namespace " + AUTO_URI + " instead of a URI which includes " +
+            "the library project's own package. This will be used to automatically adjust the " +
+            "namespace of the attributes when the library resources are merged into the " +
+            "application project.",
             Category.CORRECTNESS,
             6,
             Severity.ERROR,
@@ -190,8 +193,8 @@ public class NamespaceDetector extends LayoutDetector {
                         if (uri != null && uri.length() > 0 && uri.startsWith(URI_PREFIX)
                                 && !uri.equals(ANDROID_URI)) {
                             context.report(CUSTOMVIEW, attribute, context.getLocation(attribute),
-                                "Using a custom namespace attributes in a library project does " +
-                                "not yet work", null);
+                                "When using a custom namespace attribute in a library project, " +
+                                "use the namespace \"" + AUTO_URI + "\" instead.", null);
                         }
                     }
                 }

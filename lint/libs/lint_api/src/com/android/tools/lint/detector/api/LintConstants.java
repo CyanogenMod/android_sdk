@@ -33,6 +33,9 @@ public class LintConstants {
     /** Namespace used in XML files for Android Tooling attributes */
     public static final String TOOLS_URI =
             "http://schemas.android.com/tools";                        //$NON-NLS-1$
+    /** Namespace used for auto-adjusting namespaces */
+    public final static String AUTO_URI =
+            "http://schemas.android.com/apk/res-auto";                 //$NON-NLS-1$
     /** Default prefix used for tools attributes */
     public static final String TOOLS_PREFIX = "tools";                 //$NON-NLS-1$
     public static final String XMLNS_PREFIX = "xmlns:";                //$NON-NLS-1$

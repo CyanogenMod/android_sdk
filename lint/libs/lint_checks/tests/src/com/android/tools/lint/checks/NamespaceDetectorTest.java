@@ -27,7 +27,8 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
 
     public void testCustom() throws Exception {
         assertEquals(
-            "customview.xml:16: Error: Using a custom namespace attributes in a library project does not yet work",
+            "customview.xml:16: Error: When using a custom namespace attribute in a library " +
+            "project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead.",
 
             lintProject(
                     "multiproject/library-manifest.xml=>AndroidManifest.xml",
@@ -48,6 +49,18 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
                     //"multiproject/library.properties=>project.properties",
 
                     "res/layout/customview.xml"
+            ));
+    }
+
+    public void testCustomOk2() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                    "multiproject/library.properties=>project.properties",
+                    // This project already uses the res-auto package
+                    "res/layout/customview2.xml"
             ));
     }
 
