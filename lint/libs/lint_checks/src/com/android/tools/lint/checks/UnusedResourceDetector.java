@@ -178,11 +178,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             mReferences = null;
             mDeclarations = null;
 
-            // Remove styles: they may be used
+            // Remove styles and attributes: they may be used, analysis isn't complete for these
             List<String> styles = new ArrayList<String>();
             for (String resource : unused) {
-                // R.style.x, R.styleable.x
-                if (resource.startsWith("R.style")) { //$NON-NLS-1$
+                // R.style.x, R.styleable.x, R.attr
+                if (resource.startsWith("R.style")          //$NON-NLS-1$
+                        || resource.startsWith("R.attr")) { //$NON-NLS-1$
                     styles.add(resource);
                 }
             }
