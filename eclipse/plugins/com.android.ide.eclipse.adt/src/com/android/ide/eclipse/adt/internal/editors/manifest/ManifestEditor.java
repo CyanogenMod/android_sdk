@@ -35,7 +35,6 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -56,10 +55,6 @@ import org.w3c.dom.Node;
 
 import java.util.Collection;
 import java.util.List;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Multi-page form editor for AndroidManifest.xml.
@@ -189,18 +184,24 @@ public final class ManifestEditor extends AndroidXmlEditor {
 
     private Node getManifestXmlNode(Document xmlDoc) {
         if (xmlDoc != null) {
-            ElementDescriptor manifest_desc = mUiManifestNode.getDescriptor();
-            try {
-                XPath xpath = AndroidXPathFactory.newXPath();
-                Node node = (Node) xpath.evaluate("/" + manifest_desc.getXmlName(),  //$NON-NLS-1$
-                        xmlDoc,
-                        XPathConstants.NODE);
-                assert node != null && node.getNodeName().equals(manifest_desc.getXmlName());
+            ElementDescriptor manifestDesc = mUiManifestNode.getDescriptor();
+            String manifestXmlName = manifestDesc == null ? null : manifestDesc.getXmlName();
+            assert manifestXmlName != null;
 
-                return node;
-            } catch (XPathExpressionException e) {
-                AdtPlugin.log(e, "XPath error when trying to find '%s' element in XML.", //$NON-NLS-1$
-                        manifest_desc.getXmlName());
+            if (manifestXmlName != null) {
+                Node node = xmlDoc.getDocumentElement();
+                if (node != null && manifestXmlName.equals(node.getNodeName())) {
+                    return node;
+                }
+
+                for (node = xmlDoc.getFirstChild();
+                     node != null;
+                     node = node.getNextSibling()) {
+                    if (node.getNodeType() == Node.ELEMENT_NODE &&
+                            manifestXmlName.equals(node.getNodeName())) {
+                        return node;
+                    }
+                }
             }
         }
 
