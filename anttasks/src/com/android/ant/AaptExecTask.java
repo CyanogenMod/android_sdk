@@ -218,7 +218,7 @@ public final class AaptExecTask extends SingleDependencyTask {
      * The manifest will be rewritten so that its package ID becomes the value given here.
      * Relative class names in the manifest (e.g. ".Foo") will be rewritten to absolute names based
      * on the existing package name, meaning that no code changes need to be made.
-     * 
+     *
      * @param packageName The package ID the APK should have.
      */
     public void setManifestpackage(String packageName) {
@@ -356,8 +356,9 @@ public final class AaptExecTask extends SingleDependencyTask {
         String libPkgProp = null;
 
         // if the parameters indicate generation of the R class, check if
-        // more R classes need to be created for libraries.
-        if (mRFolder != null && new File(mRFolder).isDirectory()) {
+        // more R classes need to be created for libraries, only if this project itself
+        // is not a library
+        if (mNonConstantId == false && mRFolder != null && new File(mRFolder).isDirectory()) {
             libPkgProp = taskProject.getProperty(mProjectLibrariesPackageName);
             if (libPkgProp != null) {
                 // Replace ";" with ":" since that's what aapt expects
@@ -527,7 +528,7 @@ public final class AaptExecTask extends SingleDependencyTask {
             }
         }
 
-        if (extraPackages != null && extraPackages.length() > 0) {
+        if (mNonConstantId == false && extraPackages != null && extraPackages.length() > 0) {
             task.createArg().setValue("--extra-packages");
             task.createArg().setValue(extraPackages);
         }

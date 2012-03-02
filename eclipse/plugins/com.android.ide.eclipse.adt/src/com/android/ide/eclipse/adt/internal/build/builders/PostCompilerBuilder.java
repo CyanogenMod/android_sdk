@@ -813,13 +813,11 @@ public class PostCompilerBuilder extends BaseBuilder {
                     rootFolder.getFullPath());
 
             String name = file.getName();
-            // we don't package any R[$*] classes whatever the package (because we generate
-            // more than one if there are library dependencies). Also ignore Manifest and
-            // BuildConfig classes that are in the app package.
-            if (R_PATTERN.matcher(name).matches() ||
-                    (mAppPackage.equals(packageApp.toString()) &&
+            // Ignore the library's R/Manifest/BuildConfig classes.
+            if (mAppPackage.equals(packageApp.toString()) &&
                             (BUILD_CONFIG_CLASS.equals(name) ||
-                            MANIFEST_PATTERN.matcher(name).matches()))) {
+                            MANIFEST_PATTERN.matcher(name).matches() ||
+                            R_PATTERN.matcher(name).matches())) {
                 return;
             }
 

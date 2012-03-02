@@ -805,7 +805,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             array.add("--auto-add-overlay"); //$NON-NLS-1$
         }
 
-        if (libraryPackages != null) {
+        // there's no need to generate the R class of the libraries if this is a library too.
+        if (isLibrary == false && libraryPackages != null) {
             array.add("--extra-packages"); //$NON-NLS-1$
             array.add(libraryPackages);
         }
