@@ -24,9 +24,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
@@ -135,9 +137,15 @@ public class JarListSanitizer {
      */
     public static final class DifferentLibException extends Exception {
         private static final long serialVersionUID = 1L;
+        private final String[] mDetails;
 
-        public DifferentLibException(String message) {
+        public DifferentLibException(String message, String[] details) {
             super(message);
+            mDetails = details;
+        }
+
+        public String[] getDetails() {
+            return mDetails;
         }
     }
 
@@ -159,6 +167,7 @@ public class JarListSanitizer {
     }
 
     private final File mOut;
+    private final PrintStream mOutStream;
 
     /**
      * Creates a sanitizer.
@@ -166,6 +175,12 @@ public class JarListSanitizer {
      */
     public JarListSanitizer(File out) {
         mOut = out;
+        mOutStream = System.out;
+    }
+
+    public JarListSanitizer(File out, PrintStream outStream) {
+        mOut = out;
+        mOutStream = outStream;
     }
 
     /**
@@ -175,7 +190,7 @@ public class JarListSanitizer {
      * @throws DifferentLibException
      * @throws Sha1Exception
      */
-    public List<File> sanitize(List<File> files) throws DifferentLibException, Sha1Exception {
+    public List<File> sanitize(Collection<File> files) throws DifferentLibException, Sha1Exception {
         List<File> results = new ArrayList<File>();
 
         // get the cache list.
@@ -269,8 +284,8 @@ public class JarListSanitizer {
         for (int i = 1; i < count ; i++) {
             JarEntity entity = list.get(i);
             if (entity.getLength() != baseLength || entity.getSha1().equals(baseSha1) == false) {
-                printEntityDetails(filename, list);
-                throw new DifferentLibException("Jar mismatch! Fix your dependencies");
+                throw new DifferentLibException("Jar mismatch! Fix your dependencies",
+                        getEntityDetails(filename, list));
             }
 
         }
@@ -288,8 +303,8 @@ public class JarListSanitizer {
         List<JarEntity> v13 = nameMap.get("android-support-v13.jar");
 
         if (v13 != null && v4 != null) {
-            System.out.println("WARNING: Found both android-support-v4 and android-support-v13 in the dependency list.");
-            System.out.println("Because v13 includes v4, using only v13.");
+            mOutStream.println("WARNING: Found both android-support-v4 and android-support-v13 in the dependency list.");
+            mOutStream.println("Because v13 includes v4, using only v13.");
             results.remove(v4.get(0).getFile());
         }
     }
@@ -381,7 +396,7 @@ public class JarListSanitizer {
 
             writer.close();
         } catch (IOException e) {
-            System.err.println("WARNING: unable to write jarlist cache file " +
+            mOutStream.println("WARNING: unable to write jarlist cache file " +
                     cacheFile.getAbsolutePath());
         } catch (Sha1Exception e) {
             // shouldn't happen here since we check that the sha1 is present first, meaning it's
@@ -389,18 +404,21 @@ public class JarListSanitizer {
         }
     }
 
-    private void printEntityDetails(String filename, List<JarEntity> list) throws Sha1Exception {
-        System.err.println(
+    private String[] getEntityDetails(String filename, List<JarEntity> list) throws Sha1Exception {
+        ArrayList<String> result = new ArrayList<String>();
+        result.add(
                 String.format("Found %d versions of %s in the dependency list,",
                         list.size(), filename));
-        System.err.println("but not all the versions are identical (check is based on SHA-1 only at this time).");
-        System.err.println("All versions of the libraries must be the same at this time.");
-        System.err.println("Versions found are:");
+        result.add("but not all the versions are identical (check is based on SHA-1 only at this time).");
+        result.add("All versions of the libraries must be the same at this time.");
+        result.add("Versions found are:");
         for (JarEntity entity : list) {
-            System.err.println("Path: " + entity.getFile().getAbsolutePath());
-            System.err.println("\tLength: " + entity.getLength());
-            System.err.println("\tSHA-1: " + entity.getSha1());
+            result.add("Path: " + entity.getFile().getAbsolutePath());
+            result.add("\tLength: " + entity.getLength());
+            result.add("\tSHA-1: " + entity.getSha1());
         }
+
+        return result.toArray(new String[result.size()]);
     }
 
     /**

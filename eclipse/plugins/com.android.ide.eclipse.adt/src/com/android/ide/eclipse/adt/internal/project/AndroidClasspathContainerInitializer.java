@@ -26,22 +26,15 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
@@ -66,7 +59,7 @@ import java.util.regex.Pattern;
  * Classpath container initializer responsible for binding {@link AndroidClasspathContainer} to
  * {@link IProject}s. This removes the hard-coded path to the android.jar.
  */
-public class AndroidClasspathContainerInitializer extends ClasspathContainerInitializer {
+public class AndroidClasspathContainerInitializer extends BaseClasspathContainerInitializer {
 
     public static final String NULL_API_URL = "<null>"; //$NON-NLS-1$
 
@@ -276,69 +269,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                 };
             }
         } finally {
-            if (markerMessage != null) {
-                // log the error and put the marker on the project if we can.
-                if (outputToConsole) {
-                    AdtPlugin.printErrorToConsole(iProject, markerMessage);
-                }
-
-                try {
-                    BaseProjectHelper.markProject(iProject, AdtConstants.MARKER_TARGET,
-                            markerMessage, IMarker.SEVERITY_ERROR, IMarker.PRIORITY_HIGH);
-                } catch (CoreException e) {
-                    // In some cases, the workspace may be locked for modification when we
-                    // pass here.
-                    // We schedule a new job to put the marker after.
-                    final String fmessage = markerMessage;
-                    Job markerJob = new Job("Android SDK: Resolving error markers") {
-                        @Override
-                        protected IStatus run(IProgressMonitor monitor) {
-                            try {
-                                BaseProjectHelper.markProject(iProject,
-                                        AdtConstants.MARKER_TARGET,
-                                        fmessage, IMarker.SEVERITY_ERROR,
-                                        IMarker.PRIORITY_HIGH);
-                            } catch (CoreException e2) {
-                                return e2.getStatus();
-                            }
-
-                            return Status.OK_STATUS;
-                        }
-                    };
-
-                    // build jobs are run after other interactive jobs
-                    markerJob.setPriority(Job.BUILD);
-                    markerJob.schedule();
-                }
-            } else {
-                // no error, remove potential MARKER_TARGETs.
-                try {
-                    if (iProject.exists()) {
-                        iProject.deleteMarkers(AdtConstants.MARKER_TARGET, true,
-                                IResource.DEPTH_INFINITE);
-                    }
-                } catch (CoreException ce) {
-                    // In some cases, the workspace may be locked for modification when we pass
-                    // here, so we schedule a new job to put the marker after.
-                    Job markerJob = new Job("Android SDK: Resolving error markers") {
-                        @Override
-                        protected IStatus run(IProgressMonitor monitor) {
-                            try {
-                                iProject.deleteMarkers(AdtConstants.MARKER_TARGET, true,
-                                        IResource.DEPTH_INFINITE);
-                            } catch (CoreException e2) {
-                                return e2.getStatus();
-                            }
-
-                            return Status.OK_STATUS;
-                        }
-                    };
-
-                    // build jobs are run after other interactive jobs
-                    markerJob.setPriority(Job.BUILD);
-                    markerJob.schedule();
-                }
-            }
+           processError(iProject, markerMessage, AdtConstants.MARKER_TARGET, outputToConsole);
         }
     }
 

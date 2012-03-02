@@ -18,20 +18,24 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.build.JarListSanitizer;
+import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
+import com.android.sdklib.build.JarListSanitizer.Sha1Exception;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -40,11 +44,11 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class LibraryClasspathContainerInitializer extends ClasspathContainerInitializer {
+public class LibraryClasspathContainerInitializer extends BaseClasspathContainerInitializer {
 
     public LibraryClasspathContainerInitializer() {
     }
@@ -160,6 +164,9 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
+        // list of java project dependencies and jar files that will be built while
+        // going through the library projects.
+        Set<File> jarFiles = new HashSet<File>();
         HashSet<IProject> refProjects = new HashSet<IProject>();
 
         List<IProject> libProjects = state.getFullLibraryProjects();
@@ -192,24 +199,11 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
             }
 
             // get project dependencies
-            try {
-                IProject[] refs = libProject.getReferencedProjects();
-                refProjects.addAll(Arrays.asList(refs));
-            } catch (CoreException e) {
-            }
+            processReferencedProjects(libProject, refProjects, jarFiles, true);
         }
 
-        for (IProject p : refProjects) {
-            // ignore if it's an Android project, or if it's not a Java Project
-            try {
-                if (p.hasNature(JavaCore.NATURE_ID) &&
-                        p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    entries.add(JavaCore.newProjectEntry(p.getFullPath()));
-                }
-            } catch (CoreException e) {
-                // can't get the nature? ignore the project.
-            }
-        }
+        // now get the jar files for the referenced project for this project.
+        processReferencedProjects(iProject, refProjects, jarFiles, false);
 
         // annotations support for older version of android
         if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
@@ -217,13 +211,52 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
                     SdkConstants.FD_TOOLS + File.separator + SdkConstants.FD_SUPPORT +
                     File.separator + SdkConstants.FN_ANNOTATIONS_JAR);
 
-            IClasspathEntry entry = JavaCore.newLibraryEntry(
-                    new Path(annotationsJar.getAbsolutePath()),
-                    null, // source attachment path
-                    null);        // default source attachment root path.
-
-            entries.add(0, entry);
+            jarFiles.add(annotationsJar);
         }
+
+        // now add a classpath entry for each Java project (this is a set so dups are already
+        // removed)
+        for (IProject p : refProjects) {
+            entries.add(JavaCore.newProjectEntry(p.getFullPath()));
+        }
+
+        // and process the jar files list, but first sanitize it to remove dups.
+        JarListSanitizer sanitizer = new JarListSanitizer(
+                iProject.getFolder(SdkConstants.FD_OUTPUT).getLocation().toFile(),
+                new AndroidPrintStream(iProject, null /*prefix*/,
+                        AdtPlugin.getOutStream()));
+
+        String errorMessage = null;
+
+        try {
+            List<File> sanitizedList = sanitizer.sanitize(jarFiles);
+
+            for (File jarFile : sanitizedList) {
+                if (jarFile instanceof CPEFile) {
+                    CPEFile cpeFile = (CPEFile) jarFile;
+                    IClasspathEntry e = cpeFile.getClasspathEntry();
+
+                    entries.add(JavaCore.newLibraryEntry(
+                            e.getPath(),
+                            e.getSourceAttachmentPath(),
+                            e.getSourceAttachmentRootPath(),
+                            e.getAccessRules(),
+                            e.getExtraAttributes(),
+                            e.isExported()));
+                } else {
+                    entries.add(JavaCore.newLibraryEntry(new Path(jarFile.getAbsolutePath()),
+                            null /*sourceAttachmentPath*/, null /*sourceAttachmentRootPath*/));
+                }
+            }
+        } catch (DifferentLibException e) {
+            errorMessage = e.getMessage();
+            AdtPlugin.printErrorToConsole(iProject, (Object[]) e.getDetails());
+        } catch (Sha1Exception e) {
+            errorMessage = e.getMessage();
+        }
+
+        processError(iProject, errorMessage, AdtConstants.MARKER_DEPENDENCY,
+                true /*outputToConsole*/);
 
         return new AndroidClasspathContainer(
                 entries.toArray(new IClasspathEntry[entries.size()]),
@@ -232,4 +265,115 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
                 IClasspathContainer.K_APPLICATION);
     }
 
+
+    private static void processReferencedProjects(IProject project,
+            Set<IProject> projects, Set<File> jarFiles, boolean includeAndroidContainer) {
+        // get the jar dependencies of the project in the list
+        getJarDependencies(project, jarFiles, includeAndroidContainer);
+
+        try {
+            IProject[] refs = project.getReferencedProjects();
+            for (IProject p : refs) {
+                // ignore if it's an Android project, or if it's not a Java Project
+                if (p.hasNature(JavaCore.NATURE_ID) &&
+                        p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                    // add this project to the list
+                    projects.add(p);
+
+                    // and then process this project too.
+                    processReferencedProjects(p, projects, jarFiles, includeAndroidContainer);
+                }
+            }
+        } catch (CoreException e) {
+            // can't get the referenced projects? ignore
+        }
+    }
+
+    private static void getJarDependencies(IProject p, Set<File> jarFiles,
+            boolean includeAndroidContainer) {
+        IJavaProject javaProject = JavaCore.create(p);
+        IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
+
+        // we could use IJavaProject.getResolvedClasspath directly, but we actually
+        // want to see the containers themselves.
+        IClasspathEntry[] classpaths = javaProject.readRawClasspath();
+        if (classpaths != null) {
+            for (IClasspathEntry e : classpaths) {
+                // if this is a classpath variable reference, we resolve it.
+                if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
+                    e = JavaCore.getResolvedClasspathEntry(e);
+                }
+
+                if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+                    handleClasspathEntry(e, wsRoot, jarFiles);
+                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
+                        (includeAndroidContainer ||
+                                e.getPath().toString().startsWith(
+                                        "com.android.ide.eclipse.adt.") == false)) {
+                    // get the container.
+                    try {
+                        IClasspathContainer container = JavaCore.getClasspathContainer(
+                                e.getPath(), javaProject);
+                        // ignore the system and default_system types as they represent
+                        // libraries that are part of the runtime.
+                        if (container != null &&
+                                container.getKind() == IClasspathContainer.K_APPLICATION) {
+                            IClasspathEntry[] entries = container.getClasspathEntries();
+                            for (IClasspathEntry entry : entries) {
+                                handleClasspathEntry(entry, wsRoot, jarFiles);
+                            }
+                        }
+                    } catch (JavaModelException jme) {
+                        // can't resolve the container? ignore it.
+                        AdtPlugin.log(jme, "Failed to resolve ClasspathContainer: %s", e.getPath());
+                    }
+                }
+            }
+        }
+    }
+
+    private static final class CPEFile extends File {
+        private static final long serialVersionUID = 1L;
+
+        private final IClasspathEntry mClasspathEntry;
+
+        public CPEFile(String pathname, IClasspathEntry classpathEntry) {
+            super(pathname);
+            mClasspathEntry = classpathEntry;
+        }
+
+        public CPEFile(File file, IClasspathEntry classpathEntry) {
+            super(file.getAbsolutePath());
+            mClasspathEntry = classpathEntry;
+        }
+
+        public IClasspathEntry getClasspathEntry() {
+            return mClasspathEntry;
+        }
+    }
+
+    private static void handleClasspathEntry(IClasspathEntry e, IWorkspaceRoot wsRoot,
+            Set<File> jarFiles) {
+        // get the IPath
+        IPath path = e.getPath();
+
+        IResource resource = wsRoot.findMember(path);
+
+        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+            // case of a jar file (which could be relative to the workspace or a full path)
+            if (resource != null && resource.exists() &&
+                    resource.getType() == IResource.FILE) {
+                jarFiles.add(new CPEFile(resource.getLocation().toFile(), e));
+            } else {
+                // if the jar path doesn't match a workspace resource,
+                // then we get an OSString and check if this links to a valid file.
+                String osFullPath = path.toOSString();
+
+                File f = new CPEFile(osFullPath, e);
+                if (f.isFile()) {
+                    jarFiles.add(f);
+                }
+            }
+        }
+    }
 }

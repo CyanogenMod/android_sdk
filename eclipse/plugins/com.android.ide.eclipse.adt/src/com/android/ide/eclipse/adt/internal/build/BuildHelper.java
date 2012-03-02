@@ -799,9 +799,11 @@ public class BuildHelper {
             String configFilter, int versionCode) throws AaptExecException, AaptResultException {
         IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
 
+        @SuppressWarnings("deprecation") String aapt = target.getPath(IAndroidTarget.AAPT);
+
         // Create the command line.
         ArrayList<String> commandArray = new ArrayList<String>();
-        commandArray.add(target.getPath(IAndroidTarget.AAPT));
+        commandArray.add(aapt);
         commandArray.add(aaptCommand);
         if (AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE) {
             commandArray.add("-v"); //$NON-NLS-1$
@@ -1066,8 +1068,13 @@ public class BuildHelper {
         IPath path = e.getPath();
 
         IResource resource = wsRoot.findMember(path);
-        // case of a jar file (which could be relative to the workspace or a full path)
-        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+
+        if (resource != null && resource.getType() == IResource.PROJECT) {
+            // if it's a project we should just ignore it because it's going to be added
+            // later when we add all the referenced projects.
+
+        } else if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+            // case of a jar file (which could be relative to the workspace or a full path)
             if (resource != null && resource.exists() &&
                     resource.getType() == IResource.FILE) {
                 oslibraryList.add(resource.getLocation().toOSString());

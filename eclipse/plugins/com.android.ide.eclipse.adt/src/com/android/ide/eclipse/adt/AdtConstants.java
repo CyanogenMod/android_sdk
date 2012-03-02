@@ -214,10 +214,16 @@ public class AdtConstants {
     public final static String MARKER_ADT = AdtPlugin.PLUGIN_ID + ".adtProblem"; //$NON-NLS-1$
 
     /** Marker for Android Target errors.
-     * This is not cleared on each like other markers. Instead, it's cleared
+     * This is not cleared on each build like other markers. Instead, it's cleared
      * when an AndroidClasspathContainerInitializer has succeeded in creating an
      * AndroidClasspathContainer */
     public final static String MARKER_TARGET = AdtPlugin.PLUGIN_ID + ".targetProblem"; //$NON-NLS-1$
+    /** Marker for Android Dependency errors.
+     * This is not cleared on each build like other markers. Instead, it's cleared
+     * when a LibraryClasspathContainerInitializer has succeeded in creating a
+     * LibraryClasspathContainer */
+    public final static String MARKER_DEPENDENCY = AdtPlugin.PLUGIN_ID + ".dependencyProblem"; //$NON-NLS-1$
+
 
     /** aapt marker error when running the compile command, only to be used
      * in {@link PreCompilerBuilder} */
