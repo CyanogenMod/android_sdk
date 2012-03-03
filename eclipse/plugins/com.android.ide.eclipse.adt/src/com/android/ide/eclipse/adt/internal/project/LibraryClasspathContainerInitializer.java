@@ -121,8 +121,8 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
             return null;
         }
 
+        // First check that the project has a library-type container.
         try {
-            // First check that the project has a library-type container.
             IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
             IClasspathEntry[] oldRawClasspath = rawClasspath;
 
@@ -160,6 +160,18 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         // check if the project has a valid target.
         ProjectState state = Sdk.getProjectState(iProject);
 
+        /*
+         * At this point we're going to gather a list of all that need to go in the
+         * dependency container.
+         * - Library project outputs (direct and indirect)
+         * - Java project output (those can be indirectly referenced through library projects
+         *   or other other Java projects)
+         * - Jar files:
+         *    + inside this project's libs/
+         *    + inside the library projects' libs/
+         *    + inside the referenced Java projects' classpath
+         */
+
         List<IClasspathEntry> entries = new ArrayList<IClasspathEntry>();
 
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
@@ -167,7 +179,9 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         // list of java project dependencies and jar files that will be built while
         // going through the library projects.
         Set<File> jarFiles = new HashSet<File>();
-        HashSet<IProject> refProjects = new HashSet<IProject>();
+        Set<IProject> refProjects = new HashSet<IProject>();
+
+        // process all the libraries
 
         List<IProject> libProjects = state.getFullLibraryProjects();
         for (IProject libProject : libProjects) {
@@ -190,20 +204,26 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                     }
                 }
 
+                // we can directly add a CPE for this jar as there's no risk of a duplicate.
                 IClasspathEntry entry = JavaCore.newLibraryEntry(
                         jarIFile.getLocation(),
                         sourceFolder, // source attachment path
                         null);        // default source attachment root path.
 
                 entries.add(entry);
+
+                // now, gather the content of this library project's libs folder.
+                getJarListFromLibsFolder(libProject, jarFiles);
             }
 
             // get project dependencies
-            processReferencedProjects(libProject, refProjects, jarFiles, true);
+            processReferencedProjects(libProject, refProjects, jarFiles);
         }
 
-        // now get the jar files for the referenced project for this project.
-        processReferencedProjects(iProject, refProjects, jarFiles, false);
+        // now process this projects' referenced projects
+        processReferencedProjects(iProject, refProjects, jarFiles);
+        // and its own jar files from libs
+        getJarListFromLibsFolder(iProject, jarFiles);
 
         // annotations support for older version of android
         if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
@@ -267,10 +287,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
 
     private static void processReferencedProjects(IProject project,
-            Set<IProject> projects, Set<File> jarFiles, boolean includeAndroidContainer) {
-        // get the jar dependencies of the project in the list
-        getJarDependencies(project, jarFiles, includeAndroidContainer);
-
+            Set<IProject> projects, Set<File> jarFiles) {
         try {
             IProject[] refs = project.getReferencedProjects();
             for (IProject p : refs) {
@@ -280,8 +297,11 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                     // add this project to the list
                     projects.add(p);
 
-                    // and then process this project too.
-                    processReferencedProjects(p, projects, jarFiles, includeAndroidContainer);
+                    // get the jar dependencies of the project in the list
+                    getJarListFromClasspath(p, jarFiles);
+
+                    // and then process the referenced project by this project too.
+                    processReferencedProjects(p, projects, jarFiles);
                 }
             }
         } catch (CoreException e) {
@@ -289,9 +309,37 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         }
     }
 
-    private static void getJarDependencies(IProject p, Set<File> jarFiles,
-            boolean includeAndroidContainer) {
-        IJavaProject javaProject = JavaCore.create(p);
+    /**
+     * Finds all the jar files inside a project's libs folder.
+     * @param project
+     * @param jarFiles
+     */
+    private static void getJarListFromLibsFolder(IProject project, Set<File> jarFiles) {
+        IFolder libsFolder = project.getFolder(SdkConstants.FD_NATIVE_LIBS);
+        if (libsFolder.exists()) {
+            try {
+                IResource[] members = libsFolder.members();
+                for (IResource member : members) {
+                    if (member.getType() == IResource.FILE &&
+                            AdtConstants.EXT_JAR.equalsIgnoreCase(member.getFileExtension())) {
+                        jarFiles.add(member.getLocation().toFile());
+                    }
+                }
+            } catch (CoreException e) {
+                // can't get the list? ignore this folder.
+            }
+        }
+    }
+
+    /**
+     * Finds all the jars a given project depends on by looking at the classpath.
+     * This must be a non android project, as android project have container that really
+     * we shouldn't go through.
+     * @param project the project to query
+     * @param jarFiles the list of file to fill.
+     */
+    private static void getJarListFromClasspath(IProject project, Set<File> jarFiles) {
+        IJavaProject javaProject = JavaCore.create(project);
         IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
 
         // we could use IJavaProject.getResolvedClasspath directly, but we actually
@@ -306,10 +354,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
                 if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
                     handleClasspathEntry(e, wsRoot, jarFiles);
-                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
-                        (includeAndroidContainer ||
-                                e.getPath().toString().startsWith(
-                                        "com.android.ide.eclipse.adt.") == false)) {
+                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
                     // get the container.
                     try {
                         IClasspathContainer container = JavaCore.getClasspathContainer(
