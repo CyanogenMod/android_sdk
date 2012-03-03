@@ -83,6 +83,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -712,7 +713,8 @@ public final class Sdk  {
         // is called back during registration with project opened in the workspace.
         monitor.addResourceEventListener(mResourceEventListener);
         monitor.addProjectListener(mProjectListener);
-        monitor.addFileListener(mFileListener, IResourceDelta.CHANGED | IResourceDelta.ADDED);
+        monitor.addFileListener(mFileListener,
+                IResourceDelta.CHANGED | IResourceDelta.ADDED | IResourceDelta.REMOVED);
 
         // pre-compute some paths
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
@@ -1062,6 +1064,47 @@ public final class Sdk  {
                     // This can't happen as it's only for closed project (or non existing)
                     // but in that case we can't get a fileChanged on this file.
                 }
+            } else if (kind == IResourceDelta.ADDED || kind == IResourceDelta.REMOVED) {
+                // check if it's an add/remove on a jar files inside libs
+                if (file.getProjectRelativePath().segmentCount() == 2 &&
+                        file.getParent().getName().equals(SdkConstants.FD_NATIVE_LIBS)) {
+                    // need to update the project and whatever depend on it.
+
+                    processJarFileChange(file);
+                }
+            }
+        }
+
+        private void processJarFileChange(final IFile file) {
+            try {
+                IProject iProject = file.getProject();
+
+                if (iProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                    return;
+                }
+
+                List<IJavaProject> projectList = new ArrayList<IJavaProject>();
+                IJavaProject javaProject = BaseProjectHelper.getJavaProject(iProject);
+                if (javaProject != null) {
+                    projectList.add(javaProject);
+                }
+
+                ProjectState state = Sdk.getProjectState(iProject);
+
+                Collection<ProjectState> parents = state.getFullParentProjects();
+                for (ProjectState s : parents) {
+                    javaProject = BaseProjectHelper.getJavaProject(s.getProject());
+                    if (javaProject != null) {
+                        projectList.add(javaProject);
+                    }
+                }
+
+                ProjectHelper.updateProjects(
+                        projectList.toArray(new IJavaProject[projectList.size()]));
+
+            } catch (CoreException e) {
+                // This can't happen as it's only for closed project (or non existing)
+                // but in that case we can't get a fileChanged on this file.
             }
         }
     };
