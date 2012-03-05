@@ -144,7 +144,8 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
             if (foundLibrariesContainer == false) {
                 // add the android container to the array
                 rawClasspath = ProjectHelper.addEntryToClasspath(rawClasspath,
-                        JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_LIBRARIES)));
+                        JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_LIBRARIES),
+                                true /*isExported*/));
             }
 
             // set the new list of entries to the project
@@ -208,7 +209,8 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                 IClasspathEntry entry = JavaCore.newLibraryEntry(
                         jarIFile.getLocation(),
                         sourceFolder, // source attachment path
-                        null);        // default source attachment root path.
+                        null,         // default source attachment root path.
+                        true /*isExported*/);
 
                 entries.add(entry);
 
@@ -237,7 +239,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         // now add a classpath entry for each Java project (this is a set so dups are already
         // removed)
         for (IProject p : refProjects) {
-            entries.add(JavaCore.newProjectEntry(p.getFullPath()));
+            entries.add(JavaCore.newProjectEntry(p.getFullPath(), true /*isExported*/));
         }
 
         // and process the jar files list, but first sanitize it to remove dups.
@@ -262,10 +264,11 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                             e.getSourceAttachmentRootPath(),
                             e.getAccessRules(),
                             e.getExtraAttributes(),
-                            e.isExported()));
+                            true /*isExported*/));
                 } else {
                     entries.add(JavaCore.newLibraryEntry(new Path(jarFile.getAbsolutePath()),
-                            null /*sourceAttachmentPath*/, null /*sourceAttachmentRootPath*/));
+                            null /*sourceAttachmentPath*/, null /*sourceAttachmentRootPath*/,
+                            true /*isExported*/));
                 }
             }
         } catch (DifferentLibException e) {
