@@ -29,6 +29,8 @@ import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.sdklib.xml.AndroidManifest.NODE_USES_SDK;
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -103,6 +105,7 @@ public class ManifestInfo {
     private Map<String, String> mActivityThemes;
     private IAbstractFile mManifestFile;
     private long mLastModified;
+    private int mMinSdk;
     private int mTargetSdk;
     private String mApplicationIcon;
     private String mApplicationLabel;
@@ -130,6 +133,7 @@ public class ManifestInfo {
      * @param project the project the finder is associated with
      * @return a {@ManifestInfo} for the given project, never null
      */
+    @NonNull
     public static ManifestInfo get(IProject project) {
         ManifestInfo finder = null;
         try {
@@ -174,6 +178,7 @@ public class ManifestInfo {
         mActivityThemes = new HashMap<String, String>();
         mManifestTheme = null;
         mTargetSdk = 1; // Default when not specified
+        mMinSdk = 1; // Default when not specified
         mPackage = ""; //$NON-NLS-1$
         mApplicationIcon = null;
         mApplicationLabel = null;
@@ -227,32 +232,8 @@ public class ManifestInfo {
                 NodeList usesSdks = root.getElementsByTagName(NODE_USES_SDK);
                 if (usesSdks.getLength() > 0) {
                     Element usesSdk = (Element) usesSdks.item(0);
-                    String targetSdk = null;
-                    if (usesSdk.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_TARGET_SDK_VERSION)) {
-                        targetSdk = usesSdk.getAttributeNS(NS_RESOURCES,
-                                ATTRIBUTE_TARGET_SDK_VERSION);
-                    } else if (usesSdk.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_MIN_SDK_VERSION)) {
-                        targetSdk = usesSdk.getAttributeNS(NS_RESOURCES,
-                                ATTRIBUTE_MIN_SDK_VERSION);
-                    }
-                    if (targetSdk != null) {
-                        int apiLevel = -1;
-                        try {
-                            apiLevel = Integer.valueOf(targetSdk);
-                        } catch (NumberFormatException e) {
-                            // Handle codename
-                            if (Sdk.getCurrent() != null) {
-                                IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(
-                                        "android-" + targetSdk); //$NON-NLS-1$
-                                if (target != null) {
-                                    // codename future API level is current api + 1
-                                    apiLevel = target.getVersion().getApiLevel() + 1;
-                                }
-                            }
-                        }
-
-                        mTargetSdk = apiLevel;
-                    }
+                    mMinSdk = getApiVersion(usesSdk, ATTRIBUTE_MIN_SDK_VERSION, 1);
+                    mTargetSdk = getApiVersion(usesSdk, ATTRIBUTE_TARGET_SDK_VERSION, mMinSdk);
                 }
             } else {
                 mManifestTheme = defaultTheme;
@@ -264,11 +245,40 @@ public class ManifestInfo {
         }
     }
 
+    private static int getApiVersion(Element usesSdk, String attribute, int defaultApiLevel) {
+        String valueString = null;
+        if (usesSdk.hasAttributeNS(NS_RESOURCES, attribute)) {
+            valueString = usesSdk.getAttributeNS(NS_RESOURCES, attribute);
+        }
+
+        if (valueString != null) {
+            int apiLevel = -1;
+            try {
+                apiLevel = Integer.valueOf(valueString);
+            } catch (NumberFormatException e) {
+                // Handle codename
+                if (Sdk.getCurrent() != null) {
+                    IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(
+                            "android-" + valueString); //$NON-NLS-1$
+                    if (target != null) {
+                        // codename future API level is current api + 1
+                        apiLevel = target.getVersion().getApiLevel() + 1;
+                    }
+                }
+            }
+
+            return apiLevel;
+        }
+
+        return defaultApiLevel;
+    }
+
     /**
      * Returns the default package registered in the Android manifest
      *
      * @return the default package registered in the manifest
      */
+    @NonNull
     public String getPackage() {
         sync();
         return mPackage;
@@ -280,6 +290,7 @@ public class ManifestInfo {
      *
      * @return a map from activity fqcn to theme style
      */
+    @NonNull
     public Map<String, String> getActivityThemes() {
         sync();
         return mActivityThemes;
@@ -293,6 +304,7 @@ public class ManifestInfo {
      * @param screenSize the screen size to obtain a default theme for, or null if unknown
      * @return the theme to use for this project, never null
      */
+    @NonNull
     public String getDefaultTheme(IAndroidTarget renderingTarget, ScreenSize screenSize) {
         sync();
 
@@ -320,6 +332,7 @@ public class ManifestInfo {
      *
      * @return the application icon, or null
      */
+    @Nullable
     public String getApplicationIcon() {
         sync();
         return mApplicationIcon;
@@ -330,9 +343,30 @@ public class ManifestInfo {
      *
      * @return the application label, or null
      */
+    @Nullable
     public String getApplicationLabel() {
         sync();
         return mApplicationLabel;
+    }
+
+    /**
+     * Returns the target SDK version
+     *
+     * @return the target SDK version
+     */
+    public int getTargetSdkVersion() {
+        sync();
+        return mTargetSdk;
+    }
+
+    /**
+     * Returns the minimum SDK version
+     *
+     * @return the minimum SDK version
+     */
+    public int getMinSdkVersion() {
+        sync();
+        return mMinSdk;
     }
 
     /**
@@ -340,6 +374,7 @@ public class ManifestInfo {
      *
      * @return the {@link IPackageFragment} for the package registered in the manifest
      */
+    @Nullable
     public IPackageFragment getPackageFragment() {
         sync();
         try {
@@ -367,6 +402,7 @@ public class ManifestInfo {
      * @param pkg the package containing activities
      * @return the activity name
      */
+    @Nullable
     public static String guessActivity(IProject project, String layoutName, String pkg) {
         final AtomicReference<String> activity = new AtomicReference<String>();
         SearchRequestor requestor = new SearchRequestor() {
@@ -446,6 +482,7 @@ public class ManifestInfo {
      * @return the activity name
      */
     @SuppressWarnings("all")
+    @Nullable
     public String guessActivityBySetContentView(String layoutName) {
         if (false) {
             // These should be fields
@@ -568,7 +605,13 @@ public class ManifestInfo {
         return scope;
     }
 
-    /** Returns the first package root for the given java project */
+    /**
+     * Returns the first package root for the given java project
+     *
+     * @param javaProject the project to search in
+     * @return the first package root, or null
+     */
+    @Nullable
     public static IPackageFragmentRoot getSourcePackageRoot(IJavaProject javaProject) {
         IPackageFragmentRoot packageRoot = null;
         List<IPath> sources = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -589,8 +632,10 @@ public class ManifestInfo {
     /**
      * Computes the minimum SDK and target SDK versions for the project
      *
+     * @param project the project to look up the versions for
      * @return a pair of (minimum SDK, target SDK) versions, never null
      */
+    @NonNull
     public static Pair<Integer, Integer> computeSdkVersions(IProject project) {
         int mMinSdkVersion = 1;
         int mTargetSdkVersion = 1;

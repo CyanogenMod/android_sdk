@@ -332,7 +332,7 @@ public final class Sdk  {
     /**
      * Initializes a new project with a target. This creates the <code>project.properties</code>
      * file.
-     * @param project the project to intialize
+     * @param project the project to initialize
      * @param target the project's target.
      * @throws IOException if creating the file failed in any way.
      * @throws StreamException

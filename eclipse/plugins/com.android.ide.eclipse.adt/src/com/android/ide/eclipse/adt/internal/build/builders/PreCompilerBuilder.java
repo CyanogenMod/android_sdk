@@ -588,7 +588,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 Messages.Removing_Generated_Classes);
 
         // remove all the derived resources from the 'gen' source folder.
-        if (mGenFolder != null) {
+        if (mGenFolder != null && mGenFolder.exists()) {
             // gen folder should not be derived, but previous version could set it to derived
             // so we make sure this isn't the case (or it'll get deleted by the clean)
             mGenFolder.setDerived(false, monitor);

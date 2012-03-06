@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.actions;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 
@@ -82,7 +83,18 @@ public class FixProjectAction implements IObjectActionDelegate {
     }
 
     private void fixProject(final IProject project) {
-        new Job("Fix Project Properties") {
+        createFixProjectJob(project).schedule();
+    }
+
+    /**
+     * Creates a job to fix the project
+     *
+     * @param project the project to fix
+     * @return a job to perform the fix (not yet scheduled)
+     */
+    @NonNull
+    public static Job createFixProjectJob(@NonNull final IProject project) {
+        return new Job("Fix Project Properties") {
 
             @Override
             protected IStatus run(IProgressMonitor monitor) {
@@ -129,7 +141,7 @@ public class FixProjectAction implements IObjectActionDelegate {
                     }
                 }
             }
-        }.schedule();
+        };
     }
 
     /**

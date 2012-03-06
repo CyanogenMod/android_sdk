@@ -193,7 +193,9 @@ class ClientRulesEngine implements IClientRulesEngine {
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
             IAndroidTarget target = currentSdk.getTarget(mRulesEngine.getEditor().getProject());
-            return target.getVersion().getApiLevel();
+            if (target != null) {
+                return target.getVersion().getApiLevel();
+            }
         }
 
         return -1;
@@ -353,6 +355,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                 // First check to make sure fragments are available, and if not,
                 // warn the user.
                 IAndroidTarget target = Sdk.getCurrent().getTarget(project);
+                // No, this should be using the min SDK instead!
                 if (target.getVersion().getApiLevel() < 11 && oldFragmentType == null) {
                     // Compatibility library must be present
                     MessageDialog dialog =

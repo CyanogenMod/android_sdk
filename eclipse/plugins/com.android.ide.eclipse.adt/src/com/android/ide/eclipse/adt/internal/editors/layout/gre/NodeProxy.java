@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.project.CompatibilityLibraryHelper;
 
 import org.eclipse.swt.graphics.Rectangle;
 import org.w3c.dom.NamedNodeMap;
@@ -256,6 +257,13 @@ public class NodeProxy implements INode {
     private INode insertOrAppend(String viewFqcn, int index) {
         checkEditOK();
 
+        AndroidXmlEditor editor = mNode.getEditor();
+        if (editor != null) {
+            // Possibly replace the tag with a compatibility version if the
+            // minimum SDK requires it
+            viewFqcn = CompatibilityLibraryHelper.getTagFor(editor.getProject(), viewFqcn);
+        }
+
         // Find the descriptor for this FQCN
         ViewElementDescriptor vd = getFqcnViewDescriptor(viewFqcn);
         if (vd == null) {
@@ -277,14 +285,12 @@ public class NodeProxy implements INode {
             }
         }
 
+        // Set default attributes -- but only for new widgets (not when moving or copying)
         RulesEngine engine = null;
-        AndroidXmlEditor editor = mNode.getEditor();
         LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(editor);
         if (delegate != null) {
             engine = delegate.getRulesEngine();
         }
-
-        // Set default attributes -- but only for new widgets (not when moving or copying)
         if (engine == null || engine.getInsertType().isCreate()) {
             // TODO: This should probably use IViewRule#getDefaultAttributes() at some point
             DescriptorsUtils.setDefaultLayoutAttributes(uiNew, false /*updateLayout*/);

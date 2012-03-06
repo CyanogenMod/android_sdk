@@ -196,6 +196,7 @@ public class LayoutConstants {
 
     /** The fully qualified class name of a RelativeLayout view */
     public static final String FQCN_GRID_LAYOUT = "android.widget.GridLayout"; //$NON-NLS-1$
+    public static final String FQCN_GRID_LAYOUT_V7 = "android.support.v7.widget.GridLayout"; //$NON-NLS-1$
 
     /** The fully qualified class name of a FrameLayout view */
     public static final String FQCN_FRAME_LAYOUT = "android.widget.FrameLayout"; //$NON-NLS-1$
@@ -247,6 +248,7 @@ public class LayoutConstants {
 
     /** The fully qualified class name of a Space */
     public static final String FQCN_SPACE = "android.widget.Space"; //$NON-NLS-1$
+    public static final String FQCN_SPACE_V7 = "android.support.v7.widget.Space"; //$NON-NLS-1$
 
     /** The fully qualified class name of a TextView view */
     public static final String FQCN_TEXT_VIEW = "android.widget.TextView"; //$NON-NLS-1$
