@@ -63,4 +63,9 @@ public class CurrentVboPropertyAccessor implements IGLPropertyAccessor {
                                                buffer,
                                                mVboProperty).getProperty(state);
     }
+
+    @Override
+    public String getPath() {
+        return String.format("VERTEX_ARRAY_DATA/VBO/${currentBuffer}/%s", mVboProperty);
+    }
 }

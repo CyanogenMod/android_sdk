@@ -1252,6 +1252,9 @@ public class StateTransformFactory {
         // ..            4i
 
         int location = msg.getArgs(0).getIntValue(0);
+        if (location < 0) {
+            throw new IllegalArgumentException("Argument location cannot be less than 0.");
+        }
         List<?> uniforms;
         if (isFloats) {
             List<Float> args = new ArrayList<Float>(msg.getArgsCount() - 1);

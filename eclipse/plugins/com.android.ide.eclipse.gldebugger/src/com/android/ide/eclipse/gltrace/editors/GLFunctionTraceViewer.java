@@ -100,6 +100,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private GLCallFilter mGLCallFilter;
 
     private Color mGldrawTextColor;
+    private Color mGlCallErrorColor;
 
     // Currently displayed frame's start and end call indices.
     private int mCallStartIndex;
@@ -116,6 +117,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
+        mGlCallErrorColor = Display.getDefault().getSystemColor(SWT.COLOR_RED);
     }
 
     @Override
@@ -526,6 +528,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             if (c.getFunction() == Function.glDrawArrays
                     || c.getFunction() == Function.glDrawElements) {
                 cell.setForeground(mGldrawTextColor);
+            }
+
+            if (c.hasErrors()) {
+                cell.setForeground(mGlCallErrorColor);
             }
 
             cell.setText(getColumnText(c, cell.getColumnIndex()));

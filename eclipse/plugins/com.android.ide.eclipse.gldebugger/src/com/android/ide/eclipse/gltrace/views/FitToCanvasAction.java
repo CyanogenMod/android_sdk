@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.views;
 
-import com.android.ide.eclipse.gldebugger.Activator;
+import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
 import org.eclipse.jface.action.Action;
@@ -25,7 +25,7 @@ public class FitToCanvasAction extends Action {
     private ImageCanvas mImageCanvas;
 
     public FitToCanvasAction(boolean fitByDefault, ImageCanvas canvas) {
-        super("Fit to Canvas", Activator.getImageDescriptor("/icons/zoomfit.png")); //$NON-NLS-2$
+        super("Fit to Canvas", GlTracePlugin.getImageDescriptor("/icons/zoomfit.png")); //$NON-NLS-2$
         setToolTipText("Fit Image to Canvas");
         mImageCanvas = canvas;
 

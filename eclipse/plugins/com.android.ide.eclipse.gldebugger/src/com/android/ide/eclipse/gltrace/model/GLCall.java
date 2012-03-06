@@ -23,6 +23,7 @@ import com.android.sdklib.util.SparseArray;
 
 import org.eclipse.swt.graphics.Image;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -78,15 +79,17 @@ public class GLCall {
     private final int mThreadDuration;
 
     /** List of state transformations performed by this call. */
-    private final List<IStateTransform> mStateTransforms;
+    private List<IStateTransform> mStateTransforms = Collections.emptyList();
+
+    /** Error conditions while creating state transforms for this call. */
+    private String mStateTransformationCreationErrorMessage;
 
     /** List of properties associated to this call. */
     private SparseArray<Object> mProperties;
 
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
             Image thumbnailImage, Function function, boolean hasFb, int contextId,
-            int wallTime, int threadTime,
-            List<IStateTransform> stateTransforms) {
+            int wallTime, int threadTime) {
         mIndex = index;
         mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
@@ -97,7 +100,6 @@ public class GLCall {
         mContextId = contextId;
         mWallDuration = wallTime;
         mThreadDuration = threadTime;
-        mStateTransforms = stateTransforms;
     }
 
     public int getIndex() {
@@ -138,6 +140,22 @@ public class GLCall {
 
     public int getThreadDuration() {
         return mThreadDuration;
+    }
+
+    public void setStateTransformations(List<IStateTransform> transforms) {
+        mStateTransforms = transforms;
+    }
+
+    public void setStateTransformationCreationError(String errorMessage) {
+        mStateTransformationCreationErrorMessage = errorMessage;
+    }
+
+    public boolean hasErrors() {
+        return mStateTransformationCreationErrorMessage != null;
+    }
+
+    public String getError() {
+        return mStateTransformationCreationErrorMessage;
     }
 
     public List<IStateTransform> getStateTransformations() {

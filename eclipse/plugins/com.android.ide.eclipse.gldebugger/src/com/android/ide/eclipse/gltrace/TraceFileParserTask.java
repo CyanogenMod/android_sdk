@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.format.GLAPISpec;
@@ -107,10 +108,18 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 msg.hasFb(),
                                 msg.getContextId(),
                                 msg.getDuration(),
-                                msg.getThreadtime(),
-                                StateTransformFactory.getTransformsFor(msg));
+                                msg.getThreadtime());
 
         addProperties(c, msg);
+
+        try {
+            c.setStateTransformations(StateTransformFactory.getTransformsFor(msg));
+        } catch (Exception e) {
+            c.setStateTransformationCreationError(e.getMessage());
+            GlTracePlugin.getDefault().logMessage("Error while creating transformations for "
+                                                        + c.toString() + ":");
+            GlTracePlugin.getDefault().logMessage(e.getMessage());
+        }
 
         mGLCalls.add(c);
         mGLContextIds.add(Integer.valueOf(c.getContextId()));

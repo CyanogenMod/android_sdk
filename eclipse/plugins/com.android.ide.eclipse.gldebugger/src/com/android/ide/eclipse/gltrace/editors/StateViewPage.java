@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
-import com.android.ide.eclipse.gldebugger.Activator;
+import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ILock;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -82,6 +83,8 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
     @Override
     public void createControl(Composite parent) {
         final Tree tree = new Tree(parent, SWT.VIRTUAL | SWT.H_SCROLL | SWT.V_SCROLL);
+        GridDataFactory.fillDefaults().grab(true, true).applyTo(tree);
+
         tree.setHeaderVisible(true);
         tree.setLinesVisible(true);
         tree.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -154,8 +157,11 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
                             selectedCallIndex);
                     mCurrentStateIndex = selectedCallIndex;
                 } catch (Exception e) {
+                    GlTracePlugin.getDefault().logMessage(
+                            "Unexpected error while updating GL State.");
+                    GlTracePlugin.getDefault().logMessage(e.getMessage());
                     return new Status(Status.ERROR,
-                            Activator.PLUGIN_ID,
+                            GlTracePlugin.PLUGIN_ID,
                             "Unexpected error while updating GL State.",
                             e);
                 } finally {
@@ -218,12 +224,18 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
         Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
 
         for (int i = fromIndex + 1; i <= toIndex; i++) {
-            for (IStateTransform f : mGLCalls.get(i).getStateTransformations()) {
-                f.apply(mState);
-
-                IGLProperty changedProperty = f.getChangedProperty(mState);
-                if (changedProperty != null) {
-                    changedProperties.addAll(getHierarchy(changedProperty));
+            GLCall call = mGLCalls.get(i);
+            for (IStateTransform f : call.getStateTransformations()) {
+                try {
+                    f.apply(mState);
+                    IGLProperty changedProperty = f.getChangedProperty(mState);
+                    if (changedProperty != null) {
+                        changedProperties.addAll(getHierarchy(changedProperty));
+                    }
+                } catch (Exception e) {
+                    GlTracePlugin.getDefault().logMessage("Error applying transformations for "
+                            + call);
+                    GlTracePlugin.getDefault().logMessage(e.getMessage());
                 }
             }
         }

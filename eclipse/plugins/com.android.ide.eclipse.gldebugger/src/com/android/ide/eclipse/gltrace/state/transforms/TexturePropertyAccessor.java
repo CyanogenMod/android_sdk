@@ -61,4 +61,9 @@ public class TexturePropertyAccessor implements IGLPropertyAccessor {
         return textureAccessor.getProperty(state);
     }
 
+    @Override
+    public String getPath() {
+        return String.format("TEXTURE_STATE/TEXTURES/${activeTexture}/%s", mTextureType);
+    }
+
 }
