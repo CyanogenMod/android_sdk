@@ -122,6 +122,14 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
         mView = (MultiTouchView) findViewById(R.id.imageView);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        // Create listener for touch events.
+        mTouchListener = new TouchListener();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
         // Instantiate emulator connector.
         try {
             mEmulator = new Emulator(Emulator.MULTITOUCH_PORT,
@@ -131,8 +139,17 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
             finish();
         }
 
-        // Create listener for touch events.
-        mTouchListener = new TouchListener();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mEmulator != null) {
+            mEmulator.setOnEmulatorListener(null);
+            mEmulator.disconnect();
+            mEmulator = null;
+        }
     }
 
     /**

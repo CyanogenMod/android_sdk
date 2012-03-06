@@ -86,6 +86,8 @@ public class Emulator {
     private boolean mIsDisconnected = false;
     /** Exit I/O loop flag. */
     private boolean mExitIoLoop = false;
+    /** Disconnect flag. */
+    private boolean mDisconnect = false;
 
     /***************************************************************************
      * EmulatorChannel - Base class for sync / async channels.
@@ -536,6 +538,15 @@ public class Emulator {
         constructEmulator(port, ctype);
     }
 
+
+    /**
+     * Disconnects the emulator.
+     */
+    public void disconnect() {
+        mDisconnect = true;
+        mSelector.wakeup();
+    }
+
     /**
      * Constructs Emulator instance.
      *
@@ -698,7 +709,9 @@ public class Emulator {
             // Check mExitIoLoop before calling 'select', and after in order to
             // detect condition when mSelector has been waken up to exit the
             // I/O loop.
-            while (!mExitIoLoop && mSelector.select() >= 0 && !mExitIoLoop) {
+            while (!mExitIoLoop && !mDisconnect &&
+                    mSelector.select() >= 0 &&
+                    !mExitIoLoop && !mDisconnect) {
                 Set<SelectionKey> readyKeys = mSelector.selectedKeys();
                 Iterator<SelectionKey> i = readyKeys.iterator();
                 while (i.hasNext()) {

@@ -146,9 +146,7 @@ prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh     tools/proguard/bi
 prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  tools/proguard/ant/task.properties
 
 # SDK Controller
-#sdk/apps/SdkController       tools/apps/SdkController
-sdk/apps/SdkController/SdkControllerLib       tools/apps/SdkController/SdkControllerLib
-sdk/apps/SdkController/SdkControllerSensor    tools/apps/SdkController/SdkControllerSensor
+sdk/apps/SdkController       tools/apps/SdkController
 
 # tools specific support jar
 framework/annotations.jar   tools/support/annotations.jar
