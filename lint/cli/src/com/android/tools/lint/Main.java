@@ -21,6 +21,7 @@ import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
@@ -86,11 +87,13 @@ public class Main extends LintClient {
 
     private static final String VALUE_NONE     = "none";           //$NON-NLS-1$
 
-    private static final int ERRNO_ERRORS = -1;
-    private static final int ERRNO_USAGE = -2;
-    private static final int ERRNO_EXISTS = -3;
-    private static final int ERRNO_HELP = -4;
-    private static final int ERRNO_INVALIDARGS = -5;
+    private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir"; //$NON-NLS-1$
+
+    private static final int ERRNO_ERRORS = 1;
+    private static final int ERRNO_USAGE = 2;
+    private static final int ERRNO_EXISTS = 3;
+    private static final int ERRNO_HELP = 4;
+    private static final int ERRNO_INVALIDARGS = 5;
 
     private List<Warning> mWarnings = new ArrayList<Warning>();
     private Set<String> mSuppress = new HashSet<String>();
@@ -245,8 +248,7 @@ public class Main extends LintClient {
                     System.err.println("Missing XML configuration file argument");
                     System.exit(ERRNO_INVALIDARGS);
                 }
-                String filename = args[++index];
-                File file = new File(filename);
+                File file = getInArgumentPath(args[++index]);
                 if (!file.exists()) {
                     System.err.println(file.getAbsolutePath() + " does not exist");
                     System.exit(ERRNO_INVALIDARGS);
@@ -257,7 +259,7 @@ public class Main extends LintClient {
                     System.err.println("Missing HTML output file name");
                     System.exit(ERRNO_INVALIDARGS);
                 }
-                File output = new File(args[++index]);
+                File output = getOutArgumentPath(args[++index]);
                 // Get an absolute path such that we can ask its parent directory for
                 // write permission etc.
                 output = output.getAbsoluteFile();
@@ -309,7 +311,7 @@ public class Main extends LintClient {
                     System.err.println("Missing XML output file name");
                     System.exit(ERRNO_INVALIDARGS);
                 }
-                File output = new File(args[++index]);
+                File output = getOutArgumentPath(args[++index]);
                 if (output.exists()) {
                     boolean delete = output.delete();
                     if (!delete) {
@@ -416,7 +418,8 @@ public class Main extends LintClient {
                 System.exit(ERRNO_INVALIDARGS);
             } else {
                 String filename = arg;
-                File file = new File(filename);
+                File file = getInArgumentPath(filename);
+
                 if (!file.exists()) {
                     System.err.println(String.format("%1$s does not exist.", filename));
                     System.exit(ERRNO_EXISTS);
@@ -489,6 +492,81 @@ public class Main extends LintClient {
         System.exit(mFatal ? ERRNO_ERRORS : 0);
     }
 
+    /**
+     * Converts a relative or absolute command-line argument into an input file.
+     *
+     * @param filename The filename given as a command-line argument.
+     * @return A File matching filename, either absolute or relative to lint.workdir if defined.
+     */
+    private File getInArgumentPath(String filename) {
+        File file = new File(filename);
+
+        if (!file.isAbsolute()) {
+            File workDir = getLintWorkDir();
+            if (workDir != null) {
+                File file2 = new File(workDir, filename);
+                if (file2.exists()) {
+                    try {
+                        file = file2.getCanonicalFile();
+                    } catch (IOException e) {
+                        file = file2;
+                    }
+                }
+            }
+        }
+        return file;
+    }
+
+    /**
+     * Converts a relative or absolute command-line argument into an output file.
+     * <p/>
+     * The difference with {@code getInArgumentPath} is that we can't check whether the
+     * a relative path turned into an absolute compared to lint.workdir actually exists.
+     *
+     * @param filename The filename given as a command-line argument.
+     * @return A File matching filename, either absolute or relative to lint.workdir if defined.
+     */
+    private File getOutArgumentPath(String filename) {
+        File file = new File(filename);
+
+        if (!file.isAbsolute()) {
+            File workDir = getLintWorkDir();
+            if (workDir != null) {
+                File file2 = new File(workDir, filename);
+                try {
+                    file = file2.getCanonicalFile();
+                } catch (IOException e) {
+                    file = file2;
+                }
+            }
+        }
+        return file;
+    }
+
+
+    /**
+     * Returns the File corresponding to the system property or the environment variable
+     * for {@link #PROP_WORK_DIR}.
+     * This property is typically set by the SDK/tools/lint[.bat] wrapper.
+     * It denotes the path where the command-line client was originally invoked from
+     * and can be used to convert relative input/output paths.
+     *
+     * @return A new File corresponding to {@link #PROP_WORK_DIR} or null.
+     */
+    @Nullable
+    private File getLintWorkDir() {
+        // First check the Java properties (e.g. set using "java -jar ... -Dname=value")
+        String path = System.getProperty(PROP_WORK_DIR);
+        if (path == null || path.length() == 0) {
+            // If not found, check environment variables.
+            path = System.getenv(PROP_WORK_DIR);
+        }
+        if (path != null && path.length() > 0) {
+            return new File(path);
+        }
+        return null;
+    }
+
     private void printHelpTopicSuppress() {
         System.out.println(wrap(getSuppressHelp()));
     }
@@ -556,26 +634,24 @@ public class Main extends LintClient {
     }
 
     private void printVersion() {
-        String binDir = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
-        if (binDir != null && binDir.length() > 0) {
-            File file = new File(binDir, "source.properties"); //$NON-NLS-1$
-            if (file.exists()) {
-                FileInputStream input = null;
-                try {
-                    input = new FileInputStream(file);
-                    Properties properties = new Properties();
-                    properties.load(input);
+        File file = findResource("tools" + File.separator +     //$NON-NLS-1$
+                                 "source.properties");          //$NON-NLS-1$
+        if (file.exists()) {
+            FileInputStream input = null;
+            try {
+                input = new FileInputStream(file);
+                Properties properties = new Properties();
+                properties.load(input);
 
-                    String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
-                    if (revision != null && revision.length() > 0) {
-                        System.out.println(String.format("lint: version %1$s", revision));
-                        return;
-                    }
-                } catch (IOException e) {
-                    // Couldn't find or read the version info: just print out unknown below
-                } finally {
-                    Closeables.closeQuietly(input);
+                String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
+                if (revision != null && revision.length() > 0) {
+                    System.out.println(String.format("lint: version %1$s", revision));
+                    return;
                 }
+            } catch (IOException e) {
+                // Couldn't find or read the version info: just print out unknown below
+            } finally {
+                Closeables.closeQuietly(input);
             }
         }
 
@@ -764,6 +840,15 @@ public class Main extends LintClient {
                 "to files, use " + ARG_URL + " " + VALUE_NONE,
             ARG_SIMPLEHTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
+        });
+
+        out.println("\nExit Status:");
+        printUsage(out, new String[] {
+                Integer.toString(ERRNO_ERRORS),      "Lint errors detected.",
+                Integer.toString(ERRNO_USAGE),       "Lint usage.",
+                Integer.toString(ERRNO_EXISTS),      "Cannot clobber existing file.",
+                Integer.toString(ERRNO_HELP),        "Lint help.",
+                Integer.toString(ERRNO_INVALIDARGS), "Invalid command-line argument.",
         });
     }
 

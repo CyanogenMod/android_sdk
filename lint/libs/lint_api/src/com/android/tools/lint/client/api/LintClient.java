@@ -53,6 +53,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 @Beta
 public abstract class LintClient {
+
+    private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";  //$NON-NLS-1$
+
     /**
      * Returns a configuration for use by the given project. The configuration
      * provides information about which issues are enabled, any customizations
@@ -235,6 +238,28 @@ public abstract class LintClient {
     }
 
     /**
+     * Returns the File corresponding to the system property or the environment variable
+     * for {@link #PROP_BIN_DIR}.
+     * This property is typically set by the SDK/tools/lint[.bat] wrapper.
+     * It denotes the path of the wrapper on disk.
+     *
+     * @return A new File corresponding to {@link LintClient#PROP_BIN_DIR} or null.
+     */
+    @Nullable
+    private File getLintBinDir() {
+        // First check the Java properties (e.g. set using "java -jar ... -Dname=value")
+        String path = System.getProperty(PROP_BIN_DIR);
+        if (path == null || path.length() == 0) {
+            // If not found, check environment variables.
+            path = System.getenv(PROP_BIN_DIR);
+        }
+        if (path != null && path.length() > 0) {
+            return new File(path);
+        }
+        return null;
+    }
+
+    /**
      * Locates an SDK resource (relative to the SDK root directory).
      * <p>
      * TODO: Consider switching to a {@link URL} return type instead.
@@ -246,13 +271,13 @@ public abstract class LintClient {
      */
     @Nullable
     public File findResource(@NonNull String relativePath) {
-        String path = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
-        if (path == null) {
+        File dir = getLintBinDir();
+        if (dir == null) {
             throw new IllegalArgumentException("Lint must be invoked with the System property "
-                    + "com.android.tools.lint.bindir pointing to the ANDROID_SDK tools directory");
+                    + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
         }
 
-        File top = new File(path).getParentFile();
+        File top = dir.getParentFile();
         File file = new File(top, relativePath);
         if (file.exists()) {
             return file;
