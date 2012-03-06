@@ -46,7 +46,7 @@ public final class LogCatMessageParserTest extends TestCase {
     private static final String[] MESSAGES = new String[] {
             "[ 08-11 19:11:07.132   495:0x1ef D/dtag     ]", //$NON-NLS-1$
             "debug message",                                 //$NON-NLS-1$
-            "[ 08-11 19:11:07.132   495:0x1ef E/etag     ]", //$NON-NLS-1$
+            "[ 08-11 19:11:07.132   495:  234 E/etag     ]", //$NON-NLS-1$
             "error message",                                 //$NON-NLS-1$
             "[ 08-11 19:11:07.132   495:0x1ef I/itag     ]", //$NON-NLS-1$
             "info message",                                  //$NON-NLS-1$
@@ -90,5 +90,10 @@ public final class LogCatMessageParserTest extends TestCase {
     /** Check the message field. */
     public void testMessage() {
         assertEquals(mParsedMessages.get(2).getMessage(), MESSAGES[5]);
+    }
+
+    public void testTid() {
+        assertEquals(mParsedMessages.get(0).getTid(), Integer.toString(0x1ef));
+        assertEquals(mParsedMessages.get(1).getTid(), "234");
     }
 }
