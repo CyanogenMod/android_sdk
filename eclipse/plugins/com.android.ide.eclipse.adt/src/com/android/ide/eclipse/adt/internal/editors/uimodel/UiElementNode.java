@@ -1725,15 +1725,17 @@ public class UiElementNode implements IPropertySource {
 
     /**
      * Returns the namespace prefix matching the requested namespace URI.
-     * If no such declaration is found, returns the default "android" prefix.
+     * If no such declaration is found, returns the default "android" prefix for
+     * the Android URI, and "app" for other URI's.
      *
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
      *              e.g. SdkConstants.NS_RESOURCES
-     * @return The first prefix declared or the default "android" prefix.
+     * @return The first prefix declared or the default "android" prefix
+     *              (or "app" for non-Android URIs)
      */
     public static String lookupNamespacePrefix(Node node, String nsUri) {
-        String defaultPrefix = NS_RESOURCES.equals(nsUri) ? ANDROID_NS_NAME : "ns"; //$NON-NLS-1$
+        String defaultPrefix = NS_RESOURCES.equals(nsUri) ? ANDROID_NS_NAME : "app"; //$NON-NLS-1$
         return lookupNamespacePrefix(node, nsUri, defaultPrefix);
     }
 

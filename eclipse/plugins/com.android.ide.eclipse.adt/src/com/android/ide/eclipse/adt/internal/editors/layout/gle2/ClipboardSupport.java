@@ -285,8 +285,9 @@ public class ClipboardSupport {
         mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel("Paste", new Runnable() {
             @Override
             public void run() {
-                mCanvas.getRulesEngine().callOnPaste(targetNode, target.getViewObject(), pasted);
-                targetNode.applyPendingChanges();
+                RulesEngine engine = mCanvas.getRulesEngine();
+                NodeProxy node = engine.callOnPaste(targetNode, target.getViewObject(), pasted);
+                node.applyPendingChanges();
             }
         });
     }

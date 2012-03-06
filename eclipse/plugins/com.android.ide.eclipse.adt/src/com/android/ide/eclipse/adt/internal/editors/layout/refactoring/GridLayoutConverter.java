@@ -38,6 +38,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
@@ -210,20 +211,26 @@ class GridLayoutConverter {
             // TODO: May also have to increment column count!
             int offset = 0; // WHERE?
 
+            String gridLayout = mLayout.getTagName();
             if (mLayout instanceof IndexedRegion) {
                 IndexedRegion region = (IndexedRegion) mLayout;
                 int end = region.getEndOffset();
                 // TODO: Look backwards for the "</"
                 // (and can it ever be <foo/>) ?
-                end -= (mLayout.getTagName().length() + 3); // 3: <, /, >
+                end -= (gridLayout.length() + 3); // 3: <, /, >
                 offset = end;
             }
 
             int row = rowFixed.size();
             int column = columnFixed.size();
             StringBuilder sb = new StringBuilder(64);
-            String tag = SPACE;
-            sb.append('<').append(tag).append(' ');
+            String spaceTag = SPACE;
+            if (!gridLayout.equals(GRID_LAYOUT) && gridLayout.length() > GRID_LAYOUT.length()) {
+                String pkg = gridLayout.substring(0, gridLayout.length() - GRID_LAYOUT.length());
+                spaceTag = pkg + spaceTag;
+            }
+
+            sb.append('<').append(spaceTag).append(' ');
             String gravity;
             if (!hasStretchableRow && !hasStretchableColumn) {
                 gravity = GRAVITY_VALUE_FILL;

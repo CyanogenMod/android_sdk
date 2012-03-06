@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import static com.android.sdklib.SdkConstants.CLASS_FRAGMENT;
 import static com.android.sdklib.SdkConstants.CLASS_V4_FRAGMENT;
+import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
+import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.INode;
@@ -43,6 +45,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.MarginChooser;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
@@ -556,7 +559,14 @@ class ClientRulesEngine implements IClientRulesEngine {
 
     @Override
     public String getAppNameSpace() {
-        ManifestInfo info = ManifestInfo.get(mRulesEngine.getEditor().getProject());
-        return info.getPackage();
+        IProject project = mRulesEngine.getEditor().getProject();
+
+        ProjectState projectState = Sdk.getProjectState(project);
+        if (projectState != null && projectState.isLibrary()) {
+            return AUTO_URI;
+        }
+
+        ManifestInfo info = ManifestInfo.get(project);
+        return URI_PREFIX + info.getPackage();
     }
 }

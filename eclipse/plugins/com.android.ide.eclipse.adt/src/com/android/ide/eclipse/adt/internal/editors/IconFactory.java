@@ -17,6 +17,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
 
@@ -104,7 +105,7 @@ public class IconFactory {
      * Callers should not dispose it.
      *
      * @param osName The leaf name, without the extension, of an existing icon in the
-     *        editor's "icons" directory. If it doesn't exists, a default icon will be
+     *        editor's "icons" directory. If it doesn't exist, a default icon will be
      *        generated automatically based on the name.
      * @param color The color of the text in the automatically generated icons,
      *        one of COLOR_DEFAULT, COLOR_RED, COLOR_BLUE or COLOR_RED.
@@ -168,6 +169,60 @@ public class IconFactory {
             // up every time. If it didn't exist once, it will not exist later.
             mImageDescMap.put(key, id);
         }
+        return id;
+    }
+
+    /**
+     * Returns an Image for a given icon name.
+     * <p/>
+     * Callers should not dispose it.
+     *
+     * @param osName The leaf name, without the extension, of an existing icon
+     *            in the editor's "icons" directory. If it doesn't exist, the
+     *            fallback will be used instead.
+     * @param fallback the fallback icon name to use if the primary icon does
+     *            not exist.
+     * @return the icon, which should not be disposed by the caller
+     */
+    public Image getIcon(String osName, String fallback) {
+        String key = osName;
+        Image icon = mIconMap.get(key);
+        if (icon == null && !mIconMap.containsKey(key)) {
+            ImageDescriptor id = getImageDescriptor(osName, fallback);
+            if (id != null) {
+                icon = id.createImage();
+            }
+            // Note that we store null references in the icon map, to avoid looking them
+            // up every time. If it didn't exist once, it will not exist later.
+            mIconMap.put(key, icon);
+        }
+        return icon;
+    }
+
+    /**
+     * Returns an icon of the given name, or if that image does not exist and icon
+     * of the given fallback name.
+     *
+     * @param key the icon name
+     * @param fallbackKey the fallback image to use if the primary key does not exist
+     * @return the image descriptor
+     */
+    @NonNull
+    public ImageDescriptor getImageDescriptor(@NonNull String key, @NonNull String fallbackKey) {
+        ImageDescriptor id = mImageDescMap.get(key);
+        if (id == null && !mImageDescMap.containsKey(key)) {
+            id = AbstractUIPlugin.imageDescriptorFromPlugin(
+                    AdtPlugin.PLUGIN_ID,
+                    String.format("/icons/%1$s.png", key)); //$NON-NLS-1$
+            if (id == null) {
+                id = getImageDescriptor(fallbackKey);
+            }
+
+            // Place the fallback image for this key as well such that we don't keep trying
+            // to load the failed image
+            mImageDescMap.put(key, id);
+        }
+
         return id;
     }
 
