@@ -350,6 +350,10 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
+                // only consider the classpath entries that are exported.
+                if (e.isExported() == false) {
+                    continue;
+                }
                 // if this is a classpath variable reference, we resolve it.
                 if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
                     e = JavaCore.getResolvedClasspathEntry(e);
@@ -368,7 +372,9 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                                 container.getKind() == IClasspathContainer.K_APPLICATION) {
                             IClasspathEntry[] entries = container.getClasspathEntries();
                             for (IClasspathEntry entry : entries) {
-                                handleClasspathEntry(entry, wsRoot, jarFiles);
+                                if (entry.isExported()) {
+                                    handleClasspathEntry(entry, wsRoot, jarFiles);
+                                }
                             }
                         }
                     } catch (JavaModelException jme) {
