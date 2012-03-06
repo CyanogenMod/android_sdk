@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 public final class LogCatMessageParser {
     private LogLevel mCurLogLevel = LogLevel.WARN;
     private String mCurPid = "?";
+    private String mCurTid = "?";
     private String mCurTag = "?";
     private String mCurTime = "?:??";
 
@@ -48,7 +49,7 @@ public final class LogCatMessageParser {
      */
     private static Pattern sLogHeaderPattern = Pattern.compile(
             "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
-          + "\\s+(\\d*):(0x[0-9a-fA-F]+)\\s([VDIWEAF])/(.*)\\]$");
+          + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*)\\]$");
 
     /**
      * Parse a list of strings into {@link LogCatMessage} objects. This method
@@ -71,6 +72,7 @@ public final class LogCatMessageParser {
             if (matcher.matches()) {
                 mCurTime = matcher.group(1);
                 mCurPid = matcher.group(2);
+                mCurTid = matcher.group(3);
                 mCurLogLevel = LogLevel.getByLetterString(matcher.group(4));
                 mCurTag = matcher.group(5).trim();
 
@@ -80,7 +82,7 @@ public final class LogCatMessageParser {
                     mCurLogLevel = LogLevel.ASSERT;
                 }
             } else {
-                LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid,
+                LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid, mCurTid,
                         pidToNameMapper.getName(mCurPid),
                         mCurTag, mCurTime, line);
                 messages.add(m);

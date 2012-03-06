@@ -27,6 +27,7 @@ import com.android.ddmlib.Log.LogLevel;
 public final class LogCatMessage {
     private final LogLevel mLogLevel;
     private final String mPid;
+    private final String mTid;
     private final String mAppName;
     private final String mTag;
     private final String mTime;
@@ -35,7 +36,7 @@ public final class LogCatMessage {
     /**
      * Construct an immutable log message object.
      */
-    public LogCatMessage(LogLevel logLevel, String pid, String appName,
+    public LogCatMessage(LogLevel logLevel, String pid, String tid, String appName,
             String tag, String time, String msg) {
         mLogLevel = logLevel;
         mPid = pid;
@@ -43,6 +44,17 @@ public final class LogCatMessage {
         mTag = tag;
         mTime = time;
         mMessage = msg;
+
+        long tidValue;
+        try {
+            // Thread id's may be in hex on some platforms.
+            // Decode and store them in radix 10.
+            tidValue = Long.decode(tid.trim());
+        } catch (NumberFormatException e) {
+            tidValue = -1;
+        }
+
+        mTid = Long.toString(tidValue);
     }
 
     public LogLevel getLogLevel() {
@@ -51,6 +63,10 @@ public final class LogCatMessage {
 
     public String getPid() {
         return mPid;
+    }
+
+    public String getTid() {
+        return mTid;
     }
 
     public String getAppName() {
