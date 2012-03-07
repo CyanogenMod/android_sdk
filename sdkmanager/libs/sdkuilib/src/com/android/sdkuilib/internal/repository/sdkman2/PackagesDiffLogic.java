@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ExtraPackage;
@@ -609,7 +610,7 @@ class PackagesDiffLogic {
             // Sort by API
 
             if (pkg instanceof IPackageVersion) {
-                return ((IPackageVersion) pkg).getVersion().getApiLevel();
+                return ((IPackageVersion) pkg).getVersion();
 
             } else if (pkg instanceof ToolPackage || pkg instanceof PlatformToolPackage) {
                 return PkgCategoryApi.KEY_TOOLS;
@@ -663,8 +664,11 @@ class PackagesDiffLogic {
             // Create API category.
             PkgCategory cat = null;
 
-            assert catKey instanceof Integer;
-            int apiKey = ((Integer) catKey).intValue();
+            assert catKey instanceof AndroidVersion;
+            AndroidVersion key = (AndroidVersion) catKey;
+
+            // We should not be trying to recreate the tools or extra categories.
+            assert !key.equals(PkgCategoryApi.KEY_TOOLS) && !key.equals(PkgCategoryApi.KEY_EXTRA);
 
             // We need a label for the category.
             // If we have an API level, try to get the info from the SDK Manager.
@@ -672,19 +676,16 @@ class PackagesDiffLogic {
             // locally in the SDK Manager), it's OK we'll try to find the first platform
             // package available.
             String platformName = null;
-            if (apiKey >= 1 && apiKey != PkgCategoryApi.KEY_TOOLS) {
-                for (IAndroidTarget target :
-                        mUpdaterData.getSdkManager().getTargets()) {
-                    if (target.isPlatform() &&
-                            target.getVersion().getApiLevel() == apiKey) {
-                        platformName = target.getVersionName();
-                        break;
-                    }
+            for (IAndroidTarget target :
+                    mUpdaterData.getSdkManager().getTargets()) {
+                if (target.isPlatform() && key.equals(target.getVersion())) {
+                    platformName = target.getVersionName();
+                    break;
                 }
             }
 
             cat = new PkgCategoryApi(
-                    apiKey,
+                    key,
                     platformName,
                     mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_PLATFORM));
 
@@ -710,9 +711,11 @@ class PackagesDiffLogic {
                     public int compare(PkgCategory cat1, PkgCategory cat2) {
                         assert cat1 instanceof PkgCategoryApi;
                         assert cat2 instanceof PkgCategoryApi;
-                        int api1 = ((Integer) cat1.getKey()).intValue();
-                        int api2 = ((Integer) cat2.getKey()).intValue();
-                        return api2 - api1;
+                        assert cat1.getKey() instanceof AndroidVersion;
+                        assert cat2.getKey() instanceof AndroidVersion;
+                        AndroidVersion v1 = (AndroidVersion) cat1.getKey();
+                        AndroidVersion v2 = (AndroidVersion) cat2.getKey();
+                        return v2.compareTo(v1);
                     }
                 });
             }
