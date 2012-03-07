@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.google.common.annotations.Beta;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -35,8 +36,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** A reporter is an output generator for lint warnings */
-abstract class Reporter {
+/** A reporter is an output generator for lint warnings
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
+public abstract class Reporter {
     protected final Main mClient;
     protected final File mOutput;
     protected String mTitle = "Lint Report";
@@ -47,7 +53,16 @@ abstract class Reporter {
     protected Map<File, String> mResourceUrl = new HashMap<File, String>();
     protected Map<String, File> mNameToFile = new HashMap<String, File>();
 
-    abstract void write(int errorCount, int warningCount, List<Warning> issues) throws IOException;
+    /**
+     * Write the given warnings into the report
+     *
+     * @param errorCount the number of errors
+     * @param warningCount the number of warnings
+     * @param issues the issues to be reported
+     * @throws IOException if an error occurs
+     */
+    public abstract void write(int errorCount, int warningCount, List<Warning> issues)
+            throws IOException;
 
     protected Reporter(Main client, File output) {
         mClient = client;
@@ -59,12 +74,12 @@ abstract class Reporter {
      *
      * @param title the title of the report
      */
-    void setTitle(String title) {
+    public void setTitle(String title) {
         mTitle = title;
     }
 
     /** @return the title of the report */
-    String getTitle() {
+    public String getTitle() {
         return mTitle;
     }
 
@@ -75,7 +90,7 @@ abstract class Reporter {
      * @param bundleResources if true, copy images into a directory relative to
      *            the report
      */
-    void setBundleResources(boolean bundleResources) {
+    public void setBundleResources(boolean bundleResources) {
         mBundleResources = bundleResources;
         mSimpleFormat = false;
     }
@@ -86,7 +101,7 @@ abstract class Reporter {
      *
      * @param simpleFormat whether the formatting should be simple
      */
-    void setSimpleFormat(boolean simpleFormat) {
+    public void setSimpleFormat(boolean simpleFormat) {
         mSimpleFormat = simpleFormat;
     }
 
@@ -96,7 +111,7 @@ abstract class Reporter {
      *
      * @return whether the report should use simple formatting
      */
-    boolean isSimpleFormat() {
+    public boolean isSimpleFormat() {
         return mSimpleFormat;
     }
 

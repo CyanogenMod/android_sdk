@@ -18,22 +18,35 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.google.common.annotations.Beta;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-/** A reporter which emits lint warnings as plain text strings */
-class TextReporter extends Reporter {
+/**
+ * A reporter which emits lint warnings as plain text strings
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
+public class TextReporter extends Reporter {
     private final Writer mWriter;
 
-    TextReporter(Main client, Writer writer) {
+    /**
+     * Constructs a new {@link TextReporter}
+     *
+     * @param client the client
+     * @param writer the writer to write into
+     */
+    public TextReporter(Main client, Writer writer) {
         super(client, null);
         mWriter = writer;
     }
 
     @Override
-    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+    public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
         boolean abbreviate = mClient.getDriver().isAbbreviating();
 
         StringBuilder output = new StringBuilder(issues.size() * 200);

@@ -178,6 +178,9 @@ public class TypographyDetector extends ResourceXmlDetector {
     private static final String FRACTION_MESSAGE =
             "Use fraction character %1$c (%2$s) instead of %3$s ?";
 
+    private static final String FRACTION_MESSAGE_PATTERN =
+            "Use fraction character (.+) \\((.+)\\) instead of (.+) \\?";
+
     private boolean mCheckDashes;
     private boolean mCheckQuotes;
     private boolean mCheckFractions;
@@ -475,6 +478,17 @@ public class TypographyDetector extends ResourceXmlDetector {
                 if (endOffset != -1) {
                     edits.add(new ReplaceEdit(offset, 1, "\u2018"));     //$NON-NLS-1$
                     edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));  //$NON-NLS-1$
+                }
+            }
+        } else {
+            Matcher matcher = Pattern.compile(FRACTION_MESSAGE_PATTERN).matcher(message);
+            if (matcher.find()) {
+                //  "Use fraction character %1$c (%2$s) instead of %3$s ?";
+                String replace = matcher.group(3);
+                int offset = text.indexOf(replace);
+                if (offset != -1) {
+                    String replaceWith = matcher.group(2);
+                    edits.add(new ReplaceEdit(offset, replace.length(), replaceWith));
                 }
             }
         }

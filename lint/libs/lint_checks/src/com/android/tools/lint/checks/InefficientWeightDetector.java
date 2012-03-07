@@ -157,6 +157,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             }
             if (allChildrenAreLayouts) {
                 context.report(BASELINE_WEIGHTS,
+                        element,
                         context.getLocation(element),
                         "Set android:baselineAligned=\"false\" on this element for better performance",
                         null);
@@ -178,6 +179,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         "Use a %1$s of 0dip instead of %2$s for better performance",
                         dimension, size);
                 context.report(INEFFICIENT_WEIGHT,
+                        element,
                         context.getLocation(sizeNode != null ? sizeNode : weightChild), msg, null);
 
             }

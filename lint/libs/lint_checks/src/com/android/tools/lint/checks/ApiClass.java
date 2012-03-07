@@ -172,6 +172,17 @@ public class ApiClass {
     }
 
     public void addMethod(String name, int since) {
+        // Strip off the method type at the end to ensure that the code which
+        // produces inherited methods doesn't get confused and end up multiple entries.
+        // For example, java/nio/Buffer has the method "array()Ljava/lang/Object;",
+        // and the subclass java/nio/ByteBuffer has the method "array()[B". We want
+        // the lookup on mMethods to associate the ByteBuffer array method to be
+        // considered overriding the Buffer method.
+        int index = name.indexOf(')');
+        if (index != -1) {
+            name = name.substring(0, index + 1);
+        }
+
         Integer i = mMethods.get(name);
         if (i == null || i.intValue() > since) {
             mMethods.put(name, Integer.valueOf(since));
@@ -204,23 +215,47 @@ public class ApiClass {
     }
 
     /**
-     * Returns the set of all members (method and fields), including inherited
+     * Returns the set of all methods, including inherited
      * ones.
      *
      * @param info the api to look up super classes from
-     * @return a set containing all the members (methods and fields)
+     * @return a set containing all the members fields
      */
-    public Set<String> getAllMembers(Api info) {
+    public Set<String> getAllMethods(Api info) {
         Set<String> members = new HashSet<String>(100);
-        addAllMembers(info, members);
+        addAllMethods(info, members);
 
         return members;
     }
 
-    private void addAllMembers(Api info, Set<String> set) {
+    private void addAllMethods(Api info, Set<String> set) {
         for (String method : mMethods.keySet()) {
             set.add(method);
         }
+        for (Pair<String, Integer> superClass : mSuperClasses) {
+            ApiClass clz = info.getClass(superClass.getFirst());
+            assert clz != null : superClass.getSecond();
+            if (clz != null) {
+                clz.addAllMethods(info, set);
+            }
+        }
+    }
+
+    /**
+     * Returns the set of all fields, including inherited
+     * ones.
+     *
+     * @param info the api to look up super classes from
+     * @return a set containing all the fields
+     */
+    public Set<String> getAllFields(Api info) {
+        Set<String> members = new HashSet<String>(100);
+        addAllFields(info, members);
+
+        return members;
+    }
+
+    private void addAllFields(Api info, Set<String> set) {
         for (String field : mFields.keySet()) {
             set.add(field);
         }
@@ -228,8 +263,9 @@ public class ApiClass {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
             if (clz != null) {
-                clz.addAllMembers(info, set);
+                clz.addAllFields(info, set);
             }
         }
     }
+
 }

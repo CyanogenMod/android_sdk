@@ -57,6 +57,11 @@ public class UseCompoundDrawableRefactoringTest extends RefactoringTest {
         checkRefactoring("refactoring/usecompound/compound_all.xml", "@+id/layout3");
     }
 
+    public void test7() throws Exception {
+        // Test converting where a namespace needs to be migrated
+        checkRefactoring("refactoring/usecompound/compound5.xml", "@+id/layout");
+    }
+
     private void checkRefactoring(String basename, String id) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);

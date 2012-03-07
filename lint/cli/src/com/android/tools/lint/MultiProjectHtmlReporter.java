@@ -37,17 +37,17 @@ import java.util.Set;
  * "Multiplexing" reporter which allows output to be split up into a separate
  * report for each separate project. It also adds an overview index.
  */
-class MultiProjectHtmlReporter extends HtmlReporter {
+public class MultiProjectHtmlReporter extends HtmlReporter {
     private static final String INDEX_NAME = "index.html"; //$NON-NLS-1$
     private final File mDir;
 
-    MultiProjectHtmlReporter(Main client, File dir) throws IOException {
+    public MultiProjectHtmlReporter(Main client, File dir) throws IOException {
         super(client, new File(dir, INDEX_NAME));
         mDir = dir;
     }
 
     @Override
-    void write(int errorCount, int warningCount, List<Warning> allIssues) throws IOException {
+    public void write(int errorCount, int warningCount, List<Warning> allIssues) throws IOException {
         Map<Project, List<Warning>> projectToWarnings = new HashMap<Project, List<Warning>>();
         for (Warning warning : allIssues) {
             List<Warning> list = projectToWarnings.get(warning.project);

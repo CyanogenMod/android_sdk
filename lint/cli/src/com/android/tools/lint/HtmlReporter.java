@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -51,8 +52,12 @@ import java.util.Set;
 
 /**
  * A reporter which emits lint results into an HTML report.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
-class HtmlReporter extends Reporter {
+@Beta
+public class HtmlReporter extends Reporter {
     private static boolean USE_HOLO_STYLE = true;
     private static final String CSS = USE_HOLO_STYLE
             ? "hololike.css" : "default.css"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -72,13 +77,20 @@ class HtmlReporter extends Reporter {
     private String mStripPrefix;
     private String mFixUrl;
 
-    HtmlReporter(Main client, File output) throws IOException {
+    /**
+     * Creates a new {@link HtmlReporter}
+     *
+     * @param client the associated client
+     * @param output the output file
+     * @throws IOException if an error occurs
+     */
+    public HtmlReporter(Main client, File output) throws IOException {
         super(client, output);
         mWriter = new BufferedWriter(new FileWriter(output));
     }
 
     @Override
-    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+    public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
         Map<Issue, String> missing = computeMissingIssues(issues);
 
         mWriter.write(
@@ -406,7 +418,7 @@ class HtmlReporter extends Reporter {
                     continue;
                 }
 
-                if (!issue.isEnabledByDefault()) {
+                if (!issue.isEnabledByDefault() && !mClient.isAllEnabled()) {
                     map.put(issue, "Default");
                     continue;
                 }
