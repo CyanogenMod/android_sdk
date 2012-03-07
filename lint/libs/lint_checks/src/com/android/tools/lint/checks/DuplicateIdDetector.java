@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
 import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
@@ -34,6 +35,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -41,14 +44,16 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -58,6 +63,13 @@ public class DuplicateIdDetector extends LayoutDetector {
     private Set<String> mIds;
     private Map<File, Set<String>> mFileToIds;
     private Map<File, List<String>> mIncludes;
+
+    // Data structures used for location collection in phase 2
+
+    // Map from include files to include names to pairs of message and location
+    // Map from file defining id, to the id to be defined, to a pair of location and message
+    private Multimap<File, Multimap<String, Occurrence>> mLocations;
+    private List<Occurrence> mErrors;
 
     /** The main issue discovered by this detector */
     public static final Issue WITHIN_LAYOUT = Issue.create(
@@ -112,31 +124,79 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     @Override
     public void beforeCheckFile(Context context) {
-        mIds = new HashSet<String>();
+        if (context.getPhase() == 1) {
+            mIds = new HashSet<String>();
+        }
     }
 
     @Override
     public void afterCheckFile(Context context) {
-        // Store this layout's set of ids for full project analysis in afterCheckProject
-        mFileToIds.put(context.file, mIds);
+        if (context.getPhase() == 1) {
+            // Store this layout's set of ids for full project analysis in afterCheckProject
+            mFileToIds.put(context.file, mIds);
 
-        mIds = null;
+            mIds = null;
+        }
     }
 
     @Override
     public void beforeCheckProject(Context context) {
-        mFileToIds = new HashMap<File, Set<String>>();
-        mIncludes = new HashMap<File, List<String>>();
+        if (context.getPhase() == 1) {
+            mFileToIds = new HashMap<File, Set<String>>();
+            mIncludes = new HashMap<File, List<String>>();
+        }
     }
 
     @Override
     public void afterCheckProject(Context context) {
-        // Look for duplicates
-        if (mIncludes.size() > 0) {
-            // Traverse all the include chains and ensure that there are no duplicates
-            // across.
-            // First perform a topological sort such such
-            checkForIncludeDuplicates(context);
+        if (context.getPhase() == 1) {
+            // Look for duplicates
+            if (mIncludes.size() > 0) {
+                // Traverse all the include chains and ensure that there are no duplicates
+                // across.
+                if (context.isEnabled(CROSS_LAYOUT)
+                        && context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                    IncludeGraph graph = new IncludeGraph(context);
+                    graph.check();
+                }
+            }
+        } else {
+            assert context.getPhase() == 2;
+
+            if (mErrors != null) {
+                for (Occurrence occurrence : mErrors) {
+                    //assert location != null : occurrence;
+                    Location location = occurrence.location;
+                    if (location == null) {
+                        location = Location.create(occurrence.file);
+                    } else {
+                        Object clientData = location.getClientData();
+                        if (clientData instanceof Node) {
+                            Node node = (Node) clientData;
+                            if (context.getDriver().isSuppressed(CROSS_LAYOUT, node)) {
+                                continue;
+                            }
+                        }
+                    }
+
+                    List<Occurrence> sorted = new ArrayList<Occurrence>();
+                    Occurrence curr = occurrence.next;
+                    while (curr != null) {
+                        sorted.add(curr);
+                        curr = curr.next;
+                    }
+                    Collections.sort(sorted);
+                    Location prev = location;
+                    for (Occurrence o : sorted) {
+                        if (o.location != null) {
+                            prev.setSecondary(o.location);
+                            prev = o.location;
+                        }
+                    }
+
+                    context.report(CROSS_LAYOUT, location, occurrence.message, null);
+                }
+            }
         }
     }
 
@@ -149,267 +209,84 @@ public class DuplicateIdDetector extends LayoutDetector {
         if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
             layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
 
-            List<String> to = mIncludes.get(context.file);
-            if (to == null) {
-                to = new ArrayList<String>();
-                mIncludes.put(context.file, to);
-            }
-            to.add(layout);
-        }
-    }
-
-    private void checkForIncludeDuplicates(Context context) {
-        if (!context.isEnabled(CROSS_LAYOUT) ||
-                !context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
-            return;
-        }
-
-        // Consider this scenario:
-        //     first/foo.xml: include @layout/second
-        //     first-land/foo.xml: define @+id/foo
-        //     second-land/bar.xml define @+id/bar
-        //     second-port/bar.xml define @+id/foo
-        // Here there's no problem, because even though @layout/first includes @layout/second,
-        // the only duplicate is "foo" which appears only in the combination first-land and
-        // second-port which won't be matched up together.
-        // In this analysis we won't go that far; we'll just look at the OVERALL set of
-        // includes. In other words, we'll consider the set of ids defined by "first" to
-        // be {"foo"}, and the set of ids defined by "second" to be {"foo","bar"}, and
-        // so there is a potential conflict.
-
-        // Map from layout resource name (instead of file) to referenced layouts.
-        // Note: Unlike mIncludes, this merges all the configurations for a single layout
-        Map<String, Set<String>> resourceToLayouts =
-                new HashMap<String, Set<String>>(mIncludes.size());
-        Map<String, Set<String>> resourceToIds =
-                new HashMap<String, Set<String>>(mIncludes.size());
-
-        for (Entry<File, List<String>> entry : mIncludes.entrySet()) {
-            File file = entry.getKey();
-            String from = LintUtils.getLayoutName(file);
-
-            // Merge include lists
-            List<String> layouts = entry.getValue();
-            Set<String> set = resourceToLayouts.get(from);
-            if (set == null) {
-                resourceToLayouts.put(from, new HashSet<String>(layouts));
-            } else {
-                set.addAll(layouts);
-            }
-        }
-
-        // Merge id maps
-        for (Entry<File, Set<String>> entry : mFileToIds.entrySet()) {
-            File file = entry.getKey();
-            String from = LintUtils.getLayoutName(file);
-            Set<String> ids = entry.getValue();
-            if (ids != null) {
-                Set<String> set = resourceToIds.get(from);
-                if (set == null) {
-                    // I might be able to just reuse the set instance here instead of duplicating
-                    resourceToIds.put(from, new HashSet<String>(ids));
-                } else {
-                    set.addAll(ids);
+            if (context.getPhase() == 1) {
+                List<String> to = mIncludes.get(context.file);
+                if (to == null) {
+                    to = new ArrayList<String>();
+                    mIncludes.put(context.file, to);
                 }
-            }
-        }
-
-        // Set of layouts that are included from somewhere else. We will use
-        Set<String> included = new HashSet<String>();
-        for (Set<String> s : resourceToLayouts.values()) {
-            included.addAll(s);
-        }
-
-        // Compute the set of layouts which include some other layouts, but which are not
-        // included themselves, meaning they are the "roots" to start searching through
-        // include chains from
-        Set<String> entryPoints = new HashSet<String>(resourceToLayouts.keySet());
-        entryPoints.removeAll(included);
-
-        // Perform DFS on the include graph and look for a cycle; if we find one, produce
-        // a chain of includes on the way back to show to the user
-        HashMap<String, Set<String>> mergedIds = new HashMap<String, Set<String>>();
-        Set<String> visiting = new HashSet<String>();
-        for (String from : entryPoints) {
-            visiting.clear();
-            getMergedIds(context, from, visiting, resourceToLayouts, resourceToIds, mergedIds);
-        }
-    }
-
-    /**
-     * Computes the complete set of ids in a layout (including included layouts,
-     * transitively) and emits warnings when it detects that there is a
-     * duplication
-     */
-    private Set<String> getMergedIds(
-            Context context,
-            String from,
-            Set<String> visiting,
-            Map<String, Set<String>> resourceToLayouts,
-            Map<String, Set<String>> resourceToIds,
-            Map<String, Set<String>> mergedIds) {
-
-        Set<String> merged = mergedIds.get(from);
-        if (merged == null) {
-            visiting.add(from);
-
-            Set<String> currentIds = resourceToIds.get(from);
-            if (currentIds != null && currentIds.size() > 0) {
-                merged = new HashSet<String>(currentIds);
+                to.add(layout);
             } else {
-                merged = new HashSet<String>();
-            }
-            Set<String> includes = resourceToLayouts.get(from);
-            if (includes != null && includes.size() > 0) {
-                for (String include : includes) {
-                    if (!visiting.contains(include)) {
-                        Set<String> otherIds = getMergedIds(context, include, visiting,
-                                resourceToLayouts, resourceToIds, mergedIds);
-                        // Look for overlap
-                        for (String id : otherIds) {
-                            if (merged.contains(id)) {
-                                // Find the (first) file among the various configuration variations
-                                // which defines the id
-                                File first = null;
-                                File second = null;
-                                for (Map.Entry<File, Set<String>> entry : mFileToIds.entrySet()) {
-                                    File file = entry.getKey();
-                                    String name = LintUtils.getLayoutName(file);
-                                    if (name.equals(from)) {
-                                        Set<String> fileIds = entry.getValue();
-                                        if (fileIds.contains(id)) {
-                                            first = file;
-                                        }
-                                    }
-                                    if (name.equals(include)) {
-                                        Set<String> fileIds = entry.getValue();
-                                        if (fileIds.contains(id)) {
-                                            second = file;
-                                        }
-                                    }
-                                }
-                                if (first == null) {
-                                    for (Map.Entry<File, List<String>> entry
-                                            : mIncludes.entrySet()) {
-                                        File file = entry.getKey();
-                                        String name = LintUtils.getLayoutName(file);
-                                        if (name.equals(from)) {
-                                            first = file;
-                                        }
-                                    }
-                                }
+                assert context.getPhase() == 2;
 
-                                String includer = second != null ? second.getName() : include;
-                                List<String> chain = new ArrayList<String>();
-                                chain.add(from);
-                                findOrigin(chain, from, id, new HashSet<String>(),
-                                        resourceToLayouts, resourceToIds);
-                                reportError(context, id, first, second, includer, chain);
-                            } else {
-                                merged.add(id);
+                Collection<Multimap<String, Occurrence>> maps = mLocations.get(context.file);
+                if (maps != null && maps.size() > 0) {
+                    for (Multimap<String, Occurrence> map : maps) {
+                        if (maps.size() > 0) {
+                            Collection<Occurrence> occurrences = map.get(layout);
+                            if (occurrences != null && occurrences.size() > 0) {
+                                for (Occurrence occurrence : occurrences) {
+                                    Location location = context.getLocation(element);
+                                    location.setClientData(element);
+                                    location.setMessage(occurrence.message);
+                                    location.setSecondary(occurrence.location);
+                                    occurrence.location = location;
+                                }
                             }
                         }
                     }
                 }
             }
-            mergedIds.put(from, merged);
-            visiting.remove(from);
         }
-
-        return merged;
-    }
-
-
-    private void reportError(Context context, String id, File first, File second, String includer,
-            List<String> chain) {
-        String msg = null;
-        if (chain.size() > 2) { // < 2: it's a direct include and therefore obvious
-            StringBuilder sb = new StringBuilder();
-            for (String layout : chain) {
-                if (sb.length() > 0) {
-                    sb.append(" => ");
-                }
-                sb.append(layout);
-            }
-            msg = String.format(
-                "Duplicate id %1$s, already defined in layout %2$s which is included in this layout (%3$s)",
-                id, includer, sb.toString());
-        } else {
-            msg = String.format(
-                "Duplicate id %1$s, already defined in layout %2$s which is included in this layout",
-                id, includer);
-        }
-
-        Location location = Location.create(first);
-        if (second != null) {
-            // Also record the secondary location
-            Location secondLocation = Location.create(second);
-            secondLocation.setMessage(String.format("%1$s originally defined here", id));
-            location.setSecondary(secondLocation);
-        }
-        // TODO: Get applicable scope?
-        context.report(CROSS_LAYOUT, location, msg, null);
-    }
-
-    /**
-     * Compute the include chain which provided id into this layout. We could
-     * have tracked this while we were already performing a depth first search,
-     * but we're choosing to be faster before we know there's an error and take
-     * ore time to produce diagnostics if an actual error is found.
-     */
-    private boolean findOrigin(
-            List<String> chain,
-            String from,
-            String id,
-            Set<String> visiting,
-            Map<String, Set<String>> resourceToLayouts,
-            Map<String, Set<String>> resourceToIds) {
-        visiting.add(from);
-
-        Set<String> includes = resourceToLayouts.get(from);
-        if (includes != null && includes.size() > 0) {
-            for (String include : includes) {
-                if (visiting.contains(include)) {
-                    return false;
-                }
-
-                Set<String> ids = resourceToIds.get(include);
-                if (ids != null && ids.contains(id)) {
-                    chain.add(include);
-                    return true;
-                }
-
-                if (findOrigin(chain, include, id, visiting, resourceToLayouts, resourceToIds)) {
-                    chain.add(include);
-                    return true;
-                }
-            }
-        }
-
-        visiting.remove(from);
-
-        return false;
     }
 
     @Override
     public void visitAttribute(XmlContext context, Attr attribute) {
         assert attribute.getName().equals(ATTR_ID) || attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
-        if (mIds.contains(id)) {
-            Location location = context.getLocation(attribute);
+        if (context.getPhase() == 1) {
+            if (mIds.contains(id)) {
+                Location location = context.getLocation(attribute);
 
-            Attr first = findIdAttribute(attribute.getOwnerDocument(), id);
-            if (first != null && first != attribute) {
-                Location secondLocation = context.getLocation(first);
-                secondLocation.setMessage(String.format("%1$s originally defined here", id));
-                location.setSecondary(secondLocation);
+                Attr first = findIdAttribute(attribute.getOwnerDocument(), id);
+                if (first != null && first != attribute) {
+                    Location secondLocation = context.getLocation(first);
+                    secondLocation.setMessage(String.format("%1$s originally defined here", id));
+                    location.setSecondary(secondLocation);
+                }
+
+                context.report(WITHIN_LAYOUT, attribute, location,
+                        String.format("Duplicate id %1$s, already defined earlier in this layout",
+                                id), null);
+            } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+                // Skip id's on include tags
+                if (attribute.getOwnerElement().getTagName().equals(INCLUDE)) {
+                    return;
+                }
+
+                mIds.add(id);
             }
-
-            context.report(WITHIN_LAYOUT, attribute, location,
-                    String.format("Duplicate id %1$s, already defined earlier in this layout",
-                            id), null);
-        } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
-            mIds.add(id);
+        } else {
+            Collection<Multimap<String, Occurrence>> maps = mLocations.get(context.file);
+            if (maps != null && maps.size() > 0) {
+                for (Multimap<String, Occurrence> map : maps) {
+                    if (maps.size() > 0) {
+                        Collection<Occurrence> occurrences = map.get(id);
+                        if (occurrences != null && occurrences.size() > 0) {
+                            for (Occurrence occurrence : occurrences) {
+                                if (context.getDriver().isSuppressed(CROSS_LAYOUT, attribute)) {
+                                    return;
+                                }
+                                Location location = context.getLocation(attribute);
+                                location.setClientData(attribute);
+                                location.setMessage(occurrence.message);
+                                location.setSecondary(occurrence.location);
+                                occurrence.location = location;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -432,5 +309,358 @@ public class DuplicateIdDetector extends LayoutDetector {
         }
 
         return null;
+    }
+
+    /** Include Graph Node */
+    private static class Layout {
+        private File mFile;
+        private List<Layout> mIncludes;
+        private List<Layout> mIncludedBy;
+        private Set<String> mIds;
+
+        Layout(File file, Set<String> ids) {
+            mFile = file;
+            mIds = ids;
+        }
+
+        Set<String> getIds() {
+            return mIds;
+        }
+
+        String getLayoutName() {
+            return LintUtils.getLayoutName(mFile);
+        }
+
+        String getDisplayName() {
+            return mFile.getParentFile().getName() + File.separator + mFile.getName();
+        }
+
+        void include(Layout target) {
+            if (mIncludes == null) {
+                mIncludes = new ArrayList<Layout>();
+            }
+            mIncludes.add(target);
+
+            if (target.mIncludedBy == null) {
+                target.mIncludedBy = new ArrayList<Layout>();
+            }
+            target.mIncludedBy.add(this);
+        }
+
+        boolean isIncluded() {
+            return mIncludedBy != null && mIncludedBy.size() > 0;
+        }
+
+        File getFile() {
+            return mFile;
+        }
+
+        List<Layout> getIncludes() {
+            return mIncludes;
+        }
+
+        @Override
+        public String toString() {
+            return getDisplayName();
+        }
+    }
+
+    private class IncludeGraph {
+        private final Context mContext;
+        private final Map<File, Layout> mFileToLayout;
+
+        public IncludeGraph(Context context) {
+            mContext = context;
+
+            // Produce a DAG of the files to be included, and compute edges to all eligible
+            // includes.
+            // Then visit the DAG and whenever you find a duplicate emit a warning about the
+            // include path which reached it.
+            mFileToLayout = new HashMap<File, Layout>(2 * mIncludes.size());
+            for (File file : mIncludes.keySet()) {
+                if (!mFileToLayout.containsKey(file)) {
+                    mFileToLayout.put(file, new Layout(file, mFileToIds.get(file)));
+                }
+            }
+            for (File file : mFileToIds.keySet()) {
+                Set<String> ids = mFileToIds.get(file);
+                if (ids != null && ids.size() > 0) {
+                    if (!mFileToLayout.containsKey(file)) {
+                        mFileToLayout.put(file, new Layout(file, ids));
+                    }
+                }
+            }
+            Multimap<String, Layout> nameToLayout =
+                    ArrayListMultimap.create(mFileToLayout.size(), 4);
+            for (File file : mFileToLayout.keySet()) {
+                String name = LintUtils.getLayoutName(file);
+                nameToLayout.put(name, mFileToLayout.get(file));
+            }
+
+            // Build up the DAG
+            for (File file : mIncludes.keySet()) {
+                Layout from = mFileToLayout.get(file);
+                assert from != null : file;
+
+                List<String> includedLayouts = mIncludes.get(file);
+                for (String name : includedLayouts) {
+                    Collection<Layout> layouts = nameToLayout.get(name);
+                    if (layouts != null && layouts.size() > 0) {
+                        if (layouts.size() == 1) {
+                            from.include(layouts.iterator().next());
+                        } else {
+                            // See if we have an obvious match
+                            File folder = from.getFile().getParentFile();
+                            File candidate = new File(folder, name + DOT_XML);
+                            Layout candidateLayout = mFileToLayout.get(candidate);
+                            if (candidateLayout != null) {
+                                from.include(candidateLayout);
+                            } else if (mFileToIds.containsKey(candidate)) {
+                                // We had an entry in mFileToIds, but not a layout: this
+                                // means that the file exists, but had no includes or ids.
+                                // This can't be a valid match: there is a layout that we know
+                                // the include will pick, but it has no includes (to other layouts)
+                                // and no ids, so no need to look at it
+                                continue;
+                            } else {
+                                for (Layout to : layouts) {
+                                    // Decide if the two targets are compatible
+                                    if (isCompatible(from, to)) {
+                                        from.include(to);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // The layout is including some layout which has no ids or other includes
+                        // so it's not relevant for a duplicate id search
+                        continue;
+                    }
+                }
+            }
+        }
+
+        /** Determine whether two layouts are compatible. They are not if they (for example)
+         * specify conflicting qualifiers such as {@code -land} and {@code -port}.
+         * @param from the include from
+         * @param to the include to
+         * @return true if the two are compatible */
+        boolean isCompatible(Layout from, Layout to) {
+            File fromFolder = from.mFile.getParentFile();
+            File toFolder = to.mFile.getParentFile();
+            if (fromFolder.equals(toFolder)) {
+                return true;
+            }
+
+            String[] fromQualifiers = fromFolder.getName().split("-"); //$NON-NLS-1$
+            String[] toQualifiers = toFolder.getName().split("-"); //$NON-NLS-1$
+
+            if (isPortrait(fromQualifiers) != isPortrait(toQualifiers)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        private boolean isPortrait(String[] qualifiers) {
+            for (String qualifier : qualifiers) {
+                if (qualifier.equals("port")) { //$NON-NLS-1$
+                    return true;
+                } else if (qualifier.equals("land")) { //$NON-NLS-1$
+                    return false;
+                }
+            }
+
+            return true; // it's the default
+        }
+
+        public void check() {
+            // Visit the DAG, looking for conflicts
+            for (Layout layout : mFileToLayout.values()) {
+                if (!layout.isIncluded()) { // Only check from "root" nodes
+                    Deque<Layout> stack = new ArrayDeque<Layout>();
+                    getIds(layout, stack, new HashSet<Layout>());
+                }
+            }
+        }
+
+        /**
+         * Computes the cumulative set of ids used in a given layout. We can't
+         * just depth-first-search the graph and check the set of ids
+         * encountered along the way, because we need to detect when multiple
+         * includes contribute the same ids. For example, if a file is included
+         * more than once, that would result in duplicates.
+         */
+        private Set<String> getIds(Layout layout, Deque<Layout> stack, Set<Layout> seen) {
+            seen.add(layout);
+
+            Set<String> layoutIds = layout.getIds();
+            List<Layout> includes = layout.getIncludes();
+            if (includes != null) {
+                Set<String> ids = new HashSet<String>();
+                if (layoutIds != null) {
+                    ids.addAll(layoutIds);
+                }
+
+                stack.push(layout);
+
+                Multimap<String, Set<String>> nameToIds =
+                        ArrayListMultimap.create(includes.size(), 4);
+
+                for (Layout included : includes) {
+                    if (seen.contains(included)) {
+                        continue;
+                    }
+                    Set<String> includedIds = getIds(included, stack, seen);
+                    if (includedIds != null) {
+                        String layoutName = included.getLayoutName();
+
+                        idCheck:
+                        for (String id : includedIds) {
+                            if (ids.contains(id)) {
+                                Collection<Set<String>> idSets = nameToIds.get(layoutName);
+                                if (idSets != null) {
+                                    for (Set<String> siblingIds : idSets) {
+                                        if (siblingIds.contains(id)) {
+                                            // The id reference was added by a sibling,
+                                            // so no need to complain (again)
+                                            continue idCheck;
+                                        }
+                                    }
+                                }
+
+                                // Duplicate! Record location request for new phase.
+                                if (mLocations == null) {
+                                    mErrors = new ArrayList<Occurrence>();
+                                    mLocations = ArrayListMultimap.create();
+                                    mContext.getDriver().requestRepeat(DuplicateIdDetector.this,
+                                            Scope.ALL_RESOURCES_SCOPE);
+                                }
+
+                                Map<Layout, Occurrence> occurrences =
+                                        new HashMap<Layout, Occurrence>();
+                                findId(layout, id, new ArrayDeque<Layout>(), occurrences,
+                                        new HashSet<Layout>());
+                                assert occurrences.size() >= 2;
+
+                                // Stash a request to find the given include
+                                Collection<Occurrence> values = occurrences.values();
+                                List<Occurrence> sorted = new ArrayList<Occurrence>(values);
+                                Collections.sort(sorted);
+                                String msg = String.format(
+                                        "Duplicate id %1$s, defined or included multiple " +
+                                        "times in %2$s: %3$s",
+                                        id, layout.getDisplayName(),
+                                        sorted.toString());
+
+                                // Store location request for the <include> tag
+                                Occurrence primary = new Occurrence(layout.getFile(), msg, null);
+                                Multimap<String, Occurrence> m = ArrayListMultimap.create();
+                                m.put(layoutName, primary);
+                                mLocations.put(layout.getFile(), m);
+                                mErrors.add(primary);
+
+                                Occurrence prev = primary;
+
+                                // Now store all the included occurrences of the id
+                                for (Occurrence occurrence : values) {
+                                    if (occurrence.file.equals(layout.getFile())) {
+                                        occurrence.message = "Defined here";
+                                    } else {
+                                        occurrence.message = String.format(
+                                                "Defined here, included via %1$s",
+                                                occurrence.includePath);
+                                    }
+
+                                    m = ArrayListMultimap.create();
+                                    m.put(id, occurrence);
+                                    mLocations.put(occurrence.file, m);
+
+                                    // Link locations together
+                                    prev.next = occurrence;
+                                    prev = occurrence;
+                                }
+                            }
+                            ids.add(id);
+                        }
+
+                        // Store these ids such that on a conflict, we can tell when
+                        // an id was added by a single variation of this file
+                        nameToIds.put(layoutName, includedIds);
+                    }
+                }
+                Layout visited = stack.pop();
+                assert visited == layout;
+                return ids;
+            } else {
+                return layoutIds;
+            }
+        }
+
+        private void findId(Layout layout, String id, Deque<Layout> stack,
+                Map<Layout, Occurrence> occurrences, Set<Layout> seen) {
+            seen.add(layout);
+
+            Set<String> layoutIds = layout.getIds();
+            if (layoutIds != null && layoutIds.contains(id)) {
+                StringBuilder path = new StringBuilder();
+
+                if (!stack.isEmpty()) {
+                    Iterator<Layout> iterator = stack.descendingIterator();
+                    while (iterator.hasNext()) {
+                        path.append(iterator.next().getDisplayName());
+                        path.append(" => ");
+                    }
+                }
+                path.append(layout.getDisplayName());
+                path.append(" defines ");
+                path.append(id);
+
+                assert occurrences.get(layout) == null : id + "," + layout;
+                occurrences.put(layout, new Occurrence(layout.getFile(), null, path.toString()));
+            }
+
+            List<Layout> includes = layout.getIncludes();
+            if (includes != null) {
+                stack.push(layout);
+                for (Layout included : includes) {
+                    if (!seen.contains(included)) {
+                        findId(included, id, stack, occurrences, seen);
+                    }
+                }
+                Layout visited = stack.pop();
+                assert visited == layout;
+            }
+        }
+    }
+
+    private static class Occurrence implements Comparable<Occurrence> {
+        public Occurrence next;
+        public File file;
+        public Location location;
+        public String message;
+        public String includePath;
+
+        public Occurrence(File file, String message, String includePath) {
+            this.file = file;
+            this.message = message;
+            this.includePath = includePath;
+        }
+
+        @Override
+        public String toString() {
+            return includePath != null ? includePath : message;
+        }
+
+        @Override
+        public int compareTo(Occurrence other) {
+            // First sort by length, then sort by name
+            int delta = toString().length() - other.toString().length();
+            if (delta != 0) {
+                return delta;
+            }
+
+            return toString().compareTo(other.toString());
+        }
     }
 }
