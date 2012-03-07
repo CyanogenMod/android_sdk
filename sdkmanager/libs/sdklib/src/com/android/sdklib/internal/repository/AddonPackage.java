@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
@@ -178,7 +179,8 @@ public class AddonPackage extends Package
 
         // For a missing id, we simply use a sanitized version of the display vendor
         if (vendorId.length() == 0) {
-            vendorId = sanitizeDisplayToNameId(vendor.length() > 0 ? vendor : vendorDisp);
+            boolean hasVendor = vendor.length() > 0;
+            vendorId = sanitizeDisplayToNameId(hasVendor ? vendor : vendorDisp);
         }
 
         assert vendorId.length() > 0;
@@ -267,7 +269,8 @@ public class AddonPackage extends Package
 
         // For a missing id, we simply use a sanitized version of the display vendor
         if (vendorId.length() == 0) {
-            vendorId = sanitizeDisplayToNameId(vendor.length() > 0 ? vendor : vendorDisp);
+            boolean hasVendor = vendor.length() > 0;
+            vendorId = sanitizeDisplayToNameId(hasVendor ? vendor : vendorDisp);
         }
 
         assert vendorId.length() > 0;
@@ -398,22 +401,22 @@ public class AddonPackage extends Package
     }
 
     /** Returns the vendor id, a string, for add-on packages. */
-    public String getVendorId() {
+    public @NonNull String getVendorId() {
         return mVendorId;
     }
 
     /** Returns the vendor, a string for display purposes. */
-    public String getDisplayVendor() {
+    public @NonNull String getDisplayVendor() {
         return mVendorDisplay;
     }
 
     /** Returns the name id, a string, for add-on packages or for libraries. */
-    public String getNameId() {
+    public @NonNull String getNameId() {
         return mNameId;
     }
 
     /** Returns the name, a string for display purposes. */
-    public String getDisplayName() {
+    public @NonNull String getDisplayName() {
         return mDisplayName;
     }
 
@@ -423,12 +426,12 @@ public class AddonPackage extends Package
      * An add-on has the same {@link AndroidVersion} as the platform it depends on.
      */
     @Override
-    public AndroidVersion getVersion() {
+    public @NonNull AndroidVersion getVersion() {
         return mVersion;
     }
 
     /** Returns the libs defined in this add-on. Can be an empty array but not null. */
-    public Lib[] getLibs() {
+    public @NonNull Lib[] getLibs() {
         return mLibs;
     }
 
@@ -445,7 +448,7 @@ public class AddonPackage extends Package
      * @since sdk-addon-2.xsd
      */
     @Override
-    public Pair<Integer, Integer> getLayoutlibVersion() {
+    public @NonNull Pair<Integer, Integer> getLayoutlibVersion() {
         return mLayoutlibVersion.getLayoutlibVersion();
     }
 
@@ -456,7 +459,7 @@ public class AddonPackage extends Package
      * {@inheritDoc}
      */
     @Override
-    public String installId() {
+    public @NonNull String installId() {
         return encodeAddonName();
     }
 
@@ -578,16 +581,13 @@ public class AddonPackage extends Package
         name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
 
-        // NOTE: ideally we would want to trim leading and trailing _ but in fact
-        // this MUST NOT be done, otherwise it will break <vendor-id> tags that were
-        // auto converted from the old <vendor> tag when switching from the addon
-        // schema v3 to v4.
-        // if (name.length() > 1) {
-        //     name = name.replaceAll("^_+", "");            //$NON-NLS-1$ //$NON-NLS-2$
-        // }
-        // if (name.length() > 1) {
-        //     name = name.replaceAll("_+$", "");            //$NON-NLS-1$ //$NON-NLS-2$
-        // }
+        // Trim leading and trailing underscores
+        if (name.length() > 1) {
+            name = name.replaceAll("^_+", "");            //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        if (name.length() > 1) {
+            name = name.replaceAll("_+$", "");            //$NON-NLS-1$ //$NON-NLS-2$
+        }
         return name;
     }
 
@@ -597,9 +597,20 @@ public class AddonPackage extends Package
             AddonPackage newPkg = (AddonPackage)pkg;
 
             // check they are the same add-on.
-            return getNameId().equals(newPkg.getNameId()) &&
-                    getVendorId().equals(newPkg.getVendorId()) &&
-                    getVersion().equals(newPkg.getVersion());
+            if (getNameId().equals(newPkg.getNameId()) &&
+                    getVersion().equals(newPkg.getVersion())) {
+                // Check the vendor-id field.
+                if (getVendorId().equals(newPkg.getVendorId())) {
+                    return true;
+                }
+
+                // When loading addons from the v3 schema that only had a <vendor>
+                // field, the vendor field has been converted to vendor-display so
+                // as a transition mechanism we should test this also.
+                // TODO: in a couple iterations of the SDK Manager, remove this check
+                // and only compare using the vendor-id field.
+                return getDisplayVendor().equals(newPkg.getDisplayVendor());
+            }
         }
 
         return false;
