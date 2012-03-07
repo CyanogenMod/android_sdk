@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -29,17 +30,28 @@ import java.util.List;
 
 /**
  * A reporter which emits lint results into an XML report.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
-class XmlReporter extends Reporter {
+@Beta
+public class XmlReporter extends Reporter {
     private final Writer mWriter;
 
-    XmlReporter(Main client, File output) throws IOException {
+    /**
+     * Constructs a new {@link XmlReporter}
+     *
+     * @param client the client
+     * @param output the output file
+     * @throws IOException if an error occurs
+     */
+    public XmlReporter(Main client, File output) throws IOException {
         super(client, output);
         mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
     }
 
     @Override
-    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+    public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
         mWriter.write(
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +     //$NON-NLS-1$
                 "<issues>\n");                                       //$NON-NLS-1$

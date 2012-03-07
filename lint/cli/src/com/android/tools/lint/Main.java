@@ -78,6 +78,7 @@ public class Main extends LintClient {
     private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
+    private static final String ARG_EXITCODE   = "--exitcode";     //$NON-NLS-1$
 
     private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
     // GCC style flag names for options
@@ -100,7 +101,8 @@ public class Main extends LintClient {
     private Set<String> mEnabled = new HashSet<String>();
     /** If non-null, only run the specified checks (possibly modified by enable/disables) */
     private Set<String> mCheck = null;
-    private boolean mFatal;
+    private boolean mHasErrors;
+    private boolean mSetExitCode;
     private boolean mFullPath;
     private int mErrorCount;
     private int mWarningCount;
@@ -228,6 +230,8 @@ public class Main extends LintClient {
                 mQuiet = true;
             } else if (arg.equals(ARG_NOLINES)) {
                 mShowLines = false;
+            } else if (arg.equals(ARG_EXITCODE)) {
+                mSetExitCode = true;
             } else if (arg.equals(ARG_VERSION)) {
                 printVersion();
                 System.exit(0);
@@ -489,7 +493,7 @@ public class Main extends LintClient {
             System.exit(ERRNO_INVALIDARGS);
         }
 
-        System.exit(mFatal ? ERRNO_ERRORS : 0);
+        System.exit(mSetExitCode ? (mHasErrors ? ERRNO_ERRORS : 0) : 0);
     }
 
     /**
@@ -805,8 +809,10 @@ public class Main extends LintClient {
             ARG_HELP + " <topic>", "Help on the given topic, such as \"suppress\".",
             ARG_LISTIDS, "List the available issue id's and exit.",
             ARG_VERSION, "Output version information and exit.",
+            ARG_EXITCODE, "Set the exit code to " + ERRNO_ERRORS + " if errors are found.",
             ARG_SHOW, "List available issues along with full explanations.",
             ARG_SHOW + " <ids>", "Show full explanations for the given list of issue id's.",
+
             "", "\nEnabled Checks:",
             ARG_DISABLE + " <list>", "Disable the list of categories or " +
                 "specific issue id's. The list should be a comma-separated list of issue " +
@@ -823,7 +829,9 @@ public class Main extends LintClient {
             ARG_CONFIG + " <filename>", "Use the given configuration file to " +
                     "determine whether issues are enabled or disabled. If a project contains " +
                     "a lint.xml file, then this config file will be used as a fallback.",
-                    "", "\nOutput Options:",
+
+
+            "", "\nOutput Options:",
             ARG_QUIET, "Don't show progress.",
             ARG_FULLPATH, "Use full paths in the error output.",
             ARG_SHOWALL, "Do not truncate long messages, lists of alternate locations, etc.",
@@ -840,15 +848,14 @@ public class Main extends LintClient {
                 "to files, use " + ARG_URL + " " + VALUE_NONE,
             ARG_SIMPLEHTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
-        });
 
-        out.println("\nExit Status:");
-        printUsage(out, new String[] {
-                Integer.toString(ERRNO_ERRORS),      "Lint errors detected.",
-                Integer.toString(ERRNO_USAGE),       "Lint usage.",
-                Integer.toString(ERRNO_EXISTS),      "Cannot clobber existing file.",
-                Integer.toString(ERRNO_HELP),        "Lint help.",
-                Integer.toString(ERRNO_INVALIDARGS), "Invalid command-line argument.",
+            "", "\nExit Status:",
+            "0",                                 "Success.",
+            Integer.toString(ERRNO_ERRORS),      "Lint errors detected.",
+            Integer.toString(ERRNO_USAGE),       "Lint usage.",
+            Integer.toString(ERRNO_EXISTS),      "Cannot clobber existing file.",
+            Integer.toString(ERRNO_HELP),        "Lint help.",
+            Integer.toString(ERRNO_INVALIDARGS), "Invalid command-line argument.",
         });
     }
 
@@ -936,12 +943,12 @@ public class Main extends LintClient {
         }
 
         if (severity == Severity.FATAL) {
-            mFatal = true;
             // From here on, treat the fatal error as an error such that we don't display
             // both "Fatal:" and "Error:" etc in the error output.
             severity = Severity.ERROR;
         }
         if (severity == Severity.ERROR) {
+            mHasErrors = true;
             mErrorCount++;
         } else {
             mWarningCount++;
@@ -1096,11 +1103,14 @@ public class Main extends LintClient {
                 // Detectors shouldn't be returning ignore as a default severity,
                 // but in case they do, force it up to warning here to ensure that
                 // it's run
-                if (severity == Severity.IGNORE && severity == issue.getDefaultSeverity()) {
-                    return Severity.WARNING;
-                } else {
-                    return severity;
+                if (severity == Severity.IGNORE) {
+                    severity = issue.getDefaultSeverity();
+                    if (severity == Severity.IGNORE) {
+                        severity = Severity.WARNING;
+                    }
                 }
+
+                return severity;
             }
 
             if (mCheck != null && issue != LINT_ERROR && issue != PARSER_ERROR) {
@@ -1160,6 +1170,11 @@ public class Main extends LintClient {
         }
 
         return path;
+    }
+
+    /** Returns whether all warnings are enabled, including those disabled by default */
+    boolean isAllEnabled() {
+        return mWarnAll;
     }
 
     /** Returns the issue registry used by this client */

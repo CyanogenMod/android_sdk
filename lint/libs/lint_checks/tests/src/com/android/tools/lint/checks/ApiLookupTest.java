@@ -57,6 +57,11 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertTrue(mDb.getCallVersion("java/lang/Object", "getClass", "()") <= 1);
     }
 
+    public void testIssue26467() {
+        assertTrue(mDb.getCallVersion("java/nio/ByteBuffer", "array", "()") <= 1);
+        assertEquals(9, mDb.getCallVersion("java/nio/Buffer", "array", "()"));
+    }
+
     @Override
     protected Detector getDetector() {
         fail("This is not used in the ApiDatabase test");

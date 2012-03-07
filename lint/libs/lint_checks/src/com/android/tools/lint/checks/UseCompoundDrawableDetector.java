@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WEIGHT;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
@@ -86,6 +87,12 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                 ((second.getTagName().equals(IMAGE_VIEW) &&
                         first.getTagName().equals(TEXT_VIEW) &&
                         !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
+                // If the layout has a background, ignore since it would disappear from
+                // the TextView
+                if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
+                    return;
+                }
+
                 context.report(ISSUE, element, context.getLocation(element),
                         "This tag and its children can be replaced by one <TextView/> and " +
                                 "a compound drawable", null);

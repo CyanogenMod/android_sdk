@@ -73,7 +73,7 @@ public class ApiLookup {
     /** Relative path to the api-versions.xml database file within the Lint installation */
     private static final String XML_FILE_PATH = "platform-tools/api/api-versions.xml"; //$NON-NLS-1$
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 1;
+    private static final int BINARY_FORMAT_VERSION = 2;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
@@ -336,7 +336,8 @@ public class ApiLookup {
             String className = entry.getKey();
             ApiClass apiClass = entry.getValue();
 
-            Set<String> allMembers = apiClass.getAllMembers(info);
+            Set<String> allMethods = apiClass.getAllMethods(info);
+            Set<String> allFields = apiClass.getAllFields(info);
 
             // Strip out all members that have been supported since version 1.
             // This makes the database *much* leaner (down from about 4M to about
@@ -345,14 +346,27 @@ public class ApiLookup {
             // requires a version *higher* than the minimum. If in the future the
             // database needs to answer queries about whether a method is public
             // or not, then we'd need to put this data back in.
-            List<String> members = new ArrayList<String>(allMembers.size());
-            for (String member : allMembers) {
-                Integer since;
-                if (member.indexOf('(') != -1) {
-                    since = apiClass.getMethod(member, info);
-                } else {
-                    since = apiClass.getField(member, info);
+            List<String> members = new ArrayList<String>(allMethods.size() + allFields.size());
+            for (String member : allMethods) {
+                Integer since = apiClass.getMethod(member, info);
+                assert since != null : className + ':' + member;
+                if (since == null) {
+                    since = 1;
                 }
+                if (since != 1) {
+                    members.add(member);
+                }
+            }
+
+            // Strip out all members that have been supported since version 1.
+            // This makes the database *much* leaner (down from about 4M to about
+            // 1.7M), and this just fills the table with entries that ultimately
+            // don't help the API checker since it just needs to know if something
+            // requires a version *higher* than the minimum. If in the future the
+            // database needs to answer queries about whether a method is public
+            // or not, then we'd need to put this data back in.
+            for (String member : allFields) {
+                Integer since = apiClass.getField(member, info);
                 assert since != null : className + ':' + member;
                 if (since == null) {
                     since = 1;

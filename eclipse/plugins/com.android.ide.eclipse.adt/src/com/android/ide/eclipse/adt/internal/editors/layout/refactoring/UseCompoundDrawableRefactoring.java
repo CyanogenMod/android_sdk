@@ -56,6 +56,7 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -282,6 +283,17 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         }
 
         setAndroidAttribute(newTextElement, androidNsPrefix, drawableAttribute, src);
+
+        // If the removed LinearLayout is the root container, transfer its namespace
+        // declaration to the TextView
+        if (layout.getParentNode() instanceof Document) {
+            List<Attr> declarations = findNamespaceAttributes(layout);
+            for (Attr attribute : declarations) {
+                if (attribute instanceof IndexedRegion) {
+                    newTextElement.setAttribute(attribute.getName(), attribute.getValue());
+                }
+            }
+        }
 
         // Update any layout references to the layout to point to the text view
         String layoutId = getId(layout);

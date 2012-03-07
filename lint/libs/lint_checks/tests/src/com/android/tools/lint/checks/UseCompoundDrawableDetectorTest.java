@@ -31,4 +31,11 @@ public class UseCompoundDrawableDetectorTest extends AbstractCheckTest {
                         "<TextView/> and a compound drawable",
                 lintFiles("res/layout/compound.xml"));
     }
+
+    public void testCompound2() throws Exception {
+        // Ignore layouts that set a custom background
+        assertEquals(
+                "No warnings.",
+                lintFiles("res/layout/compound2.xml"));
+    }
 }
