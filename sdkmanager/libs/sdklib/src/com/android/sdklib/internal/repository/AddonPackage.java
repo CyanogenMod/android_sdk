@@ -577,6 +577,17 @@ public class AddonPackage extends Package
         String name = displayName.toLowerCase(Locale.US);
         name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+
+        // NOTE: ideally we would want to trim leading and trailing _ but in fact
+        // this MUST NOT be done, otherwise it will break <vendor-id> tags that were
+        // auto converted from the old <vendor> tag when switching from the addon
+        // schema v3 to v4.
+        // if (name.length() > 1) {
+        //     name = name.replaceAll("^_+", "");            //$NON-NLS-1$ //$NON-NLS-2$
+        // }
+        // if (name.length() > 1) {
+        //     name = name.replaceAll("_+$", "");            //$NON-NLS-1$ //$NON-NLS-2$
+        // }
         return name;
     }
 

@@ -1560,42 +1560,55 @@ public class PackagesPage extends UpdaterPage
 
         @Override
         public String getToolTipText(Object element) {
-            if (element instanceof PkgItem) {
-                element = ((PkgItem) element).getMainPackage();
+            PkgItem pi = element instanceof PkgItem ? (PkgItem) element : null;
+            if (pi != null) {
+                element = pi.getMainPackage();
             }
             if (element instanceof IDescription) {
-                String s = ((IDescription) element).getLongDescription();
-                if (element instanceof Package) {
-                    Package p = (Package) element;
+                String s = getTooltipDescription((IDescription) element);
 
-                    if (!p.isLocal()) {
-                        // For non-installed item, try to find a download size
-                        for (Archive a : p.getArchives()) {
-                            if (!a.isLocal() && a.isCompatible()) {
-                                s += '\n' + a.getSizeDescription();
-                                break;
-                            }
-                        }
-                    }
-
-                    // Display info about where this package comes/came from
-                    SdkSource src = p.getParentSource();
-                    if (src != null) {
-                        try {
-                            URL url = new URL(src.getUrl());
-                            String host = url.getHost();
-                            if (p.isLocal()) {
-                                s += String.format("\nInstalled from %1$s", host);
-                            } else {
-                                s += String.format("\nProvided by %1$s", host);
-                            }
-                        } catch (MalformedURLException ignore) {
-                        }
-                    }
+                if (pi != null && pi.hasUpdatePkg()) {
+                    s += "\n-----------------" +        //$NON-NLS-1$
+                         "\nUpdate Available:\n" +      //$NON-NLS-1$
+                         getTooltipDescription(pi.getUpdatePkg());
                 }
+
                 return s;
             }
             return super.getToolTipText(element);
+        }
+
+        private String getTooltipDescription(IDescription element) {
+            String s = element.getLongDescription();
+            if (element instanceof Package) {
+                Package p = (Package) element;
+
+                if (!p.isLocal()) {
+                    // For non-installed item, try to find a download size
+                    for (Archive a : p.getArchives()) {
+                        if (!a.isLocal() && a.isCompatible()) {
+                            s += '\n' + a.getSizeDescription();
+                            break;
+                        }
+                    }
+                }
+
+                // Display info about where this package comes/came from
+                SdkSource src = p.getParentSource();
+                if (src != null) {
+                    try {
+                        URL url = new URL(src.getUrl());
+                        String host = url.getHost();
+                        if (p.isLocal()) {
+                            s += String.format("\nInstalled from %1$s", host);
+                        } else {
+                            s += String.format("\nProvided by %1$s", host);
+                        }
+                    } catch (MalformedURLException ignore) {
+                    }
+                }
+            }
+            return s;
         }
 
         @Override
