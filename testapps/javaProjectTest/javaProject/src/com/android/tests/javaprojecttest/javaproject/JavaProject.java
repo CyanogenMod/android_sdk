@@ -9,6 +9,9 @@ public class JavaProject {
 
     public static String getContent() {
         InputStream input = JavaProject.class.getResourceAsStream("JavaProject.txt");
+        if (input == null) {
+            return "FAILED TO FIND JavaProject.txt";
+        }
 
         BufferedReader reader = null;
         try {

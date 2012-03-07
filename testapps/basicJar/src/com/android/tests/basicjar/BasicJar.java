@@ -9,6 +9,9 @@ public class BasicJar {
     
     public static String getContent() {
         InputStream input = BasicJar.class.getResourceAsStream("basicJar.txt");
+        if (input == null) {
+            return "FAILED TO FIND basicJar.txt";
+        }
 
         BufferedReader reader = null;
         try {
