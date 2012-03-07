@@ -62,6 +62,8 @@ import java.io.OutputStream;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -122,7 +124,8 @@ public final class ExportHelper {
 
             BuildHelper helper = new BuildHelper(project,
                     fakeStream, fakeStream,
-                    debugMode, false /*verbose*/);
+                    debugMode, false /*verbose*/,
+                    null /*resourceMarker*/);
 
             // get the list of library projects
             ProjectState projectState = Sdk.getProjectState(project);
@@ -200,44 +203,46 @@ public final class ExportHelper {
                 }
             }
 
-            String[] dxInput;
+            Collection<String> dxInput;
 
             if (runProguard) {
-                // the output of the main project (and any java-only project dependency)
-                String[] projectOutputs = helper.getProjectJavaOutputs();
+                // get all the compiled code paths. This will contain both project output
+                // folder and jar files.
+                Collection<String> paths = helper.getCompiledCodePaths();
 
-                // create a jar from the output of these projects
+                // create a jar file containing all the project output (as proguard cannot
+                // process folders of .class files).
                 File inputJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
                 inputJar.deleteOnExit();
-
                 JarOutputStream jos = new JarOutputStream(new FileOutputStream(inputJar));
-                for (String po : projectOutputs) {
-                    File root = new File(po);
-                    if (root.exists()) {
+
+                // a list of the other paths (jar files.)
+                List<String> jars = new ArrayList<String>();
+
+                for (String path : paths) {
+                    File root = new File(path);
+                    if (root.isDirectory()) {
                         addFileToJar(jos, root, root);
+                    } else if (root.isFile()) {
+                        jars.add(path);
                     }
                 }
                 jos.close();
-
-                // get the other jar files
-                String[] jarFiles = helper.getCompiledCodePaths(false /*includeProjectOutputs*/,
-                        null /*resourceMarker*/);
 
                 // destination file for proguard
                 File obfuscatedJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
                 obfuscatedJar.deleteOnExit();
 
                 // run proguard
-                helper.runProguard(proguardConfigFiles, inputJar, jarFiles, obfuscatedJar,
+                helper.runProguard(proguardConfigFiles, inputJar, jars, obfuscatedJar,
                         new File(project.getLocation().toFile(), SdkConstants.FD_PROGUARD));
 
                 // dx input is proguard's output
-                dxInput = new String[] { obfuscatedJar.getAbsolutePath() };
+                dxInput = Collections.singletonList(obfuscatedJar.getAbsolutePath());
             } else {
                 // no proguard, simply get all the compiled code path: project output(s) +
                 // jar file(s)
-                dxInput = helper.getCompiledCodePaths(true /*includeProjectOutputs*/,
-                        null /*resourceMarker*/);
+                dxInput = helper.getCompiledCodePaths();
             }
 
             IJavaProject javaProject = JavaCore.create(project);

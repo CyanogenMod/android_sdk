@@ -214,17 +214,16 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
                 entries.add(entry);
 
-                // now, gather the content of this library project's libs folder.
+                // process all of the library project's dependencies
+                getDependencyListFromClasspath(libProject, refProjects, jarFiles, true);
+                // and the content of its libs folder.
                 getJarListFromLibsFolder(libProject, jarFiles);
             }
-
-            // get project dependencies
-            getDependencyListFromClasspath(libProject, refProjects, jarFiles, false);
         }
 
-        // now process this projects' referenced projects
-        getDependencyListFromClasspath(iProject, refProjects, jarFiles, false);
-        // and its own jar files from libs
+        // now process this projects' referenced projects only.
+        processReferencedProjects(iProject, refProjects, jarFiles);
+        // and the content of its libs folder
         getJarListFromLibsFolder(iProject, jarFiles);
 
         // annotations support for older version of android
@@ -311,6 +310,32 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
     }
 
     /**
+     * Process reference projects from the main projects to add indirect dependencies coming
+     * from Java project.
+     * @param project the main project
+     * @param projects the project list to add to
+     * @param jarFiles the jar list to add to.
+     */
+    private static void processReferencedProjects(IProject project,
+            Set<IProject> projects, Set<File> jarFiles) {
+        try {
+            IProject[] refs = project.getReferencedProjects();
+            for (IProject p : refs) {
+                // ignore if it's an Android project, or if it's not a Java
+                // Project
+                if (p.hasNature(JavaCore.NATURE_ID)
+                        && p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+
+                    // process this project's dependencies
+                    getDependencyListFromClasspath(p, projects, jarFiles, true /*includeJarFiles*/);
+                }
+            }
+        } catch (CoreException e) {
+            // can't get the referenced projects? ignore
+        }
+    }
+
+    /**
      * Finds all the dependencies of a given project and add them to a project list and
      * a jar list.
      * Only classpath entries that are exported are added, and only Java project (not Android
@@ -332,7 +357,10 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
-                processCPE(e, javaProject, wsRoot, projects, jarFiles, includeJarFiles);
+                // ignore entries that are not exported
+                if (e.isExported()) {
+                    processCPE(e, javaProject, wsRoot, projects, jarFiles, includeJarFiles);
+                }
             }
         }
     }
@@ -351,19 +379,9 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
             IWorkspaceRoot wsRoot,
             Set<IProject> projects, Set<File> jarFiles, boolean includeJarFiles) {
 
-        // ignore entries that are not exported
-        if (entry.isExported() == false) {
-            return;
-        }
-
         // if this is a classpath variable reference, we resolve it.
         if (entry.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
             entry = JavaCore.getResolvedClasspathEntry(entry);
-        }
-
-        // not sure if an exported var could resolve to an exported one?
-        if (entry.isExported() == false) {
-            return;
         }
 
         if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {

@@ -586,12 +586,25 @@ public final class ApkBuilder implements IArchiveBuilder {
             throw new SealedApkException("APK is already sealed");
         }
 
+        addSourceFolder(this, sourceFolder);
+    }
+
+    /**
+     * Adds the resources from a source folder to a given {@link IArchiveBuilder}
+     * @param sourceFolder the source folder.
+     * @throws ApkCreationException if an error occurred
+     * @throws SealedApkException if the APK is already sealed.
+     * @throws DuplicateFileException if a file conflicts with another already added to the APK
+     *                                   at the same location inside the APK archive.
+     */
+    public static void addSourceFolder(IArchiveBuilder builder, File sourceFolder)
+            throws ApkCreationException, DuplicateFileException {
         if (sourceFolder.isDirectory()) {
             try {
                 // file is a directory, process its content.
                 File[] files = sourceFolder.listFiles();
                 for (File file : files) {
-                    processFileForResource(file, null);
+                    processFileForResource(builder, file, null);
                 }
             } catch (DuplicateFileException e) {
                 throw e;
@@ -799,9 +812,11 @@ public final class ApkBuilder implements IArchiveBuilder {
      * @throws IOException
      * @throws DuplicateFileException if a file conflicts with another already added
      *          to the APK at the same location inside the APK archive.
+     * @throws SealedApkException if the APK is already sealed.
+     * @throws ApkCreationException if an error occurred
      */
-    private void processFileForResource(File file, String path)
-            throws IOException, DuplicateFileException {
+    private static void processFileForResource(IArchiveBuilder builder, File file, String path)
+            throws IOException, DuplicateFileException, ApkCreationException, SealedApkException {
         if (file.isDirectory()) {
             // a directory? we check it
             if (checkFolderForPackaging(file.getName())) {
@@ -815,7 +830,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                 // and process its content.
                 File[] files = file.listFiles();
                 for (File contentFile : files) {
-                    processFileForResource(contentFile, path);
+                    processFileForResource(builder, contentFile, path);
                 }
             }
         } else {
@@ -829,7 +844,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                 }
 
                 // and add it to the apk
-                doAddFile(file, path);
+                builder.addFile(file, path);
             }
         }
     }

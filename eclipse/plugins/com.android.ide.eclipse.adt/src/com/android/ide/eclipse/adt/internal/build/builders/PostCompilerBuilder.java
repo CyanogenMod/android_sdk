@@ -38,6 +38,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
@@ -68,6 +69,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -427,7 +429,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
                         true /*debugMode*/,
-                        AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
+                        AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
+                        mResourceMarker);
                 updateCrunchCache(project, helper);
 
                 // refresh recursively bin/res folder
@@ -542,7 +545,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
                         true /*debugMode*/,
-                        AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
+                        AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
+                        mResourceMarker);
 
                 // resource to the AndroidManifest.xml file
                 IFile manifestFile = project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
@@ -637,8 +641,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                         System.out.println("\trunning dex!");
                     }
                     try {
-                        String[] dxInputPaths = helper.getCompiledCodePaths(
-                                true /*includeProjectOutputs*/, mResourceMarker);
+                        Collection<String> dxInputPaths = helper.getCompiledCodePaths();
 
                         helper.executeDx(javaProject, dxInputPaths, classesDexPath);
                     } catch (DexException e) {
@@ -920,8 +923,8 @@ public class PostCompilerBuilder extends BaseBuilder {
             // write the class files
             writeClassFilesIntoJar(jarBuilder, javaOutputFolder, javaOutputFolder);
 
-            // now write the standard Java resources
-            BuildHelper.writeResources(jarBuilder, JavaCore.create(project));
+            // now write the standard Java resources from the output folder
+            ApkBuilder.addSourceFolder(jarBuilder, javaOutputFolder.getLocation().toFile());
 
             saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex);
         } catch (Exception e) {
