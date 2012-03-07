@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.AndroidVersion;
+
 
 class PkgCategoryApi extends PkgCategory {
 
@@ -23,15 +25,17 @@ class PkgCategoryApi extends PkgCategory {
     private String mPlatformName;
 
     // When sorting by Source, key is the hash of the source's name.
-    // When storing by API, key is the API level (>=1). Tools and extra have the
-    // special values so they get naturally sorted the way we want them.
-    // (Note: don't use max to avoid integers wrapping in comparisons. We can
+    // When storing by API, key is the AndroidVersion (API level >=1 + optional codename).
+    // We always want categories in order tools..platforms..extras; to achieve that tools
+    // and extras have the special values so they get "naturally" sorted the way we want
+    // them.
+    // (Note: don't use integer.max to avoid integers wrapping in comparisons. We can
     // revisit the day we get 2^30 platforms.)
-    public final static int KEY_TOOLS = Integer.MAX_VALUE / 2;
-    public final static int KEY_EXTRA = -1;
+    public final static AndroidVersion KEY_TOOLS = new AndroidVersion(Integer.MAX_VALUE / 2, null);;
+    public final static AndroidVersion KEY_EXTRA = new AndroidVersion(-1, null);
 
-    public PkgCategoryApi(int apiKey, String platformName, Object iconRef) {
-        super(apiKey, null /*label*/, iconRef);
+    public PkgCategoryApi(AndroidVersion version, String platformName, Object iconRef) {
+        super(version, null /*label*/, iconRef);
         setPlatformName(platformName);
     }
 
@@ -48,13 +52,13 @@ class PkgCategoryApi extends PkgCategory {
     }
 
     public String getApiLabel() {
-        int api = ((Integer) getKey()).intValue();
-        if (api == KEY_TOOLS) {
+        AndroidVersion key = (AndroidVersion) getKey();
+        if (key.equals(KEY_TOOLS)) {
             return "TOOLS";             //$NON-NLS-1$ // for internal debug use only
-        } else if (api == KEY_EXTRA) {
+        } else if (key.equals(KEY_EXTRA)) {
             return "EXTRAS";            //$NON-NLS-1$ // for internal debug use only
         } else {
-            return String.format("API %1$d", getKey());
+            return key.toString();
         }
     }
 
@@ -62,11 +66,11 @@ class PkgCategoryApi extends PkgCategory {
     public String getLabel() {
         String label = super.getLabel();
         if (label == null) {
-            int key = ((Integer) getKey()).intValue();
+            AndroidVersion key = (AndroidVersion) getKey();
 
-            if (key == KEY_TOOLS) {
+            if (key.equals(KEY_TOOLS)) {
                 label = "Tools";
-            } else if (key == KEY_EXTRA) {
+            } else if (key.equals(KEY_EXTRA)) {
                 label = "Extras";
             } else {
                 if (mPlatformName != null) {
