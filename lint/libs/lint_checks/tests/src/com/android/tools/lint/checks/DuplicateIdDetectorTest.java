@@ -34,13 +34,42 @@ public class DuplicateIdDetectorTest extends AbstractCheckTest {
 
     public void testDuplicateChains() throws Exception {
         assertEquals(
-            "layout/layout2.xml: Warning: Duplicate id @+id/button1, already defined in layout layout4.xml which is included in this layout\n" +
-            "=> layout/layout4.xml: @+id/button1 originally defined here\n" +
-            "layout1.xml: Warning: Duplicate id @+id/button1, already defined in layout layout2 which is included in this layout (layout1 => layout3 => layout2)\n" +
-            "layout1.xml: Warning: Duplicate id @+id/button2, already defined in layout layout2 which is included in this layout (layout1 => layout4 => layout2)",
+            "layout/layout1.xml:7: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout1.xml: [layout/layout1.xml defines @+id/button1, layout/layout1.xml => layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button1]\n" +
+            "=> layout/layout1.xml:13: Defined here\n" +
+            "=> layout/layout3.xml:8: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout3.xml defines @+id/button1\n" +
+            "=> layout/layout4.xml:8: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button1\n" +
+            "layout/layout1.xml:7: Warning: Duplicate id @+id/button2, defined or included multiple times in layout/layout1.xml: [layout/layout1.xml defines @+id/button2, layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button2]\n" +
+            "=> layout/layout1.xml:19: Defined here\n" +
+            "=> layout/layout4.xml:14: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button2\n" +
+            "layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout2.xml: [layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout2.xml => layout/layout4.xml defines @+id/button1]\n" +
+            "=> layout/layout3.xml:8: Defined here, included via layout/layout2.xml => layout/layout3.xml defines @+id/button1\n" +
+            "=> layout/layout4.xml:8: Defined here, included via layout/layout2.xml => layout/layout4.xml defines @+id/button1",
+
+            // layout1: defines @+id/button1, button2
+            // layout3: defines @+id/button1
+            // layout4: defines @+id/button1, button2
+            // layout1 include layout2
+            // layout2 includes layout3 and layout4
+
+            // Therefore, layout3 and layout4 have no problems
+            // In layout2, there's a duplicate definition of button1 (coming from 3 and 4)
+            // In layout1, there's a duplicate definition of button1 (coming from layout1, 3 and 4)
+            // In layout1, there'sa duplicate definition of button2 (coming from 1 and 4)
 
             lintProject("res/layout/layout1.xml", "res/layout/layout2.xml",
                         "res/layout/layout3.xml", "res/layout/layout4.xml"));
     }
 
+    public void testSuppress() throws Exception {
+        assertEquals(
+            "layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout2.xml: [layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout2.xml => layout/layout4.xml defines @+id/button1]\n" +
+            "=> layout/layout3.xml:8: Defined here, included via layout/layout2.xml => layout/layout3.xml defines @+id/button1\n" +
+            "=> layout/layout4.xml:8: Defined here, included via layout/layout2.xml => layout/layout4.xml defines @+id/button1",
+
+            lintProject(
+                    "res/layout/layout1_ignore.xml=>res/layout/layout1.xml",
+                    "res/layout/layout2.xml",
+                    "res/layout/layout3.xml",
+                    "res/layout/layout4.xml"));
+    }
 }
