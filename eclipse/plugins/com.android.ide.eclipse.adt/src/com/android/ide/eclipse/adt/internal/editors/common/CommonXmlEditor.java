@@ -136,10 +136,19 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
             ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
             ResourceFolderType type = resFolder == null ? null : resFolder.getType();
 
-            for (IDelegateCreator creator : DELEGATES) {
-                mDelegate = creator.createForFile(this, type);
-                if (mDelegate != null) {
-                    break;
+            if (type == null) {
+                // We lack any real resource information about that file.
+                // Let's take a guess using the actual path.
+                String folderName = AdtUtils.getParentFolderName(editorInput);
+                type = ResourceFolderType.getFolderType(folderName);
+            }
+
+            if (type != null) {
+                for (IDelegateCreator creator : DELEGATES) {
+                    mDelegate = creator.createForFile(this, type);
+                    if (mDelegate != null) {
+                        break;
+                    }
                 }
             }
 
@@ -161,7 +170,7 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
                 // and IProjects so for now just use a plain XML editor for project-less layout
                 // files
                 mDelegate = new OtherXmlEditorDelegate(this);
-            } else {
+            } else if (type != null) {
                 for (IDelegateCreator creator : DELEGATES) {
                     mDelegate = creator.createForFile(this, type);
                     if (mDelegate != null) {
