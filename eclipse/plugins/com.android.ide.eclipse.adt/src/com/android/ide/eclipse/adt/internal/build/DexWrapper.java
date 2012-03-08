@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
 
 /**
  * Wrapper to access dx.jar through reflection.
@@ -144,7 +145,7 @@ public final class DexWrapper {
      * @return the integer return code of com.android.dx.command.dexer.Main.run()
      * @throws CoreException
      */
-    public synchronized int run(String osOutFilePath, String[] osFilenames,
+    public synchronized int run(String osOutFilePath, Collection<String> osFilenames,
             boolean verbose, PrintStream outStream, PrintStream errStream) throws CoreException {
 
         assert mRunMethod != null;
@@ -171,7 +172,7 @@ public final class DexWrapper {
             // create the Arguments object.
             Object args = mArgConstructor.newInstance();
             mArgOutName.set(args, osOutFilePath);
-            mArgFileNames.set(args, osFilenames);
+            mArgFileNames.set(args, osFilenames.toArray(new String[osFilenames.size()]));
             mArgJarOutput.set(args, false);
             mArgVerbose.set(args, verbose);
 
