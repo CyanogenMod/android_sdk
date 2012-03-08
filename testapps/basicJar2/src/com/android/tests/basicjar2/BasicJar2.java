@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 public class BasicJar2 {
     
     public static String getContent() {
-        InputStream input = BasicJar2.class.getResourceAsStream("basicJar2.txt");
+        InputStream input = BasicJar2.class.getResourceAsStream("/com/android/tests/basicjar2/basicJar2.txt");
         if (input == null) {
             return "FAILED TO FIND basicJar2.txt";
         }

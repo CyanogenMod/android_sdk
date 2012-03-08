@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 public class JavaProject3 {
 
     public static String getContent() {
-        InputStream input = JavaProject3.class.getResourceAsStream("JavaProject3.txt");
+        InputStream input = JavaProject3.class.getResourceAsStream("/com/android/tests/javaprojecttest/javaproject3/JavaProject3.txt");
         if (input == null) {
             return "FAILED TO FIND JavaProject3.txt";
         }
