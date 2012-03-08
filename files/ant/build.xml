@@ -267,7 +267,7 @@
                 </condition>
                 <else>
                     <path id="out.dex.jar.input.ref">
-                        <path refid="jar.libs.ref" />
+                        <path refid="project.libraries.jars" />
                     </path>
                 </else>
             </if>
@@ -307,7 +307,7 @@
                     buildType="${build.is.packaging.debug}/${build.is.signing.debug}">
                 <dex path="${intermediate.dex.file}"/>
                 <sourcefolder path="${source.absolute.dir}"/>
-                <jarfile refid="jar.libs.ref" />
+                <jarfile refid="project.libraries.jars" />
                 <nativefolder path="${native.libs.absolute.dir}" />
                 <nativefolder refid="project.libraries.libs" />
                 <extra-jars/>
@@ -442,6 +442,12 @@
                 <not><isset property="setup.done" /></not>
             </condition>
             <then>
+                <echo>Creating output directories if needed...</echo>
+                <mkdir dir="${resource.absolute.dir}" />
+                <mkdir dir="${jar.libs.absolute.dir}" />
+                <mkdir dir="${out.absolute.dir}" />
+                <mkdir dir="${out.res.absolute.dir}" />
+
                 <property name="setup.done" value="true" />
                 <echo>Gathering info for ${ant.project.name}...</echo>
                 <!-- load project properties, resolve Android target, library dependencies
@@ -460,6 +466,7 @@
                         projectLibrariesPackageOut="project.libraries.package"
                         projectLibrariesLibsOut="project.libraries.libs"
                         targetApiOut="target.api"
+                        verbose="${verbose}"
                 />
 
                 <!-- sets a few boolean based on android.project.type
@@ -540,13 +547,6 @@
         <xpath input="AndroidManifest.xml" expression="/manifest/application/@android:hasCode"
                     output="manifest.hasCode" default="true"/>
 
-        <!-- create a path with all the jar files, from the main project and the
-             libraries -->
-        <path id="jar.libs.ref">
-            <fileset dir="${jar.libs.absolute.dir}" includes="*.jar" />
-            <path refid="project.libraries.jars" />
-        </path>
-
         <!-- If the "debug" build type changed, clear out the compiled code.
              This is to make sure the new BuildConfig.DEBUG value is picked up
              as javac can't deal with this type of change in its dependency computation. -->
@@ -582,11 +582,6 @@
             </else>
         </if>
 
-        <echo>Creating output directories if needed...</echo>
-        <mkdir dir="${resource.absolute.dir}" />
-        <mkdir dir="${jar.libs.absolute.dir}" />
-        <mkdir dir="${out.absolute.dir}" />
-        <mkdir dir="${out.res.absolute.dir}" />
         <do-only-if-manifest-hasCode>
             <mkdir dir="${gen.absolute.dir}" />
             <mkdir dir="${out.classes.absolute.dir}" />
@@ -673,7 +668,7 @@
                     bootclasspathref="android.target.classpath"
                     verbose="${verbose}"
                     classpath="${extensible.classpath}"
-                    classpathref="jar.libs.ref"
+                    classpathref="project.libraries.jars"
                     fork="${need.javac.fork}">
                 <src path="${source.absolute.dir}" />
                 <src path="${gen.absolute.dir}" />
@@ -700,6 +695,7 @@
 
                     <jar destfile="${out.library.jar.file}">
                         <fileset dir="${out.classes.absolute.dir}"
+                                includes="**/*.class"
                                 excludes="${manifest.package.path}/R.class ${manifest.package.path}/R$*.class ${manifest.package.path}/Manifest.class ${manifest.package.path}/Manifest$*.class ${manifest.package.path}/BuildConfig.class"/>
                         <fileset dir="${source.absolute.dir}" excludes="**/*.java ${android.package.excludes}" />
                     </jar>
@@ -774,7 +770,7 @@
                      files. -->
                 <path id="project.jars.ref">
                     <pathelement location="${preobfuscate.jar.file}" />
-                    <path refid="jar.libs.ref" />
+                    <path refid="project.libraries.jars" />
                 </path>
                 <!-- Set the project jar files Path object into a single property. It'll be
                      all the jar files separated by a platform path-separator.

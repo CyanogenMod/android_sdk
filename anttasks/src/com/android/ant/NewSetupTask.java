@@ -24,6 +24,9 @@ import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.build.JarListSanitizer;
+import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
+import com.android.sdklib.build.JarListSanitizer.Sha1Exception;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
@@ -83,6 +86,7 @@ public class NewSetupTask extends Task {
     private String mProjectLibrariesJarsOut;
     private String mProjectLibrariesLibsOut;
     private String mTargetApiOut;
+    private boolean mVerbose = false;
 
     public void setProjectTypeOut(String projectTypeOut) {
         mProjectTypeOut = projectTypeOut;
@@ -130,6 +134,14 @@ public class NewSetupTask extends Task {
 
     public void setTargetApiOut(String targetApiOut) {
         mTargetApiOut = targetApiOut;
+    }
+
+    /**
+     * Sets the value of the "verbose" attribute.
+     * @param verbose the value.
+     */
+    public void setVerbose(boolean verbose) {
+        mVerbose = verbose;
     }
 
     @Override
@@ -440,8 +452,11 @@ public class NewSetupTask extends Task {
         Path rootPath = new Path(antProject);
         Path resPath = new Path(antProject);
         Path libsPath = new Path(antProject);
-        Path jarsPath = new Path(antProject);
         StringBuilder packageStrBuilder = new StringBuilder();
+
+        // list of all the jars that are on the classpath. This will receive the
+        // project's libs/*.jar files, the Library Projects output and their own libs/*.jar
+        List<File> jars = new ArrayList<File>();
 
         FilenameFilter filter = new FilenameFilter() {
             @Override
@@ -477,17 +492,15 @@ public class NewSetupTask extends Task {
 
                 // get the jars from it too.
                 // 1. the library code jar
-                element = jarsPath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
-                        "/" + SdkConstants.FN_CLASSES_JAR);
+                jars.add(new File(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+                        "/" + SdkConstants.FN_CLASSES_JAR));
 
                 // 2. the 3rd party jar files
                 File libsFolder = new File(library, SdkConstants.FD_NATIVE_LIBS);
                 File[] jarFiles = libsFolder.listFiles(filter);
                 if (jarFiles != null) {
                     for (File jarFile : jarFiles) {
-                        element = jarsPath.createPathElement();
-                        element.setPath(jarFile.getAbsolutePath());
+                        jars.add(jarFile);
                     }
                 }
 
@@ -516,29 +529,28 @@ public class NewSetupTask extends Task {
                 PathElement element = rootPath.createPathElement();
                 element.setPath(library.getAbsolutePath());
             }
+            System.out.println();
 
         } else {
             System.out.println("No library dependencies.\n");
         }
 
-        System.out.println("------------------\n");
+        System.out.println("------------------");
 
-        boolean hasLibraries = jarsPath.list().length > 0;
+        boolean hasLibraries = jars.size() > 0;
 
         if (androidTarget.getVersion().getApiLevel() <= 15) {
             System.out.println("API<=15: Adding annotations.jar to the classpath.\n");
 
-            PathElement element = jarsPath.createPathElement();
-            element.setPath(sdkLocation + "/" + SdkConstants.FD_TOOLS +
+            jars.add(new File(sdkLocation + "/" + SdkConstants.FD_TOOLS +
                     "/" + SdkConstants.FD_SUPPORT +
-                    "/" + SdkConstants.FN_ANNOTATIONS_JAR);
+                    "/" + SdkConstants.FN_ANNOTATIONS_JAR));
 
-            System.out.println("------------------\n");
+            System.out.println("------------------");
         }
 
         // even with no libraries, always setup these so that various tasks in Ant don't complain
         // (the task themselves can handle a ref to an empty Path)
-        antProject.addReference(mProjectLibrariesJarsOut, jarsPath);
         antProject.addReference(mProjectLibrariesLibsOut, libsPath);
 
         // the rest is done only if there's a library.
@@ -546,6 +558,36 @@ public class NewSetupTask extends Task {
             antProject.addReference(mProjectLibrariesRootOut, rootPath);
             antProject.addReference(mProjectLibrariesResOut, resPath);
             antProject.setProperty(mProjectLibrariesPackageOut, packageStrBuilder.toString());
+        }
+
+        // add the project's own content of libs/*.jar
+        File libsFolder = new File(SdkConstants.FD_NATIVE_LIBS);
+        File[] jarFiles = libsFolder.listFiles(filter);
+        if (jarFiles != null) {
+            for (File jarFile : jarFiles) {
+                jars.add(jarFile);
+            }
+        }
+
+        // now sanitize the path to remove dups
+        jars = sanitizePaths(antProject, jars);
+
+        // and create a Path object for them
+        Path jarsPath = new Path(antProject);
+        if (mVerbose) {
+            System.out.println("Sanitized jar list:");
+        }
+        for (File f : jars) {
+            if (mVerbose) {
+                System.out.println("- " + f.getAbsolutePath());
+            }
+            PathElement element = jarsPath.createPathElement();
+            element.setPath(f.getAbsolutePath());
+        }
+        antProject.addReference(mProjectLibrariesJarsOut, jarsPath);
+
+        if (mVerbose) {
+            System.out.println();
         }
     }
 
@@ -682,5 +724,40 @@ public class NewSetupTask extends Task {
             }
         }
         return new DeweyDecimal(sb.toString());
+    }
+
+    private List<File> sanitizePaths(Project antProject, List<File> paths) {
+        // first get the non-files.
+        List<File> results = new ArrayList<File>();
+        for (int i = 0 ; i < paths.size() ;) {
+            File f = paths.get(i);
+            // TEMP WORKAROUND: ignore classes.jar as all the output of libraries are
+            // called the same (in Ant) but are not actually the same jar file.
+            // TODO: Be aware of library output vs. regular jar dependency.
+            if (f.isFile() && f.getName().equals(SdkConstants.FN_CLASSES_JAR) == false) {
+                i++;
+            } else {
+                results.add(f);
+                paths.remove(i);
+            }
+        }
+
+        File outputFile = new File(antProject.getProperty("out.absolute.dir"));
+        JarListSanitizer sanitizer = new JarListSanitizer(outputFile);
+
+        try {
+            results.addAll(sanitizer.sanitize(paths));
+        } catch (DifferentLibException e) {
+            String[] details = e.getDetails();
+            for (String s : details) {
+                System.err.println(s);
+            }
+            throw new BuildException(e.getMessage(), e);
+        } catch (Sha1Exception e) {
+            throw new BuildException(
+                    "Failed to compute sha1 for " + e.getJarFile().getAbsolutePath(), e);
+        }
+
+        return results;
     }
 }

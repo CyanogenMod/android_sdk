@@ -364,8 +364,9 @@ public class JarListSanitizer {
 
     private void writeJarList(Map<String, List<JarEntity>> nameMap) {
         File cacheFile = new File(mOut, CACHE_FILENAME);
+        OutputStreamWriter writer = null;
         try {
-            OutputStreamWriter writer = new OutputStreamWriter(
+            writer = new OutputStreamWriter(
                     new FileOutputStream(cacheFile), "UTF-8");
 
             writer.write("# cache for current jar dependecy. DO NOT EDIT.\n");
@@ -393,14 +394,19 @@ public class JarListSanitizer {
                     }
                 }
             }
-
-            writer.close();
         } catch (IOException e) {
             mOutStream.println("WARNING: unable to write jarlist cache file " +
                     cacheFile.getAbsolutePath());
         } catch (Sha1Exception e) {
             // shouldn't happen here since we check that the sha1 is present first, meaning it's
             // already been computing.
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
 

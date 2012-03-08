@@ -342,16 +342,25 @@ public class ApkBuilderTask extends SingleDependencyTask {
 
             // add the content of the zip files.
             for (File f : zipFiles) {
+                if (mVerbose) {
+                    System.out.println("Zip Input: " + f.getAbsolutePath());
+                }
                 apkBuilder.addZipFile(f);
             }
 
             // now go through the list of file to directly add the to the list.
             for (File f : sourceFolderList) {
+                if (mVerbose) {
+                    System.out.println("Source Folder Input: " + f.getAbsolutePath());
+                }
                 apkBuilder.addSourceFolder(f);
             }
 
             // now go through the list of jar files.
             for (File f : jarFileList) {
+                if (mVerbose) {
+                    System.out.println("Jar Input: " + f.getAbsolutePath());
+                }
                 apkBuilder.addResourcesFromJar(f);
             }
 
