@@ -5,6 +5,12 @@
         <mkdir dir="${basedir}/bin/classes" />
         <javac encoding="ascii" target="1.5" debug="true" extdirs=""
                 srcdir="src" destdir="${basedir}/bin/classes" />
-        <jar basedir="${basedir}/bin/classes" destfile="${basedir}/bin/${ant.project.name}.jar" />
+        <jar destfile="${basedir}/bin/${ant.project.name}.jar">
+            <fileset dir="${basedir}/bin/classes" />
+            <fileset dir="src" excludes="**/*.java"/>
+        </jar>
+    </target>
+    <target name="clean">
+        <delete dir="bin" />
     </target>
 </project>

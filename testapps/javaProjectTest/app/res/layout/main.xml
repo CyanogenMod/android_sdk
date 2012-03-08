@@ -41,7 +41,28 @@
         tools:ignore="HardcodedText" />
 
     <TextView
+        android:id="@+id/javaProject3"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="\\?"
+        tools:ignore="HardcodedText" />
+
+    <TextView
         android:id="@+id/basicJar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="\\?"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/basicJar2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="\\?"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/basicJar3"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="\\?"

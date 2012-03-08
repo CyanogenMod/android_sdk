@@ -9,6 +9,9 @@ public class Lib2 {
 
     public static String getContent() {
         InputStream input = Lib2.class.getResourceAsStream("Lib2.txt");
+        if (input == null) {
+            return "FAILED TO FIND Lib2.txt";
+        }
 
         BufferedReader reader = null;
         try {
