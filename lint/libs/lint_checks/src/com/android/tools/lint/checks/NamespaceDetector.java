@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
+import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
 
 import com.android.tools.lint.detector.api.Category;
@@ -91,7 +92,6 @@ public class NamespaceDetector extends LayoutDetector {
     /** Prefix relevant for custom namespaces */
     private static final String XMLNS_ANDROID = "xmlns:android";                    //$NON-NLS-1$
     private static final String XMLNS_A = "xmlns:a";                                //$NON-NLS-1$
-    private static final String URI_PREFIX = "http://schemas.android.com/apk/res/"; //$NON-NLS-1$
 
     private Map<String, Attr> mUnusedNamespaces;
     private boolean mCheckUnused;

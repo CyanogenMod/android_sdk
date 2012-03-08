@@ -319,7 +319,15 @@ public final class CustomViewDescriptorService {
 
         @Override
         public Image getGenericIcon() {
-            return IconFactory.getInstance().getIcon("customView"); //$NON-NLS-1$
+            IconFactory iconFactory = IconFactory.getInstance();
+
+            int index = mXmlName.lastIndexOf('.');
+            if (index != -1) {
+                return iconFactory.getIcon(mXmlName.substring(index + 1),
+                        "customView"); //$NON-NLS-1$
+            }
+
+            return iconFactory.getIcon("customView"); //$NON-NLS-1$
         }
     }
 }

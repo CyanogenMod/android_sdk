@@ -49,7 +49,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
@@ -518,29 +517,10 @@ public class BaseLayoutRule extends BaseViewRule {
     protected static void addAttributes(INode newNode, IDragElement oldElement,
             Map<String, Pair<String, String>> idMap, AttributeFilter filter) {
 
-        // A little trick here: when creating new UI widgets by dropping them
-        // from the palette, we assign them a new id and then set the text
-        // attribute to that id, so for example a Button will have
-        // android:text="@+id/Button01".
-        // Here we detect if such an id is being remapped to a new id and if
-        // there's a text attribute with exactly the same id name, we update it
-        // too.
-        String oldText = null;
-        String oldId = null;
-        String newId = null;
-
         for (IDragAttribute attr : oldElement.getAttributes()) {
             String uri = attr.getUri();
             String name = attr.getName();
             String value = attr.getValue();
-
-            if (uri.equals(ANDROID_URI)) {
-                if (name.equals(ATTR_ID)) {
-                    oldId = value;
-                } else if (name.equals(ATTR_TEXT)) {
-                    oldText = value;
-                }
-            }
 
             IAttributeInfo attrInfo = newNode.getAttributeInfo(uri, name);
             if (attrInfo != null) {
@@ -557,16 +537,7 @@ public class BaseLayoutRule extends BaseViewRule {
             }
             if (value != null && value.length() > 0) {
                 newNode.setAttribute(uri, name, value);
-
-                if (uri.equals(ANDROID_URI) && name.equals(ATTR_ID) &&
-                        oldId != null && !oldId.equals(value)) {
-                    newId = value;
-                }
             }
-        }
-
-        if (newId != null && oldText != null && oldText.equals(oldId)) {
-            newNode.setAttribute(ANDROID_URI, ATTR_TEXT, newId);
         }
     }
 

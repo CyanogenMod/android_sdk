@@ -21,7 +21,9 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
@@ -150,11 +152,12 @@ public class GridLayoutRule extends BaseLayoutRule {
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
+        String namespace = getNamespace(parentNode);
         Choices orientationAction = RuleAction.createChoices(
                 ACTION_ORIENTATION,
                 "Orientation", //$NON-NLS-1$
                 new PropertyCallback(Collections.singletonList(parentNode),
-                        "Change LinearLayout Orientation", ANDROID_URI, ATTR_ORIENTATION), Arrays
+                        "Change LinearLayout Orientation", namespace, ATTR_ORIENTATION), Arrays
                         .<String> asList("Set Horizontal Orientation", "Set Vertical Orientation"),
                 Arrays.<URL> asList(ICON_HORIZONTAL, ICON_VERTICAL), Arrays.<String> asList(
                         "horizontal", "vertical"), getCurrentOrientation(parentNode),
@@ -256,8 +259,8 @@ public class GridLayoutRule extends BaseLayoutRule {
      * Returns the orientation attribute value currently used by the node (even if not
      * defined, in which case the default horizontal value is returned)
      */
-    private static String getCurrentOrientation(final INode node) {
-        String orientation = node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION);
+    private String getCurrentOrientation(final INode node) {
+        String orientation = node.getStringAttr(getNamespace(node), ATTR_ORIENTATION);
         if (orientation == null || orientation.length() == 0) {
             orientation = VALUE_HORIZONTAL;
         }
@@ -332,8 +335,25 @@ public class GridLayoutRule extends BaseLayoutRule {
         FillPreference fill = metadata.getFillPreference();
         String gravity = computeDefaultGravity(fill);
         if (gravity != null) {
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_GRAVITY, gravity);
+            node.setAttribute(getNamespace(parent), ATTR_LAYOUT_GRAVITY, gravity);
         }
+    }
+
+    /**
+     * Returns the namespace URI to use for GridLayout-specific attributes, such
+     * as columnCount, layout_column, layout_column_span, layout_gravity etc.
+     *
+     * @param layout the GridLayout instance to look up the namespace for
+     * @return the namespace, never null
+     */
+    public String getNamespace(INode layout) {
+        String namespace = ANDROID_URI;
+
+        if (!layout.getFqcn().equals(FQCN_GRID_LAYOUT)) {
+            namespace = mRulesEngine.getAppNameSpace();
+        }
+
+        return namespace;
     }
 
     /**
@@ -374,7 +394,8 @@ public class GridLayoutRule extends BaseLayoutRule {
         GridModel grid = new GridModel(mRulesEngine, parent, null);
         for (INode child : deleted) {
             // We don't care about deletion of spacers
-            if (child.getFqcn().equals(FQCN_SPACE)) {
+            String fqcn = child.getFqcn();
+            if (fqcn.equals(FQCN_SPACE) || fqcn.equals(FQCN_SPACE_V7)) {
                 continue;
             }
             grid.markDeleted(child);
@@ -430,8 +451,9 @@ public class GridLayoutRule extends BaseLayoutRule {
             Pair<Integer, Integer> spans = computeResizeSpans(state);
             int rowSpan = spans.getFirst();
             int columnSpan = spans.getSecond();
-            GridModel.setColumnSpanAttribute(node, columnSpan);
-            GridModel.setRowSpanAttribute(node, rowSpan);
+            GridModel grid = getGrid(state);
+            grid.setColumnSpanAttribute(node, columnSpan);
+            grid.setRowSpanAttribute(node, rowSpan);
         }
     }
 
@@ -561,7 +583,8 @@ public class GridLayoutRule extends BaseLayoutRule {
             for (IDragElement element : elements) {
                 // Skip <Space> elements and only insert the real elements being
                 // copied
-                if (elements.length > 1 && FQCN_SPACE.equals(element.getFqcn())) {
+                if (elements.length > 1 && (FQCN_SPACE.equals(element.getFqcn())
+                        || FQCN_SPACE_V7.equals(element.getFqcn()))) {
                     continue;
                 }
 
@@ -571,8 +594,10 @@ public class GridLayoutRule extends BaseLayoutRule {
 
                 // Ensure that we reset any potential row/column attributes from a different
                 // grid layout being copied from
-                newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_COLUMN, null);
-                newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_ROW, null);
+                GridDropHandler handler = (GridDropHandler) feedback.userData;
+                GridModel grid = handler.getGrid();
+                grid.setGridAttribute(newChild, ATTR_LAYOUT_COLUMN, null);
+                grid.setGridAttribute(newChild, ATTR_LAYOUT_ROW, null);
 
                 // TODO: Set columnSpans to avoid making these widgets completely
                 // break the layout

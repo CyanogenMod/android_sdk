@@ -18,18 +18,23 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ROW_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_VIEWTAG;
+import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
+import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
 import com.android.annotations.VisibleForTesting;
@@ -46,10 +51,14 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IAction;
@@ -58,6 +67,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IElementComparer;
@@ -66,6 +76,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
+import org.eclipse.jface.viewers.StyledString.Styler;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -559,21 +570,59 @@ public class OutlinePage extends ContentOutlinePage
                     Element e = (Element) xmlNode;
 
                     // Temporary diagnostics code when developing GridLayout
-                    if (GridLayoutRule.sDebugGridLayout && e.getParentNode() != null
-                            && e.getParentNode().getNodeName() != null) {
-                        if (e.getParentNode().getNodeName().equals("GridLayout")) { //$NON-NLS-1$
+                    if (GridLayoutRule.sDebugGridLayout) {
+                        String namespace;
+                        if (e.getParentNode().getNodeName().equals(GRID_LAYOUT)) {
+                            namespace = ANDROID_URI;
+                        } else {
+                            IProject project = mGraphicalEditorPart.getProject();
+                            ProjectState projectState = Sdk.getProjectState(project);
+                            if (projectState != null && projectState.isLibrary()) {
+                                namespace = AUTO_URI;
+                            } else {
+                                ManifestInfo info = ManifestInfo.get(project);
+                                namespace = URI_PREFIX + info.getPackage();
+                            }
+                        }
+
+                        if (e.getNodeName() != null && e.getNodeName().endsWith(GRID_LAYOUT)) {
+                            // Attach rowCount/columnCount info
+                            String rowCount = e.getAttributeNS(namespace, ATTR_ROW_COUNT);
+                            if (rowCount.length() == 0) {
+                                rowCount = "?";
+                            }
+                            String columnCount = e.getAttributeNS(namespace, ATTR_COLUMN_COUNT);
+                            if (columnCount.length() == 0) {
+                                columnCount = "?";
+                            }
+
+                            styledString.append(" - columnCount=", QUALIFIER_STYLER);
+                            styledString.append(columnCount, QUALIFIER_STYLER);
+                            styledString.append(", rowCount=", QUALIFIER_STYLER);
+                            styledString.append(rowCount, QUALIFIER_STYLER);
+                        } else if (e.getParentNode() != null
+                            && e.getParentNode().getNodeName() != null
+                            && e.getParentNode().getNodeName().endsWith(GRID_LAYOUT)) {
                             // Attach row/column info
-                            styledString.append(" - cell (", QUALIFIER_STYLER);
-                            String row = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_ROW);
+                            String row = e.getAttributeNS(namespace, ATTR_LAYOUT_ROW);
                             if (row.length() == 0) {
                                 row = "?";
                             }
-                            String column = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_COLUMN);
+                            Styler colStyle = QUALIFIER_STYLER;
+                            String column = e.getAttributeNS(namespace, ATTR_LAYOUT_COLUMN);
                             if (column.length() == 0) {
                                 column = "?";
+                            } else {
+                                String colCount = ((Element) e.getParentNode()).getAttributeNS(
+                                        namespace, ATTR_COLUMN_COUNT);
+                                if (colCount.length() > 0 && Integer.parseInt(colCount) <=
+                                        Integer.parseInt(column)) {
+                                    colStyle = StyledString.createColorRegistryStyler(
+                                        JFacePreferences.ERROR_COLOR, null);
+                                }
                             }
-                            String rowSpan = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_ROW_SPAN);
-                            String columnSpan = e.getAttributeNS(ANDROID_URI,
+                            String rowSpan = e.getAttributeNS(namespace, ATTR_LAYOUT_ROW_SPAN);
+                            String columnSpan = e.getAttributeNS(namespace,
                                     ATTR_LAYOUT_COLUMN_SPAN);
                             if (rowSpan.length() == 0) {
                                 rowSpan = "1";
@@ -582,10 +631,13 @@ public class OutlinePage extends ContentOutlinePage
                                 columnSpan = "1";
                             }
 
+                            styledString.append(" - cell (row=", QUALIFIER_STYLER);
                             styledString.append(row, QUALIFIER_STYLER);
                             styledString.append(',', QUALIFIER_STYLER);
-                            styledString.append(column, QUALIFIER_STYLER);
-                            styledString.append("), span=(", QUALIFIER_STYLER);
+                            styledString.append("col=", colStyle);
+                            styledString.append(column, colStyle);
+                            styledString.append(')', colStyle);
+                            styledString.append(", span=(", QUALIFIER_STYLER);
                             styledString.append(columnSpan, QUALIFIER_STYLER);
                             styledString.append(',', QUALIFIER_STYLER);
                             styledString.append(rowSpan, QUALIFIER_STYLER);

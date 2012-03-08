@@ -773,7 +773,9 @@ public final class DescriptorsUtils {
                 || tag.equals(VIEW_FRAGMENT)
                 || tag.equals(VIEW_INCLUDE)
                 || tag.equals(VIEW_MERGE)
-                || tag.equals(SPACE)) {
+                || tag.equals(SPACE)
+                || tag.endsWith(SPACE) && tag.length() > SPACE.length() &&
+                    tag.charAt(tag.length() - SPACE.length()) == '.') {
             return false;
         }
 

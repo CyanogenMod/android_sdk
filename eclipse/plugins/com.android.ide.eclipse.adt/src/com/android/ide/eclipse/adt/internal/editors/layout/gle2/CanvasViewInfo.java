@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
@@ -457,7 +458,7 @@ public class CanvasViewInfo implements IPropertySource {
             return false;
         }
 
-        return FQCN_SPACE.equals(mName);
+        return FQCN_SPACE.equals(mName) || FQCN_SPACE_V7.equals(mName);
     }
 
     /**

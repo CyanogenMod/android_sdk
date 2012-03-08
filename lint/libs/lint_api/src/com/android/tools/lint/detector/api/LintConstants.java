@@ -27,6 +27,9 @@ import com.google.common.annotations.Beta;
 @Beta
 @SuppressWarnings("javadoc") // Not documenting each and every obvious constant
 public class LintConstants {
+    /** Namespace prefix used for all resources */
+    public static final String URI_PREFIX =
+            "http://schemas.android.com/apk/res/";                     //$NON-NLS-1$
     /** Namespace used in XML files for Android attributes */
     public static final String ANDROID_URI =
             "http://schemas.android.com/apk/res/android";              //$NON-NLS-1$

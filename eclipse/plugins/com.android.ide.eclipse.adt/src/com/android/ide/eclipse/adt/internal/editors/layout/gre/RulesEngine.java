@@ -368,9 +368,30 @@ public class RulesEngine {
      * @param targetNode The first node selected.
      * @param targetView The view object for the target node, or null if not known
      * @param pastedElements The elements being pasted.
+     * @return the parent node the paste was applied into
      */
-    public void callOnPaste(NodeProxy targetNode, Object targetView,
+    public NodeProxy callOnPaste(NodeProxy targetNode, Object targetView,
             SimpleElement[] pastedElements) {
+
+        // Find a target which accepts children. If you for example select a button
+        // and attempt to paste, this will reselect the parent of the button as the paste
+        // target. (This is a loop rather than just checking the direct parent since
+        // we will soon ask each child whether they are *willing* to accept the new child.
+        // A ScrollView for example, which only accepts one child, might also say no
+        // and delegate to its parent in turn.
+        INode parent = targetNode;
+        while (parent instanceof NodeProxy) {
+            NodeProxy np = (NodeProxy) parent;
+            if (np.getNode() != null && np.getNode().getDescriptor() != null) {
+                ElementDescriptor descriptor = np.getNode().getDescriptor();
+                if (descriptor.hasChildren()) {
+                    targetNode = np;
+                    break;
+                }
+            }
+            parent = parent.getParent();
+        }
+
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(targetNode.getNode());
 
@@ -385,6 +406,8 @@ public class RulesEngine {
                         e.toString());
             }
         }
+
+        return targetNode;
     }
 
     // ---- Resize operations ----

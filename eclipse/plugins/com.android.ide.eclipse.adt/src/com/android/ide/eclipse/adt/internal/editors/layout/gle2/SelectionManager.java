@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
 
@@ -874,7 +875,8 @@ public class SelectionManager implements ISelectionProvider {
                     // Skip spacers - unless you're dropping just one
                     continue;
                 }
-                if (GridLayoutRule.sDebugGridLayout && viewInfo.getName().equals(FQCN_SPACE)) {
+                if (GridLayoutRule.sDebugGridLayout && (viewInfo.getName().equals(FQCN_SPACE)
+                        || viewInfo.getName().equals(FQCN_SPACE_V7))) {
                     // In debug mode they might not be marked as hidden but we never never
                     // want to select these guys
                     continue;

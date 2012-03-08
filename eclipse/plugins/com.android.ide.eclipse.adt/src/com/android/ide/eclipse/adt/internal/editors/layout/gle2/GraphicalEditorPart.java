@@ -1658,6 +1658,7 @@ public class GraphicalEditorPart extends EditorPart
 
             for (String clazz : brokenClasses) {
                 addText(mErrorLabel, "- ");
+                addText(mErrorLabel, clazz);
                 addText(mErrorLabel, " (");
                 addActionLink(mErrorLabel,
                         ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class", clazz);
