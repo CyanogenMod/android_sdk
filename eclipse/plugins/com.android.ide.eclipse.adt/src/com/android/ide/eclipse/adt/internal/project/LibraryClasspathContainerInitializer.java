@@ -219,11 +219,11 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
             }
 
             // get project dependencies
-            processReferencedProjects(libProject, refProjects, jarFiles);
+            getDependencyListFromClasspath(libProject, refProjects, jarFiles, false);
         }
 
         // now process this projects' referenced projects
-        processReferencedProjects(iProject, refProjects, jarFiles);
+        getDependencyListFromClasspath(iProject, refProjects, jarFiles, false);
         // and its own jar files from libs
         getJarListFromLibsFolder(iProject, jarFiles);
 
@@ -288,30 +288,6 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                 IClasspathContainer.K_APPLICATION);
     }
 
-
-    private static void processReferencedProjects(IProject project,
-            Set<IProject> projects, Set<File> jarFiles) {
-        try {
-            IProject[] refs = project.getReferencedProjects();
-            for (IProject p : refs) {
-                // ignore if it's an Android project, or if it's not a Java Project
-                if (p.hasNature(JavaCore.NATURE_ID) &&
-                        p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    // add this project to the list
-                    projects.add(p);
-
-                    // get the jar dependencies of the project in the list
-                    getJarListFromClasspath(p, jarFiles);
-
-                    // and then process the referenced project by this project too.
-                    processReferencedProjects(p, projects, jarFiles);
-                }
-            }
-        } catch (CoreException e) {
-            // can't get the referenced projects? ignore
-        }
-    }
-
     /**
      * Finds all the jar files inside a project's libs folder.
      * @param project
@@ -335,13 +311,19 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
     }
 
     /**
-     * Finds all the jars a given project depends on by looking at the classpath.
-     * This must be a non android project, as android project have container that really
-     * we shouldn't go through.
+     * Finds all the dependencies of a given project and add them to a project list and
+     * a jar list.
+     * Only classpath entries that are exported are added, and only Java project (not Android
+     * project) are added.
+     *
      * @param project the project to query
-     * @param jarFiles the list of file to fill.
+     * @param projects the referenced project list to add to
+     * @param jarFiles the jar list to add to
+     * @param includeJarFiles whether to include jar files or just projects. This is useful when
+     *           calling on an Android project (value should be <code>false</code>)
      */
-    private static void getJarListFromClasspath(IProject project, Set<File> jarFiles) {
+    private static void getDependencyListFromClasspath(IProject project, Set<IProject> projects,
+            Set<File> jarFiles, boolean includeJarFiles) {
         IJavaProject javaProject = JavaCore.create(project);
         IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -350,38 +332,77 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
-                // only consider the classpath entries that are exported.
-                if (e.isExported() == false) {
-                    continue;
-                }
-                // if this is a classpath variable reference, we resolve it.
-                if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
-                    e = JavaCore.getResolvedClasspathEntry(e);
-                }
+                processCPE(e, javaProject, wsRoot, projects, jarFiles, includeJarFiles);
+            }
+        }
+    }
 
-                if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-                    handleClasspathEntry(e, wsRoot, jarFiles);
-                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                    // get the container.
-                    try {
-                        IClasspathContainer container = JavaCore.getClasspathContainer(
-                                e.getPath(), javaProject);
-                        // ignore the system and default_system types as they represent
-                        // libraries that are part of the runtime.
-                        if (container != null &&
-                                container.getKind() == IClasspathContainer.K_APPLICATION) {
-                            IClasspathEntry[] entries = container.getClasspathEntries();
-                            for (IClasspathEntry entry : entries) {
-                                if (entry.isExported()) {
-                                    handleClasspathEntry(entry, wsRoot, jarFiles);
-                                }
-                            }
-                        }
-                    } catch (JavaModelException jme) {
-                        // can't resolve the container? ignore it.
-                        AdtPlugin.log(jme, "Failed to resolve ClasspathContainer: %s", e.getPath());
+    /**
+     * Processes a {@link IClasspathEntry} and add it to one of the list if applicable.
+     * @param entry the entry to process
+     * @param javaProject the {@link IJavaProject} from which this entry came.
+     * @param wsRoot the {@link IWorkspaceRoot}
+     * @param projects the project list to add to
+     * @param jarFiles the jar list to add to
+     * @param includeJarFiles whether to include jar files or just projects. This is useful when
+     *           calling on an Android project (value should be <code>false</code>)
+     */
+    private static void processCPE(IClasspathEntry entry, IJavaProject javaProject,
+            IWorkspaceRoot wsRoot,
+            Set<IProject> projects, Set<File> jarFiles, boolean includeJarFiles) {
+
+        // ignore entries that are not exported
+        if (entry.isExported() == false) {
+            return;
+        }
+
+        // if this is a classpath variable reference, we resolve it.
+        if (entry.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
+            entry = JavaCore.getResolvedClasspathEntry(entry);
+        }
+
+        // not sure if an exported var could resolve to an exported one?
+        if (entry.isExported() == false) {
+            return;
+        }
+
+        if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+            IProject refProject = wsRoot.getProject(entry.getPath().lastSegment());
+            try {
+                // ignore if it's an Android project, or if it's not a Java Project
+                if (refProject.hasNature(JavaCore.NATURE_ID) &&
+                        refProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                    // add this project to the list
+                    projects.add(refProject);
+
+                    // also get the dependency from this project.
+                    getDependencyListFromClasspath(refProject, projects, jarFiles,
+                            true /*includeJarFiles*/);
+                }
+            } catch (CoreException exception) {
+                // can't query the project nature? ignore
+            }
+        } else if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+            if (includeJarFiles) {
+                handleClasspathLibrary(entry, wsRoot, jarFiles);
+            }
+        } else if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+            // get the container and its content
+            try {
+                IClasspathContainer container = JavaCore.getClasspathContainer(
+                        entry.getPath(), javaProject);
+                // ignore the system and default_system types as they represent
+                // libraries that are part of the runtime.
+                if (container != null &&
+                        container.getKind() == IClasspathContainer.K_APPLICATION) {
+                    IClasspathEntry[] entries = container.getClasspathEntries();
+                    for (IClasspathEntry cpe : entries) {
+                        processCPE(cpe, javaProject, wsRoot, projects, jarFiles, includeJarFiles);
                     }
                 }
+            } catch (JavaModelException jme) {
+                // can't resolve the container? ignore it.
+                AdtPlugin.log(jme, "Failed to resolve ClasspathContainer: %s", entry.getPath());
             }
         }
     }
@@ -406,7 +427,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         }
     }
 
-    private static void handleClasspathEntry(IClasspathEntry e, IWorkspaceRoot wsRoot,
+    private static void handleClasspathLibrary(IClasspathEntry e, IWorkspaceRoot wsRoot,
             Set<File> jarFiles) {
         // get the IPath
         IPath path = e.getPath();
