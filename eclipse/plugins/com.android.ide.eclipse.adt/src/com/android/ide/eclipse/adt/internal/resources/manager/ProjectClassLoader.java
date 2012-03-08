@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -27,9 +28,11 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -253,8 +256,6 @@ public final class ProjectClassLoader extends ClassLoader {
         // get a java project from it
         IJavaProject javaProject = JavaCore.create(mJavaProject.getProject());
 
-        IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
-
         ArrayList<URL> oslibraryList = new ArrayList<URL>();
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
@@ -266,43 +267,71 @@ public final class ProjectClassLoader extends ClassLoader {
                         e = JavaCore.getResolvedClasspathEntry(e);
                     }
 
-                    // get the IPath
-                    IPath path = e.getPath();
-
-                    // check the name ends with .jar
-                    if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
-                        boolean local = false;
-                        IResource resource = wsRoot.findMember(path);
-                        if (resource != null && resource.exists() &&
-                                resource.getType() == IResource.FILE) {
-                            local = true;
-                            try {
-                                oslibraryList.add(new File(resource.getLocation().toOSString())
-                                        .toURI().toURL());
-                            } catch (MalformedURLException mue) {
-                                // pass
-                            }
-                        }
-
-                        if (local == false) {
-                            // if the jar path doesn't match a workspace resource,
-                            // then we get an OSString and check if this links to a valid file.
-                            String osFullPath = path.toOSString();
-
-                            File f = new File(osFullPath);
-                            if (f.exists()) {
-                                try {
-                                    oslibraryList.add(f.toURI().toURL());
-                                } catch (MalformedURLException mue) {
-                                    // pass
+                    handleClassPathEntry(e, oslibraryList);
+                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                    // get the container.
+                    try {
+                        IClasspathContainer container = JavaCore.getClasspathContainer(
+                                e.getPath(), javaProject);
+                        // ignore the system and default_system types as they represent
+                        // libraries that are part of the runtime.
+                        if (container != null &&
+                                container.getKind() == IClasspathContainer.K_APPLICATION) {
+                            IClasspathEntry[] entries = container.getClasspathEntries();
+                            for (IClasspathEntry entry : entries) {
+                                // TODO: Xav -- is this necessary?
+                                if (entry.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
+                                    entry = JavaCore.getResolvedClasspathEntry(entry);
                                 }
+
+                                handleClassPathEntry(entry, oslibraryList);
                             }
                         }
+                    } catch (JavaModelException jme) {
+                        // can't resolve the container? ignore it.
+                        AdtPlugin.log(jme, "Failed to resolve ClasspathContainer: %s",
+                                e.getPath());
                     }
                 }
             }
         }
 
         return oslibraryList.toArray(new URL[oslibraryList.size()]);
+    }
+
+    private void handleClassPathEntry(IClasspathEntry e, ArrayList<URL> oslibraryList) {
+        // get the IPath
+        IPath path = e.getPath();
+
+        // check the name ends with .jar
+        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+            boolean local = false;
+            IResource resource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
+            if (resource != null && resource.exists() &&
+                    resource.getType() == IResource.FILE) {
+                local = true;
+                try {
+                    oslibraryList.add(new File(resource.getLocation().toOSString())
+                            .toURI().toURL());
+                } catch (MalformedURLException mue) {
+                    // pass
+                }
+            }
+
+            if (local == false) {
+                // if the jar path doesn't match a workspace resource,
+                // then we get an OSString and check if this links to a valid file.
+                String osFullPath = path.toOSString();
+
+                File f = new File(osFullPath);
+                if (f.exists()) {
+                    try {
+                        oslibraryList.add(f.toURI().toURL());
+                    } catch (MalformedURLException mue) {
+                        // pass
+                    }
+                }
+            }
+        }
     }
 }

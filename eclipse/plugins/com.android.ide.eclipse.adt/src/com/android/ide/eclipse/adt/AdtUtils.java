@@ -373,8 +373,12 @@ public class AdtUtils {
      * @param offset the offset to be checked
      * @return a list (possibly empty but never null) of matching markers
      */
-    public static List<IMarker> findMarkersOnLine(String markerType,
-            IResource file, IDocument document, int offset) {
+    @NonNull
+    public static List<IMarker> findMarkersOnLine(
+            @NonNull String markerType,
+            @NonNull IResource file,
+            @NonNull IDocument document,
+            int offset) {
         List<IMarker> matchingMarkers = new ArrayList<IMarker>(2);
         try {
             IMarker[] markers = file.findMarkers(markerType, true, IResource.DEPTH_ZERO);
@@ -413,6 +417,7 @@ public class AdtUtils {
      *
      * @return the available and open Android projects, never null
      */
+    @NonNull
     public static IJavaProject[] getOpenAndroidProjects() {
         return BaseProjectHelper.getAndroidProjects(new IProjectFilter() {
             @Override
@@ -420,6 +425,43 @@ public class AdtUtils {
                 return project.isAccessible();
             }
         });
+    }
+
+    /**
+     * Returns a unique project name, based on the given {@code base} file name
+     * possibly with a {@code conjunction} and a new number behind it to ensure
+     * that the project name is unique. For example,
+     * {@code getUniqueProjectName("project", "_")} will return
+     * {@code "project"} if that name does not already exist, and if it does, it
+     * will return {@code "project_2"}.
+     *
+     * @param base the base name to use, such as "foo"
+     * @param conjunction a string to insert between the base name and the
+     *            number.
+     * @return a unique project name based on the given base and conjunction
+     */
+    public static String getUniqueProjectName(String base, String conjunction) {
+        // We're using all workspace projects here rather than just open Android project
+        // via getOpenAndroidProjects because the name cannot conflict with non-Android
+        // or closed projects either
+        IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+        IProject[] projects = workspaceRoot.getProjects();
+
+        for (int i = 1; i < 1000; i++) {
+            String name = i == 1 ? base : base + conjunction + Integer.toString(i);
+            boolean found = false;
+            for (IProject project : projects) {
+                if (project.getName().equals(name)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return name;
+            }
+        }
+
+        return base;
     }
 
     /**

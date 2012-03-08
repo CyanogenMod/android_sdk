@@ -28,7 +28,6 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.tools.lint.checks.DuplicateIdDetector;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -195,21 +194,9 @@ class AddSuppressAttribute implements ICompletionProposal {
             return null;
         }
 
-        // Some issues cannot find a specific node scope associated with the error
-        // (for example because it involves cross-file analysis and at the end of
-        // the project scan when the warnings are computed the DOM model is no longer
-        // available). Until that's resolved, we need to filter these out such that
-        // we don't add misleading annotations on individual elements; the fallback
-        // path is the DOM document itself instead.
-        if (id.equals(DuplicateIdDetector.CROSS_LAYOUT.getId())) {
-            node = document.getDocumentElement();
-        }
-
+        node = document.getDocumentElement();
         if (node == null) {
-            node = document.getDocumentElement();
-            if (node == null) {
-                return null;
-            }
+            return null;
         }
 
         String desc = String.format("Add ignore '%1$s\' to element", id);
