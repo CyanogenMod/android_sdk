@@ -680,8 +680,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     }
                     helper.finalDebugPackage(
                             osAndroidBinPath + File.separator + AdtConstants.FN_RESOURCES_AP_,
-                        classesDexPath, osFinalPackagePath,
-                        javaProject, libProjects, referencedJavaProjects, mResourceMarker);
+                        classesDexPath, osFinalPackagePath, libProjects, mResourceMarker);
                 } catch (KeytoolException e) {
                     String eMessage = e.getMessage();
 

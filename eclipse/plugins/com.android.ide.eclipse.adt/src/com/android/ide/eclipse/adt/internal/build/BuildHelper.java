@@ -63,6 +63,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,7 @@ public class BuildHelper {
     public static long sStartJavaCTime = 0;
 
     private final static int MILLION = 1000000;
+    private String mProguardFile;
 
     /**
      * An object able to put a marker on a resource.
@@ -284,9 +286,7 @@ public class BuildHelper {
      * @param intermediateApk The path to the temporary resource file.
      * @param dex The path to the dex file.
      * @param output The path to the final package file to create.
-     * @param javaProject the java project being compiled
      * @param libProjects an optional list of library projects (can be null)
-     * @param referencedJavaProjects referenced projects.
      * @return true if success, false otherwise.
      * @throws ApkCreationException
      * @throws AndroidLocationException
@@ -296,8 +296,7 @@ public class BuildHelper {
      * @throws DuplicateFileException
      */
     public void finalDebugPackage(String intermediateApk, String dex, String output,
-            final IJavaProject javaProject, List<IProject> libProjects,
-            List<IJavaProject> referencedJavaProjects, ResourceMarker resMarker)
+            List<IProject> libProjects, ResourceMarker resMarker)
             throws ApkCreationException, KeytoolException, AndroidLocationException,
             NativeLibInJarException, DuplicateFileException, CoreException {
 
@@ -321,8 +320,7 @@ public class BuildHelper {
         // from the keystore, get the signing info
         SigningInfo info = ApkBuilder.getDebugKey(keystoreOsPath, mVerbose ? mOutStream : null);
 
-        finalPackage(intermediateApk, dex, output, javaProject, libProjects,
-                referencedJavaProjects,
+        finalPackage(intermediateApk, dex, output, libProjects,
                 info != null ? info.key : null, info != null ? info.certificate : null, resMarker);
     }
 
@@ -338,9 +336,7 @@ public class BuildHelper {
      * @param dex The path to the dex file.
      * @param output The path to the final package file to create.
      * @param debugSign whether the apk must be signed with the debug key.
-     * @param javaProject the java project being compiled
      * @param libProjects an optional list of library projects (can be null)
-     * @param referencedJavaProjects referenced projects.
      * @param abiFilter an optional filter. If not null, then only the matching ABI is included in
      * the final archive
      * @return true if success, false otherwise.
@@ -350,9 +346,8 @@ public class BuildHelper {
      * @throws DuplicateFileException
      */
     public void finalPackage(String intermediateApk, String dex, String output,
-            final IJavaProject javaProject, List<IProject> libProjects,
-            List<IJavaProject> referencedJavaProjects, PrivateKey key,
-            X509Certificate certificate, ResourceMarker resMarker)
+            List<IProject> libProjects,
+            PrivateKey key, X509Certificate certificate, ResourceMarker resMarker)
             throws NativeLibInJarException, ApkCreationException, DuplicateFileException,
             CoreException {
 
@@ -362,8 +357,16 @@ public class BuildHelper {
                     mVerbose ? mOutStream: null);
             apkBuilder.setDebugMode(mDebugMode);
 
+            // either use the full compiled code paths or just the proguard file
+            // if present
+            Collection<String> pathsCollection = mCompiledCodePaths;
+            if (mProguardFile != null) {
+                pathsCollection = Collections.singletonList(mProguardFile);
+                mProguardFile = null;
+            }
+
             // Now we write the standard resources from all the output paths.
-            for (String path : mCompiledCodePaths) {
+            for (String path : pathsCollection) {
                 File file = new File(path);
                 if (file.isFile()) {
                     JarStatus jarStatus = apkBuilder.addResourcesFromJar(file);
@@ -445,6 +448,10 @@ public class BuildHelper {
         } catch (SealedApkException e) {
             // this won't happen as we control when the apk is sealed.
         }
+    }
+
+    public void setProguardOutput(String proguardFile) {
+        mProguardFile = proguardFile;
     }
 
     public Collection<String> getCompiledCodePaths() {

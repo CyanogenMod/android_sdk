@@ -20,7 +20,6 @@ import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.DexException;
@@ -237,6 +236,8 @@ public final class ExportHelper {
                 helper.runProguard(proguardConfigFiles, inputJar, jars, obfuscatedJar,
                         new File(project.getLocation().toFile(), SdkConstants.FD_PROGUARD));
 
+                helper.setProguardOutput(obfuscatedJar.getAbsolutePath());
+
                 // dx input is proguard's output
                 dxInput = Collections.singletonList(obfuscatedJar.getAbsolutePath());
             } else {
@@ -246,9 +247,6 @@ public final class ExportHelper {
             }
 
             IJavaProject javaProject = JavaCore.create(project);
-            List<IProject> javaProjects = ProjectHelper.getReferencedProjects(project);
-            List<IJavaProject> referencedJavaProjects = BuildHelper.getJavaProjects(
-                    javaProjects);
 
             helper.executeDx(javaProject, dxInput, dexFile.getAbsolutePath());
 
@@ -258,9 +256,7 @@ public final class ExportHelper {
                     resourceFile.getAbsolutePath(),
                     dexFile.getAbsolutePath(),
                     outputFile.getAbsolutePath(),
-                    javaProject,
                     libProjects,
-                    referencedJavaProjects,
                     key,
                     certificate,
                     null); //resourceMarker
@@ -375,17 +371,12 @@ public final class ExportHelper {
     private static void addFileToJar(JarOutputStream jar, File file, File rootDirectory)
             throws IOException {
         if (file.isDirectory()) {
-            for (File child: file.listFiles()) {
-                addFileToJar(jar, child, rootDirectory);
+            if (file.getName().equals("META-INF") == false) {
+                for (File child: file.listFiles()) {
+                    addFileToJar(jar, child, rootDirectory);
+                }
             }
-
         } else if (file.isFile()) {
-            // check the extension
-            String name = file.getName();
-            if (!AdtUtils.endsWith(name, AdtConstants.DOT_CLASS)) {
-                return;
-            }
-
             String rootPath = rootDirectory.getAbsolutePath();
             String path = file.getAbsolutePath();
             path = path.substring(rootPath.length()).replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
