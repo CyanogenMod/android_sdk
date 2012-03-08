@@ -436,13 +436,17 @@ public class DependencyGraph {
             if (fStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(fStream));
 
-                String line;
-                StringBuilder total = new StringBuilder(reader.readLine());
-                while ((line = reader.readLine()) != null) {
-                    total.append('\n');
-                    total.append(line);
+                try {
+                    String line;
+                    StringBuilder total = new StringBuilder(reader.readLine());
+                    while ((line = reader.readLine()) != null) {
+                        total.append('\n');
+                        total.append(line);
+                    }
+                    return total.toString();
+                } finally {
+                    reader.close();
                 }
-                return total.toString();
             }
         } catch (IOException e) {
             // we'll just return null
