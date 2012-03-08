@@ -99,7 +99,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     private boolean mMustCreateBuildConfig = false;
     private boolean mLastBuildConfigMode;
 
-    private final List<SourceProcessor> mProcessors = new ArrayList<SourceProcessor>();
+    private final List<SourceProcessor> mProcessors = new ArrayList<SourceProcessor>(2);
 
     /** cache of the java package defined in the manifest */
     private String mManifestPackage;
@@ -634,10 +634,11 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // load the source processors
             SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
-            mProcessors.add(aidlProcessor);
             SourceProcessor renderScriptProcessor = new RenderScriptProcessor(javaProject,
                     mGenFolder);
+            mProcessors.add(aidlProcessor);
             mProcessors.add(renderScriptProcessor);
+
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
         }
