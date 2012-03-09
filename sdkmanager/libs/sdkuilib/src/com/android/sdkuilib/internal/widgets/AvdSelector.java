@@ -26,6 +26,9 @@ import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.util.GrabProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
+import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
@@ -55,10 +58,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -1081,93 +1082,99 @@ public final class AvdSelector {
             final String[] command = list.toArray(new String[list.size()]);
 
             // launch the emulator
-            new ProgressTask(mTable.getShell(),
-                    "Starting Android Emulator",
-                    new ITask() {
-                        @Override
-                        public void run(ITaskMonitor monitor) {
-                            try {
-                                monitor.setDescription(
-                                        "Starting emulator for AVD '%1$s'",
-                                        avdName);
-                                int n = 10;
-                                monitor.setProgressMax(n);
-                                Process process = Runtime.getRuntime().exec(command);
-                                grabEmulatorOutput(process, monitor);
+            final ProgressTask progress = new ProgressTask(mTable.getShell(),
+                                                    "Starting Android Emulator");
+            progress.start(new ITask() {
+                ITaskMonitor mMonitor = null;
 
-                                // This small wait prevents the dialog from closing too fast:
-                                // When it works, the emulator returns immediately, even if
-                                // no UI is shown yet. And when it fails (because the AVD is
-                                // locked/running)
-                                // if we don't have a wait we don't capture the error for
-                                // some reason.
-                                for (int i = 0; i < n; i++) {
-                                    try {
-                                        Thread.sleep(100);
-                                        monitor.incProgress(1);
-                                    } catch (InterruptedException e) {
-                                        // ignore
+                @Override
+                public void run(final ITaskMonitor monitor) {
+                    mMonitor = monitor;
+                    try {
+                        monitor.setDescription(
+                                "Starting emulator for AVD '%1$s'",
+                                avdName);
+                        monitor.log("Starting emulator for AVD '%1$s'", avdName);
+
+                        // we'll wait 100ms*100 = 10s. The emulator sometimes seem to
+                        // start mostly OK just to crash a few seconds later. 10 seconds
+                        // seems a good wait for that case.
+                        int n = 100;
+                        monitor.setProgressMax(n);
+
+                        Process process = Runtime.getRuntime().exec(command);
+                        GrabProcessOutput.grabProcessOutput(
+                                process,
+                                Wait.ASYNC,
+                                new IProcessOutput() {
+                                    @Override
+                                    public void out(String line) {
+                                        if (line != null) {
+                                            filterStdOut(line);
+                                        }
                                     }
-                                }
-                            } catch (IOException e) {
-                                monitor.logError("Failed to start emulator: %1$s",
-                                        e.getMessage());
+
+                                    @Override
+                                    public void err(String line) {
+                                        if (line != null) {
+                                            filterStdErr(line);
+                                        }
+                                    }
+                                });
+
+                        // This small wait prevents the dialog from closing too fast:
+                        // When it works, the emulator returns immediately, even if
+                        // no UI is shown yet. And when it fails (because the AVD is
+                        // locked/running) this allows us to have time to capture the
+                        // error and display it.
+                        for (int i = 0; i < n; i++) {
+                            try {
+                                Thread.sleep(100);
+                                monitor.incProgress(1);
+                            } catch (InterruptedException e) {
+                                // ignore
                             }
                         }
+                    } catch (Exception e) {
+                        monitor.logError("Failed to start emulator: %1$s",
+                                e.getMessage());
+                    } finally {
+                        mMonitor = null;
+                    }
+                }
+
+                private void filterStdOut(String line) {
+                    // Skip some non-useful messages.
+                    if (line.indexOf("NSQuickDrawView") != -1) { //$NON-NLS-1$
+                        // Discard the MacOS warning:
+                        // "This application, or a library it uses, is using NSQuickDrawView,
+                        // which has been deprecated. Apps should cease use of QuickDraw and move
+                        // to Quartz."
+                        return;
+                    }
+
+                    if (line.toLowerCase().indexOf("error") != -1 ||                //$NON-NLS-1$
+                            line.indexOf("qemu: fatal") != -1) {                    //$NON-NLS-1$
+                        // Sometimes the emulator seems to output errors on stdout. Catch these.
+                        mMonitor.logError("%1$s", line);                            //$NON-NLS-1$
+                        return;
+                    }
+
+                    mMonitor.log("%1$s", line);                                     //$NON-NLS-1$
+                }
+
+                private void filterStdErr(String line) {
+                    if (line.indexOf("emulator: device") != -1 ||                   //$NON-NLS-1$
+                            line.indexOf("HAX is working") != -1) {                 //$NON-NLS-1$
+                        // These are not errors. Output them as regular stdout messages.
+                        mMonitor.log("%1$s", line);                                 //$NON-NLS-1$
+                        return;
+                    }
+
+                    mMonitor.logError("%1$s", line);                                //$NON-NLS-1$
+                }
             });
         }
-    }
-
-    /**
-     * Get the stderr/stdout outputs of a process and return when the process is done.
-     * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the output from.
-     * @param monitor An {@link ITaskMonitor} to capture errors. Cannot be null.
-     */
-    private void grabEmulatorOutput(final Process process, final ITaskMonitor monitor) {
-        // read the lines as they come. if null is returned, it's because the process finished
-        new Thread("emu-stderr") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                // create a buffer to read the stderr output
-                InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                BufferedReader errReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = errReader.readLine();
-                        if (line != null) {
-                            monitor.logError("%1$s", line);    //$NON-NLS-1$
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        }.start();
-
-        new Thread("emu-stdout") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                InputStreamReader is = new InputStreamReader(process.getInputStream());
-                BufferedReader outReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = outReader.readLine();
-                        if (line != null) {
-                            monitor.log("%1$s", line);    //$NON-NLS-1$
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        }.start();
     }
 
     private boolean isAvdRepairable(AvdStatus avdStatus) {
