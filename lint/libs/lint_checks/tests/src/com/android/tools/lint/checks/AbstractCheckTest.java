@@ -31,16 +31,13 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
@@ -176,7 +173,7 @@ public abstract class AbstractCheckTest extends TestCase {
     }
 
     private File makeTestFile(String name, String relative,
-            String contents) throws IOException {
+            final InputStream contents) throws IOException {
         File dir = getTargetDir();
         if (relative != null) {
             dir = new File(dir, relative);
@@ -193,9 +190,11 @@ public abstract class AbstractCheckTest extends TestCase {
             tempFile.delete();
         }
 
-        Writer writer = new BufferedWriter(new FileWriter(tempFile));
-        writer.write(contents);
-        writer.close();
+        Files.copy(new InputSupplier<InputStream>() {
+            public InputStream getInput() throws IOException {
+                return contents;
+            }
+        }, tempFile);
 
         return tempFile;
     }
@@ -218,10 +217,6 @@ public abstract class AbstractCheckTest extends TestCase {
         InputStream stream =
             AbstractCheckTest.class.getResourceAsStream(path);
         assertNotNull(relativePath + " does not exist", stream);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String xml = readFile(reader);
-        assertNotNull(xml);
-        assertTrue(xml.length() > 0);
         int index = targetPath.lastIndexOf('/');
         String relative = null;
         String name = targetPath;
@@ -230,23 +225,7 @@ public abstract class AbstractCheckTest extends TestCase {
             relative = targetPath.substring(0, index);
         }
 
-        return makeTestFile(name, relative, xml);
-    }
-
-    private static String readFile(Reader reader) throws IOException {
-        try {
-            StringBuilder sb = new StringBuilder();
-            while (true) {
-                int c = reader.read();
-                if (c == -1) {
-                    return sb.toString();
-                } else {
-                    sb.append((char)c);
-                }
-            }
-        } finally {
-            reader.close();
-        }
+        return makeTestFile(name, relative, stream);
     }
 
     protected boolean isEnabled(Issue issue) {
