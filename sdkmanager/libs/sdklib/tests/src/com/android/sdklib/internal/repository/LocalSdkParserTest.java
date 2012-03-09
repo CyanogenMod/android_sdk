@@ -40,6 +40,35 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                  "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
+        assertEquals(
+                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                 "Sources for Android SDK, API 0, revision 0]",
+                 Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                         sdkman,
+                         LocalSdkParser.PARSE_PLATFORMS | LocalSdkParser.PARSE_SOURCES,
+                         monitor)));
+
+        assertEquals(
+                "[SDK Platform Android 0.0, API 0, revision 1]",
+                Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                        sdkman,
+                        LocalSdkParser.PARSE_PLATFORMS,
+                        monitor)));
+
+        assertEquals(
+                "[Sources for Android SDK, API 0, revision 0]",
+                Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                        sdkman,
+                        LocalSdkParser.PARSE_SOURCES,
+                        monitor)));
+
+        assertEquals(
+                "[]",
+                Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                        sdkman,
+                        LocalSdkParser.PARSE_TOOLS,
+                        monitor)));
+
         // Now add a few "platform subfolders" system images and reload the SDK.
         // This disables the "legacy" mode but it still doesn't create any system image package
 
@@ -89,6 +118,36 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                  "Sources for Android SDK, API 0, revision 0, " +
                  "Broken Intel x86 Atom System Image, API 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
+
+        assertEquals(
+                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                 "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "ARM EABI System Image, Android API 0, revision 0, " +
+                 "Sources for Android SDK, API 0, revision 0, " +
+                 "Broken Intel x86 Atom System Image, API 0]",
+                 Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                         sdkman,
+                         LocalSdkParser.PARSE_ALL,
+                         monitor)));
+
+        assertEquals(
+                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                 "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "ARM EABI System Image, Android API 0, revision 0, " +
+                 "Sources for Android SDK, API 0, revision 0, " +
+                 "Broken Intel x86 Atom System Image, API 0]",
+                 Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                         sdkman,
+                         LocalSdkParser.PARSE_PLATFORMS | // platform also loads system-images
+                         LocalSdkParser.PARSE_SOURCES,
+                         monitor)));
+
+        assertEquals(
+                "[Sources for Android SDK, API 0, revision 0]",
+                 Arrays.toString(parser.parseSdk(sdkman.getLocation(),
+                         sdkman,
+                         LocalSdkParser.PARSE_SOURCES,
+                         monitor)));
     }
 
 }

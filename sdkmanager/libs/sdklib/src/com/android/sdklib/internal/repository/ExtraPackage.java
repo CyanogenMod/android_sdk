@@ -552,6 +552,7 @@ public class ExtraPackage extends MinToolsPackage
         Package[] pkgs = localParser.parseSdk(
                 osSdkRoot,
                 sdkManager,
+                LocalSdkParser.PARSE_EXTRAS,
                 new NullTaskMonitor(new NullSdkLog()));
 
         for (Package pkg : pkgs) {
