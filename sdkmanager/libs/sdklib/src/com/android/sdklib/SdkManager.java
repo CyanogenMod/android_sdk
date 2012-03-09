@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.FileWrapper;
@@ -24,6 +25,11 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.ExtraPackage;
+import com.android.sdklib.internal.repository.LocalSdkParser;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
+import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.repository.PkgProps;
 import com.android.util.Pair;
 
@@ -149,8 +155,8 @@ public class SdkManager {
 
             manager.setTargets(list.toArray(new IAndroidTarget[list.size()]));
 
-            // load the samples, after the targets have been set.
-            manager.loadSamples(log);
+            // Initialize the targets' sample paths, after the targets have been set.
+            manager.initializeSamplePaths(log);
 
             return manager;
         } catch (IllegalArgumentException e) {
@@ -260,7 +266,7 @@ public class SdkManager {
         setTargets(list.toArray(new IAndroidTarget[list.size()]));
 
         // load the samples, after the targets have been set.
-        loadSamples(log);
+        initializeSamplePaths(log);
     }
 
     /**
@@ -272,7 +278,7 @@ public class SdkManager {
      * version defined.
      *
      * @return The greatest {@link LayoutlibVersion} or null if none is found.
-     * @deprecated This does NOT solve the right problem and will be changed in Tools R15.
+     * @deprecated This does NOT solve the right problem and will be changed later.
      */
     @Deprecated
     public LayoutlibVersion getMaxLayoutlibVersion() {
@@ -291,6 +297,43 @@ public class SdkManager {
 
         return maxVersion;
     }
+
+    /**
+     * Returns a map of the <em>root samples directories</em> located in the SDK/extras packages.
+     * No guarantee is made that the extras' samples directory actually contain any valid samples.
+     * The only guarantee is that the root samples directory actually exists.
+     * The map is { File: Samples root directory => String: Extra package display name. }
+     *
+     * @return A non-null possibly empty map of extra samples directories and their associated
+     *   extra package display name.
+     */
+    public @NonNull Map<File, String> getExtraSamples() {
+        LocalSdkParser parser = new LocalSdkParser();
+        Package[] packages = parser.parseSdk(mOsSdkPath,
+                                             this,
+                                             LocalSdkParser.PARSE_EXTRAS,
+                                             new NullTaskMonitor(new NullSdkLog()));
+
+        Map<File, String> samples = new HashMap<File, String>();
+
+        for (Package pkg : packages) {
+            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
+                // isLocal()==true implies there's a single locally-installed archive.
+                assert pkg.getArchives() != null && pkg.getArchives().length == 1;
+                Archive a = pkg.getArchives()[0];
+                assert a != null;
+                File path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLES);
+                if (path.isDirectory()) {
+                    samples.put(path, pkg.getListDescription());
+                }
+            }
+        }
+
+        return samples;
+    }
+
+
+    // -------- private methods ----------
 
     /**
      * Loads the Platforms from the SDK.
@@ -994,11 +1037,15 @@ public class SdkManager {
     }
 
     /**
-     * Loads all samples from the {@link SdkConstants#FD_SAMPLES} directory.
+     * Initialize the sample folders for all known targets (platforms and addons).
+     * <p/>
+     * Samples used to be located at SDK/Target/samples. We then changed this to
+     * have a separate SDK/samples/samples-API directory. This parses either directories
+     * and sets the targets' sample path accordingly.
      *
      * @param log Logger. Cannot be null.
      */
-    private void loadSamples(ISdkLog log) {
+    private void initializeSamplePaths(ISdkLog log) {
         File sampleFolder = new File(mOsSdkPath, SdkConstants.FD_SAMPLES);
         if (sampleFolder.isDirectory()) {
             File[] platforms  = sampleFolder.listFiles();

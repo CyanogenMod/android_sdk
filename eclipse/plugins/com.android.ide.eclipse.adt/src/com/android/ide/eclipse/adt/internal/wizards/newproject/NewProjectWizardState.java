@@ -26,6 +26,7 @@ import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
@@ -94,14 +95,12 @@ public class NewProjectWizardState {
     public String minSdk;
     /** True if the minimum SDK version has been manually edited by the user */
     public boolean minSdkModifiedByUser;
-
     /**
-     * The directory where the samples are found. This field is only applicable
-     * when the wizard is running in create-sample-mode.
-     */
-    public File samplesDir;
-    /** A list of paths to each of the available samples for the current SDK */
-    public List<File> samples = new ArrayList<File>();
+     * A list of paths to each of the available samples for the current SDK.
+     * The pair is (String: sample display name => File: sample directory).
+     * Note we want a list, not a map since we might have duplicates.
+     * */
+    public List<Pair<String, File>> samples = new ArrayList<Pair<String, File>>();
     /** Path to the currently chosen sample */
     public File chosenSample;
 

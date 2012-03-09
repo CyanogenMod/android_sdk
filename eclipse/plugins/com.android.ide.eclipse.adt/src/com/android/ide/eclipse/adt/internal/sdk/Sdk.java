@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
@@ -300,6 +301,25 @@ public final class Sdk  {
      */
     public String getSdkLocation() {
         return mManager.getLocation();
+    }
+
+    /**
+     * Returns a <em>new</em> {@link SdkManager} that can parse the SDK located
+     * at the current {@link #getSdkLocation()}.
+     * <p/>
+     * Implementation detail: The {@link Sdk} has its own internal manager with
+     * a custom logger which is not designed to be useful for outsiders. Callers
+     * who need their own {@link SdkManager} for parsing will often want to control
+     * the logger for their own need.
+     * <p/>
+     * This is just a convenient method equivalent to writing:
+     * <pre>SdkManager.createManager(Sdk.getCurrent().getSdkLocation(), log);</pre>
+     *
+     * @param log The logger for the {@link SdkManager}.
+     * @return A new {@link SdkManager} parsing the same location.
+     */
+    public @NonNull SdkManager getNewSdkManager(@NonNull ISdkLog log) {
+        return SdkManager.createManager(getSdkLocation(), log);
     }
 
     /**

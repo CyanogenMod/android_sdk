@@ -15,17 +15,25 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.annotations.Nullable;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
+import com.android.io.FileWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SdkManager;
+import com.android.sdklib.xml.AndroidManifestParser;
+import com.android.sdklib.xml.ManifestData;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -38,7 +46,11 @@ import org.eclipse.swt.widgets.Group;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 /** A page in the New Project wizard where you select the target SDK */
 class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
@@ -196,21 +208,43 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
             // Get the sample root path and recompute the list of samples
             String samplesRootPath = target.getPath(IAndroidTarget.SAMPLES);
 
-            mValues.samplesDir = new File(samplesRootPath);
-            findSamplesManifests(mValues.samplesDir, mValues.samples);
+            File root = new File(samplesRootPath);
+            findSamplesManifests(root, root, null, null, mValues.samples);
 
-            if (mValues.samples.size() == 0) {
-                return;
-            } else {
-                Collections.sort(mValues.samples);
+            Sdk sdk = Sdk.getCurrent();
+            if (sdk != null) {
+                // Parse the extras to see if we can find samples that are
+                // compatible with the selected target API.
+                // First we need an SdkManager that suppresses all output.
+                SdkManager sdkman = sdk.getNewSdkManager(new NullSdkLog());
+
+                Map<File, String> extras = sdkman.getExtraSamples();
+                for (Entry<File, String> entry : extras.entrySet()) {
+                    File path = entry.getKey();
+                    String name = entry.getValue();
+                    findSamplesManifests(path, path, name,
+                                         target.getVersion(),
+                                         mValues.samples);
+                }
             }
 
-            // Recompute the description of each sample (the relative path
-            // to the sample root). Also try to find the old selection.
+            if (mValues.samples.isEmpty()) {
+                return;
+            } else {
+                Collections.sort(mValues.samples, new Comparator<Pair<String, File>>() {
+                    @Override
+                    public int compare(Pair<String, File> o1, Pair<String, File> o2) {
+                        // Compare the display name of the sample
+                        return o1.getFirst().compareTo(o2.getFirst());
+                    }
+                });
+            }
+
+            // Try to find the old selection.
             if (previouslyChosenSample != null) {
                 String previouslyChosenName = previouslyChosenSample.getName();
                 for (int i = 0, n = mValues.samples.size(); i < n; i++) {
-                    File file = mValues.samples.get(i);
+                    File file = mValues.samples.get(i).getSecond();
                     if (file.getName().equals(previouslyChosenName)) {
                         mValues.chosenSample = file;
                         break;
@@ -224,18 +258,61 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
      * Recursively find potential sample directories under the given directory.
      * Actually lists any directory that contains an android manifest.
      * Paths found are added the samplesPaths list.
+     *
+     * @param rootDir The "samples" root directory. Doesn't change during recursion.
+     * @param currDir The directory being scanned. Caller must initially set it to {@code rootDir}.
+     * @param extraName Optional name appended to the samples display name. Typically used to
+     *   indicate a sample comes from a given extra package.
+     * @param targetVersion Optional target version filter. If non null, only samples that are
+     *   compatible with the given target will be listed.
+     * @param samplesPaths A non-null list filled by this method with all samples found. The
+     *   pair is (String: sample display name => File: sample directory).
      */
-    private void findSamplesManifests(File samplesDir, List<File> samplesPaths) {
-        if (!samplesDir.isDirectory()) {
+    private void findSamplesManifests(
+            File rootDir,
+            File currDir,
+            @Nullable String extraName,
+            @Nullable AndroidVersion targetVersion,
+            List<Pair<String, File>> samplesPaths) {
+        if (!currDir.isDirectory()) {
             return;
         }
 
-        for (File f : samplesDir.listFiles()) {
+        for (File f : currDir.listFiles()) {
             if (f.isDirectory()) {
                 // Assume this is a sample if it contains an android manifest.
                 File manifestFile = new File(f, SdkConstants.FN_ANDROID_MANIFEST_XML);
                 if (manifestFile.isFile()) {
-                    samplesPaths.add(f);
+                    try {
+                        ManifestData data =
+                            AndroidManifestParser.parse(new FileWrapper(manifestFile));
+                        if (data != null) {
+                            boolean accept = false;
+                            if (targetVersion == null) {
+                                accept = true;
+                            } else if (targetVersion != null) {
+                                int i = data.getMinSdkVersion();
+                                if (i != ManifestData.MIN_SDK_CODENAME) {
+                                   accept = i <= targetVersion.getApiLevel();
+                                } else {
+                                    String s = data.getMinSdkVersionString();
+                                    if (s != null) {
+                                        accept = s.equals(targetVersion.getCodename());
+                                    }
+                                }
+                            }
+
+                            if (accept) {
+                                String name = getSampleDisplayName(extraName, rootDir, f);
+                                samplesPaths.add(Pair.of(name, f));
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Ignore. Don't use a sample which manifest doesn't parse correctly.
+                        AdtPlugin.log(IStatus.INFO,
+                                "NPW ignoring malformed manifest %s",   //$NON-NLS-1$
+                                manifestFile.getAbsolutePath());
+                    }
                 }
 
                 // Recurse in the project, to find embedded tests sub-projects
@@ -245,10 +322,33 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
                 if (!SdkConstants.FD_SOURCES.equals(leaf) &&
                         !SdkConstants.FD_ASSETS.equals(leaf) &&
                         !SdkConstants.FD_RES.equals(leaf)) {
-                    findSamplesManifests(f, samplesPaths);
+                    findSamplesManifests(rootDir, f, extraName, targetVersion, samplesPaths);
                 }
             }
         }
+    }
+
+    /**
+     * Compute the sample name compared to its root directory.
+     */
+    private String getSampleDisplayName(String extraName, File rootDir, File sampleDir) {
+        String path = sampleDir.getPath();
+        int n = rootDir.getPath().length();
+        if (path.length() > n) {
+            path = path.substring(n);
+            if (path.charAt(0) == File.separatorChar) {
+                path = path.substring(1);
+            }
+            if (path.endsWith(File.separator)) {
+                path = path.substring(0, path.length() - 1);
+            }
+            path = path.replaceAll(Pattern.quote(File.separator), " > ");   //$NON-NLS-1$
+        }
+        if (extraName != null) {
+            path = path + " [" + extraName + ']';                            //$NON-NLS-1$
+        }
+
+        return path;
     }
 
     private void validatePage() {
