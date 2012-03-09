@@ -61,7 +61,8 @@ public interface ISystemImage extends Comparable<ISystemImage> {
 
     /**
      * Returns the ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
-     * {@link SdkConstants#ABI_ARMEABI_V7A} or  {@link SdkConstants#ABI_INTEL_ATOM}.
+     * {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
+     * {@link SdkConstants#ABI_MIPS}.
      * Cannot be null nor empty.
      */
     public abstract String getAbiType();

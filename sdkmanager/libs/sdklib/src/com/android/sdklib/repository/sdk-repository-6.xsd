@@ -67,7 +67,7 @@
             - <extra> packages are removed. They are served only by the addon XML.
             - <platform>, <system-image>, <source>, <tool>, <platform-tool>, <doc>
               and <sample> get a new optional field <beta-rc> which can be used to indicate
-              the package is a Beta Release Candidate and not a final release. 
+              the package is a Beta Release Candidate and not a final release.
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />
@@ -225,6 +225,7 @@
             <xsd:enumeration value="armeabi"     />
             <xsd:enumeration value="armeabi-v7a" />
             <xsd:enumeration value="x86"         />
+            <xsd:enumeration value="mips"        />
         </xsd:restriction>
     </xsd:simpleType>
 

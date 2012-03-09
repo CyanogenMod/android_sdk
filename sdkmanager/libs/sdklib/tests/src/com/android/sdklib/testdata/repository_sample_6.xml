@@ -297,6 +297,19 @@
         </sdk:archives>
     </sdk:system-image>
 
+    <sdk:system-image>
+        <sdk:api-level>42</sdk:api-level>
+        <sdk:revision>12</sdk:revision>
+        <sdk:abi>mips</sdk:abi>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>12345</sdk:size>
+                <sdk:checksum type="sha1">12345637115ebf13412bbef91339ee0d94541234</sdk:checksum>
+                <sdk:url>http://www.example.com/plat42/mips/image12.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:system-image>
+
     <sdk:source>
         <sdk:api-level>42</sdk:api-level>
         <sdk:revision>12</sdk:revision>

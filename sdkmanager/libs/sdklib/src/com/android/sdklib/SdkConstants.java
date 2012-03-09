@@ -229,9 +229,11 @@ public final class SdkConstants {
     public final static String ABI_ARMEABI = "armeabi";                 //$NON-NLS-1$
     public final static String ABI_ARMEABI_V7A = "armeabi-v7a";         //$NON-NLS-1$
     public final static String ABI_INTEL_ATOM = "x86";                  //$NON-NLS-1$
+    public final static String ABI_MIPS = "mips";                       //$NON-NLS-1$
     /** Name of the CPU arch to support. */
     public final static String CPU_ARCH_ARM = "arm";                    //$NON-NLS-1$
     public final static String CPU_ARCH_INTEL_ATOM = "x86";             //$NON-NLS-1$
+    public final static String CPU_ARCH_MIPS = "mips";                  //$NON-NLS-1$
     /** Name of the CPU model to support. */
     public final static String CPU_MODEL_CORTEX_A8 = "cortex-a8";       //$NON-NLS-1$
 

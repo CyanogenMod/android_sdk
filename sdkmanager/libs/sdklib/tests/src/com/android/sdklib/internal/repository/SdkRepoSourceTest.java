@@ -734,6 +734,7 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Android SDK Platform-tools, revision 3\n" +
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
                      "Found ARM EABI System Image, Android API 42, revision 12\n" +
+                     "Found Mips System Image, Android API 42, revision 12\n" +
                      "Found Sources for Android SDK, API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
@@ -746,7 +747,7 @@ public class SdkRepoSourceTest extends TestCase {
         // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
         Package[] pkgs = mSource.getPackages();
 
-        assertEquals(15, pkgs.length);
+        assertEquals(16, pkgs.length);
         for (Package p : pkgs) {
             assertTrue(p.getArchives().length >= 1);
         }
@@ -815,8 +816,9 @@ public class SdkRepoSourceTest extends TestCase {
         }
         assertEquals(
                 "[42 armeabi, " +
-                "2 armeabi-v7a, " +
-                "2 x86]",
+                 "42 mips, " +
+                 "2 armeabi-v7a, " +
+                 "2 x86]",
                 Arrays.toString(sysImgVersionAbi.toArray()));
 
         // Check the source packages

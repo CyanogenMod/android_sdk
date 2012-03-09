@@ -40,7 +40,8 @@ public class SystemImage implements ISystemImage {
      * @param location The location of an installed system image.
      * @param locationType Where the system image folder is located for this ABI.
      * @param abiType The ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
-     *          {@link SdkConstants#ABI_ARMEABI_V7A} or  {@link SdkConstants#ABI_INTEL_ATOM}.
+     *          {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
+     *          {@link SdkConstants#ABI_MIPS}.
      */
     public SystemImage(File location, LocationType locationType, String abiType) {
         mLocation = location;
@@ -55,7 +56,8 @@ public class SystemImage implements ISystemImage {
      * @param sdkManager The current SDK manager.
      * @param locationType Where the system image folder is located for this ABI.
      * @param abiType The ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
-     *          {@link SdkConstants#ABI_ARMEABI_V7A} or  {@link SdkConstants#ABI_INTEL_ATOM}.
+     *          {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
+     *          {@link SdkConstants#ABI_MIPS}.
      * @throws IllegalArgumentException if the {@code target} used for
      *         {@link ISystemImage.LocationType#IN_SYSTEM_IMAGE} is not a {@link PlatformTarget}.
      */
@@ -135,7 +137,8 @@ public class SystemImage implements ISystemImage {
 
     /**
      * Returns the ABI type. For example, one of {@link SdkConstants#ABI_ARMEABI},
-     * {@link SdkConstants#ABI_ARMEABI_V7A} or  {@link SdkConstants#ABI_INTEL_ATOM}.
+     * {@link SdkConstants#ABI_ARMEABI_V7A}, {@link SdkConstants#ABI_INTEL_ATOM} or
+     * {@link SdkConstants#ABI_MIPS}.
      * Cannot be null nor empty.
      */
     @Override
