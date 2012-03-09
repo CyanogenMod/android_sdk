@@ -210,42 +210,42 @@ public class DocPackage extends Package implements IPackageVersion {
         return new File(osSdkRoot, SdkConstants.FD_DOCS);
     }
 
+    /**
+     * Consider doc packages to be the same if they cover the same API level,
+     * regardless of their revision number.
+     */
     @Override
     public boolean sameItemAs(Package pkg) {
-        // only one doc package so any doc package is the same item
-        // and we explicitly don't check whether the version is the same.
-        return pkg instanceof DocPackage;
+        if (pkg instanceof DocPackage) {
+            AndroidVersion rev2 = ((DocPackage) pkg).getVersion();
+            return this.getVersion().equals(rev2);
+        }
+
+        return false;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * The comparison between doc packages is a bit more complex so we override the default
-     * implementation.
+     * <hr>
+     * Doc packages are a bit different since there can only be one doc installed at
+     * the same time.
      * <p/>
-     * Docs are upgrade if they have a higher api, or a similar api but a higher revision.
-     * <p/>
-     * What makes this more complex is handling codename.
+     * We now consider that docs for different APIs are NOT updates, e.g. doc for API N+1
+     * is no longer considered an update for doc API N.
+     * However docs that have the same API version (API level + codename) are considered
+     * updates if they have a higher revision number (so 15 rev 2 is an update for 15 rev 1,
+     * but is not an update for 14 rev 1.)
      */
     @Override
     public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
-        if (replacementPackage == null) {
-            return UpdateInfo.INCOMPATIBLE;
-        }
-
-        // check they are the same item.
-        if (sameItemAs(replacementPackage) == false) {
+        // check they are the same kind of object
+        if (!(replacementPackage instanceof DocPackage)) {
             return UpdateInfo.INCOMPATIBLE;
         }
 
         DocPackage replacementDoc = (DocPackage)replacementPackage;
 
         AndroidVersion replacementVersion = replacementDoc.getVersion();
-
-        // the new doc is an update if the api level is higher (no matter the codename on either)
-        if (replacementVersion.getApiLevel() > mVersion.getApiLevel()) {
-            return UpdateInfo.UPDATE;
-        }
 
         // Check if they're the same exact (api and codename)
         if (replacementVersion.equals(mVersion)) {
