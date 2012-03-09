@@ -154,7 +154,11 @@ public class ApiLookup {
         if (cacheDir == null) {
             cacheDir = xmlFile.getParentFile();
         }
-        File binaryData = new File(cacheDir, name + ".bin");
+
+        File binaryData = new File(cacheDir, name
+                // Incorporate version number in the filename to avoid upgrade filename
+                // conflicts on Windows (such as issue #26663)
+                + "-" + BINARY_FORMAT_VERSION + ".bin"); //$NON-NLS-1$ //$NON-NLS-2$
 
         if (DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("\nTemporarily regenerating binary data unconditionally \nfrom "
