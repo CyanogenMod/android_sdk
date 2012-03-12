@@ -253,7 +253,7 @@ int  main( int argc, char**  argv )
         usage();
 
     disk_size = strtoll( argv[1], &end, 10 );
-    if (disk_size <= 0 || errno == EINVAL || errno == ERANGE) {
+    if (disk_size < 0 || (disk_size == 0 && (errno == EINVAL || errno == ERANGE))) {
         fprintf(stderr, "Invalid argument size '%s'\n\n", argv[1]);
         usage();
     }
