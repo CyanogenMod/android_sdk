@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.actions;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -46,12 +45,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -99,7 +95,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
                             .getAdapter(IProject.class);
                 }
                 if (project != null) {
-                    install(project, false /* waitForFinish */);
+                    install(project);
                 }
             }
         }
@@ -114,25 +110,19 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
      * Install the compatibility jar into the given project.
      *
      * @param project The Android project to install the compatibility jar into
-     * @param waitForFinish If true, block until the task has finished
-     * @return true if the installation was successful (or if <code>waitForFinish</code>
-     *    is false, if the installation is likely to be successful - e.g. the user has
-     *    at least agreed to all installation prompts.)
+     * @return true if the installation was successful
      */
-    public static boolean install(final IProject project, boolean waitForFinish) {
-
-        final IJavaProject javaProject = JavaCore.create(project);
-        if (javaProject == null) {
-            // Should not happen.
-            AdtPlugin.log(IStatus.ERROR, "JavaProject is null for %1$s", project); //$NON-NLS-1$
-        }
-
+    public static boolean install(final IProject project) {
         File jarPath = installSupport();
         if (jarPath != null) {
-            return addJar(javaProject, jarPath, waitForFinish);
-        } else {
-            return false;
+            try {
+                return copyJarIntoProject(project, jarPath) != null;
+            } catch (Exception e) {
+                AdtPlugin.log(e, null);
+            }
         }
+
+        return false;
     }
 
     private static File installSupport() {
@@ -180,63 +170,6 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         }
 
         return jarPath;
-    }
-
-    private static boolean addJar(
-            final IJavaProject javaProject,
-            final File jarPath,
-            boolean waitForFinish) {
-
-        // Run an Eclipse asynchronous job to update the project
-        final IProject project = javaProject.getProject();
-        Job job = new Job("Add Compatibility Library to Project") {
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    monitor.beginTask("Add library to project build path", 3);
-
-                    IResource jarRes = copyJarIntoProject(project, jarPath, monitor);
-
-                    monitor.worked(1);
-
-                    IClasspathEntry libEntry = JavaCore.newLibraryEntry(
-                            jarRes.getFullPath(),
-                            null /*sourceAttachmentPath*/,
-                            null /*sourceAttachmentRootPath*/ );
-
-                    if (!ProjectHelper.isEntryInClasspath(javaProject, libEntry)) {
-                        ProjectHelper.addEntryToClasspath(javaProject, libEntry);
-                    }
-
-                    monitor.worked(1);
-
-                    return Status.OK_STATUS;
-                } catch (JavaModelException e) {
-                    return e.getJavaModelStatus();
-                } catch (CoreException e) {
-                    return e.getStatus();
-                } catch (Exception e) {
-                    return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
-                                      "Failed", e); //$NON-NLS-1$
-                } finally {
-                    if (monitor != null) {
-                        monitor.done();
-                    }
-                }
-            }
-        };
-        job.schedule();
-
-        if (waitForFinish) {
-            try {
-                job.join();
-                return job.getState() == IStatus.OK;
-            } catch (InterruptedException e) {
-                AdtPlugin.log(e, null);
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -447,11 +380,10 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
 
     private static IResource copyJarIntoProject(
             IProject project,
-            File jarPath,
-            IProgressMonitor monitor) throws IOException, CoreException {
+            File jarPath) throws IOException, CoreException {
         IFolder resFolder = project.getFolder(SdkConstants.FD_NATIVE_LIBS);
         if (!resFolder.exists()) {
-            resFolder.create(IResource.FORCE, true /*local*/, new SubProgressMonitor(monitor, 1));
+            resFolder.create(IResource.FORCE, true /*local*/, null);
         }
 
         IFile destFile = resFolder.getFile(jarPath.getName());

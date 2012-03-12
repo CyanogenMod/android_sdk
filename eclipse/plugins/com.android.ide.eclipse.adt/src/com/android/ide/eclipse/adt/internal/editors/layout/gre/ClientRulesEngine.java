@@ -374,8 +374,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                           1 /* default button: Cancel */);
                       int answer = dialog.open();
                       if (answer == 0) {
-                          if (!AddCompatibilityJarAction.install(project,
-                                  true /*waitForFinish*/)) {
+                          if (!AddCompatibilityJarAction.install(project)) {
                               return null;
                           }
                       } else {
