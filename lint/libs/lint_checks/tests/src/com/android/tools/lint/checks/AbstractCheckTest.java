@@ -110,7 +110,11 @@ public abstract class AbstractCheckTest extends TestCase {
         return mOutput.toString();
     }
 
-    /** Run lint on the given files when constructed as a separate project */
+    /**
+     * Run lint on the given files when constructed as a separate project
+     * @return The output of the lint check. On Windows, this transforms all directory
+     *   separators to the unix-style forward slash.
+     */
     protected String lintProject(String... relativePaths) throws Exception {
         assertFalse("getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
@@ -126,7 +130,14 @@ public abstract class AbstractCheckTest extends TestCase {
 
         addManifestFile(projectDir);
 
-        return checkLint(Collections.singletonList(projectDir));
+        String result = checkLint(Collections.singletonList(projectDir));
+        // The output typically contains a few directory/filenames.
+        // On Windows we need to change the separators to the unix-style
+        // forward slash to make the test as OS-agnostic as possible.
+        if (File.separatorChar != '/') {
+            result = result.replace(File.separatorChar, '/');
+        }
+        return result;
     }
 
     private void addManifestFile(File projectDir) throws IOException {
