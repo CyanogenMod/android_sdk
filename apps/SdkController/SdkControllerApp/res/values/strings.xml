@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+-->
+
+<resources>
+
+    <!-- Strings for manifest. -->
+    <string name="app_name">SdkControllerApp</string>
+    <string name="service_description">Background service for SdkController</string>
+
+    <!-- Strings for service. -->
+    <string name="service_notif_title">SdkController is running</string>
+    
+    <!-- Strings for layout/main -->
+    <string name="main_text_intro">(insert a description of the purpose of this app here)</string>
+    <string name="main_label_service">Service:</string>
+    <string name="main_label_buttons">What you can do:</string>
+    <string name="main_btn_open_multitouch">Control Multi-touch</string>
+    <string name="main_btn_open_sensors">Control Sensors</string>
+    <string name="main_service_status_running">Running</string>
+    <string name="main_service_status_stopped">Stopped</string>
+    
+</resources>

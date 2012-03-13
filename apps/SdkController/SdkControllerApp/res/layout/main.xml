@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="8dp" >
+
+    <TextView
+        android:id="@+id/textIntro"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/main_text_intro" />
+
+    <ToggleButton
+        android:id="@+id/toggleService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textIntro" />
+
+    <TextView
+        android:id="@+id/labelService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/toggleService"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"
+        android:text="@string/main_label_service"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/textStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/labelService"
+        android:layout_marginLeft="8dp"
+        android:layout_toRightOf="@+id/labelService"
+        android:text="[status]"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/textError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/toggleService"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:background="#F00F"
+        android:gravity="center_horizontal"
+        android:padding="8dp"
+        android:text="[service errors]"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#FFF0" 
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/labelButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textError"
+        android:layout_marginTop="16dp"
+        android:text="@string/main_label_buttons"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        android:id="@+id/btnOpenMultitouch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/labelButtons"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="@string/main_btn_open_multitouch" />
+
+    <Button
+        android:id="@+id/btnOpenSensors"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnOpenMultitouch"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="@string/main_btn_open_sensors" />
+
+</RelativeLayout>
