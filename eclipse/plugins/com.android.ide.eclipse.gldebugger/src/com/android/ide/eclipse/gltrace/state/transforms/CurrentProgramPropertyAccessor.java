@@ -38,6 +38,7 @@ public class CurrentProgramPropertyAccessor implements IGLPropertyAccessor {
                 GLStateType.PROGRAM_STATE,
                 GLStateType.CURRENT_PROGRAM);
     }
+
     @Override
     public IGLProperty getProperty(IGLProperty state) {
         // obtain the current program
@@ -56,5 +57,11 @@ public class CurrentProgramPropertyAccessor implements IGLPropertyAccessor {
                                                mStateCategory,
                                                Integer.valueOf(mLocation),
                                                mStateType).getProperty(state);
+    }
+
+    @Override
+    public String getPath() {
+        return String.format("PROGRAM_STATE/PROGRAMS/${program}/%s/%d/%s",
+                mStateCategory, mLocation, mStateType);
     }
 }

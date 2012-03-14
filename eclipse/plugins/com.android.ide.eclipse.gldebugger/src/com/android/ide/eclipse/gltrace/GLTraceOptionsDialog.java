@@ -18,7 +18,7 @@ package com.android.ide.eclipse.gltrace;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.ide.eclipse.gldebugger.Activator;
+import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -283,7 +283,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void savePreferences() {
-        IEclipsePreferences prefs = new InstanceScope().getNode(Activator.PLUGIN_ID);
+        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
         prefs.put(PREF_APPNAME, mActivityToTrace);
         prefs.put(PREF_TRACEFILE, mTraceFilePath);
         try {
@@ -294,7 +294,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void loadPreferences() {
-        IEclipsePreferences prefs = new InstanceScope().getNode(Activator.PLUGIN_ID);
+        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
         mActivityToTrace = prefs.get(PREF_APPNAME, "");
         mTraceFilePath = prefs.get(PREF_TRACEFILE, "");
     }

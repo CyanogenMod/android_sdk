@@ -64,8 +64,12 @@ public class PropertyChangeTransform implements IStateTransform {
             }
         }
 
-        mOldValue = property.getValue();
-        property.setValue(mNewValue);
+        if (property != null) {
+            mOldValue = property.getValue();
+            property.setValue(mNewValue);
+        } else {
+            throw new RuntimeException("No such property: " + mAccessor.getPath());
+        }
     }
 
     /**

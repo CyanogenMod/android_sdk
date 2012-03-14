@@ -79,6 +79,7 @@ public class DurationMinimap extends Canvas {
     private Color mBackgroundColor;
     private Color mDurationLineColor;
     private Color mGlDrawColor;
+    private Color mGlErrorColor;
     private Color mContextHeaderColor;
     private Color mVisibleCallsHighlightColor;
     private Color mMouseMarkerColor;
@@ -174,6 +175,8 @@ public class DurationMinimap extends Canvas {
         mContextHeaderColor = new Color(getDisplay(), 0xd1, 0xe5, 0xf0);
         mVisibleCallsHighlightColor = new Color(getDisplay(), 0xcc, 0xcc, 0xcc);
         mMouseMarkerColor = new Color(getDisplay(), 0xaa, 0xaa, 0xaa);
+
+        mGlErrorColor = getDisplay().getSystemColor(SWT.COLOR_RED);
     }
 
     private void disposeColors() {
@@ -301,17 +304,22 @@ public class DurationMinimap extends Canvas {
             boolean resetColor = false;
             GLCall c = mCalls.get(i);
 
-            if (c.getFunction() == Function.glDrawArrays
+            long duration = c.getWallDuration();
+
+            if (c.hasErrors()) {
+                gc.setBackground(mGlErrorColor);
+                resetColor = true;
+
+                // If the call has any errors, we want it to be visible in the minimap
+                // regardless of how long it took.
+                duration = mPositionHelper.getMaxDuration();
+            } else if (c.getFunction() == Function.glDrawArrays
                     || c.getFunction() == Function.glDrawElements
                     || c.getFunction() == Function.eglSwapBuffers) {
                 gc.setBackground(mGlDrawColor);
                 resetColor = true;
-            }
 
-            long duration = c.getWallDuration();
-            if (c.getFunction() == Function.eglSwapBuffers) {
-                // egl swap buffers typically takes very little time, but since
-                // it is a significant call, we explicitly size it to the max length
+                // render all draw calls & swap buffer at max length
                 duration = mPositionHelper.getMaxDuration();
             }
 

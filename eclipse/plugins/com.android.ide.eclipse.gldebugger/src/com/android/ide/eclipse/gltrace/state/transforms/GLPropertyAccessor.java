@@ -45,7 +45,8 @@ public class GLPropertyAccessor implements IGLPropertyAccessor {
         for (GLPropertyExtractor e : mExtractors) {
             IGLProperty successor = e.getProperty(root);
             if (successor == null) {
-                return null;
+                root = null;
+                break;
             }
             root = successor;
         }
@@ -111,7 +112,7 @@ public class GLPropertyAccessor implements IGLPropertyAccessor {
 
         @Override
         public IGLProperty getProperty(IGLProperty p) {
-            if (p instanceof GLListProperty) {
+            if (p instanceof GLListProperty && mIndex >= 0) {
                 return ((GLListProperty) p).get(mIndex);
             }
             if (p instanceof GLSparseArrayProperty) {
@@ -119,5 +120,20 @@ public class GLPropertyAccessor implements IGLPropertyAccessor {
             }
             return null;
         }
+    }
+
+    @Override
+    public String getPath() {
+        StringBuilder sb = new StringBuilder(mExtractors.size() * 10);
+        for (GLPropertyExtractor e: mExtractors) {
+            if (e instanceof GLNamePropertyExtractor) {
+                sb.append(((GLNamePropertyExtractor) e).mType);
+            } else {
+                sb.append(((GLIndexPropertyExtractor) e).mIndex);
+            }
+            sb.append('/');
+        }
+
+        return sb.toString();
     }
 }

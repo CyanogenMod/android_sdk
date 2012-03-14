@@ -23,5 +23,9 @@ import com.android.ide.eclipse.gltrace.state.IGLProperty;
  * a specific property from a composite property.
  */
 public interface IGLPropertyAccessor {
+    /** Obtain a specific property from the given state. */
     IGLProperty getProperty(IGLProperty state);
+
+    /** Returns the string representation of this property accessor. */
+    String getPath();
 }

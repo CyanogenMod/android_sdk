@@ -17,24 +17,37 @@
 package com.android.ide.eclipse.gldebugger;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 /**
  * The activator class controls the plug-in life cycle
  */
-public class Activator extends AbstractUIPlugin {
+public class GlTracePlugin extends AbstractUIPlugin {
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.android.ide.eclipse.gldebugger"; //$NON-NLS-1$
 
     // The shared instance
-    private static Activator plugin;
+    private static GlTracePlugin plugin;
+
+    private MessageConsole mConsole;
+    private MessageConsoleStream mConsoleStream;
 
     /**
      * The constructor
      */
-    public Activator() {
+    public GlTracePlugin() {
     }
 
     /*
@@ -47,6 +60,12 @@ public class Activator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+
+        mConsole = new MessageConsole("OpenGL Trace View", null);
+        ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] {
+                mConsole });
+
+        mConsoleStream = mConsole.newMessageStream();
     }
 
     /*
@@ -66,7 +85,7 @@ public class Activator extends AbstractUIPlugin {
      *
      * @return the shared instance
      */
-    public static Activator getDefault() {
+    public static GlTracePlugin getDefault() {
         return plugin;
     }
 
@@ -79,5 +98,33 @@ public class Activator extends AbstractUIPlugin {
      */
     public static ImageDescriptor getImageDescriptor(String path) {
         return imageDescriptorFromPlugin(PLUGIN_ID, path);
+    }
+
+    public void logMessage(String message) {
+        mConsoleStream.println(message);
+
+        Display.getDefault().asyncExec(sShowConsoleRunnable);
+    }
+
+    private static Runnable sShowConsoleRunnable = new Runnable() {
+        @Override
+        public void run() {
+            showConsoleView();
+        };
+    };
+
+    private static void showConsoleView() {
+        IWorkbenchWindow w = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (w != null) {
+            IWorkbenchPage page = w.getActivePage();
+            if (page != null) {
+                try {
+                    page.showView(IConsoleConstants.ID_CONSOLE_VIEW, null,
+                            IWorkbenchPage.VIEW_VISIBLE);
+                } catch (PartInitException e) {
+                    // ignore
+                }
+            }
+        }
     }
 }
