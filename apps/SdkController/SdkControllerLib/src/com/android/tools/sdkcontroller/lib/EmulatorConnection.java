@@ -221,7 +221,7 @@ public class EmulatorConnection {
                 public void run() {
                     theReader();
                 }
-            }).start();
+            }, "EmuSyncChannel").start();
         }
 
         /***********************************************************************
@@ -549,13 +549,16 @@ public class EmulatorConnection {
 
     /**
      * Constructs EmulatorConnection instance.
+     * <p/>
+     * Important: Apps targeting Honeycomb+ SDK are not allowed to do networking on their main
+     * thread. The caller is responsible to make sure this is NOT called from a main UI thread.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
      *            to EmulatorConnection class for more info.
      * @throws IOException
      */
-    private void constructEmulator(int port, EmulatorConnectionType ctype) throws IOException {
+    private void constructEmulator(final int port, EmulatorConnectionType ctype) throws IOException {
         mConnectionType = ctype;
         // Create I/O looper.
         mSelector = SelectorProvider.provider().openSelector();
@@ -565,11 +568,13 @@ public class EmulatorConnection {
         mServerSocket = ServerSocketChannel.open();
         mServerSocket.configureBlocking(false);
         InetAddress local = InetAddress.getLocalHost();
-        InetSocketAddress address = new InetSocketAddress(local, port);
+        final InetSocketAddress address = new InetSocketAddress(local, port);
         mServerSocket.socket().bind(address);
 
         // Register 'accept' I/O on the server socket.
         mServerSocket.register(mSelector, SelectionKey.OP_ACCEPT);
+
+        // TODO we need a call back onBindSuccess(success or exception)
 
         Logv("EmulatorConnection listener is created for port " + port);
         // Start I/O looper and dispatcher.
@@ -578,11 +583,14 @@ public class EmulatorConnection {
             public void run() {
                 runIOLooper();
             }
-        }).start();
+        }, "EmuCnxIoLoop").start();
     }
 
     /**
      * Sends a notification message to the emulator via 'event' channel.
+     * <p/>
+     * Important: Apps targeting Honeycomb+ SDK are not allowed to do networking on their main
+     * thread. The caller is responsible to make sure this is NOT called from a main UI thread.
      *
      * @param msg
      */

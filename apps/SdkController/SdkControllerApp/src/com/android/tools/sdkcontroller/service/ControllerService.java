@@ -14,10 +14,13 @@
  * the License.
  */
 
-package com.android.tools.sdkcontroller;
+package com.android.tools.sdkcontroller.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -27,8 +30,17 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
+
+import com.android.tools.sdkcontroller.R;
+import com.android.tools.sdkcontroller.activities.MainActivity;
+import com.android.tools.sdkcontroller.handlers.BaseHandler;
+import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
+import com.android.tools.sdkcontroller.handlers.MultitouchHandler;
+import com.android.tools.sdkcontroller.handlers.SensorsHandler;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
+import com.android.tools.sdkcontroller.lib.EmulatorListener;
 
 /**
  * The background service of the SdkController.
@@ -58,6 +70,8 @@ public class ControllerService extends Service {
     /** Internal error reported by the service. */
     private String mSensorError = "";
 
+    private final Set<EmuCnxHandler> mHandlers = new HashSet<ControllerService.EmuCnxHandler>();
+
     /**
      * Interface that the service uses to notify binded activities.
      * <p/>
@@ -69,9 +83,13 @@ public class ControllerService extends Service {
         /**
          * The error string reported by the service has changed. <br/>
          * Note this may be called from a thread different than the UI thread.
-         * @param error The new error string.
          */
-        void onErrorChanged(String error);
+        void onErrorChanged();
+
+        /**
+         * The service status has changed (emulator connected/disconnected.)
+         */
+        void onStatusChanged();
     }
 
     /** Interface that callers can use to access the service. */
@@ -83,6 +101,7 @@ public class ControllerService extends Service {
          * @param listener A non-null listener. Ignored if already listed.
          */
         public void addListener(ControllerListener listener) {
+            assert listener != null;
             if (listener != null) {
                 synchronized(mListeners) {
                     if (!mListeners.contains(listener)) {
@@ -98,6 +117,7 @@ public class ControllerService extends Service {
          * @param listener A listener to remove. Can be null.
          */
         public void removeListener(ControllerListener listener) {
+            assert listener != null;
             synchronized(mListeners) {
                 mListeners.remove(listener);
             }
@@ -105,6 +125,25 @@ public class ControllerService extends Service {
 
         public String getSensorErrors() {
             return mSensorError;
+        }
+
+        public boolean isEmuConnected() {
+            for (EmuCnxHandler handler : mHandlers) {
+                if (!handler.isConnected()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public BaseHandler getHandler(HandlerType type) {
+            for (EmuCnxHandler handler : mHandlers) {
+                BaseHandler h = handler.getHandler();
+                if (h.getType() == type) {
+                    return h;
+                }
+            }
+            return null;
         }
     }
 
@@ -151,32 +190,131 @@ public class ControllerService extends Service {
     // ------
 
     /**
+     * Wrapper that associates one {@link EmulatorConnection} with
+     * one {@link BaseHandler}. Ideally we would not need this if all
+     * the action handlers were using the same port, so this wrapper
+     * is just temporary.
+     */
+    private class EmuCnxHandler implements EmulatorListener {
+
+        private EmulatorConnection mCnx;
+        private boolean mConnected;
+        private final BaseHandler mHandler;
+
+        public EmuCnxHandler(BaseHandler handler) {
+            mHandler = handler;
+        }
+
+        @Override
+        public void onEmulatorConnected() {
+            mConnected = true;
+            notifyStatusChanged();
+        }
+
+        @Override
+        public void onEmulatorDisconnected() {
+            mConnected = false;
+            notifyStatusChanged();
+        }
+
+        @Override
+        public String onEmulatorQuery(String query, String param) {
+            return mHandler.onEmulatorQuery(query, param);
+        }
+
+        @Override
+        public String onEmulatorBlobQuery(byte[] array) {
+            return mHandler.onEmulatorBlobQuery(array);
+        }
+
+        EmuCnxHandler connect() throws InterruptedException {
+            assert mCnx == null;
+
+            final EmuCnxHandler cnxHandler = this;
+
+            // Apps targeting Honeycomb SDK can't do network IO on their main UI
+            // thread. So just start the connection from a thread and then join it.
+            // Yes there's some irony in there.
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mCnx = new EmulatorConnection(mHandler.getPort(),
+                                EmulatorConnectionType.SYNC_CONNECTION,
+                                cnxHandler);
+                    } catch (IOException e) {
+                        addError("Connection failed: " + e.toString());
+                        Log.e(TAG, "EmuConnection failed");
+                    }
+                }
+            }, "EmuCnxH.connect");
+            t.start();
+            t.join();
+
+            mHandler.onStart(mCnx, ControllerService.this /*context*/);
+            return this;
+        }
+
+        void disconnect() {
+            if (mCnx != null) {
+                mHandler.onStop();
+                mCnx.disconnect();
+                mCnx = null;
+            }
+        }
+
+        boolean isConnected() {
+            return mConnected;
+        }
+
+        public BaseHandler getHandler() {
+            return mHandler;
+        }
+    }
+
+    private void disconnectAll() {
+        for(EmuCnxHandler handler : mHandlers) {
+            handler.disconnect();
+        }
+        mHandlers.clear();
+    }
+
+    /**
      * Called when the service has been created.
      */
     private void onServiceStarted() {
-        // TODO: add stuff to do when the service starts (e.g. activate sensors?)
+        try {
+            disconnectAll();
 
-        // Hack: just do see if this is working, change the error field for a little while.
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 1; i <= 5 && gServiceIsRunning; i++) {
-                    SystemClock.sleep(1000); // 1s
-                    resetError();
-                    addError("Test msg from service thread " + i);
-                }
-                resetError();
-            }
-        });
-        t.start();
+            assert mHandlers.isEmpty();
+            mHandlers.add(new EmuCnxHandler(new MultitouchHandler()).connect());
+            mHandlers.add(new EmuCnxHandler(new SensorsHandler()).connect());
+        } catch (Exception e) {
+            addError("Connection failed: " + e.toString());
+        }
     }
 
     /**
      * Called when the service is being destroyed.
      */
     private void onServiceStopped() {
+        disconnectAll();
+    }
 
-        // TODO: add stuff to do when the service stops (e.g. release sensors?)
+    private void notifyErrorChanged() {
+        synchronized(mListeners) {
+            for (ControllerListener listener : mListeners) {
+                listener.onErrorChanged();
+            }
+        }
+    }
+
+    private void notifyStatusChanged() {
+        synchronized(mListeners) {
+            for (ControllerListener listener : mListeners) {
+                listener.onStatusChanged();
+            }
+        }
     }
 
     /**
@@ -185,11 +323,7 @@ public class ControllerService extends Service {
     private void resetError() {
         mSensorError = "";
 
-        synchronized(mListeners) {
-            for (ControllerListener listener : mListeners) {
-                listener.onErrorChanged(mSensorError);
-            }
-        }
+        notifyErrorChanged();
     }
 
     /**
@@ -203,11 +337,7 @@ public class ControllerService extends Service {
         }
         mSensorError += error;
 
-        synchronized(mListeners) {
-            for (ControllerListener listener : mListeners) {
-                listener.onErrorChanged(mSensorError);
-            }
-        }
+        notifyErrorChanged();
     }
 
     /**

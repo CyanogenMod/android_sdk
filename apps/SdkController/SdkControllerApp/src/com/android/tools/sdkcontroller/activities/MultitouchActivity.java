@@ -14,14 +14,14 @@
  * the License.
  */
 
-package com.android.tools.sdkcontroller;
+package com.android.tools.sdkcontroller.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
 
-public class SensorActivity extends Activity {
+public class MultitouchActivity extends Activity {
 
-    public static String TAG = SensorActivity.class.getSimpleName();
+    public static String TAG = MultitouchActivity.class.getSimpleName();
     @SuppressWarnings("unused")
     private static boolean DEBUG = true;
 
@@ -29,6 +29,6 @@ public class SensorActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //TODO setContentView(R.layout.sensors);
+        //TODO setContentView(R.layout.multitouch);
     }
 }

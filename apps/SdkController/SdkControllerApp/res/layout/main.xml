@@ -75,7 +75,7 @@
         android:padding="8dp"
         android:text="[service errors]"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#FFF0" 
+        android:textColor="#FFF0"
         tools:ignore="HardcodedText" />
 
     <TextView
