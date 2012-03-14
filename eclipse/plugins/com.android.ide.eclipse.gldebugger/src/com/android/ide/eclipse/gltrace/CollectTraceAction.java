@@ -18,12 +18,11 @@ package com.android.ide.eclipse.gltrace;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -40,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.Semaphore;
 
 public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     /** Abstract Unix Domain Socket Name used by the gltrace device code. */
@@ -75,16 +75,6 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         TraceOptions traceOptions = dlg.getTraceOptions();
 
         IDevice device = getDevice(traceOptions.device);
-        String appName = traceOptions.activityToTrace.split("/")[0]; //$NON-NLS-1$
-        killApp(device, appName);
-
-        try {
-            setGLTraceOn(device, appName);
-        } catch (Exception e) {
-            MessageDialog.openError(shell, "Setup GL Trace",
-                    "Error initializing GL Trace on device: " + e.getMessage());
-        }
-
         try {
             setupForwarding(device, LOCAL_FORWARDED_PORT);
         } catch (Exception e) {
@@ -97,6 +87,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
                     "Error while launching application: " + e.getMessage());
+            return;
         }
 
         try {
@@ -110,8 +101,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         // to connect
         startTracing(shell, traceOptions, LOCAL_FORWARDED_PORT);
 
-        // once tracing is complete, disable tracing on device, and remove port forwarding
-        disableGLTrace(device);
+        // once tracing is complete, remove port forwarding
         disablePortForwarding(device, LOCAL_FORWARDED_PORT);
     }
 
@@ -177,11 +167,24 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
     private void startActivity(IDevice device, String appName)
             throws TimeoutException, AdbCommandRejectedException,
-            ShellCommandUnresponsiveException, IOException {
+            ShellCommandUnresponsiveException, IOException, InterruptedException {
         String startAppCmd = String.format(
-                "am start %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
+                "am start -S --opengl-trace %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
                 appName);
-        device.executeShellCommand(startAppCmd, new IgnoreOutputReceiver());
+
+        Semaphore launchCompletionSempahore = new Semaphore(0);
+        StartActivityOutputReceiver receiver = new StartActivityOutputReceiver(
+                launchCompletionSempahore);
+        device.executeShellCommand(startAppCmd, receiver);
+
+        // wait until shell finishes launch
+        launchCompletionSempahore.acquire();
+
+        // throw exception if there was an error during launch
+        String output = receiver.getOutput();
+        if (output.contains("Error")) {             //$NON-NLS-1$
+            throw new RuntimeException(output);
+        }
     }
 
     private void setupForwarding(IDevice device, int i)
@@ -194,23 +197,6 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
             device.removeForward(port, GLTRACE_UDS, DeviceUnixSocketNamespace.ABSTRACT);
         } catch (Exception e) {
             // ignore exceptions;
-        }
-    }
-
-    // adb shell setprop debug.egl.debug_proc <procname>
-    private void setGLTraceOn(IDevice device, String appName)
-            throws TimeoutException, AdbCommandRejectedException,
-            ShellCommandUnresponsiveException, IOException {
-        String setDebugProcProperty = "setprop debug.egl.debug_proc " + appName; //$NON-NLS-1$
-        device.executeShellCommand(setDebugProcProperty, new IgnoreOutputReceiver());
-    }
-
-    private void disableGLTrace(IDevice device) {
-        // The only way to disable is by enabling tracing with an invalid package name
-        try {
-            setGLTraceOn(device, "no.such.package"); //$NON-NLS-1$
-        } catch (Exception e) {
-            // ignore any exception
         }
     }
 
@@ -231,25 +217,32 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         return null;
     }
 
-    private void killApp(IDevice device, String appName) {
-        Client client = device.getClient(appName);
-        if (client != null) {
-            client.kill();
-        }
-    }
+    private static class StartActivityOutputReceiver implements IShellOutputReceiver {
+        private Semaphore mSemaphore;
+        private StringBuffer sb = new StringBuffer(300);
 
-    private static class IgnoreOutputReceiver implements IShellOutputReceiver {
+        public StartActivityOutputReceiver(Semaphore s) {
+            mSemaphore = s;
+        }
+
         @Override
-        public void addOutput(byte[] arg0, int arg1, int arg2) {
+        public void addOutput(byte[] data, int offset, int length) {
+            String d = new String(data, offset, length);
+            sb.append(d);
         }
 
         @Override
         public void flush() {
+            mSemaphore.release();
         }
 
         @Override
         public boolean isCancelled() {
             return false;
+        }
+
+        public String getOutput() {
+            return sb.toString();
         }
     }
 }
