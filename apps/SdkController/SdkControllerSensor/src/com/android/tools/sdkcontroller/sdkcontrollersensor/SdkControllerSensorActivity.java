@@ -34,9 +34,9 @@ import android.widget.CompoundButton;
 import android.view.LayoutInflater;
 import android.util.Log;
 
-import com.android.tools.sdkcontroller.lib.Emulator;
-import com.android.tools.sdkcontroller.lib.Emulator.EmulatorConnectionType;
-import com.android.tools.sdkcontroller.lib.OnEmulatorListener;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
+import com.android.tools.sdkcontroller.lib.EmulatorListener;
 
 /**
  * Encapsulates an application that monitors all sensors available on a device,
@@ -44,12 +44,12 @@ import com.android.tools.sdkcontroller.lib.OnEmulatorListener;
  * on the host machine. This application is used to provide a realistic sensor
  * emulation in Android Emulator.
  */
-public class SdkControllerSensorActivity extends Activity implements OnEmulatorListener {
+public class SdkControllerSensorActivity extends Activity implements EmulatorListener {
     /** Tag for logging messages. */
     private static final String TAG = "SdkControllerSensor";
 
     /** TCP over USB connection to the emulator. */
-    private Emulator mEmulator;
+    private EmulatorConnection mEmulator;
     /** Array containing monitored sensors. */
     private List<MonitoredSensor> mSensors;
     /** Controls displayed list of sensors. */
@@ -371,8 +371,9 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
             // Sensor emulator starts very early during emulator startup. So, as
             // discussed in comments to Emulator class, we must use synchronous
             // type of connection with the emulator.
-            mEmulator = new Emulator(Emulator.SENSORS_PORT, EmulatorConnectionType.SYNC_CONNECTION,
-                    this);
+            mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
+                                               EmulatorConnectionType.SYNC_CONNECTION,
+                                               this);
         } catch (IOException e) {
             Loge("Exception while creating server socket: " + e.getMessage());
             finish();
@@ -389,7 +390,7 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
     }
 
     /***************************************************************************
-     * OnEmulatorListener implementation
+     * EmulatorListener implementation
      **************************************************************************/
 
     /**
@@ -415,8 +416,9 @@ public class SdkControllerSensorActivity extends Activity implements OnEmulatorL
 
         // Instantiate emulator connector for the next client.
         try {
-            mEmulator = new Emulator(Emulator.SENSORS_PORT, EmulatorConnectionType.SYNC_CONNECTION,
-                    this);
+            mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
+                                               EmulatorConnectionType.SYNC_CONNECTION,
+                                               this);
         } catch (IOException e) {
             Loge("Exception while creating server socket: " + e.getMessage());
             finish();

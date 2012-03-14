@@ -18,10 +18,10 @@ package com.android.tools.sdkcontroller.lib;
 
 /**
  * Encapsulates a listener to emulator events. An object implementing this
- * interface must be registered with the Emulator instance via
- * setOnEmulatorListener method of the Emulator class.
+ * interface must be registered with the EmulatorConnection instance via
+ * setEmulatorListener method of the EmulatorConnection class.
  */
-public interface OnEmulatorListener {
+public interface EmulatorListener {
     /**
      * Called when emulator is connected. NOTE: This method is called from the
      * I/O loop, so all communication with the emulator will be "on hold" until
