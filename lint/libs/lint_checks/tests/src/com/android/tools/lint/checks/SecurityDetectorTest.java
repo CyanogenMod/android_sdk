@@ -80,8 +80,10 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testWorldWriteable() throws Exception {
         assertEquals(
-            "WorldWriteableFile.java:21: Warning: Using MODE_WORLD_WRITEABLE with openFileOutput can be risky, review carefully\n" +
-            "WorldWriteableFile.java:22: Warning: Using MODE_WORLD_READABLE with openFileOutput can be risky, review carefully",
+            "WorldWriteableFile.java:25: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully\n" +
+            "WorldWriteableFile.java:26: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully\n" +
+            "WorldWriteableFile.java:30: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully\n" +
+            "WorldWriteableFile.java:31: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully",
 
             lintProject(
                 // Java files must be renamed in source tree
