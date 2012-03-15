@@ -107,6 +107,21 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             SecurityDetector.class,
             Scope.JAVA_FILE_SCOPE);
 
+
+    /** Using the world-readable flag */
+    public static final Issue WORLD_READABLE = Issue.create(
+            "WorldReadableFiles", //$NON-NLS-1$
+            "Checks for openFileOutput() calls passing MODE_WORLD_READABLE",
+            "There are cases where it is appropriate for an application to write " +
+            "world readable files, but these should be reviewed carefully to " +
+            "ensure that they contain no private data that is leaked to other " +
+            "applications.",
+            Category.SECURITY,
+            4,
+            Severity.WARNING,
+            SecurityDetector.class,
+            Scope.JAVA_FILE_SCOPE);
+
     /** Constructs a new {@link SecurityDetector} check */
     public SecurityDetector() {
     }
@@ -198,8 +213,8 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
 
     @Override
     public List<String> getApplicableMethodNames() {
-        // TBD: Just look for MODE_WORLD_WRITEABLE anywhere? Or just in the openFileOutput
-        // method?
+        // TBD: Just look for MODE_WORLD_WRITEABLE/MODE_WORLD_READABLE anywhere?
+        // Or just in the openFileOutput method?
         return Collections.singletonList("openFileOutput"); //$NON-NLS-1$
     }
 
@@ -231,6 +246,12 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
                 Location location = mContext.getLocation(node);
                 mContext.report(WORLD_WRITEABLE, node, location,
                         "Using MODE_WORLD_WRITEABLE with openFileOutput can be " +
+                                "risky, review carefully",
+                        null);
+            } else if ("MODE_WORLD_READABLE".equals(node.getDescription())) { //$NON-NLS-1$
+                Location location = mContext.getLocation(node);
+                mContext.report(WORLD_READABLE, node, location,
+                        "Using MODE_WORLD_READABLE with openFileOutput can be " +
                                 "risky, review carefully",
                         null);
             }
