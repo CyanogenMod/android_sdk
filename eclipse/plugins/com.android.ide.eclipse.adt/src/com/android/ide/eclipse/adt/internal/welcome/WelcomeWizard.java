@@ -112,7 +112,7 @@ public class WelcomeWizard extends Wizard {
                     try {
                         Set<Integer> apiLevels = new HashSet<Integer>();
                         if (installCommon) {
-                            apiLevels.add(7);
+                            apiLevels.add(8);
                         }
                         if (installLatest) {
                             apiLevels.add(AdtUpdateDialog.USE_MAX_REMOTE_API_LEVEL);
