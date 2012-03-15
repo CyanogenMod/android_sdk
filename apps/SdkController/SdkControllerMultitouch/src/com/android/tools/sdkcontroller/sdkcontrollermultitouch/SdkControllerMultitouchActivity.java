@@ -30,9 +30,9 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
-import com.android.tools.sdkcontroller.lib.Emulator;
-import com.android.tools.sdkcontroller.lib.Emulator.EmulatorConnectionType;
-import com.android.tools.sdkcontroller.lib.OnEmulatorListener;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection;
+import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
+import com.android.tools.sdkcontroller.lib.EmulatorListener;
 
 /**
  * Encapsulates an application that monitors multi-touch activities on a device,
@@ -40,7 +40,7 @@ import com.android.tools.sdkcontroller.lib.OnEmulatorListener;
  * machine. This application is used to provide a realistic multi-touch
  * emulation in Android Emulator.
  */
-public class SdkControllerMultitouchActivity extends Activity implements OnEmulatorListener {
+public class SdkControllerMultitouchActivity extends Activity implements EmulatorListener {
     /** Tag for logging messages. */
     private static final String TAG = "SdkControllerMultitouch";
     /** Received frame is JPEG image. */
@@ -51,7 +51,7 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
     private static final int FRAME_RGB888 = 3;
 
     /** TCP over USB connection to the emulator. */
-    private Emulator mEmulator;
+    private EmulatorConnection mEmulator;
     /** View for this application. */
     private MultiTouchView mView;
     /** Listener to touch events. */
@@ -132,8 +132,9 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
 
         // Instantiate emulator connector.
         try {
-            mEmulator = new Emulator(Emulator.MULTITOUCH_PORT,
-                    EmulatorConnectionType.SYNC_CONNECTION, this);
+            mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
+                                               EmulatorConnectionType.SYNC_CONNECTION,
+                                               this);
         } catch (IOException e) {
             Loge("Exception while creating server socket: " + e.getMessage());
             finish();
@@ -146,7 +147,7 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
         super.onPause();
 
         if (mEmulator != null) {
-            mEmulator.setOnEmulatorListener(null);
+            mEmulator.setEmulatorListener(null);
             mEmulator.disconnect();
             mEmulator = null;
         }
@@ -183,7 +184,7 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
     }
 
     /***************************************************************************
-     * OnEmulatorListener implementation
+     * EmulatorListener implementation
      **************************************************************************/
 
     /**
@@ -211,8 +212,9 @@ public class SdkControllerMultitouchActivity extends Activity implements OnEmula
 
         // Instantiate emulator connector for the next client.
         try {
-            mEmulator = new Emulator(Emulator.MULTITOUCH_PORT,
-                    EmulatorConnectionType.SYNC_CONNECTION, this);
+            mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
+                                               EmulatorConnectionType.SYNC_CONNECTION,
+                                               this);
         } catch (IOException e) {
             Loge("Exception while recreating server socket: " + e.getMessage());
             finish();

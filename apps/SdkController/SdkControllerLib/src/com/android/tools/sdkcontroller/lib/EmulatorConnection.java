@@ -34,8 +34,8 @@ import android.util.Log;
  * an event channel that is intended for sending notification messages (events)
  * to the emulator.
  * <p/>
- * Emulator is considered to be "connected" when both channels are connected.
- * Emulator is considered to be "disconnected" when connection with any of the
+ * EmulatorConnection is considered to be "connected" when both channels are connected.
+ * EmulatorConnection is considered to be "disconnected" when connection with any of the
  * channels is lost.
  * <p/>
  * Instance of this class is operational only for a single connection with the
@@ -45,16 +45,16 @@ import android.util.Log;
  * Note that connection with the device over TCP port forwarding is extremely
  * fragile at the moment. For whatever reason the connection is even more
  * fragile if device uses asynchronous sockets (based on java.nio API). So, to
- * address this issue Emulator class implements two types of connections. One is
+ * address this issue EmulatorConnection class implements two types of connections. One is
  * using synchronous sockets, and another is using asynchronous sockets. The
- * type of connection is selected when Emulator instance is created (see
- * comments to Emulator's constructor).
+ * type of connection is selected when EmulatorConnection instance is created (see
+ * comments to EmulatorConnection's constructor).
  * <p/>
  * According to the exchange protocol with the emulator, queries, responses to
  * the queries, and notification messages are all zero-terminated strings.
  */
-public class Emulator {
-    /** Defines connection types supported by the Emulator class. */
+public class EmulatorConnection {
+    /** Defines connection types supported by the EmulatorConnection class. */
     public enum EmulatorConnectionType {
         /** Use asynchronous connection (based on java.nio API). */
         ASYNC_CONNECTION,
@@ -67,9 +67,9 @@ public class Emulator {
     /** TCP port reserved for the multitouch emulation. */
     public static final int MULTITOUCH_PORT = 1969;
     /** Tag for logging messages. */
-    private static final String TAG = "Emulator";
-    /** Emulator events listener. */
-    private OnEmulatorListener mListener;
+    private static final String TAG = "EmulatorConnection";
+    /** EmulatorConnection events listener. */
+    private EmulatorListener mListener;
     /** I/O selector (looper). */
     private Selector mSelector;
     /** Server socket channel. */
@@ -508,31 +508,31 @@ public class Emulator {
     } // EmulatorChannel
 
     /***************************************************************************
-     * Emulator public API
+     * EmulatorConnection public API
      **************************************************************************/
 
     /**
-     * Constructs Emulator instance.
+     * Constructs EmulatorConnection instance.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
-     *            to Emulator class for more info.
+     *            to EmulatorConnection class for more info.
      * @throws IOException
      */
-    public Emulator(int port, EmulatorConnectionType ctype) throws IOException {
+    public EmulatorConnection(int port, EmulatorConnectionType ctype) throws IOException {
         constructEmulator(port, ctype);
     }
 
     /**
-     * Constructs Emulator instance.
+     * Constructs EmulatorConnection instance.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
-     *            to Emulator class for more info.
-     * @param listener Emulator event listener.
+     *            to EmulatorConnection class for more info.
+     * @param listener EmulatorConnection event listener.
      * @throws IOException
      */
-    public Emulator(int port, EmulatorConnectionType ctype, OnEmulatorListener listener)
+    public EmulatorConnection(int port, EmulatorConnectionType ctype, EmulatorListener listener)
             throws IOException {
         mListener = listener;
         constructEmulator(port, ctype);
@@ -548,11 +548,11 @@ public class Emulator {
     }
 
     /**
-     * Constructs Emulator instance.
+     * Constructs EmulatorConnection instance.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
-     *            to Emulator class for more info.
+     *            to EmulatorConnection class for more info.
      * @throws IOException
      */
     private void constructEmulator(int port, EmulatorConnectionType ctype) throws IOException {
@@ -571,7 +571,7 @@ public class Emulator {
         // Register 'accept' I/O on the server socket.
         mServerSocket.register(mSelector, SelectionKey.OP_ACCEPT);
 
-        Logv("Emulator listener is created for port " + port);
+        Logv("EmulatorConnection listener is created for port " + port);
         // Start I/O looper and dispatcher.
         new Thread(new Runnable() {
             @Override
@@ -594,7 +594,7 @@ public class Emulator {
                 onLostConnection();
             }
         } else {
-            Logw("Attempt to send '" + msg + "' to a disconnected Emulator");
+            Logw("Attempt to send '" + msg + "' to a disconnected EmulatorConnection");
         }
     }
 
@@ -605,7 +605,7 @@ public class Emulator {
      * @param listener Listener to set. Passing null with this parameter will
      *            remove the current listener (if there was one).
      */
-    public void setOnEmulatorListener(OnEmulatorListener listener) {
+    public void setEmulatorListener(EmulatorListener listener) {
         synchronized (this) {
             mListener = listener;
         }
@@ -620,7 +620,7 @@ public class Emulator {
     }
 
     /***************************************************************************
-     * Emulator events
+     * EmulatorConnection events
      **************************************************************************/
 
     /**
@@ -629,7 +629,7 @@ public class Emulator {
      * this method returns.
      */
     private void onConnected() {
-        OnEmulatorListener listener;
+        EmulatorListener listener;
         synchronized (this) {
             listener = mListener;
         }
@@ -644,7 +644,7 @@ public class Emulator {
      * be "on hold" until this method returns.
      */
     private void onDisconnected() {
-        OnEmulatorListener listener;
+        EmulatorListener listener;
         synchronized (this) {
             listener = mListener;
         }
@@ -664,7 +664,7 @@ public class Emulator {
      *         "ok|ko[:reply data]"
      */
     private String onQuery(String query, String param) {
-        OnEmulatorListener listener;
+        EmulatorListener listener;
         synchronized (this) {
             listener = mListener;
         }
@@ -685,7 +685,7 @@ public class Emulator {
      *         "ok|ko[:reply data]"
      */
     private String onBlobQuery(byte[] array) {
-        OnEmulatorListener listener;
+        EmulatorListener listener;
         synchronized (this) {
             listener = mListener;
         }
@@ -697,7 +697,7 @@ public class Emulator {
     }
 
     /***************************************************************************
-     * Emulator implementation
+     * EmulatorConnection implementation
      **************************************************************************/
 
     /**
@@ -705,7 +705,7 @@ public class Emulator {
      */
     private void runIOLooper() {
         try {
-            Logv("Waiting on Emulator to connect...");
+            Logv("Waiting on EmulatorConnection to connect...");
             // Check mExitIoLoop before calling 'select', and after in order to
             // detect condition when mSelector has been waken up to exit the
             // I/O loop.
@@ -764,7 +764,7 @@ public class Emulator {
         if (mEventChannel != null && mQueryChannel != null) {
             // We don't accept any more connections after both channels were
             // connected.
-            Loge("Emulator is connecting to the already connected instance.");
+            Loge("EmulatorConnection is connecting to the already connected instance.");
             channel.close();
             return;
         }
@@ -820,7 +820,7 @@ public class Emulator {
         if (mEventChannel != null && mQueryChannel != null) {
             // When both, query and event channels are connected, the emulator
             // is considered to be connected.
-            Logv("... Emulator is connected.");
+            Logv("... EmulatorConnection is connected.");
             mIsConnected = true;
             onConnected();
         }
