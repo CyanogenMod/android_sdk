@@ -17,7 +17,9 @@ public class WorldWriteableFile {
         boolean success = false;
         try {
             out = openFileOutput(mFile.getName()); // ok
-            out = openFileOutput(mFile.getName(), MODE_WORLD_READABLE | MODE_WORLD_WRITEABLE);
+            out = openFileOutput(mFile.getName(), MODE_PRIVATE); // ok
+            out = openFileOutput(mFile.getName(), MODE_WORLD_WRITEABLE);
+            out = openFileOutput(mFile.getName(), MODE_WORLD_READABLE);
             // Flickr.get().downloadPhoto(params[0], Flickr.PhotoSize.LARGE,
             // out);
             success = true;
