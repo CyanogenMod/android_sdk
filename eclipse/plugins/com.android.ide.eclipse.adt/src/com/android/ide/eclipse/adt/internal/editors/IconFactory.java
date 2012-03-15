@@ -18,6 +18,7 @@
 package com.android.ide.eclipse.adt.internal.editors;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
 
@@ -181,10 +182,13 @@ public class IconFactory {
      *            in the editor's "icons" directory. If it doesn't exist, the
      *            fallback will be used instead.
      * @param fallback the fallback icon name to use if the primary icon does
-     *            not exist.
-     * @return the icon, which should not be disposed by the caller
+     *            not exist, or null if the method should return null if the
+     *            image does not exist
+     * @return the icon, which should not be disposed by the caller, or null
+     * if the image does not exist *and*
      */
-    public Image getIcon(String osName, String fallback) {
+    @Nullable
+    public Image getIcon(@NonNull String osName, @Nullable String fallback) {
         String key = osName;
         Image icon = mIconMap.get(key);
         if (icon == null && !mIconMap.containsKey(key)) {
@@ -200,21 +204,26 @@ public class IconFactory {
     }
 
     /**
-     * Returns an icon of the given name, or if that image does not exist and icon
-     * of the given fallback name.
+     * Returns an icon of the given name, or if that image does not exist and
+     * icon of the given fallback name.
      *
      * @param key the icon name
-     * @param fallbackKey the fallback image to use if the primary key does not exist
-     * @return the image descriptor
+     * @param fallbackKey the fallback image to use if the primary key does not
+     *            exist
+     * @return the image descriptor, or null if the image does not exist and the
+     *         fallbackKey is null
      */
-    @NonNull
-    public ImageDescriptor getImageDescriptor(@NonNull String key, @NonNull String fallbackKey) {
+    @Nullable
+    public ImageDescriptor getImageDescriptor(@NonNull String key, @Nullable String fallbackKey) {
         ImageDescriptor id = mImageDescMap.get(key);
         if (id == null && !mImageDescMap.containsKey(key)) {
             id = AbstractUIPlugin.imageDescriptorFromPlugin(
                     AdtPlugin.PLUGIN_ID,
                     String.format("/icons/%1$s.png", key)); //$NON-NLS-1$
             if (id == null) {
+                if (fallbackKey == null) {
+                    return null;
+                }
                 id = getImageDescriptor(fallbackKey);
             }
 

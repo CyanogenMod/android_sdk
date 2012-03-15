@@ -47,6 +47,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IShowEditorInput;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.ide.IDE;
 import org.w3c.dom.Document;
 
@@ -370,6 +371,17 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         if (mDelegate != null) {
             mDelegate.delegateInitUiRootNode(force);
         }
+    }
+
+    @Override
+    public IFormPage setActivePage(String pageId) {
+        IFormPage page = super.setActivePage(pageId);
+
+        if (mDelegate != null) {
+            return mDelegate.delegatePostSetActivePage(page, pageId);
+        }
+
+        return page;
     }
 
     /* Implements showEditorInput(...) in IShowEditorInput */

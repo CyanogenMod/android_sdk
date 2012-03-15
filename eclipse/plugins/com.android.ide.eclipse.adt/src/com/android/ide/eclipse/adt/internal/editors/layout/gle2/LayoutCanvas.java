@@ -91,7 +91,6 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.texteditor.ITextEditor;
-import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.w3c.dom.Node;
 
 import java.util.HashSet;
@@ -305,10 +304,8 @@ public class LayoutCanvas extends Canvas {
 
         // --- setup outline ---
         // Get the outline associated with this editor, if any and of the right type.
-        Object outline = editorDelegate == null ? null :
-                           editorDelegate.delegateGetAdapter(IContentOutlinePage.class);
-        if (outline instanceof OutlinePage) {
-            mOutlinePage = (OutlinePage) outline;
+        if (editorDelegate != null) {
+            mOutlinePage = editorDelegate.getGraphicalOutline();
         }
     }
 

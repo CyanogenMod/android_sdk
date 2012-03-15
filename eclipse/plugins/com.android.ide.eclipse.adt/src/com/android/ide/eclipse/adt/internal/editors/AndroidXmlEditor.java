@@ -76,6 +76,7 @@ import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.WorkbenchPart;
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelStateListener;
@@ -273,6 +274,10 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             };
         }
 
+        if (result == null && adapter == IContentOutlinePage.class) {
+            return getStructuredTextEditor().getAdapter(adapter);
+        }
+
         return result;
     }
 
@@ -416,7 +421,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         }
     }
 
-
     /**
      * Notifies this multi-page editor that the page with the given id has been
      * activated. This method is called when the user selects a different tab.
@@ -442,6 +446,15 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 // ignore
             }
         }
+    }
+
+    /**
+     * Returns true if the active page is the editor page
+     *
+     * @return true if the active page is the editor page
+     */
+    public boolean isEditorPageActive() {
+        return getActivePage() == mTextPageIndex;
     }
 
     /**

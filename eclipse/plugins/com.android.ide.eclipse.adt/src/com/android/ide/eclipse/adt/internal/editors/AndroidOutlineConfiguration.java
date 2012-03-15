@@ -16,20 +16,22 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+
 import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.wst.xml.ui.internal.quickoutline.XMLQuickOutlineConfiguration;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.wst.xml.ui.views.contentoutline.XMLContentOutlineConfiguration;
 
 /**
- * Custom version of {@link XMLQuickOutlineConfiguration} which adds in icons and
+ * Custom version of {@link XMLContentOutlineConfiguration} which adds in icons and
  * details such as id or name, to the labels.
  */
-public class AndroidQuickOutlineConfiguration extends XMLQuickOutlineConfiguration {
-    /** Constructs a new {@link AndroidQuickOutlineConfiguration} */
-    public AndroidQuickOutlineConfiguration() {
+public class AndroidOutlineConfiguration extends XMLContentOutlineConfiguration {
+    /** Constructs a new {@link AndroidOutlineConfiguration} */
+    public AndroidOutlineConfiguration() {
     }
 
     @Override
-    public ILabelProvider getLabelProvider() {
+    public ILabelProvider getLabelProvider(TreeViewer viewer) {
         return new OutlineLabelProvider();
     }
 }

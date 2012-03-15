@@ -29,8 +29,10 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IURIEditorInput;
+import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.part.EditorActionBarContributor;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.part.MultiPageEditorPart;
 import org.w3c.dom.Document;
 
 /**
@@ -200,5 +202,19 @@ public abstract class CommonXmlDelegate {
      */
     public boolean delegateSupportsFormatOnGuiEdit() {
         return false;
+    }
+
+    /**
+     * Called after the editor's active page has been set.
+     *
+     * @param superReturned the return value from
+     *            {@link MultiPageEditorPart#setActivePage(int)}
+     * @param pageIndex the index of the page to be activated; the index must be
+     *            valid
+     * @return the page, or null
+     * @see MultiPageEditorPart#setActivePage(int)
+     */
+    public IFormPage delegatePostSetActivePage(IFormPage superReturned, String pageIndex) {
+        return superReturned;
     }
 }
