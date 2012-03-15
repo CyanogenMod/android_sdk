@@ -45,6 +45,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,7 +96,8 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     /** Using the world-writable flag */
     public static final Issue WORLD_WRITEABLE = Issue.create(
             "WorldWriteableFiles", //$NON-NLS-1$
-            "Checks for openFileOutput() calls passing MODE_WORLD_WRITEABLE",
+            "Checks for openFileOutput() and getSharedPreferences() calls passing " +
+            "MODE_WORLD_WRITEABLE",
             "There are cases where it is appropriate for an application to write " +
             "world writeable files, but these should be reviewed carefully to " +
             "ensure that they contain no private data, and that if the file is " +
@@ -111,7 +113,8 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     /** Using the world-readable flag */
     public static final Issue WORLD_READABLE = Issue.create(
             "WorldReadableFiles", //$NON-NLS-1$
-            "Checks for openFileOutput() calls passing MODE_WORLD_READABLE",
+            "Checks for openFileOutput() and getSharedPreferences() calls passing " +
+            "MODE_WORLD_READABLE",
             "There are cases where it is appropriate for an application to write " +
             "world readable files, but these should be reviewed carefully to " +
             "ensure that they contain no private data that is leaked to other " +
@@ -213,9 +216,12 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
 
     @Override
     public List<String> getApplicableMethodNames() {
-        // TBD: Just look for MODE_WORLD_WRITEABLE/MODE_WORLD_READABLE anywhere?
-        // Or just in the openFileOutput method?
-        return Collections.singletonList("openFileOutput"); //$NON-NLS-1$
+        // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITABLE
+        // argument.
+        List<String> values = new ArrayList<String>(2);
+        values.add("openFileOutput"); //$NON-NLS-1$
+        values.add("getSharedPreferences"); //$NON-NLS-1$
+        return values;
     }
 
     @Override
@@ -245,13 +251,13 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             if ("MODE_WORLD_WRITEABLE".equals(node.getDescription())) { //$NON-NLS-1$
                 Location location = mContext.getLocation(node);
                 mContext.report(WORLD_WRITEABLE, node, location,
-                        "Using MODE_WORLD_WRITEABLE with openFileOutput can be " +
+                        "Using MODE_WORLD_WRITEABLE when creating files can be " +
                                 "risky, review carefully",
                         null);
             } else if ("MODE_WORLD_READABLE".equals(node.getDescription())) { //$NON-NLS-1$
                 Location location = mContext.getLocation(node);
                 mContext.report(WORLD_READABLE, node, location,
-                        "Using MODE_WORLD_READABLE with openFileOutput can be " +
+                        "Using MODE_WORLD_READABLE when creating files can be " +
                                 "risky, review carefully",
                         null);
             }
