@@ -16,11 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorMultiOutline;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -51,19 +53,25 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IShowEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
+import org.eclipse.wst.sse.ui.StructuredTextEditor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -103,8 +111,24 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
     private GraphicalEditorPart mGraphicalEditor;
     private int mGraphicalEditorIndex;
+
     /** Implementation of the {@link IContentOutlinePage} for this editor */
-    private IContentOutlinePage mOutline;
+    private OutlinePage mLayoutOutline;
+
+    /** The XML editor outline */
+    private IContentOutlinePage mEditorOutline;
+
+    /** Multiplexing outline, used for multi-page editors that have their own outline */
+    private XmlEditorMultiOutline mMultiOutline;
+
+    /**
+     * Temporary flag set by the editor caret listener which is used to cause
+     * the next getAdapter(IContentOutlinePage.class) call to return the editor
+     * outline rather than the multi-outline. See the {@link #delegateGetAdapter}
+     * method for details.
+     */
+    private boolean mCheckOutlineAdapter;
+
     /** Custom implementation of {@link IPropertySheetPage} for this editor */
     private IPropertySheetPage mPropertyPage;
 
@@ -402,16 +426,60 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
      */
     @Override
     public Object delegateGetAdapter(Class<?> adapter) {
-        // For the outline, force it to come from the Graphical Editor.
-        // This fixes the case where a layout file is opened in XML view first and the outline
-        // gets stuck in the XML outline.
-        if (IContentOutlinePage.class == adapter && mGraphicalEditor != null) {
+        if (adapter == IContentOutlinePage.class) {
+            // Somebody has requested the outline. Eclipse can only have a single outline page,
+            // even for a multi-part editor:
+            //       https://bugs.eclipse.org/bugs/show_bug.cgi?id=1917
+            // To work around this we use PDE's workaround of having a single multiplexing
+            // outline which switches its contents between the outline pages we register
+            // for it, and then on page switch we notify it to update itself.
 
-            if (mOutline == null && mGraphicalEditor != null) {
-                mOutline = new OutlinePage(mGraphicalEditor);
+            // There is one complication: The XML editor outline listens for the editor
+            // selection and uses this to automatically expand its tree children and show
+            // the current node containing the caret as selected. Unfortunately, this
+            // listener code contains this:
+            //
+            //     /* Bug 136310, unless this page is that part's
+            //      * IContentOutlinePage, ignore the selection change */
+            //     if (part.getAdapter(IContentOutlinePage.class) == this) {
+            //
+            // This means that when we return the multiplexing outline from this getAdapter
+            // method, the outline no longer updates to track the selection.
+            // To work around this, we use the following hack^H^H^H^H technique:
+            // - Add a selection listener *before* requesting the editor outline, such
+            //   that the selection listener is told about the impending selection event
+            //   right before the editor outline hears about it. Set the flag
+            //   mCheckOutlineAdapter to true. (We also only set it if the editor view
+            //   itself is active.)
+            // - In this getAdapter method, when somebody requests the IContentOutline.class,
+            //   see if mCheckOutlineAdapter to see if this request is *likely* coming
+            //   from the XML editor outline. If so, make sure it is by actually looking
+            //   at the signature of the caller. If it's the editor outline, then return
+            //   the editor outline instance itself rather than the multiplexing outline.
+            if (mCheckOutlineAdapter && mEditorOutline != null) {
+                mCheckOutlineAdapter = false;
+                // Make *sure* this is really the editor outline calling in case
+                // future versions of Eclipse changes the sequencing or dispatch of selection
+                // events:
+                StackTraceElement[] frames = new Throwable().fillInStackTrace().getStackTrace();
+                if (frames.length > 2) {
+                    StackTraceElement frame = frames[2];
+                    if (frame.getClassName().equals(
+                            "org.eclipse.wst.sse.ui.internal.contentoutline." + //$NON-NLS-1$
+                            "ConfigurableContentOutlinePage$PostSelectionServiceListener")) { //$NON-NLS-1$
+                        return mEditorOutline;
+                    }
+                }
             }
 
-            return mOutline;
+            // Use a multiplexing outline: workaround for
+            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=1917
+            if (mMultiOutline == null || mMultiOutline.isDisposed()) {
+                mMultiOutline = new XmlEditorMultiOutline();
+                updateOutline(getEditor().getActivePageInstance());
+            }
+
+            return mMultiOutline;
         }
 
         if (IPropertySheetPage.class == adapter && mGraphicalEditor != null) {
@@ -424,6 +492,60 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
         // return default
         return super.delegateGetAdapter(adapter);
+    }
+
+    /**
+     * Update the contents of the outline to show either the XML editor outline
+     * or the layout editor graphical outline depending on which tab is visible
+     */
+    private void updateOutline(IFormPage page) {
+        if (mMultiOutline == null) {
+            return;
+        }
+
+        IContentOutlinePage outline;
+        CommonXmlEditor editor = getEditor();
+        if (!editor.isEditorPageActive()) {
+            outline = getGraphicalOutline();
+        } else {
+            // Use plain XML editor outline instead
+            if (mEditorOutline == null) {
+                StructuredTextEditor structuredTextEditor = editor.getStructuredTextEditor();
+                if (structuredTextEditor != null) {
+                    IWorkbenchWindow window = editor.getSite().getWorkbenchWindow();
+                    ISelectionService service = window.getSelectionService();
+                    service.addPostSelectionListener(new ISelectionListener() {
+                        @Override
+                        public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+                            if (getEditor().isEditorPageActive()) {
+                                mCheckOutlineAdapter = true;
+                            }
+                        }
+                    });
+
+                    mEditorOutline = (IContentOutlinePage) structuredTextEditor.getAdapter(
+                            IContentOutlinePage.class);
+                }
+            }
+
+            outline = mEditorOutline;
+        }
+
+        mMultiOutline.setPageActive(outline);
+    }
+
+    /**
+     * Returns the graphical outline associated with the layout editor
+     *
+     * @return the outline page, never null
+     */
+    @NonNull
+    public OutlinePage getGraphicalOutline() {
+        if (mLayoutOutline == null) {
+            mLayoutOutline = new OutlinePage(mGraphicalEditor);
+        }
+
+        return mLayoutOutline;
     }
 
     @Override
@@ -452,6 +574,24 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
                 mGraphicalEditor.deactivated();
             }
         }
+    }
+
+    @Override
+    public void delegatePostPageChange(int newPageIndex) {
+        super.delegatePostPageChange(newPageIndex);
+
+        IFormPage page = getEditor().getActivePageInstance();
+        updateOutline(page);
+    }
+
+    @Override
+    public IFormPage delegatePostSetActivePage(IFormPage superReturned, String pageIndex) {
+        IFormPage page = superReturned;
+        if (page != null) {
+            updateOutline(page);
+        }
+
+        return page;
     }
 
     // ----- IActionContributorDelegate methods ----
