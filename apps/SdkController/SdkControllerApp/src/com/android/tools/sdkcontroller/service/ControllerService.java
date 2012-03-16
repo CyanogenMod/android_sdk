@@ -16,7 +16,6 @@
 
 package com.android.tools.sdkcontroller.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -227,32 +226,37 @@ public class ControllerService extends Service {
             return mHandler.onEmulatorBlobQuery(array);
         }
 
-        EmuCnxHandler connect() throws InterruptedException {
+        EmuCnxHandler connect() {
             assert mCnx == null;
 
             final EmuCnxHandler cnxHandler = this;
 
             // Apps targeting Honeycomb SDK can't do network IO on their main UI
-            // thread. So just start the connection from a thread and then join it.
-            // Yes there's some irony in there.
+            // thread. So just start the connection from a thread.
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        mCnx = new EmulatorConnection(mHandler.getPort(),
-                                EmulatorConnectionType.SYNC_CONNECTION,
-                                cnxHandler);
-                    } catch (IOException e) {
-                        addError("Connection failed: " + e.toString());
-                        Log.e(TAG, "EmuConnection failed");
-                    }
+                    // This will call onEmulatorBindResult with the result.
+                    mCnx = new EmulatorConnection(mHandler.getPort(),
+                            EmulatorConnectionType.SYNC_CONNECTION,
+                            cnxHandler);
                 }
             }, "EmuCnxH.connect");
             t.start();
-            t.join();
 
-            mHandler.onStart(mCnx, ControllerService.this /*context*/);
             return this;
+        }
+
+        @Override
+        public void onEmulatorBindResult(boolean success, Exception e) {
+            if (success) {
+                mHandler.onStart(mCnx, ControllerService.this /*context*/);
+            } else {
+                Log.e(TAG, "EmuCnx failed for " + mHandler.getType(), e);
+                String msg = mHandler.getType().toString() + " failed: " +
+                    (e == null ? "n/a" : e.toString());
+                addError(msg);
+            }
         }
 
         void disconnect() {

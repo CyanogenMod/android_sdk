@@ -17,7 +17,6 @@
 package com.android.tools.sdkcontroller.sdkcontrollermultitouch;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -29,6 +28,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.android.tools.sdkcontroller.lib.EmulatorConnection;
 import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
@@ -131,15 +131,10 @@ public class SdkControllerMultitouchActivity extends Activity implements Emulato
         super.onResume();
 
         // Instantiate emulator connector.
-        try {
-            mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
-                                               EmulatorConnectionType.SYNC_CONNECTION,
-                                               this);
-        } catch (IOException e) {
-            Loge("Exception while creating server socket: " + e.getMessage());
-            finish();
-        }
-
+        // This will call onEmulatorBindResult with the result.
+        mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
+                                           EmulatorConnectionType.SYNC_CONNECTION,
+                                           this);
     }
 
     @Override
@@ -211,12 +206,22 @@ public class SdkControllerMultitouchActivity extends Activity implements Emulato
         }
 
         // Instantiate emulator connector for the next client.
-        try {
-            mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
-                                               EmulatorConnectionType.SYNC_CONNECTION,
-                                               this);
-        } catch (IOException e) {
-            Loge("Exception while recreating server socket: " + e.getMessage());
+        // This will call onEmulatorBindResult with the result.
+        mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
+                                           EmulatorConnectionType.SYNC_CONNECTION,
+                                           this);
+    }
+
+    /**
+     * Called with the result from {@code new EmulatorConnection}
+     */
+    @Override
+    public void onEmulatorBindResult(boolean success, Exception e) {
+        if (!success) {
+            String msg = "Failed to connect to server socket";
+            if (e != null) msg += ": " + e.toString();
+            Loge(msg);
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             finish();
         }
     }

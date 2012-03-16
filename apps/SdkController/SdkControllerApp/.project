@@ -3,6 +3,7 @@
 	<name>SdkControllerApp</name>
 	<comment></comment>
 	<projects>
+		<project>SdkControllerLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
