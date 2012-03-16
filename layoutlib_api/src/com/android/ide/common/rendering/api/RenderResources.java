@@ -93,11 +93,31 @@ public class RenderResources {
      *
      * @param itemName the name of the item to search for.
      * @return the {@link ResourceValue} object or <code>null</code>
+     *
+     * @deprecated Use {@link #findItemInTheme(String, boolean)}
      */
+    @Deprecated
     public ResourceValue findItemInTheme(String itemName) {
         StyleResourceValue currentTheme = getCurrentTheme();
         if (currentTheme != null) {
             return findItemInStyle(currentTheme, itemName);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the {@link ResourceValue} matching a given attribute in the current theme. If the
+     * item is not directly available in the theme, the method looks in its parent theme.
+     *
+     * @param attrName the name of the attribute to search for.
+     * @param isFrameworkAttr whether the attribute is a framework attribute
+     * @return the {@link ResourceValue} object or <code>null</code>
+     */
+    public ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
+        StyleResourceValue currentTheme = getCurrentTheme();
+        if (currentTheme != null) {
+            return findItemInStyle(currentTheme, attrName, isFrameworkAttr);
         }
 
         return null;
@@ -110,8 +130,25 @@ public class RenderResources {
      * @param style the style to search in
      * @param itemName the name of the item to search for.
      * @return the {@link ResourceValue} object or <code>null</code>
+     *
+     * @Deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)}
      */
+    @Deprecated
     public ResourceValue findItemInStyle(StyleResourceValue style, String itemName) {
+        return null;
+    }
+
+    /**
+     * Returns the {@link ResourceValue} matching a given attribute in a given style. If the
+     * item is not directly available in the style, the method looks in its parent style.
+     *
+     * @param style the style to search in
+     * @param attrName the name of the attribute to search for.
+     * @param isFrameworkAttr whether the attribute is a framework attribute
+     * @return the {@link ResourceValue} object or <code>null</code>
+     */
+    public ResourceValue findItemInStyle(StyleResourceValue style, String attrName,
+            boolean isFrameworkAttr) {
         return null;
     }
 

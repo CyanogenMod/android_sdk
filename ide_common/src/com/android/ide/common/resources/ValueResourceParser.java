@@ -129,16 +129,29 @@ public final class ValueResourceParser extends DefaultHandler {
                 if (name != null) {
 
                     if (mCurrentStyle != null) {
-                        // the name can, in some cases, contain a prefix! we remove it.
+                        // is the attribute in the android namespace?
+                        boolean isFrameworkAttr = mIsFramework;
                         if (name.startsWith(DEFAULT_NS_PREFIX)) {
                             name = name.substring(DEFAULT_NS_PREFIX_LEN);
+                            isFrameworkAttr = true;
                         }
 
                         mCurrentValue = new ResourceValue(null, name, mIsFramework);
-                        mCurrentStyle.addValue(mCurrentValue);
+                        mCurrentStyle.addValue(mCurrentValue, isFrameworkAttr);
                     } else if (mCurrentDeclareStyleable != null) {
-                        mCurrentAttr = new AttrResourceValue(ResourceType.ATTR, name, mIsFramework);
+                        // is the attribute in the android namespace?
+                        boolean isFramework = mIsFramework;
+                        if (name.startsWith(DEFAULT_NS_PREFIX)) {
+                            name = name.substring(DEFAULT_NS_PREFIX_LEN);
+                            isFramework = true;
+                        }
+
+                        mCurrentAttr = new AttrResourceValue(ResourceType.ATTR, name, isFramework);
                         mCurrentDeclareStyleable.addValue(mCurrentAttr);
+
+                        // also add it to the repository.
+                        mRepository.addResourceValue(mCurrentAttr);
+
                     } else if (mCurrentAttr != null) {
                         // get the enum/flag value
                         String value = attributes.getValue(ATTR_VALUE);
