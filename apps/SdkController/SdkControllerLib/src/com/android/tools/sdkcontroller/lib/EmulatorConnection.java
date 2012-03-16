@@ -16,12 +16,22 @@
 
 package com.android.tools.sdkcontroller.lib;
 
-import java.io.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.nio.channels.spi.*;
-import java.net.*;
-import java.util.*;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Vector;
+
 import android.util.Log;
 
 /**
@@ -513,15 +523,28 @@ public class EmulatorConnection {
 
     /**
      * Constructs EmulatorConnection instance.
+     * Caller must call {@link #connect(int, EmulatorConnectionType)} afterwards.
+     *
+     * @param listener EmulatorConnection event listener. Must not be null.
+     */
+    public EmulatorConnection(EmulatorListener listener) {
+        mListener = listener;
+    }
+
+    /**
+     * Connects the EmulatorConnection instance.
+     * <p/>
+     * Important: Apps targeting Honeycomb+ SDK are not allowed to do networking on their main
+     * thread. The caller is responsible to make sure this is NOT called from a main UI thread.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
      *            to EmulatorConnection class for more info.
-     * @param listener EmulatorConnection event listener. Must not be null.
+     * @return This object for chaining calls.
      */
-    public EmulatorConnection(int port, EmulatorConnectionType ctype, EmulatorListener listener) {
-        mListener = listener;
+    public EmulatorConnection connect(int port, EmulatorConnectionType ctype) {
         constructEmulator(port, ctype);
+        return this;
     }
 
 

@@ -50,7 +50,7 @@ import com.android.tools.sdkcontroller.lib.EmulatorListener;
  * or "sending multitouch data and displaying an emulator screen".
  * <p/>
  * Each handler currently has its own emulator connection associated to it (cf class
- * {@cpde EmuCnxHandler} below. However our goal is to later move to a single connection channel
+ * {@code EmuCnxHandler} below. However our goal is to later move to a single connection channel
  * with all data multiplexed on top of it.
  * <p/>
  * All the handlers are created when the service starts, and whether the emulator connection
@@ -246,7 +246,7 @@ public class ControllerService extends Service {
         EmuCnxHandler connect() {
             assert mCnx == null;
 
-            final EmuCnxHandler cnxHandler = this;
+            mCnx = new EmulatorConnection(this);
 
             // Apps targeting Honeycomb SDK can't do network IO on their main UI
             // thread. So just start the connection from a thread.
@@ -254,9 +254,7 @@ public class ControllerService extends Service {
                 @Override
                 public void run() {
                     // This will call onEmulatorBindResult with the result.
-                    mCnx = new EmulatorConnection(mHandler.getPort(),
-                            EmulatorConnectionType.SYNC_CONNECTION,
-                            cnxHandler);
+                    mCnx.connect(mHandler.getPort(), EmulatorConnectionType.SYNC_CONNECTION);
                 }
             }, "EmuCnxH.connect");
             t.start();

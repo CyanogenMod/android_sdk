@@ -29,7 +29,6 @@
     <string name="service_notif_title">SdkController is running</string>
 
     <!-- Strings for layout/main -->
-    <string name="main_text_intro">(insert a description of the purpose of this app here)</string>
     <string name="main_label_service">Service:</string>
     <string name="main_label_buttons">What you can do:</string>
     <string name="main_btn_open_multitouch">Control Multi-touch</string>

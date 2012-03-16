@@ -17,92 +17,98 @@
  */
 -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/RelativeLayout1"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:padding="8dp" >
+    android:layout_height="wrap_content"
+    >
 
-    <TextView
-        android:id="@+id/textIntro"
+    <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/main_text_intro" />
+        android:padding="8dp" >
 
-    <ToggleButton
-        android:id="@+id/toggleService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/textIntro" />
+        <ToggleButton
+            android:id="@+id/toggleService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/textIntro" />
 
-    <TextView
-        android:id="@+id/labelService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/toggleService"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="20dp"
-        android:text="@string/main_label_service"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        <TextView
+            android:id="@+id/labelService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/toggleService"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="20dp"
+            android:text="@string/main_label_service"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <TextView
-        android:id="@+id/textStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/labelService"
-        android:layout_marginLeft="8dp"
-        android:layout_toRightOf="@+id/labelService"
-        android:text="[status]"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/textStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/labelService"
+            android:layout_marginLeft="8dp"
+            android:layout_toRightOf="@+id/labelService"
+            android:text="[status]"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/textError"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/toggleService"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
-        android:background="#F00F"
-        android:gravity="center_horizontal"
-        android:padding="8dp"
-        android:text="[service errors]"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#FFF0"
-        tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/textError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/toggleService"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:background="#F00F"
+            android:gravity="center_horizontal"
+            android:padding="8dp"
+            android:text="[service errors]"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#FFF0"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/labelButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textError"
-        android:layout_marginTop="16dp"
-        android:text="@string/main_label_buttons"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        <TextView
+            android:id="@+id/labelButtons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textError"
+            android:layout_marginTop="16dp"
+            android:text="@string/main_label_buttons"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <Button
-        android:id="@+id/btnOpenMultitouch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/labelButtons"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="@string/main_btn_open_multitouch" />
+        <Button
+            android:id="@+id/btnOpenMultitouch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/labelButtons"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:text="@string/main_btn_open_multitouch" />
 
-    <Button
-        android:id="@+id/btnOpenSensors"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnOpenMultitouch"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="@string/main_btn_open_sensors" />
+        <Button
+            android:id="@+id/btnOpenSensors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnOpenMultitouch"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:text="@string/main_btn_open_sensors" />
 
-</RelativeLayout>
+        <WebView
+            android:id="@+id/webIntro"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnOpenSensors"
+            android:layout_marginTop="16dp"
+            android:background="@null"
+            />
+
+    </RelativeLayout>
+</ScrollView>

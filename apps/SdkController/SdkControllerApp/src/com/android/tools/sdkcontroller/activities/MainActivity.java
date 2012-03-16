@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -56,6 +57,9 @@ public class MainActivity extends BaseBindingActivity {
 
         mTextError  = (TextView) findViewById(R.id.textError);
         mTextStatus = (TextView) findViewById(R.id.textStatus);
+
+        WebView wv = (WebView) findViewById(R.id.webIntro);
+        wv.loadUrl("file:///android_asset/intro_help.html");
 
         setupButtons();
     }
@@ -133,8 +137,10 @@ public class MainActivity extends BaseBindingActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     bindToService();
+                    updateButtons();
                 } else {
                     stopService();
+                    updateButtons();
                 }
             }
         });

@@ -19,7 +19,8 @@ package com.android.tools.sdkcontroller.handlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -35,6 +36,7 @@ public class SensorsHandler extends BaseHandler {
 
     private static String TAG = SensorsHandler.class.getSimpleName();
     private static boolean DEBUG = true;
+    private static String EVENT_QUEUE_END = "@end@";
 
     /**
      * Sensor "enabled by emulator" state has changed.
@@ -43,7 +45,7 @@ public class SensorsHandler extends BaseHandler {
     public static final int SENSOR_STATE_CHANGED = 1;
     /**
      * Sensor display value has changed.
-     * Parameters are [0]=MonitoredSensor, [1]=String value.
+     * Parameters are [0]=MonitoredSensor, [1]=String value
      */
     public static final int SENSOR_DISPLAY_MODIFIED = 2;
 
@@ -51,6 +53,10 @@ public class SensorsHandler extends BaseHandler {
     private final List<MonitoredSensor> mSensors = new ArrayList<MonitoredSensor>();
     private EmulatorConnection mConnection;
     private SensorManager mSenMan;
+
+    private final AtomicInteger mEventCount = new AtomicInteger(0);
+    private volatile boolean mRunEventQueue = true;
+    private final BlockingQueue<String> mEventQueue = new LinkedBlockingQueue<String>();
 
     public SensorsHandler() {
     }
@@ -65,14 +71,26 @@ public class SensorsHandler extends BaseHandler {
         return EmulatorConnection.SENSORS_PORT;
     }
 
+    /**
+     * Returns the list of sensors found on the device.
+     * The list is computed once by {@link #onStart(EmulatorConnection, Context)}.
+     *
+     * @return A non-null possibly-empty list of sensors.
+     */
     public List<MonitoredSensor> getSensors() {
         return mSensors;
     }
 
+    public int getEventSentCount() {
+        return mEventCount.get();
+    }
+
     @Override
     public void onStart(EmulatorConnection connection, Context context) {
+        assert connection != null;
         mConnection = connection;
-        mNotificationThread.start();
+        mRunEventQueue = true;
+        mEventThread.start();
 
         // Iterate through the available sensors, adding them to the array.
         SensorManager sm = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -101,9 +119,12 @@ public class SensorsHandler extends BaseHandler {
     @Override
     public void onStop() {
         stopSensors();
-        // To stop the notification queue, we nullify the connect and send a msg
+        // Stop the message queue
         mConnection = null;
-        mNotificationQueue.offer("<end>");
+        if (mRunEventQueue) {
+            mRunEventQueue = false;
+            mEventQueue.offer(EVENT_QUEUE_END);
+        }
     }
 
     /**
@@ -254,23 +275,24 @@ public class SensorsHandler extends BaseHandler {
      * Internals
      **************************************************************************/
 
-    private final BlockingQueue<String> mNotificationQueue = new LinkedBlockingDeque<String>();
-    private final Thread mNotificationThread = new Thread(new Runnable() {
+    private final Thread mEventThread = new Thread(new Runnable() {
         @Override
         public void run() {
-            while(true) {
+            if (DEBUG) Log.d(TAG, "EventThread.started");
+            while(mRunEventQueue) {
                 try {
-                    String msg = mNotificationQueue.take();
-                    if (mConnection == null) {
-                        return;
+                    String msg = mEventQueue.take();
+                    if (msg != null && mConnection != null && !msg.equals(EVENT_QUEUE_END)) {
+                        mConnection.sendNotification(msg);
+                        mEventCount.incrementAndGet();
                     }
-                    mConnection.sendNotification(msg);
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "NotifQueue.take", e);
+                    Log.e(TAG, "EventThread", e);
                 }
             }
+            if (DEBUG) Log.d(TAG, "EventThread.terminate");
         }
-    }, "sensorNotif");
+    }, "eventThread");
 
     /**
      * Sends sensor's event to the emulator.
@@ -279,7 +301,7 @@ public class SensorsHandler extends BaseHandler {
      */
     private void sendSensorEvent(String msg) {
         try {
-            mNotificationQueue.put(msg);
+            mEventQueue.put(msg);
         } catch (InterruptedException e) {
             Log.e(TAG, "NotifQueue.put", e);
         }
@@ -590,6 +612,7 @@ public class SensorsHandler extends BaseHandler {
                 }
                 mValue = val;
                 sendSensorEvent(msg);
+
                 notifyUi(SENSOR_DISPLAY_MODIFIED, this, val);
             }
 
