@@ -16,6 +16,7 @@
 
 package com.android.tools.sdkcontroller.lib;
 
+
 /**
  * Encapsulates a listener to emulator events. An object implementing this
  * interface must be registered with the EmulatorConnection instance via
@@ -24,10 +25,11 @@ package com.android.tools.sdkcontroller.lib;
 public interface EmulatorListener {
 
     /**
-     * Called as a side effect of constructing a new {@link EmulatorConnection}
-     * when emulator is bound with its communication socket.
+     * Called as a side effect of constructing a new {@link EmulatorConnection} to
+     * indicate whether the when emulator is bound with its communication socket.
      *
      * @param success True if the socket bind was successful.
+     *   False when the socket bind failed.
      * @param e Any exception thrown whilst trying to bind to the communication socket.
      *   Null if there's no exception (typically when {@code success==true}).
      */

@@ -36,6 +36,12 @@ import com.android.tools.sdkcontroller.handlers.SensorsHandler.MonitoredSensor;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
 
+/**
+ * Activity that displays and controls the sensors from {@link SensorsHandler}.
+ * For each sensor it displays a checkbox that is enabled if the sensor is supported
+ * by the emulator. The user can select whether the sensor is active. It also displays
+ * data from the sensor when available.
+ */
 public class SensorActivity extends BaseBindingActivity {
 
     @SuppressWarnings("hiding")
@@ -132,7 +138,9 @@ public class SensorActivity extends BaseBindingActivity {
             assert mDisplayedSensors.isEmpty();
             List<MonitoredSensor> sensors = mSensorHandler.getSensors();
             for (MonitoredSensor sensor : sensors) {
-                final TableRow row = (TableRow) inflater.inflate(R.layout.sensor_row, mTableLayout, false);
+                final TableRow row = (TableRow) inflater.inflate(R.layout.sensor_row,
+                                                                 mTableLayout,
+                                                                 false);
                 mTableLayout.addView(row);
                 mDisplayedSensors.put(sensor, new DisplayInfo(sensor, row));
             }

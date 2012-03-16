@@ -44,6 +44,22 @@ import com.android.tools.sdkcontroller.lib.EmulatorListener;
 /**
  * The background service of the SdkController.
  * There can be only one instance of this.
+ * <p/>
+ * The service manages a number of action "handlers" which can be seen as individual tasks
+ * that the user might want to accomplish, for example "sending sensor data to the emulator"
+ * or "sending multitouch data and displaying an emulator screen".
+ * <p/>
+ * Each handler currently has its own emulator connection associated to it (cf class
+ * {@cpde EmuCnxHandler} below. However our goal is to later move to a single connection channel
+ * with all data multiplexed on top of it.
+ * <p/>
+ * All the handlers are created when the service starts, and whether the emulator connection
+ * is successful or not, and whether there's any UI to control it. It's up to the handlers
+ * to deal with these specific details. <br/>
+ * For example the {@link SensorsHandler} initializes its sensor list as soon as created
+ * and then tries to send data as soon as there's an emulator connection.
+ * On the other hand the {@link MultitouchHandler} lays dormant till there's an UI interacting
+ * with it.
  */
 public class ControllerService extends Service {
 
@@ -55,6 +71,7 @@ public class ControllerService extends Service {
     public static String TAG = ControllerService.class.getSimpleName();
     private static boolean DEBUG = true;
 
+    /** Identifier for the notification. */
     private static int NOTIF_ID = 'S' << 24 + 'd' << 16 + 'k' << 8 + 'C' << 0;
 
     private final IBinder mBinder = new ControllerBinder();
