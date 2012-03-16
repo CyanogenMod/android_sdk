@@ -1083,6 +1083,9 @@ public class BuildHelper {
                     public void err(String line) {
                         if (line != null) {
                             results.add(line);
+                            if (BuildVerbosity.VERBOSE == AdtPrefs.getPrefs().getBuildVerbosity()) {
+                                AdtPlugin.printErrorToConsole(project, line);
+                            }
                         }
                     }
                 });
