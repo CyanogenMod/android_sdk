@@ -14,15 +14,10 @@
  * the License.
  */
 
-package com.android.tools.sdkcontroller;
+package com.android.tools.sdkcontroller.activities;
 
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -32,18 +27,19 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.android.tools.sdkcontroller.ControllerService.ControllerBinder;
-import com.android.tools.sdkcontroller.ControllerService.ControllerListener;
+import com.android.tools.sdkcontroller.R;
+import com.android.tools.sdkcontroller.service.ControllerService;
+import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
+import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
 
-public class MainActivity extends Activity {
+public class MainActivity extends BaseBindingActivity {
 
+    @SuppressWarnings("hiding")
     public static String TAG = MainActivity.class.getSimpleName();
     private static boolean DEBUG = true;
     private Button mBtnOpenMultitouch;
     private Button mBtnOpenSensors;
     private ToggleButton mBtnToggleService;
-    private ServiceConnection mServiceConnection;
-    protected ControllerBinder mServiceBinder;
     private TextView mTextError;
     private TextView mTextStatus;
 
@@ -61,34 +57,46 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        if (DEBUG) Log.d(TAG, "onResume");
+        // BaseBindingActivity.onResume will bind to the service.
         super.onResume();
-        bindToService();
         updateError();
     }
 
     @Override
     protected void onPause() {
-        if (DEBUG) Log.d(TAG, "onPause");
+        // BaseBindingActivity.onResume will unbind from (but not stop) the service.
         super.onPause();
-        // On pause we unbind but don't stop -- this is the case when the users goes home
-        // or invokes any other activity, including our owns.
-        boolean isRunning = mServiceBinder != null;
-        unbindFromService();
     }
 
     @Override
     public void onBackPressed() {
         if (DEBUG) Log.d(TAG, "onBackPressed");
-        // If back is pressed, we stop the service automatically. It seems more intuitive that way.
+        // If back is pressed, we stop the service automatically.
+        // It seems more intuitive that way.
         stopService();
         super.onBackPressed();
     }
 
     // ----------
 
-    private void setupButtons() {
+    @Override
+    protected void onServiceConnected() {
+        updateButtons();
+    }
 
+    @Override
+    protected void onServiceDisconnected() {
+        updateButtons();
+    }
+
+    @Override
+    protected ControllerListener createControllerListener() {
+        return new MainControllerListener();
+    }
+
+    // ----------
+
+    private void setupButtons() {
         mBtnOpenMultitouch = (Button) findViewById(R.id.btnOpenMultitouch);
         mBtnOpenSensors    = (Button) findViewById(R.id.btnOpenSensors);
 
@@ -133,56 +141,6 @@ public class MainActivity extends Activity {
         mBtnOpenMultitouch.setEnabled(running);
         mBtnOpenSensors.setEnabled(running);
         mBtnToggleService.setChecked(running);
-
-        mTextStatus.setText(
-                getText(running ? R.string.main_service_status_running
-                                : R.string.main_service_status_stopped));
-    }
-
-    /**
-     * Starts the service and binds to it.
-     */
-    private void bindToService() {
-        if (mServiceConnection == null) {
-            final ControllerListener listener = new OurControllerListener();
-
-            mServiceConnection = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    if (DEBUG) Log.d(TAG, "Activity connected to service");
-                    mServiceBinder = (ControllerBinder) service;
-                    mServiceBinder.addListener(listener);
-                    updateButtons();
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    if (DEBUG) Log.d(TAG, "Activity disconnected from service");
-                    mServiceBinder = null;
-                    updateButtons();
-                }
-            };
-        }
-
-        // Start service so that it doesn't stop when we unbind
-        if (DEBUG) Log.d(TAG, "start requested & bind service");
-        Intent service = new Intent(this, ControllerService.class);
-        startService(service);
-        bindService(service,
-                mServiceConnection,
-                Context.BIND_AUTO_CREATE);
-    }
-
-    /**
-     * Unbinds from the service but does not actually stop the service.
-     * This lets us have it run in the background even if this isn't the active app.
-     */
-    private void unbindFromService() {
-        if (mServiceConnection != null) {
-            if (DEBUG) Log.d(TAG, "unbind service");
-            unbindService(mServiceConnection);
-            mServiceConnection = null;
-        }
     }
 
     /**
@@ -195,9 +153,9 @@ public class MainActivity extends Activity {
         stopService(service);
     }
 
-    private class OurControllerListener implements ControllerListener {
+    private class MainControllerListener implements ControllerListener {
         @Override
-        public void onErrorChanged(String error) {
+        public void onErrorChanged() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -205,15 +163,35 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @Override
+        public void onStatusChanged() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateStatus();
+                }
+            });
+        }
     }
 
     private void updateError() {
-        String error = mServiceBinder == null ? "" : mServiceBinder.getSensorErrors();
+        ControllerBinder binder = getServiceBinder();
+        String error = binder == null ? "" : binder.getSensorErrors();
         if (error == null) {
             error = "";
         }
 
         mTextError.setVisibility(error.length() == 0 ? View.GONE : View.VISIBLE);
         mTextError.setText(error);
+    }
+
+    private void updateStatus() {
+        ControllerBinder binder = getServiceBinder();
+        boolean connected = binder == null ? false : binder.isEmuConnected();
+        mTextStatus.setText(
+                getText(connected ? R.string.main_service_status_connected
+                                  : R.string.main_service_status_disconnected));
+
     }
 }
