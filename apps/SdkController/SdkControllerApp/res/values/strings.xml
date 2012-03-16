@@ -20,7 +20,9 @@
 <resources>
 
     <!-- Strings for manifest. -->
-    <string name="app_name">Sdk Controller App</string>
+    <!-- App name. TODO change. This is a placeholder to easily differentiate
+         the name in the home launcher compared to the MT/sensor apps. -->
+    <string name="app_name">New Sdk Controller</string>
     <string name="service_description">Background service for Sdk Controller App</string>
 
     <!-- Strings for service. -->

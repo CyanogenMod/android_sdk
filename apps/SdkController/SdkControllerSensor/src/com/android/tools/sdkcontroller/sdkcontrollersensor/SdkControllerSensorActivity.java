@@ -18,21 +18,21 @@ package com.android.tools.sdkcontroller.sdkcontrollersensor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
 
 import android.app.Activity;
+import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.Sensor;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.widget.CheckBox;
-import android.widget.TextView;
+import android.widget.CompoundButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
-import android.widget.CompoundButton;
-import android.view.LayoutInflater;
-import android.util.Log;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.tools.sdkcontroller.lib.EmulatorConnection;
 import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
@@ -367,16 +367,23 @@ public class SdkControllerSensorActivity extends Activity implements EmulatorLis
         }
 
         // Instantiate emulator connector.
-        try {
-            // Sensor emulator starts very early during emulator startup. So, as
-            // discussed in comments to Emulator class, we must use synchronous
-            // type of connection with the emulator.
-            mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
-                                               EmulatorConnectionType.SYNC_CONNECTION,
-                                               this);
-        } catch (IOException e) {
-            Loge("Exception while creating server socket: " + e.getMessage());
-            finish();
+        // This will call onEmulatorBindResult with the result.
+        // Sensor emulator starts very early during emulator startup. So, as
+        // discussed in comments to Emulator class, we must use synchronous
+        // type of connection with the emulator.
+        mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
+                                           EmulatorConnectionType.SYNC_CONNECTION,
+                                           this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mEmulator != null) {
+            mEmulator.setEmulatorListener(null);
+            mEmulator.disconnect();
+            mEmulator = null;
         }
     }
 
@@ -415,12 +422,22 @@ public class SdkControllerSensorActivity extends Activity implements EmulatorLis
         }
 
         // Instantiate emulator connector for the next client.
-        try {
-            mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
-                                               EmulatorConnectionType.SYNC_CONNECTION,
-                                               this);
-        } catch (IOException e) {
-            Loge("Exception while creating server socket: " + e.getMessage());
+        // This will call onEmulatorBindResult with the result.
+        mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
+                                           EmulatorConnectionType.SYNC_CONNECTION,
+                                           this);
+    }
+
+    /**
+     * Called with the result from {@code new EmulatorConnection}
+     */
+    @Override
+    public void onEmulatorBindResult(boolean success, Exception e) {
+        if (!success) {
+            String msg = "Failed to connect to server socket";
+            if (e != null) msg += ": " + e.toString();
+            Loge(msg);
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             finish();
         }
     }

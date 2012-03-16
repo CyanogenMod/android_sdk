@@ -517,23 +517,9 @@ public class EmulatorConnection {
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
      *            to EmulatorConnection class for more info.
-     * @throws IOException
+     * @param listener EmulatorConnection event listener. Must not be null.
      */
-    public EmulatorConnection(int port, EmulatorConnectionType ctype) throws IOException {
-        constructEmulator(port, ctype);
-    }
-
-    /**
-     * Constructs EmulatorConnection instance.
-     *
-     * @param port TCP port where emulator connects.
-     * @param ctype Defines connection type to use (sync / async). See comments
-     *            to EmulatorConnection class for more info.
-     * @param listener EmulatorConnection event listener.
-     * @throws IOException
-     */
-    public EmulatorConnection(int port, EmulatorConnectionType ctype, EmulatorListener listener)
-            throws IOException {
+    public EmulatorConnection(int port, EmulatorConnectionType ctype, EmulatorListener listener) {
         mListener = listener;
         constructEmulator(port, ctype);
     }
@@ -552,31 +538,41 @@ public class EmulatorConnection {
      * <p/>
      * Important: Apps targeting Honeycomb+ SDK are not allowed to do networking on their main
      * thread. The caller is responsible to make sure this is NOT called from a main UI thread.
+     * <p/>
+     * On error or success, this calls
+     * {@link EmulatorListener#onEmulatorBindResult(boolean, Exception)} to indicate whether
+     * the socket was properly bound.
+     * The IO loop will start after the method reported a successful bind.
      *
      * @param port TCP port where emulator connects.
      * @param ctype Defines connection type to use (sync / async). See comments
      *            to EmulatorConnection class for more info.
-     * @throws IOException
      */
-    private void constructEmulator(final int port, EmulatorConnectionType ctype) throws IOException {
-        mConnectionType = ctype;
-        // Create I/O looper.
-        mSelector = SelectorProvider.provider().openSelector();
+    private void constructEmulator(final int port, EmulatorConnectionType ctype) {
 
-        // Create non-blocking server socket that would listen for connections,
-        // and bind it to the given port on the local host.
-        mServerSocket = ServerSocketChannel.open();
-        mServerSocket.configureBlocking(false);
-        InetAddress local = InetAddress.getLocalHost();
-        final InetSocketAddress address = new InetSocketAddress(local, port);
-        mServerSocket.socket().bind(address);
+        try {
+            mConnectionType = ctype;
+            // Create I/O looper.
+            mSelector = SelectorProvider.provider().openSelector();
 
-        // Register 'accept' I/O on the server socket.
-        mServerSocket.register(mSelector, SelectionKey.OP_ACCEPT);
+            // Create non-blocking server socket that would listen for connections,
+            // and bind it to the given port on the local host.
+            mServerSocket = ServerSocketChannel.open();
+            mServerSocket.configureBlocking(false);
+            InetAddress local = InetAddress.getLocalHost();
+            final InetSocketAddress address = new InetSocketAddress(local, port);
+            mServerSocket.socket().bind(address);
 
-        // TODO we need a call back onBindSuccess(success or exception)
+            // Register 'accept' I/O on the server socket.
+            mServerSocket.register(mSelector, SelectionKey.OP_ACCEPT);
+        } catch (IOException e) {
+            mListener.onEmulatorBindResult(false, e);
+            return;
+        }
 
+        mListener.onEmulatorBindResult(true, null);
         Logv("EmulatorConnection listener is created for port " + port);
+
         // Start I/O looper and dispatcher.
         new Thread(new Runnable() {
             @Override

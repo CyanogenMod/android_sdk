@@ -22,6 +22,17 @@ package com.android.tools.sdkcontroller.lib;
  * setEmulatorListener method of the EmulatorConnection class.
  */
 public interface EmulatorListener {
+
+    /**
+     * Called as a side effect of constructing a new {@link EmulatorConnection}
+     * when emulator is bound with its communication socket.
+     *
+     * @param success True if the socket bind was successful.
+     * @param e Any exception thrown whilst trying to bind to the communication socket.
+     *   Null if there's no exception (typically when {@code success==true}).
+     */
+    public void onEmulatorBindResult(boolean success, Exception e);
+
     /**
      * Called when emulator is connected. NOTE: This method is called from the
      * I/O loop, so all communication with the emulator will be "on hold" until
