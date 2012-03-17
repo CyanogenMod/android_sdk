@@ -23,7 +23,8 @@ LOCAL_JAVA_LIBRARIES := \
 	hierarchyviewerlib \
 	guavalib \
 	sdklib \
-	swt
+	swt \
+	jsr305
 
 LOCAL_MODULE := chimpchat
 
