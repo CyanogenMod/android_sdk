@@ -117,5 +117,10 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
                 ));
     }
 
+    public void testIssue27108() throws Exception {
+        assertEquals(
+            "No warnings.",
 
+            lintProject("res/values/formatstrings3.xml"));
+    }
 }

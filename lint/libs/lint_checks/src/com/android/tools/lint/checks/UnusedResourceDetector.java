@@ -74,10 +74,8 @@ import lombok.ast.AstVisitor;
 import lombok.ast.ClassDeclaration;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.NormalTypeBody;
-import lombok.ast.Select;
 import lombok.ast.VariableDeclaration;
 import lombok.ast.VariableDefinition;
-import lombok.ast.VariableReference;
 
 /**
  * Finds unused resources.
@@ -147,7 +145,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         File file = context.file;
 
         String fileName = file.getName();
-        if (endsWith(fileName, DOT_XML)
+        boolean isXmlFile = endsWith(fileName, DOT_XML);
+        if (isXmlFile
                 || endsWith(fileName, DOT_PNG)
                 || endsWith(fileName, DOT_JPG)
                 || endsWith(fileName, DOT_GIF)) {
@@ -163,6 +162,24 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 } else {
                     assert context.getPhase() == 2;
                     if (mUnused.containsKey(resource)) {
+                        // Check whether this is an XML document that has a tools:ignore attribute
+                        // on the document element: if so don't record it as a declaration.
+                        if (isXmlFile && context instanceof XmlContext) {
+                            XmlContext xmlContext = (XmlContext) context;
+                            if (xmlContext.document != null
+                                    && xmlContext.document.getDocumentElement() != null) {
+                                Element root = xmlContext.document.getDocumentElement();
+                                if (xmlContext.getDriver().isSuppressed(ISSUE, root)) {
+                                    //  Also remove it from consideration such that even the
+                                    // presence of this field in the R file is ignored.
+                                    if (mUnused != null) {
+                                        mUnused.remove(resource);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+
                         recordLocation(resource, Location.create(file));
                     }
                 }
@@ -436,7 +453,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     @Override
     public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            VariableReference node, String type, String name, boolean isFramework) {
+            lombok.ast.Node node, String type, String name, boolean isFramework) {
         if (mReferences != null && !isFramework) {
             String reference = R_PREFIX + type + '.' + name;
             mReferences.add(reference);
@@ -455,20 +472,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     // Look for references and declarations
     private class UnusedResourceVisitor extends ForwardingAstVisitor {
-        // Look for references to field R.<class>.<name>
-        // and store them in mReferences
-        @Override
-        public boolean visitVariableReference(VariableReference node) {
-            if (node.astIdentifier().getDescription().equals(R_CLASS) &&
-                    node.getParent() instanceof Select &&
-                    node.getParent().getParent() instanceof Select) {
-                String reference = node.getParent().getParent().toString();
-                mReferences.add(reference);
-            }
-
-            return false;
-        }
-
         @Override
         public boolean visitClassDeclaration(ClassDeclaration node) {
             // Look for declarations of R class fields and store them in

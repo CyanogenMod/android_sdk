@@ -368,6 +368,10 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
 
                     index = matcher.end(); // Ensure loop proceeds
                     String str = formatString.substring(matchStart, matcher.end());
+                    if (str.equals("%%")) { //$NON-NLS-1$
+                        // Just an escaped %
+                        continue;
+                    }
 
                     if (checkValid) {
                         // Make sure it's a valid format string
