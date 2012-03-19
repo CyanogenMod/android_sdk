@@ -17,7 +17,6 @@
 package com.android.tools.sdkcontroller.handlers;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -465,8 +464,8 @@ public class SensorsHandler extends BaseHandler {
                     mTextFmt = "N/A";
                     mEmulatorFriendlyName = "unknown";
                     mMsgFmt = mEmulatorFriendlyName + "\0";
-                    if (DEBUG) Log.e(TAG, "Unknown sensor type " + mSensor.getType() + " for sensor "
-                            + mSensor.getName());
+                    if (DEBUG) Log.e(TAG, "Unknown sensor type " + mSensor.getType() +
+                            " for sensor " + mSensor.getName());
                     break;
             }
         }
@@ -576,7 +575,7 @@ public class SensorsHandler extends BaseHandler {
                 String msg;
                 String val;
                 if (nArgs == 3) {
-                    val = String.format(mTextFmt, event.values[0], event.values[1], event.values[2]);
+                    val = String.format(mTextFmt, event.values[0], event.values[1],event.values[2]);
                     msg = String.format(mMsgFmt, event.values[0], event.values[1], event.values[2]);
                 } else if (nArgs == 2) {
                     val = String.format(mTextFmt, event.values[0], event.values[1]);

@@ -39,10 +39,20 @@ public abstract class BaseBindingActivity extends Activity {
     private ServiceConnection mServiceConnection;
     private ControllerBinder mServiceBinder;
 
+    /**
+     * Returns the binder. Activities can use that to query the controller service.
+     * @return An existing {@link ControllerBinder}.
+     *   The binder is only valid between calls {@link #onServiceConnected()} and
+     *   {@link #onServiceDisconnected()}. Returns null when not valid.
+     */
     public ControllerBinder getServiceBinder() {
         return mServiceBinder;
     }
 
+    /**
+     * Called when the activity resumes.
+     * This automatically binds to the service, starting it as needed.
+     */
     @Override
     protected void onResume() {
         if (DEBUG) Log.d(TAG, "onResume");
@@ -50,6 +60,10 @@ public abstract class BaseBindingActivity extends Activity {
         bindToService();
     }
 
+    /**
+     * Called when the activity is paused.
+     * This automatically unbinds from the service but does not stop it.
+     */
     @Override
     protected void onPause() {
         if (DEBUG) Log.d(TAG, "onPause");
@@ -59,8 +73,24 @@ public abstract class BaseBindingActivity extends Activity {
 
     // ----------
 
+    /**
+     * Called when binding to the service to get the activity's {@link ControllerListener}.
+     * @return A new non-null {@link ControllerListener}.
+     */
     protected abstract ControllerListener createControllerListener();
+
+    /**
+     * Called by the service once the activity is connected (bound) to it.
+     * When this is called, {@link #getServiceBinder()} returns a non-null binder that
+     * can be used by the activity to control the service.
+     */
     protected abstract void onServiceConnected();
+
+    /**
+     * Called by the service when it is disconnected (unbound).
+     * When this is called, {@link #getServiceBinder()} returns a null binder and
+     * the activity should stop using that binder and remove any reference to it.
+     */
     protected abstract void onServiceDisconnected();
 
     /**
@@ -99,7 +129,7 @@ public abstract class BaseBindingActivity extends Activity {
 
     /**
      * Unbinds from the service but does not actually stop the service.
-     * This lets us have it run in the background even if this isn't the active app.
+     * This lets us have it run in the background even if this isn't the active activity.
      */
     protected void unbindFromService() {
         if (mServiceConnection != null) {

@@ -16,9 +16,14 @@
 
 package com.android.tools.sdkcontroller.activities;
 
+import com.android.tools.sdkcontroller.handlers.MultitouchHandler;
+
 import android.app.Activity;
 import android.os.Bundle;
 
+/**
+ * Activity that controls and displays the {@link MultitouchHandler}.
+ */
 public class MultitouchActivity extends Activity {
 
     public static String TAG = MultitouchActivity.class.getSimpleName();

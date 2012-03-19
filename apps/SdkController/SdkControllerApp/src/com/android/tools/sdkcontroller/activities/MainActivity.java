@@ -32,6 +32,11 @@ import com.android.tools.sdkcontroller.service.ControllerService;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
 
+/**
+ * Main activity. It's the entry point for the application.
+ * It allows the user to start/stop the service and see it's current state and errors.
+ * It also has buttons to start either the sensor control activity or the multitouch activity.
+ */
 public class MainActivity extends BaseBindingActivity {
 
     @SuppressWarnings("hiding")
