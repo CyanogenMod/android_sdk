@@ -14,8 +14,7 @@ LOCAL_JAVA_LIBRARIES := \
 	common \
 	lombok-ast-0.2 \
 	androidprefs \
-	lint_api
-LOCAL_STATIC_JAVA_LIBRARIES := \
+	lint_api \
         asm-tools \
         asm-tree-tools \
         guava-tools

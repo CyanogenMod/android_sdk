@@ -13,8 +13,7 @@ LOCAL_JAVA_LIBRARIES := \
 	common \
 	lint_api \
 	lint_checks \
-	lombok-ast-0.2
-LOCAL_STATIC_JAVA_LIBRARIES := \
+	lombok-ast-0.2 \
 	asm-tools \
 	asm-tree-tools \
 	guava-tools

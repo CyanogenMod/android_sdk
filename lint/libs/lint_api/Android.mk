@@ -21,8 +21,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
-	common
-LOCAL_STATIC_JAVA_LIBRARIES := \
+	common \
         asm-tools \
         asm-tree-tools \
         guava-tools
