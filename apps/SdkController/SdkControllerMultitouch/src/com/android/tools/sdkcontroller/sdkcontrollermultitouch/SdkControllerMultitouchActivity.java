@@ -132,9 +132,9 @@ public class SdkControllerMultitouchActivity extends Activity implements Emulato
 
         // Instantiate emulator connector.
         // This will call onEmulatorBindResult with the result.
-        mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
-                                           EmulatorConnectionType.SYNC_CONNECTION,
-                                           this);
+        mEmulator = new EmulatorConnection(this);
+        mEmulator.connect(EmulatorConnection.MULTITOUCH_PORT,
+                EmulatorConnectionType.SYNC_CONNECTION);
     }
 
     @Override
@@ -207,9 +207,9 @@ public class SdkControllerMultitouchActivity extends Activity implements Emulato
 
         // Instantiate emulator connector for the next client.
         // This will call onEmulatorBindResult with the result.
-        mEmulator = new EmulatorConnection(EmulatorConnection.MULTITOUCH_PORT,
-                                           EmulatorConnectionType.SYNC_CONNECTION,
-                                           this);
+        mEmulator = new EmulatorConnection(this);
+        mEmulator.connect(EmulatorConnection.MULTITOUCH_PORT,
+                EmulatorConnectionType.SYNC_CONNECTION);
     }
 
     /**

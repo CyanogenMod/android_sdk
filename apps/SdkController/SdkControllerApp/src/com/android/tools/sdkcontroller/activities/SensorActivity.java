@@ -22,6 +22,7 @@ import java.util.Map;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TableLayout;
@@ -50,6 +51,8 @@ public class SensorActivity extends BaseBindingActivity {
     private static boolean DEBUG = true;
 
     private TableLayout mTableLayout;
+    private TextView mTextError;
+    private TextView mTextStatus;
     private SensorsHandler mSensorHandler;
     private final OurUiListener mUiListener = new OurUiListener();
     private final Map<MonitoredSensor, DisplayInfo> mDisplayedSensors =
@@ -61,13 +64,16 @@ public class SensorActivity extends BaseBindingActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sensors);
         mTableLayout = (TableLayout) findViewById(R.id.tableLayout);
-
+        mTextError  = (TextView) findViewById(R.id.textError);
+        mTextStatus = (TextView) findViewById(R.id.textStatus);
+        updateStatus("Waiting for connection");
     }
 
     @Override
     protected void onResume() {
         // BaseBindingActivity.onResume will bind to the service.
         super.onResume();
+        updateError();
     }
 
     @Override
@@ -107,7 +113,7 @@ public class SensorActivity extends BaseBindingActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    //--updateError();
+                    updateError();
                 }
             });
         }
@@ -118,7 +124,9 @@ public class SensorActivity extends BaseBindingActivity {
                 @Override
                 public void run() {
                     ControllerBinder binder = getServiceBinder();
-                    mTableLayout.setEnabled(binder.isEmuConnected());
+                    boolean connected = binder.isEmuConnected();
+                    mTableLayout.setEnabled(connected);
+                    updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
                 }
             });
         }
@@ -231,10 +239,28 @@ public class SensorActivity extends BaseBindingActivity {
                         if (info != null) {
                             info.updateValue();
                         }
+                        updateStatus(Integer.toString(mSensorHandler.getEventSentCount()) +
+                                     " events sent");
                         break;
                     }
                 }
             });
         }
+    }
+
+    private void updateStatus(String status) {
+        mTextStatus.setVisibility(status == null ? View.GONE : View.VISIBLE);
+        if (status != null) mTextStatus.setText(status);
+    }
+
+    private void updateError() {
+        ControllerBinder binder = getServiceBinder();
+        String error = binder == null ? "" : binder.getSensorErrors();
+        if (error == null) {
+            error = "";
+        }
+
+        mTextError.setVisibility(error.length() == 0 ? View.GONE : View.VISIBLE);
+        mTextError.setText(error);
     }
 }

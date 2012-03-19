@@ -371,9 +371,9 @@ public class SdkControllerSensorActivity extends Activity implements EmulatorLis
         // Sensor emulator starts very early during emulator startup. So, as
         // discussed in comments to Emulator class, we must use synchronous
         // type of connection with the emulator.
-        mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
-                                           EmulatorConnectionType.SYNC_CONNECTION,
-                                           this);
+        mEmulator = new EmulatorConnection(this);
+        mEmulator.connect(EmulatorConnection.SENSORS_PORT,
+                EmulatorConnectionType.SYNC_CONNECTION);
     }
 
     @Override
@@ -423,9 +423,9 @@ public class SdkControllerSensorActivity extends Activity implements EmulatorLis
 
         // Instantiate emulator connector for the next client.
         // This will call onEmulatorBindResult with the result.
-        mEmulator = new EmulatorConnection(EmulatorConnection.SENSORS_PORT,
-                                           EmulatorConnectionType.SYNC_CONNECTION,
-                                           this);
+        mEmulator = new EmulatorConnection(this);
+        mEmulator.connect(EmulatorConnection.SENSORS_PORT,
+                EmulatorConnectionType.SYNC_CONNECTION);
     }
 
     /**
