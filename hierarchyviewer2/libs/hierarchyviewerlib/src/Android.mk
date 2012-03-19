@@ -23,8 +23,8 @@ LOCAL_JAR_MANIFEST := ../manifest.txt
 LOCAL_JAVA_LIBRARIES := ddmlib \
     ddmuilib \
     swt \
-    org.eclipse.jface_3.4.2.M20090107-0800 \
-    org.eclipse.core.commands_3.4.0.I20080509-2000
+    org.eclipse.jface_3.6.2.M20110210-1200 \
+    org.eclipse.core.commands_3.6.0.I20100512-1500
 
 LOCAL_MODULE := hierarchyviewerlib
 

@@ -45,7 +45,7 @@ In order to compile the project:
 - Create a new user library named ANDROID_OSGI
 - Add the following JAR file:
 
-  - prebuilt/common/osgi/osgi.jar
+  - prebuilt/common/eclipse/org.eclipse.osgi_3.*.jar
 
 
 -------
