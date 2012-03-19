@@ -121,4 +121,24 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "multiproject/strings.xml=>../LibraryProject/res/values/strings.xml"
             ));
     }
+
+    public void testFqcnReference() throws Exception {
+        assertEquals(
+           "No warnings.",
+
+            lintProject(
+                "res/layout/layout1.xml=>res/layout/main.xml",
+                "src/test/pkg/UnusedReference.java.txt=>src/test/pkg/UnusedReference.java",
+                "AndroidManifest.xml"));
+    }
+
+    public void testIgnoreXmlDrawable() throws Exception {
+        assertEquals(
+           "No warnings.",
+
+            lintProject(
+                    "res/drawable/ic_menu_help.xml",
+                    "gen/my/pkg/R2.java.txt=>gen/my/pkg/R.java"
+            ));
+    }
 }

@@ -65,6 +65,7 @@ import lombok.ast.EmptyStatement;
 import lombok.ast.EnumConstant;
 import lombok.ast.EnumDeclaration;
 import lombok.ast.EnumTypeBody;
+import lombok.ast.Expression;
 import lombok.ast.ExpressionStatement;
 import lombok.ast.FloatingPointLiteral;
 import lombok.ast.For;
@@ -1114,43 +1115,60 @@ public class JavaVisitor {
         }
 
         @Override
-        public boolean visitVariableReference(@NonNull VariableReference node) {
+        public boolean visitSelect(Select node) {
             if (mVisitResources) {
-                String identifier = node.astIdentifier().getDescription();
-                if (identifier.equals(R_CLASS) &&
-                        node.getParent() instanceof Select &&
-                        node.getParent().getParent() instanceof Select) {
-                    Select parentSelect = (Select) node.getParent();
-                    Select grandParentSelect = (Select) parentSelect.getParent();
-                    String type = parentSelect.astIdentifier().astValue();
-                    String name = grandParentSelect.astIdentifier().astValue();
+                // R.type.name
+                if (node.astOperand() instanceof Select) {
+                    Select select = (Select) node.astOperand();
+                    if (select.astOperand() instanceof VariableReference) {
+                        VariableReference reference = (VariableReference) select.astOperand();
+                        if (reference.astIdentifier().astValue().equals(R_CLASS)) {
+                            String type = select.astIdentifier().astValue();
+                            String name = node.astIdentifier().astValue();
 
-                    for (VisitingDetector v : mResourceFieldDetectors) {
-                        JavaScanner detector = v.getJavaScanner();
-                        detector.visitResourceReference(mContext, v.getVisitor(), node,
-                                type, name, false /* isFramework */);
+                            // R -could- be referenced locally and really have been
+                            // imported as "import android.R;" in the import statements,
+                            // but this is not recommended (and in fact there's a specific
+                            // lint rule warning against it)
+                            boolean isFramework = false;
+
+                            for (VisitingDetector v : mResourceFieldDetectors) {
+                                JavaScanner detector = v.getJavaScanner();
+                                detector.visitResourceReference(mContext, v.getVisitor(),
+                                        node, type, name, isFramework);
+                            }
+
+                            return super.visitSelect(node);
+                        }
                     }
-                } else if (identifier.equals(ANDROID_PKG)
-                            && node.getParent() instanceof Select) {
-                    Select parentSelect = (Select) node.getParent();
-                    if (parentSelect.astIdentifier().astValue().equals(R_CLASS)
-                            && parentSelect.getParent() instanceof Select
-                            && parentSelect.getParent().getParent() instanceof Select) {
-                        Select p2 = (Select) parentSelect.getParent();
-                        Select p3 = (Select) p2.getParent();
-                        String type = p2.astIdentifier().astValue();
-                        String name = p3.astIdentifier().astValue();
+                }
 
-                        for (VisitingDetector v : mResourceFieldDetectors) {
-                            JavaScanner detector = v.getJavaScanner();
-                            detector.visitResourceReference(mContext, v.getVisitor(), node,
-                                    type, name, true /* isFramework */);
+                // Arbitrary packages -- android.R.type.name, foo.bar.R.type.name
+                if (node.astIdentifier().astValue().equals(R_CLASS)) {
+                    Node parent = node.getParent();
+                    if (parent instanceof Select) {
+                        Node grandParent = parent.getParent();
+                        if (grandParent instanceof Select) {
+                            Select select = (Select) grandParent;
+                            String name = select.astIdentifier().astValue();
+                            Expression typeOperand = select.astOperand();
+                            if (typeOperand instanceof Select) {
+                                Select typeSelect = (Select) typeOperand;
+                                String type = typeSelect.astIdentifier().astValue();
+                                boolean isFramework =
+                                        node.astIdentifier().astValue().equals(ANDROID_PKG);
+                                for (VisitingDetector v : mResourceFieldDetectors) {
+                                    JavaScanner detector = v.getJavaScanner();
+                                    detector.visitResourceReference(mContext, v.getVisitor(),
+                                            node, type, name, isFramework);
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            return super.visitVariableReference(node);
+            return super.visitSelect(node);
         }
 
         @Override

@@ -33,7 +33,6 @@ import java.util.List;
 
 import lombok.ast.AstVisitor;
 import lombok.ast.MethodInvocation;
-import lombok.ast.VariableReference;
 
 /**
  * A detector is able to find a particular problem. It might also be thought of as enforcing
@@ -188,7 +187,7 @@ public abstract class Detector {
         void visitResourceReference(
                 @NonNull JavaContext context,
                 @Nullable AstVisitor visitor,
-                @NonNull VariableReference node,
+                @NonNull lombok.ast.Node node,
                 @NonNull String type,
                 @NonNull String name,
                 boolean isFramework);
@@ -444,7 +443,8 @@ public abstract class Detector {
 
     @SuppressWarnings("javadoc")
     public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
-            @NonNull VariableReference node, @NonNull String type, @NonNull String name, boolean isFramework) {
+            @NonNull lombok.ast.Node node, @NonNull String type, @NonNull String name,
+            boolean isFramework) {
     }
 
     // ---- Dummy implementations to make implementing a ClassScanner easier: ----

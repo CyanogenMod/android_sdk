@@ -32,7 +32,7 @@ import java.io.File;
 import lombok.ast.AstVisitor;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
-import lombok.ast.VariableReference;
+import lombok.ast.Select;
 
 /**
  * Looks for cases where the code attempts to set a resource id, rather than
@@ -78,13 +78,13 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
 
     @Override
     public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            VariableReference node, String type, String name, boolean isFramework) {
+            Node select, String type, String name, boolean isFramework) {
         if (type.equals(RESOURCE_CLZ_COLOR)) {
-            // See if this method is being called on a setter
-            Node select = node.getParent().getParent();
-            if (isFramework) {
+            while (select.getParent() instanceof Select) {
                 select = select.getParent();
             }
+
+            // See if this method is being called on a setter
             if (select.getParent() instanceof MethodInvocation) {
                 MethodInvocation call = (MethodInvocation) select.getParent();
                 String methodName = call.astName().astValue();
