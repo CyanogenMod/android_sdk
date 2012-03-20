@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -271,7 +272,18 @@ public class XmlPrettyPrinter {
     }
 
     private void printText(Node node) {
+        boolean escape = true;
         String text = node.getNodeValue();
+
+        if (node instanceof IDOMNode) {
+            // Get the original source string. This will contain the actual entities
+            // such as "&gt;" instead of ">" which it gets turned into for the DOM nodes.
+            // By operating on source we can preserve the user's entities rather than
+            // having &gt; for example always turned into >.
+            IDOMNode textImpl = (IDOMNode) node;
+            text = textImpl.getSource();
+            escape = false;
+        }
 
         // Most text nodes are just whitespace for formatting (which we're replacing)
         // so look for actual text content and extract that part out
@@ -311,7 +323,12 @@ public class XmlPrettyPrinter {
                 text = text.substring(lastPrefixNewline + 1, firstSuffixNewline);
             }
 
-            DomUtilities.appendXmlTextValue(mOut, text);
+            if (escape) {
+                DomUtilities.appendXmlTextValue(mOut, text);
+            } else {
+                // Text is already escaped
+                mOut.append(text);
+            }
 
             if (mStyle != XmlFormatStyle.RESOURCE) {
                 mOut.append(mLineSeparator);

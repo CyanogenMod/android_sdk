@@ -855,4 +855,24 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
+
+    public void testPreserveEntities() throws Exception {
+        // Ensure that entities such as &gt; in the input string are preserved in the output
+        // format
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources><string name=\"untitled\">&lt;untitled2></string>\n" +
+                "<string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
+                "<string name=\"untitled3\">&apos;untitled3&quot;</string></resources>\n",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"untitled\">&lt;untitled2></string>\n" +
+                "    <string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
+                "    <string name=\"untitled3\">&apos;untitled3&quot;</string>\n" +
+                "\n" +
+                "</resources>");
+    }
 }
