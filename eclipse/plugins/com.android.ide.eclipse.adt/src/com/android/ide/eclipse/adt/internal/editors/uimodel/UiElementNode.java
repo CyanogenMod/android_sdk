@@ -130,7 +130,7 @@ public class UiElementNode implements IPropertySource {
     private Map<String, AttributeDescriptor> mCachedHiddenAttributes;
     /** An optional list of {@link IUiUpdateListener}. Most element nodes will not have any
      *  listeners attached, so the list is only created on demand and can be null. */
-    private ArrayList<IUiUpdateListener> mUiUpdateListeners;
+    private List<IUiUpdateListener> mUiUpdateListeners;
     /** A provider that knows how to create {@link ElementDescriptor} from unmapped XML names.
      *  The default is to have one that creates new {@link ElementDescriptor}. */
     private IUnknownDescriptorProvider mUnknownDescProvider;

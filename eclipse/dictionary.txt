@@ -36,6 +36,7 @@ callbacks
 carlo
 cf
 changeset
+charset
 checkbox
 checkboxes
 classloader
@@ -174,6 +175,7 @@ multimaps
 namespace
 namespaces
 newfound
+nexus
 ninepatch
 nodpi
 num
@@ -205,6 +207,7 @@ pristine
 programmatic
 programmatically
 proguard
+propertysheet
 proxies
 proxy
 pulldown
@@ -268,6 +271,7 @@ subclassed
 subclassing
 submenu
 subregion
+superclasses
 supertype
 symlinks
 syncs
@@ -278,6 +282,7 @@ textfield
 textfields
 thematically
 themed
+thumbnail
 timestamp
 tmp
 toolbar
