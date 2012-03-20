@@ -29,10 +29,9 @@
             android:launchMode="singleInstance" />
         
         <activity
-            android:name=".activities.MultitouchActivity"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|fontScale"
+            android:name=".activities.MultiTouchActivity"
             android:launchMode="singleInstance"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait" android:theme="@style/Theme.MultiTouch"/>
 
         <service
             android:name=".service.ControllerService"

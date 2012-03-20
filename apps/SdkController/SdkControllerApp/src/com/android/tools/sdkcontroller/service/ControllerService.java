@@ -35,7 +35,7 @@ import com.android.tools.sdkcontroller.R;
 import com.android.tools.sdkcontroller.activities.MainActivity;
 import com.android.tools.sdkcontroller.handlers.BaseHandler;
 import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
-import com.android.tools.sdkcontroller.handlers.MultitouchHandler;
+import com.android.tools.sdkcontroller.handlers.MultiTouchHandler;
 import com.android.tools.sdkcontroller.handlers.SensorsHandler;
 import com.android.tools.sdkcontroller.lib.EmulatorConnection;
 import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
@@ -47,7 +47,7 @@ import com.android.tools.sdkcontroller.lib.EmulatorListener;
  * <p/>
  * The service manages a number of action "handlers" which can be seen as individual tasks
  * that the user might want to accomplish, for example "sending sensor data to the emulator"
- * or "sending multitouch data and displaying an emulator screen".
+ * or "sending multi-touch data and displaying an emulator screen".
  * <p/>
  * Each handler currently has its own emulator connection associated to it (cf class
  * {@code EmuCnxHandler} below. However our goal is to later move to a single connection channel
@@ -58,7 +58,7 @@ import com.android.tools.sdkcontroller.lib.EmulatorListener;
  * to deal with these specific details. <br/>
  * For example the {@link SensorsHandler} initializes its sensor list as soon as created
  * and then tries to send data as soon as there's an emulator connection.
- * On the other hand the {@link MultitouchHandler} lays dormant till there's an UI interacting
+ * On the other hand the {@link MultiTouchHandler} lays dormant till there's an UI interacting
  * with it.
  */
 public class ControllerService extends Service {
@@ -84,7 +84,7 @@ public class ControllerService extends Service {
     private static volatile boolean gServiceIsRunning = false;
 
     /** Internal error reported by the service. */
-    private String mSensorError = "";
+    private String mServiceError = "";
 
     private final Set<EmuCnxHandler> mHandlers = new HashSet<ControllerService.EmuCnxHandler>();
 
@@ -116,7 +116,7 @@ public class ControllerService extends Service {
          *
          * @param listener A non-null listener. Ignored if already listed.
          */
-        public void addListener(ControllerListener listener) {
+        public void addControllerListener(ControllerListener listener) {
             assert listener != null;
             if (listener != null) {
                 synchronized(mListeners) {
@@ -132,17 +132,28 @@ public class ControllerService extends Service {
          *
          * @param listener A listener to remove. Can be null.
          */
-        public void removeListener(ControllerListener listener) {
+        public void removeControllerListener(ControllerListener listener) {
             assert listener != null;
             synchronized(mListeners) {
                 mListeners.remove(listener);
             }
         }
 
-        public String getSensorErrors() {
-            return mSensorError;
+        /**
+         * Returns the error string accumulated by the service.
+         * Typically these would relate to failures to establish the communication
+         * channel(s) with the emulator, or unexpected disconnections.
+         */
+        public String getServiceError() {
+            return mServiceError;
         }
 
+        /**
+         * Indicates when <em>all</all> the communication channels for all handlers
+         * are properly connected.
+         *
+         * @return True if all the handler's communication channels are connected.
+         */
         public boolean isEmuConnected() {
             for (EmuCnxHandler handler : mHandlers) {
                 if (!handler.isConnected()) {
@@ -152,6 +163,12 @@ public class ControllerService extends Service {
             return true;
         }
 
+        /**
+         * Returns the handler for the given type.
+         *
+         * @param type One of the {@link HandlerType}s. Must not be null.
+         * @return Null if the type is not found, otherwise the handler's unique instance.
+         */
         public BaseHandler getHandler(HandlerType type) {
             for (EmuCnxHandler handler : mHandlers) {
                 BaseHandler h = handler.getHandler();
@@ -235,11 +252,13 @@ public class ControllerService extends Service {
 
         @Override
         public String onEmulatorQuery(String query, String param) {
+            if (DEBUG) Log.d(TAG, mHandler.getType().toString() +  " Query " + query);
             return mHandler.onEmulatorQuery(query, param);
         }
 
         @Override
         public String onEmulatorBlobQuery(byte[] array) {
+            if (DEBUG) Log.d(TAG, mHandler.getType().toString() +  " BlobQuery " + array.length);
             return mHandler.onEmulatorBlobQuery(array);
         }
 
@@ -256,7 +275,7 @@ public class ControllerService extends Service {
                     // This will call onEmulatorBindResult with the result.
                     mCnx.connect(mHandler.getPort(), EmulatorConnectionType.SYNC_CONNECTION);
                 }
-            }, "EmuCnxH.connect");
+            }, "EmuCnxH.connect-" + mHandler.getType().toString());
             t.start();
 
             return this;
@@ -306,7 +325,7 @@ public class ControllerService extends Service {
             disconnectAll();
 
             assert mHandlers.isEmpty();
-            mHandlers.add(new EmuCnxHandler(new MultitouchHandler()).connect());
+            mHandlers.add(new EmuCnxHandler(new MultiTouchHandler()).connect());
             mHandlers.add(new EmuCnxHandler(new SensorsHandler()).connect());
         } catch (Exception e) {
             addError("Connection failed: " + e.toString());
@@ -340,7 +359,7 @@ public class ControllerService extends Service {
      * Resets the error string and notify listeners.
      */
     private void resetError() {
-        mSensorError = "";
+        mServiceError = "";
 
         notifyErrorChanged();
     }
@@ -351,10 +370,10 @@ public class ControllerService extends Service {
      */
     private void addError(String error) {
         Log.e(TAG, error);
-        if (mSensorError.length() > 0) {
-            mSensorError += "\n";
+        if (mServiceError.length() > 0) {
+            mServiceError += "\n";
         }
-        mSensorError += error;
+        mServiceError += error;
 
         notifyErrorChanged();
     }

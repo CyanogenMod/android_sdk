@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import android.os.Bundle;
+import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
@@ -31,7 +33,6 @@ import android.widget.TextView;
 
 import com.android.tools.sdkcontroller.R;
 import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
-import com.android.tools.sdkcontroller.handlers.BaseHandler.UiListener;
 import com.android.tools.sdkcontroller.handlers.SensorsHandler;
 import com.android.tools.sdkcontroller.handlers.SensorsHandler.MonitoredSensor;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
@@ -43,20 +44,21 @@ import com.android.tools.sdkcontroller.service.ControllerService.ControllerListe
  * by the emulator. The user can select whether the sensor is active. It also displays
  * data from the sensor when available.
  */
-public class SensorActivity extends BaseBindingActivity {
+public class SensorActivity extends BaseBindingActivity
+        implements android.os.Handler.Callback {
 
     @SuppressWarnings("hiding")
     public static String TAG = SensorActivity.class.getSimpleName();
-    @SuppressWarnings("unused")
     private static boolean DEBUG = true;
 
     private TableLayout mTableLayout;
     private TextView mTextError;
     private TextView mTextStatus;
     private SensorsHandler mSensorHandler;
-    private final OurUiListener mUiListener = new OurUiListener();
+
     private final Map<MonitoredSensor, DisplayInfo> mDisplayedSensors =
         new HashMap<SensorsHandler.MonitoredSensor, SensorActivity.DisplayInfo>();
+    private final android.os.Handler mUiHandler = new android.os.Handler(this);
 
     /** Called when the activity is first created. */
     @Override
@@ -71,6 +73,7 @@ public class SensorActivity extends BaseBindingActivity {
 
     @Override
     protected void onResume() {
+        if (DEBUG) Log.d(TAG, "onResume");
         // BaseBindingActivity.onResume will bind to the service.
         super.onResume();
         updateError();
@@ -78,12 +81,14 @@ public class SensorActivity extends BaseBindingActivity {
 
     @Override
     protected void onPause() {
+        if (DEBUG) Log.d(TAG, "onPause");
         // BaseBindingActivity.onResume will unbind from (but not stop) the service.
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        if (DEBUG) Log.d(TAG, "onDestroy");
         super.onDestroy();
         removeSensorUi();
     }
@@ -92,11 +97,13 @@ public class SensorActivity extends BaseBindingActivity {
 
     @Override
     protected void onServiceConnected() {
+        if (DEBUG) Log.d(TAG, "onServiceConnected");
         createSensorUi();
     }
 
     @Override
     protected void onServiceDisconnected() {
+        if (DEBUG) Log.d(TAG, "onServiceDisconnected");
         removeSensorUi();
     }
 
@@ -141,7 +148,7 @@ public class SensorActivity extends BaseBindingActivity {
 
         mSensorHandler = (SensorsHandler) getServiceBinder().getHandler(HandlerType.Sensor);
         if (mSensorHandler != null) {
-            mSensorHandler.addUiListener(mUiListener);
+            mSensorHandler.addUiHandler(mUiHandler);
 
             assert mDisplayedSensors.isEmpty();
             List<MonitoredSensor> sensors = mSensorHandler.getSensors();
@@ -156,9 +163,11 @@ public class SensorActivity extends BaseBindingActivity {
     }
 
     private void removeSensorUi() {
+        if (mSensorHandler != null) {
+            mSensorHandler.removeUiHandler(mUiHandler);
+            mSensorHandler = null;
+        }
         mTableLayout.removeAllViews();
-        mSensorHandler.removeUiListener(mUiListener);
-        mSensorHandler = null;
         for (DisplayInfo info : mDisplayedSensors.values()) {
             info.release();
         }
@@ -219,33 +228,29 @@ public class SensorActivity extends BaseBindingActivity {
         }
     }
 
-    private class OurUiListener implements UiListener {
-        @Override
-        public void onHandlerEvent(final int event, final Object... params) {
-            // This is invoked from the emulator connection thread.
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    DisplayInfo info = null;
-                    switch(event) {
-                    case SensorsHandler.SENSOR_STATE_CHANGED:
-                        info = mDisplayedSensors.get(params[0]);
-                        if (info != null) {
-                            info.updateState();
-                        }
-                        break;
-                    case SensorsHandler.SENSOR_DISPLAY_MODIFIED:
-                        info = mDisplayedSensors.get(params[0]);
-                        if (info != null) {
-                            info.updateValue();
-                        }
-                        updateStatus(Integer.toString(mSensorHandler.getEventSentCount()) +
-                                     " events sent");
-                        break;
-                    }
-                }
-            });
+    /** Implementation of Handler.Callback */
+    @Override
+    public boolean handleMessage(Message msg) {
+        if (DEBUG) Log.d(TAG, "handleMessage" + msg.toString());
+        DisplayInfo info = null;
+        switch (msg.what) {
+        case SensorsHandler.SENSOR_STATE_CHANGED:
+            info = mDisplayedSensors.get(msg.obj);
+            if (info != null) {
+                info.updateState();
+            }
+            break;
+        case SensorsHandler.SENSOR_DISPLAY_MODIFIED:
+            info = mDisplayedSensors.get(msg.obj);
+            if (info != null) {
+                info.updateValue();
+            }
+            if (mSensorHandler != null) {
+                updateStatus(Integer.toString(mSensorHandler.getEventSentCount()) + " events sent");
+            }
+            break;
         }
+        return true; // we consumed this message
     }
 
     private void updateStatus(String status) {
@@ -255,7 +260,7 @@ public class SensorActivity extends BaseBindingActivity {
 
     private void updateError() {
         ControllerBinder binder = getServiceBinder();
-        String error = binder == null ? "" : binder.getSensorErrors();
+        String error = binder == null ? "" : binder.getServiceError();
         if (error == null) {
             error = "";
         }

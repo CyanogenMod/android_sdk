@@ -113,7 +113,7 @@ public class MainActivity extends BaseBindingActivity {
             @Override
             public void onClick(View v) {
                 // Open the multi-touch activity.
-                Intent i = new Intent(MainActivity.this, MultitouchActivity.class);
+                Intent i = new Intent(MainActivity.this, MultiTouchActivity.class);
                 startActivity(i);
             }
         });
@@ -188,7 +188,7 @@ public class MainActivity extends BaseBindingActivity {
 
     private void updateError() {
         ControllerBinder binder = getServiceBinder();
-        String error = binder == null ? "" : binder.getSensorErrors();
+        String error = binder == null ? "" : binder.getServiceError();
         if (error == null) {
             error = "";
         }
