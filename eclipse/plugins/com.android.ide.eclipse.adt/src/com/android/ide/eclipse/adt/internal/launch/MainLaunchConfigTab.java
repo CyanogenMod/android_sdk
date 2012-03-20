@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.launch;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.IProjectChooserFilter;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.NonLibraryProjectOnlyFilter;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
@@ -112,10 +113,13 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
     public MainLaunchConfigTab() {
     }
 
+    protected IProjectChooserFilter getProjectFilter() {
+        return new NonLibraryProjectOnlyFilter();
+    }
+
     @Override
     public void createControl(Composite parent) {
-        mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(),
-                new NonLibraryProjectOnlyFilter());
+        mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(), getProjectFilter());
 
         Font font = parent.getFont();
         Composite comp = new Composite(parent, SWT.NONE);

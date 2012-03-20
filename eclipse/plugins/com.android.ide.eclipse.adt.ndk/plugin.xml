@@ -139,5 +139,35 @@
             class="com.android.ide.eclipse.adt.ndk.internal.preferences.NdkPreferenceInitializer">
       </initializer>
    </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="com.android.ide.eclipse.adt.ndk.internal.launch.NdkGdbLaunchDelegate"
+            delegateName="Android ndk-gdb Launcher"
+            id="com.android.ide.eclipse.adt.ndk.debug.LaunchConfigType"
+            modes="debug"
+            name="Android Native Application"
+            public="true"
+            sourceLocatorId="org.eclipse.cdt.debug.core.sourceLocator"
+            sourcePathComputerId="org.eclipse.cdt.debug.core.sourcePathComputer">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="com.android.ide.eclipse.adt.ndk.debug.LaunchConfigType"
+            icon="icons/android_app.png"
+            id="com.android.ide.eclipse.adt.ndk.debug.LaunchConfigTypeImage">
+      </launchConfigurationTypeImage>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="com.android.ide.eclipse.adt.ndk.internal.launch.NdkGdbLaunchConfigTabGroups"
+            description="Android Native Application"
+            id="com.android.ide.eclipse.adt.ndk.debug.LaunchConfigTabGroup"
+            type="com.android.ide.eclipse.adt.ndk.debug.LaunchConfigType">
+      </launchConfigurationTabGroup>
+   </extension>
 
 </plugin>
