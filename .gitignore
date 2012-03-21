@@ -3,6 +3,7 @@
 *.pyc
 Thumbs.db
 *.class
+testapps/testSensors/proguard.cfg
 
 # Hide temporary files created by the build_server script
 eclipse/assemble.com.android.ide.eclipse.*.xml
