@@ -213,10 +213,9 @@ public class DrawableDescriptors implements IDescriptorProvider {
                  + "its attributes. Must be a child of a <selector> element.",
             SDK_URL_BASE + "drawable-resource.html#StateList", //$NON-NLS-1$
             new ReferenceAttributeDescriptor(
-                    ResourceType.DRAWABLE, "drawable", "drawable", //$NON-NLS-1$ //$NON-NLS-2$
-                    SdkConstants.NS_RESOURCES,
-                    "Reference to a drawable resource.",
-                    new AttributeInfo("drawable", referenceFormat)),
+                    ResourceType.DRAWABLE, "drawable", SdkConstants.NS_RESOURCES, //$NON-NLS-1$
+                    new AttributeInfo("drawable", referenceFormat))
+                    .setTooltip("Reference to a drawable resource."),
             null, /* This is wrong -- we can now embed any above drawable
                         (but without xmlns as extra) */
             false /*mandatory*/);

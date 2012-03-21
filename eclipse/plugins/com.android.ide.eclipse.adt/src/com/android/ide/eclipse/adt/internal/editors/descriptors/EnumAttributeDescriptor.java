@@ -29,7 +29,7 @@ public class EnumAttributeDescriptor extends ListAttributeDescriptor {
 
     public EnumAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
             String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+        super(xmlLocalName, nsUri, attrInfo);
     }
 
     /**

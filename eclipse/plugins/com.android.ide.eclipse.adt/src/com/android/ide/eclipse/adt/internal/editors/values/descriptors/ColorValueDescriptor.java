@@ -30,7 +30,7 @@ public final class ColorValueDescriptor extends TextValueDescriptor {
     public ColorValueDescriptor(String uiName, String tooltip) {
         super(uiName, tooltip);
     }
-    
+
     /**
      * @return A new {@link UiResourceAttributeNode} linked to this theme descriptor.
      */

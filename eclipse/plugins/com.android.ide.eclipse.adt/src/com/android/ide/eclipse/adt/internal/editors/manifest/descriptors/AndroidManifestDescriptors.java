@@ -116,10 +116,11 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         // The "package" attribute is treated differently as it doesn't have the standard
         // Android XML namespace.
         PACKAGE_ATTR_DESC = new PackageAttributeDescriptor(PACKAGE_ATTR,
-                "Package",
                 null /* nsUri */,
-                "This attribute gives a unique name for the package, using a Java-style naming convention to avoid name collisions.\nFor example, applications published by Google could have names of the form com.google.app.appname",
-                new AttributeInfo(PACKAGE_ATTR, new Format[] { Format.REFERENCE }) );
+                new AttributeInfo(PACKAGE_ATTR, new Format[] { Format.REFERENCE })).setTooltip(
+                    "This attribute gives a unique name for the package, using a Java-style " +
+                    "naming convention to avoid name collisions.\nFor example, applications " +
+                    "published by Google could have names of the form com.google.app.appname");
     }
 
     @Override
@@ -249,10 +250,8 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         overrides.put(elementName + "/" + ANDROID_NAME_ATTR,
                 new ITextAttributeCreator() {
             @Override
-            public TextAttributeDescriptor create(String xmlName, String uiName, String nsUri,
-                    String tooltip, IAttributeInfo attrInfo) {
-                uiName += "*";  //$NON-NLS-1$
-
+            public TextAttributeDescriptor create(String xmlName, String nsUri,
+                    IAttributeInfo attrInfo) {
                 if (attrInfo == null) {
                     attrInfo = new AttributeInfo(xmlName, new Format[] { Format.STRING } );
                 }
@@ -262,9 +261,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             className,
                             PostActivityCreationAction.getAction(),
                             xmlName,
-                            uiName,
                             nsUri,
-                            tooltip,
                             attrInfo,
                             true /*mandatory */,
                             true /*defaultToProjectOnly*/);
@@ -273,9 +270,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             className,
                             PostReceiverCreationAction.getAction(),
                             xmlName,
-                            uiName,
                             nsUri,
-                            tooltip,
                             attrInfo,
                             true /*mandatory */,
                             true /*defaultToProjectOnly*/);
@@ -284,9 +279,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             className,
                             null, // no post action
                             xmlName,
-                            uiName,
                             nsUri,
-                            tooltip,
                             attrInfo,
                             true /*mandatory */,
                             false /*defaultToProjectOnly*/);
@@ -294,9 +287,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                     return new ClassAttributeDescriptor(
                             className,
                             xmlName,
-                            uiName,
                             nsUri,
-                            tooltip,
                             attrInfo,
                             true /*mandatory */);
                 }

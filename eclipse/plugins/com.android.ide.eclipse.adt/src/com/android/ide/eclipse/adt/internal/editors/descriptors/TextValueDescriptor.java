@@ -35,7 +35,9 @@ public class TextValueDescriptor extends TextAttributeDescriptor {
      * @param tooltip A non-empty tooltip string or null
      */
     public TextValueDescriptor(String uiName, String tooltip) {
-        super("#text" /* xmlLocalName */, uiName, null /* nsUri */, tooltip, null /* info */);
+        super("#text" /* xmlLocalName */, null /* nsUri */, null /* info */);
+        setUiName(uiName);
+        setTooltip(tooltip);
     }
 
     /**

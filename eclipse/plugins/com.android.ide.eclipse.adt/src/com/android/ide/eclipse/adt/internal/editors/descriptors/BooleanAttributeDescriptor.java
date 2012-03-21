@@ -26,9 +26,8 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiListAttributeNode;
 public class BooleanAttributeDescriptor extends ListAttributeDescriptor {
     private static final String[] VALUES = new String[] { "true", "false" };  //$NON-NLS-1$ //$NON-NLS-2$
 
-    public BooleanAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo, VALUES);
+    public BooleanAttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo, VALUES);
     }
 }
 
