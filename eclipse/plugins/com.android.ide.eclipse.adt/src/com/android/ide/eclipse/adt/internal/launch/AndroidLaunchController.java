@@ -81,6 +81,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Controls the launch of Android application either on a device or on the
@@ -572,7 +573,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // bring up the device chooser.
         final IAndroidTarget desiredProjectTarget = projectTarget;
-        AdtPlugin.getDisplay().asyncExec(new Runnable() {
+        final AtomicBoolean continueLaunch = new AtomicBoolean(false);
+        AdtPlugin.getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -584,8 +586,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     if (dialog.open() == Dialog.OK) {
                         updateLaunchOnSameDeviceState(response,
                                 launch.getLaunchConfiguration().getName());
-                        AndroidLaunchController.this.continueLaunch(response, project, launch,
-                                launchInfo, config);
+                        continueLaunch.set(true);
                     } else {
                         AdtPlugin.printErrorToConsole(project, "Launch canceled!");
                         stopLaunch(launchInfo);
@@ -606,6 +607,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         });
+
+        if (continueLaunch.get()) {
+            continueLaunch(response, project, launch, launchInfo, config);
+        }
     }
 
     private IDevice getDeviceUsedForLastLaunch(IDevice[] devices,
@@ -671,45 +676,37 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param launchInfo The {@link DelayedLaunchInfo}
      * @param config The config needed to start a new emulator.
      */
-    void continueLaunch(final DeviceChooserResponse response, final IProject project,
+    private void continueLaunch(final DeviceChooserResponse response, final IProject project,
             final AndroidLaunch launch, final DelayedLaunchInfo launchInfo,
             final AndroidLaunchConfiguration config) {
+        if (response.getAvdToLaunch() != null) {
+            // there was no selected device, we start a new emulator.
+            synchronized (sListLock) {
+                AvdInfo info = response.getAvdToLaunch();
+                mWaitingForEmulatorLaunches.add(launchInfo);
+                AdtPlugin.printToConsole(project, String.format(
+                        "Launching a new emulator with Virtual Device '%1$s'",
+                        info.getName()));
+                boolean status = launchEmulator(config, info);
 
-        // Since this is called from the UI thread we spawn a new thread
-        // to finish the launch.
-        new Thread() {
-            @Override
-            public void run() {
-                if (response.getAvdToLaunch() != null) {
-                    // there was no selected device, we start a new emulator.
-                    synchronized (sListLock) {
-                        AvdInfo info = response.getAvdToLaunch();
-                        mWaitingForEmulatorLaunches.add(launchInfo);
-                        AdtPlugin.printToConsole(project, String.format(
-                                "Launching a new emulator with Virtual Device '%1$s'",
-                                info.getName()));
-                        boolean status = launchEmulator(config, info);
+                if (status == false) {
+                    // launching the emulator failed!
+                    AdtPlugin.displayError("Emulator Launch",
+                            "Couldn't launch the emulator! Make sure the SDK directory is properly setup and the emulator is not missing.");
 
-                        if (status == false) {
-                            // launching the emulator failed!
-                            AdtPlugin.displayError("Emulator Launch",
-                                    "Couldn't launch the emulator! Make sure the SDK directory is properly setup and the emulator is not missing.");
-
-                            // stop the launch and return
-                            mWaitingForEmulatorLaunches.remove(launchInfo);
-                            AdtPlugin.printErrorToConsole(project, "Launch canceled!");
-                            stopLaunch(launchInfo);
-                            return;
-                        }
-
-                        return;
-                    }
-                } else if (response.getDeviceToUse() != null) {
-                    launchInfo.setDevice(response.getDeviceToUse());
-                    simpleLaunch(launchInfo, launchInfo.getDevice());
+                    // stop the launch and return
+                    mWaitingForEmulatorLaunches.remove(launchInfo);
+                    AdtPlugin.printErrorToConsole(project, "Launch canceled!");
+                    stopLaunch(launchInfo);
+                    return;
                 }
+
+                return;
             }
-        }.start();
+        } else if (response.getDeviceToUse() != null) {
+            launchInfo.setDevice(response.getDeviceToUse());
+            simpleLaunch(launchInfo, launchInfo.getDevice());
+        }
     }
 
     /**
