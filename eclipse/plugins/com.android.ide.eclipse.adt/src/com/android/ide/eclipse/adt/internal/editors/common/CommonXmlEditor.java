@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDeleg
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.otherxml.OtherXmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.otherxml.PlainXmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.values.ValuesEditorDelegate;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -155,13 +156,13 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
 
             if (mDelegate == null) {
                 // We didn't find any editor.
-                // We'll use the OtherXmlEditorDelegate as a catch-all editor.
+                // We'll use the PlainXmlEditorDelegate as a catch-all editor.
                 AdtPlugin.log(IStatus.INFO,
                         "No valid Android XML Editor Delegate found for file %1$s [Res %2$s, type %3$s]",
                         file.getFullPath(),
                         resFolder,
                         type);
-                mDelegate = new OtherXmlEditorDelegate(this);
+                mDelegate = new PlainXmlEditorDelegate(this);
             }
         } else if (editorInput instanceof IURIEditorInput) {
             String folderName = AdtUtils.getParentFolderName(editorInput);
@@ -182,13 +183,13 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
 
             if (mDelegate == null) {
                 // We didn't find any editor.
-                // We'll use the OtherXmlEditorDelegate as a catch-all editor.
+                // We'll use the PlainXmlEditorDelegate as a catch-all editor.
                 AdtPlugin.log(IStatus.INFO,
                         "No valid Android XML Editor Delegate found for file %1$s [Res %2$s, type %3$s]",
                         ((IURIEditorInput) editorInput).getURI().toString(),
                         folderName,
                         type);
-                mDelegate = new OtherXmlEditorDelegate(this);
+                mDelegate = new PlainXmlEditorDelegate(this);
             }
         }
 
