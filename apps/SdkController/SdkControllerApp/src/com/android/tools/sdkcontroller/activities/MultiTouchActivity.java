@@ -143,9 +143,11 @@ public class MultiTouchActivity extends BaseBindingActivity
                 @Override
                 public void run() {
                     ControllerBinder binder = getServiceBinder();
-                    boolean connected = binder.isEmuConnected();
-                    mImageView.setEnabled(connected);
-                    updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
+                    if (binder != null) {
+                        boolean connected = binder.isEmuConnected();
+                        mImageView.setEnabled(connected);
+                        updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
+                    }
                 }
             });
         }

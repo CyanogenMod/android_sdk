@@ -216,13 +216,13 @@ public abstract class BaseHandler {
     // Interaction from handler towards listening UI
 
     /**
-     * Indicates whether the given UI handler is already registered with the handler.
+     * Indicates any UI handler is currently registered with the handler.
+     * If no UI is displaying the handler's state, maybe the handler can skip UI related tasks.
      *
-     * @param uiHandler The UI handler.
-     * @return True if the UI handler is not null and already registered.
+     * @return True if there's at least one UI handler registered.
      */
-    public boolean hasUiHandler(android.os.Handler uiHandler) {
-        return uiHandler != null && mUiHandlers.contains(uiHandler);
+    public boolean hasUiHandler() {
+        return !mUiHandlers.isEmpty();
     }
 
     /**

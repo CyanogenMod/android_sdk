@@ -131,9 +131,11 @@ public class SensorActivity extends BaseBindingActivity
                 @Override
                 public void run() {
                     ControllerBinder binder = getServiceBinder();
-                    boolean connected = binder.isEmuConnected();
-                    mTableLayout.setEnabled(connected);
-                    updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
+                    if (binder != null) {
+                        boolean connected = binder.isEmuConnected();
+                        mTableLayout.setEnabled(connected);
+                        updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
+                    }
                 }
             });
         }
@@ -231,7 +233,6 @@ public class SensorActivity extends BaseBindingActivity
     /** Implementation of Handler.Callback */
     @Override
     public boolean handleMessage(Message msg) {
-        if (DEBUG) Log.d(TAG, "handleMessage" + msg.toString());
         DisplayInfo info = null;
         switch (msg.what) {
         case SensorsHandler.SENSOR_STATE_CHANGED:

@@ -25,6 +25,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.android.tools.sdkcontroller.lib.EmulatorConnection;
@@ -36,6 +37,7 @@ public class SensorsHandler extends BaseHandler {
     private static String TAG = SensorsHandler.class.getSimpleName();
     @SuppressWarnings("hiding")
     private static boolean DEBUG = true;
+    private static boolean VERBOSE_TIMING = false;
 
     /**
      * Sensor "enabled by emulator" state has changed.
@@ -312,13 +314,15 @@ public class SensorsHandler extends BaseHandler {
         /** The sensor name to display in the UI. */
         private String mUiName = "";
         /** Text view displaying the value of the sensor. */
-        private String mValue = "";
+        private String mValue = null;
         /** Emulator-friendly name for the sensor. */
         private String mEmulatorFriendlyName;
         /** Formats string to show in the TextView. */
         private String mTextFmt;
         /** Formats string to send to the emulator. */
         private String mMsgFmt;
+        private int mNbValues = 0;
+        private float[] mValues = new float[3];
         /**
          * Enabled state. This state is controlled by the emulator, that
          * maintains its own list of sensors. So, if a sensor is missing, or is
@@ -438,7 +442,22 @@ public class SensorsHandler extends BaseHandler {
         }
 
         public String getValue() {
-            return mValue;
+            String val = mValue;
+
+            if (val == null) {
+                int len = mNbValues;
+                float[] values = mValues;
+                if (len == 3) {
+                    val = String.format(mTextFmt, values[0], values[1],values[2]);
+                } else if (len == 2) {
+                    val = String.format(mTextFmt, values[0], values[1]);
+                } else if (len == 1) {
+                    val = String.format(mTextFmt, values[0]);
+                }
+                mValue = val;
+            }
+
+            return val == null ? "??" : val;
         }
 
         public boolean isEnabledByEmulator() {
@@ -490,7 +509,7 @@ public class SensorsHandler extends BaseHandler {
         private void startListening() {
             if (mEnabledByEmulator && mEnabledByUser) {
                 if (DEBUG) Log.d(TAG, "+++ Sensor " + getEmulatorFriendlyName() + " is started.");
-                mSenMan.registerListener(mListener, mSensor, SensorManager.SENSOR_DELAY_UI);
+                mSenMan.registerListener(mListener, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
             }
         }
 
@@ -510,11 +529,12 @@ public class SensorsHandler extends BaseHandler {
         private void enableSensor() {
             if (DEBUG) Log.d(TAG, ">>> Sensor " + getEmulatorFriendlyName() + " is enabled.");
             mEnabledByEmulator = true;
-            mValue = "";
+            mNbValues = 0;
+            mValue = null;
 
             Message msg = Message.obtain();
             msg.what = SENSOR_STATE_CHANGED;
-            msg.obj = this;
+            msg.obj = MonitoredSensor.this;
             notifyUiHandlers(msg);
         }
 
@@ -529,7 +549,7 @@ public class SensorsHandler extends BaseHandler {
 
             Message msg = Message.obtain();
             msg.what = SENSOR_STATE_CHANGED;
-            msg.obj = this;
+            msg.obj = MonitoredSensor.this;
             notifyUiHandlers(msg);
         }
 
@@ -540,32 +560,93 @@ public class SensorsHandler extends BaseHandler {
              */
             @Override
             public void onSensorChanged(SensorEvent event) {
+                mSensorCount++;
+                long now = SystemClock.currentThreadTimeMillis(); //.elapsedRealtime();
+
                 // Display current sensor value, and format message that will be
                 // sent to the emulator.
-                final int nArgs = event.values.length;
+                float[] values = event.values;
+                final int len = values.length;
                 String str;
-                String val;
-                if (nArgs == 3) {
-                    val = String.format(mTextFmt, event.values[0], event.values[1],event.values[2]);
-                    str = String.format(mMsgFmt, event.values[0], event.values[1], event.values[2]);
-                } else if (nArgs == 2) {
-                    val = String.format(mTextFmt, event.values[0], event.values[1]);
-                    str = String.format(mMsgFmt, event.values[0], event.values[1]);
-                } else if (nArgs == 1) {
-                    val = String.format(mTextFmt, event.values[0]);
-                    str = String.format(mMsgFmt, event.values[0]);
+                if (len == 3) {
+                    str = String.format(mMsgFmt, values[0], values[1], values[2]);
+                } else if (len == 2) {
+                    str = String.format(mMsgFmt, values[0], values[1]);
+                } else if (len == 1) {
+                    str = String.format(mMsgFmt, values[0]);
                 } else {
-                    Log.e(TAG, "Unexpected number of values " + event.values.length
+                    Log.e(TAG, "Unexpected number of values " + len
                             + " in onSensorChanged for sensor " + mSensor.getName());
                     return;
                 }
-                mValue = val;
                 sendEventToEmulator(str);
 
-                Message msg = Message.obtain();
-                msg.what = SENSOR_DISPLAY_MODIFIED;
-                msg.obj = this;
-                notifyUiHandlers(msg);
+                long now1 = SystemClock.currentThreadTimeMillis();
+
+                if (hasUiHandler()) {
+                    // TODO reduce the UI update rate. 2~4 fps would be just good enough.
+                    mNbValues = len;
+                    mValues[0] = values[0];
+                    if (len > 1) {
+                        mValues[1] = values[1];
+                        if (len > 2) {
+                            mValues[2] = values[2];
+                        }
+                    }
+                    mValue = null;
+
+                    Message msg = Message.obtain();
+                    msg.what = SENSOR_DISPLAY_MODIFIED;
+                    msg.obj = MonitoredSensor.this;
+                    notifyUiHandlers(msg);
+                }
+
+                if (VERBOSE_TIMING) {
+                    // Computes average update time for this sensor or globally.
+                    // Also computes the average time spend formatting sensor values.
+                    // average call times between "now"
+                    if (mGlobalLastNowTS != 0) {
+                        long nowDiff = now - mGlobalLastNowTS;
+                        mGlobalLastNowTS = now;
+                        if (mGlobalAvgNowMs != 0) {
+                            mGlobalAvgNowMs = (mGlobalAvgNowMs + nowDiff) / 2;
+                        } else {
+                            mGlobalAvgNowMs = nowDiff;
+                        }
+                    } else {
+                        mGlobalLastNowTS = now;
+                    }
+
+                    if (mLastNowTS != 0) {
+                        long nowDiff = now - mLastNowTS;
+                        mLastNowTS = now;
+                        if (mAvgNowMs != 0) {
+                            mAvgNowMs = (mAvgNowMs + nowDiff) / 2;
+                        } else {
+                            mAvgNowMs = nowDiff;
+                        }
+
+                        // average now to now1 time (time to format string)
+                        nowDiff = now1 - now;
+                        if (mAvgNow1Ms != 0) {
+                            mAvgNow1Ms = (mAvgNow1Ms + nowDiff) / 2;
+                        } else {
+                            mAvgNow1Ms = nowDiff;
+                        }
+
+                        // Display timing stats
+                        String d = String.format("G:%3d [%d L:%3d ms F:%3d +E:%3d ms] %s",
+                                mGlobalAvgNowMs,    // average millis between global sensor updates
+                                mSensorCount,        // update count for this sensor
+                                mAvgNowMs,            // average milis between updates for this sensor
+                                mAvgNow1Ms,            // average millis for string.format + emu send
+                                mSensor.getName());
+                        Log.d(TAG, d);
+
+                    } else {
+                        mLastNowTS = now;
+                    }
+                } // VERBOSE_TIMING
             }
 
             /**
@@ -575,7 +656,18 @@ public class SensorsHandler extends BaseHandler {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
             }
+
+            // Debug: Per-sensor variables used for verbose timing. see VERBOSE_TIMING
+            private int mSensorCount;
+            private long mLastNowTS;
+            private long mAvgNowMs;
+            private long mAvgNow1Ms;
+
         }
     } // MonitoredSensor
+
+    // Debug: Global variables used for verbose timing. see VERBOSE_TIMING
+    private long mGlobalLastNowTS;
+    private long mGlobalAvgNowMs;
 
 }
