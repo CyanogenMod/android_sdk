@@ -39,6 +39,7 @@ import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,17 +126,15 @@ public final class AnimationContentAssist extends AndroidContentAssist {
                             }
                             String name = desc.getXmlLocalName();
                             if (startsWith(name, attributePrefix)) {
-                                for (Format f : desc.getAttributeInfo().getFormats()) {
-                                    if (f == Format.INTEGER || f == Format.FLOAT) {
-                                        // TODO: Filter out some common properties
-                                        // that the user probably isn't trying to
-                                        // animate:
-                                        // num*, min*, max*, *Index, *Threshold,
-                                        // *Duration, *Id, *Limit
-
-                                        matches.put(name, desc);
-                                        break;
-                                    }
+                                EnumSet<Format> formats = desc.getAttributeInfo().getFormats();
+                                if (formats.contains(Format.INTEGER)
+                                        || formats.contains(Format.FLOAT)) {
+                                    // TODO: Filter out some common properties
+                                    // that the user probably isn't trying to
+                                    // animate:
+                                    // num*, min*, max*, *Index, *Threshold,
+                                    // *Duration, *Id, *Limit
+                                    matches.put(name, desc);
                                 }
                             }
                         }

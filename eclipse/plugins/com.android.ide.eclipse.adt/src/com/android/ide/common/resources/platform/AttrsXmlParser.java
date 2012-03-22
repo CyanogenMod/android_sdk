@@ -30,11 +30,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -57,6 +57,9 @@ public final class AttrsXmlParser {
     /** Map of all attribute names for a given element */
     private final Map<String, DeclareStyleableInfo> mStyleMap =
         new HashMap<String, DeclareStyleableInfo>();
+
+    /** Map from format name (lower case) to the uppercase version */
+    private Map<String, Format> mFormatNames = new HashMap<String, Format>(10);
 
     /**
      * Map of all (constant, value) pairs for attributes of format enum or flag.
@@ -116,6 +119,12 @@ public final class AttrsXmlParser {
             mAttributeMap = new HashMap<String, AttributeInfo>(inheritableAttributes.mAttributeMap);
             mEnumFlagValues = new HashMap<String, Map<String,Integer>>(
                                                              inheritableAttributes.mEnumFlagValues);
+        }
+
+        // Pre-compute the set of format names such that we don't have to compute the uppercase
+        // version of the same format string names again and again
+        for (Format f : Format.values()) {
+            mFormatNames.put(f.name().toLowerCase(Locale.US), f);
         }
     }
 
@@ -396,7 +405,7 @@ public final class AttrsXmlParser {
                 info = mAttributeMap.get(name);
                 // If the attribute is unknown yet, parse it.
                 // If the attribute is know but its format is unknown, parse it too.
-                if (info == null || info.getFormats().length == 0) {
+                if (info == null || info.getFormats().size() == 0) {
                     info = parseAttributeTypes(attrNode, name);
                     if (info != null) {
                         mAttributeMap.put(name, info);
@@ -468,25 +477,28 @@ public final class AttrsXmlParser {
      * When reusing a node, it is duplicated and its javadoc reassigned.
      */
     private AttributeInfo parseAttributeTypes(Node attrNode, String name) {
-        TreeSet<AttributeInfo.Format> formats = new TreeSet<AttributeInfo.Format>();
+        EnumSet<Format> formats = null;
         String[] enumValues = null;
         String[] flagValues = null;
 
         Node attrFormat = attrNode.getAttributes().getNamedItem("format"); //$NON-NLS-1$
         if (attrFormat != null) {
             for (String f : attrFormat.getNodeValue().split("\\|")) { //$NON-NLS-1$
-                try {
-                    Format format = AttributeInfo.Format.valueOf(f.toUpperCase(Locale.US));
-                    // enum and flags are handled differently right below
-                    if (format != null &&
-                            format != AttributeInfo.Format.ENUM &&
-                            format != AttributeInfo.Format.FLAG) {
-                        formats.add(format);
-                    }
-                } catch (IllegalArgumentException e) {
-                    mLog.error(e,
+                Format format = mFormatNames.get(f);
+                if (format == null) {
+                    mLog.printf(
                         "Unknown format name '%s' in <attr name=\"%s\">, file '%s'.", //$NON-NLS-1$
                         f, name, getOsAttrsXmlPath());
+                } else if (format != AttributeInfo.Format.ENUM &&
+                        format != AttributeInfo.Format.FLAG) {
+                    if (formats == null) {
+                        formats = format.asSet();
+                    } else {
+                        if (formats.size() == 1) {
+                            formats = EnumSet.copyOf(formats);
+                        }
+                        formats.add(format);
+                    }
                 }
             }
         }
@@ -494,17 +506,34 @@ public final class AttrsXmlParser {
         // does this <attr> have <enum> children?
         enumValues = parseEnumFlagValues(attrNode, "enum", name); //$NON-NLS-1$
         if (enumValues != null) {
-            formats.add(AttributeInfo.Format.ENUM);
+            if (formats == null) {
+                formats = Format.ENUM_SET;
+            } else {
+                if (formats.size() == 1) {
+                    formats = EnumSet.copyOf(formats);
+                }
+                formats.add(Format.ENUM);
+            }
         }
 
         // does this <attr> have <flag> children?
         flagValues = parseEnumFlagValues(attrNode, "flag", name); //$NON-NLS-1$
         if (flagValues != null) {
-            formats.add(AttributeInfo.Format.FLAG);
+            if (formats == null) {
+                formats = Format.FLAG_SET;
+            } else {
+                if (formats.size() == 1) {
+                    formats = EnumSet.copyOf(formats);
+                }
+                formats.add(Format.FLAG);
+            }
         }
 
-        AttributeInfo info = new AttributeInfo(name,
-                formats.toArray(new AttributeInfo.Format[formats.size()]));
+        if (formats == null) {
+            formats = Format.NONE;
+        }
+
+        AttributeInfo info = new AttributeInfo(name, formats);
         info.setEnumValues(enumValues);
         info.setFlagValues(flagValues);
         return info;

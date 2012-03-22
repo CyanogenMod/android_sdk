@@ -175,7 +175,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
         initialize(rule, "android.widget.LinearLayout");
         TestNode node = TestNode.create("android.widget.LinearLayout").id("@+id/LinearLayout012");
         node.putAttributeInfo(ANDROID_URI, "orientation",
-                new TestAttributeInfo(ATTR_ORIENTATION, new Format[] { Format.ENUM },
+                new TestAttributeInfo(ATTR_ORIENTATION, Format.ENUM_SET,
                         "android.widget.LinearLayout",
                         new String[] {"horizontal", "vertical"}, null, null));
 
@@ -209,13 +209,13 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
         initialize(rule, "android.widget.LinearLayout");
         TestNode node = TestNode.create("android.widget.LinearLayout").id("@+id/LinearLayout012");
         node.putAttributeInfo(ANDROID_URI, "orientation",
-                new TestAttributeInfo(ATTR_ORIENTATION, new Format[] { Format.ENUM },
+                new TestAttributeInfo(ATTR_ORIENTATION, Format.ENUM_SET,
                         "android.widget.LinearLayout",
                         new String[] {"horizontal", "vertical"}, null, null));
         node.setAttributeSources(Arrays.asList("android.widget.LinearLayout",
                 "android.view.ViewGroup", "android.view.View"));
         node.putAttributeInfo(ANDROID_URI, "gravity",
-                new TestAttributeInfo("gravity", new Format[] { Format.INTEGER },
+                new TestAttributeInfo("gravity", Format.INTEGER_SET,
                         "android.widget.LinearLayout", null, null, null));
 
 

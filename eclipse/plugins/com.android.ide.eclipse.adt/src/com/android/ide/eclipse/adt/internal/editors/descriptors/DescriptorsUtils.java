@@ -140,16 +140,9 @@ public final class DescriptorsUtils {
         String xmlLocalName = info.getName();
 
         // Add the known types to the tooltip
-        Format[] formats_list = info.getFormats();
-        int flen = formats_list.length;
+        EnumSet<Format> formats_set = info.getFormats();
+        int flen = formats_set.size();
         if (flen > 0) {
-            // Fill the formats in a set for faster access
-            EnumSet<Format> formats_set = EnumSet.noneOf(Format.class);
-            for (int i = 0; i < flen; i++) {
-                Format f = formats_list[i];
-                formats_set.add(f);
-            }
-
             // Create a specialized attribute if we can
             if (overrides != null) {
                 for (Entry<String, ITextAttributeCreator> entry: overrides.entrySet()) {

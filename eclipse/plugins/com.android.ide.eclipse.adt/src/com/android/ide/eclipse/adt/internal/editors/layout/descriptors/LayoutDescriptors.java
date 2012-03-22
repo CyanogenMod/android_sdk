@@ -104,14 +104,13 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         new DocumentDescriptor("layout_doc", null); //$NON-NLS-1$
 
     /** The list of all known ViewLayout descriptors. */
-    private List<ViewElementDescriptor> mLayoutDescriptors =
-        new ArrayList<ViewElementDescriptor>();
+    private List<ViewElementDescriptor> mLayoutDescriptors = Collections.emptyList();
 
     /** Read-Only list of View Descriptors. */
     private List<ViewElementDescriptor> mROLayoutDescriptors;
 
     /** The list of all known View (not ViewLayout) descriptors. */
-    private List<ViewElementDescriptor> mViewDescriptors = new ArrayList<ViewElementDescriptor>();
+    private List<ViewElementDescriptor> mViewDescriptors = Collections.emptyList();
 
     /** Read-Only list of View Descriptors. */
     private List<ViewElementDescriptor> mROViewDescriptors;
@@ -277,7 +276,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         // All views and groups have an implicit "style" attribute which is a reference.
         AttributeInfo styleInfo = new AttributeInfo(
                 "style",    //$NON-NLS-1$ xmlLocalName
-                new Format[] { Format.REFERENCE });
+                Format.REFERENCE_SET);
         styleInfo.setJavaDoc("A reference to a custom style"); //tooltip
         DescriptorsUtils.appendAttribute(attributes,
                 "style",    //$NON-NLS-1$
@@ -386,7 +385,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 null, //nsUri
                 new AttributeInfo(
                         ATTR_LAYOUT,
-                        new Format[] { Format.REFERENCE } ),
+                        Format.REFERENCE_SET ),
                 true,  //required
                 null); //overrides
 
@@ -395,7 +394,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 SdkConstants.NS_RESOURCES, //nsUri
                 new AttributeInfo(
                         "id",           //$NON-NLS-1$
-                        new Format[] { Format.REFERENCE } ),
+                        Format.REFERENCE_SET ),
                 true,  //required
                 null); //overrides
 
@@ -458,7 +457,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 // Should accept both CLASS_V4_FRAGMENT and CLASS_FRAGMENT
                 null /*superClassName*/,
                 ATTR_CLASS, null /* namespace */,
-                new AttributeInfo(ATTR_CLASS, new Format[] { Format.STRING}),
+                new AttributeInfo(ATTR_CLASS, Format.STRING_SET),
                 true /*mandatory*/)
                 .setTooltip("Supply the name of the fragment class to instantiate");
 
@@ -495,14 +494,14 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                     new ClassAttributeDescriptor(
                             null /*superClassName*/,
                             ATTR_NAME, ANDROID_URI,
-                            new AttributeInfo(ATTR_NAME, new Format[] { Format.STRING}),
+                            new AttributeInfo(ATTR_NAME, Format.STRING_SET),
                             true /*mandatory*/)
                             .setTooltip("Supply the name of the fragment class to instantiate"),
                     classAttribute,
                     new ClassAttributeDescriptor(
                             null /*superClassName*/,
                             ATTR_TAG, ANDROID_URI,
-                            new AttributeInfo(ATTR_TAG, new Format[] { Format.STRING}),
+                            new AttributeInfo(ATTR_TAG, Format.STRING_SET),
                             true /*mandatory*/)
                             .setTooltip("Supply a tag for the top-level view containing a String"),
                 }, // attributes

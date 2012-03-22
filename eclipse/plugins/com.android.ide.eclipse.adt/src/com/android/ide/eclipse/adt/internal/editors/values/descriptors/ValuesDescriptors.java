@@ -27,6 +27,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextValueDescriptor;
 import com.android.resources.ResourceType;
 
+import java.util.EnumSet;
+
 
 /**
  * Complete description of the structure for resources XML files (under res/values/)
@@ -81,7 +83,7 @@ public final class ValuesDescriptors implements IDescriptorProvider {
 
         // Elements
 
-        AttributeInfo nameAttrInfo = new AttributeInfo(NAME_ATTR, new Format[] { Format.STRING } );
+        AttributeInfo nameAttrInfo = new AttributeInfo(NAME_ATTR, Format.STRING_SET);
 
         ElementDescriptor color_element = new ElementDescriptor(
                 COLOR_ELEMENT,
@@ -130,13 +132,13 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                          new ListAttributeDescriptor(TYPE_ATTR,
                                  null /* nsUri */,
                                  new AttributeInfo(TYPE_ATTR,
-                                         new Format[] { Format.STRING, Format.ENUM }
+                                         EnumSet.of(Format.STRING, Format.ENUM)
                                  ).setEnumValues(ResourceType.getNames())
                          ).setTooltip("The mandatory type of this resource."),
                          new FlagAttributeDescriptor("format",      //$NON-NLS-1$
                                  null /* nsUri */,
                                  new AttributeInfo("format",
-                                         new Format[] { Format.STRING, Format.FLAG }
+                                         EnumSet.of(Format.STRING, Format.FLAG)
                                  ).setFlagValues(
                                      new String[] {
                                          "boolean",     //$NON-NLS-1$
@@ -203,7 +205,7 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                         new TextAttributeDescriptor("parent", //$NON-NLS-1$
                                 null /* nsUri */,
                                 new AttributeInfo("parent",  //$NON-NLS-1$
-                                        new Format[] { Format.STRING }))
+                                        Format.STRING_SET))
                         .setTooltip("An optional parent theme. All values from the specified theme will be inherited into this theme. Any values with identical names that you specify will override inherited values."),
                 },
                 new ElementDescriptor[] {

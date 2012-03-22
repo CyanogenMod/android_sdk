@@ -117,7 +117,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         // Android XML namespace.
         PACKAGE_ATTR_DESC = new PackageAttributeDescriptor(PACKAGE_ATTR,
                 null /* nsUri */,
-                new AttributeInfo(PACKAGE_ATTR, new Format[] { Format.REFERENCE })).setTooltip(
+                new AttributeInfo(PACKAGE_ATTR, Format.REFERENCE_SET)).setTooltip(
                     "This attribute gives a unique name for the package, using a Java-style " +
                     "naming convention to avoid name collisions.\nFor example, applications " +
                     "published by Google could have names of the form com.google.app.appname");
@@ -253,7 +253,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             public TextAttributeDescriptor create(String xmlName, String nsUri,
                     IAttributeInfo attrInfo) {
                 if (attrInfo == null) {
-                    attrInfo = new AttributeInfo(xmlName, new Format[] { Format.STRING } );
+                    attrInfo = new AttributeInfo(xmlName, Format.STRING_SET );
                 }
 
                 if (SdkConstants.CLASS_ACTIVITY.equals(className)) {
