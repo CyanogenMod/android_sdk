@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2010, 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,14 @@ import java.util.List;
 /**
  * Task to execute renderscript.
  * <p>
- * It expects 5 attributes:<br>
+ * It expects 7 attributes:<br>
  * 'executable' ({@link Path} with a single path) for the location of the llvm executable<br>
  * 'framework' ({@link Path} with 1 or more paths) for the include paths.<br>
  * 'genFolder' ({@link Path} with a single path) for the location of the gen folder.<br>
  * 'resFolder' ({@link Path} with a single path) for the location of the res folder.<br>
  * 'targetApi' for the -target-api value.<br>
+ * 'optLevel' for the -O optimization level.<br>
+ * 'debug' for -g renderscript debugging.<br>
  * <p>
  * It also expects one or more inner elements called "source" which are identical to {@link Path}
  * elements for where to find .rs files.
@@ -46,6 +48,9 @@ public class RenderScriptTask extends MultiFilesTask {
     private String mResFolder;
     private final List<Path> mPaths = new ArrayList<Path>();
     private int mTargetApi = 0;
+    public enum OptLevel { O0, O1, O2, O3 };
+    private OptLevel mOptLevel;
+    private boolean mDebug = false;
 
     private class RenderScriptProcessor implements SourceProcessor {
 
@@ -87,6 +92,13 @@ public class RenderScriptTask extends MultiFilesTask {
 
             }
 
+            if (mDebug) {
+                task.createArg().setValue("-g");
+            }
+
+            task.createArg().setValue("-O");
+            task.createArg().setValue(Integer.toString(mOptLevel.ordinal()));
+
             task.createArg().setValue("-target-api");
             task.createArg().setValue(mTargetApiStr);
 
@@ -115,6 +127,7 @@ public class RenderScriptTask extends MultiFilesTask {
                         System.out.println(String.format(
                                 "Compiling %1$d RenderScript files with -target-api %2$d",
                                 count, mTargetApi));
+                        System.out.println(String.format("Optimization Level: %1$d", mOptLevel.ordinal()));
                     } else {
                         System.out.println("No RenderScript files to compile.");
                     }
@@ -171,6 +184,14 @@ public class RenderScriptTask extends MultiFilesTask {
         } catch (NumberFormatException e) {
             throw new BuildException("targetApi attribute value must be an integer", e);
         }
+    }
+
+    public void setOptLevel(OptLevel optLevel) {
+        mOptLevel = optLevel;
+    }
+
+    public void setDebug(boolean debug) {
+        mDebug = debug;
     }
 
     public Path createSource() {
