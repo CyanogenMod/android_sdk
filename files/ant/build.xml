@@ -610,7 +610,9 @@
                     framework="${android.rs}"
                     genFolder="${gen.absolute.dir}"
                     resFolder="${out.res.absolute.dir}/raw"
-                    targetApi="${target.api}">
+                    targetApi="${target.api}"
+                    optLevel="${renderscript.opt.level}"
+                    debug="${build.is.packaging.debug}">
                 <source path="${source.absolute.dir}"/>
             </renderscript>
 
@@ -932,6 +934,9 @@
         <!-- signing mode: debug -->
         <property name="build.is.signing.debug" value="true" />
 
+        <!-- Renderscript optimization level: none -->
+        <property name="renderscript.opt.level" value="O0" />
+
     </target>
 
     <target name="-debug-obfuscation-check">
@@ -1020,6 +1025,9 @@
 
         <!-- signing mode: release -->
         <property name="build.is.signing.debug" value="false" />
+
+        <!-- Renderscript optimization level: aggressive -->
+        <property name="renderscript.opt.level" value="O3" />
 
         <if condition="${build.is.packaging.debug}">
             <then>
