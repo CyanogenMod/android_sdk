@@ -1,43 +1,81 @@
 #!/bin/bash
+# See usage() below for the description.
+
+function usage() {
+  cat <<EOF
 # This script copies the .jar files that each plugin depends on into the plugins libs folder.
 # By default, on Mac & Linux, this script creates symlinks from the libs folder to the jar file.
 # Since Windows does not support symlinks, the jar files are copied.
-# Use option "-f" to copy files rather than creating symlinks on the Mac/Linux platforms.
+#
+# Options:
+# -f : to copy files rather than creating symlinks on the Mac/Linux platforms.
+# -d : print make dependencies instead of running make; doesn't copy files.
+# -c : copy files expected after make dependencies (reported by -d) have been built.
+#
+# The purpose of -d/-c is to include the workflow in a make file:
+# - the make rule should depend on \$(shell create_all_symlinks -d)
+# - the rule body should perform   \$(shell create_all_symlinks -c [-f])
+EOF
+}
 
-echo "## Running $0"
 # CD to the top android directory
 PROG_DIR=`dirname "$0"`
 cd "${PROG_DIR}/../../../"
 
 HOST=`uname`
-USE_COPY="" # force copy dependent jar files rather than creating symlinks
+USE_COPY=""        # force copy dependent jar files rather than creating symlinks
+ONLY_SHOW_DEPS=""  # only report make dependencies but don't build them nor copy.
+ONLY_COPY_DEPS=""  # only copy dependencies built by make; uses -f as needed.
 
 function die() {
-  echo "Error: $*"
+  echo "Error: $*" >/dev/stderr
   exit 1
+}
+
+function warn() {
+  # Only print something if not in show-deps mode
+  if [[ -z $ONLY_SHOW_DEPS ]]; then
+    echo "$*"
+  fi
 }
 
 ## parse arguments
 while [ $# -gt 0 ]; do
-  if [ "$1" == "-f" ]; then
-    USE_COPY="1"
-  fi
+  case "$1" in
+    "-f" )
+      USE_COPY="1"
+      ;;
+    "-d" )
+      ONLY_SHOW_DEPS="1"
+      ;;
+    "-c" )
+      ONLY_COPY_DEPS="1"
+      ;;
+    * )
+      usage
+      exit 2
+  esac
   shift
 done
 
-if [ "$HOST" == "Linux" ]; then
-  PLATFORM="linux-x86"
-elif [ "$HOST" == "Darwin" ]; then
-  PLATFORM="darwin-x86"
-elif [ "${HOST:0:6}" == "CYGWIN" ]; then
-  USE_COPY="1"      # We can't use symlinks under Cygwin
+warn "## Running $0"
+
+if [[ "${HOST:0:6}" == "CYGWIN" || "$USE_MINGW" == "1" ]]; then
+  # This is either Cygwin or Linux/Mingw cross-compiling to Windows.
   PLATFORM="windows-x86"
+  if [[ "${HOST:0:6}" == "CYGWIN" ]]; then
+    # We can't use symlinks under Cygwin
+    USE_COPY="1"
+  fi
+elif [[ "$HOST" == "Linux" ]]; then
+  PLATFORM="linux-x86"
+elif [[ "$HOST" == "Darwin" ]]; then
+  PLATFORM="darwin-x86"
 else
-  echo "Unsupported platform ($HOST). Aborting."
-  exit 1
+  die "Unsupported platform ($HOST). Aborting."
 fi
 
-if [ "$USE_COPY" == "1" ]; then
+if [[ "$USE_COPY" == "1" ]]; then
   function cpfile { # $1=source $2=dest
     cp -fv $1 $2/
   }
@@ -167,25 +205,32 @@ if [[ $PLATFORM != "windows-x86" ]]; then
   CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS $GLD_PREBUILTS"
 fi
 
-# Make sure we have lunch sdk-<something>
-if [[ ! "$TARGET_PRODUCT" ]]; then
-  echo "## TARGET_PRODUCT is not set, running build/envsetup.sh"
-  . build/envsetup.sh
-  echo "## lunch sdk-eng"
-  lunch sdk-eng
+# In the mode to only echo dependencies, output them and we're done
+if [[ -n $ONLY_SHOW_DEPS ]]; then
+  echo $LIBS
+  exit 0
 fi
 
-# Run make on all libs
+if [[ -z $ONLY_COPY_DEPS ]]; then
+  # Make sure we have lunch sdk-<something>
+  if [[ ! "$TARGET_PRODUCT" ]]; then
+    warn "## TARGET_PRODUCT is not set, running build/envsetup.sh"
+    . build/envsetup.sh
+    warn "## lunch sdk-eng"
+    lunch sdk-eng
+  fi
 
-J="4"
-[[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
-[[ $(uname) == "Linux"  ]] && J=$(cat /proc/cpuinfo | grep processor | wc -l)
+  # Run make on all libs
 
-echo "## Building libs: make -j$J $LIBS"
-make -j${J} $LIBS
+  J="4"
+  [[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
+  [[ $(uname) == "Linux"  ]] && J=$(cat /proc/cpuinfo | grep processor | wc -l)
+
+  warn "## Building libs: make -j$J $LIBS"
+  make -j${J} $LIBS
+fi
 
 # Copy resulting files
-
 DEST=""
 for SRC in $CP_FILES; do
   if [[ "${SRC:0:2}" == "@:" ]]; then

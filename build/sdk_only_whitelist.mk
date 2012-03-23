@@ -46,6 +46,7 @@ subdirs += \
 	sdk/assetstudio \
 	sdk/common \
 	sdk/ddms \
+	sdk/eclipse/scripts/rcp \
 	sdk/hierarchyviewer2 \
 	sdk/ide_common \
 	sdk/jarutils \
