@@ -13,9 +13,7 @@ WIN_SDK_TARGETS := \
 	mksdcard \
 	sdklauncher
 
-# Disabled whilst we figure out to make this build on our build servers
-	monitor \
-
+# monitor -- disabled due to build break
 
 # Add OpenGLES emulation host libraries if needed.
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
