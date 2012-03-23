@@ -59,6 +59,7 @@ import org.w3c.dom.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -496,7 +497,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         AttributeDescriptor attributeDescriptor = currAttrNode.getDescriptor();
         IAttributeInfo attributeInfo = attributeDescriptor.getAttributeInfo();
         if (value.startsWith(PREFIX_RESOURCE_REF)
-                && !Format.REFERENCE.in(attributeInfo.getFormats())) {
+                && !attributeInfo.getFormats().contains(Format.REFERENCE)) {
             // Special case: If the attribute value looks like a reference to a
             // resource, offer to complete it, since in many cases our metadata
             // does not correctly state whether a resource value is allowed. We don't
@@ -1224,12 +1225,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      */
     private Object[] completeSuffix(Object[] choices, String value, UiAttributeNode currAttrNode) {
         IAttributeInfo attributeInfo = currAttrNode.getDescriptor().getAttributeInfo();
-        Format[] formats = attributeInfo.getFormats();
+        EnumSet<Format> formats = attributeInfo.getFormats();
         List<Object> suffixes = new ArrayList<Object>();
 
         if (value.length() > 0 && Character.isDigit(value.charAt(0))) {
-            boolean hasDimension = Format.DIMENSION.in(formats);
-            boolean hasFraction = Format.FRACTION.in(formats);
+            boolean hasDimension = formats.contains(Format.DIMENSION);
+            boolean hasFraction = formats.contains(Format.FRACTION);
 
             if (hasDimension || hasFraction) {
                 // Split up the value into a numeric part (the prefix) and the
@@ -1273,7 +1274,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             }
         }
 
-        boolean hasFlag = Format.FLAG.in(formats);
+        boolean hasFlag = formats.contains(Format.FLAG);
         if (hasFlag) {
             boolean isDone = false;
             String[] flagValues = attributeInfo.getFlagValues();

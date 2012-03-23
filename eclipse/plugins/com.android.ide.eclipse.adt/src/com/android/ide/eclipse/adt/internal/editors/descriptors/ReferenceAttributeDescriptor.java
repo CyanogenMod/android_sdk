@@ -51,7 +51,7 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
             return new ReferenceAttributeDescriptor(
                     ResourceType.DRAWABLE,
                     xmlLocalName, nsUri,
-                    new AttributeInfo(xmlLocalName, new Format[] { Format.REFERENCE }));
+                    new AttributeInfo(xmlLocalName, Format.REFERENCE_SET));
         }
     };
 

@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 
@@ -177,8 +178,8 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
             }
 
             // Add the known types to the tooltip
-            Format[] formats_list = info.getFormats();
-            int flen = formats_list.length;
+            EnumSet<Format> formats_list = info.getFormats();
+            int flen = formats_list.size();
             if (flen > 0) {
                 StringBuilder sb = new StringBuilder();
                 if (rawTooltip != null && rawTooltip.length() > 0) {
@@ -189,12 +190,14 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
                     sb.append("@@");    //$NON-NLS-1$  @@ inserts a break before the types
                 }
                 sb.append("[");         //$NON-NLS-1$
-                for (int i = 0; i < flen; i++) {
-                    Format f = formats_list[i];
-                    sb.append(f.toString().toLowerCase(Locale.US));
-                    if (i < flen - 1) {
-                        sb.append(", "); //$NON-NLS-1$
+                boolean isFirst = true;
+                for (Format f : formats_list) {
+                    if (isFirst) {
+                        isFirst = false;
+                    } else {
+                        sb.append(", ");
                     }
+                    sb.append(f.toString().toLowerCase(Locale.US));
                 }
                 // The extra space at the end makes the tooltip more readable on Windows.
                 sb.append("]"); //$NON-NLS-1$

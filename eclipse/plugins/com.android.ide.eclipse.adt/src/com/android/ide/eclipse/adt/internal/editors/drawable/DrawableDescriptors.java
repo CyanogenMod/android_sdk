@@ -85,8 +85,6 @@ public class DrawableDescriptors implements IDescriptorProvider {
     public synchronized void updateDescriptors(Map<String, DeclareStyleableInfo> styleMap) {
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
                 SdkConstants.NS_RESOURCES);
-        Format[] referenceFormat = new Format[] { Format.REFERENCE };
-
         List<ElementDescriptor> descriptors = new ArrayList<ElementDescriptor>();
 
         AnimatorDescriptors.addElement(descriptors, styleMap,
@@ -214,7 +212,7 @@ public class DrawableDescriptors implements IDescriptorProvider {
             SDK_URL_BASE + "drawable-resource.html#StateList", //$NON-NLS-1$
             new ReferenceAttributeDescriptor(
                     ResourceType.DRAWABLE, "drawable", SdkConstants.NS_RESOURCES, //$NON-NLS-1$
-                    new AttributeInfo("drawable", referenceFormat))
+                    new AttributeInfo("drawable", Format.REFERENCE_SET))
                     .setTooltip("Reference to a drawable resource."),
             null, /* This is wrong -- we can now embed any above drawable
                         (but without xmlns as extra) */

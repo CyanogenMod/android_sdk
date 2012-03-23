@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
+import java.util.EnumSet;
+
 /**
  * Information about an attribute as gathered from the attrs.xml file where
  * the attribute was declared. This must include a format (string, reference, float, etc.),
@@ -38,32 +40,55 @@ public interface IAttributeInfo {
         BOOLEAN,
         INTEGER,
         FLOAT,
-        REFERENCE,
         COLOR,
         DIMENSION,
         FRACTION,
         ENUM,
-        FLAG;
+        FLAG,
+        REFERENCE;
+
+        public static final EnumSet<Format> NONE = EnumSet.noneOf(Format.class);
+        public static final EnumSet<Format> FLAG_SET = EnumSet.of(FLAG);
+        public static final EnumSet<Format> ENUM_SET = EnumSet.of(ENUM);
+        public static final EnumSet<Format> COLOR_SET = EnumSet.of(COLOR);
+        public static final EnumSet<Format> STRING_SET = EnumSet.of(STRING);
+        public static final EnumSet<Format> BOOLEAN_SET = EnumSet.of(BOOLEAN);
+        public static final EnumSet<Format> INTEGER_SET = EnumSet.of(INTEGER);
+        public static final EnumSet<Format> FLOAT_SET = EnumSet.of(FLOAT);
+        public static final EnumSet<Format> DIMENSION_SET = EnumSet.of(DIMENSION);
+        public static final EnumSet<Format> REFERENCE_SET = EnumSet.of(REFERENCE);
 
         /**
-         * Returns true if and only if this format is in the given array of
-         * formats
+         * Returns an EnumSet containing only this format (which should not be
+         * modified by the client)
          *
-         * @param formats An array of formats, or null.
-         * @return True if and only if the given array (if any) contains this
-         *         format.
+         * @return a new enum set containing exactly this format
          */
-        public boolean in(@Nullable Format[] formats) {
-            if (formats == null) {
-                return false;
+        @NonNull
+        public EnumSet<Format> asSet() {
+            switch (this) {
+                case BOOLEAN:
+                    return BOOLEAN_SET;
+                case COLOR:
+                    return COLOR_SET;
+                case DIMENSION:
+                    return DIMENSION_SET;
+                case ENUM:
+                    return ENUM_SET;
+                case FLAG:
+                    return FLAG_SET;
+                case FLOAT:
+                    return FLOAT_SET;
+                case INTEGER:
+                    return INTEGER_SET;
+                case STRING:
+                    return STRING_SET;
+                case REFERENCE:
+                    return REFERENCE_SET;
+                case FRACTION:
+                default:
+                    return EnumSet.of(this);
             }
-            for (Format f : formats) {
-                if (f == this) {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 
@@ -74,7 +99,7 @@ public interface IAttributeInfo {
     /** Returns the formats of the attribute. Cannot be null.
      *  Should have at least one format. */
     @NonNull
-    public Format[] getFormats();
+    public EnumSet<Format> getFormats();
 
     /** Returns the values for enums. null for other types. */
     @Nullable

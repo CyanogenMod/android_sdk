@@ -56,7 +56,6 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
-import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
@@ -160,7 +159,7 @@ public class BaseLayoutRule extends BaseViewRule {
                     IAttributeInfo info = first.getAttributeInfo(ANDROID_URI, attributeName);
                     if (info != null) {
                         // Generate list of possible gravity value constants
-                        assert IAttributeInfo.Format.FLAG.in(info.getFormats());
+                        assert info.getFormats().contains(IAttributeInfo.Format.FLAG);
                         for (String name : info.getFlagValues()) {
                             titles.add(getAttributeDisplayName(name));
                             ids.add(name);
@@ -524,8 +523,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
             IAttributeInfo attrInfo = newNode.getAttributeInfo(uri, name);
             if (attrInfo != null) {
-                Format[] formats = attrInfo.getFormats();
-                if (IAttributeInfo.Format.REFERENCE.in(formats)) {
+                if (attrInfo.getFormats().contains(IAttributeInfo.Format.REFERENCE)) {
                     if (idMap.containsKey(value)) {
                         value = idMap.get(value).getFirst();
                     }

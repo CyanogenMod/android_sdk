@@ -16,7 +16,10 @@
 
 package com.android.ide.common.resources.platform;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo;
+
+import java.util.EnumSet;
 
 
 /**
@@ -29,7 +32,7 @@ public class AttributeInfo implements IAttributeInfo {
     private String mName;
 
     /** Formats of the attribute. Cannot be null. Should have at least one format. */
-    private Format[] mFormats;
+    private EnumSet<Format> mFormats;
     /** Values for enum. null for other types. */
     private String[] mEnumValues;
     /** Values for flag. null for other types. */
@@ -46,7 +49,7 @@ public class AttributeInfo implements IAttributeInfo {
      * @param formats The formats of the attribute. Cannot be null.
      *                Should have at least one format.
      */
-    public AttributeInfo(String name, Format[] formats) {
+    public AttributeInfo(@NonNull String name, @NonNull EnumSet<Format> formats) {
         mName = name;
         mFormats = formats;
     }
@@ -57,7 +60,7 @@ public class AttributeInfo implements IAttributeInfo {
      *                Should have at least one format.
      * @param javadoc Short javadoc (i.e. the first sentence).
      */
-    public AttributeInfo(String name, Format[] formats, String javadoc) {
+    public AttributeInfo(@NonNull String name, @NonNull EnumSet<Format> formats, String javadoc) {
         mName = name;
         mFormats = formats;
         mJavaDoc = javadoc;
@@ -80,7 +83,7 @@ public class AttributeInfo implements IAttributeInfo {
     /** Returns the formats of the attribute. Cannot be null.
      *  Should have at least one format. */
     @Override
-    public Format[] getFormats() {
+    public EnumSet<Format> getFormats() {
         return mFormats;
     }
     /** Returns the values for enums. null for other types. */

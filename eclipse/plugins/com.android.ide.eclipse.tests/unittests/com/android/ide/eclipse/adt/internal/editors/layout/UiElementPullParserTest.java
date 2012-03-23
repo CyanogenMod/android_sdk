@@ -45,7 +45,7 @@ public class UiElementPullParserTest extends TestCase {
         return new TextAttributeDescriptor(
                 xmlName,    // xmlLocalName
                 SdkConstants.NS_RESOURCES,
-                new AttributeInfo(xmlName, new Format[] { Format.STRING })
+                new AttributeInfo(xmlName, Format.STRING_SET)
                 );
     }
 

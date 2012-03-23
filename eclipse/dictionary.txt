@@ -192,6 +192,8 @@ popup
 popups
 pre
 precompiler
+precompute
+precomputing
 pref
 prefs
 preload

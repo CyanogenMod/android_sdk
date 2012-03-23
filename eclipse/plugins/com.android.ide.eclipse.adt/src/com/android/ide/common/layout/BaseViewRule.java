@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -317,7 +318,7 @@ public class BaseViewRule extends AbstractViewRule {
                 oldValue = ensureValidString(oldValue);
                 IAttributeInfo attributeInfo = node.getAttributeInfo(ANDROID_URI, attribute);
                 if (attributeInfo != null
-                        && IAttributeInfo.Format.REFERENCE.in(attributeInfo.getFormats())) {
+                        && attributeInfo.getFormats().contains(Format.REFERENCE)) {
                     return mRulesEngine.displayReferenceInput(oldValue);
                 } else {
                     // A single resource type? If so use a resource chooser initialized
@@ -696,17 +697,17 @@ public class BaseViewRule extends AbstractViewRule {
                     // Layout width/height are already handled at the root level
                     continue;
                 }
-                Format[] formats = attrInfo != null ? attrInfo.getFormats() : null;
-                if (formats == null) {
+                if (attrInfo == null) {
                     continue;
                 }
+                EnumSet<Format> formats = attrInfo.getFormats();
 
                 String title = getAttributeDisplayName(id);
 
                 String definedBy = attrInfo != null ? attrInfo.getDefinedBy() : null;
-                if (IAttributeInfo.Format.BOOLEAN.in(formats)) {
+                if (formats.contains(IAttributeInfo.Format.BOOLEAN)) {
                     props.put(id, new Prop(title, true, definedBy));
-                } else if (IAttributeInfo.Format.ENUM.in(formats)) {
+                } else if (formats.contains(IAttributeInfo.Format.ENUM)) {
                     // Convert each enum into a map id=>title
                     Map<String, String> values = new HashMap<String, String>();
                     if (attrInfo != null) {
@@ -716,7 +717,7 @@ public class BaseViewRule extends AbstractViewRule {
                     }
 
                     props.put(id, new Prop(title, false, false, values, definedBy));
-                } else if (IAttributeInfo.Format.FLAG.in(formats)) {
+                } else if (formats.contains(IAttributeInfo.Format.FLAG)) {
                     // Convert each flag into a map id=>title
                     Map<String, String> values = new HashMap<String, String>();
                     if (attrInfo != null) {

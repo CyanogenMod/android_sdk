@@ -78,7 +78,7 @@ public class ColorDescriptors implements IDescriptorProvider {
             new ReferenceAttributeDescriptor(
                     ResourceType.COLOR, ATTR_COLOR,
                     SdkConstants.NS_RESOURCES,
-                    new AttributeInfo(ATTR_COLOR, new Format[] { Format.COLOR })).setTooltip(
+                    new AttributeInfo(ATTR_COLOR, Format.COLOR_SET)).setTooltip(
                 "Hexadeximal color. Required. The color is specified with an RGB value and "
                     + "optional alpha channel.\n"
                     + "The value always begins with a pound (#) character and then "

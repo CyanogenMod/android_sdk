@@ -35,7 +35,7 @@ public class AttrsXmlParserTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        mFilePath = AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH); //$NON-NLS-1$
+        mFilePath = AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH);
         mParser = new AttrsXmlParser(mFilePath, new TestLogger());
     }
 
@@ -65,8 +65,8 @@ public class AttrsXmlParserTest extends TestCase {
         AttributeInfo[] attrs = info.getAttributes();
         assertEquals(1, attrs.length);
         assertEquals("scrollbarSize", info.getAttributes()[0].getName());
-        assertEquals(1, info.getAttributes()[0].getFormats().length);
-        assertEquals(Format.DIMENSION, info.getAttributes()[0].getFormats()[0]);
+        assertEquals(1, info.getAttributes()[0].getFormats().size());
+        assertEquals(Format.DIMENSION, info.getAttributes()[0].getFormats().iterator().next());
     }
 
     public final void testEnumFlagValues() throws Exception {
