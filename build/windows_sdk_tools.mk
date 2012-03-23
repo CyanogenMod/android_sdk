@@ -11,8 +11,11 @@ WIN_SDK_TARGETS := \
 	find_java \
 	find_lock \
 	mksdcard \
-	monitor \
 	sdklauncher
+
+# Disabled whilst we figure out to make this build on our build servers
+	monitor \
+
 
 # Add OpenGLES emulation host libraries if needed.
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
