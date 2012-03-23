@@ -23,6 +23,7 @@
 ##############################################################################
 
 # RCP Monitor.
-bin/monitor                                 tools/monitor
-eclipse/monitor-macosx.cocoa.x86_64/monitor tools/lib/monitor-x86_64
+# Not ready yet, fails due to missing "ant" on build servers
+# bin/monitor                                 tools/monitor
+# eclipse/monitor-macosx.cocoa.x86_64/monitor tools/lib/monitor-x86_64
 
