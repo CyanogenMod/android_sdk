@@ -47,11 +47,10 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
     public static final ITextAttributeCreator CREATOR = new ITextAttributeCreator() {
         @Override
         public TextAttributeDescriptor create(String xmlLocalName,
-                String uiName, String nsUri, String tooltip,
-                IAttributeInfo attrInfo) {
+                String nsUri, IAttributeInfo attrInfo) {
             return new ReferenceAttributeDescriptor(
                     ResourceType.DRAWABLE,
-                    xmlLocalName, uiName, nsUri, tooltip,
+                    xmlLocalName, nsUri,
                     new AttributeInfo(xmlLocalName, new Format[] { Format.REFERENCE }));
         }
     };
@@ -59,15 +58,13 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
     /**
      * Creates a reference attributes that can contain any type of resources.
      * @param xmlLocalName The XML name of the attribute (case sensitive)
-     * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip A non-empty tooltip string or null
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
      */
-    public ReferenceAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+    public ReferenceAttributeDescriptor(String xmlLocalName, String nsUri,
+            IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo);
     }
 
     /**
@@ -76,16 +73,13 @@ public final class ReferenceAttributeDescriptor extends TextAttributeDescriptor 
      * @param resourceType The specific {@link ResourceType} that this reference attribute supports.
      * It can be <code>null</code>, in which case, all resource types are supported.
      * @param xmlLocalName The XML name of the attribute (case sensitive)
-     * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip A non-empty tooltip string or null
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
      */
     public ReferenceAttributeDescriptor(ResourceType resourceType,
-            String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+            String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo);
         mResourceType = resourceType;
     }
 

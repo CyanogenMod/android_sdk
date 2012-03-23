@@ -35,18 +35,13 @@ public interface ITextAttributeCreator {
      * UI name and tooltip.
      *
      * @param xmlLocalName The XML name of the attribute (case sensitive)
-     * @param uiName The UI attribute name.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip An optional tooltip.
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
-     *
      * @return A new {@link TextAttributeDescriptor} (or derived) instance.
      */
     public TextAttributeDescriptor create(
             String xmlLocalName,
-            String uiName,
             String nsUri,
-            String tooltip,
             IAttributeInfo attrInfo);
 }

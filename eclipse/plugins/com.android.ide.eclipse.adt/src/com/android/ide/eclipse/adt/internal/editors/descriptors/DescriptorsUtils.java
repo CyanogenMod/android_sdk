@@ -51,6 +51,7 @@ import com.android.sdklib.SdkConstants;
 import org.eclipse.swt.graphics.Image;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -64,7 +65,6 @@ import java.util.regex.Pattern;
  * Utility methods related to descriptors handling.
  */
 public final class DescriptorsUtils {
-
     private static final String DEFAULT_WIDGET_PREFIX = "widget";
 
     private static final int JAVADOC_BREAK_LENGTH = 60;
@@ -135,73 +135,20 @@ public final class DescriptorsUtils {
             String nsUri,
             AttributeInfo info, boolean required,
             Map<String, ITextAttributeCreator> overrides) {
-        AttributeDescriptor attr = null;
+        TextAttributeDescriptor attr = null;
 
         String xmlLocalName = info.getName();
-        String uiName = prettyAttributeUiName(info.getName()); // ui_name
-        if (required) {
-            uiName += "*"; //$NON-NLS-1$
-        }
-
-        String tooltip = null;
-        String rawTooltip = info.getJavaDoc();
-        if (rawTooltip == null) {
-            rawTooltip = "";
-        }
-
-        String deprecated = info.getDeprecatedDoc();
-        if (deprecated != null) {
-            if (rawTooltip.length() > 0) {
-                rawTooltip += "@@"; //$NON-NLS-1$ insert a break
-            }
-            rawTooltip += "* Deprecated";
-            if (deprecated.length() != 0) {
-                rawTooltip += ": " + deprecated;                            //$NON-NLS-1$
-            }
-            if (deprecated.length() == 0 || !deprecated.endsWith(".")) {    //$NON-NLS-1$
-                rawTooltip += ".";                                          //$NON-NLS-1$
-            }
-        }
 
         // Add the known types to the tooltip
         Format[] formats_list = info.getFormats();
         int flen = formats_list.length;
         if (flen > 0) {
             // Fill the formats in a set for faster access
-            HashSet<Format> formats_set = new HashSet<Format>();
-
-            StringBuilder sb = new StringBuilder();
-            if (rawTooltip != null && rawTooltip.length() > 0) {
-                sb.append(rawTooltip);
-                sb.append(" ");     //$NON-NLS-1$
-            }
-            if (sb.length() > 0) {
-                sb.append("@@");    //$NON-NLS-1$  @@ inserts a break before the types
-            }
-            sb.append("[");         //$NON-NLS-1$
+            EnumSet<Format> formats_set = EnumSet.noneOf(Format.class);
             for (int i = 0; i < flen; i++) {
                 Format f = formats_list[i];
                 formats_set.add(f);
-
-                sb.append(f.toString().toLowerCase(Locale.US));
-                if (i < flen - 1) {
-                    sb.append(", "); //$NON-NLS-1$
-                }
             }
-            // The extra space at the end makes the tooltip more readable on Windows.
-            sb.append("]"); //$NON-NLS-1$
-
-            if (required) {
-                // Note: this string is split in 2 to make it translatable.
-                sb.append(".@@");          //$NON-NLS-1$ @@ inserts a break and is not translatable
-                sb.append("* Required.");
-            }
-
-            // The extra space at the end makes the tooltip more readable on Windows.
-            sb.append(" "); //$NON-NLS-1$
-
-            rawTooltip = sb.toString();
-            tooltip = formatTooltip(rawTooltip);
 
             // Create a specialized attribute if we can
             if (overrides != null) {
@@ -245,7 +192,7 @@ public final class DescriptorsUtils {
 
                     ITextAttributeCreator override = entry.getValue();
                     if (override != null) {
-                        attr = override.create(xmlLocalName, uiName, nsUri, tooltip, info);
+                        attr = override.create(xmlLocalName, nsUri, info);
                     }
                 }
             } // if overrides
@@ -255,30 +202,32 @@ public final class DescriptorsUtils {
                 if (formats_set.contains(Format.REFERENCE)) {
                     // This is either a multi-type reference or a generic reference.
                     attr = new ReferenceAttributeDescriptor(
-                            xmlLocalName, uiName, nsUri, tooltip, info);
+                            xmlLocalName, nsUri, info);
                 } else if (formats_set.contains(Format.ENUM)) {
                     attr = new ListAttributeDescriptor(
-                            xmlLocalName, uiName, nsUri, tooltip, info);
+                            xmlLocalName, nsUri, info);
                 } else if (formats_set.contains(Format.FLAG)) {
                     attr = new FlagAttributeDescriptor(
-                            xmlLocalName, uiName, nsUri, tooltip, info);
+                            xmlLocalName, nsUri, info);
                 } else if (formats_set.contains(Format.BOOLEAN)) {
                     attr = new BooleanAttributeDescriptor(
-                            xmlLocalName, uiName, nsUri, tooltip, info);
+                            xmlLocalName, nsUri, info);
                 } else if (formats_set.contains(Format.STRING)) {
                     attr = new ReferenceAttributeDescriptor(
-                            ResourceType.STRING, xmlLocalName, uiName, nsUri, tooltip, info);
+                            ResourceType.STRING, xmlLocalName, nsUri, info);
                 }
             }
         }
 
         // By default a simple text field is used
         if (attr == null) {
-            if (tooltip == null) {
-                tooltip = formatTooltip(rawTooltip);
-            }
-            attr = new TextAttributeDescriptor(xmlLocalName, uiName, nsUri, tooltip, info);
+            attr = new TextAttributeDescriptor(xmlLocalName, nsUri, info);
         }
+
+        if (required) {
+            attr.setRequired(true);
+        }
+
         attributes.add(attr);
     }
 
@@ -320,25 +269,25 @@ public final class DescriptorsUtils {
         if (name.length() < 1) {
             return name;
         }
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder(2 * name.length());
 
         char c = name.charAt(0);
         // Use upper case initial letter
-        buf.append((char)(c >= 'a' && c <= 'z' ? c + 'A' - 'a' : c));
+        buf.append(Character.toUpperCase(c));
         int len = name.length();
         for (int i = 1; i < len; i++) {
             c = name.charAt(i);
-            if (c >= 'A' && c <= 'Z') {
+            if (Character.isUpperCase(c)) {
                 // Break camel case into separate words
                 buf.append(' ');
                 // Use a lower case initial letter for the next word, except if the
                 // word is solely X, Y or Z.
                 if (c >= 'X' && c <= 'Z' &&
                         (i == len-1 ||
-                            (i < len-1 && name.charAt(i+1) >= 'A' && name.charAt(i+1) <= 'Z'))) {
+                            (i < len-1 && Character.isUpperCase(name.charAt(i+1))))) {
                     buf.append(c);
                 } else {
-                    buf.append((char)(c - 'A' + 'a'));
+                    buf.append(Character.toLowerCase(c));
                 }
             } else if (c == '_') {
                 buf.append(' ');
@@ -352,8 +301,15 @@ public final class DescriptorsUtils {
         // Replace these acronyms by upper-case versions
         // - (?<=^| ) means "if preceded by a space or beginning of string"
         // - (?=$| )  means "if followed by a space or end of string"
-        name = name.replaceAll("(?<=^| )sdk(?=$| )", "SDK");
-        name = name.replaceAll("(?<=^| )uri(?=$| )", "URI");
+        if (name.contains("sdk") || name.startsWith("Sdk")) {
+            name = name.replaceAll("(?<=^| )[sS]dk(?=$| )", "SDK");
+        }
+        if (name.contains("uri") || name.startsWith("Uri")) {
+            name = name.replaceAll("(?<=^| )[uU]ri(?=$| )", "URI");
+        }
+        if (name.contains("ime") || name.startsWith("Ime")) {
+            name = name.replaceAll("(?<=^| )[iI]me(?=$| )", "IME");
+        }
 
         return name;
     }

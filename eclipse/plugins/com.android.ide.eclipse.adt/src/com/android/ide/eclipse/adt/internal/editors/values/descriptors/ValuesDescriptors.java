@@ -90,13 +90,12 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                 "http://code.google.com/android/reference/available-resources.html#colorvals",  //$NON-NLS-1$
                 new AttributeDescriptor[] {
                         new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this color.",
                                 nameAttrInfo),
                         new ColorValueDescriptor(
                                 "Value*",
                                 "A mandatory color value.")
+                        .setTooltip("The mandatory name used in referring to this color.")
                 },
                 null,  // no child nodes
                 false /* not mandatory */);
@@ -108,10 +107,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                 "http://code.google.com/android/reference/available-resources.html#stringresources",  //$NON-NLS-1$
                 new AttributeDescriptor[] {
                         new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this string.",
-                                nameAttrInfo),
+                                nameAttrInfo)
+                        .setTooltip("The mandatory name used in referring to this string."),
                         new TextValueDescriptor(
                                 "Value*",
                                 "A mandatory string value.")
@@ -126,22 +124,17 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                  null,  // TODO find link to javadoc
                  new AttributeDescriptor[] {
                          new TextAttributeDescriptor(NAME_ATTR,
-                                 "Name*",
                                  null /* nsUri */,
-                                 "The mandatory name used in referring to this resource.",
-                                 nameAttrInfo),
+                                 nameAttrInfo)
+                         .setTooltip("The mandatory name used in referring to this resource."),
                          new ListAttributeDescriptor(TYPE_ATTR,
-                                 "Type*",
                                  null /* nsUri */,
-                                 "The mandatory type of this resource.",
                                  new AttributeInfo(TYPE_ATTR,
                                          new Format[] { Format.STRING, Format.ENUM }
                                  ).setEnumValues(ResourceType.getNames())
-                         ),
+                         ).setTooltip("The mandatory type of this resource."),
                          new FlagAttributeDescriptor("format",      //$NON-NLS-1$
-                                 "Format",
                                  null /* nsUri */,
-                                 "The optional format of this resource.",
                                  new AttributeInfo("format",
                                          new Format[] { Format.STRING, Format.FLAG }
                                  ).setFlagValues(
@@ -155,7 +148,7 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                                          "reference",   //$NON-NLS-1$
                                          "string"       //$NON-NLS-1$
                                      } )
-                         ),
+                         ).setTooltip("The optional format of this resource."),
                          new TextValueDescriptor(
                                  "Value",
                                  "A standard string, hex color value, or reference to any other resource type.")
@@ -170,10 +163,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                 "http://code.google.com/android/reference/available-resources.html#colordrawableresources",  //$NON-NLS-1$
                 new AttributeDescriptor[] {
                         new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this drawable.",
-                                nameAttrInfo),
+                                nameAttrInfo)
+                        .setTooltip("The mandatory name used in referring to this drawable."),
                         new TextValueDescriptor(
                                 "Value*",
                                 "A mandatory color value in the form #RGB, #ARGB, #RRGGBB or #AARRGGBB.")
@@ -188,10 +180,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                 "http://code.google.com/android/reference/available-resources.html#dimension",  //$NON-NLS-1$
                 new AttributeDescriptor[] {
                         new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this dimension.",
-                                nameAttrInfo),
+                                nameAttrInfo)
+                        .setTooltip("The mandatory name used in referring to this dimension."),
                         new TextValueDescriptor(
                                 "Value*",
                                 "A mandatory dimension value is a number followed by a unit of measurement. For example: 10px, 2in, 5sp.")
@@ -206,16 +197,14 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                 "http://code.google.com/android/reference/available-resources.html#stylesandthemes",  //$NON-NLS-1$
                 new AttributeDescriptor[] {
                         new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this theme.",
-                                nameAttrInfo),
+                                nameAttrInfo)
+                        .setTooltip("The mandatory name used in referring to this theme."),
                         new TextAttributeDescriptor("parent", //$NON-NLS-1$
-                                "Parent",
                                 null /* nsUri */,
-                                "An optional parent theme. All values from the specified theme will be inherited into this theme. Any values with identical names that you specify will override inherited values.",
                                 new AttributeInfo("parent",  //$NON-NLS-1$
-                                        new Format[] { Format.STRING })),
+                                        new Format[] { Format.STRING }))
+                        .setTooltip("An optional parent theme. All values from the specified theme will be inherited into this theme. Any values with identical names that you specify will override inherited values."),
                 },
                 new ElementDescriptor[] {
                     new ElementDescriptor(
@@ -225,10 +214,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                         "http://code.google.com/android/reference/available-resources.html#stylesandthemes",  //$NON-NLS-1$
                         new AttributeDescriptor[] {
                             new TextAttributeDescriptor(NAME_ATTR,
-                                "Name*",
                                 null /* nsUri */,
-                                "The mandatory name used in referring to this item.",
-                                nameAttrInfo),
+                                nameAttrInfo)
+                            .setTooltip("The mandatory name used in referring to this item."),
                             new TextValueDescriptor(
                                 "Value*",
                                 "A mandatory standard string, hex color value, or reference to any other resource type.")
@@ -245,10 +233,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                  null, // tooltips
                  new AttributeDescriptor[] {
                          new TextAttributeDescriptor(NAME_ATTR,
-                                 "Name*",
                                  null /* nsUri */,
-                                 "The mandatory name used in referring to this string array.",
-                                 nameAttrInfo),
+                                 nameAttrInfo)
+                         .setTooltip("The mandatory name used in referring to this string array."),
                  },
                  new ElementDescriptor[] {
                      new ElementDescriptor(
@@ -273,10 +260,9 @@ public final class ValuesDescriptors implements IDescriptorProvider {
                  null, // tooltips
                  new AttributeDescriptor[] {
                          new TextAttributeDescriptor(NAME_ATTR,
-                                 "Name*",
                                  null /* nsUri */,
-                                 "The mandatory name used in referring to this integer array.",
-                                 nameAttrInfo),
+                                 nameAttrInfo)
+                         .setTooltip("The mandatory name used in referring to this integer array.")
                  },
                  new ElementDescriptor[] {
                      new ElementDescriptor(

@@ -16,7 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.eclipse.adt.internal.editors.ui.TextValueCellEditor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -28,6 +31,8 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
+
+import java.util.Locale;
 
 
 /**
@@ -43,33 +48,91 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
 
     private String mUiName;
     private String mTooltip;
+    private boolean mRequired;
 
     /**
      * Creates a new {@link TextAttributeDescriptor}
      *
      * @param xmlLocalName The XML name of the attribute (case sensitive)
-     * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip A non-empty tooltip string or null
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
      */
     public TextAttributeDescriptor(
             String xmlLocalName,
-            String uiName,
             String nsUri,
-            String tooltip,
             IAttributeInfo attrInfo) {
         super(xmlLocalName, nsUri, attrInfo);
-        mUiName = uiName;
-        mTooltip = (tooltip != null && tooltip.length() > 0) ? tooltip : null;
     }
 
     /**
      * @return The UI name of the attribute. Cannot be an empty string and cannot be null.
      */
-    public final String getUiName() {
+    @NonNull
+    public String getUiName() {
+        if (mUiName == null) {
+            IAttributeInfo info = getAttributeInfo();
+            if (info != null) {
+                mUiName = DescriptorsUtils.prettyAttributeUiName(info.getName());
+                if (mRequired) {
+                    mUiName += "*"; //$NON-NLS-1$
+                }
+            } else {
+                mUiName = getXmlLocalName();
+            }
+        }
+
         return mUiName;
+    }
+
+
+    /**
+     * Sets the UI name to be associated with this descriptor. This is usually
+     * computed lazily from the {@link #getAttributeInfo()} data, but for some
+     * hardcoded/builtin descriptor this is manually initialized.
+     *
+     * @param uiName the new UI name to be used
+     * @return this, for constructor setter chaining
+     */
+    public TextAttributeDescriptor setUiName(String uiName) {
+        mUiName = uiName;
+
+        return this;
+    }
+
+    /**
+     * Sets the tooltip to be associated with this descriptor. This is usually
+     * computed lazily from the {@link #getAttributeInfo()} data, but for some
+     * hardcoded/builtin descriptor this is manually initialized.
+     *
+     * @param tooltip the new tooltip to be used
+     * @return this, for constructor setter chaining
+     */
+    public TextAttributeDescriptor setTooltip(String tooltip) {
+        mTooltip = tooltip;
+
+        return this;
+    }
+
+    /**
+     * Sets whether this attribute is required
+     *
+     * @param required whether this attribute is required
+     * @return this, for constructor setter chaining
+     */
+    public TextAttributeDescriptor setRequired(boolean required) {
+        mRequired = required;
+
+        return this;
+    }
+
+    /**
+     * Returns whether this attribute is required
+     *
+     * @return whether this attribute is required
+     */
+    public boolean isRequired() {
+        return mRequired;
     }
 
     /**
@@ -84,8 +147,78 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
      *
      * @return A non-empty tooltip string or null
      */
-    public final String getTooltip() {
-        return mTooltip;
+    @Nullable
+    public String getTooltip() {
+        if (mTooltip == null) {
+            IAttributeInfo info = getAttributeInfo();
+            if (info == null) {
+                mTooltip = "";
+                return mTooltip;
+            }
+
+            String tooltip = null;
+            String rawTooltip = info.getJavaDoc();
+            if (rawTooltip == null) {
+                rawTooltip = "";
+            }
+
+            String deprecated = info.getDeprecatedDoc();
+            if (deprecated != null) {
+                if (rawTooltip.length() > 0) {
+                    rawTooltip += "@@"; //$NON-NLS-1$ insert a break
+                }
+                rawTooltip += "* Deprecated";
+                if (deprecated.length() != 0) {
+                    rawTooltip += ": " + deprecated;                            //$NON-NLS-1$
+                }
+                if (deprecated.length() == 0 || !deprecated.endsWith(".")) {    //$NON-NLS-1$
+                    rawTooltip += ".";                                          //$NON-NLS-1$
+                }
+            }
+
+            // Add the known types to the tooltip
+            Format[] formats_list = info.getFormats();
+            int flen = formats_list.length;
+            if (flen > 0) {
+                StringBuilder sb = new StringBuilder();
+                if (rawTooltip != null && rawTooltip.length() > 0) {
+                    sb.append(rawTooltip);
+                    sb.append(" ");     //$NON-NLS-1$
+                }
+                if (sb.length() > 0) {
+                    sb.append("@@");    //$NON-NLS-1$  @@ inserts a break before the types
+                }
+                sb.append("[");         //$NON-NLS-1$
+                for (int i = 0; i < flen; i++) {
+                    Format f = formats_list[i];
+                    sb.append(f.toString().toLowerCase(Locale.US));
+                    if (i < flen - 1) {
+                        sb.append(", "); //$NON-NLS-1$
+                    }
+                }
+                // The extra space at the end makes the tooltip more readable on Windows.
+                sb.append("]"); //$NON-NLS-1$
+
+                if (mRequired) {
+                    // Note: this string is split in 2 to make it translatable.
+                    sb.append(".@@");          //$NON-NLS-1$ @@ inserts a break and is not translatable
+                    sb.append("* Required.");
+                }
+
+                // The extra space at the end makes the tooltip more readable on Windows.
+                sb.append(" "); //$NON-NLS-1$
+
+                rawTooltip = sb.toString();
+                tooltip = DescriptorsUtils.formatTooltip(rawTooltip);
+            }
+
+            if (tooltip == null) {
+                tooltip = DescriptorsUtils.formatTooltip(rawTooltip);
+            }
+            mTooltip = tooltip;
+        }
+
+        return mTooltip.isEmpty() ? null : mTooltip;
     }
 
     /**
@@ -119,12 +252,12 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
 
     @Override
     public String getDescription() {
-        return mTooltip;
+        return getTooltip();
     }
 
     @Override
     public String getDisplayName() {
-        return mUiName;
+        return getUiName();
     }
 
     @Override

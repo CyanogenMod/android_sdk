@@ -76,18 +76,18 @@ public class ColorDescriptors implements IDescriptorProvider {
                  + "its attributes. Must be a child of a <selector> element.",
             SDK_URL,
             new ReferenceAttributeDescriptor(
-                    ResourceType.COLOR, ATTR_COLOR, ATTR_COLOR,
+                    ResourceType.COLOR, ATTR_COLOR,
                     SdkConstants.NS_RESOURCES,
-                    "Hexadeximal color. Required. The color is specified with an RGB value and "
-                        + "optional alpha channel.\n"
-                        + "The value always begins with a pound (#) character and then "
-                        + "followed by the Alpha-Red-Green-Blue information in one of "
-                        + "the following formats:\n"
-                        + "* RGB\n"
-                        + "* ARGB\n"
-                        + "* RRGGBB\n"
-                        + "* AARRGGBB",
-                    new AttributeInfo("drawable", new Format[] { Format.COLOR })),
+                    new AttributeInfo(ATTR_COLOR, new Format[] { Format.COLOR })).setTooltip(
+                "Hexadeximal color. Required. The color is specified with an RGB value and "
+                    + "optional alpha channel.\n"
+                    + "The value always begins with a pound (#) character and then "
+                    + "followed by the Alpha-Red-Green-Blue information in one of "
+                    + "the following formats:\n"
+                    + "* RGB\n"
+                    + "* ARGB\n"
+                    + "* RRGGBB\n"
+                    + "* AARRGGBB"),
             null, /* This is wrong -- we can now embed any above drawable
                         (but without xmlns as extra) */
             false /*mandatory*/);

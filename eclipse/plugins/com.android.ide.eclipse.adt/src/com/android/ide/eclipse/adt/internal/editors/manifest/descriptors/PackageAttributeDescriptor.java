@@ -27,9 +27,8 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
  */
 public class PackageAttributeDescriptor extends TextAttributeDescriptor {
 
-    public PackageAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+    public PackageAttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo);
     }
 
     /**

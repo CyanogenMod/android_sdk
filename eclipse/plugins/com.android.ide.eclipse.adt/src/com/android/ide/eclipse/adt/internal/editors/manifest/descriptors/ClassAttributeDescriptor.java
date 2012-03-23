@@ -45,23 +45,23 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      * @param superClassName the fully qualified name of the superclass of the class represented
      * by the attribute.
      * @param xmlLocalName The XML name of the attribute (case sensitive, with android: prefix).
-     * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip A non-empty tooltip string or null.
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
      * @param mandatory indicates if the class attribute is mandatory.
      */
     public ClassAttributeDescriptor(String superClassName,
             String xmlLocalName,
-            String uiName,
             String nsUri,
-            String tooltip,
             IAttributeInfo attrInfo,
             boolean mandatory) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+        super(xmlLocalName, nsUri, attrInfo);
         mSuperClassName = superClassName;
         mDefaultToProjectOnly = true;
+        if (mandatory) {
+            mMandatory = true;
+            setRequired(true);
+        }
     }
 
     /**
@@ -71,10 +71,8 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
      * @param postCreationAction the {@link IPostTypeCreationAction} to be executed on the
      *        newly created class.
      * @param xmlLocalName The XML local name of the attribute (case sensitive).
-     * @param uiName The UI name of the attribute. Cannot be an empty string and cannot be null.
      * @param nsUri The URI of the attribute. Can be null if attribute has no namespace.
      *              See {@link SdkConstants#NS_RESOURCES} for a common value.
-     * @param tooltip A non-empty tooltip string or null.
      * @param attrInfo The {@link IAttributeInfo} of this attribute. Can't be null.
      * @param mandatory indicates if the class attribute is mandatory.
      * @param defaultToProjectOnly True if only classes from the sources of this project should
@@ -83,16 +81,18 @@ public class ClassAttributeDescriptor extends TextAttributeDescriptor {
     public ClassAttributeDescriptor(String superClassName,
             IPostTypeCreationAction postCreationAction,
             String xmlLocalName,
-            String uiName,
             String nsUri,
-            String tooltip,
             IAttributeInfo attrInfo,
             boolean mandatory,
             boolean defaultToProjectOnly) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+        super(xmlLocalName, nsUri, attrInfo);
         mSuperClassName = superClassName;
         mPostCreationAction = postCreationAction;
         mDefaultToProjectOnly = defaultToProjectOnly;
+        if (mandatory) {
+            mMandatory = true;
+            setRequired(true);
+        }
     }
 
     /**

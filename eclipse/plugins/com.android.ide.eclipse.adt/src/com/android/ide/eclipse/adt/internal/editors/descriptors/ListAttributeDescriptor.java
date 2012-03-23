@@ -39,9 +39,8 @@ public class ListAttributeDescriptor extends TextAttributeDescriptor {
     public static final ITextAttributeCreator CREATOR = new ITextAttributeCreator() {
         @Override
         public TextAttributeDescriptor create(String xmlLocalName,
-                String uiName, String nsUri, String tooltip,
-                IAttributeInfo attrInfo) {
-            return new ListAttributeDescriptor(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+                String nsUri, IAttributeInfo attrInfo) {
+            return new ListAttributeDescriptor(xmlLocalName, nsUri, attrInfo);
         }
     };
 
@@ -52,9 +51,8 @@ public class ListAttributeDescriptor extends TextAttributeDescriptor {
      * used for the list.
      * Otherwise values are automatically extracted from the FrameworkResourceManager.
      */
-    public ListAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+    public ListAttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo);
         if (attrInfo != null) {
             mValues = attrInfo.getEnumValues();
         }
@@ -64,9 +62,9 @@ public class ListAttributeDescriptor extends TextAttributeDescriptor {
      * Creates a new {@link ListAttributeDescriptor} which uses the provided values
      * and does not lookup the content of <code>attrInfo</code>.
      */
-    public ListAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo, String[] values) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+    public ListAttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo,
+            String[] values) {
+        super(xmlLocalName, nsUri, attrInfo);
         mValues = values;
     }
 

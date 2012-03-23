@@ -33,6 +33,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescript
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ClassAttributeDescriptor;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -453,13 +454,13 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             "A Fragment is a piece of an application's user interface or behavior that "
             + "can be placed in an Activity";
         String sdkUrl = "http://developer.android.com/guide/topics/fundamentals/fragments.html";
-        ClassAttributeDescriptor classAttribute = new ClassAttributeDescriptor(
+        TextAttributeDescriptor classAttribute = new ClassAttributeDescriptor(
                 // Should accept both CLASS_V4_FRAGMENT and CLASS_FRAGMENT
                 null /*superClassName*/,
-                ATTR_CLASS, ATTR_CLASS, null /* namespace */,
-                "Supply the name of the fragment class to instantiate",
+                ATTR_CLASS, null /* namespace */,
                 new AttributeInfo(ATTR_CLASS, new Format[] { Format.STRING}),
-                true /*mandatory*/);
+                true /*mandatory*/)
+                .setTooltip("Supply the name of the fragment class to instantiate");
 
         if (style != null) {
             descriptor = new ViewElementDescriptor(
@@ -493,17 +494,17 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 new AttributeDescriptor[] {
                     new ClassAttributeDescriptor(
                             null /*superClassName*/,
-                            ATTR_NAME, ATTR_NAME, ANDROID_URI,
-                            "Supply the name of the fragment class to instantiate",
+                            ATTR_NAME, ANDROID_URI,
                             new AttributeInfo(ATTR_NAME, new Format[] { Format.STRING}),
-                            true /*mandatory*/),
+                            true /*mandatory*/)
+                            .setTooltip("Supply the name of the fragment class to instantiate"),
                     classAttribute,
                     new ClassAttributeDescriptor(
                             null /*superClassName*/,
-                            ATTR_TAG, ATTR_TAG, ANDROID_URI,
-                            "Supply a tag for the top-level view containing a String",
+                            ATTR_TAG, ANDROID_URI,
                             new AttributeInfo(ATTR_TAG, new Format[] { Format.STRING}),
-                            true /*mandatory*/),
+                            true /*mandatory*/)
+                            .setTooltip("Supply a tag for the top-level view containing a String"),
                 }, // attributes
                 viewLayoutAttribs,  // layout attributes
                 null,  // children

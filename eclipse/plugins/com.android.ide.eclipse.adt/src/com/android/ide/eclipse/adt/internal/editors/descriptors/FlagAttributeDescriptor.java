@@ -49,9 +49,8 @@ public class FlagAttributeDescriptor extends TextAttributeDescriptor {
      * used for the list.
      * Otherwise values are automatically extracted from the FrameworkResourceManager.
      */
-    public FlagAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
-            String tooltip, IAttributeInfo attrInfo) {
-        super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+    public FlagAttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        super(xmlLocalName, nsUri, attrInfo);
         if (attrInfo != null) {
             mNames = attrInfo.getFlagValues();
         }
@@ -63,7 +62,7 @@ public class FlagAttributeDescriptor extends TextAttributeDescriptor {
     */
     public FlagAttributeDescriptor(String xmlLocalName, String uiName, String nsUri,
             String tooltip, IAttributeInfo attrInfo, String[] names) {
-       super(xmlLocalName, uiName, nsUri, tooltip, attrInfo);
+       super(xmlLocalName, nsUri, attrInfo);
        mNames = names;
     }
 

@@ -1482,9 +1482,7 @@ public class UiElementNode implements IPropertySource {
         // Create a new unknown attribute of format string
         TextAttributeDescriptor desc = new TextAttributeDescriptor(
                 xmlAttrLocalName,           // xml name
-                xmlFullName,                // ui name
-                xmlNsUri,                   // NS uri
-                "Unknown XML attribute",    // tooltip, translatable
+                xmlNsUri,                // ui name
                 new AttributeInfo(xmlAttrLocalName, new Format[] { Format.STRING } )
                 );
         UiAttributeNode uiAttr = desc.createUiNode(this);
