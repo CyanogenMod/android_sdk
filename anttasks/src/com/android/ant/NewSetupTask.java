@@ -561,7 +561,7 @@ public class NewSetupTask extends Task {
         }
 
         // add the project's own content of libs/*.jar
-        File libsFolder = new File(SdkConstants.FD_NATIVE_LIBS);
+        File libsFolder = new File(antProject.getBaseDir(), SdkConstants.FD_NATIVE_LIBS);
         File[] jarFiles = libsFolder.listFiles(filter);
         if (jarFiles != null) {
             for (File jarFile : jarFiles) {
