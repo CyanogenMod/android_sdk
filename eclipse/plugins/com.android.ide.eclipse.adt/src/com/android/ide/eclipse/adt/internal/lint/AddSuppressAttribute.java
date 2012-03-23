@@ -191,12 +191,10 @@ class AddSuppressAttribute implements ICompletionProposal {
             node = node.getParentNode();
         }
         if (node == null) {
-            return null;
-        }
-
-        node = document.getDocumentElement();
-        if (node == null) {
-            return null;
+            node = document.getDocumentElement();
+            if (node == null) {
+                return null;
+            }
         }
 
         String desc = String.format("Add ignore '%1$s\' to element", id);
