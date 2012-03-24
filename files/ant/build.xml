@@ -218,7 +218,7 @@
                 <task-to-do />
             </else>
             <then>
-                <echo>@{elseText}</echo>
+                <echo level="info">@{elseText}</echo>
             </then>
         </if>
         </sequential>
@@ -240,7 +240,7 @@
                         <length string="@{elseText}" trim="true" when="greater" length="0" />
                     </condition>
                     <then>
-                        <echo>@{elseText}</echo>
+                        <echo level="info">@{elseText}</echo>
                     </then>
                 </if>
             </else>
@@ -333,7 +333,7 @@
         <attribute name="emma.enabled" default="false" />
         <element name="extra-instrument-args" optional="yes" />
         <sequential>
-            <echo>Running tests ...</echo>
+            <echo level="info">Running tests ...</echo>
             <exec executable="${adb}" failonerror="true">
                 <arg line="${adb.device.arg}" />
                 <arg value="shell" />
@@ -371,7 +371,7 @@
     <macrodef name="uninstall-helper">
         <attribute name="app.package" default="false" />
         <sequential>
-            <echo>Uninstalling @{app.package} from the default emulator or device...</echo>
+            <echo level="info">Uninstalling @{app.package} from the default emulator or device...</echo>
             <exec executable="${adb}" failonerror="true">
                 <arg line="${adb.device.arg}" />
                 <arg value="uninstall" />
@@ -442,14 +442,14 @@
                 <not><isset property="setup.done" /></not>
             </condition>
             <then>
-                <echo>Creating output directories if needed...</echo>
+                <echo level="info">Creating output directories if needed...</echo>
                 <mkdir dir="${resource.absolute.dir}" />
                 <mkdir dir="${jar.libs.absolute.dir}" />
                 <mkdir dir="${out.absolute.dir}" />
                 <mkdir dir="${out.res.absolute.dir}" />
 
                 <property name="setup.done" value="true" />
-                <echo>Gathering info for ${ant.project.name}...</echo>
+                <echo level="info">Gathering info for ${ant.project.name}...</echo>
                 <!-- load project properties, resolve Android target, library dependencies
                      and set some properties with the results.
                      All property names are passed as parameters ending in -Out -->
@@ -509,17 +509,17 @@
                 </and>
             </condition>
             <then>
-                <echo>Building Libraries</echo>
+                <echo level="info">Building Libraries</echo>
                 <subant failonerror="true"
                         buildpathref="project.libraries"
                         antfile="build.xml">
                     <target name="nodeps" />
                     <target name="${build.target}" />
                 </subant>
-                <echo></echo>
-                <echo>############################################</echo>
-                <echo>**** Back to project ${ant.project.name} ****</echo>
-                <echo>############################################</echo>
+                <echo level="info"></echo>
+                <echo level="info">############################################</echo>
+                <echo level="info">**** Back to project ${ant.project.name} ****</echo>
+                <echo level="info">############################################</echo>
             </then>
         </if>
 
@@ -532,14 +532,14 @@
                     <isset property="emma.enabled" />
                 </condition>
 
-                <echo>Building tested project at ${tested.project.absolute.dir}</echo>
+                <echo level="info">Building tested project at ${tested.project.absolute.dir}</echo>
                 <subant target="${tested.project.target}" failonerror="true">
                     <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
                 </subant>
-                <echo></echo>
-                <echo>############################################</echo>
-                <echo>**** Back to project ${ant.project.name} ****</echo>
-                <echo>############################################</echo>
+                <echo level="info"></echo>
+                <echo level="info">############################################</echo>
+                <echo level="info">**** Back to project ${ant.project.name} ****</echo>
+                <echo level="info">############################################</echo>
             </then>
         </if>
 
@@ -560,7 +560,7 @@
                 </and>
             </condition>
             <then>
-                <echo>Switching between debug and non debug build: Deleting previous compilation output...</echo>
+                <echo level="info">Switching between debug and non debug build: Deleting previous compilation output...</echo>
                 <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
             </then>
             <else>
@@ -575,7 +575,7 @@
                         </and>
                     </condition>
                     <then>
-                        <echo>Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
+                        <echo level="info">Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
                         <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
                     </then>
                 </if>
@@ -596,16 +596,16 @@
     <target name="-code-gen">
         <do-only-if-manifest-hasCode
                 elseText="hasCode = false. Skipping aidl/renderscript/R.java">
-            <echo>----------</echo>
-            <echo>Handling aidl files...</echo>
+            <echo level="info">----------</echo>
+            <echo level="info">Handling aidl files...</echo>
             <aidl executable="${aidl}" framework="${android.aidl}"
                     genFolder="${gen.absolute.dir}">
                 <source path="${source.absolute.dir}"/>
             </aidl>
 
             <!-- renderscript generates resources so it must be called before aapt -->
-            <echo>----------</echo>
-            <echo>Handling RenderScript files...</echo>
+            <echo level="info">----------</echo>
+            <echo level="info">Handling RenderScript files...</echo>
             <renderscript executable="${renderscript}"
                     framework="${android.rs}"
                     genFolder="${gen.absolute.dir}"
@@ -616,8 +616,8 @@
                 <source path="${source.absolute.dir}"/>
             </renderscript>
 
-            <echo>----------</echo>
-            <echo>Handling Resources...</echo>
+            <echo level="info">----------</echo>
+            <echo level="info">Handling Resources...</echo>
             <aapt executable="${aapt}"
                     command="package"
                     verbose="${verbose}"
@@ -631,8 +631,8 @@
                 <res path="${resource.absolute.dir}" />
             </aapt>
 
-            <echo>----------</echo>
-            <echo>Handling BuildConfig class...</echo>
+            <echo level="info">----------</echo>
+            <echo level="info">Handling BuildConfig class...</echo>
             <xpath input="AndroidManifest.xml" expression="/manifest/@package"
                     output="manifest.package" />
             <buildconfig
@@ -682,14 +682,14 @@
             <!-- if the project is a library then we generate a jar file -->
             <if condition="${project.is.library}">
                 <then>
-                    <echo>Creating library output jar file...</echo>
+                    <echo level="info">Creating library output jar file...</echo>
                     <property name="out.library.jar.file" location="${out.absolute.dir}/classes.jar" />
                     <if>
                         <condition>
                             <length string="${android.package.excludes}" trim="true" when="greater" length="0" />
                         </condition>
                         <then>
-                            <echo>Custom jar packaging exclusion: ${android.package.excludes}</echo>
+                            <echo level="info">Custom jar packaging exclusion: ${android.package.excludes}</echo>
                         </then>
                     </if>
 
@@ -707,7 +707,7 @@
             <!-- if the project is instrumented, intrument the classes -->
             <if condition="${build.is.instrumented}">
                 <then>
-                    <echo>Instrumenting classes from ${out.absolute.dir}/classes...</echo>
+                    <echo level="info">Instrumenting classes from ${out.absolute.dir}/classes...</echo>
                     <!-- It only instruments class files, not any external libs -->
                     <emma enabled="true">
                         <instr verbosity="${verbosity}"
@@ -950,7 +950,7 @@
         <do-only-if-not-library elseText="Library project: do not create apk..." >
             <sequential>
                 <zipalign-helper in.package="${out.packaged.file}" out.package="${out.final.file}" />
-                <echo>Debug Package: ${out.final.file}</echo>
+                <echo level="info">Debug Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
@@ -984,15 +984,16 @@
         <!-- no release builds for library project -->
         <do-only-if-not-library elseText="" >
             <sequential>
-                <echo>No key.store and key.alias properties found in build.properties.</echo>
-                <echo>Please sign ${out.packaged.file} manually</echo>
-                <echo>and run zipalign from the Android SDK tools.</echo>
+                <echo level="info">No key.store and key.alias properties found in build.properties.</echo>
+                <echo level="info">Please sign ${out.packaged.file} manually</echo>
+                <echo level="info">and run zipalign from the Android SDK tools.</echo>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
     </target>
 
     <target name="-release-obfuscation-check">
+        <echo level="info">proguard.config is ${proguard.config}</echo>
         <condition property="proguard.enabled" value="true" else="false">
             <and>
                 <isset property="build.is.mode.release" />
@@ -1001,6 +1002,7 @@
         </condition>
         <if condition="${proguard.enabled}">
             <then>
+                <echo level="info">Proguard.config is enabled</echo>
                 <!-- Secondary dx input (jar files) is empty since all the
                      jar files will be in the obfuscated jar -->
                 <path id="out.dex.jar.input.ref" />
@@ -1052,7 +1054,7 @@
                 <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-release-unaligned.apk" />
 
                 <!-- Signs the APK -->
-                <echo>Signing final apk...</echo>
+                <echo level="info">Signing final apk...</echo>
                 <signjar
                         jar="${out.packaged.file}"
                         signedjar="${out.unaligned.file}"
@@ -1066,7 +1068,7 @@
                 <zipalign-helper
                         in.package="${out.unaligned.file}"
                         out.package="${out.final.file}" />
-                <echo>Release Package: ${out.final.file}</echo>
+                <echo level="info">Release Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
@@ -1104,7 +1106,7 @@
         <do-only-if-not-library elseText="Library project: do not create apk..." >
             <sequential>
                 <zipalign-helper in.package="${out.packaged.file}" out.package="${out.final.file}" />
-                <echo>Instrumented Package: ${out.final.file}</echo>
+                <echo level="info">Instrumented Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
@@ -1158,14 +1160,14 @@
                            <arg value="${emma.dump.file}" />
                     </extra-instrument-args>
                 </run-tests-helper>
-                <echo>Downloading coverage file into project directory...</echo>
+                <echo level="info">Downloading coverage file into project directory...</echo>
                 <exec executable="${adb}" failonerror="true">
                     <arg line="${adb.device.arg}" />
                     <arg value="pull" />
                     <arg value="${emma.dump.file}" />
                     <arg value="coverage.ec" />
                 </exec>
-                <echo>Extracting coverage report...</echo>
+                <echo level="info">Extracting coverage report...</echo>
                 <emma>
                     <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
                                       verbosity="${verbosity}">
@@ -1178,10 +1180,10 @@
                         <html outfile="coverage.html" />
                    </report>
                 </emma>
-                <echo>Cleaning up temporary files...</echo>
+                <echo level="info">Cleaning up temporary files...</echo>
                 <delete file="coverage.ec" />
                 <delete file="coverage.em" />
-                <echo>Saving the report file in ${basedir}/coverage/coverage.html</echo>
+                <echo level="info">Saving the report file in ${basedir}/coverage/coverage.html</echo>
             </then>
             <else>
                 <run-tests-helper />
@@ -1212,7 +1214,7 @@
                             </resourceexists>
                         </condition>
                         <then>
-                            <echo>Installing ${out.final.file} onto default emulator or device...</echo>
+                            <echo level="info">Installing ${out.final.file} onto default emulator or device...</echo>
                             <exec executable="${adb}" failonerror="true">
                                 <arg line="${adb.device.arg}" />
                                 <arg value="install" />
@@ -1297,7 +1299,7 @@
                 <uninstall-helper app.package="${manifest.package}" />
             </then>
             <else>
-                <echo>Could not find application package in manifest. Cannot run 'adb uninstall'.</echo>
+                <fail message="Could not find application package in manifest. Cannot run 'adb uninstall'." />
             </else>
         </if>
 
@@ -1326,7 +1328,7 @@
                         <uninstall-helper app.package="${tested.manifest.package}" />
                     </then>
                     <else>
-                        <echo>Could not find tested application package in manifest. Cannot run 'adb uninstall'.</echo>
+                        <fail message="Could not find tested application package in manifest. Cannot run 'adb uninstall'." />
                     </else>
                 </if>
             </then>
