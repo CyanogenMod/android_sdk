@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
 /*
  * Copyright (C) 2012 The Android Open Source Project
  *
@@ -15,12 +13,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
--->
 
-<resources>
+package com.android.tools.sdkcontroller.utils;
 
-    <style name="Theme.MultiTouch" parent="android:Theme.NoTitleBar.Fullscreen">
-        <item name="android:windowBackground">@android:color/transparent</item>
-    </style>
+import android.annotation.TargetApi;
+import android.view.View;
 
-</resources>
+/**
+ * API 11: support View_setSystemUiVisibility
+ */
+@TargetApi(11)
+class ApiHelper_11 extends ApiHelper {
+
+    /**
+     * Applies {@link View#setSystemUiVisibility(int)}, available only starting with API 11.
+     * Does nothing for API < 11.
+     */
+    @Override
+    public void View_setSystemUiVisibility(View view, int visibility) {
+        view.setSystemUiVisibility(visibility);
+    }
+}

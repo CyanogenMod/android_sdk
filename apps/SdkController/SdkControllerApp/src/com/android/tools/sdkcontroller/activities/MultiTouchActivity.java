@@ -34,6 +34,7 @@ import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
 import com.android.tools.sdkcontroller.handlers.MultiTouchHandler;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
+import com.android.tools.sdkcontroller.utils.ApiHelper;
 import com.android.tools.sdkcontroller.views.MultiTouchView;
 
 /**
@@ -77,6 +78,9 @@ public class MultiTouchActivity extends BaseBindingActivity
         mTextError  = (TextView) findViewById(R.id.textError);
         mTextStatus = (TextView) findViewById(R.id.textStatus);
         updateStatus("Waiting for connection");
+
+        ApiHelper ah = ApiHelper.get();
+        ah.View_setSystemUiVisibility(mImageView, View.SYSTEM_UI_FLAG_LOW_PROFILE);
     }
 
     @Override
