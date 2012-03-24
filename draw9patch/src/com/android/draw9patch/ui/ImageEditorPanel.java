@@ -83,7 +83,7 @@ class ImageEditorPanel extends JPanel {
     private JLabel xLabel;
     private JLabel yLabel;
 
-    private TexturePaint texture;    
+    private TexturePaint texture;
 
     private List<Rectangle> patches;
     private List<Rectangle> horizontalPatches;
@@ -93,7 +93,7 @@ class ImageEditorPanel extends JPanel {
     private boolean horizontalStartWithPatch;
 
     private Pair<Integer> horizontalPadding;
-    private Pair<Integer> verticalPadding;    
+    private Pair<Integer> verticalPadding;
 
     ImageEditorPanel(MainFrame mainFrame, BufferedImage image, String name) {
         this.image = image;
@@ -404,7 +404,7 @@ class ImageEditorPanel extends JPanel {
             both = new StretchView();
 
             setScale(DEFAULT_SCALE);
-            
+
             add(vertical, new GridBagConstraints(0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
                     GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
             add(horizontal, new GridBagConstraints(0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
