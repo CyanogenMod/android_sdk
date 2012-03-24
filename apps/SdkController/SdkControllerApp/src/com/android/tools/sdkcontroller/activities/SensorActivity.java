@@ -23,8 +23,11 @@ import java.util.Map;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnKeyListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TableLayout;
@@ -51,14 +54,20 @@ public class SensorActivity extends BaseBindingActivity
     public static String TAG = SensorActivity.class.getSimpleName();
     private static boolean DEBUG = true;
 
+    private static final int MSG_UPDATE_ACTUAL_HZ = 0x31415;
+
     private TableLayout mTableLayout;
     private TextView mTextError;
     private TextView mTextStatus;
+    private TextView mTextTargetHz;
+    private TextView mTextActualHz;
     private SensorsHandler mSensorHandler;
 
     private final Map<MonitoredSensor, DisplayInfo> mDisplayedSensors =
         new HashMap<SensorsHandler.MonitoredSensor, SensorActivity.DisplayInfo>();
     private final android.os.Handler mUiHandler = new android.os.Handler(this);
+    private int mTargetSampleRate;
+    private long mLastActualUpdateMs;
 
     /** Called when the activity is first created. */
     @Override
@@ -68,7 +77,23 @@ public class SensorActivity extends BaseBindingActivity
         mTableLayout = (TableLayout) findViewById(R.id.tableLayout);
         mTextError  = (TextView) findViewById(R.id.textError);
         mTextStatus = (TextView) findViewById(R.id.textStatus);
+        mTextTargetHz = (TextView) findViewById(R.id.textSampleRate);
+        mTextActualHz = (TextView) findViewById(R.id.textActualRate);
         updateStatus("Waiting for connection");
+
+        mTextTargetHz.setOnKeyListener(new OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                updateSampleRate();
+                return false;
+            }
+        });
+        mTextTargetHz.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                updateSampleRate();
+            }
+        });
     }
 
     @Override
@@ -151,6 +176,7 @@ public class SensorActivity extends BaseBindingActivity
         mSensorHandler = (SensorsHandler) getServiceBinder().getHandler(HandlerType.Sensor);
         if (mSensorHandler != null) {
             mSensorHandler.addUiHandler(mUiHandler);
+            mUiHandler.sendEmptyMessage(MSG_UPDATE_ACTUAL_HZ);
 
             assert mDisplayedSensors.isEmpty();
             List<MonitoredSensor> sensors = mSensorHandler.getSensors();
@@ -248,8 +274,29 @@ public class SensorActivity extends BaseBindingActivity
             }
             if (mSensorHandler != null) {
                 updateStatus(Integer.toString(mSensorHandler.getEventSentCount()) + " events sent");
+
+                // Update the "actual rate" field if the value has changed
+                long ms = mSensorHandler.getActualUpdateMs();
+                if (ms != mLastActualUpdateMs) {
+                    mLastActualUpdateMs = ms;
+                    String hz = mLastActualUpdateMs <= 0 ? "--" :
+                                    Integer.toString((int) Math.ceil(1000. / ms));
+                    mTextActualHz.setText(hz);
+                }
             }
             break;
+        case MSG_UPDATE_ACTUAL_HZ:
+            if (mSensorHandler != null) {
+                // Update the "actual rate" field if the value has changed
+                long ms = mSensorHandler.getActualUpdateMs();
+                if (ms != mLastActualUpdateMs) {
+                    mLastActualUpdateMs = ms;
+                    String hz = mLastActualUpdateMs <= 0 ? "--" :
+                                    Integer.toString((int) Math.ceil(1000. / ms));
+                    mTextActualHz.setText(hz);
+                }
+                mUiHandler.sendEmptyMessageDelayed(MSG_UPDATE_ACTUAL_HZ, 1000 /*1s*/);
+            }
         }
         return true; // we consumed this message
     }
@@ -268,5 +315,25 @@ public class SensorActivity extends BaseBindingActivity
 
         mTextError.setVisibility(error.length() == 0 ? View.GONE : View.VISIBLE);
         mTextError.setText(error);
+    }
+
+    private void updateSampleRate() {
+        String str = mTextTargetHz.getText().toString();
+        try {
+            int hz = Integer.parseInt(str.trim());
+
+            // Cap the value. 50 Hz is a reasonable value for the emulator.
+            // Allow a bit more since modern hardware can do it.
+            if (hz <= 0 || hz > 100) {
+                hz = 100;
+            }
+
+            if (hz != mTargetSampleRate) {
+                mTargetSampleRate = hz;
+                if (mSensorHandler != null) {
+                    mSensorHandler.setUpdateTargetMs(hz <= 0 ? 0 : (int)(1000.0f / hz));
+                }
+            }
+        } catch (Exception ignore) {}
     }
 }

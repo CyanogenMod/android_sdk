@@ -26,12 +26,15 @@
         
         <activity
             android:name=".activities.SensorActivity"
-            android:launchMode="singleInstance" />
+            android:launchMode="singleInstance" 
+            android:windowSoftInputMode="stateUnchanged"/>
         
         <activity
             android:name=".activities.MultiTouchActivity"
             android:launchMode="singleInstance"
-            android:screenOrientation="portrait" android:theme="@style/Theme.MultiTouch"/>
+            android:screenOrientation="portrait" 
+            android:theme="@style/Theme.MultiTouch" 
+            android:windowSoftInputMode="stateHidden"/>
 
         <service
             android:name=".service.ControllerService"

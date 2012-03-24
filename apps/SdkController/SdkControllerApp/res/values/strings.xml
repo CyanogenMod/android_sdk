@@ -36,5 +36,9 @@
     <string name="main_service_status_connected">Emulator Connected</string>
     <string name="main_service_status_disconnected">Emulator Connected</string>
     <string name="sensors_top_description">Available Sensors:</string>
+    <string name="sensors_sample_rate">Sample Rate</string>
+    <string name="sensors_hz_per_sensor">Hz per sensor</string>
+    <string name="sensors_actual_rate">Actual</string>
+    <string name="sensors_hz_average">Hz average</string>
 
 </resources>
