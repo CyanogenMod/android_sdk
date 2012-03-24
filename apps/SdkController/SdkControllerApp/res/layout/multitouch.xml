@@ -9,6 +9,7 @@
          android:layout_width="fill_parent"
          android:layout_height="fill_parent" />
 
+    <!-- Placeholder status text. Becomes visibility=gone when empty. -->
     <TextView
         android:id="@+id/textStatus"
         android:layout_width="fill_parent"
@@ -16,6 +17,7 @@
         android:layout_alignParentTop="true"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
+    <!-- Placeholder error text. Becomes visibility=gone when empty. -->
     <TextView
         android:id="@+id/textError"
         android:layout_width="fill_parent"

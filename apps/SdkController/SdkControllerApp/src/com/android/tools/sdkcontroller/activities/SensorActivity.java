@@ -322,10 +322,9 @@ public class SensorActivity extends BaseBindingActivity
         try {
             int hz = Integer.parseInt(str.trim());
 
-            // Cap the value. 50 Hz is a reasonable value for the emulator.
-            // Allow a bit more since modern hardware can do it.
-            if (hz <= 0 || hz > 100) {
-                hz = 100;
+            // Cap the value. 50 Hz is a reasonable max value for the emulator.
+            if (hz <= 0 || hz > 50) {
+                hz = 50;
             }
 
             if (hz != mTargetSampleRate) {

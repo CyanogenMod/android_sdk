@@ -24,13 +24,12 @@
     android:orientation="vertical"
     >
 
-    <TableLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
         <TableRow
+            android:id="@+id/row1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
 
@@ -40,7 +39,8 @@
                 android:text="@string/sensors_sample_rate"
                 android:gravity="right"
                 android:layout_marginRight="8dp"
-                />
+                />
+
             <EditText
                 android:id="@+id/textSampleRate"
                 android:layout_width="wrap_content"
@@ -49,7 +49,8 @@
                 android:gravity="right"
                 android:imeOptions="actionNone|flagNoExtractUi|flagNoFullscreen|"
                 android:inputType="number"
-                android:text="@string/sensors_default_sample_rate" />
+                android:text="@string/sensors_default_sample_rate"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -59,8 +60,12 @@
         </TableRow>
 
         <TableRow
+            android:id="@+id/row2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignBaseline="@+id/row1"
+            >
 
             <TextView
                 android:layout_width="wrap_content"
@@ -83,6 +88,39 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/sensors_hz_average" />
+
+            <!-- This 1-pixel wide invisible edit field makes sure that row1 and
+                 row2 have the same height and an equal baseline. This works around
+                 the fact that row2's attribute layout_alignBaseline=row1 is in fact
+                 ignored. -->
+            <EditText
+                android:layout_width="1px"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNone"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:visibility="invisible"
+                />
+
+        </TableRow>
+
+    </RelativeLayout>
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        >
+
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
 
         </TableRow>
 

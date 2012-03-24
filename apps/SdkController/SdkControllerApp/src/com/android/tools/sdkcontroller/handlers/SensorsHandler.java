@@ -36,12 +36,16 @@ public class SensorsHandler extends BaseHandler {
     @SuppressWarnings("hiding")
     private static String TAG = SensorsHandler.class.getSimpleName();
     @SuppressWarnings("hiding")
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
     /**
-     * The minimum update time per sensor. Ignored if 0 or negative.
+     * The target update time per sensor. Ignored if 0 or negative.
      * Sensor updates that arrive faster than this delay are ignored.
+     * Ideally the emulator can be updated at up to 50 fps, however
+     * for average power devices something like 20 fps is more
+     * reasonable.
+     * Default value should match res/values/strings.xml > sensors_default_sample_rate.
      */
-    private long mUpdateTargetMs = 1000/50; // 50 fps in milliseconds
+    private long mUpdateTargetMs = 1000/20; // 20 fps in milliseconds
     private long mGlobalAvgUpdateMs = 0;
 
 
@@ -347,8 +351,7 @@ public class SensorsHandler extends BaseHandler {
         private String mEmulatorFriendlyName;
         /** Formats string to show in the TextView. */
         private String mTextFmt;
-        /** Formats string to send to the emulator. */
-        private String mMsgFmt;
+        private int mExpectedLen;
         private int mNbValues = 0;
         private float[] mValues = new float[3];
         /**
@@ -382,83 +385,83 @@ public class SensorsHandler extends BaseHandler {
                     // 3 floats.
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "acceleration";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case 9: // Sensor.TYPE_GRAVITY is missing in API 7
                     // 3 floats.
                     mUiName = "Gravity";
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "gravity";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     mUiName = "Gyroscope";
                     // 3 floats.
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "gyroscope";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_LIGHT:
                     mUiName = "Light";
                     // 1 integer.
                     mTextFmt = "%.0f";
                     mEmulatorFriendlyName = "light";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g\0";
+                    mExpectedLen = 1;
                     break;
                 case 10: // Sensor.TYPE_LINEAR_ACCELERATION is missing in API 7
                     mUiName = "Linear acceleration";
                     // 3 floats.
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "linear-acceleration";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     mUiName = "Magnetic field";
                     // 3 floats.
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "magnetic-field";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_ORIENTATION:
                     mUiName = "Orientation";
                     // 3 integers.
                     mTextFmt = "%+03.0f %+03.0f %+03.0f";
                     mEmulatorFriendlyName = "orientation";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_PRESSURE:
                     mUiName = "Pressure";
                     // 1 integer.
                     mTextFmt = "%.0f";
                     mEmulatorFriendlyName = "pressure";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g\0";
+                    mExpectedLen = 1;
                     break;
                 case Sensor.TYPE_PROXIMITY:
                     mUiName = "Proximity";
                     // 1 integer.
                     mTextFmt = "%.0f";
                     mEmulatorFriendlyName = "proximity";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g\0";
+                    mExpectedLen = 1;
                     break;
                 case 11: // Sensor.TYPE_ROTATION_VECTOR is missing in API 7
                     mUiName = "Rotation";
                     // 3 floats.
                     mTextFmt = "%+.2f %+.2f %+.2f";
                     mEmulatorFriendlyName = "rotation";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g:%g:%g\0";
+                    mExpectedLen = 3;
                     break;
                 case Sensor.TYPE_TEMPERATURE:
                     mUiName = "Temperature";
                     // 1 integer.
                     mTextFmt = "%.0f";
-                    mEmulatorFriendlyName = "tempterature";
-                    mMsgFmt = mEmulatorFriendlyName + ":%g\0";
+                    mEmulatorFriendlyName = "temperature";
+                    mExpectedLen = 1;
                     break;
                 default:
                     mUiName = "<Unknown>";
                     mTextFmt = "N/A";
                     mEmulatorFriendlyName = "unknown";
-                    mMsgFmt = mEmulatorFriendlyName + "\0";
+                    mExpectedLen = 0;
                     if (DEBUG) Log.e(TAG, "Unknown sensor type " + mSensor.getType() +
                             " for sensor " + mSensor.getName());
                     break;
@@ -586,6 +589,7 @@ public class SensorsHandler extends BaseHandler {
             private long mLastUpdateTS;
             /** Last display update time-stamp. */
             private long mLastDisplayTS;
+            private final StringBuilder mTempStr = new StringBuilder();
 
             /**
              * Handles "sensor changed" event.
@@ -593,13 +597,12 @@ public class SensorsHandler extends BaseHandler {
              */
             @Override
             public void onSensorChanged(SensorEvent event) {
-                long now = SystemClock.currentThreadTimeMillis(); //.elapsedRealtime();
+                long now = SystemClock.currentThreadTimeMillis();
 
-                long nowDiff = 0;
+                long deltaMs = 0;
                 if (mLastUpdateTS != 0) {
-                    nowDiff = now - mLastUpdateTS;
-                    Log.d(TAG, String.format("%d < %d < %d-- %s", mUpdateTargetMs, nowDiff, mGlobalAvgUpdateMs, mSensor.getName() ));
-                    if (mUpdateTargetMs > 0 && nowDiff < mUpdateTargetMs) {
+                    deltaMs = now - mLastUpdateTS;
+                    if (mUpdateTargetMs > 0 && deltaMs < mUpdateTargetMs) {
                         // New sample is arriving too fast. Discard it.
                         return;
                     }
@@ -608,26 +611,35 @@ public class SensorsHandler extends BaseHandler {
                 // Format message that will be sent to the emulator.
                 float[] values = event.values;
                 final int len = values.length;
-                String str;
-                if (len == 3) {
-                    str = String.format(mMsgFmt, values[0], values[1], values[2]);
-                } else if (len == 2) {
-                    str = String.format(mMsgFmt, values[0], values[1]);
-                } else if (len == 1) {
-                    str = String.format(mMsgFmt, values[0]);
-                } else {
+
+                // A 3printfs with 3 * %g takes around 9-15 ms on an ADP2, or 3-4 ms on a GN.
+                // However doing 3 * StringBuilder.append(float) takes < ~1 ms on ADP2.
+                StringBuilder sb = mTempStr;
+                sb.setLength(0);
+                sb.append(mEmulatorFriendlyName);
+
+                if (len != mExpectedLen) {
                     Log.e(TAG, "Unexpected number of values " + len
                             + " in onSensorChanged for sensor " + mSensor.getName());
                     return;
+                } else {
+                    sb.append(':').append(values[0]);
+                    if (len > 1) {
+                        sb.append(':').append(values[1]);
+                        if (len > 2) {
+                            sb.append(':').append(values[2]);
+                        }
+                    }
                 }
-                sendEventToEmulator(str);
+                sb.append('\0');
+                sendEventToEmulator(sb.toString());
 
                 // Computes average update time for this sensor and average globally.
                 if (mLastUpdateTS != 0) {
                     if (mGlobalAvgUpdateMs != 0) {
-                        mGlobalAvgUpdateMs = (mGlobalAvgUpdateMs + nowDiff) / 2;
+                        mGlobalAvgUpdateMs = (mGlobalAvgUpdateMs + deltaMs) / 2;
                     } else {
-                        mGlobalAvgUpdateMs = nowDiff;
+                        mGlobalAvgUpdateMs = deltaMs;
                     }
                 }
                 mLastUpdateTS = now;
@@ -635,8 +647,8 @@ public class SensorsHandler extends BaseHandler {
                 // Update the UI for the sensor, with a static throttling of 10 fps max.
                 if (hasUiHandler()) {
                     if (mLastDisplayTS != 0) {
-                        nowDiff = now - mLastDisplayTS;
-                        if (nowDiff < 100 /*ms, 10fps*/) {
+                        long uiDeltaMs = now - mLastDisplayTS;
+                        if (uiDeltaMs < 1000/4 /*4fps in ms*/) {
                             // Skip this UI update
                             return;
                         }
@@ -657,6 +669,14 @@ public class SensorsHandler extends BaseHandler {
                     msg.what = SENSOR_DISPLAY_MODIFIED;
                     msg.obj = MonitoredSensor.this;
                     notifyUiHandlers(msg);
+                }
+
+                if (DEBUG) {
+                    long now2 = SystemClock.currentThreadTimeMillis();
+                    long processingTimeMs = now2 - now;
+                    Log.d(TAG, String.format("glob %d - local %d > target %d - processing %d -- %s",
+                            mGlobalAvgUpdateMs, deltaMs, mUpdateTargetMs, processingTimeMs,
+                            mSensor.getName()));
                 }
             }
 

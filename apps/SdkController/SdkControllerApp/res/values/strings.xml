@@ -20,13 +20,11 @@
 <resources>
 
     <!-- Strings for manifest. -->
-    <!-- App name. TODO change. This is a placeholder to easily differentiate
-         the name in the home launcher compared to the MT/sensor apps. -->
-    <string name="app_name">New Sdk Controller</string>
-    <string name="service_description">Background service for Sdk Controller App</string>
+    <string name="app_name">SDK Controller</string>
+    <string name="service_description">Background service for SDK Controller</string>
 
     <!-- Strings for service. -->
-    <string name="service_notif_title">SdkController is running</string>
+    <string name="service_notif_title">SDK Controller is running</string>
 
     <!-- Strings for layout/main -->
     <string name="main_label_service">Service:</string>
@@ -35,10 +33,16 @@
     <string name="main_btn_open_sensors">Control Sensors</string>
     <string name="main_service_status_connected">Emulator Connected</string>
     <string name="main_service_status_disconnected">Emulator Connected</string>
+
+    <!-- Strings for layout/sensors -->
+    <string name="sensors_activity_title">SDK Controller &gt; Sensors</string>
     <string name="sensors_top_description">Available Sensors:</string>
     <string name="sensors_sample_rate">Sample Rate</string>
     <string name="sensors_hz_per_sensor">Hz per sensor</string>
     <string name="sensors_actual_rate">Actual</string>
     <string name="sensors_hz_average">Hz average</string>
+    <!-- Default sample rate for SensorsActivity UI.
+         Should match the default for SensorsHandler.mUpdateTargetMs. -->
+    <string name="sensors_default_sample_rate">20</string>
 
 </resources>
