@@ -34,4 +34,14 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                     "src/test/pkg/WrongCastActivity.java.txt=>src/test/pkg/WrongCastActivity.java"
                 ));
     }
+
+    public void test27441() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "res/layout/casts2.xml",
+                "src/test/pkg/WrongCastActivity2.java.txt=>src/test/pkg/WrongCastActivity2.java"
+            ));
+    }
 }
