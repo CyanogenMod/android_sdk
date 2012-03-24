@@ -94,7 +94,10 @@ public class DeprecationDetector extends LayoutDetector {
                 // output, keep quiet about this one -for now-.
                 //ATTR_SINGLE_LINE,
 
-                ATTR_ENABLED,
+                // This attribute is marked deprecated in android.R.attr but apparently
+                // using the suggested replacement of state_enabled doesn't work, see issue 27613
+                //ATTR_ENABLED,
+
                 ATTR_NUMERIC,
                 ATTR_PHONE_NUMBER,
                 ATTR_PASSWORD
