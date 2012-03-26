@@ -190,8 +190,11 @@ public class RenderScriptTask extends MultiFilesTask {
         mOptLevel = optLevel;
     }
 
-    public void setDebug(boolean debug) {
-        mDebug = debug;
+    /** Sets the current build type. value is a boolean, true for debug build, false for release */
+    @Override
+    public void setBuildType(String buildType) {
+        super.setBuildType(buildType);
+        mDebug = Boolean.valueOf(buildType);
     }
 
     public Path createSource() {

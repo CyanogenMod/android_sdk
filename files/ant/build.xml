@@ -52,6 +52,10 @@
     <property name="java.source" value="1.5" />
     <property name="java.compilerargs" value="" />
 
+    <!-- Renderscript options -->
+    <property name="renderscript.debug.opt.level" value="O0" />
+    <property name="renderscript.release.opt.level" value="O3" />
+
     <!-- instrumentation options -->
     <property name="emma.filter" value="" />
 
@@ -616,7 +620,8 @@
                     resFolder="${out.res.absolute.dir}/raw"
                     targetApi="${target.api}"
                     optLevel="${renderscript.opt.level}"
-                    debug="${build.is.packaging.debug}">
+                    buildType="${build.is.packaging.debug}"
+                    previousBuildType="${build.last.is.packaging.debug}">
                 <source path="${source.absolute.dir}"/>
             </renderscript>
 
@@ -939,7 +944,7 @@
         <property name="build.is.signing.debug" value="true" />
 
         <!-- Renderscript optimization level: none -->
-        <property name="renderscript.opt.level" value="O0" />
+        <property name="renderscript.opt.level" value="${renderscript.debug.opt.level}" />
 
     </target>
 
@@ -1033,7 +1038,7 @@
         <property name="build.is.signing.debug" value="false" />
 
         <!-- Renderscript optimization level: aggressive -->
-        <property name="renderscript.opt.level" value="O3" />
+        <property name="renderscript.opt.level" value="${renderscript.release.opt.level}" />
 
         <if condition="${build.is.packaging.debug}">
             <then>
