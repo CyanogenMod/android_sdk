@@ -157,4 +157,32 @@ public class JavaPerformanceTest extends Button {
     private boolean mAllowCrop;
     private Canvas mOverlayCanvas;
     private Bitmap mOverlay;
+
+    @Override
+    public void layout(int l, int t, int r, int b) {
+        // Using "this." to reference fields
+        if (this.shader == null)
+            this.shader = new LinearGradient(0, 0, getWidth(), 0, GRADIENT_COLORS, null,
+                TileMode.REPEAT);
+    }
+
+    @Override
+    public void layout(int l, int t, int r, int b) {
+        int width = getWidth();
+        int height = getHeight();
+
+        if ((shader == null) || (lastWidth != width) || (lastHeight != height))
+        {
+           lastWidth = width;
+           lastHeight = height;
+
+           shader = new LinearGradient(0, 0, width, 0, GRADIENT_COLORS, null, TileMode.REPEAT);
+        }
+    }
+
+    @Override
+    public void layout(int l, int t, int r, int b) {
+        if ((shader == null) || (lastWidth != getWidth()) || (lastHeight != getHeight())) {
+        }
+    }
 }

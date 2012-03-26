@@ -44,7 +44,9 @@ import lombok.ast.If;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
+import lombok.ast.Select;
 import lombok.ast.StrictListAccessor;
+import lombok.ast.This;
 import lombok.ast.Throw;
 import lombok.ast.TypeReference;
 import lombok.ast.TypeReferencePart;
@@ -127,6 +129,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
     private static final String ON_DRAW = "onDraw";                         //$NON-NLS-1$
     private static final String ON_LAYOUT = "onLayout";                     //$NON-NLS-1$
     private static final String ON_MEASURE = "onMeasure";                   //$NON-NLS-1$
+    private static final String LAYOUT = "layout";                          //$NON-NLS-1$
 
     /** Constructs a new {@link JavaPerformanceDetector} check */
     public JavaPerformanceDetector() {
@@ -346,6 +349,11 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             } else if (expression instanceof VariableReference) {
                 VariableReference reference = (VariableReference) expression;
                 variables.add(reference.astIdentifier().astValue());
+            } else if (expression instanceof Select) {
+                Select select = (Select) expression;
+                if (select.astOperand() instanceof This) {
+                    variables.add(select.astIdentifier().astValue());
+                }
             }
         }
 
@@ -354,7 +362,8 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
          * where allocating objects is not allowed for performance reasons
          */
         private boolean isBlockedAllocationMethod(MethodDeclaration node) {
-            return isOnDrawMethod(node) || isOnMeasureMethod(node) || isOnLayoutMethod(node);
+            return isOnDrawMethod(node) || isOnMeasureMethod(node) || isOnLayoutMethod(node)
+                    || isLayoutMethod(node);
         }
 
         /**
@@ -435,6 +444,34 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         }
 
         /**
+         * Returns true if this method looks like it's overriding android.view.View's
+         * {@code public void layout(int l, int t, int r, int b)}
+         */
+        private static boolean isLayoutMethod(MethodDeclaration node) {
+            if (LAYOUT.equals(node.astMethodName().astValue())) {
+                StrictListAccessor<VariableDefinition, MethodDeclaration> parameters =
+                        node.astParameters();
+                if (parameters != null && parameters.size() == 4) {
+                    Iterator<VariableDefinition> iterator = parameters.iterator();
+                    for (int i = 0; i < 4; i++) {
+                        if (!iterator.hasNext()) {
+                            return false;
+                        }
+                        VariableDefinition next = iterator.next();
+                        TypeReferencePart type = next.astTypeReference().astParts().last();
+                        if (!INT.equals(type.getTypeName())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+
+        /**
          * Checks whether the given constructor call and type reference refers
          * to a HashMap constructor call that is eligible for replacement by a
          * SparseArray call instead
@@ -482,7 +519,14 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         public boolean visitBinaryExpression(BinaryExpression node) {
             BinaryOperator operator = node.astOperator();
             if (operator == BinaryOperator.ASSIGN || operator == BinaryOperator.OR_ASSIGN) {
-                mVariables.add(node.astLeft().toString());
+                Expression left = node.astLeft();
+                String variable;
+                if (left instanceof Select && ((Select) left).astOperand() instanceof This) {
+                    variable = ((Select) left).astIdentifier().astValue();
+                } else {
+                    variable = left.toString();
+                }
+                mVariables.add(variable);
             }
 
             return super.visitBinaryExpression(node);
