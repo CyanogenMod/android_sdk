@@ -44,18 +44,27 @@ BASE_DIR="$1"
 
 [[ -n "$1" ]] || die "Usage: $0 <dest-dir>"
 
-# URL for 3.5.2 RCP Linux 32 Bits. Includes GEF, WTP as needed.
+# URL for Eclipse Linux RCP.
 DOWNLOAD_URL="http://download.eclipse.org/technology/epp/downloads/release/helios/SR2/eclipse-rcp-helios-SR2-linux-gtk-x86_64.tar.gz"
+
+# URL for CDT
+CDT_DOWNLOAD_URL="http://download.eclipse.org/tools/cdt/releases/helios/dist/cdt-master-7.0.2.zip"
 
 BIN="$BASE_DIR/eclipse/eclipse"           # path to installed binary
 TARGZ="$BASE_DIR/${DOWNLOAD_URL##*/}"     # base dir + filename of the download URL
+CDTZIP="$BASE_DIR/${CDT_DOWNLOAD_URL##*/}"
 
 if [[ ! -f "$BIN" ]]; then
   echo "Downloading and installing Eclipse in $BASE_DIR."
   mkdir -p "$BASE_DIR"
+
   wget --continue $V --output-document="$TARGZ" "$DOWNLOAD_URL"
   echo "Unpacking $TARGZ"
   (cd "$BASE_DIR" && tar xzf "$TARGZ")
+
+  wget --continue $V --output-document="$CDTZIP" "$CDT_DOWNLOAD_URL"
+  echo "Unpacking $CDTZIP"
+  (cd "$BASE_DIR/eclipse" && unzip -o "$CDTZIP")
 
   echo
   echo "*** WARNING: To setup Eclipse correctly, it must be ran at least once manually"
