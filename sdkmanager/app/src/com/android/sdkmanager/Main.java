@@ -286,7 +286,7 @@ public class Main {
                 if (mSdkCommandLine.getFlagNoUI(verb)) {
                     updateSdkNoUI();
                 } else {
-                    showSdkManagerWindow(true /*autoUpdate*/);
+                    showSdkManagerWindow();
                 }
 
             } else if (SdkCommandLine.OBJECT_ADB.equals(directObject)) {
@@ -294,7 +294,7 @@ public class Main {
 
             }
         } else if (SdkCommandLine.VERB_SDK.equals(verb)) {
-            showSdkManagerWindow(false /*autoUpdate*/);
+            showSdkManagerWindow();
 
         } else if (SdkCommandLine.VERB_AVD.equals(verb)) {
             showAvdManagerWindow();
@@ -308,7 +308,7 @@ public class Main {
             moveAvd();
 
         } else if (verb == null && directObject == null) {
-            showSdkManagerWindow(false /*autoUpdate*/);
+            showSdkManagerWindow();
 
         } else {
             mSdkCommandLine.printHelpAndExit(null);
@@ -318,7 +318,7 @@ public class Main {
     /**
      * Display the main SDK Manager app window
      */
-    private void showSdkManagerWindow(boolean autoUpdate) {
+    private void showSdkManagerWindow() {
         try {
             MessageBoxLog errorLogger = new MessageBoxLog(
                     "SDK Manager",
@@ -332,10 +332,6 @@ public class Main {
                     SdkInvocationContext.STANDALONE);
             window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
             window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
-            if (autoUpdate) {
-                window.setInitialPage(PackagesPage.class);
-                window.setRequestAutoUpdate(true);
-            }
             window.open();
 
             errorLogger.displayResult(true);
