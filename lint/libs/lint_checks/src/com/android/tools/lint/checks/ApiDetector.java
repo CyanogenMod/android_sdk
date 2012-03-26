@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -133,6 +134,21 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         }
 
         String value = attribute.getValue();
+
+        if (value.equals(VALUE_MATCH_PARENT)) {
+            int minSdk = getMinSdk(context);
+            // minSdk != -1: Avoid warning about this in library projects where
+            // no uses-sdk has been specified
+            if (minSdk != -1 && minSdk < 8 && context.getFolderVersion() < 8) {
+                Location location = context.getLocation(attribute);
+                String message = String.format(
+                        "\"match_parent\" requires API level 8 (current min is %1$d), " +
+                        "use \"fill_parent\" instead",
+                        minSdk);
+                context.report(UNSUPPORTED, attribute, location, message, null);
+            }
+        }
+
         if (value.startsWith(ANDROID_RESOURCE_PREFIX)) {
             // Convert @android:type/foo into android/R$type and "foo"
             int index = value.indexOf('/', ANDROID_RESOURCE_PREFIX.length());
