@@ -395,7 +395,10 @@ public class NewProjectCreator  {
         final HashMap<String, String> dictionary = new HashMap<String, String>();
         dictionary.put(STRING_APP_NAME, mValues.testApplicationName);
 
+        // Use the same logic to determine test project location as in
+        // ApplicationInfoPage#validateTestProjectLocation
         IPath path = new Path(mValues.projectLocation.getPath());
+        path = path.removeLastSegments(1).append(mValues.testProjectName);
         IPath defaultLocation = Platform.getLocation();
         if ((!mValues.useDefaultLocation || mValues.useExisting)
                 && !path.equals(defaultLocation)) {
