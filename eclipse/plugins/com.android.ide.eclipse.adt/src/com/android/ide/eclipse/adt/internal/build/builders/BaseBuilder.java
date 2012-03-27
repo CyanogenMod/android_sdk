@@ -26,6 +26,9 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.XmlErrorListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.io.IFileWrapper;
+import com.android.io.IAbstractFile;
+import com.android.io.StreamException;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
@@ -340,6 +343,53 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
             // don't stop, something's really screwed up and the build will break later with
             // a better error message.
         }
+    }
+
+    /**
+     * Handles a {@link StreamException} by logging the info and marking the project.
+     * This should generally be followed by exiting the build process.
+     *
+     * @param e the exception
+     */
+    protected void handleStreamException(StreamException e) {
+        IAbstractFile file = e.getFile();
+
+        String msg;
+
+        IResource target = getProject();
+        if (file instanceof IFileWrapper) {
+            target = ((IFileWrapper) file).getIFile();
+
+            if (e.getError() == StreamException.Error.OUTOFSYNC) {
+                msg = "File is Out of sync";
+            } else {
+                msg = "Error reading file. Read log for details";
+            }
+
+        } else {
+            if (e.getError() == StreamException.Error.OUTOFSYNC) {
+                msg = String.format("Out of sync file: %s", file.getOsLocation());
+            } else {
+                msg = String.format("Error reading file %s. Read log for details",
+                        file.getOsLocation());
+            }
+        }
+
+        AdtPlugin.logAndPrintError(e, getProject().getName(), msg);
+        BaseProjectHelper.markResource(target, AdtConstants.MARKER_ADT, msg,
+                IMarker.SEVERITY_ERROR);
+    }
+
+    /**
+     * Handles a generic {@link Throwable} by logging the info and marking the project.
+     * This should generally be followed by exiting the build process.
+     *
+     * @param t the {@link Throwable}.
+     * @param message the message to log and to associate with the marker.
+     */
+    protected void handleException(Throwable t, String message) {
+        AdtPlugin.logAndPrintError(t, getProject().getName(), message);
+        markProject(AdtConstants.MARKER_ADT, message, IMarker.SEVERITY_ERROR);
     }
 
     /**

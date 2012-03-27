@@ -90,7 +90,7 @@ public class FileWrapper extends File implements IAbstractFile {
         try {
             return new FileInputStream(this);
         } catch (FileNotFoundException e) {
-            throw new StreamException(e);
+            throw new StreamException(e, this, StreamException.Error.FILENOTFOUND);
         }
     }
 
@@ -106,13 +106,13 @@ public class FileWrapper extends File implements IAbstractFile {
                 fos.write(buffer, 0, count);
             }
         } catch (IOException e) {
-            throw new StreamException(e);
+            throw new StreamException(e, this);
         } finally {
             if (fos != null) {
                 try {
                     fos.close();
                 } catch (IOException e) {
-                    throw new StreamException(e);
+                    throw new StreamException(e, this);
                 }
             }
         }
@@ -123,7 +123,7 @@ public class FileWrapper extends File implements IAbstractFile {
         try {
             return new FileOutputStream(this);
         } catch (FileNotFoundException e) {
-            throw new StreamException(e);
+            throw new StreamException(e, this);
         }
     }
 
