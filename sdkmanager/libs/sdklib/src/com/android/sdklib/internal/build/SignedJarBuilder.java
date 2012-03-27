@@ -268,6 +268,21 @@ public class SignedJarBuilder {
         }
 
         mOutputJar.close();
+        mOutputJar = null;
+    }
+
+    /**
+     * Clean up of the builder for interrupted workflow.
+     * This does nothing if {@link #close()} was called successfully.
+     */
+    public void cleanUp() {
+        if (mOutputJar != null) {
+            try {
+                mOutputJar.close();
+            } catch (IOException e) {
+                // pass
+            }
+        }
     }
 
     /**

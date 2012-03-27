@@ -96,6 +96,10 @@
             classname="com.android.ant.ApkBuilderTask"
             classpathref="android.antlibs" />
 
+    <taskdef name="signapk"
+            classname="com.android.ant.SignApkTask"
+            classpathref="android.antlibs" />
+
     <taskdef name="zipalign"
             classname="com.android.ant.ZipAlignTask"
             classpathref="android.antlibs" />
@@ -1055,14 +1059,13 @@
 
                 <!-- Signs the APK -->
                 <echo level="info">Signing final apk...</echo>
-                <signjar
-                        jar="${out.packaged.file}"
-                        signedjar="${out.unaligned.file}"
+                <signapk
+                        input="${out.packaged.file}"
+                        output="${out.unaligned.file}"
                         keystore="${key.store}"
                         storepass="${key.store.password}"
                         alias="${key.alias}"
-                        keypass="${key.alias.password}"
-                        verbose="${verbose}" />
+                        keypass="${key.alias.password}"/>
 
                 <!-- Zip aligns the APK -->
                 <zipalign-helper

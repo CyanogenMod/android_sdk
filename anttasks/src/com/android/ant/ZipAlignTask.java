@@ -17,17 +17,12 @@
 package com.android.ant;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.Path;
 
-import java.io.File;
-
-public class ZipAlignTask extends Task {
+public class ZipAlignTask extends SingleInputOutputTask {
 
     private String mExecutable;
-    private String mInput;
-    private String mOutput;
     private int mAlign = 4;
     private boolean mVerbose = false;
 
@@ -39,14 +34,6 @@ public class ZipAlignTask extends Task {
         mExecutable = TaskHelper.checkSinglePath("executable", executable);
     }
 
-    public void setInput(Path inputPath) {
-        mInput = TaskHelper.checkSinglePath("input", inputPath);
-    }
-
-    public void setOutput(Path outputPath) {
-        mOutput = TaskHelper.checkSinglePath("output", outputPath);
-    }
-
     public void setAlign(int align) {
         mAlign = align;
     }
@@ -56,25 +43,9 @@ public class ZipAlignTask extends Task {
     }
 
     @Override
-    public void execute() throws BuildException {
+    public void createOutput() throws BuildException {
         if (mExecutable == null) {
             throw new BuildException("Missing attribute executable");
-        }
-        if (mInput == null) {
-            throw new BuildException("Missing attribute input");
-        }
-        if (mOutput == null) {
-            throw new BuildException("Missing attribute output");
-        }
-
-        // check if there's a need for the task to run.
-        File outputFile = new File(mOutput);
-        if (outputFile.isFile()) {
-            File inputFile = new File(mInput);
-            if (outputFile.lastModified() >= inputFile.lastModified()) {
-                System.out.println("No changes. No need to run zip-align on the apk.");
-                return;
-            }
         }
 
         System.out.println("Running zip align on final apk...");
@@ -102,10 +73,10 @@ public class ZipAlignTask extends Task {
         task.createArg().setValue(Integer.toString(mAlign));
 
         // input
-        task.createArg().setValue(mInput);
+        task.createArg().setValue(getInput());
 
         // output
-        task.createArg().setValue(mOutput);
+        task.createArg().setValue(getOutput());
 
         // execute
         task.execute();

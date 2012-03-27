@@ -163,16 +163,24 @@ public class DebugKeyProvider {
     private boolean loadKeyEntry(String osKeyStorePath, String storeType) throws KeyStoreException,
             NoSuchAlgorithmException, CertificateException, IOException,
             UnrecoverableEntryException {
+        FileInputStream fis = null;
         try {
             KeyStore keyStore = KeyStore.getInstance(
                     storeType != null ? storeType : KeyStore.getDefaultType());
-            FileInputStream fis = new FileInputStream(osKeyStorePath);
+            fis = new FileInputStream(osKeyStorePath);
             keyStore.load(fis, PASSWORD_CHAR);
-            fis.close();
             mEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(
                     DEBUG_ALIAS, new KeyStore.PasswordProtection(PASSWORD_CHAR));
         } catch (FileNotFoundException e) {
             return false;
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    // pass
+                }
+            }
         }
 
         return true;

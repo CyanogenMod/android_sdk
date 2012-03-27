@@ -456,8 +456,10 @@ public final class ApkBuilder implements IArchiveBuilder {
             }
 
         } catch (ApkCreationException e) {
+            mBuilder.cleanUp();
             throw e;
         } catch (Exception e) {
+            mBuilder.cleanUp();
             throw new ApkCreationException(e);
         }
     }
@@ -498,8 +500,10 @@ public final class ApkBuilder implements IArchiveBuilder {
         try {
             doAddFile(file, archivePath);
         } catch (DuplicateFileException e) {
+            mBuilder.cleanUp();
             throw e;
         } catch (Exception e) {
+            mBuilder.cleanUp();
             throw new ApkCreationException(e, "Failed to add %s", file);
         }
     }
@@ -529,8 +533,10 @@ public final class ApkBuilder implements IArchiveBuilder {
             FileInputStream fis = new FileInputStream(zipFile);
             mBuilder.writeZip(fis, mNullFilter);
         } catch (DuplicateFileException e) {
+            mBuilder.cleanUp();
             throw e;
         } catch (Exception e) {
+            mBuilder.cleanUp();
             throw new ApkCreationException(e, "Failed to add %s", zipFile);
         }
     }
@@ -566,8 +572,10 @@ public final class ApkBuilder implements IArchiveBuilder {
             // constitutes an error or warning depending on if they are in lib/
             return new JarStatusImpl(mFilter.getNativeLibs(), mFilter.getNativeLibsConflict());
         } catch (DuplicateFileException e) {
+            mBuilder.cleanUp();
             throw e;
         } catch (Exception e) {
+            mBuilder.cleanUp();
             throw new ApkCreationException(e, "Failed to add %s", jarFile);
         }
     }
@@ -676,6 +684,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                                 try {
                                     doAddFile(lib, path);
                                 } catch (IOException e) {
+                                    mBuilder.cleanUp();
                                     throw new ApkCreationException(e, "Failed to add %s", lib);
                                 }
                             }
@@ -696,6 +705,7 @@ public final class ApkBuilder implements IArchiveBuilder {
             try {
                 doAddFile(entry.mFile, entry.mPath);
             } catch (IOException e) {
+                mBuilder.cleanUp();
                 throw new ApkCreationException(e, "Failed to add %s", entry.mFile);
             }
         }
@@ -775,6 +785,8 @@ public final class ApkBuilder implements IArchiveBuilder {
             mIsSealed = true;
         } catch (Exception e) {
             throw new ApkCreationException(e, "Failed to seal APK");
+        } finally {
+            mBuilder.cleanUp();
         }
     }
 
