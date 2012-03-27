@@ -27,7 +27,7 @@
    <feature url="features/com.android.ide.eclipse.gldebugger_17.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="17.0.0.qualifier">
       <category name="preview"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.adt.ndk_17.0.0.qualifier.jar" id="com.android.ide.eclipse.adt.ndk" version="17.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ndk_17.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="17.0.0.qualifier">
       <category name="preview"/>
    </feature>
    <category-def name="developer" label="Application Developer Tools">
