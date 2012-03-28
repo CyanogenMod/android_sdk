@@ -17,7 +17,6 @@
 package com.android.ant;
 
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PatternSet.NameEntry;
@@ -29,10 +28,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
-class MultiFilesTask extends Task {
+class MultiFilesTask extends BuildTypedTask {
 
     static enum DisplayType {
         FOUND, COMPILING, REMOVE_OUTPUT, REMOVE_DEP;
@@ -103,7 +102,8 @@ class MultiFilesTask extends Task {
                     sourceFiles.remove(sourceFilePath);
 
                     // check if it needs to be recompiled.
-                    if (graph.dependenciesHaveChanged(false /*printStatus*/)) {
+                    if (hasBuildTypeChanged() ||
+                            graph.dependenciesHaveChanged(false /*printStatus*/)) {
                         toCompile.put(sourceFilePath, sourceFolder);
                     }
                 }
