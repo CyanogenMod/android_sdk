@@ -28,6 +28,11 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 
 public class MonitorActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction mQuitAction;
+    private IWorkbenchAction mCopyAction;
+    private IWorkbenchAction mSelectAllAction;
+    private IWorkbenchAction mOpenPerspectiveAction;
+    private IWorkbenchAction mResetPerspectiveAction;
+    private IWorkbenchAction mPreferencesAction;
     private IWorkbenchAction mAboutAction;
 
     public MonitorActionBarAdvisor(IActionBarConfigurer configurer) {
@@ -39,6 +44,21 @@ public class MonitorActionBarAdvisor extends ActionBarAdvisor {
         mQuitAction = ActionFactory.QUIT.create(window);
         register(mQuitAction);
 
+        mCopyAction = ActionFactory.COPY.create(window);
+        register(mCopyAction);
+
+        mSelectAllAction = ActionFactory.SELECT_ALL.create(window);
+        register(mSelectAllAction);
+
+        mOpenPerspectiveAction = ActionFactory.OPEN_PERSPECTIVE_DIALOG.create(window);
+        register(mOpenPerspectiveAction);
+
+        mResetPerspectiveAction = ActionFactory.RESET_PERSPECTIVE.create(window);
+        register(mResetPerspectiveAction);
+
+        mPreferencesAction = ActionFactory.PREFERENCES.create(window);
+        register(mPreferencesAction);
+
         mAboutAction = ActionFactory.ABOUT.create(window);
         register(mAboutAction);
     }
@@ -46,15 +66,29 @@ public class MonitorActionBarAdvisor extends ActionBarAdvisor {
     @Override
     protected void fillMenuBar(IMenuManager menuBar) {
         MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
+        MenuManager editMenu = new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
         MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
+        MenuManager windowMenu = new MenuManager("&Window", IWorkbenchActionConstants.M_WINDOW);
 
         menuBar.add(fileMenu);
+        menuBar.add(editMenu);
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menuBar.add(windowMenu);
         menuBar.add(helpMenu);
 
         // contents of File menu
         fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         fileMenu.add(mQuitAction);
+
+        // contents of Edit menu
+        editMenu.add(mCopyAction);
+        editMenu.add(mSelectAllAction);
+
+        // contents of Window menu
+        windowMenu.add(mOpenPerspectiveAction);
+        windowMenu.add(mResetPerspectiveAction);
+        windowMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        windowMenu.add(mPreferencesAction);
 
         // contents of Help menu
         helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
