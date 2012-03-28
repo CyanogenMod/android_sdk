@@ -21,6 +21,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
@@ -866,23 +868,38 @@ public final class ProjectHelper {
     @SuppressWarnings("unchecked")
     public static void compileInReleaseMode(IProject project, IProgressMonitor monitor)
             throws CoreException {
-        // Get list of projects that we depend on
-        List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
-        try {
-            androidProjectList = getAndroidProjectDependencies(
-                    BaseProjectHelper.getJavaProject(project));
+        compileInReleaseMode(project, true /*includeDependencies*/, monitor);
+    }
 
-        } catch (JavaModelException e) {
-            AdtPlugin.printErrorToConsole(project, e);
-        }
+    /**
+     * Does a full release build of the application, including the libraries. Do not build the
+     * package.
+     *
+     * @param project The project to be built.
+     * @param monitor A eclipse runtime progress monitor to be updated by the builders.
+     * @throws CoreException
+     */
+    @SuppressWarnings("unchecked")
+    private static void compileInReleaseMode(IProject project, boolean includeDependencies,
+            IProgressMonitor monitor)
+            throws CoreException {
 
-        // Recursively build dependencies
-        for (IJavaProject dependency : androidProjectList) {
-            IProject libProject = dependency.getProject();
-            compileInReleaseMode(libProject, monitor);
+        if (includeDependencies) {
+            ProjectState projectState = Sdk.getProjectState(project);
 
-            // force refresh of the dependency.
-            libProject.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+            // this gives us all the library projects, direct and indirect dependencies,
+            // so no need to run this method recursively.
+            List<IProject> libraries = projectState.getFullLibraryProjects();
+
+            // build dependencies in reverse order to prevent libraries being rebuilt
+            // due to refresh of other libraries (they would be compiled in the wrong mode).
+            for (int i = libraries.size() - 1 ; i >= 0 ; i--) {
+                IProject lib = libraries.get(i);
+                compileInReleaseMode(lib, false /*includeDependencies*/, monitor);
+
+                // force refresh of the dependency.
+                lib.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+            }
         }
 
         // do a full build on all the builders to guarantee that the builders are called.
@@ -902,8 +919,13 @@ public final class ProjectHelper {
                 project.build(IncrementalProjectBuilder.FULL_BUILD,
                         PreCompilerBuilder.ID, newArgs, monitor);
             } else if (PostCompilerBuilder.ID.equals(name)) {
-                // skip...
+                if (includeDependencies == false) {
+                    // this is a library, we need to build it!
+                    project.build(IncrementalProjectBuilder.FULL_BUILD, name,
+                            command.getArguments(), monitor);
+                }
             } else {
+
                 project.build(IncrementalProjectBuilder.FULL_BUILD, name,
                         command.getArguments(), monitor);
             }
@@ -921,18 +943,18 @@ public final class ProjectHelper {
     public static void buildWithDeps(IProject project, int kind, IProgressMonitor monitor)
             throws CoreException {
         // Get list of projects that we depend on
-        List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
-        try {
-            androidProjectList = getAndroidProjectDependencies(
-                    BaseProjectHelper.getJavaProject(project));
+        ProjectState projectState = Sdk.getProjectState(project);
 
-        } catch (JavaModelException e) {
-            AdtPlugin.printErrorToConsole(project, e);
-        }
+        // this gives us all the library projects, direct and indirect dependencies,
+        // so no need to run this method recursively.
+        List<IProject> libraries = projectState.getFullLibraryProjects();
 
-        // Recursively build dependencies
-        for (IJavaProject dependency : androidProjectList) {
-            buildWithDeps(dependency.getProject(), kind, monitor);
+        // build dependencies in reverse order to prevent libraries being rebuilt
+        // due to refresh of other libraries (they would be compiled in the wrong mode).
+        for (int i = libraries.size() - 1 ; i >= 0 ; i--) {
+            IProject lib = libraries.get(i);
+            lib.build(kind, monitor);
+            lib.refreshLocal(IResource.DEPTH_INFINITE, monitor);
         }
 
         project.build(kind, monitor);
