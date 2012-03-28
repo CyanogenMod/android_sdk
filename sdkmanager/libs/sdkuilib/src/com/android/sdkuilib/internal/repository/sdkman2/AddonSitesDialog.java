@@ -16,14 +16,13 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdkuilib.internal.repository.UpdaterBaseDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.ui.SwtBaseDialog;
+import com.android.sdkuilib.ui.GridDataBuilder;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -47,8 +46,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
@@ -58,16 +55,12 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import java.util.Arrays;
 
-public class AddonSitesDialog extends SwtBaseDialog {
-
-    private final UpdaterData mUpdaterData;
+public class AddonSitesDialog extends UpdaterBaseDialog {
 
     private Table mTable;
     private TableViewer mTableViewer;
     private Button mButtonNew;
     private Button mButtonDelete;
-    private Button mButtonClose;
-    private Label mlabel;
     private Button mButtonEdit;
     private TableColumn mColumnUrl;
 
@@ -77,8 +70,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
      * @param parent The parent's shell
      */
     public AddonSitesDialog(Shell parent, UpdaterData updaterData) {
-        super(parent, SWT.APPLICATION_MODAL, "Add-on Sites");
-        mUpdaterData = updaterData;
+        super(parent, updaterData, "Add-on Sites");
     }
 
     /**
@@ -87,18 +79,14 @@ public class AddonSitesDialog extends SwtBaseDialog {
     @SuppressWarnings("unused")
     @Override
     protected void createContents() {
+        super.createContents();
         Shell shell = getShell();
         shell.setMinimumSize(new Point(450, 300));
         shell.setSize(450, 300);
-        setWindowImage(shell);
 
-        GridLayout glShell = new GridLayout();
-        glShell.numColumns = 2;
-        shell.setLayout(glShell);
-
-        mlabel = new Label(shell, SWT.NONE);
-        mlabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-        mlabel.setText(
+        Label label = new Label(shell, SWT.NONE);
+        GridDataBuilder.create(label).hLeft().vCenter().hSpan(2);
+        label.setText(
             "This dialog lets you manage the URLs of external add-on sites to be used.\n" +
             "\n" +
             "Add-on sites can provide new add-ons or \"user\" packages.\n" +
@@ -121,7 +109,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 on_Table_mouseUp(e);
             }
         });
-        mTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 5));
+        GridDataBuilder.create(mTable).fill().grab().vSpan(5);
 
         TableViewerColumn tableViewerColumn = new TableViewerColumn(mTableViewer, SWT.NONE);
         mColumnUrl = tableViewerColumn.getColumn();
@@ -135,7 +123,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 newOrEdit(false /*isEdit*/);
             }
         });
-        mButtonNew.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        GridDataBuilder.create(mButtonNew).hFill().vCenter();
         mButtonNew.setText("New...");
 
         mButtonEdit = new Button(shell, SWT.NONE);
@@ -145,7 +133,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 newOrEdit(true /*isEdit*/);
             }
         });
-        mButtonEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        GridDataBuilder.create(mButtonEdit).hFill().vCenter();
         mButtonEdit.setText("Edit...");
 
         mButtonDelete = new Button(shell, SWT.NONE);
@@ -155,40 +143,13 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 on_ButtonDelete_widgetSelected(e);
             }
         });
-        mButtonDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        GridDataBuilder.create(mButtonDelete).hFill().vCenter();
         mButtonDelete.setText("Delete...");
         new Label(shell, SWT.NONE);
 
-        mButtonClose = new Button(shell, SWT.NONE);
-        mButtonClose.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                on_ButtonClose_widgetSelected(e);
-            }
-        });
-        mButtonClose.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1));
-        mButtonClose.setText("Close");
+        createCloseButton();
 
         adjustColumnsWidth(mTable, mColumnUrl);
-    }
-
-    /**
-     * Creates the icon of the window shell.
-     *
-     * @param shell The shell on which to put the icon
-     */
-    private void setWindowImage(Shell shell) {
-        String imageName = "android_icon_16.png"; //$NON-NLS-1$
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            imageName = "android_icon_128.png"; //$NON-NLS-1$
-        }
-
-        if (mUpdaterData != null) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
-            if (imgFactory != null) {
-                shell.setImage(imgFactory.getImageByName(imageName));
-            }
-        }
     }
 
     /**
@@ -206,7 +167,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
     }
 
     private void newOrEdit(final boolean isEdit) {
-        SdkSources sources = mUpdaterData.getSources();
+        SdkSources sources = getUpdaterData().getSources();
         final SdkSource[] knownSources = sources.getAllSources();
         String title = isEdit ? "Edit Add-on Site URL" : "Add Add-on Site URL";
         String msg = "Please enter the URL of the addon.xml:";
@@ -304,7 +265,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
         mb.setText("Delete add-on site");
         mb.setMessage(String.format("Do you want to delete the URL %1$s?", selectedUrl));
         if (mb.open() == SWT.YES) {
-            SdkSources sources = mUpdaterData.getSources();
+            SdkSources sources = getUpdaterData().getSources();
             for (SdkSource source : sources.getSources(SdkSourceCategory.USER_ADDONS)) {
                 if (selectedUrl.equals(source.getUrl())) {
                     sources.remove(source);
@@ -313,10 +274,6 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 }
             }
         }
-    }
-
-    private void on_ButtonClose_widgetSelected(SelectionEvent e) {
-        close();
     }
 
     private void on_Table_mouseUp(MouseEvent e) {
@@ -342,9 +299,9 @@ public class AddonSitesDialog extends SwtBaseDialog {
     }
 
     private void loadList() {
-        if (mUpdaterData != null) {
+        if (getUpdaterData() != null) {
             SdkSource[] knownSources =
-                mUpdaterData.getSources().getSources(SdkSourceCategory.USER_ADDONS);
+                getUpdaterData().getSources().getSources(SdkSourceCategory.USER_ADDONS);
             Arrays.sort(knownSources);
 
             ISelection oldSelection = mTableViewer.getSelection();

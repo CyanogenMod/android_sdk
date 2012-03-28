@@ -20,10 +20,11 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
-import com.android.sdkuilib.internal.repository.ISettingsPage;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
 import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
@@ -37,9 +38,6 @@ import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
-import com.android.sdkuilib.ui.GridDataBuilder;
-import com.android.sdkuilib.ui.GridLayoutBuilder;
-import com.android.sdkuilib.ui.SwtBaseDialog;
 import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
@@ -51,7 +49,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -72,7 +69,7 @@ import java.util.ArrayList;
  */
 public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
-    private static final String APP_NAME = "Android SDK Manager";
+    public static final String APP_NAME = "Android SDK Manager";
     private static final String SIZE_POS_PREFIX = "sdkman2"; //$NON-NLS-1$
 
     private final Shell mParentShell;
@@ -340,12 +337,14 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 new MenuBarWrapper(APP_NAME, menuTools) {
                     @Override
                     public void onPreferencesMenuSelected() {
-                        showRegisteredPage(Purpose.SETTINGS);
+                        SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
+                        sd.open();
                     }
 
                     @Override
                     public void onAboutMenuSelected() {
-                        showRegisteredPage(Purpose.ABOUT_BOX);
+                        AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
+                        ad.open();
                     }
 
                     @Override
@@ -618,26 +617,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         // TODO
     }
 
-    private void showRegisteredPage(Purpose purpose) {
-        if (mExtraPages == null) {
-            return;
-        }
-
-        Class<? extends UpdaterPage> clazz = null;
-
-        for (Pair<Class<? extends UpdaterPage>, Purpose> extraPage : mExtraPages) {
-            if (extraPage.getSecond() == purpose) {
-                clazz = extraPage.getFirst();
-                break;
-            }
-        }
-
-        if (clazz != null) {
-            PageDialog d = new PageDialog(mShell, clazz, purpose == Purpose.SETTINGS);
-            d.open();
-        }
-    }
-
     private void onAvdManager() {
         ITaskFactory oldFactory = mUpdaterData.getTaskFactory();
 
@@ -661,77 +640,4 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     // End of hiding from SWT Designer
     //$hide<<$
-
-    // -----
-
-    /**
-     * Dialog used to display either the About page or the Settings (aka Options) page
-     * with a "close" button.
-     */
-    private class PageDialog extends SwtBaseDialog {
-
-        private final Class<? extends UpdaterPage> mPageClass;
-        private final boolean mIsSettingsPage;
-
-        protected PageDialog(
-                Shell parentShell,
-                Class<? extends UpdaterPage> pageClass,
-                boolean isSettingsPage) {
-            super(parentShell, SWT.APPLICATION_MODAL, null /*title*/);
-            mPageClass = pageClass;
-            mIsSettingsPage = isSettingsPage;
-        }
-
-        @Override
-        protected void createContents() {
-            Shell shell = getShell();
-            setWindowImage(shell);
-
-            GridLayoutBuilder.create(shell).columns(2);
-
-            UpdaterPage content = UpdaterPage.newInstance(
-                    mPageClass,
-                    shell,
-                    SWT.NONE,
-                    mUpdaterData.getSdkLog());
-            GridDataBuilder.create(content).fill().grab().hSpan(2);
-            if (content.getLayout() instanceof GridLayout) {
-                GridLayout gl = (GridLayout) content.getLayout();
-                gl.marginHeight = gl.marginWidth = 0;
-            }
-
-            if (mIsSettingsPage && content instanceof ISettingsPage) {
-                mSettingsController.setSettingsPage((ISettingsPage) content);
-            }
-
-            getShell().setText(
-                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));
-
-            Label filler = new Label(shell, SWT.NONE);
-            GridDataBuilder.create(filler).hFill().hGrab();
-
-            Button close = new Button(shell, SWT.PUSH);
-            close.setText("Close");
-            GridDataBuilder.create(close);
-            close.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    close();
-                }
-            });
-        }
-
-        @Override
-        protected void postCreate() {
-            // pass
-        }
-
-        @Override
-        protected void close() {
-            if (mIsSettingsPage) {
-                mSettingsController.setSettingsPage(null);
-            }
-            super.close();
-        }
-    }
 }
