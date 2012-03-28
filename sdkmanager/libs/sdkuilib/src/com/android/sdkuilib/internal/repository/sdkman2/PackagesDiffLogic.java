@@ -302,9 +302,7 @@ class PackagesDiffLogic {
         }
 
         public boolean updateSourcePackages(SdkSource source, Package[] newPackages) {
-            if (newPackages.length > 0) {
-                mVisitedSources.add(source);
-            }
+            mVisitedSources.add(source);
             if (source == null) {
                 return processLocals(this, newPackages);
             } else {
@@ -759,6 +757,31 @@ class PackagesDiffLogic {
      * {@link UpdateOp} describing the Sort-by-Source operation.
      */
     private class UpdateOpSource extends UpdateOp {
+
+        @Override
+        public boolean updateSourcePackages(SdkSource source, Package[] newPackages) {
+            // When displaying the repo by source, we want to create all the
+            // categories so that they can appear on the UI even if empty.
+            if (source != null) {
+                List<PkgCategory> cats = getCategories();
+                Object catKey = source;
+                PkgCategory cat = findCurrentCategory(cats, catKey);
+
+                if (cat == null) {
+                    // This is a new category. Create it and add it to the list.
+                    cat = createCategory(catKey);
+                    synchronized (cats) {
+                        cats.add(cat);
+                    }
+                    sortCategoryList();
+                }
+
+                keep(cat);
+            }
+
+            return super.updateSourcePackages(source, newPackages);
+        }
+
         @Override
         public Object getCategoryKey(Package pkg) {
             // Sort by source

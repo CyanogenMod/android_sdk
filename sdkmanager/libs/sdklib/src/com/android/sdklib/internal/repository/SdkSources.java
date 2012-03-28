@@ -44,11 +44,19 @@ public class SdkSources {
     private final EnumMap<SdkSourceCategory, ArrayList<SdkSource>> mSources =
         new EnumMap<SdkSourceCategory, ArrayList<SdkSource>>(SdkSourceCategory.class);
 
+    private ArrayList<Runnable> mChangeListeners; // lazily initialized
+
+
     public SdkSources() {
     }
 
     /**
      * Adds a new source to the Sources list.
+     * <p/>
+     * Implementation detail: {@link SdkSources} doesn't invoke {@link #notifyChangeListeners()}
+     * directly. Callers who use {@code add()} are responsible for notifying the listeners once
+     * they are done modifying the sources list. The intent is to notify the listeners only once
+     * at the end, not for every single addition.
      */
     public void add(SdkSourceCategory category, SdkSource source) {
         synchronized (mSources) {
@@ -64,6 +72,9 @@ public class SdkSources {
 
     /**
      * Removes a source from the Sources list.
+     * <p/>
+     * Callers who remove entries are responsible for notifying the listeners using
+     * {@link #notifyChangeListeners()} once they are done modifying the sources list.
      */
     public void remove(SdkSource source) {
         synchronized (mSources) {
@@ -85,6 +96,9 @@ public class SdkSources {
 
     /**
      * Removes all the sources in the given category.
+     * <p/>
+     * Callers who remove entries are responsible for notifying the listeners using
+     * {@link #notifyChangeListeners()} once they are done modifying the sources list.
      */
     public void removeAll(SdkSourceCategory category) {
         synchronized (mSources) {
@@ -243,53 +257,63 @@ public class SdkSources {
     /**
      * Loads all user sources. This <em>replaces</em> all existing user sources
      * by the ones from the property file.
+     * <p/>
+     * This calls {@link #notifyChangeListeners()} at the end of the operation.
      */
     public void loadUserAddons(ISdkLog log) {
+        // Implementation detail: synchronize on the sources list to make sure that
+        // a- the source list doesn't change while we load/save it, and most important
+        // b- to make sure it's not being saved while loaded or the reverse.
+        // In most cases we do these operation from the UI thread so it's not really
+        // that necessary. This is more a protection in case of someone calls this
+        // from a worker thread by mistake.
+        synchronized (mSources) {
+            // Remove all existing user sources
+            removeAll(SdkSourceCategory.USER_ADDONS);
 
-        // Remove all existing user sources
-        removeAll(SdkSourceCategory.USER_ADDONS);
+            // Load new user sources from property file
+            FileInputStream fis = null;
+            try {
+                String folder = AndroidLocation.getFolder();
+                File f = new File(folder, SRC_FILENAME);
+                if (f.exists()) {
+                    fis = new FileInputStream(f);
 
-        // Load new user sources from property file
-        FileInputStream fis = null;
-        try {
-            String folder = AndroidLocation.getFolder();
-            File f = new File(folder, SRC_FILENAME);
-            if (f.exists()) {
-                fis = new FileInputStream(f);
+                    Properties props = new Properties();
+                    props.load(fis);
 
-                Properties props = new Properties();
-                props.load(fis);
+                    int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
 
-                int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
-
-                for (int i = 0; i < count; i++) {
-                    String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));  //$NON-NLS-1$
-                    if (url != null) {
-                        SdkSource s = new SdkAddonSource(url, null/*uiName*/);
-                        if (!hasSourceUrl(s)) {
-                            add(SdkSourceCategory.USER_ADDONS, s);
+                    for (int i = 0; i < count; i++) {
+                        String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));  //$NON-NLS-1$
+                        if (url != null) {
+                            SdkSource s = new SdkAddonSource(url, null/*uiName*/);
+                            if (!hasSourceUrl(s)) {
+                                add(SdkSourceCategory.USER_ADDONS, s);
+                            }
                         }
                     }
                 }
-            }
 
-        } catch (NumberFormatException e) {
-            log.error(e, null);
+            } catch (NumberFormatException e) {
+                log.error(e, null);
 
-        } catch (AndroidLocationException e) {
-            log.error(e, null);
+            } catch (AndroidLocationException e) {
+                log.error(e, null);
 
-        } catch (IOException e) {
-            log.error(e, null);
+            } catch (IOException e) {
+                log.error(e, null);
 
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                    }
                 }
             }
         }
+        notifyChangeListeners();
     }
 
     /**
@@ -297,38 +321,93 @@ public class SdkSources {
      * @param log Logger. Cannot be null.
      */
     public void saveUserAddons(ISdkLog log) {
-        FileOutputStream fos = null;
-        try {
-            String folder = AndroidLocation.getFolder();
-            File f = new File(folder, SRC_FILENAME);
+        // See the implementation detail note in loadUserAddons() about the synchronization.
+        synchronized (mSources) {
+            FileOutputStream fos = null;
+            try {
+                String folder = AndroidLocation.getFolder();
+                File f = new File(folder, SRC_FILENAME);
 
-            fos = new FileOutputStream(f);
+                fos = new FileOutputStream(f);
 
-            Properties props = new Properties();
+                Properties props = new Properties();
 
-            int count = 0;
-            for (SdkSource s : getSources(SdkSourceCategory.USER_ADDONS)) {
-                props.setProperty(String.format("%s%02d", KEY_SRC, count), s.getUrl());  //$NON-NLS-1$
-                count++;
-            }
-            props.setProperty(KEY_COUNT, Integer.toString(count));
+                int count = 0;
+                for (SdkSource s : getSources(SdkSourceCategory.USER_ADDONS)) {
+                    props.setProperty(String.format("%s%02d", KEY_SRC, count), //$NON-NLS-1$
+                                      s.getUrl());
+                    count++;
+                }
+                props.setProperty(KEY_COUNT, Integer.toString(count));
 
-            props.store( fos, "## User Sources for Android tool");  //$NON-NLS-1$
+                props.store( fos, "## User Sources for Android SDK Manager");  //$NON-NLS-1$
 
-        } catch (AndroidLocationException e) {
-            log.error(e, null);
+            } catch (AndroidLocationException e) {
+                log.error(e, null);
 
-        } catch (IOException e) {
-            log.error(e, null);
+            } catch (IOException e) {
+                log.error(e, null);
 
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
+            } finally {
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException e) {
+                    }
                 }
             }
         }
+    }
 
+    /**
+     * Adds a listener that will be notified when the sources list has changed.
+     *
+     * @param changeListener A non-null listener to add. Ignored if already present.
+     * @see SdkSources#notifyChangeListeners()
+     */
+    public void addChangeListener(Runnable changeListener) {
+        assert changeListener != null;
+        if (mChangeListeners == null) {
+            mChangeListeners = new ArrayList<Runnable>();
+        }
+        synchronized (mChangeListeners) {
+            if (changeListener != null && !mChangeListeners.contains(changeListener)) {
+                mChangeListeners.add(changeListener);
+            }
+        }
+    }
+
+    /**
+     * Removes a listener from the list of listeners to notify when the sources change.
+     *
+     * @param changeListener A listener to remove. Ignored if not previously added.
+     */
+    public void removeChangeListener(Runnable changeListener) {
+        if (mChangeListeners != null && changeListener != null) {
+            synchronized (mChangeListeners) {
+                mChangeListeners.remove(changeListener);
+            }
+        }
+    }
+
+    /**
+     * Invoke all the registered change listeners, if any.
+     * <p/>
+     * This <em>may</em> be called from a worker thread, in which case the runnable
+     * should take care of only updating UI from a main thread.
+     */
+    public void notifyChangeListeners() {
+        if (mChangeListeners == null) {
+            return;
+        }
+        synchronized (mChangeListeners) {
+            for (Runnable runnable : mChangeListeners) {
+                try {
+                    runnable.run();
+                } catch (Throwable ignore) {
+                    assert ignore == null : "A SdkSource.ChangeListener failed with an exception.";
+                }
+            }
+        }
     }
 }

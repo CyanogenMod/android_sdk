@@ -328,7 +328,8 @@ public class UpdaterData implements IUpdaterData {
                 new SdkRepoSource(baseUrl,
                                   SdkSourceCategory.ANDROID_REPO.getUiName()));
 
-        // Load user sources
+        // Load user sources (this will also notify change listeners but this operation is
+        // done early enough that there shouldn't be any anyway.)
         sources.loadUserAddons(getSdkLog());
     }
 
@@ -1062,6 +1063,8 @@ public class UpdaterData implements IUpdaterData {
                                  new SdkAddonSource(s.getUrl(), s.getUiName()));
                 }
             }
+
+            mSources.notifyChangeListeners();
 
             mStateFetchRemoteAddonsList = 1;
         }
