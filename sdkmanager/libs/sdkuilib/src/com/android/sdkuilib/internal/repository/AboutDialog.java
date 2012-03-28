@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,73 +14,67 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager.internal.repository;
+package com.android.sdkuilib.internal.repository;
 
 
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.sdkmanager.Main;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
-public class AboutPage extends UpdaterPage {
+public class AboutDialog extends UpdaterBaseDialog {
 
-    private Label mLabel;
-
-    /**
-     * Create the composite.
-     * @param parent The parent of the composite.
-     */
-    public AboutPage(Composite parent, int swtStyle) {
-        super(parent, swtStyle);
-
-        createContents(this);
-
-        postCreate();  //$hide$
+    public AboutDialog(Shell parentShell, UpdaterData updaterData) {
+        super(parentShell, updaterData, "About" /*title*/);
+        assert updaterData != null;
     }
 
     @Override
-    public String getPageTitle() {
-        return "About";
-    }
+    protected void createContents() {
+        super.createContents();
+        Shell shell = getShell();
+        shell.setMinimumSize(new Point(450, 150));
+        shell.setSize(450, 150);
 
-    private void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(2, false));
+        GridLayoutBuilder.create(shell).columns(3);
 
-        Label logo = new Label(parent, SWT.NONE);
-        InputStream imageStream = this.getClass().getResourceAsStream("logo.png"); //$NON-NLS-1$
+        Label logo = new Label(shell, SWT.NONE);
+        ImageFactory imgf = getUpdaterData() == null ? null : getUpdaterData().getImageFactory();
+        Image image = imgf == null ? null : imgf.getImageByName("sdkman_logo_128.png");
+        if (image != null) logo.setImage(image);
 
-        if (imageStream != null) {
-            Image img = new Image(parent.getShell().getDisplay(), imageStream);
-            logo.setImage(img);
-        }
-
-        mLabel = new Label(parent, SWT.NONE);
-        mLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        mLabel.setText(String.format(
-                "Android SDK Updater.\n" +
+        Label label = new Label(shell, SWT.NONE);
+        GridDataBuilder.create(label).hFill().hGrab().hSpan(2);;
+        label.setText(String.format(
+                "Android SDK Manager.\n" +
                 "Revision %1$s\n" +
                 "Add-on XML Schema #%2$d\n" +
                 "Repository XML Schema #%3$d\n" +
-                "Copyright (C) 2009-2011 The Android Open Source Project.",
+                "Copyright (C) 2009-2012 The Android Open Source Project.",
                 getRevision(),
                 SdkAddonConstants.NS_LATEST_VERSION,
                 SdkRepoConstants.NS_LATEST_VERSION));
+
+
+        Label filler = new Label(shell, SWT.NONE);
+        GridDataBuilder.create(filler).fill().grab().hSpan(2);
+
+        createCloseButton();
     }
 
     @Override
@@ -92,25 +86,15 @@ public class AboutPage extends UpdaterPage {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
-    /**
-     * Called by the constructor right after {@link #createContents(Composite)}.
-     */
-    private void postCreate() {
-    }
-
     // End of hiding from SWT Designer
     //$hide<<$
 
     private String getRevision() {
         Properties p = new Properties();
         try{
-            String toolsdir = System.getProperty(Main.TOOLSDIR);
-            File sourceProp;
-            if (toolsdir == null || toolsdir.length() == 0) {
-                sourceProp = new File(SdkConstants.FN_SOURCE_PROP);
-            } else {
-                sourceProp = new File(toolsdir, SdkConstants.FN_SOURCE_PROP);
-            }
+            File sourceProp = FileOp.append(getUpdaterData().getOsSdkRoot(),
+                    SdkConstants.FD_TOOLS,
+                    SdkConstants.FN_SOURCE_PROP);
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(sourceProp);
@@ -128,10 +112,7 @@ public class AboutPage extends UpdaterPage {
             if (revision != null) {
                 return revision;
             }
-        } catch (FileNotFoundException e) {
-            // couldn't find the file? don't ping.
         } catch (IOException e) {
-            // couldn't find the file? don't ping.
         }
 
         return "?";

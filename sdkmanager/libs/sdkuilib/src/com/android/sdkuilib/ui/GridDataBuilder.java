@@ -93,6 +93,24 @@ public final class GridDataBuilder {
         return this;
     }
 
+    /** Sets <code>verticalAlignment</code> to {@link SWT#BOTTOM}. */
+    public GridDataBuilder vBottom() {
+        mGD.verticalAlignment = SWT.BOTTOM;
+        return this;
+    }
+
+    /** Sets <code>horizontalAlignment</code> to {@link SWT#LEFT}. */
+    public GridDataBuilder hLeft() {
+        mGD.horizontalAlignment = SWT.LEFT;
+        return this;
+    }
+
+    /** Sets <code>horizontalAlignment</code> to {@link SWT#RIGHT}. */
+    public GridDataBuilder hRight() {
+        mGD.horizontalAlignment = SWT.RIGHT;
+        return this;
+    }
+
     /** Sets <code>horizontalAlignment</code> to {@link GridData#FILL}. */
     public GridDataBuilder hFill() {
         mGD.horizontalAlignment = GridData.FILL;

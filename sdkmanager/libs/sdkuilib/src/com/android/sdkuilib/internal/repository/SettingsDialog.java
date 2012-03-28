@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager.internal.repository;
+package com.android.sdkuilib.internal.repository;
 
-import com.android.sdkuilib.internal.repository.ISettingsPage;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.Properties;
 
 
-public class SettingsPage extends UpdaterPage implements ISettingsPage {
+public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
 
     // data members
+    private final SettingsController mSettingsController;
     private SettingsChangedCallback mSettingsChangedCallback;
 
     // UI widgets
@@ -64,90 +63,86 @@ public class SettingsPage extends UpdaterPage implements ISettingsPage {
         }
     };
 
-    /**
-     * Create the composite.
-     * @param parent The parent of the composite.
-     */
-    public SettingsPage(Composite parent, int swtStyle) {
-        super(parent, swtStyle);
-
-        createContents(this);
-        postCreate();  //$hide$
+    public SettingsDialog(Shell parentShell, UpdaterData updaterData) {
+        super(parentShell, updaterData, "Settings" /*title*/);
+        assert updaterData != null;
+        mSettingsController = updaterData.getSettingsController();
     }
 
     @Override
-    public String getPageTitle() {
-        return "Settings";
-    }
+    protected void createContents() {
+        super.createContents();
+        Shell shell = getShell();
 
-    private void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(1, false));
-
-        mProxySettingsGroup = new Group(this, SWT.NONE);
+        mProxySettingsGroup = new Group(shell, SWT.NONE);
         mProxySettingsGroup.setText("Proxy Settings");
-        mProxySettingsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-        mProxySettingsGroup.setLayout(new GridLayout(2, false));
+        GridDataBuilder.create(mProxySettingsGroup).fill().grab().hSpan(2);
+        GridLayoutBuilder.create(mProxySettingsGroup).columns(2);
 
         mProxyServerLabel = new Label(mProxySettingsGroup, SWT.NONE);
-        mProxyServerLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        GridDataBuilder.create(mProxyServerLabel).hRight().vCenter();
         mProxyServerLabel.setText("HTTP Proxy Server");
         String tooltip = "The DNS name or IP of the HTTP proxy server to use. " +
                          "When empty, no HTTP proxy is used.";
         mProxyServerLabel.setToolTipText(tooltip);
 
         mProxyServerText = new Text(mProxySettingsGroup, SWT.BORDER);
-        mProxyServerText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mProxyServerText).hFill().hGrab().vCenter();
         mProxyServerText.addModifyListener(mApplyOnModified);
         mProxyServerText.setToolTipText(tooltip);
 
         mProxyPortLabel = new Label(mProxySettingsGroup, SWT.NONE);
-        mProxyPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        GridDataBuilder.create(mProxyPortLabel).hRight().vCenter();
         mProxyPortLabel.setText("HTTP Proxy Port");
         tooltip = "The port of the HTTP proxy server to use. " +
                   "When empty, the default for HTTP or HTTPS is used.";
         mProxyPortLabel.setToolTipText(tooltip);
 
         mProxyPortText = new Text(mProxySettingsGroup, SWT.BORDER);
-        mProxyPortText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mProxyPortText).hFill().hGrab().vCenter();
         mProxyPortText.addModifyListener(mApplyOnModified);
         mProxyPortText.setToolTipText(tooltip);
 
-        mMiscGroup = new Group(this, SWT.NONE);
-        mMiscGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mMiscGroup = new Group(shell, SWT.NONE);
         mMiscGroup.setText("Misc");
-        mMiscGroup.setLayout(new GridLayout(2, false));
+        GridDataBuilder.create(mMiscGroup).fill().grab().hSpan(2);
+        GridLayoutBuilder.create(mMiscGroup).columns(2);
 
         mForceHttpCheck = new Button(mMiscGroup, SWT.CHECK);
-        mForceHttpCheck.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridDataBuilder.create(mForceHttpCheck).hFill().hGrab().vCenter().hSpan(2);
         mForceHttpCheck.setText("Force https://... sources to be fetched using http://...");
         mForceHttpCheck.setToolTipText("If you are not able to connect to the official Android repository " +
                 "using HTTPS, enable this setting to force accessing it via HTTP.");
         mForceHttpCheck.addSelectionListener(mApplyOnSelected);
 
         mAskAdbRestartCheck = new Button(mMiscGroup, SWT.CHECK);
-        mAskAdbRestartCheck.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridDataBuilder.create(mAskAdbRestartCheck).hFill().hGrab().vCenter().hSpan(2);
         mAskAdbRestartCheck.setText("Ask before restarting ADB");
         mAskAdbRestartCheck.setToolTipText("When checked, the user will be asked for permission " +
                 "to restart ADB after updating an addon-on package or a tool package.");
         mAskAdbRestartCheck.addSelectionListener(mApplyOnSelected);
+
+        createCloseButton();
     }
 
     @Override
-    protected void checkSubclass() {
-        // Disable the check that prevents subclassing of SWT components
+    protected void postCreate() {
+        super.postCreate();
+        // This tells the controller to load the settings into the page UI.
+        mSettingsController.setSettingsPage(this);
     }
 
+    @Override
+    protected void close() {
+        // Dissociate this page from the controller
+        mSettingsController.setSettingsPage(null);
+        super.close();
+    }
 
 
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
-
-    /**
-     * Called by the constructor right after {@link #createContents(Composite)}.
-     */
-    private void postCreate() {
-    }
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
     @Override

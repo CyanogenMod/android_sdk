@@ -41,11 +41,7 @@ import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
-import com.android.sdkmanager.internal.repository.AboutPage;
-import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
-import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
@@ -330,8 +326,6 @@ public class Main {
                     errorLogger,
                     mOsSdkFolder,
                     SdkInvocationContext.STANDALONE);
-            window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
-            window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
             window.open();
 
             errorLogger.displayResult(true);
@@ -356,9 +350,6 @@ public class Main {
                     errorLogger,
                     mOsSdkFolder,
                     AvdInvocationContext.STANDALONE);
-
-            window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
-            window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
 
             window.open();
 
