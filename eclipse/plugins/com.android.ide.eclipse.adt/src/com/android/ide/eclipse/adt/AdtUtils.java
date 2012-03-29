@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 
+import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -308,6 +309,16 @@ public class AdtUtils {
      * @return the corresponding {@link IFile}, or null
      */
     public static IFile fileToIFile(File file) {
+        if (!file.isAbsolute()) {
+            file = file.getAbsoluteFile();
+        }
+
+        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+        IFile[] files = workspace.findFilesForLocationURI(file.toURI());
+        if (files.length > 0) {
+            return files[0];
+        }
+
         IPath filePath = new Path(file.getPath());
         return pathToIFile(filePath);
     }
@@ -319,6 +330,16 @@ public class AdtUtils {
      * @return the corresponding {@link IResource}, or null
      */
     public static IResource fileToResource(File file) {
+        if (!file.isAbsolute()) {
+            file = file.getAbsoluteFile();
+        }
+
+        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+        IFile[] files = workspace.findFilesForLocationURI(file.toURI());
+        if (files.length > 0) {
+            return files[0];
+        }
+
         IPath filePath = new Path(file.getPath());
         return pathToResource(filePath);
     }
@@ -331,6 +352,12 @@ public class AdtUtils {
      */
     public static IFile pathToIFile(IPath path) {
         IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+
+        IFile[] files = workspace.findFilesForLocationURI(URIUtil.toURI(path.makeAbsolute()));
+        if (files.length > 0) {
+            return files[0];
+        }
+
         IPath workspacePath = workspace.getLocation();
         if (workspacePath.isPrefixOf(path)) {
             IPath relativePath = path.makeRelativeTo(workspacePath);
@@ -353,10 +380,16 @@ public class AdtUtils {
      */
     public static IResource pathToResource(IPath path) {
         IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+
+        IFile[] files = workspace.findFilesForLocationURI(URIUtil.toURI(path.makeAbsolute()));
+        if (files.length > 0) {
+            return files[0];
+        }
+
         IPath workspacePath = workspace.getLocation();
         if (workspacePath.isPrefixOf(path)) {
             IPath relativePath = path.makeRelativeTo(workspacePath);
-            return  workspace.findMember(relativePath);
+            return workspace.findMember(relativePath);
         } else if (path.isAbsolute()) {
             return workspace.getFileForLocation(path);
         }
