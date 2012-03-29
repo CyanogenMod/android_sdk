@@ -24,7 +24,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 
 import org.eclipse.swt.graphics.Rectangle;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * An object that can create {@link INode} proxies.
@@ -32,8 +33,8 @@ import java.util.HashMap;
  */
 public class NodeFactory {
 
-    private final HashMap<UiViewElementNode, NodeProxy> mNodeMap =
-        new HashMap<UiViewElementNode, NodeProxy>();
+    private final Map<UiViewElementNode, NodeProxy> mNodeMap =
+        new WeakHashMap<UiViewElementNode, NodeProxy>();
     private LayoutCanvas mCanvas;
 
     public NodeFactory(LayoutCanvas canvas) {
