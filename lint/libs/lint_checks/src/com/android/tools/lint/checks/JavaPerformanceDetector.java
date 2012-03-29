@@ -243,7 +243,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
 
         @Override
         public boolean visitMethodInvocation(MethodInvocation node) {
-            if (mFlagAllocations) {
+            if (mFlagAllocations && node.astOperand() != null) {
                 // Look for forbidden methods
                 String methodName = node.astName().astValue();
                 if (methodName.equals("createBitmap")                              //$NON-NLS-1$
