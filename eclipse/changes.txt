@@ -1,3 +1,9 @@
+19.0.0
+
+18.0.0
+* Fix bug 27940 where exporting release package doesn't recompile libraries
+  in release mode.
+
 17.0.0:
 * ADT 17 requires Java 6 and Eclipse 3.6.2.
 * Improved Lint UI.
