@@ -141,7 +141,8 @@
     <property name="source.absolute.dir" location="${source.dir}" />
     <property name="gen.absolute.dir" location="gen" />
     <property name="resource.absolute.dir" location="res" />
-    <property name="asset.absolute.dir" location="assets" />
+    <property name="asset.dir" value="assets" />
+    <property name="asset.absolute.dir" location="${asset.dir}" />
     <property name="jar.libs.dir" value="libs" />
     <property name="jar.libs.absolute.dir" location="${jar.libs.dir}" />
     <property name="native.libs.absolute.dir" location="libs" />
