@@ -11,11 +11,11 @@
 	<classpathentry kind="lib" path="/adt/libs/layoutlib_api.jar" sourcepath="/layoutlib_api"/>
 	<classpathentry kind="lib" path="/adt/libs/ide_common.jar" sourcepath="/ide_common"/>
 	<classpathentry kind="lib" path="/adt/libs/ninepatch.jar" sourcepath="/ninepatch"/>
-	<classpathentry kind="lib" path="/adt/libs/sdklib.jar" sourcepath="/SdkLib"/>
+	<classpathentry kind="lib" path="/base/libs/sdklib.jar" sourcepath="/SdkLib"/>
 	<classpathentry kind="lib" path="/adt/libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
 	<classpathentry kind="lib" path="/adt/libs/rule_api.jar" sourcepath="/rule_api"/>
-	<classpathentry kind="lib" path="/adt/libs/common.jar"/>
-        <classpathentry kind="lib" path="/adt/libs/lint_api.jar" sourcepath="/lint-api"/>
-        <classpathentry kind="lib" path="/adt/libs/lint_checks.jar" sourcepath="/lint-checks"/>
+	<classpathentry kind="lib" path="/base/libs/common.jar" sourcepath="/common"/>
+	<classpathentry kind="lib" path="/adt/libs/lint_api.jar" sourcepath="/lint-api"/>
+	<classpathentry kind="lib" path="/adt/libs/lint_checks.jar" sourcepath="/lint-checks"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

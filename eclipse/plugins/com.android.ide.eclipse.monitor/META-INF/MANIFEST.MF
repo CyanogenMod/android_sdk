@@ -8,10 +8,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  com.android.ide.eclipse.ddms,
  com.android.ide.eclipse.gldebugger,
- com.android.ide.eclipse.traceview
+ com.android.ide.eclipse.traceview,
+ com.android.ide.eclipse.base
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor
-Bundle-ClassPath: libs/androidprefs.jar,
- libs/sdklib.jar,
- libs/sdkstats.jar,
- .
+Bundle-ClassPath: .

@@ -39,7 +39,7 @@
              <property name="id" value="com.android.ide.eclipse.traceview" />
          </ant>
 
-        <antcall target="buildInternalFeatures"/>
+         <antcall target="buildInternalFeatures"/>
 
      </target>
 
@@ -71,6 +71,10 @@
      <!-- Add one target for each root element and each configuration           -->
      <!-- Replace element.id with the id of the top level element being built   -->
      <!-- ===================================================================== -->
+     <target name="assemble.com.android.ide.eclipse.base">
+         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
+     </target>
+
      <target name="assemble.com.android.ide.eclipse.adt">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>

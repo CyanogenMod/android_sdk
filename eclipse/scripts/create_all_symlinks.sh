@@ -105,22 +105,31 @@ set -e # fail early
 LIBS=""
 CP_FILES=""
 
+### BASE ###
+
+BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
+BASE_PLUGIN_LIBS="common sdkstats androidprefs sdklib"
+BASE_PLUGIN_PREBUILTS="\
+    prebuilt/common/commons-compress/commons-compress-1.0.jar \
+    prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
+    prebuilt/common/http-client/commons-logging-1.1.1.jar \
+    prebuilt/common/http-client/commons-codec-1.4.jar \
+    prebuilt/common/http-client/httpclient-4.1.1.jar \
+    prebuilt/common/http-client/httpcore-4.1.jar \
+    prebuilt/common/http-client/httpmime-4.1.1.jar"
+
+LIBS="$LIBS $BASE_PLUGIN_LIBS"
+CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS"
+
 ### ADT ###
 
 ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
-ADT_LIBS="sdkstats androidprefs common layoutlib_api lint_api lint_checks ide_common rule_api ninepatch sdklib sdkuilib assetstudio"
+ADT_LIBS="layoutlib_api lint_api lint_checks ide_common rule_api ninepatch sdkuilib assetstudio"
 ADT_PREBUILTS="\
     prebuilt/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
-    prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
-    prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar \
-    prebuilt/common/commons-compress/commons-compress-1.0.jar \
-    prebuilt/common/http-client/httpclient-4.1.1.jar \
-    prebuilt/common/http-client/httpcore-4.1.jar \
-    prebuilt/common/http-client/httpmime-4.1.1.jar \
-    prebuilt/common/http-client/commons-logging-1.1.1.jar \
-    prebuilt/common/http-client/commons-codec-1.4.jar"
+    prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"
 
 LIBS="$LIBS $ADT_LIBS"
 CP_FILES="$CP_FILES @:$ADT_DEST $ADT_LIBS $ADT_PREBUILTS"
@@ -184,25 +193,16 @@ SDMAN_LIBS="swtmenubar"
 
 LIBS="$LIBS $SDKMAN_LIBS"
 
-### MONITOR ###
-
-MONITOR_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.monitor/libs"
-MONITOR_LIBS="sdklib sdkstats androidprefs"
-
-LIBS="$LIBS $MONITOR_LIBS"
-CP_FILES="$CP_FILES @:$MONITOR_DEST $MONITOR_LIBS"
-
 ### GL DEBUGGER ###
 
 if [[ $PLATFORM != "windows-x86" ]]; then
   # liblzf doesn't build under cygwin. If necessary, this should be fixed first.
   
   GLD_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.gldebugger/libs"
-  GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf sdklib ddmlib"
-  GLD_PREBUILTS="prebuilts/tools/common/guava-tools/guava-10.0.1.jar"
+  GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf"
 
   LIBS="$LIBS $GLD_LIBS"
-  CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS $GLD_PREBUILTS"
+  CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS"
 fi
 
 # In the mode to only echo dependencies, output them and we're done

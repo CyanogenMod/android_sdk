@@ -238,6 +238,13 @@
    </requires>
 
    <plugin
+         id="com.android.ide.eclipse.base"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="com.android.ide.eclipse.ddms"
          download-size="0"
          install-size="0"

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="libs/androidprefs.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/common.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-codec-1.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-compress-1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-logging-1.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/guava-10.0.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/httpclient-4.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/httpcore-4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/httpmime-4.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/sdklib.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/sdkstats.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/guava-tools/guava-10.0.1.jar" sourcepath="ANDROID_SRC/prebuilts/tools/common/guava-tools/src.zip"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
