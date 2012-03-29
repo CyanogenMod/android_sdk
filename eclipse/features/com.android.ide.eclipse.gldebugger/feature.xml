@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.gldebugger"
       label="GLESv2 Debugger Client"
-      version="17.0.0.qualifier"
+      version="19.0.0.qualifier"
       provider-name="The Android Open Source Project">
 
    <description>

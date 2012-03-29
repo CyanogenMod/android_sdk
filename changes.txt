@@ -1,5 +1,12 @@
 Change log for Android SDK Tools.
 
+Revision 19:
+
+Revision 18:
+* Fix Ant issues where some jar libraries in libs/ are not picked in some
+  cases
+* New version of SdkController
+
 Revision 17:
 * Bug fixes.
 * ProGuard updated to version 4.7. In addition to many new features,
