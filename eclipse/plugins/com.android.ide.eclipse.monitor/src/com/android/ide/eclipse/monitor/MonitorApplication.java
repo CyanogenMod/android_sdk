@@ -17,7 +17,10 @@
 package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
+import com.android.prefs.AndroidLocation;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -32,10 +35,15 @@ import java.io.File;
 
 public class MonitorApplication implements IApplication {
     private static final String SDK_PATH_ENVVAR = "com.android.sdk.path";
+    private static final String MONITOR_WORKSPACE_PATH = "monitor-workspace";
 
     @Override
     public Object start(IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
+
+        Location instanceLoc = Platform.getInstanceLocation();
+        IPath workspacePath = new Path(AndroidLocation.getFolder()).append(MONITOR_WORKSPACE_PATH);
+        instanceLoc.set(workspacePath.toFile().toURI().toURL(), true);
 
         String sdkPath = findSdkPath(display);
         if (!isValidSdkLocation(sdkPath)) {
