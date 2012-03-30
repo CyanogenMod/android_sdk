@@ -93,8 +93,8 @@ public final class AaptExecTask extends SingleDependencyTask {
     private String mResourceFilter;
     private String mRFolder;
     private final ArrayList<NoCompress> mNoCompressList = new ArrayList<NoCompress>();
-    private String mProjectLibrariesResName;
-    private String mProjectLibrariesPackageName;
+    private String mLibraryResFolderPathRefid;
+    private String mLibraryPackagesRefid;
     private boolean mNonConstantId;
 
     /**
@@ -302,14 +302,19 @@ public final class AaptExecTask extends SingleDependencyTask {
         }
     }
 
-    public void setProjectLibrariesResName(String projectLibrariesResName) {
-        mProjectLibrariesResName = projectLibrariesResName;
+    /**
+     * Set the property name of the property that contains the list of res folder for
+     * Library Projects. This sets the name and not the value itself to handle the case where
+     * it doesn't exist.
+     * @param projectLibrariesResName
+     */
+    public void setLibraryResFolderPathRefid(String libraryResFolderPathRefid) {
+        mLibraryResFolderPathRefid = libraryResFolderPathRefid;
     }
 
-    public void setProjectLibrariesPackageName(String projectLibrariesPackageName) {
-        mProjectLibrariesPackageName = projectLibrariesPackageName;
+    public void setLibraryPackagesRefid(String libraryPackagesRefid) {
+        mLibraryPackagesRefid = libraryPackagesRefid;
     }
-
 
     /**
      * Returns an object representing a nested <var>nocompress</var> element.
@@ -344,11 +349,11 @@ public final class AaptExecTask extends SingleDependencyTask {
      */
     @Override
     public void execute() throws BuildException {
-        if (mProjectLibrariesResName == null) {
-            throw new BuildException("Missing attribute projectLibrariesResName");
+        if (mLibraryResFolderPathRefid == null) {
+            throw new BuildException("Missing attribute libraryResFolderPathRefid");
         }
-        if (mProjectLibrariesPackageName == null) {
-            throw new BuildException("Missing attribute projectLibrariesPackageName");
+        if (mLibraryPackagesRefid == null) {
+            throw new BuildException("Missing attribute libraryPackagesRefid");
         }
 
         Project taskProject = getProject();
@@ -359,7 +364,7 @@ public final class AaptExecTask extends SingleDependencyTask {
         // more R classes need to be created for libraries, only if this project itself
         // is not a library
         if (mNonConstantId == false && mRFolder != null && new File(mRFolder).isDirectory()) {
-            libPkgProp = taskProject.getProperty(mProjectLibrariesPackageName);
+            libPkgProp = taskProject.getProperty(mLibraryPackagesRefid);
             if (libPkgProp != null) {
                 // Replace ";" with ":" since that's what aapt expects
                 libPkgProp = libPkgProp.replace(';', ':');
@@ -387,7 +392,7 @@ public final class AaptExecTask extends SingleDependencyTask {
         final boolean generateRClass = mRFolder != null && new File(mRFolder).isDirectory();
 
         // Get whether we have libraries
-        Object libResRef = taskProject.getReference(mProjectLibrariesResName);
+        Object libResRef = taskProject.getReference(mLibraryResFolderPathRefid);
 
         // Set up our input paths that matter for dependency checks
         ArrayList<File> paths = new ArrayList<File>();

@@ -18,7 +18,7 @@ package com.android.sdklib.xml;
 
 import com.android.sdklib.SdkConstants;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class AndroidXPathFactory {
                 DEFAULT_NS_PREFIX);
 
         private final String mAndroidPrefix;
-        private final List<String> mAndroidPrefixes = new ArrayList<String>();
+        private final List<String> mAndroidPrefixes;
 
         /**
          * Returns the default {@link AndroidNamespaceContext}.
@@ -57,7 +57,7 @@ public class AndroidXPathFactory {
          */
         public AndroidNamespaceContext(String androidPrefix) {
             mAndroidPrefix = androidPrefix;
-            mAndroidPrefixes.add(mAndroidPrefix);
+            mAndroidPrefixes = Collections.singletonList(mAndroidPrefix);
         }
 
         @Override

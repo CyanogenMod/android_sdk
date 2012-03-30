@@ -43,7 +43,7 @@ import java.util.List;
 public class RenderScriptTask extends MultiFilesTask {
 
     private String mExecutable;
-    private Path mFramework;
+    private Path mIncludePath;
     private String mGenFolder;
     private String mResFolder;
     private final List<Path> mPaths = new ArrayList<Path>();
@@ -79,7 +79,7 @@ public class RenderScriptTask extends MultiFilesTask {
             task.setExecutable(mExecutable);
             task.setFailonerror(true);
 
-            for (String path : mFramework.list()) {
+            for (String path : mIncludePath.list()) {
                 File res = new File(path);
                 if (res.isDirectory()) {
                     task.createArg().setValue("-I");
@@ -163,8 +163,8 @@ public class RenderScriptTask extends MultiFilesTask {
         mExecutable = TaskHelper.checkSinglePath("executable", executable);
     }
 
-    public void setFramework(Path value) {
-        mFramework = value;
+    public void setIncludePath(Path value) {
+        mIncludePath = value;
     }
 
     public void setGenFolder(Path value) {
@@ -208,8 +208,8 @@ public class RenderScriptTask extends MultiFilesTask {
         if (mExecutable == null) {
             throw new BuildException("RenderScriptTask's 'executable' is required.");
         }
-        if (mFramework == null) {
-            throw new BuildException("RenderScriptTask's 'framework' is required.");
+        if (mIncludePath == null) {
+            throw new BuildException("RenderScriptTask's 'includePath' is required.");
         }
         if (mGenFolder == null) {
             throw new BuildException("RenderScriptTask's 'genFolder' is required.");
