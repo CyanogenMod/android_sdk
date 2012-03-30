@@ -7,7 +7,6 @@ Bundle-Activator: com.android.ide.eclipse.monitor.MonitorPlugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  com.android.ide.eclipse.ddms,
- com.android.ide.eclipse.gldebugger,
  com.android.ide.eclipse.traceview,
  com.android.ide.eclipse.base
 Bundle-ActivationPolicy: lazy
