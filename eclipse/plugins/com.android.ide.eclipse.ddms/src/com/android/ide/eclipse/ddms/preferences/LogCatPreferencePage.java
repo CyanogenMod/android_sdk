@@ -18,6 +18,7 @@ package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
+import com.android.ide.eclipse.base.InstallDetails;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.LogCatMonitor;
 import com.android.ide.eclipse.ddms.i18n.Messages;
@@ -39,7 +40,6 @@ import org.eclipse.ui.PlatformUI;
  */
 public class LogCatPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
-
     private BooleanFieldEditor mSwitchPerspective;
     private ComboFieldEditor mWhichPerspective;
     private IntegerFieldEditor mMaxMessages;
@@ -61,6 +61,12 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
                 Messages.LogCatPreferencePage_MaxMessages, getFieldEditorParent());
         addField(mMaxMessages);
 
+        if (InstallDetails.isAdtInstalled()) {
+            createAdtSpecificFieldEditors();
+        }
+    }
+
+    private void createAdtSpecificFieldEditors() {
         ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM,
                 Messages.LogCatPreferencePage_Double_Click_Action, new String[][] {
                         {

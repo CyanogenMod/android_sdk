@@ -18,6 +18,7 @@ package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.PortFieldEditor;
+import com.android.ide.eclipse.base.InstallDetails;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
@@ -71,16 +72,18 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         ife.setValidRange(1, 60);
         addField(ife);
 
-        ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_HPROF_ACTION,
-                Messages.PreferencePage_HPROF_Action, new String[][] {
-                        {
-                                Messages.PreferencePage_Save_Disk, HProfHandler.ACTION_SAVE
-                        },
-                        {
-                                Messages.PreferencePage_Open_Eclipse, HProfHandler.ACTION_OPEN
-                        },
-                }, getFieldEditorParent());
-        addField(cfe);
+        if (InstallDetails.isAdtInstalled()) {
+            ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_HPROF_ACTION,
+                    Messages.PreferencePage_HPROF_Action, new String[][] {
+                    {
+                        Messages.PreferencePage_Save_Disk, HProfHandler.ACTION_SAVE
+                    },
+                    {
+                        Messages.PreferencePage_Open_Eclipse, HProfHandler.ACTION_OPEN
+                    },
+            }, getFieldEditorParent());
+            addField(cfe);
+        }
 
         ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_TIME_OUT,
                 Messages.PreferencePage_ADB_Connection_Time_Out, getFieldEditorParent());
