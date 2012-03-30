@@ -32,7 +32,13 @@ cd "${progdir}"
 
 javaCmd="java"
 
-vmarch=`${javaCmd} -jar tools/lib/archquery.jar`
+vmarch=`${javaCmd} -jar lib/archquery.jar`
 
-exec tools/lib/monitor-${vmarch}/monitor
+app=lib/monitor-${vmarch}/monitor
+if [[ "Darwin" == `uname` ]]; then
+  app=${app}.app/Contents/MacOS/monitor
+fi
+
+
+exec $app
 

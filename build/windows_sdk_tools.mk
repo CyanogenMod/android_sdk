@@ -13,9 +13,9 @@ WIN_SDK_TARGETS := \
 	find_java \
 	find_lock \
 	mksdcard \
+	monitor \
 	sdklauncher
 
-# monitor -- disabled due to build break
 
 # Add OpenGLES emulation host libraries if needed.
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
@@ -28,5 +28,6 @@ endif
 
 # Define the list of tool-dependent modules requisites needed
 # for the Windows SDK. These will be built using HOST_OS=linux.
-WIN_SDK_BUILD_PREREQ :=
+WIN_SDK_BUILD_PREREQ := \
+	monitor
 

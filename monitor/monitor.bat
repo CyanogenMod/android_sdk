@@ -20,8 +20,13 @@ rem Change current directory and drive to where the script is, to avoid
 rem issues with directories containing whitespaces.
 cd /d %~dp0
 
-:QueryArch
-for /f %%a in ('%java_exe% -jar tools\lib\archquery.jar') do set vmarch=%%a
+rem Check we have a valid Java.exe in the path.
+set java_exe=
+call lib\find_java.bat
+if not defined java_exe goto :EOF
 
-call tools\lib\monitor-%vmarch%\monitor
+:QueryArch
+for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set vmarch=%%a
+
+start lib\monitor-%vmarch%\monitor
 
