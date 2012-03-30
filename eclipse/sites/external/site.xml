@@ -15,9 +15,17 @@
    <feature url="features/com.android.ide.eclipse.traceview_19.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="19.0.0.qualifier">
       <category name="developer"/>
    </feature>
+   <feature url="features/com.android.ide.eclipse.ndk_19.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="19.0.0.qualifier">
+      <category name="ndk"/>
+   </feature>
    <category-def name="developer" label="Developer Tools">
       <description>
          Features that add Android support to Eclipse for application developers.
+      </description>
+   </category-def>
+   <category-def name="ndk" label="NDK Plugins">
+      <description>
+         Support for NDK build and debug in Eclipse.
       </description>
    </category-def>
 </site>
