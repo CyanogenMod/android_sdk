@@ -78,6 +78,25 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                     "res/values/strings.xml"));
     }
 
+    // exportprovider1.xml has two exported content providers with no permissions
+    public void testContentProvider1() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:14: Warning: Exported content providers can provide access to potentially sensitive data\n" +
+                "AndroidManifest.xml:20: Warning: Exported content providers can provide access to potentially sensitive data",
+                 lintProject(
+                        "exportprovider1.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    // exportprovider2.xml has no un-permissioned exported content providers
+    public void testContentProvider2() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        "exportprovider2.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
     public void testWorldWriteable() throws Exception {
         assertEquals(
             "WorldWriteableFile.java:25: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully\n" +
