@@ -17,10 +17,8 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -85,22 +83,6 @@ public class AvdManagerWindow {
                 sdkLog,
                 osSdkRoot,
                 context);
-    }
-
-    /**
-     * Registers an extra page for the updater window.
-     * <p/>
-     * Pages must derive from {@link Composite} and implement a constructor that takes
-     * a single parent {@link Composite} argument.
-     * <p/>
-     * All pages must be registered before the call to {@link #open()}.
-     *
-     * @param pageClass The {@link Composite}-derived class that will implement the page.
-     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
-     */
-    public void registerPage(Class<? extends UpdaterPage> pageClass,
-            UpdaterPage.Purpose purpose) {
-        mWindow.registerPage(pageClass, purpose);
     }
 
     /**
