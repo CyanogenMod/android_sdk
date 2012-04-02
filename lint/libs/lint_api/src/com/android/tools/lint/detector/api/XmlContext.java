@@ -138,6 +138,9 @@ public class XmlContext extends Context {
 
     private final static Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
 
+    private static File sCachedFolder = null;
+    private static int sCachedFolderVersion = -1;
+
     /**
      * Returns the folder version. For example, for the file values-v14/foo.xml,
      * it returns 14.
@@ -145,14 +148,23 @@ public class XmlContext extends Context {
      * @return the folder version, or -1 if no specific version was specified
      */
     public int getFolderVersion() {
-        String[] qualifiers = file.getParentFile().getName().split("-"); //$NON-NLS-1$
+        File parent = file.getParentFile();
+        if (parent.equals(sCachedFolder)) {
+            return sCachedFolderVersion;
+        }
+
+        sCachedFolder = parent;
+        sCachedFolderVersion = -1;
+
+        String[] qualifiers = parent.getName().split("-"); //$NON-NLS-1$
         for (String qualifier : qualifiers) {
             Matcher matcher = sVersionPattern.matcher(qualifier);
             if (matcher.matches()) {
-                return Integer.parseInt(matcher.group(1));
+                sCachedFolderVersion = Integer.parseInt(matcher.group(1));
+                break;
             }
         }
 
-        return -1;
+        return sCachedFolderVersion;
     }
 }
