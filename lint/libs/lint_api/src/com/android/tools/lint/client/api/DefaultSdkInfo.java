@@ -77,6 +77,8 @@ class DefaultSdkInfo extends SdkInfo {
     @Override
     @Nullable
     public String getParentViewName(@NonNull String name) {
+        name = getRawType(name);
+
         return PARENTS.get(name);
     }
 
@@ -102,6 +104,9 @@ class DefaultSdkInfo extends SdkInfo {
 
     @Override
     public boolean isSubViewOf(@NonNull String parent, @NonNull String child) {
+        parent = getRawType(parent);
+        child = getRawType(child);
+
         // Do analysis just on non-fqcn paths
         if (parent.indexOf('.') != -1) {
             parent = parent.substring(parent.lastIndexOf('.') + 1);
@@ -128,13 +133,25 @@ class DefaultSdkInfo extends SdkInfo {
         return false;
     }
 
+    // Strip off type parameters, e.g. AdapterView<?> => AdapterView
+    private static String getRawType(String type) {
+        if (type != null) {
+            int index = type.indexOf('<');
+            if (index != -1) {
+                type = type.substring(0, index);
+            }
+        }
+
+        return type;
+    }
+
     private static final int CLASS_COUNT = 59;
 
     @NonNull
     private static final Map<String, String> PARENTS = new HashMap<String, String>(CLASS_COUNT);
 
     static {
-        PARENTS.put(COMPOUND_BUTTON, VIEW);
+        PARENTS.put(COMPOUND_BUTTON, BUTTON);
         PARENTS.put(ABS_SPINNER, ADAPTER_VIEW);
         PARENTS.put(ABS_LIST_VIEW, ADAPTER_VIEW);
         PARENTS.put(ABS_SEEK_BAR, ADAPTER_VIEW);
@@ -201,9 +218,7 @@ class DefaultSdkInfo extends SdkInfo {
 
         /*
         // Check that all widgets lead to the root view
-        boolean assertionsEnabled = false;
-        assert assertionsEnabled = true; // Intentional side-effect
-        if (assertionsEnabled) {
+        if (LintUtils.assertionsEnabled()) {
             for (String key : PARENTS.keySet()) {
                 String parent = PARENTS.get(key);
                 if (!parent.equals(VIEW)) {

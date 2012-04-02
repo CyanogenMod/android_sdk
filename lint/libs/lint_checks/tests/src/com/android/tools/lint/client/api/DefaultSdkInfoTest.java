@@ -42,6 +42,9 @@ public class DefaultSdkInfoTest extends TestCase {
         DefaultSdkInfo info = new DefaultSdkInfo();
         assertTrue(info.isSubViewOf("Button", "Button"));
         assertTrue(info.isSubViewOf("TextView", "Button"));
+        assertTrue(info.isSubViewOf("TextView", "RadioButton"));
+        assertTrue(info.isSubViewOf("AdapterView", "Spinner"));
+        assertTrue(info.isSubViewOf("AdapterView<?>", "Spinner"));
         assertFalse(info.isSubViewOf("Button", "TextView"));
         assertFalse(info.isSubViewOf("CheckBox", "ToggleButton"));
         assertFalse(info.isSubViewOf("ToggleButton", "CheckBox"));
@@ -52,5 +55,6 @@ public class DefaultSdkInfoTest extends TestCase {
         assertFalse(info.isSubViewOf("EditText", "TextView"));
         assertTrue(info.isSubViewOf("View", "TextView"));
         assertFalse(info.isSubViewOf("TextView", "View"));
+        assertFalse(info.isSubViewOf("Spinner", "AdapterView<?>"));
     }
 }
