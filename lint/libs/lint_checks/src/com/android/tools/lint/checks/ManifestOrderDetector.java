@@ -20,7 +20,12 @@ import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_RECEIVER;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_LIBRARY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 
@@ -35,6 +40,7 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
@@ -93,10 +99,28 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
             Category.CORRECTNESS,
             6,
-            Severity.ERROR,
+            Severity.FATAL,
             ManifestOrderDetector.class,
             EnumSet.of(Scope.MANIFEST)).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
+
+    /** Missing a {@code <uses-sdk>} element */
+    public static final Issue WRONG_PARENT = Issue.create(
+            "WrongManifestParent", //$NON-NLS-1$
+            "Checks that various manifest elements are declared in the right place",
+
+            "The <uses-library> element should be defined as a direct child of the " +
+            "<application> tag, not the <manifest> tag or an <activity> tag. Similarly, " +
+            "a <uses-sdk> tag much be declared at the root level, and so on. This check " +
+            "looks for incorrect declaration locations in the manifest, and complains " +
+            "if an element is found in the wrong place.",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.FATAL,
+            ManifestOrderDetector.class,
+            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            "http://developer.android.com/guide/topics/manifest/manifest-intro.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
@@ -148,13 +172,41 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                 "uses-feature",            //$NON-NLS-1$
                 "supports-screens",        //$NON-NLS-1$
                 "compatible-screens",      //$NON-NLS-1$
-                "supports-gl-texture"      //$NON-NLS-1$
+                "supports-gl-texture",     //$NON-NLS-1$
+                TAG_USES_LIBRARY,
+                TAG_ACTIVITY,
+                TAG_SERVICE,
+                TAG_PROVIDER,
+                TAG_RECEIVER
         );
     }
 
     @Override
     public void visitElement(XmlContext context, Element element) {
         String tag = element.getTagName();
+        Node parentNode = element.getParentNode();
+
+        if (tag.equals(TAG_USES_LIBRARY) || tag.equals(TAG_ACTIVITY) || tag.equals(TAG_SERVICE)
+                || tag.equals(TAG_PROVIDER) || tag.equals(TAG_RECEIVER)) {
+            if (!TAG_APPLICATION.equals(parentNode.getNodeName())
+                    && context.isEnabled(WRONG_PARENT)) {
+                context.report(WRONG_PARENT, element, context.getLocation(element),
+                        String.format(
+                        "The <%1$s> element must be a direct child of the <application> element",
+                        tag), null);
+            }
+
+            return;
+        }
+
+        if (parentNode != element.getOwnerDocument().getDocumentElement()
+                && context.isEnabled(WRONG_PARENT)) {
+            context.report(WRONG_PARENT, element, context.getLocation(element),
+                    String.format(
+                    "The <%1$s> element must be a direct child of the " +
+                    "<manifest> root element", tag), null);
+        }
+
         if (tag.equals(TAG_USES_SDK)) {
             mSeenUsesSdk++;
 

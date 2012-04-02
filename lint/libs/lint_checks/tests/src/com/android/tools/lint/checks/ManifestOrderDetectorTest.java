@@ -77,4 +77,27 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                         "multiplesdk.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
     }
+
+    public void testWrongLocation() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:10: Error: The <permission> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:11: Error: The <permission-tree> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:12: Error: The <permission-group> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:14: Error: The <uses-sdk> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:15: Error: The <uses-configuration> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:16: Error: The <uses-feature> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:17: Error: The <supports-screens> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:18: Error: The <compatible-screens> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:19: Error: The <supports-gl-texture> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:24: Error: The <uses-library> element must be a direct child of the <application> element\n" +
+                "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element\n" +
+                "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element\n" +
+                "AndroidManifest.xml:8: Warning: <uses-sdk> tag appears after <application> tag\n" +
+                "AndroidManifest.xml:8: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"\n" +
+                "AndroidManifest.xml:9: Error: The <uses-permission> element must be a direct child of the <manifest> root element\n" +
+                "ManifestOrderDetectorTest_testWrongLocation/AndroidManifest.xml:14: Error: There should only be a single <uses-sdk> element in the manifest: merge these together\n" +
+                "=> ManifestOrderDetectorTest_testWrongLocation/AndroidManifest.xml:8: Also appears here",
+
+                lintProject("broken-manifest2.xml=>AndroidManifest.xml"));
+    }
 }
