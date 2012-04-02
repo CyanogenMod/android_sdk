@@ -70,7 +70,6 @@ public class AboutDialog extends UpdaterBaseDialog {
                 SdkAddonConstants.NS_LATEST_VERSION,
                 SdkRepoConstants.NS_LATEST_VERSION));
 
-
         Label filler = new Label(shell, SWT.NONE);
         GridDataBuilder.create(filler).fill().grab().hSpan(2);
 

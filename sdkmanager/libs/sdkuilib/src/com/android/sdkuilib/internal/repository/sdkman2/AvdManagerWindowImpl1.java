@@ -20,21 +20,16 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
-import com.android.sdkuilib.internal.repository.ISettingsPage;
+import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
 import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
-import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman1.AvdManagerPage;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
-import com.android.sdkuilib.ui.GridDataBuilder;
-import com.android.sdkuilib.ui.GridLayoutBuilder;
-import com.android.sdkuilib.ui.SwtBaseDialog;
-import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -44,15 +39,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
-
-import java.util.ArrayList;
 
 /**
  * This is an intermediate version of the {@link AvdManagerPage}
@@ -68,11 +58,6 @@ public class AvdManagerWindowImpl1 {
     private final AvdInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
-    /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
-     *  the string title and the Composite class to instantiate to create the page. */
-    private ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>> mExtraPages;
-    /** Sets whether the auto-update wizard will be shown when opening the window. */
-    private boolean mRequestAutoUpdate;
 
     // --- UI members ---
 
@@ -227,12 +212,14 @@ public class AvdManagerWindowImpl1 {
                 new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
                     @Override
                     public void onPreferencesMenuSelected() {
-                        showRegisteredPage(Purpose.SETTINGS);
+                        SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
+                        sd.open();
                     }
 
                     @Override
                     public void onAboutMenuSelected() {
-                        showRegisteredPage(Purpose.ABOUT_BOX);
+                        AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
+                        ad.open();
                     }
 
                     @Override
@@ -255,46 +242,6 @@ public class AvdManagerWindowImpl1 {
     //$hide>>$
 
     // --- Public API -----------
-
-
-    /**
-     * Registers an extra page for the updater window.
-     * <p/>
-     * Pages must derive from {@link Composite} and implement a constructor that takes
-     * a single parent {@link Composite} argument.
-     * <p/>
-     * All pages must be registered before the call to {@link #open()}.
-     *
-     * @param pageClass The {@link Composite}-derived class that will implement the page.
-     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
-     */
-    @SuppressWarnings("unchecked")
-    public void registerPage(Class<? extends UpdaterPage> pageClass,
-            Purpose purpose) {
-        if (mExtraPages == null) {
-            mExtraPages = new ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>>();
-        }
-        Pair<?, Purpose> value = Pair.of(pageClass, purpose);
-        mExtraPages.add((Pair<Class<? extends UpdaterPage>, Purpose>) value);
-    }
-
-    /**
-     * Indicate the initial page that should be selected when the window opens.
-     * This must be called before the call to {@link #open()}.
-     * If null or if the page class is not found, the first page will be selected.
-     */
-    public void setInitialPage(Class<? extends Composite> pageClass) {
-        // Unused in this case. This window display only one page.
-    }
-
-    /**
-     * Sets whether the auto-update wizard will be shown when opening the window.
-     * <p/>
-     * This must be called before the call to {@link #open()}.
-     */
-    public void setRequestAutoUpdate(boolean requestAutoUpdate) {
-        mRequestAutoUpdate = requestAutoUpdate;
-    }
 
     /**
      * Adds a new listener to be notified when a change is made to the content of the SDK.
@@ -341,15 +288,6 @@ public class AvdManagerWindowImpl1 {
         }
 
         mUpdaterData.broadcastOnSdkLoaded();
-
-        if (mRequestAutoUpdate) {
-            mUpdaterData.updateOrInstallAll_WithGUI(
-                    null /*selectedArchives*/,
-                    false /* includeObsoletes */,
-                    mContext == AvdInvocationContext.IDE ?
-                            UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT :
-                                UpdaterData.TOOLS_MSG_UPDATED_FROM_SDKMAN);
-        }
 
         return true;
     }
@@ -411,26 +349,6 @@ public class AvdManagerWindowImpl1 {
         mSettingsController.applySettings();
     }
 
-    private void showRegisteredPage(Purpose purpose) {
-        if (mExtraPages == null) {
-            return;
-        }
-
-        Class<? extends UpdaterPage> clazz = null;
-
-        for (Pair<Class<? extends UpdaterPage>, Purpose> extraPage : mExtraPages) {
-            if (extraPage.getSecond() == purpose) {
-                clazz = extraPage.getFirst();
-                break;
-            }
-        }
-
-        if (clazz != null) {
-            PageDialog d = new PageDialog(mShell, clazz, purpose == Purpose.SETTINGS);
-            d.open();
-        }
-    }
-
     private void onSdkManager() {
         ITaskFactory oldFactory = mUpdaterData.getTaskFactory();
 
@@ -440,91 +358,11 @@ public class AvdManagerWindowImpl1 {
                     mUpdaterData,
                     SdkUpdaterWindow.SdkInvocationContext.AVD_MANAGER);
 
-            for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
-                win.registerPage(page.getFirst(), page.getSecond());
-            }
-
             win.open();
         } catch (Exception e) {
             mUpdaterData.getSdkLog().error(e, "SDK Manager window error");
         } finally {
             mUpdaterData.setTaskFactory(oldFactory);
-        }
-    }
-
-    // End of hiding from SWT Designer
-    //$hide<<$
-
-    // -----
-
-    /**
-     * Dialog used to display either the About page or the Settings (aka Options) page
-     * with a "close" button.
-     */
-    private class PageDialog extends SwtBaseDialog {
-
-        private final Class<? extends UpdaterPage> mPageClass;
-        private final boolean mIsSettingsPage;
-
-        protected PageDialog(
-                Shell parentShell,
-                Class<? extends UpdaterPage> pageClass,
-                boolean isSettingsPage) {
-            super(parentShell, SWT.APPLICATION_MODAL, null /*title*/);
-            mPageClass = pageClass;
-            mIsSettingsPage = isSettingsPage;
-        }
-
-        @Override
-        protected void createContents() {
-            Shell shell = getShell();
-            setWindowImage(shell);
-
-            GridLayoutBuilder.create(shell).columns(2);
-
-            UpdaterPage content = UpdaterPage.newInstance(
-                    mPageClass,
-                    shell,
-                    SWT.NONE,
-                    mUpdaterData.getSdkLog());
-            GridDataBuilder.create(content).fill().grab().hSpan(2);
-            if (content.getLayout() instanceof GridLayout) {
-                GridLayout gl = (GridLayout) content.getLayout();
-                gl.marginHeight = gl.marginWidth = 0;
-            }
-
-            if (mIsSettingsPage && content instanceof ISettingsPage) {
-                mSettingsController.setSettingsPage((ISettingsPage) content);
-            }
-
-            getShell().setText(
-                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));
-
-            Label filler = new Label(shell, SWT.NONE);
-            GridDataBuilder.create(filler).hFill().hGrab();
-
-            Button close = new Button(shell, SWT.PUSH);
-            close.setText("Close");
-            GridDataBuilder.create(close);
-            close.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    close();
-                }
-            });
-        }
-
-        @Override
-        protected void postCreate() {
-            // pass
-        }
-
-        @Override
-        protected void close() {
-            if (mIsSettingsPage) {
-                mSettingsController.setSettingsPage(null);
-            }
-            super.close();
         }
     }
 }
