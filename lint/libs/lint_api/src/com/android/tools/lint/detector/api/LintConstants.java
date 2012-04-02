@@ -56,6 +56,7 @@ public class LintConstants {
     public static final String TAG_RECEIVER = "receiver";              //$NON-NLS-1$
     public static final String TAG_PROVIDER = "provider";              //$NON-NLS-1$
     public static final String TAG_GRANT_PERMISSION = "grant-uri-permission"; //$NON-NLS-1$
+    public static final String TAG_PATH_PERMISSION = "path-permission"; //$NON-NLS-1$
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources";            //$NON-NLS-1$
@@ -129,6 +130,8 @@ public class LintConstants {
     public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
     public static final String ATTR_PATH_PATTERN = "pathPattern";      //$NON-NLS-1$
     public final static String ATTR_DEBUGGABLE = "debuggable";         //$NON-NLS-1$
+    public final static String ATTR_READ_PERMISSION = "readPermission"; //$NON_NLS-1$
+    public final static String ATTR_WRITE_PERMISSION = "writePermission"; //$NON_NLS-1$
 
     // Attributes: Resources
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
