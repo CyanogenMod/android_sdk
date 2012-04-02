@@ -122,6 +122,9 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
                 "to restart ADB after updating an addon-on package or a tool package.");
         mAskAdbRestartCheck.addSelectionListener(mApplyOnSelected);
 
+        Label filler = new Label(shell, SWT.NONE);
+        GridDataBuilder.create(filler).hFill().hGrab();
+
         createCloseButton();
     }
 

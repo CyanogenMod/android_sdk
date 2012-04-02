@@ -26,8 +26,6 @@ import com.android.sdkuilib.internal.repository.MenuBarWrapper;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
-import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage.MenuAction;
 import com.android.sdkuilib.internal.tasks.ILogUiProvider;
@@ -38,7 +36,6 @@ import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
-import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -59,8 +56,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
-import java.util.ArrayList;
-
 /**
  * This is the private implementation of the UpdateWindow
  * for the second version of the SDK Manager.
@@ -76,11 +71,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
     private final SdkInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
-    /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
-     *  the string title and the Composite class to instantiate to create the page. */
-    private ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>> mExtraPages;
-    /** Sets whether the auto-update wizard will be shown when opening the window. */
-    private boolean mRequestAutoUpdate;
 
     // --- UI members ---
 
@@ -391,49 +381,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     // --- Public API -----------
 
-
-    /**
-     * Registers an extra page for the updater window.
-     * <p/>
-     * Pages must derive from {@link Composite} and implement a constructor that takes
-     * a single parent {@link Composite} argument.
-     * <p/>
-     * All pages must be registered before the call to {@link #open()}.
-     *
-     * @param pageClass The {@link Composite}-derived class that will implement the page.
-     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public void registerPage(Class<? extends UpdaterPage> pageClass,
-            Purpose purpose) {
-        if (mExtraPages == null) {
-            mExtraPages = new ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>>();
-        }
-        Pair<?, Purpose> value = Pair.of(pageClass, purpose);
-        mExtraPages.add((Pair<Class<? extends UpdaterPage>, Purpose>) value);
-    }
-
-    /**
-     * Indicate the initial page that should be selected when the window opens.
-     * This must be called before the call to {@link #open()}.
-     * If null or if the page class is not found, the first page will be selected.
-     */
-    @Override
-    public void setInitialPage(Class<? extends Composite> pageClass) {
-        // Unused in this case. This window display only one page.
-    }
-
-    /**
-     * Sets whether the auto-update wizard will be shown when opening the window.
-     * <p/>
-     * This must be called before the call to {@link #open()}.
-     */
-    @Override
-    public void setRequestAutoUpdate(boolean requestAutoUpdate) {
-        mRequestAutoUpdate = requestAutoUpdate;
-    }
-
     /**
      * Adds a new listener to be notified when a change is made to the content of the SDK.
      */
@@ -532,15 +479,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
         mUpdaterData.broadcastOnSdkLoaded();
 
-        if (mRequestAutoUpdate) {
-            mUpdaterData.updateOrInstallAll_WithGUI(
-                    null /*selectedArchives*/,
-                    false /* includeObsoletes */,
-                    mContext == SdkInvocationContext.IDE ?
-                            UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT :
-                                UpdaterData.TOOLS_MSG_UPDATED_FROM_SDKMAN);
-        }
-
         // Tell the one page its the selected one
         mPkgPage.onPageSelected();
 
@@ -625,10 +563,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                     mShell,
                     mUpdaterData,
                     AvdInvocationContext.SDK_MANAGER);
-
-            for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
-                win.registerPage(page.getFirst(), page.getSecond());
-            }
 
             win.open();
         } catch (Exception e) {
