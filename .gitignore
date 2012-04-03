@@ -11,12 +11,7 @@ eclipse/package.com.android.ide.eclipse.*.xml
 eclipse/final*Versions*.properties
 eclipse/plugins/com.android.ide.eclipse.*/@dot*
 eclipse/plugins/com.android.*/javaCompiler...args
-eclipse/plugins/com.android.ide.eclipse.adt/build.xml
-eclipse/plugins/com.android.ide.eclipse.adt.ndk/build.xml
-eclipse/plugins/com.android.ide.eclipse.adt.overlay/build.xml
-eclipse/plugins/com.android.ide.eclipse.ddms/build.xml
-eclipse/plugins/com.android.ide.eclipse.hierarchyviewer/build.xml
-eclipse/plugins/com.android.ide.eclipse.traceview/build.xml
+eclipse/plugins/com.android.ide.eclipse.*/build.xml
 eclipse/features/com.android.ide.eclipse.*/build.xml
 eclipse/features/com.android.ide.eclipse.*/*.zip
 /eclipse/v[0-9-]*-[0-9]*
