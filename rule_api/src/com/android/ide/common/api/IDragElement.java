@@ -86,6 +86,14 @@ public interface IDragElement {
     public abstract IDragElement[] getInnerElements();
 
     /**
+     * Returns true if the given {@link INode} represents this drag element
+     *
+     * @param node the node to be checked
+     * @return true if the given node represents this drag element
+     */
+    public abstract boolean isSame(@NonNull INode node);
+
+    /**
      * An XML attribute in the {@link IDragElement}.
      * <p/>
      * The attribute is always represented by a namespace URI, a name and a value.

@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Rect;
 
@@ -63,6 +65,10 @@ final class GlobalCanvasDragInfo {
      * Registers the XML elements being dragged.
      *
      * @param elements The elements being dragged
+     * @param primary the "primary" element among the elements; when there is a
+     *            single item dragged this will be the same, but in
+     *            multi-selection it will be the element under the mouse as the
+     *            selection was initiated
      * @param selection The selection (which can be null, for example when the
      *            user drags from the palette)
      * @param sourceCanvas An object representing the source we are dragging
@@ -71,8 +77,11 @@ final class GlobalCanvasDragInfo {
      *            source. It should only be invoked if the drag operation is a
      *            move, not a copy.
      */
-    public void startDrag(SimpleElement[] elements, SelectionItem[] selection,
-            Object sourceCanvas, Runnable removeSourceHandler) {
+    public void startDrag(
+            @NonNull SimpleElement[] elements,
+            @Nullable SelectionItem[] selection,
+            @Nullable Object sourceCanvas,
+            @Nullable Runnable removeSourceHandler) {
         mCurrentElements = elements;
         mCurrentSelection = selection;
         mSourceCanvas = sourceCanvas;
@@ -93,6 +102,7 @@ final class GlobalCanvasDragInfo {
     }
 
     /** Returns the elements being dragged. */
+    @NonNull
     public SimpleElement[] getCurrentElements() {
         return mCurrentElements;
     }

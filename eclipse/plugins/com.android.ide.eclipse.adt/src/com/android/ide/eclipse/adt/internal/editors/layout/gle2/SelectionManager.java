@@ -21,6 +21,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.Selection
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -429,11 +430,15 @@ public class SelectionManager implements ISelectionProvider {
 
     /**
      * Removes all the currently selected item and only select the given item.
-     * Issues a {@link #redraw()} if the selection changes.
+     * Issues a redraw() if the selection changes.
      *
      * @param vi The new selected item if non-null. Selection becomes empty if null.
+     * @return the item selected, or null if the selection was cleared (e.g. vi was null)
      */
-    /* package */ void selectSingle(CanvasViewInfo vi) {
+    @Nullable
+    SelectionItem selectSingle(CanvasViewInfo vi) {
+        SelectionItem item = null;
+
         // reset alternate selection if any
         mAltSelection = null;
 
@@ -449,13 +454,14 @@ public class SelectionManager implements ISelectionProvider {
         if (!mSelections.isEmpty()) {
             if (mSelections.size() == 1 && mSelections.getFirst().getViewInfo() == vi) {
                 // CanvasSelection remains the same, don't touch it.
-                return;
+                return mSelections.getFirst();
             }
             mSelections.clear();
         }
 
         if (vi != null) {
-            mSelections.add(createSelection(vi));
+            item = createSelection(vi);
+            mSelections.add(item);
             if (vi.isInvisible()) {
                 redoLayout = true;
             }
@@ -467,6 +473,8 @@ public class SelectionManager implements ISelectionProvider {
         }
 
         redraw();
+
+        return item;
     }
 
     /** Returns true if the view hierarchy is showing exploded items. */

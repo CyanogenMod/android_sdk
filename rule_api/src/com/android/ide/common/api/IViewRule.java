@@ -161,7 +161,9 @@ public interface IViewRule {
      * @param targetView the corresponding View object for the target layout, or
      *            null if not known
      * @param elements an array of {@link IDragElement} element descriptors for
-     *            the dragged views
+     *            the dragged views. When there are more than one element, the
+     *            first element will always be the "primary" element (e.g. the
+     *            one that the mouse is actively dragging.)
      * @return a {@link DropFeedback} object with drop state (which will be
      *         supplied to a follow-up {@link #onDropMove} call), or null if the
      *         drop should be ignored
@@ -178,7 +180,9 @@ public interface IViewRule {
      * @param targetNode the {@link INode} for the target layout receiving a
      *            drop event
      * @param elements an array of {@link IDragElement} element descriptors for
-     *            the dragged views
+     *            the dragged views.  When there are more than one element, the
+     *            first element will always be the "primary" element (e.g. the
+     *            one that the mouse is actively dragging.)
      * @param feedback the {@link DropFeedback} object created by
      *            {@link #onDropEnter(INode, Object, IDragElement[])}
      * @param where the current mouse drag position
@@ -211,7 +215,9 @@ public interface IViewRule {
      * @param targetNode the {@link INode} for the target layout receiving a
      *            drop event
      * @param elements an array of {@link IDragElement} element descriptors for
-     *            the dragged views
+     *            the dragged views.  When there are more than one element, the
+     *            first element will always be the "primary" element (e.g. the
+     *            one that the mouse is actively dragging.)
      * @param feedback the {@link DropFeedback} object created by
      *            {@link #onDropEnter(INode, Object, IDragElement[])}
      */
@@ -230,7 +236,9 @@ public interface IViewRule {
      * @param targetNode the {@link INode} for the target layout receiving a
      *            drop event
      * @param elements an array of {@link IDragElement} element descriptors for
-     *            the dragged views
+     *            the dragged views.  When there are more than one element, the
+     *            first element will always be the "primary" element (e.g. the
+     *            one that the mouse is actively dragging.)
      * @param feedback the {@link DropFeedback} object created by
      *            {@link #onDropEnter(INode, Object, IDragElement[])}
      * @param where the mouse drop position

@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 
 import java.util.ArrayList;
@@ -150,5 +151,8 @@ public class TestDragElement implements IDragElement {
                 + mRect + "]";
     }
 
-
+    @Override
+    public boolean isSame(INode node) {
+        return node.getBounds().equals(getBounds());
+    }
 }

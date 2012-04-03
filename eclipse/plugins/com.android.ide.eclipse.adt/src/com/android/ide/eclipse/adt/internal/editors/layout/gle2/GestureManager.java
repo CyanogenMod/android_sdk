@@ -717,6 +717,7 @@ public class GestureManager {
             // operation.
             List<SelectionItem> selections = selectionManager.getSelections();
             mDragSelection.clear();
+            SelectionItem primary = null;
 
             if (!selections.isEmpty()) {
                 // Is the cursor on top of a selected element?
@@ -724,6 +725,7 @@ public class GestureManager {
 
                 for (SelectionItem cs : selections) {
                     if (!cs.isRoot() && cs.getRect().contains(p.x, p.y)) {
+                        primary = cs;
                         insideSelection = true;
                         break;
                     }
@@ -732,7 +734,7 @@ public class GestureManager {
                 if (!insideSelection) {
                     CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
                     if (vi != null && !vi.isRoot() && !vi.isHidden()) {
-                        selectionManager.selectSingle(vi);
+                        primary = selectionManager.selectSingle(vi);
                         insideSelection = true;
                     }
                 }
@@ -753,6 +755,8 @@ public class GestureManager {
                         for (SelectionItem cs : selections) {
                             if (!cs.isRoot() && !cs.isHidden()) {
                                 mDragSelection.add(cs);
+                            } else if (cs == primary) {
+                                primary = null;
                             }
                         }
                     }
@@ -763,7 +767,7 @@ public class GestureManager {
             if (mDragSelection.isEmpty()) {
                 CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
                 if (vi != null && !vi.isRoot() && !vi.isHidden()) {
-                    selectionManager.selectSingle(vi);
+                    primary = selectionManager.selectSingle(vi);
                     mDragSelection.addAll(selections);
                 }
             }
@@ -773,7 +777,7 @@ public class GestureManager {
             e.doit = !mDragSelection.isEmpty();
             int imageCount = mDragSelection.size();
             if (e.doit) {
-                mDragElements = SelectionItem.getAsElements(mDragSelection);
+                mDragElements = SelectionItem.getAsElements(mDragSelection, primary);
                 GlobalCanvasDragInfo.getInstance().startDrag(mDragElements,
                         mDragSelection.toArray(new SelectionItem[imageCount]),
                         mCanvas, new Runnable() {

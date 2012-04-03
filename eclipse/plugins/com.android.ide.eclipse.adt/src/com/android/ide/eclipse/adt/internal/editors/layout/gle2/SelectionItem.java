@@ -169,13 +169,39 @@ class SelectionItem {
      * @return An array of wrapper elements. Never null.
      */
     @NonNull
-    static SimpleElement[] getAsElements(List<SelectionItem> items) {
-        ArrayList<SimpleElement> elements = new ArrayList<SimpleElement>();
+    static SimpleElement[] getAsElements(@NonNull List<SelectionItem> items) {
+        return getAsElements(items, null);
+    }
+
+    /**
+     * Returns elements representing the given selection of canvas items.
+     *
+     * @param items Items to wrap in elements
+     * @param primary The primary selected item which should be listed first
+     * @return An array of wrapper elements. Never null.
+     */
+    @NonNull
+    static SimpleElement[] getAsElements(
+            @NonNull List<SelectionItem> items,
+            @Nullable SelectionItem primary) {
+        List<SimpleElement> elements = new ArrayList<SimpleElement>();
+
+        if (primary != null) {
+            CanvasViewInfo vi = primary.getViewInfo();
+            SimpleElement e = vi.toSimpleElement();
+            e.setSelectionItem(primary);
+            elements.add(e);
+        }
 
         for (SelectionItem cs : items) {
-            CanvasViewInfo vi = cs.getViewInfo();
+            if (cs == primary) {
+                // Already handled
+                continue;
+            }
 
+            CanvasViewInfo vi = cs.getViewInfo();
             SimpleElement e = vi.toSimpleElement();
+            e.setSelectionItem(cs);
             elements.add(e);
         }
 

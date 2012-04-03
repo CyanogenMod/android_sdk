@@ -304,8 +304,9 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 for (IDragElement element : elements) {
                     // This tries to determine if an INode corresponds to an
                     // IDragElement, by comparing their bounds.
-                    if (bc.equals(element.getBounds())) {
+                    if (element.isSame(it)) {
                         isDragged = true;
+                        break;
                     }
                 }
 
