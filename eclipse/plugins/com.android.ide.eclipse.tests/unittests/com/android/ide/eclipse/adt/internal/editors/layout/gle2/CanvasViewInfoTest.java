@@ -39,7 +39,6 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-@SuppressWarnings("javadoc")
 public class CanvasViewInfoTest extends TestCase {
 
     public static ViewElementDescriptor createDesc(String name, String fqn, boolean hasChildren) {

@@ -40,7 +40,6 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
-import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -303,66 +302,6 @@ public final class DescriptorsUtils {
         }
         if (name.contains("ime") || name.startsWith("Ime")) {
             name = name.replaceAll("(?<=^| )[iI]me(?=$| )", "IME");
-        }
-
-        return name;
-    }
-
-    /**
-     * Similar to {@link #prettyAttributeUiName(String)}, but it will capitalize
-     * all words, not just the first one.
-     * <p/>
-     * The original xml name starts with a lower case and is camel-case, e.g.
-     * "maxWidthForView". The corresponding return value is
-     * "Max Width For View".
-     *
-     * @param name the attribute name, which should be a camel case name, e.g.
-     *            "maxWidth"
-     * @return the corresponding display name, e.g. "Max Width"
-     */
-    @NonNull
-    public static String capitalize(@NonNull String name) {
-        if (name.isEmpty()) {
-            return name;
-        }
-        StringBuilder buf = new StringBuilder(2 * name.length());
-
-        char c = name.charAt(0);
-        // Use upper case initial letter
-        buf.append(Character.toUpperCase(c));
-        int len = name.length();
-        for (int i = 1; i < len; i++) {
-            c = name.charAt(i);
-            if (Character.isUpperCase(c)) {
-                // Break camel case into separate words
-                buf.append(' ');
-                // Use a lower case initial letter for the next word, except if the
-                // word is solely X, Y or Z.
-                buf.append(c);
-            } else if (c == '_') {
-                buf.append(' ');
-                if (i < len -1 && Character.isLowerCase(name.charAt(i + 1))) {
-                    buf.append(Character.toUpperCase(name.charAt(i + 1)));
-                    i++;
-                }
-            } else {
-                buf.append(c);
-            }
-        }
-
-        name = buf.toString();
-
-        // Replace these acronyms by upper-case versions
-        // - (?<=^| ) means "if preceded by a space or beginning of string"
-        // - (?=$| )  means "if followed by a space or end of string"
-        if (name.contains("Sdk")) {
-            name = name.replaceAll("(?<=^| )Sdk(?=$| )", "SDK");
-        }
-        if (name.contains("Uri")) {
-            name = name.replaceAll("(?<=^| )Uri(?=$| )", "URI");
-        }
-        if (name.contains("Ime")) {
-            name = name.replaceAll("(?<=^| )Ime(?=$| )", "IME");
         }
 
         return name;

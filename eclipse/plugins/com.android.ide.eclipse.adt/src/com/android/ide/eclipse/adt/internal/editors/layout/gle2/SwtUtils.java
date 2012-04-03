@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.ide.common.api.Rect;
 
 import org.eclipse.swt.SWTException;
-import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
@@ -124,7 +123,7 @@ public class SwtUtils {
      * @return A new SWT {@link Image} with the same contents as the source
      *         {@link BufferedImage}
      */
-    public static Image convertToSwt(Device display, BufferedImage awtImage,
+    public static Image convertToSwt(Display display, BufferedImage awtImage,
             boolean transferAlpha, int globalAlpha) {
         if (!isSupportedPaletteType(awtImage.getType())) {
             awtImage = convertToCompatibleFormat(awtImage);

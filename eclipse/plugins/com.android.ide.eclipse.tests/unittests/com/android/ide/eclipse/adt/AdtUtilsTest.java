@@ -31,28 +31,6 @@ public class AdtUtilsTest extends TestCase {
         assertFalse(AdtUtils.endsWithIgnoreCase("foo", "fo"));
     }
 
-    public void testStartsWithIgnoreCase() {
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "Foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("barfoo", "bar"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("BarFoo", "bar"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("BarFoo", "bAr"));
-
-        assertFalse(AdtUtils.startsWithIgnoreCase("bfoo", "foo"));
-        assertFalse(AdtUtils.startsWithIgnoreCase("fo", "foo"));
-    }
-
-    public void testStartsWith() {
-        assertTrue(AdtUtils.startsWith("foo", 0, "foo"));
-        assertTrue(AdtUtils.startsWith("foo", 0, "Foo"));
-        assertTrue(AdtUtils.startsWith("Foo", 0, "foo"));
-        assertTrue(AdtUtils.startsWith("aFoo", 1, "foo"));
-
-        assertFalse(AdtUtils.startsWith("aFoo", 0, "foo"));
-        assertFalse(AdtUtils.startsWith("aFoo", 2, "foo"));
-    }
-
     public void testEndsWith() {
         assertTrue(AdtUtils.endsWith("foo", "foo"));
         assertTrue(AdtUtils.endsWith("foobar", "obar"));
