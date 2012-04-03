@@ -191,7 +191,9 @@ public final class MenuBarEnhancer {
         IMenuBarEnhancer enhancer = null;
         String p = SWT.getPlatform();
         String className = null;
-        if ("cocoa".equals(p)) {                                                  //$NON-NLS-1$
+        if ("carbon".equals(p)) {                                                 //$NON-NLS-1$
+            className = "com.android.menubar.internal.MenuBarEnhancerCarbon";     //$NON-NLS-1$
+        } else if ("cocoa".equals(p)) {                                           //$NON-NLS-1$
             className = "com.android.menubar.internal.MenuBarEnhancerCocoa";      //$NON-NLS-1$
         }
 
