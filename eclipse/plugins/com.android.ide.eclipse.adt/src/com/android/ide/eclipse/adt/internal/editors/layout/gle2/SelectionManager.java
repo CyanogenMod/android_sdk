@@ -20,7 +20,6 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
 
-import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -123,7 +122,6 @@ public class SelectionManager implements ISelectionProvider {
      *
      * @return An immutable list of {@link SelectionItem}. Can be empty but not null.
      */
-    @NonNull
     List<SelectionItem> getSelections() {
         return mUnmodifiableSelection;
     }
@@ -134,12 +132,7 @@ public class SelectionManager implements ISelectionProvider {
      *
      * @return A copy of the current selection. Never null.
      */
-    @NonNull
-    public List<SelectionItem> getSnapshot() {
-        if (mSelectionListeners.isEmpty()) {
-            return Collections.emptyList();
-        }
-
+    /* package */ List<SelectionItem> getSnapshot() {
         return new ArrayList<SelectionItem>(mSelections);
     }
 
@@ -197,7 +190,6 @@ public class SelectionManager implements ISelectionProvider {
             return;
         }
 
-        boolean changed = false;
         try {
             mInsideUpdateSelection = true;
 
@@ -219,6 +211,7 @@ public class SelectionManager implements ISelectionProvider {
                     return;
                 }
 
+                boolean changed = false;
                 boolean redoLayout = false;
 
                 // Create a list of all currently selected view infos
@@ -249,10 +242,6 @@ public class SelectionManager implements ISelectionProvider {
                         if (newVi.isInvisible()) {
                             redoLayout = true;
                         }
-                    } else {
-                        // Unrelated selection (e.g. user clicked in the Project Explorer
-                        // or something) -- just ignore these
-                        return;
                     }
                 }
 
@@ -268,15 +257,14 @@ public class SelectionManager implements ISelectionProvider {
                 if (redoLayout) {
                     mCanvas.getEditorDelegate().recomputeLayout();
                 }
+                if (changed) {
+                    redraw();
+                    updateActionsFromSelection();
+                }
+
             }
         } finally {
             mInsideUpdateSelection = false;
-        }
-
-        if (changed) {
-            redraw();
-            fireSelectionChanged();
-            updateActionsFromSelection();
         }
     }
 
@@ -711,7 +699,7 @@ public class SelectionManager implements ISelectionProvider {
     }
 
     /** Sync the selection with an updated view info tree */
-    void sync() {
+    /* package */ void sync() {
         // Check if the selection is still the same (based on the object keys)
         // and eventually recompute their bounds.
         for (ListIterator<SelectionItem> it = mSelections.listIterator(); it.hasNext(); ) {
@@ -726,9 +714,6 @@ public class SelectionManager implements ISelectionProvider {
             // we need to recompute its bounds in case it moved so we'll insert a new one
             // at the same place.
             it.remove();
-            if (vi == null) {
-                vi = findCorresponding(s.getViewInfo(), viewHierarchy.getRoot());
-            }
             if (vi != null) {
                 it.add(createSelection(vi));
             }
@@ -737,39 +722,6 @@ public class SelectionManager implements ISelectionProvider {
 
         // remove the current alternate selection views
         mAltSelection = null;
-    }
-
-    /** Finds the corresponding {@link CanvasViewInfo} in the new hierarchy */
-    private CanvasViewInfo findCorresponding(CanvasViewInfo old, CanvasViewInfo newRoot) {
-        CanvasViewInfo oldParent = old.getParent();
-        if (oldParent != null) {
-            CanvasViewInfo newParent = findCorresponding(oldParent, newRoot);
-            if (newParent == null) {
-                return null;
-            }
-
-            List<CanvasViewInfo> oldSiblings = oldParent.getChildren();
-            List<CanvasViewInfo> newSiblings = newParent.getChildren();
-            Iterator<CanvasViewInfo> oldIterator = oldSiblings.iterator();
-            Iterator<CanvasViewInfo> newIterator = newSiblings.iterator();
-            while (oldIterator.hasNext() && newIterator.hasNext()) {
-                CanvasViewInfo oldSibling = oldIterator.next();
-                CanvasViewInfo newSibling = newIterator.next();
-
-                if (oldSibling.getName().equals(newSibling.getName())) {
-                    // Structure has changed: can't do a proper search
-                    return null;
-                }
-
-                if (oldSibling == old) {
-                    return newSibling;
-                }
-            }
-        } else {
-            return newRoot;
-        }
-
-        return null;
     }
 
     /**
@@ -932,13 +884,9 @@ public class SelectionManager implements ISelectionProvider {
                 newChildren.add(viewInfo);
             }
         }
-        boolean found = nodes.size() == newChildren.size();
+        mCanvas.getSelectionManager().selectMultiple(newChildren);
 
-        if (found || newChildren.size() > 0) {
-            mCanvas.getSelectionManager().selectMultiple(newChildren);
-        }
-
-        return found;
+        return nodes.size() == newChildren.size();
     }
 
     /**

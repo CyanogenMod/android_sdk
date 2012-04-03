@@ -124,7 +124,7 @@ CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS
 ### ADT ###
 
 ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
-ADT_LIBS="layoutlib_api lint_api lint_checks ide_common rule_api ninepatch sdkuilib assetstudio propertysheet"
+ADT_LIBS="layoutlib_api lint_api lint_checks ide_common rule_api ninepatch sdkuilib assetstudio"
 ADT_PREBUILTS="\
     prebuilt/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \

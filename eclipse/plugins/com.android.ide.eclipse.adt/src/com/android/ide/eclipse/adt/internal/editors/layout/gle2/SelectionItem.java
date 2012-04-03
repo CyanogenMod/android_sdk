@@ -16,8 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -99,19 +97,8 @@ class SelectionItem {
      *
      * @return the selected view info. Cannot be null.
      */
-    @NonNull
     public CanvasViewInfo getViewInfo() {
         return mCanvasViewInfo;
-    }
-
-    /**
-     * Returns the selected node.
-     *
-     * @return the selected node, or null
-     */
-    @Nullable
-    public UiViewElementNode getUiNode() {
-        return mCanvasViewInfo.getUiViewNode();
     }
 
     /**
@@ -124,13 +111,11 @@ class SelectionItem {
     }
 
     /** Returns the node associated with this selection (may be null) */
-    @Nullable
     NodeProxy getNode() {
         return mNodeProxy;
     }
 
     /** Returns the canvas associated with this selection (never null) */
-    @NonNull
     LayoutCanvas getCanvas() {
         return mCanvas;
     }
@@ -141,7 +126,6 @@ class SelectionItem {
      * Gets the XML text from the given selection for a text transfer.
      * The returned string can be empty but not null.
      */
-    @NonNull
     static String getAsText(LayoutCanvas canvas, List<SelectionItem> selection) {
         StringBuilder sb = new StringBuilder();
 
@@ -168,7 +152,6 @@ class SelectionItem {
      * @param items Items to wrap in elements
      * @return An array of wrapper elements. Never null.
      */
-    @NonNull
     static SimpleElement[] getAsElements(List<SelectionItem> items) {
         ArrayList<SimpleElement> elements = new ArrayList<SimpleElement>();
 
@@ -201,7 +184,6 @@ class SelectionItem {
      *
      * @return the {@link SelectionHandles} for this {@link SelectionItem}, never null
      */
-    @NonNull
     public SelectionHandles getSelectionHandles() {
         if (mHandles == null) {
             mHandles = new SelectionHandles(this);
@@ -215,7 +197,6 @@ class SelectionItem {
      *
      * @return the {@link ResizePolicy} for this item, never null
      */
-    @NonNull
     public ResizePolicy getResizePolicy() {
         if (mResizePolicy == null && mNodeProxy != null) {
             mResizePolicy = ViewMetadataRepository.get().getResizePolicy(mNodeProxy.getFqcn());

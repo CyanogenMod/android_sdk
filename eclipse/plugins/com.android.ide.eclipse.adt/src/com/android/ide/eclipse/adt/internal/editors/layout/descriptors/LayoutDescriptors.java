@@ -305,6 +305,8 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             AttributeInfo[] attrList = link.getAttributes();
             if (attrList.length > 0) {
                 attributeSources.add(link.getFullClassName());
+                attributes.add(new SeparatorAttributeDescriptor(
+                        String.format("Attributes from %1$s", link.getShortClassName())));
                 DescriptorsUtils.appendAttributes(attributes,
                         null, // elementName
                         SdkConstants.NS_RESOURCES,
@@ -319,10 +321,27 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         LayoutParamsInfo layoutParams = info.getLayoutData();
 
         for(; layoutParams != null; layoutParams = layoutParams.getSuperClass()) {
+            boolean needSeparator = true;
             for (AttributeInfo attrInfo : layoutParams.getAttributes()) {
                 if (DescriptorsUtils.containsAttribute(layoutAttributes,
                         SdkConstants.NS_RESOURCES, attrInfo)) {
                     continue;
+                }
+                if (needSeparator) {
+                    ViewClassInfo viewLayoutClass = layoutParams.getViewLayoutClass();
+                    String title;
+                    String shortClassName = viewLayoutClass.getShortClassName();
+                    if (layoutParams.getShortClassName().equals(
+                            SdkConstants.CLASS_NAME_LAYOUTPARAMS)) {
+                        title = String.format("Layout Attributes from %1$s",
+                                    shortClassName);
+                    } else {
+                        title = String.format("Layout Attributes from %1$s (%2$s)",
+                                shortClassName,
+                                layoutParams.getShortClassName());
+                    }
+                    layoutAttributes.add(new SeparatorAttributeDescriptor(title));
+                    needSeparator = false;
                 }
                 DescriptorsUtils.appendAttribute(layoutAttributes,
                         null, // elementName

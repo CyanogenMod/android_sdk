@@ -309,11 +309,8 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
      * <p>
      * For example, if you are editing a style attribute, it's likely that among the
      * resource values you would rather see @style or @android than @string.
-     * @param descriptor the descriptor that the resource values are being completed for,
-     *          used to prioritize some of the resource types
-     * @param choices the set of string resource values
      */
-    public static void sortAttributeChoices(AttributeDescriptor descriptor,
+    private static void sortAttributeChoices(AttributeDescriptor descriptor,
             List<String> choices) {
         final IAttributeInfo attributeInfo = descriptor.getAttributeInfo();
         Collections.sort(choices, new Comparator<String>() {
@@ -322,7 +319,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 int compare = score(attributeInfo, s1) - score(attributeInfo, s2);
                 if (compare == 0) {
                     // Sort alphabetically as a fallback
-                    compare = s1.compareToIgnoreCase(s2);
+                    compare = s1.compareTo(s2);
                 }
                 return compare;
             }

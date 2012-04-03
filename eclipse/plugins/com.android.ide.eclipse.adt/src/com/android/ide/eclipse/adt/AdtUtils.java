@@ -103,32 +103,6 @@ public class AdtUtils {
     }
 
     /**
-     * Returns true if the given string starts with the given prefix, using a
-     * case-insensitive comparison.
-     *
-     * @param string the full string to be checked
-     * @param prefix the prefix to be checked for
-     * @return true if the string case-insensitively starts with the given prefix
-     */
-    public static boolean startsWithIgnoreCase(String string, String prefix) {
-        return string.regionMatches(true /* ignoreCase */, 0, prefix, 0, prefix.length());
-    }
-
-    /**
-     * Returns true if the given string starts at the given offset with the
-     * given prefix, case insensitively.
-     *
-     * @param string the full string to be checked
-     * @param offset the offset in the string to start looking
-     * @param prefix the prefix to be checked for
-     * @return true if the string case-insensitively starts at the given offset
-     *         with the given prefix
-     */
-    public static boolean startsWith(String string, int offset, String prefix) {
-        return string.regionMatches(true /* ignoreCase */, offset, prefix, 0, prefix.length());
-    }
-
-    /**
      * Strips the whitespace from the given string
      *
      * @param string the string to be cleaned up

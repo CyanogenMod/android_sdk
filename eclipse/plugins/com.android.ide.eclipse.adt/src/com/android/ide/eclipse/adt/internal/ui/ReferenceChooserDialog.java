@@ -135,9 +135,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         createFilteredTree(top);
 
         // setup the initial selection
-        if (mCurrentResource != null) {
-            setupInitialSelection();
-        }
+        setupInitialSelection();
 
         // create the "New Resource" button
         createNewResButtons(top);

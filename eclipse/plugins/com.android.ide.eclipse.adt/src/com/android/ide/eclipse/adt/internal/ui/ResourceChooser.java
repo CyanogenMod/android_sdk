@@ -20,7 +20,6 @@ package com.android.ide.eclipse.adt.internal.ui;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 
-import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
@@ -28,7 +27,6 @@ import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.OpenCreateAssetSetWizardAction;
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
@@ -771,25 +769,5 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
             }
             updateStatus(status);
         }
-    }
-
-    /**
-     * Open the resource chooser for the given type, associated with the given
-     * editor
-     *
-     * @param graphicalEditor the editor associated with the resource to be
-     *            chosen (used to find the associated Android target to be used
-     *            for framework resources etc)
-     * @param type the resource type to be chosen
-     * @param currentValue the current value, or null
-     * @param validator a validator to be used, or null
-     * @return the chosen resource, null if cancelled and "" if value should be
-     *         cleared
-     */
-    public static String chooseResource(
-            @NonNull GraphicalEditorPart graphicalEditor,
-            @NonNull ResourceType type,
-            String currentValue, IInputValidator validator) {
-        return ResourceChooser.chooseResource(graphicalEditor, type, currentValue, validator);
     }
 }

@@ -110,7 +110,7 @@ public class XmlEditorMultiOutline extends Page implements IContentOutlinePage,
     @Override
     public void addSelectionChangedListener(ISelectionChangedListener listener) {
         if (mListeners == null) {
-            mListeners = new ArrayList<ISelectionChangedListener>(2);
+            mListeners = new ArrayList<ISelectionChangedListener>();
         }
         mListeners.add(listener);
     }
