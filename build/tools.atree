@@ -121,9 +121,9 @@ external/emma/lib/emma_ant.jar                                tools/lib/emma_ant
 framework/jcommon-1.0.12.jar                                  tools/lib/jcommon-1.0.12.jar
 framework/jfreechart-1.0.9.jar                                tools/lib/jfreechart-1.0.9.jar
 framework/jfreechart-1.0.9-swt.jar                            tools/lib/jfreechart-1.0.9-swt.jar
-framework/org.eclipse.core.commands_3.6.0.I20100512-1500.jar  tools/lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar
-framework/org.eclipse.equinox.common_3.6.0.v20100503.jar      tools/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar
-framework/org.eclipse.jface_3.6.2.M20110210-1200.jar          tools/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar
+framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar  tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
+framework/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar tools/lib/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar
+framework/org.eclipse.jface_3.4.2.M20090107-0800.jar          tools/lib/org.eclipse.jface_3.4.2.M20090107-0800.jar
 framework/osgi.jar                                            tools/lib/osgi.jar
 framework/swing-worker-1.1.jar                                tools/lib/swing-worker-1.1.jar
 prebuilts/tools/common/asm-tools/asm-4.0.jar                  tools/lib/asm-4.0.jar
