@@ -345,6 +345,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         // each inherited method
                         if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                             owner = context.getDriver().getSuperClass(owner);
+                        } else if (node.getOpcode() == Opcodes.INVOKESTATIC && api == -1) {
+                            // Inherit through static classes as well
+                            owner = context.getDriver().getSuperClass(owner);
                         } else {
                             owner = null;
                         }
