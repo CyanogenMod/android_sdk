@@ -540,9 +540,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
 
     /**
-     * Process a instrumentation run failure
+     * Inform the parser of a instrumentation run failure. Should be called when the adb command
+     * used to run the test fails.
      */
-    void handleTestRunFailed(String errorMsg) {
+    public void handleTestRunFailed(String errorMsg) {
         errorMsg = (errorMsg == null ? "Unknown error" : errorMsg);
         Log.i(LOG_TAG, String.format("test run failed: '%1$s'", errorMsg));
         if (mLastTestResult != null &&
