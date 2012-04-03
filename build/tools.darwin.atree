@@ -27,3 +27,14 @@
 # bin/monitor                                 tools/monitor
 # eclipse/monitor-macosx.cocoa.x86_64/monitor tools/lib/monitor-x86_64
 
+# swt
+prebuilts/tools/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar
+prebuilts/tools/darwin-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar
+
+
+# JetCreator (only available on mac/windows)
+external/sonivox/jet_tools/JetCreator                     tools/Jet/JetCreator
+prebuilts/tools/darwin-x86/jetcreator/libEASLIb.dylib     tools/Jet/JetCreator/libEASLIb.dylib
+external/sonivox/jet_tools/JetCreator_content             tools/Jet/demo_content
+external/sonivox/jet_tools/logic_templates                tools/Jet/logic_templates
+
