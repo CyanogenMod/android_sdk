@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.layout.grid;
 
+import static com.android.ide.common.layout.GravityHelper.getGravity;
 import static com.android.ide.common.layout.GridLayoutRule.GRID_SIZE;
 import static com.android.ide.common.layout.GridLayoutRule.MARGIN_SIZE;
 import static com.android.ide.common.layout.GridLayoutRule.MAX_CELL_DIFFERENCE;
@@ -25,9 +26,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_S
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_CENTER_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_RIGHT;
 import static com.android.ide.common.layout.grid.GridModel.UNDEFINED;
 import static java.lang.Math.abs;
 
@@ -40,6 +38,7 @@ import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.BaseLayoutRule;
+import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 
@@ -66,7 +65,7 @@ public class GridDropHandler {
      */
     public GridDropHandler(GridLayoutRule gridLayoutRule, INode layout, Object view) {
         mRule = gridLayoutRule;
-        mGrid = new GridModel(mRule.getRulesEngine(), layout, view);
+        mGrid = GridModel.get(mRule.getRulesEngine(), layout, view);
     }
 
     /**
@@ -522,9 +521,7 @@ public class GridDropHandler {
         int rowSpan = endRow - row + 1;
 
         // Make sure my math was right:
-        if (mRowMatch.type == SegmentType.BASELINE) {
-            assert rowSpan == 1 : rowSpan;
-        }
+        assert mRowMatch.type != SegmentType.BASELINE || rowSpan == 1 : rowSpan;
 
         // If the item almost fits into the row (at most N % bigger) then just enlarge
         // the row; don't add a rowspan since that will defeat baseline alignment etc
@@ -588,9 +585,6 @@ public class GridDropHandler {
             if (insertMarginColumn) {
                 column++;
             }
-            // TODO: This grid refresh is a little risky because we may have added a new
-            // child (spacer) which has no bounds yet!
-            mGrid.loadFromXml();
         }
 
         // Split cells to make a new  row
@@ -628,7 +622,6 @@ public class GridDropHandler {
             if (insertMarginRow) {
                 row++;
             }
-            mGrid.loadFromXml();
         }
 
         // Figure out where to insert the new child
@@ -649,22 +642,33 @@ public class GridDropHandler {
             next.applyPositionAttributes();
         }
 
-        // Set the cell position of the new widget
+        // Set the cell position (gravity) of the new widget
+        int gravity = 0;
         if (mColumnMatch.type == SegmentType.RIGHT) {
-            mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, VALUE_RIGHT);
+            gravity |= GravityHelper.GRAVITY_RIGHT;
         } else if (mColumnMatch.type == SegmentType.CENTER_HORIZONTAL) {
-            mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, VALUE_CENTER_HORIZONTAL);
+            gravity |= GravityHelper.GRAVITY_CENTER_HORIZ;
         }
         mGrid.setGridAttribute(newChild, ATTR_LAYOUT_COLUMN, column);
         if (mRowMatch.type == SegmentType.BOTTOM) {
-            String value = VALUE_BOTTOM;
-            if (mColumnMatch.type == SegmentType.RIGHT) {
-                value = value + '|' + VALUE_RIGHT;
-            } else if (mColumnMatch.type == SegmentType.CENTER_HORIZONTAL) {
-                    value = value + '|' + VALUE_CENTER_HORIZONTAL;
-            }
-            mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, value);
+            gravity |= GravityHelper.GRAVITY_BOTTOM;
+        } else if (mRowMatch.type == SegmentType.CENTER_VERTICAL) {
+            gravity |= GravityHelper.GRAVITY_CENTER_VERT;
         }
+        // Ensure that we have at least one horizontal and vertical constraint, otherwise
+        // the new item will be fixed. As an example, if we have a single button in the
+        // table which we inserted *without* a gravity, and we then insert a button
+        // above it with a vertical gravity, then only the top column would be considered
+        // stretchable, and it will fill all available vertical space and the previous
+        // button will jump to the bottom.
+        if (!GravityHelper.isConstrainedHorizontally(gravity)) {
+            gravity |= GravityHelper.GRAVITY_LEFT;
+        }
+        if (!GravityHelper.isConstrainedVertically(gravity)) {
+            gravity |= GravityHelper.GRAVITY_TOP;
+        }
+        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, getGravity(gravity));
+
         mGrid.setGridAttribute(newChild, ATTR_LAYOUT_ROW, row);
 
         // Apply spans to ensure that the widget can fit without pushing columns
@@ -700,7 +704,6 @@ public class GridDropHandler {
                     newChild, UNDEFINED, false, UNDEFINED, UNDEFINED);
         }
         if (mRowMatch.createCell) {
-            mGrid.loadFromXml();
             mGrid.addRow(mRowMatch.cellIndex, newChild, UNDEFINED, false, UNDEFINED, UNDEFINED);
         }
 

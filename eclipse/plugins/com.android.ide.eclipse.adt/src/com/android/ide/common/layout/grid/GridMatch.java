@@ -88,39 +88,39 @@ class GridMatch implements Comparable<GridMatch> {
     public String getDisplayName(INode layout) {
         switch (type) {
             case BASELINE:
-                return String.format("Align baseline in row %1$d", cellIndex);
+                return String.format("Align baseline in row %1$d", cellIndex + 1);
             case CENTER_HORIZONTAL:
                 return "Center horizontally";
             case LEFT:
                 if (!createCell) {
-                    return String.format("Insert into column %1$d", cellIndex);
+                    return String.format("Insert into column %1$d", cellIndex + 1);
                 }
                 if (margin != UNDEFINED) {
                     if (cellIndex == 0 && margin != 0) {
                         return "Add one margin distance from the left";
                     }
-                    return String.format("Add next to column %1$d", cellIndex);
+                    return String.format("Add next to column %1$d", cellIndex + 1);
                 }
                 return String.format("Align left at x=%1$d", matchedLine - layout.getBounds().x);
             case RIGHT:
                 if (!createCell) {
-                    return String.format("Insert right-aligned into column %1$d", cellIndex);
+                    return String.format("Insert right-aligned into column %1$d", cellIndex + 1);
                 }
                 return String.format("Align right at x=%1$d", matchedLine - layout.getBounds().x);
             case TOP:
                 if (!createCell) {
-                    return String.format("Insert into row %1$d", cellIndex);
+                    return String.format("Insert into row %1$d", cellIndex + 1);
                 }
                 if (margin != UNDEFINED) {
                     if (cellIndex == 0 && margin != 0) {
                         return "Add one margin distance from the top";
                     }
-                    return String.format("Add below row %1$d", cellIndex);
+                    return String.format("Add below row %1$d", cellIndex + 1);
                 }
                 return String.format("Align top at y=%1d", matchedLine - layout.getBounds().y);
             case BOTTOM:
                 if (!createCell) {
-                    return String.format("Insert into bottom of row %1$d", cellIndex);
+                    return String.format("Insert into bottom of row %1$d", cellIndex + 1);
                 }
                 return String.format("Align bottom at y=%1d", matchedLine - layout.getBounds().y);
             case CENTER_VERTICAL:

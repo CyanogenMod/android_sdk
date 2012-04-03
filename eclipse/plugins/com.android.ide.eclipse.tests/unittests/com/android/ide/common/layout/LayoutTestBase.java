@@ -192,10 +192,10 @@ public class LayoutTestBase extends TestCase {
         rule.onInitialize(fqn, new TestRulesEngine(fqn));
     }
 
-    private static class TestRulesEngine implements IClientRulesEngine {
+    public static class TestRulesEngine implements IClientRulesEngine {
         private final String mFqn;
 
-        protected TestRulesEngine(String fqn) {
+        public TestRulesEngine(String fqn) {
             mFqn = fqn;
         }
 
@@ -320,8 +320,14 @@ public class LayoutTestBase extends TestCase {
 
         @Override
         public int pxToDp(int px) {
-            fail("Not supported in tests yet");
-            return px;
+            // Arbitrary conversion
+            return px / 3;
+        }
+
+        @Override
+        public int dpToPx(int dp) {
+            // Arbitrary conversion
+            return 3 * dp;
         }
 
         @Override
@@ -333,17 +339,17 @@ public class LayoutTestBase extends TestCase {
         @Override
         public int screenToLayout(int pixels) {
             fail("Not supported in tests yet");
-            return 0;
-        }
-
-        @Override
-        public int dpToPx(int dp) {
-            fail("Not supported in tests yet");
-            return 0;
+            return pixels;
         }
 
         @Override
         public @NonNull String getAppNameSpace() {
+            fail("Not supported in tests yet");
+            return null;
+        }
+
+        @Override
+        public @Nullable Object getViewObject(@NonNull INode node) {
             fail("Not supported in tests yet");
             return null;
         }

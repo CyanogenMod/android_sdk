@@ -44,6 +44,15 @@ public interface IClientRulesEngine {
     String getFqcn();
 
     /**
+     * Returns the most recently rendered View object for this node, if any.
+     *
+     * @param node the node to look up the view object for
+     * @return the corresponding view object, or null
+     */
+    @Nullable
+    Object getViewObject(@NonNull INode node);
+
+    /**
      * Prints a debug line in the Eclipse console using the ADT formatter.
      *
      * @param msg A String format message.

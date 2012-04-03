@@ -41,10 +41,12 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -176,6 +178,18 @@ class ClientRulesEngine implements IClientRulesEngine {
         if (d.open() == Window.OK) {
             return d.getValue();
         }
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public Object getViewObject(@NonNull INode node) {
+        ViewHierarchy views = mRulesEngine.getEditor().getCanvasControl().getViewHierarchy();
+        CanvasViewInfo vi = views.findViewInfoFor(node);
+        if (vi != null) {
+            return vi.getViewObject();
+        }
+
         return null;
     }
 

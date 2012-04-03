@@ -205,7 +205,7 @@ public class GridLayoutRule extends BaseLayoutRule {
                             return;
                         }
 
-                        GridModel grid = new GridModel(mRulesEngine, parentNode, null);
+                        GridModel grid = GridModel.get(mRulesEngine, parentNode, null);
                         if (id.equals(ACTION_ADD_ROW)) {
                             grid.addRow(children);
                         } else if (id.equals(ACTION_REMOVE_ROW)) {
@@ -285,6 +285,9 @@ public class GridLayoutRule extends BaseLayoutRule {
     @Override
     public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
             @Nullable DropFeedback feedback, @NonNull Point p) {
+        if (feedback == null) {
+            return null;
+        }
         feedback.requestPaint = true;
 
         GridDropHandler handler = (GridDropHandler) feedback.userData;
@@ -296,6 +299,10 @@ public class GridLayoutRule extends BaseLayoutRule {
     @Override
     public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
             @Nullable DropFeedback feedback, @NonNull Point p) {
+        if (feedback == null) {
+            return;
+        }
+
         Rect b = targetNode.getBounds();
         if (!b.isValid()) {
             return;
@@ -334,13 +341,14 @@ public class GridLayoutRule extends BaseLayoutRule {
             return;
         }
 
+        if (GridModel.isSpace(node.getFqcn())) {
+            return;
+        }
+
         // Attempt to set "fill" properties on newly added views such that for example
         // a text field will stretch horizontally.
         String fqcn = node.getFqcn();
         IViewMetadata metadata = mRulesEngine.getMetadata(fqcn);
-        if (metadata == null) {
-            return;
-        }
         FillPreference fill = metadata.getFillPreference();
         String gravity = computeDefaultGravity(fill);
         if (gravity != null) {
@@ -400,17 +408,8 @@ public class GridLayoutRule extends BaseLayoutRule {
 
         // Attempt to clean up spacer objects for any newly-empty rows or columns
         // as the result of this deletion
-        GridModel grid = new GridModel(mRulesEngine, parent, null);
-        for (INode child : deleted) {
-            // We don't care about deletion of spacers
-            String fqcn = child.getFqcn();
-            if (fqcn.equals(FQCN_SPACE) || fqcn.equals(FQCN_SPACE_V7)) {
-                continue;
-            }
-            grid.markDeleted(child);
-        }
-
-        grid.cleanup();
+        GridModel grid = GridModel.get(mRulesEngine, parent, null);
+        grid.onDeleted(deleted);
     }
 
     @Override
@@ -442,7 +441,7 @@ public class GridLayoutRule extends BaseLayoutRule {
     private GridModel getGrid(ResizeState resizeState) {
         GridModel grid = (GridModel) resizeState.clientData;
         if (grid == null) {
-            grid = new GridModel(mRulesEngine, resizeState.layout, resizeState.layoutView);
+            grid = GridModel.get(mRulesEngine, resizeState.layout, resizeState.layoutView);
             resizeState.clientData = grid;
         }
 
@@ -543,10 +542,10 @@ public class GridLayoutRule extends BaseLayoutRule {
                 }
             }
             GridLayoutPainter.paintStructure(DrawingStyle.GUIDELINE_DASHED,
-                        parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
+                        parentNode, graphics, GridModel.get(mRulesEngine, parentNode, view));
         } else if (sDebugGridLayout) {
             GridLayoutPainter.paintStructure(DrawingStyle.GRID,
-                    parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
+                    parentNode, graphics, GridModel.get(mRulesEngine, parentNode, view));
         }
 
         // TBD: Highlight the cells around the selection, and display easy controls
