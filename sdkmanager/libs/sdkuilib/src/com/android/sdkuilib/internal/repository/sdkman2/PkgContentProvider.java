@@ -213,7 +213,12 @@ public class PkgContentProvider implements ITreeContentProvider {
 
         @Override
         public String getLongDescription() {
-            return mSource.getLongDescription();
+            if (mSource.isEnabled()) {
+                return mSource.getLongDescription();
+            } else {
+                return "Loading from this site has been disabled. " +
+                       "To enable it, use Tools > Manage Add-ons Sites.";
+            }
         }
 
         @Override
@@ -221,7 +226,7 @@ public class PkgContentProvider implements ITreeContentProvider {
             if (mSource.isEnabled()) {
                 return "No packages found.";
             } else {
-                return "This site is disabled.";
+                return "This site is disabled. ";
             }
         }
     }

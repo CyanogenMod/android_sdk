@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
+import com.android.sdklib.internal.repository.SdkSourceProperties;
 import com.android.sdklib.internal.repository.SdkSources;
 import com.android.sdkuilib.internal.repository.UpdaterBaseDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
@@ -290,6 +291,8 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
         if (mSources != null && mSourcesChangeListener != null) {
             mSources.removeChangeListener(mSourcesChangeListener);
         }
+        SdkSourceProperties p = new SdkSourceProperties();
+        p.save();
         super.close();
     }
 
