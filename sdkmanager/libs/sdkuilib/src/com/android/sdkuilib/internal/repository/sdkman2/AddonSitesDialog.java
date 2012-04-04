@@ -23,9 +23,14 @@ import com.android.sdklib.internal.repository.SdkSources;
 import com.android.sdkuilib.internal.repository.UpdaterBaseDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -46,110 +51,246 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class AddonSitesDialog extends UpdaterBaseDialog {
 
-    private Table mTable;
-    private TableViewer mTableViewer;
-    private Button mButtonNew;
-    private Button mButtonDelete;
-    private Button mButtonEdit;
-    private TableColumn mColumnUrl;
+    private final SdkSources mSources;
+    private Table mUserTable;
+    private TableViewer mUserTableViewer;
+    private CheckboxTableViewer mSitesTableViewer;
+    private Button mUserButtonNew;
+    private Button mUserButtonDelete;
+    private Button mUserButtonEdit;
+    private Runnable mSourcesChangeListener;
 
     /**
      * Create the dialog.
      *
      * @param parent The parent's shell
+     * @wbp.parser.entryPoint
      */
     public AddonSitesDialog(Shell parent, UpdaterData updaterData) {
         super(parent, updaterData, "Add-on Sites");
+        mSources = updaterData.getSources();
+        assert mSources != null;
     }
 
     /**
      * Create contents of the dialog.
+     * @wbp.parser.entryPoint
      */
-    @SuppressWarnings("unused")
     @Override
     protected void createContents() {
         super.createContents();
         Shell shell = getShell();
-        shell.setMinimumSize(new Point(450, 300));
-        shell.setSize(450, 300);
+        shell.setMinimumSize(new Point(300, 300));
+        shell.setSize(600, 400);
 
+        TabFolder tabFolder = new TabFolder(shell, SWT.NONE);
+        tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        GridDataBuilder.create(tabFolder).fill().grab().hSpan(2);
+
+        TabItem sitesTabItem = new TabItem(tabFolder, SWT.NONE);
+        sitesTabItem.setText("Official Add-on Sites");
+        createTabOfficialSites(tabFolder, sitesTabItem);
+
+        TabItem userTabItem = new TabItem(tabFolder, SWT.NONE);
+        userTabItem.setText("User Defined Sites");
+        createTabUserSites(tabFolder, userTabItem);
+
+        // placeholder for aligning close button
         Label label = new Label(shell, SWT.NONE);
+        GridDataBuilder.create(label).hFill().hGrab();
+
+        createCloseButton();
+    }
+
+    void createTabOfficialSites(TabFolder tabFolder, TabItem sitesTabItem) {
+        Composite root = new Composite(tabFolder, SWT.NONE);
+        sitesTabItem.setControl(root);
+        GridLayoutBuilder.create(root).columns(3);
+
+        Label label = new Label(root, SWT.NONE);
+        GridDataBuilder.create(label).hLeft().vCenter().hSpan(3);
+        label.setText(
+            "This lets select which official 3rd-party sites you want to load.\n" +
+            "\n" +
+            "These sites are managed by non-Android vendors to provide add-ons and extra packages.\n" +
+            "They are by default all enabled. When you disable one, the SDK Manager will not check the site for new packages."
+        );
+
+        mSitesTableViewer = CheckboxTableViewer.newCheckList(root, SWT.BORDER | SWT.FULL_SELECTION);
+        mSitesTableViewer.setContentProvider(new SourcesContentProvider());
+
+        Table sitesTable = mSitesTableViewer.getTable();
+        sitesTable.setToolTipText("Enable 3rd-Party Site");
+        sitesTable.setLinesVisible(true);
+        sitesTable.setHeaderVisible(true);
+        GridDataBuilder.create(sitesTable).fill().grab().hSpan(3);
+
+        TableViewerColumn columnViewer = new TableViewerColumn(mSitesTableViewer, SWT.NONE);
+        TableColumn column = columnViewer.getColumn();
+        column.setResizable(true);
+        column.setWidth(150);
+        column.setText("Name");
+        columnViewer.setLabelProvider(new ColumnLabelProvider() {
+            @Override
+            public String getText(Object element) {
+                if (element instanceof SdkSource) {
+                    String name = ((SdkSource) element).getUiName();
+                    if (name != null) {
+                        return name;
+                    }
+                    return ((SdkSource) element).getShortDescription();
+                }
+                return super.getText(element);
+            }
+        });
+
+        columnViewer = new TableViewerColumn(mSitesTableViewer, SWT.NONE);
+        column = columnViewer.getColumn();
+        column.setResizable(true);
+        column.setWidth(400);
+        column.setText("URL");
+        columnViewer.setLabelProvider(new ColumnLabelProvider() {
+            @Override
+            public String getText(Object element) {
+                if (element instanceof SdkSource) {
+                    return ((SdkSource) element).getUrl();
+                }
+                return super.getText(element);
+            }
+        });
+
+        mSitesTableViewer.addCheckStateListener(new ICheckStateListener() {
+            @Override
+            public void checkStateChanged(CheckStateChangedEvent event) {
+                on_SitesTableViewer_checkStateChanged(event);
+            }
+        });
+
+        // "enable all" and "disable all" buttons under the table
+        Button selectAll = new Button(root, SWT.NONE);
+        selectAll.setText("Enable All");
+        GridDataBuilder.create(selectAll).hLeft();
+        selectAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                on_SitesTableViewer_selectAll();
+            }
+        });
+
+        // placeholder between both buttons
+        label = new Label(root, SWT.NONE);
+        GridDataBuilder.create(label).hFill().hGrab();
+
+        Button deselectAll = new Button(root, SWT.NONE);
+        deselectAll.setText("Disable All");
+        GridDataBuilder.create(deselectAll).hRight();
+        deselectAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                on_SitesTableViewer_deselectAll();
+            }
+        });
+    }
+
+    void createTabUserSites(TabFolder tabFolder, TabItem userTabItem) {
+        Composite root = new Composite(tabFolder, SWT.NONE);
+        userTabItem.setControl(root);
+        GridLayoutBuilder.create(root).columns(2);
+
+        Label label = new Label(root, SWT.NONE);
         GridDataBuilder.create(label).hLeft().vCenter().hSpan(2);
         label.setText(
-            "This dialog lets you manage the URLs of external add-on sites to be used.\n" +
+            "This lets you manage a list of user-contributed external add-on sites URLs.\n" +
             "\n" +
-            "Add-on sites can provide new add-ons or \"user\" packages.\n" +
-            "They cannot provide standard Android platforms, docs or samples packages.\n" +
+            "Add-on sites can provide new add-ons and extra packages.\n" +
+            "They cannot provide standard Android platforms, system images or docs.\n" +
             "Adding a URL here will not allow you to clone an official Android repository."
         );
 
-        mTableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION);
-        mTableViewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
+        mUserTableViewer = new TableViewer(root, SWT.BORDER | SWT.FULL_SELECTION);
+        mUserTableViewer.setContentProvider(new SourcesContentProvider());
+
+        mUserTableViewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
             @Override
             public void selectionChanged(SelectionChangedEvent event) {
-                on_TableViewer_selectionChanged(event);
+                on_UserTableViewer_selectionChanged(event);
             }
         });
-        mTable = mTableViewer.getTable();
-        mTable.setLinesVisible(false);
-        mTable.addMouseListener(new MouseAdapter() {
+        mUserTable = mUserTableViewer.getTable();
+        mUserTable.setLinesVisible(true);
+        mUserTable.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseUp(MouseEvent e) {
-                on_Table_mouseUp(e);
+            public void mouseUp(MouseEvent event) {
+                on_UserTable_mouseUp(event);
             }
         });
-        GridDataBuilder.create(mTable).fill().grab().vSpan(5);
+        GridDataBuilder.create(mUserTable).fill().grab().vSpan(5);
 
-        TableViewerColumn tableViewerColumn = new TableViewerColumn(mTableViewer, SWT.NONE);
-        mColumnUrl = tableViewerColumn.getColumn();
-        mColumnUrl.setWidth(100);
-        mColumnUrl.setText("New Column");
+        TableViewerColumn tableViewerColumn = new TableViewerColumn(mUserTableViewer, SWT.NONE);
+        TableColumn userColumnUrl = tableViewerColumn.getColumn();
+        userColumnUrl.setWidth(100);
 
-        mButtonNew = new Button(shell, SWT.NONE);
-        mButtonNew.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                newOrEdit(false /*isEdit*/);
-            }
-        });
-        GridDataBuilder.create(mButtonNew).hFill().vCenter();
-        mButtonNew.setText("New...");
+        // Implementation detail: set the label provider on the table viewer *after* associating
+        // a column. This will set the label provider on the column for us.
+        mUserTableViewer.setLabelProvider(new LabelProvider());
 
-        mButtonEdit = new Button(shell, SWT.NONE);
-        mButtonEdit.addSelectionListener(new SelectionAdapter() {
+
+        mUserButtonNew = new Button(root, SWT.NONE);
+        mUserButtonNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                newOrEdit(true /*isEdit*/);
+                userNewOrEdit(false /*isEdit*/);
             }
         });
-        GridDataBuilder.create(mButtonEdit).hFill().vCenter();
-        mButtonEdit.setText("Edit...");
+        GridDataBuilder.create(mUserButtonNew).hFill().vCenter();
+        mUserButtonNew.setText("New...");
 
-        mButtonDelete = new Button(shell, SWT.NONE);
-        mButtonDelete.addSelectionListener(new SelectionAdapter() {
+        mUserButtonEdit = new Button(root, SWT.NONE);
+        mUserButtonEdit.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                on_ButtonDelete_widgetSelected(e);
+                userNewOrEdit(true /*isEdit*/);
             }
         });
-        GridDataBuilder.create(mButtonDelete).hFill().vCenter();
-        mButtonDelete.setText("Delete...");
-        new Label(shell, SWT.NONE);
+        GridDataBuilder.create(mUserButtonEdit).hFill().vCenter();
+        mUserButtonEdit.setText("Edit...");
 
-        createCloseButton();
+        mUserButtonDelete = new Button(root, SWT.NONE);
+        mUserButtonDelete.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                on_UserButtonDelete_widgetSelected(e);
+            }
+        });
+        GridDataBuilder.create(mUserButtonDelete).hFill().vCenter();
+        mUserButtonDelete.setText("Delete...");
 
-        adjustColumnsWidth(mTable, mColumnUrl);
+        adjustColumnsWidth(mUserTable, userColumnUrl);
+    }
+
+    @Override
+    protected void close() {
+        if (mSources != null && mSourcesChangeListener != null) {
+            mSources.removeChangeListener(mSourcesChangeListener);
+        }
+        super.close();
     }
 
     /**
@@ -166,12 +307,11 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
         });
     }
 
-    private void newOrEdit(final boolean isEdit) {
-        SdkSources sources = getUpdaterData().getSources();
-        final SdkSource[] knownSources = sources.getAllSources();
+    private void userNewOrEdit(final boolean isEdit) {
+        final SdkSource[] knownSources = mSources.getAllSources();
         String title = isEdit ? "Edit Add-on Site URL" : "Add Add-on Site URL";
         String msg = "Please enter the URL of the addon.xml:";
-        IStructuredSelection sel = (IStructuredSelection) mTableViewer.getSelection();
+        IStructuredSelection sel = (IStructuredSelection) mUserTableViewer.getSelection();
         final String initialValue = !isEdit || sel.isEmpty() ? null :
                                                                sel.getFirstElement().toString();
 
@@ -228,9 +368,9 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
                 if (isEdit && initialValue != null) {
                     // Remove the old value before we add the new one, which is we just
                     // asserted will be different.
-                    for (SdkSource source : sources.getSources(SdkSourceCategory.USER_ADDONS)) {
+                    for (SdkSource source : mSources.getSources(SdkSourceCategory.USER_ADDONS)) {
                         if (initialValue.equals(source.getUrl())) {
-                            sources.remove(source);
+                            mSources.remove(source);
                             break;
                         }
                     }
@@ -239,21 +379,22 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
 
                 // create the source, store it and update the list
                 SdkAddonSource newSource = new SdkAddonSource(url, null/*uiName*/);
-                sources.add(
+                mSources.add(
                         SdkSourceCategory.USER_ADDONS,
                         newSource);
                 setReturnValue(true);
-                loadList();
+                // notify sources change listeners. This will invoke our own loadUserUrlsList().
+                mSources.notifyChangeListeners();
 
                 // select the new source
                 IStructuredSelection newSel = new StructuredSelection(newSource);
-                mTableViewer.setSelection(newSel, true /*reveal*/);
+                mUserTableViewer.setSelection(newSel, true /*reveal*/);
             }
         }
     }
 
-    private void on_ButtonDelete_widgetSelected(SelectionEvent e) {
-        IStructuredSelection sel = (IStructuredSelection) mTableViewer.getSelection();
+    private void on_UserButtonDelete_widgetSelected(SelectionEvent e) {
+        IStructuredSelection sel = (IStructuredSelection) mUserTableViewer.getSelection();
         String selectedUrl = sel.isEmpty() ? null : sel.getFirstElement().toString();
 
         if (selectedUrl == null) {
@@ -265,60 +406,138 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
         mb.setText("Delete add-on site");
         mb.setMessage(String.format("Do you want to delete the URL %1$s?", selectedUrl));
         if (mb.open() == SWT.YES) {
-            SdkSources sources = getUpdaterData().getSources();
-            for (SdkSource source : sources.getSources(SdkSourceCategory.USER_ADDONS)) {
+            for (SdkSource source : mSources.getSources(SdkSourceCategory.USER_ADDONS)) {
                 if (selectedUrl.equals(source.getUrl())) {
-                    sources.remove(source);
+                    mSources.remove(source);
                     setReturnValue(true);
-                    loadList();
+                    mSources.notifyChangeListeners();
+                    break;
                 }
             }
         }
     }
 
-    private void on_Table_mouseUp(MouseEvent e) {
-        Point p = new Point(e.x, e.y);
-        if (mTable.getItem(p) == null) {
-            mTable.deselectAll();
-            on_TableViewer_selectionChanged(null /*event*/);
+    private void on_UserTable_mouseUp(MouseEvent event) {
+        Point p = new Point(event.x, event.y);
+        if (mUserTable.getItem(p) == null) {
+            mUserTable.deselectAll();
+            on_UserTableViewer_selectionChanged(null /*event*/);
         }
     }
 
-    private void on_TableViewer_selectionChanged(SelectionChangedEvent event) {
-        ISelection sel = mTableViewer.getSelection();
-        mButtonDelete.setEnabled(!sel.isEmpty());
-        mButtonEdit.setEnabled(!sel.isEmpty());
+    private void on_UserTableViewer_selectionChanged(SelectionChangedEvent event) {
+        ISelection sel = mUserTableViewer.getSelection();
+        mUserButtonDelete.setEnabled(!sel.isEmpty());
+        mUserButtonEdit.setEnabled(!sel.isEmpty());
     }
 
-    @Override
-    protected void postCreate() {
-        // initialize the list
-        mTableViewer.setLabelProvider(new LabelProvider());
-        mTableViewer.setContentProvider(new SourcesContentProvider());
-        loadList();
-    }
-
-    private void loadList() {
-        if (getUpdaterData() != null) {
-            SdkSource[] knownSources =
-                getUpdaterData().getSources().getSources(SdkSourceCategory.USER_ADDONS);
-            Arrays.sort(knownSources);
-
-            ISelection oldSelection = mTableViewer.getSelection();
-
-            mTableViewer.setInput(knownSources);
-            mTableViewer.refresh();
-            // initialize buttons' state that depend on the list
-            on_TableViewer_selectionChanged(null /*event*/);
-
-            if (oldSelection != null && !oldSelection.isEmpty()) {
-                mTableViewer.setSelection(oldSelection, true /*reveal*/);
+    private void on_SitesTableViewer_checkStateChanged(CheckStateChangedEvent event) {
+        Object element = event.getElement();
+        if (element instanceof SdkSource) {
+            SdkSource source = (SdkSource) element;
+            boolean isChecked = event.getChecked();
+            if (source.isEnabled() != isChecked) {
+                setReturnValue(true);
+                source.setEnabled(isChecked);
+                mSources.notifyChangeListeners();
             }
         }
     }
 
-    private static class SourcesContentProvider implements IStructuredContentProvider {
+    private void on_SitesTableViewer_selectAll() {
+        for (Object item : (Object[]) mSitesTableViewer.getInput()) {
+            if (!mSitesTableViewer.getChecked(item)) {
+                mSitesTableViewer.setChecked(item, true);
+                on_SitesTableViewer_checkStateChanged(
+                        new CheckStateChangedEvent(mSitesTableViewer, item, true));
+            }
+        }
+    }
 
+    private void on_SitesTableViewer_deselectAll() {
+        for (Object item : (Object[]) mSitesTableViewer.getInput()) {
+            if (mSitesTableViewer.getChecked(item)) {
+                mSitesTableViewer.setChecked(item, false);
+                on_SitesTableViewer_checkStateChanged(
+                        new CheckStateChangedEvent(mSitesTableViewer, item, false));
+            }
+        }
+    }
+
+
+    @Override
+    protected void postCreate() {
+        // A runnable to initially load and then update the user urls & sites lists.
+        final Runnable updateInUiThread = new Runnable() {
+            @Override
+            public void run() {
+                loadUserUrlsList();
+                loadSiteUrlsList();
+            }
+        };
+
+        // A listener that runs when the sources have changed.
+        // This is most likely called on a worker thread.
+        mSourcesChangeListener = new Runnable() {
+            @Override
+            public void run() {
+                Shell shell = getShell();
+                if (shell != null) {
+                    Display display = shell.getDisplay();
+                    if (display != null) {
+                        display.syncExec(updateInUiThread);
+                    }
+                }
+            }
+        };
+
+        mSources.addChangeListener(mSourcesChangeListener);
+
+        // initialize the list
+        updateInUiThread.run();
+    }
+
+    private void loadUserUrlsList() {
+        SdkSource[] knownSources = mSources.getSources(SdkSourceCategory.USER_ADDONS);
+        Arrays.sort(knownSources);
+
+        ISelection oldSelection = mUserTableViewer.getSelection();
+
+        mUserTableViewer.setInput(knownSources);
+        mUserTableViewer.refresh();
+        // initialize buttons' state that depend on the list
+        on_UserTableViewer_selectionChanged(null /*event*/);
+
+        if (oldSelection != null && !oldSelection.isEmpty()) {
+            mUserTableViewer.setSelection(oldSelection, true /*reveal*/);
+        }
+    }
+
+    private void loadSiteUrlsList() {
+        SdkSource[] knownSources = mSources.getSources(SdkSourceCategory.ADDONS_3RD_PARTY);
+        Arrays.sort(knownSources);
+
+        ISelection oldSelection = mSitesTableViewer.getSelection();
+
+        mSitesTableViewer.setInput(knownSources);
+        mSitesTableViewer.refresh();
+
+        if (oldSelection != null && !oldSelection.isEmpty()) {
+            mSitesTableViewer.setSelection(oldSelection, true /*reveal*/);
+        }
+
+        // Check the sources which are currently enabled.
+        ArrayList<SdkSource> disabled = new ArrayList<SdkSource>(knownSources.length);
+        for (SdkSource source : knownSources) {
+            if (source.isEnabled()) {
+                disabled.add(source);
+            }
+        }
+        mSitesTableViewer.setCheckedElements(disabled.toArray());
+    }
+
+
+    private static class SourcesContentProvider implements IStructuredContentProvider {
         @Override
         public void dispose() {
             // pass
