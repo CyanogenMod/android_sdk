@@ -18,6 +18,8 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 
@@ -25,7 +27,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -125,47 +129,40 @@ public class SdkSourceProperties {
         }
     }
 
+    /**
+     * Returns an internal string representation of the underlying Properties map,
+     * sorted by ascending keys. Useful for debugging and testing purposes only.
+     */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("<SdkSourceProperties ");      //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder("<SdkSourceProperties");      //$NON-NLS-1$
         synchronized (sSourcesProperties) {
-            for (Map.Entry<Object, Object> entry : sSourcesProperties.entrySet()) {
-                sb.append('\n').append(entry.getKey())
-                  .append(" = ").append(entry.getValue());                  //$NON-NLS-1$
+            List<Object> keys = Collections.list(sSourcesProperties.keys());
+            Collections.sort(keys, new Comparator<Object>() {
+                @Override
+                public int compare(Object o1, Object o2) {
+                    return o1.toString().compareTo(o2.toString());
+                }});
+
+            for (Object key : keys) {
+                sb.append('\n').append(key)
+                  .append(" = ").append(sSourcesProperties.get(key));       //$NON-NLS-1$
             }
         }
-        sb.append("\n>");                                                   //$NON-NLS-1$
+        sb.append('>');
         return sb.toString();
     }
 
+    /** Load state from persistent file. Expects sSourcesProperties to be synchronized. */
     private void loadLocked() {
         // Load state from persistent file
-        FileInputStream fis = null;
-        try {
-            String folder = AndroidLocation.getFolder();
-            File f = new File(folder, SRC_FILENAME);
-            if (f.exists()) {
-                fis = new FileInputStream(f);
-
-                sSourcesProperties.load(fis);
-
-                // If it lacks our magic version key, don't use it
-                if (sSourcesProperties.getProperty(KEY_VERSION) == null) {
-                    sSourcesProperties.clear();
-                }
-
-                sModified = false;
+        if (loadProperties()) {
+            // If it lacks our magic version key, don't use it
+            if (sSourcesProperties.getProperty(KEY_VERSION) == null) {
+                sSourcesProperties.clear();
             }
-        } catch (IOException ignore) {
-            // nop
-        } catch (AndroidLocationException ignore) {
-            // nop
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException ignore) {}
-            }
+
+            sModified = false;
         }
 
         if (sSourcesProperties.isEmpty()) {
@@ -177,7 +174,47 @@ public class SdkSourceProperties {
         }
     }
 
-    private void saveLocked() {
+    /**
+     * Load properties from default file. Extracted so that it can be mocked in tests.
+     *
+     * @return True if actually loaded the file. False if there was an IO error or no
+     *   file and nothing was loaded.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected boolean loadProperties() {
+        try {
+            String folder = AndroidLocation.getFolder();
+            File f = new File(folder, SRC_FILENAME);
+            if (f.exists()) {
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(f);
+                    sSourcesProperties.load(fis);
+                } catch (IOException ignore) {
+                    // nop
+                } finally {
+                    if (fis != null) {
+                        try {
+                            fis.close();
+                        } catch (IOException ignore) {}
+                    }
+                }
+
+                return true;
+            }
+        } catch (AndroidLocationException ignore) {
+            // nop
+        }
+        return false;
+    }
+
+    /**
+     * Save file to disk. Expects sSourcesProperties to be synchronized.
+     * Made accessible for testing purposes.
+     * For public usage, please use {@link #save()} instead.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected void saveLocked() {
         // Persist it to the file
         FileOutputStream fos = null;
         try {
@@ -199,6 +236,14 @@ public class SdkSourceProperties {
                 } catch (IOException ignore) {}
             }
         }
+    }
 
+    /** Empty current property list. Made accessible for testing purposes. */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected void clear() {
+        synchronized (sSourcesProperties) {
+            sSourcesProperties.clear();
+            sModified = false;
+        }
     }
 }
