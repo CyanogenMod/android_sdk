@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
+import com.android.io.StreamException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -57,12 +58,15 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Pre Java Compiler.
@@ -364,27 +368,60 @@ public class PreCompilerBuilder extends BaseBuilder {
             // resource delta visitor yet.
             if (dv == null || dv.getCheckedManifestXml() == false) {
                 BasicXmlErrorListener errorListener = new BasicXmlErrorListener();
-                ManifestData parser = AndroidManifestHelper.parse(new IFileWrapper(manifestFile),
-                        true /*gather data*/,
-                        errorListener);
+                try {
+                    ManifestData parser = AndroidManifestHelper.parseUnchecked(
+                            new IFileWrapper(manifestFile),
+                            true /*gather data*/,
+                            errorListener);
 
-                if (errorListener.mHasXmlError == true) {
-                    // There was an error in the manifest, its file has been marked
-                    // by the XmlErrorHandler. The stopBuild() call below will abort
-                    // this with an exception.
-                    String msg = String.format(Messages.s_Contains_Xml_Error,
-                            SdkConstants.FN_ANDROID_MANIFEST_XML);
-                    AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
+                    if (errorListener.mHasXmlError == true) {
+                        // There was an error in the manifest, its file has been marked
+                        // by the XmlErrorHandler. The stopBuild() call below will abort
+                        // this with an exception.
+                        String msg = String.format(Messages.s_Contains_Xml_Error,
+                                SdkConstants.FN_ANDROID_MANIFEST_XML);
+                        AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
+                        markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+
+                        return result;
+                    }
+
+                    // Get the java package from the parser.
+                    // This can be null if the parsing failed because the resource is out of sync,
+                    // in which case the error will already have been logged anyway.
+                    if (parser != null) {
+                        javaPackage = parser.getPackage();
+                        minSdkVersion = parser.getMinSdkVersionString();
+                    }
+                } catch (StreamException e) {
+                    handleStreamException(e);
 
                     return result;
-                }
+                } catch (ParserConfigurationException e) {
+                    String msg = String.format(
+                            "Bad parser configuration for %s: %s",
+                            manifestFile.getFullPath(),
+                            e.getMessage());
 
-                // Get the java package from the parser.
-                // This can be null if the parsing failed because the resource is out of sync,
-                // in which case the error will already have been logged anyway.
-                if (parser != null) {
-                    javaPackage = parser.getPackage();
-                    minSdkVersion = parser.getMinSdkVersionString();
+                    handleException(e, msg);
+                    return result;
+
+                } catch (SAXException e) {
+                    String msg = String.format(
+                            "Parser exception for %s: %s",
+                            manifestFile.getFullPath(),
+                            e.getMessage());
+
+                    handleException(e, msg);
+                    return result;
+                } catch (IOException e) {
+                    String msg = String.format(
+                            "I/O error for %s: %s",
+                            manifestFile.getFullPath(),
+                            e.getMessage());
+
+                    handleException(e, msg);
+                    return result;
                 }
             }
 
@@ -519,8 +556,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             try {
                 handleBuildConfig(args);
             } catch (IOException e) {
-                AdtPlugin.log(e, "Failed to create BuildConfig class for project %s",
-                        getProject().getName());
+                handleException(e, "Failed to create BuildConfig class");
                 return result;
             }
 
@@ -531,7 +567,10 @@ public class PreCompilerBuilder extends BaseBuilder {
                     processorStatus |= processor.compileFiles(this,
                             project, projectTarget, minSdkValue, sourceFolderPathList, monitor);
                 } catch (Throwable t) {
-                    AdtPlugin.log(t, "Failed to run one of the source processor");
+                    handleException(t, String.format(
+                            "Failed to run %s. Check workspace log for detail.",
+                            processor.getClass().getName()));
+                    return result;
                 }
             }
 

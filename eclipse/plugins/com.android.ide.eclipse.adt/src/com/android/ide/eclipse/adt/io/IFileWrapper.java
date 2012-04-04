@@ -48,7 +48,11 @@ public class IFileWrapper implements IAbstractFile {
         try {
             return mFile.getContents();
         } catch (CoreException e) {
-            throw new StreamException(e);
+            StreamException.Error error = StreamException.Error.DEFAULT;
+            if (mFile.isSynchronized(IResource.DEPTH_ZERO) == false) {
+                error = StreamException.Error.OUTOFSYNC;
+            }
+            throw new StreamException(e, this, error);
         }
     }
 
@@ -57,7 +61,7 @@ public class IFileWrapper implements IAbstractFile {
         try {
             mFile.setContents(source, IResource.FORCE, null);
         } catch (CoreException e) {
-            throw new StreamException(e);
+            throw new StreamException(e, this);
         }
     }
 

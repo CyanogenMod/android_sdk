@@ -52,24 +52,54 @@ public class AndroidManifestHelper {
      * @param errorListener an optional error listener. If non null, then the parser will also
      * look for XML errors.
      * @return an {@link ManifestData} or null if the parsing failed.
+     * @throws ParserConfigurationException
+     * @throws StreamException
+     * @throws IOException
+     * @throws SAXException
+     */
+    public static ManifestData parseUnchecked(
+            IAbstractFile manifestFile,
+            boolean gatherData,
+            XmlErrorListener errorListener) throws SAXException, IOException,
+            StreamException, ParserConfigurationException {
+        if (manifestFile != null) {
+            IFile eclipseFile = null;
+            if (manifestFile instanceof IFileWrapper) {
+                eclipseFile = ((IFileWrapper)manifestFile).getIFile();
+            }
+            XmlErrorHandler errorHandler = null;
+            if (errorListener != null) {
+                errorHandler = new XmlErrorHandler(eclipseFile, errorListener);
+            }
+
+            return AndroidManifestParser.parse(manifestFile, gatherData, errorHandler);
+        }
+
+        return null;
+    }
+
+    /**
+     * Parses the Android Manifest, and returns an object containing the result of the parsing.
+     * <p/>
+     * This method can also gather XML error during the parsing. This is done by using an
+     * {@link XmlErrorHandler} to mark the files in case of error, as well as a given
+     * {@link XmlErrorListener}. To use a different error handler, consider using
+     * {@link AndroidManifestParser#parse(IAbstractFile, boolean, com.android.sdklib.xml.AndroidManifestParser.ManifestErrorHandler)}
+     * directly.
+     *
+     * @param manifestFile the {@link IFile} representing the manifest file.
+     * @param gatherData indicates whether the parsing will extract data from the manifest. If null,
+     * the method will always return null.
+     * @param errorListener an optional error listener. If non null, then the parser will also
+     * look for XML errors.
+     * @return an {@link ManifestData} or null if the parsing failed.
      */
     public static ManifestData parse(
             IAbstractFile manifestFile,
             boolean gatherData,
             XmlErrorListener errorListener) {
         try {
-            if (manifestFile != null) {
-                IFile eclipseFile = null;
-                if (manifestFile instanceof IFileWrapper) {
-                    eclipseFile = ((IFileWrapper)manifestFile).getIFile();
-                }
-                XmlErrorHandler errorHandler = null;
-                if (errorListener != null) {
-                    errorHandler = new XmlErrorHandler(eclipseFile, errorListener);
-                }
-
-                return AndroidManifestParser.parse(manifestFile, gatherData, errorHandler);
-            }
+            return parseUnchecked(manifestFile, gatherData, errorListener);
         } catch (ParserConfigurationException e) {
             AdtPlugin.logAndPrintError(e, AndroidManifestHelper.class.getCanonicalName(),
                     "Bad parser configuration for %s: %s",
