@@ -19,8 +19,6 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.repository.SdkAddonConstants;
@@ -35,10 +33,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -46,7 +41,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,8 +68,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
     private String mFetchError;
     private final String mUiName;
 
-    private static final Properties sDisabledSourceUrls = new Properties();
-    private static final String     SRC_FILENAME = "sites-settings.cfg"; //$NON-NLS-1$
+    private static final SdkSourceProperties sSourcesProps = new SdkSourceProperties();
 
     /**
      * Constructs a new source for the given repository URL.
@@ -100,6 +93,12 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             if (names.length > 0) {
                 url += names[0];
             }
+        }
+
+        if (uiName == null) {
+            uiName = sSourcesProps.getProperty(SdkSourceProperties.KEY_NAME, url, null);
+        } else {
+            sSourcesProps.setProperty(SdkSourceProperties.KEY_NAME, url, uiName);
         }
 
         mUrl = url;
@@ -221,103 +220,31 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      * Indicates if the source is enabled.
      * <p/>
      * A 3rd-party add-on source can be disabled by the user to prevent from loading it.
-     * This loads the persistent state from a settings file when first called.
      *
      * @return True if the source is enabled (default is true).
      */
     public boolean isEnabled() {
-        synchronized (sDisabledSourceUrls) {
-            if (sDisabledSourceUrls.isEmpty()) {
-                // Load state from persistent file
-
-                FileInputStream fis = null;
-                try {
-                    String folder = AndroidLocation.getFolder();
-                    File f = new File(folder, SRC_FILENAME);
-                    if (f.exists()) {
-                        fis = new FileInputStream(f);
-
-                        sDisabledSourceUrls.load(fis);
-                    }
-                } catch (IOException ignore) {
-                    // nop
-                } catch (AndroidLocationException ignore) {
-                    // nop
-                } finally {
-                    if (fis != null) {
-                        try {
-                            fis.close();
-                        } catch (IOException ignore) {}
-                    }
-                }
-
-                if (sDisabledSourceUrls.isEmpty()) {
-                    // Nothing was loaded. Initialize the storage with a version
-                    // identified. This isn't currently checked back, but we might
-                    // want it later if we decide to change the way this works.
-                    // The version key is choosen on purpose to not match any valid URL.
-                    sDisabledSourceUrls.setProperty("@version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-            }
-
-            // A URL is enabled if it's not in the disabled list.
-            return sDisabledSourceUrls.getProperty(mUrl) == null;
-        }
+        // A URL is enabled if it's not in the disabled list.
+        return sSourcesProps.getProperty(SdkSourceProperties.KEY_DISABLED, mUrl, null) == null;
     }
 
     /**
      * Changes whether the source is marked as enabled.
      * <p/>
-     * When <em>changing> the enable state, the current package list is purged
+     * When <em>changing</em> the enable state, the current package list is purged
      * and the next {@code load} will either return an empty list (if disabled) or
      * the actual package list (if enabled.)
-     * <p/>
-     * This also persistent the change by updating a settings file.
      *
      * @param enabled True for the source to be enabled (can be loaded), false otherwise.
      */
     public void setEnabled(boolean enabled) {
-        // Comparing using isEnabled() has the voluntary side-effect of also
-        // loading the map from the persistent file the first time.
         if (enabled != isEnabled()) {
             // First we clear the current package list, which will force the
             // next load() to actually set the package list as desired.
             clearPackages();
 
-            synchronized (sDisabledSourceUrls) {
-                // Change the map
-                if (enabled) {
-                    sDisabledSourceUrls.remove(mUrl);
-                } else {
-                    // The "disabled" value is not being checked when reloading the map.
-                    // We might want to do something with it later if a URL can have
-                    // more attributes than just disabled.
-                    sDisabledSourceUrls.setProperty(mUrl, "disabled"); //$NON-NLS-1$
-                }
-
-                // Persist it to the file
-                FileOutputStream fos = null;
-                try {
-                    String folder = AndroidLocation.getFolder();
-                    File f = new File(folder, SRC_FILENAME);
-
-                    fos = new FileOutputStream(f);
-
-                    sDisabledSourceUrls.store(fos,
-                            "## Disabled Sources for Android SDK Manager");  //$NON-NLS-1$
-
-                } catch (AndroidLocationException ignore) {
-                    // nop
-                } catch (IOException ignore) {
-                    // nop
-                } finally {
-                    if (fos != null) {
-                        try {
-                            fos.close();
-                        } catch (IOException ignore) {}
-                    }
-                }
-            }
+            sSourcesProps.setProperty(SdkSourceProperties.KEY_DISABLED, mUrl,
+                    enabled ? null /*remove*/ : "disabled"); //$NON-NLS-1$
         }
     }
 

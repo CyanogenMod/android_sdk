@@ -20,6 +20,7 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.SdkSourceProperties;
 import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
@@ -148,6 +149,9 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 }
             }
         }
+
+        SdkSourceProperties p = new SdkSourceProperties();
+        p.save();
 
         dispose();  //$hide$
     }
