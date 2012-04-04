@@ -74,6 +74,11 @@ class ImageEditorPanel extends JPanel {
     private static final int DEFAULT_ZOOM = 8;
     private static final float DEFAULT_SCALE = 2.0f;
 
+    // For stretch regions and padding
+    private static final int BLACK_TICK = 0xFF000000;
+    // For Layout Bounds
+    private static final int RED_TICK = 0xFFFF0000;
+
     private String name;
     private BufferedImage image;
     private boolean is9Patch;
@@ -317,21 +322,21 @@ class ImageEditorPanel extends JPanel {
         int height = image.getHeight();
         for (int i = 0; i < width; i++) {
             int pixel = image.getRGB(i, 0);
-            if (pixel != 0 && pixel != 0xFF000000) {
+            if (pixel != 0 && pixel != BLACK_TICK && pixel != RED_TICK) {
                 image.setRGB(i, 0, 0);
             }
             pixel = image.getRGB(i, height - 1);
-            if (pixel != 0 && pixel != 0xFF000000) {
+            if (pixel != 0 && pixel != BLACK_TICK && pixel != RED_TICK) {
                 image.setRGB(i, height - 1, 0);
             }
         }
         for (int i = 0; i < height; i++) {
             int pixel = image.getRGB(0, i);
-            if (pixel != 0 && pixel != 0xFF000000) {
+            if (pixel != 0 && pixel != BLACK_TICK && pixel != RED_TICK) {
                 image.setRGB(0, i, 0);
             }
             pixel = image.getRGB(width - 1, i);
-            if (pixel != 0 && pixel != 0xFF000000) {
+            if (pixel != 0 && pixel != BLACK_TICK && pixel != RED_TICK) {
                 image.setRGB(width - 1, i, 0);
             }
         }
@@ -685,7 +690,8 @@ class ImageEditorPanel extends JPanel {
             helpPanel = new JPanel(new BorderLayout());
             helpPanel.setBorder(new EmptyBorder(0, 6, 0, 6));
             helpPanel.setBackground(HELP_COLOR);
-            helpLabel = new JLabel("Press Shift to erase pixels");
+            helpLabel = new JLabel("Press Shift to erase pixels."
+                    + " Press Control to draw layout bounds");
             helpLabel.putClientProperty("JComponent.sizeVariant", "small");            
             helpPanel.add(helpLabel, BorderLayout.WEST);
             checkButton = new JButton("Show bad patches");
@@ -727,6 +733,7 @@ class ImageEditorPanel extends JPanel {
                     // event returns 0, which appears to be technically correct (no button
                     // changed state).
                     currentButton = event.isShiftDown() ? MouseEvent.BUTTON3 : event.getButton();
+                    currentButton = event.isControlDown() ? MouseEvent.BUTTON2 : currentButton;
                     paint(event.getX(), event.getY(), currentButton);
                 }
             });
@@ -843,7 +850,8 @@ class ImageEditorPanel extends JPanel {
                 if (eraseMode) {
                     helpLabel.setText("Release Shift to draw pixels");
                 } else {
-                    helpLabel.setText("Press Shift to erase pixels");
+                    helpLabel.setText("Press Shift to erase pixels."
+                                      + " Press Control to draw layout bounds");
                 }
             }
         }
@@ -852,7 +860,10 @@ class ImageEditorPanel extends JPanel {
             int color;
             switch (button) {
                 case MouseEvent.BUTTON1:
-                    color = 0xFF000000;
+                    color = BLACK_TICK;
+                    break;
+                case MouseEvent.BUTTON2:
+                    color = RED_TICK;
                     break;
                 case MouseEvent.BUTTON3:
                     color = 0;
@@ -1154,7 +1165,7 @@ class ImageEditorPanel extends JPanel {
             for (int i = 1; i < pixels.length - 1; i++) {
                 int pixel = pixels[i];
                 if (pixel != lastPixel) {
-                    if (lastPixel == 0xFF000000) {
+                    if (lastPixel == BLACK_TICK) {
                         if (first) startWithPatch[0] = true;
                         patches.add(new Pair<Integer>(lastIndex, i));
                     } else {
@@ -1166,7 +1177,7 @@ class ImageEditorPanel extends JPanel {
                     lastPixel = pixel;
                 }
             }
-            if (lastPixel == 0xFF000000) {
+            if (lastPixel == BLACK_TICK) {
                 if (first) startWithPatch[0] = true;
                 patches.add(new Pair<Integer>(lastIndex, pixels.length - 1));
             } else {
