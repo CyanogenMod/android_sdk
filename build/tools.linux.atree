@@ -28,3 +28,7 @@
 # eclipse/monitor-linux.gtk.x86/monitor       tools/lib/monitor-x86
 # eclipse/monitor-linux.gtk.x86_64/monitor    tools/lib/monitor-x86_64
 
+
+# swt
+prebuilts/tools/linux-x86/swt/swt.jar tools/lib/x86/swt.jar
+prebuilts/tools/linux-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar

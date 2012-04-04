@@ -107,3 +107,11 @@ sdk/find_java/find_java.bat                       tools/lib/find_java.bat
 bin/find_java.exe                           strip tools/lib/find_java.exe
 bin/find_lock.exe                           strip tools/lib/find_lock.exe
 
+prebuilts/tools/windows/swt/swt.jar               tools/lib/x86/swt.jar
+prebuilts/tools/windows-x86_64/swt/swt.jar        tools/lib/x86_64/swt.jar
+
+external/sonivox/jet_tools/JetCreator             tools/Jet/JetCreator
+external/sonivox/jet_tools/JetCreator_content     tools/Jet/demo_content
+external/sonivox/jet_tools/logic_templates        tools/Jet/logic_templates
+prebuilts/tools/windows/jetcreator/EASDLL.dll     tools/Jet/JetCreator/EASDLL.dll
+
