@@ -1217,9 +1217,9 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:The addon B from vendor 1, Android API 1, revision 7>\n" + // from src3+4
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
                 getTree(m, true /*displaySortByApi*/));
-        // When sorting by source, the src4 packages are not listed at all since
-        // they are exactly the same as the ones from src2 or src3.
-        // FIXME: in this sort mode, we should still list them explicitly.
+        // When sorting by source, the src4 source is listed, however since its
+        // packages are the same as the ones from src2 or src3 the packages themselves
+        // are not shown.
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
@@ -1228,7 +1228,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategorySource <source=repo2 (example.com), #items=1>\n" +
                 "-- <NEW, pkg:The addon A from vendor 1, Android API 1, revision 5>\n" + // from src2+3+4
                 "PkgCategorySource <source=repo3 (example.com), #items=1>\n" +
-                "-- <NEW, pkg:The addon B from vendor 1, Android API 1, revision 7>\n",  // from src3+4
+                "-- <NEW, pkg:The addon B from vendor 1, Android API 1, revision 7>\n" + // from src3+4
+                "PkgCategorySource <source=repo4 (4.example.com), #items=0>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
