@@ -36,7 +36,6 @@ import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -48,8 +47,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
-import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
-import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -59,7 +56,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -424,6 +420,8 @@ public class PackagesPage extends UpdaterPage
                 case TOGGLE_SHOW_ARCHIVES:
                     mDisplayArchives = !mDisplayArchives;
                     // Force the viewer to be refreshed
+                    ((PkgContentProvider) mTreeViewer.getContentProvider()).setDisplayArchives(
+                                                                                  mDisplayArchives);
                     mTreeViewer.setInput(null);
                     refreshViewerInput();
                     syncViewerSelection();
@@ -523,7 +521,6 @@ public class PackagesPage extends UpdaterPage
                 item.setSelection(value);
             }
         }
-
     }
 
     private void postCreate() {
@@ -531,13 +528,19 @@ public class PackagesPage extends UpdaterPage
             mTextSdkOsPath.setText(mUpdaterData.getOsSdkRoot());
         }
 
-        mTreeViewer.setContentProvider(new PkgContentProvider());
+        mTreeViewer.setContentProvider(new PkgContentProvider(mTreeViewer));
+        ((PkgContentProvider) mTreeViewer.getContentProvider()).setDisplayArchives(
+                                                                                mDisplayArchives);
         ColumnViewerToolTipSupport.enableFor(mTreeViewer, ToolTip.NO_RECREATE);
 
-        mColumnApi.setLabelProvider     (new PkgTreeColumnViewerLabelProvider(mColumnApi));
-        mColumnName.setLabelProvider    (new PkgTreeColumnViewerLabelProvider(mColumnName));
-        mColumnStatus.setLabelProvider  (new PkgTreeColumnViewerLabelProvider(mColumnStatus));
-        mColumnRevision.setLabelProvider(new PkgTreeColumnViewerLabelProvider(mColumnRevision));
+        mColumnApi.setLabelProvider(
+                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnApi)));
+        mColumnName.setLabelProvider(
+                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnName)));
+        mColumnStatus.setLabelProvider(
+                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnStatus)));
+        mColumnRevision.setLabelProvider(
+                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnRevision)));
 
         FontData fontData = mTree.getFont().getFontData()[0];
         fontData.setStyle(SWT.ITALIC);
@@ -1277,116 +1280,6 @@ public class PackagesPage extends UpdaterPage
 
     // ----------------------
 
-    /**
-     * A custom version of {@link TreeColumnViewerLabelProvider} which
-     * handles {@link TreePath}s and delegates content to a base
-     * {@link PkgCellLabelProvider} for the given {@link TreeViewerColumn}.
-     * <p/>
-     * The implementation handles a variety of providers (table label, table
-     * color, table font) but does not implement a tooltip provider, so we
-     * delegate the calls here to the appropriate {@link PkgCellLabelProvider}.
-     * <p/>
-     * Only {@link #getToolTipText(Object)} is really useful for us but we
-     * delegate all the tooltip calls for completeness and avoid surprises later
-     * if we ever decide to override more things in the label provider.
-     */
-    public class PkgTreeColumnViewerLabelProvider extends TreeColumnViewerLabelProvider {
-
-        private CellLabelProvider mTooltipProvider;
-
-        public PkgTreeColumnViewerLabelProvider(TreeViewerColumn column) {
-            super(new PkgCellLabelProvider(column));
-        }
-
-        @Override
-        public void setProviders(Object provider) {
-            super.setProviders(provider);
-            if (provider instanceof CellLabelProvider) {
-                mTooltipProvider = (CellLabelProvider) provider;
-            }
-        }
-
-        @Override
-        public Image getToolTipImage(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipImage(object);
-            }
-            return super.getToolTipImage(object);
-        }
-
-        @Override
-        public String getToolTipText(Object element) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipText(element);
-            }
-            return super.getToolTipText(element);
-        }
-
-        @Override
-        public Color getToolTipBackgroundColor(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipBackgroundColor(object);
-            }
-            return super.getToolTipBackgroundColor(object);
-        }
-
-        @Override
-        public Color getToolTipForegroundColor(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipForegroundColor(object);
-            }
-            return super.getToolTipForegroundColor(object);
-        }
-
-        @Override
-        public Font getToolTipFont(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipFont(object);
-            }
-            return super.getToolTipFont(object);
-        }
-
-        @Override
-        public Point getToolTipShift(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipShift(object);
-            }
-            return super.getToolTipShift(object);
-        }
-
-        @Override
-        public boolean useNativeToolTip(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.useNativeToolTip(object);
-            }
-            return super.useNativeToolTip(object);
-        }
-
-        @Override
-        public int getToolTipTimeDisplayed(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipTimeDisplayed(object);
-            }
-            return super.getToolTipTimeDisplayed(object);
-        }
-
-        @Override
-        public int getToolTipDisplayDelayTime(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipDisplayDelayTime(object);
-            }
-            return super.getToolTipDisplayDelayTime(object);
-        }
-
-        @Override
-        public int getToolTipStyle(Object object) {
-            if (mTooltipProvider != null) {
-                return mTooltipProvider.getToolTipStyle(object);
-            }
-            return super.getToolTipStyle(object);
-        }
-    }
-
     public class PkgCellLabelProvider extends ColumnLabelProvider implements ITableFontProvider {
 
         private final TreeViewerColumn mColumn;
@@ -1400,7 +1293,6 @@ public class PackagesPage extends UpdaterPage
         public String getText(Object element) {
 
             if (mColumn == mColumnName) {
-
                 if (element instanceof PkgCategory) {
                     return ((PkgCategory) element).getLabel();
                 } else if (element instanceof PkgItem) {
@@ -1410,7 +1302,6 @@ public class PackagesPage extends UpdaterPage
                 }
 
             } else if (mColumn == mColumnApi) {
-
                 int api = -1;
                 if (element instanceof PkgItem) {
                     api = ((PkgItem) element).getApi();
@@ -1420,14 +1311,12 @@ public class PackagesPage extends UpdaterPage
                 }
 
             } else if (mColumn == mColumnRevision) {
-
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
                     return Integer.toString(pkg.getRevision());
                 }
 
             } else if (mColumn == mColumnStatus) {
-
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
 
@@ -1458,7 +1347,7 @@ public class PackagesPage extends UpdaterPage
                 }
             }
 
-            return "";
+            return ""; //$NON-NLS-1$
         }
 
         private String getPkgItemName(PkgItem item) {
@@ -1619,105 +1508,6 @@ public class PackagesPage extends UpdaterPage
         @Override
         public int getToolTipDisplayDelayTime(Object object) {
             return 500;
-        }
-    }
-
-    private class PkgContentProvider implements ITreeContentProvider {
-
-        @Override
-        public Object[] getChildren(Object parentElement) {
-            if (parentElement instanceof ArrayList<?>) {
-                return ((ArrayList<?>) parentElement).toArray();
-
-            } else if (parentElement instanceof PkgCategory) {
-                return ((PkgCategory) parentElement).getItems().toArray();
-
-            } else if (parentElement instanceof PkgItem) {
-                if (mDisplayArchives) {
-
-                    Package pkg = ((PkgItem) parentElement).getUpdatePkg();
-
-                    // Display update packages as sub-items if the details mode is activated.
-                    if (pkg != null) {
-                        return new Object[] { pkg };
-                    }
-
-                    return ((PkgItem) parentElement).getArchives();
-                }
-
-            } else if (parentElement instanceof Package) {
-                if (mDisplayArchives) {
-                    return ((Package) parentElement).getArchives();
-                }
-
-            }
-
-            return new Object[0];
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Object getParent(Object element) {
-            // This operation is expensive, so we do the minimum
-            // and don't try to cover all cases.
-
-            if (element instanceof PkgItem) {
-                Object input = mTreeViewer.getInput();
-                if (input != null) {
-                    for (PkgCategory cat : (List<PkgCategory>) input) {
-                        if (cat.getItems().contains(element)) {
-                            return cat;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public boolean hasChildren(Object parentElement) {
-            if (parentElement instanceof ArrayList<?>) {
-                return true;
-
-            } else if (parentElement instanceof PkgCategory) {
-                return true;
-
-            } else if (parentElement instanceof PkgItem) {
-                if (mDisplayArchives) {
-                    Package pkg = ((PkgItem) parentElement).getUpdatePkg();
-
-                    // Display update packages as sub-items if the details mode is activated.
-                    if (pkg != null) {
-                        return true;
-                    }
-
-                    Archive[] archives = ((PkgItem) parentElement).getArchives();
-                    return archives.length > 0;
-                }
-            } else if (parentElement instanceof Package) {
-                if (mDisplayArchives) {
-                    return ((Package) parentElement).getArchives().length > 0;
-                }
-            }
-
-            return false;
-        }
-
-        @Override
-        public Object[] getElements(Object inputElement) {
-            return getChildren(inputElement);
-        }
-
-        @Override
-        public void dispose() {
-            // unused
-
-        }
-
-        @Override
-        public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
-            // unused
         }
     }
 
