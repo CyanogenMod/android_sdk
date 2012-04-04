@@ -82,6 +82,16 @@ public final class LogCatMessageList {
     }
 
     /**
+     * Returns the number of additional elements that this queue can 
+     * ideally (in the absence of memory or resource constraints) 
+     * accept without blocking.
+     * @return the remaining capacity
+     */
+    public synchronized int remainingCapacity() {
+        return mQ.remainingCapacity();
+    }
+
+    /**
      * Clear all messages in the list.
      */
     public synchronized void clear() {
