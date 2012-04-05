@@ -229,7 +229,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         mRemoveAllAction = new LintViewAction("Remove All", ACTION_REMOVE_ALL,
                 sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVEALL),
                 sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVEALL_DISABLED));
-        mRefreshAction = new LintViewAction("Refresh", ACTION_REFRESH,
+        mRefreshAction = new LintViewAction("Refresh (& Save Files)", ACTION_REFRESH,
                 iconFactory.getImageDescriptor(REFRESH_ICON), null);
         mRemoveAllAction.setEnabled(true);
         mCollapseAll = new LintViewAction("Collapse All", ACTION_COLLAPSE,
@@ -461,6 +461,11 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         public void run() {
             switch (mAction) {
                 case ACTION_REFRESH: {
+                    IWorkbench workbench = PlatformUI.getWorkbench();
+                    if (workbench != null) {
+                        workbench.saveAllEditors(false /*confirm*/);
+                    }
+
                     Job[] jobs = EclipseLintRunner.getCurrentJobs();
                     if (jobs.length > 0) {
                         EclipseLintRunner.cancelCurrentJobs(false);
@@ -471,9 +476,8 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                         }
                         Job job = EclipseLintRunner.startLint(resources, null,
                                 false /*fatalOnly*/, false /*show*/);
-                        if (job != null) {
+                        if (job != null && workbench != null) {
                             job.addJobChangeListener(LintViewPart.this);
-                            IWorkbench workbench = PlatformUI.getWorkbench();
                             ISharedImages sharedImages = workbench.getSharedImages();
                             setImageDescriptor(sharedImages.getImageDescriptor(
                                     ISharedImages.IMG_ELCL_STOP));
