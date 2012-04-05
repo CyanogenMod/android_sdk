@@ -140,9 +140,9 @@ DDMS_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.ddms/libs"
 DDMS_LIBS="ddmlib ddmuilib swtmenubar"
 
 DDMS_PREBUILTS="\
-    prebuilt/common/jfreechart/jcommon-1.0.12.jar \
-    prebuilt/common/jfreechart/jfreechart-1.0.9.jar \
-    prebuilt/common/jfreechart/jfreechart-1.0.9-swt.jar"
+    prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar \
+    prebuilts/tools/common/jfreechart/jfreechart-1.0.9.jar \
+    prebuilts/tools/common/jfreechart/jfreechart-1.0.9-swt.jar"
 
 LIBS="$LIBS $DDMS_LIBS"
 CP_FILES="$CP_FILES @:$DDMS_DEST $DDMS_LIBS $DDMS_PREBUILTS"
