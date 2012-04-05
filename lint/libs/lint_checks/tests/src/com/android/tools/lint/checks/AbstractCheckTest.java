@@ -345,7 +345,7 @@ public abstract class AbstractCheckTest extends TestCase {
             if (exception != null) {
                 sb.append(exception.toString());
             }
-            fail(sb.toString());
+            System.err.println(sb);
         }
 
         @Override
@@ -387,7 +387,6 @@ public abstract class AbstractCheckTest extends TestCase {
 
             return super.findResource(relativePath);
         }
-
     }
 
     public class TestConfiguration extends Configuration {
