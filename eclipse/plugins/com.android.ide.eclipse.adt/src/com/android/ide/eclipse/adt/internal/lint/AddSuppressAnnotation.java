@@ -312,7 +312,21 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         boolean isClassDetector = issue != null && issue.getScope().contains(Scope.CLASS_FILE);
 
         NodeFinder nodeFinder = new NodeFinder(root, offset, length);
-        ASTNode coveringNode = nodeFinder.getCoveringNode();
+        ASTNode coveringNode;
+        if (offset <= 0) {
+            // Error added on the first line of a Java class: typically from a class-based
+            // detector which lacks line information. Map this to the top level class
+            // in the file instead.
+            coveringNode = root;
+            if (root.types() != null && root.types().size() > 0) {
+                Object type = root.types().get(0);
+                if (type instanceof ASTNode) {
+                    coveringNode = (ASTNode) type;
+                }
+            }
+        } else {
+            coveringNode = nodeFinder.getCoveringNode();
+        }
         for (ASTNode body = coveringNode; body != null; body = body.getParent()) {
             if (body instanceof BodyDeclaration) {
                 BodyDeclaration declaration = (BodyDeclaration) body;
