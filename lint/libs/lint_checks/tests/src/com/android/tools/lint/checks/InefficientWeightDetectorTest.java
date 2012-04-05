@@ -60,4 +60,13 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
             "baseline_weights3.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance",
             lintFiles("res/layout/baseline_weights3.xml"));
     }
+
+    public void testSuppressed() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/inefficient_weight2.xml"));
+    }
+
+
 }
