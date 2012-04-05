@@ -950,9 +950,17 @@ public class LintDriver {
             if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
                 mOuterClasses = new ArrayDeque<ClassNode>();
                 for (ClassEntry entry : entries) {
-                    ClassReader reader = new ClassReader(entry.bytes);
-                    ClassNode classNode = new ClassNode();
-                    reader.accept(classNode, 0 /* flags */);
+                    ClassReader reader;
+                    ClassNode classNode;
+                    try {
+                        reader = new ClassReader(entry.bytes);
+                        classNode = new ClassNode();
+                        reader.accept(classNode, 0 /* flags */);
+                    } catch (Throwable t) {
+                        mClient.log(null, "Error processing %1$s: broken class file?",
+                                entry.path());
+                        continue;
+                    }
 
                     ClassNode peek;
                     while ((peek = mOuterClasses.peek()) != null) {
@@ -1019,9 +1027,13 @@ public class LintDriver {
 
     private void addSuperClasses(SuperclassVisitor visitor, List<ClassEntry> entries) {
         for (ClassEntry entry : entries) {
-            ClassReader reader = new ClassReader(entry.bytes);
-            int flags = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
-            reader.accept(visitor, flags);
+            try {
+                ClassReader reader = new ClassReader(entry.bytes);
+                int flags = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
+                reader.accept(visitor, flags);
+            } catch (Throwable t) {
+                mClient.log(null, "Error processing %1$s: broken class file?", entry.path());
+            }
         }
     }
 
@@ -1762,6 +1774,14 @@ public class LintDriver {
             this.jarFile = jarFile;
             this.binDir = binDir;
             this.bytes = bytes;
+        }
+
+        public String path() {
+            if (jarFile != null) {
+                return jarFile.getPath() + ':' + file.getPath();
+            } else {
+                return file.getPath();
+            }
         }
 
         @Override

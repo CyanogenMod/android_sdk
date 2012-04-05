@@ -71,4 +71,14 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                 "bytecode/GetterTest.jar.data=>bin/classes.jar"
                 ));
     }
+
+    public void testTruncatedData() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                    "bytecode/classpath-jar=>.classpath",
+                    "bytecode/GetterTest.jar.data=>bin/test/pkg/bogus.class"
+                    ));
+    }
 }
