@@ -179,7 +179,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         "Use a %1$s of 0dip instead of %2$s for better performance",
                         dimension, size);
                 context.report(INEFFICIENT_WEIGHT,
-                        element,
+                        weightChild,
                         context.getLocation(sizeNode != null ? sizeNode : weightChild), msg, null);
 
             }
