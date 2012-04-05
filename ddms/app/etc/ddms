@@ -88,7 +88,7 @@ else
     vmarch=`${javaCmd} -jar "${frameworkdir}"/archquery.jar`
     if [ -n "$ANDROID_BUILD_TOP" ]; then
         osname=`uname -s | tr A-Z a-z`
-        swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
+        swtpath="${ANDROID_BUILD_TOP}/prebuilts/tools/${osname}-${vmarch}/swt"
     else
         swtpath="${frameworkdir}/${vmarch}"
     fi
