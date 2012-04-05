@@ -47,6 +47,7 @@ public class PaletteMetadataDescriptor extends ViewElementDescriptor {
                 descriptor.getChildren(), descriptor.getMandatory() == Mandatory.MANDATORY);
         mInitString = initString;
         mIconName = iconName;
+        setSuperClass(descriptor.getSuperClassDesc());
     }
 
     /**

@@ -21,6 +21,8 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.GridLayoutRule;
@@ -70,8 +72,7 @@ public class CanvasViewInfo implements IPropertySource {
     /**
      * Minimal size of the selection, in case an empty view or layout is selected.
      */
-    private static final int SELECTION_MIN_SIZE = 6;
-
+    public static final int SELECTION_MIN_SIZE = 6;
 
     private final Rectangle mAbsRect;
     private final Rectangle mSelectionRect;
@@ -121,17 +122,21 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return the bounding box in absolute coordinates
      */
+    @NonNull
     public Rectangle getAbsRect() {
         return mAbsRect;
     }
 
-    /*
-    * Returns the absolute selection bounds of the view info as a rectangle.
-    * The selection bounds will always have a size greater or equal to
-    * {@link #SELECTION_MIN_SIZE}.
-    * The width/height is inclusive (i.e. width = right-left-1).
-    * This is in absolute "screen" coordinates (relative to the rendered bitmap).
-    */
+    /**
+     * Returns the absolute selection bounds of the view info as a rectangle.
+     * The selection bounds will always have a size greater or equal to
+     * {@link #SELECTION_MIN_SIZE}.
+     * The width/height is inclusive (i.e. width = right-left-1).
+     * This is in absolute "screen" coordinates (relative to the rendered bitmap).
+     *
+     * @return the absolute selection bounds
+     */
+    @NonNull
     public Rectangle getSelectionRect() {
         return mSelectionRect;
     }
@@ -141,6 +146,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @return An {@link UiViewElementNode} that uniquely identifies the object in the XML model.
      * @see ViewInfo#getCookie()
      */
+    @Nullable
     public UiViewElementNode getUiViewNode() {
         return mUiViewNode;
     }
@@ -151,6 +157,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return the parent {@link CanvasViewInfo}, which can be null
      */
+    @Nullable
     public CanvasViewInfo getParent() {
         return mParent;
     }
@@ -162,6 +169,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return the children, never null
      */
+    @NonNull
     public List<CanvasViewInfo> getChildren() {
         return mChildren;
     }
@@ -171,6 +179,7 @@ public class CanvasViewInfo implements IPropertySource {
      * children of a {@code <merge>} tag included into a separate layout, return the
      * "primary" view, the first view that is rendered
      */
+    @Nullable
     private CanvasViewInfo getPrimaryNodeSibling() {
         if (mNodeSiblings == null || mNodeSiblings.size() == 0) {
             return null;
@@ -200,6 +209,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return a non-empty list of siblings (including this), or null
      */
+    @Nullable
     public List<CanvasViewInfo> getNodeSiblings() {
         return mNodeSiblings;
     }
@@ -218,6 +228,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @return list of {@link CanvasViewInfo} objects that are children of this view,
      *         never null
      */
+    @NonNull
     public List<CanvasViewInfo> getUniqueChildren() {
         boolean haveHidden = false;
 
@@ -261,10 +272,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @param potentialParent the view info to check
      * @return true if the given info is a parent of this view
      */
-    public boolean isParent(CanvasViewInfo potentialParent) {
-        if (potentialParent == null) {
-
-        }
+    public boolean isParent(@NonNull CanvasViewInfo potentialParent) {
         CanvasViewInfo p = mParent;
         while (p != null) {
             if (p == potentialParent) {
@@ -281,10 +289,11 @@ public class CanvasViewInfo implements IPropertySource {
      * Experience shows this is the full qualified Java name of the View.
      * TODO: Rename this method to getFqcn.
      *
-     * @return the name of the view info, or null
+     * @return the name of the view info
      *
      * @see ViewInfo#getClassName()
      */
+    @NonNull
     public String getName() {
         return mName;
     }
@@ -293,10 +302,16 @@ public class CanvasViewInfo implements IPropertySource {
      * Returns the View object associated with the {@link CanvasViewInfo}.
      * @return the view object or null.
      */
+    @Nullable
     public Object getViewObject() {
         return mViewObject;
     }
 
+    /**
+     * Returns the baseline of this object, or -1 if it does not support a baseline
+     *
+     * @return the baseline or -1
+     */
     public int getBaseline() {
         if (mViewInfo != null) {
             int baseline = mViewInfo.getBaseLine();
@@ -313,6 +328,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return the {@link Margins} for this {@link CanvasViewInfo}
      */
+    @Nullable
     public Margins getMargins() {
         if (mViewInfo != null) {
             int leftMargin = mViewInfo.getLeftMargin();
@@ -331,6 +347,7 @@ public class CanvasViewInfo implements IPropertySource {
     }
 
     // ---- Implementation of IPropertySource
+    // TODO: Get rid of this once the old propertysheet implementation is fully gone
 
     @Override
     public Object getEditableValue() {
@@ -390,6 +407,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return The XML node corresponding to this info object, or null
      */
+    @Nullable
     public Node getXmlNode() {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -480,7 +498,7 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @param exploded New value of the exploded property to mark this info with.
      */
-    /* package */ void setExploded(boolean exploded) {
+    void setExploded(boolean exploded) {
         this.mExploded = exploded;
     }
 
@@ -489,7 +507,8 @@ public class CanvasViewInfo implements IPropertySource {
      *
      * @return A {@link SimpleElement} wrapping this info.
      */
-    /* package */ SimpleElement toSimpleElement() {
+    @NonNull
+    SimpleElement toSimpleElement() {
 
         UiViewElementNode uiNode = getUiViewNode();
 
@@ -538,6 +557,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @return the layout url attribute value for the surrounding include tag, or null if
      *         not applicable
      */
+    @Nullable
     public String getIncludeUrl() {
         CanvasViewInfo curr = this;
         while (curr != null) {
@@ -568,12 +588,12 @@ public class CanvasViewInfo implements IPropertySource {
     }
 
     /** Adds the given {@link CanvasViewInfo} as a new last child of this view */
-    private void addChild(CanvasViewInfo child) {
+    private void addChild(@NonNull CanvasViewInfo child) {
         mChildren.add(child);
     }
 
     /** Adds the given {@link CanvasViewInfo} as a child at the given index */
-    private void addChildAt(int index, CanvasViewInfo child) {
+    private void addChildAt(int index, @NonNull CanvasViewInfo child) {
         mChildren.add(index, child);
     }
 
@@ -584,7 +604,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @param child the child to be removed
      * @return true if it was a child and was removed
      */
-    public boolean removeChild(CanvasViewInfo child) {
+    public boolean removeChild(@NonNull CanvasViewInfo child) {
         return mChildren.remove(child);
     }
 
@@ -623,6 +643,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @param root the root {@link ViewInfo} to build from
      * @return a {@link CanvasViewInfo} hierarchy
      */
+    @NonNull
     public static Pair<CanvasViewInfo,List<Rectangle>> create(ViewInfo root, boolean layoutlib5) {
         return new Builder(layoutlib5).create(root);
     }
