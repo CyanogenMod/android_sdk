@@ -29,7 +29,7 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_JAVA_LIBRARIES := \
 	swt \
-	org.eclipse.jface_3.4.2.M20090107-0800
+	org.eclipse.jface_3.6.2.M20110210-1200
 
 
 include $(BUILD_HOST_JAVA_LIBRARY)
