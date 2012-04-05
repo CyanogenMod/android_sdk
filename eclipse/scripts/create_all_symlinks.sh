@@ -239,6 +239,7 @@ for SRC in $CP_FILES; do
     continue
   fi
   if [[ ! -f "$SRC" ]]; then
+    ORIG_SRC="$SRC"
     SRC="out/host/$PLATFORM/framework/$SRC.jar"
   fi
   if [[ -f "$SRC" ]]; then
@@ -248,7 +249,7 @@ for SRC in $CP_FILES; do
 
     cpfile "$SRC" "$DEST"
   else
-    die "## Unknown file '$SRC' to copy in '$DEST'"
+    die "## Unknown source '$ORIG_SRC' to copy in '$DEST'"
   fi
 done
 
