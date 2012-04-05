@@ -34,8 +34,11 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -59,6 +62,7 @@ public class Analyzer {
 
     private List<File> mDirectories;
     private File mCurrentFile;
+    private boolean mListAdvanced;
 
     /** Map from view id to map from attribute to frequency count */
     private Map<String, Map<String, Usage>> mFrequencies =
@@ -74,9 +78,10 @@ public class Analyzer {
     private int mLayoutFileCount;
     private File mXmlMetadataFile;
 
-    private Analyzer(List<File> directories, File xmlMetadataFile) {
+    private Analyzer(List<File> directories, File xmlMetadataFile, boolean listAdvanced) {
         mDirectories = directories;
         mXmlMetadataFile = xmlMetadataFile;
+        mListAdvanced = listAdvanced;
     }
 
     public static void main(String[] args) {
@@ -90,14 +95,21 @@ public class Analyzer {
 
         File metadataFile = null;
         List<File> directories = new ArrayList<File>();
+        boolean listAdvanced = false;
         for (int i = 0, n = args.length; i < n; i++) {
             String arg = args[i];
+
+            if (arg.equals("--list")) {
+                // List ALL encountered attributes
+                listAdvanced = true;
+                continue;
+            }
 
             // The -metadata flag takes a pointer to an ADT extra-view-metadata.xml file
             // and attempts to insert topAttrs attributes into it (and saves it as same
             // file +.mod as an extension). This isn't listed on the usage flag because
             // it's pretty brittle and requires some manual fixups to the file afterwards.
-            if (arg.equals("-metadata")) {
+            if (arg.equals("--metadata")) {
                 i++;
                 File file = new File(args[i]);
                 if (!file.exists()) {
@@ -125,13 +137,18 @@ public class Analyzer {
             directories.add(directory);
         }
 
-        new Analyzer(directories, metadataFile).analyze();
+        new Analyzer(directories, metadataFile, listAdvanced).analyze();
     }
 
     private void analyze() {
         for (File directory : mDirectories) {
             scanDirectory(directory);
         }
+
+        if (mListAdvanced) {
+            listAdvanced();
+        }
+
         printStatistics();
 
         if (mXmlMetadataFile != null) {
@@ -523,6 +540,69 @@ public class Analyzer {
         System.out.println("Done - wrote " + output.getPath());
     }
 
+    //private File mPublicFile = new File(location, "data/res/values/public.xml");
+    private File mPublicFile = new File("/Volumes/AndroidWork/git/frameworks/base/core/res/res/values/public.xml");
+
+    private void listAdvanced() {
+        Set<String> keys = new HashSet<String>(1000);
+
+        // Merged usages across view types
+        Map<String, Usage> mergedUsages = new HashMap<String, Usage>(100);
+
+        for (Entry<String,Map<String,Usage>> entry : mFrequencies.entrySet()) {
+            String view = entry.getKey();
+            if (view.indexOf('.') != -1 && !view.startsWith("android.")) {
+                // Skip custom views etc
+                continue;
+            }
+            Map<String, Usage> map = entry.getValue();
+            for (Usage usage : map.values()) {
+//                if (usage.count == 1) {
+//                    System.out.println("Only found *one* usage of " + usage.attribute);
+//                }
+//                if (usage.count < 4) {
+//                    System.out.println("Only found " + usage.count + " usage of " + usage.attribute);
+//                }
+
+                String attribute = usage.attribute;
+                int index = attribute.indexOf(':');
+                if (index == -1 || attribute.startsWith("android:")) {
+                    Usage merged = mergedUsages.get(attribute);
+                    if (merged == null) {
+                        merged = new Usage(attribute);
+                        merged.count = usage.count;
+                        mergedUsages.put(attribute, merged);
+                    } else {
+                        merged.count += usage.count;
+                    }
+                }
+            }
+        }
+
+        for (Usage usage : mergedUsages.values())  {
+            String attribute = usage.attribute;
+            if (usage.count < 4) {
+                System.out.println("Only found " + usage.count + " usage of " + usage.attribute);
+                continue;
+            }
+            int index = attribute.indexOf(':');
+            if (index != -1) {
+                attribute = attribute.substring(index + 1); // +1: skip ':'
+            }
+            keys.add(attribute);
+        }
+
+        List<String> sorted = new ArrayList<String>(keys);
+        Collections.sort(sorted);
+        System.out.println("\nEncountered Attributes");
+        System.out.println("-----------------------------");
+        for (String attribute : sorted) {
+            System.out.println(attribute);
+        }
+
+        System.out.println();
+    }
+
     private static class Usage implements Comparable<Usage> {
         public String attribute;
         public int count;
@@ -539,6 +619,7 @@ public class Analyzer {
             count++;
         }
 
+        @Override
         public int compareTo(Usage o) {
             // Sort by decreasing frequency, then sort alphabetically
             int frequencyDelta = o.count - count;

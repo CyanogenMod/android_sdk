@@ -18,6 +18,7 @@ package com.android.ide.common.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
 import com.google.common.annotations.Beta;
 
 import java.util.EnumSet;
@@ -89,6 +90,39 @@ public interface IAttributeInfo {
                 default:
                     return EnumSet.of(this);
             }
+        }
+
+        /** Returns the corresponding resource type for this attribute info,
+         * or null if there is no known or corresponding resource type (such as for
+         * enums and flags)
+         *
+         * @return the corresponding resource type, or null
+         */
+        @Nullable
+        public ResourceType getResourceType() {
+            switch (this) {
+                case STRING:
+                    return ResourceType.STRING;
+                case BOOLEAN:
+                    return ResourceType.BOOL;
+                case COLOR:
+                    return ResourceType.COLOR;
+                case DIMENSION:
+                    return ResourceType.DIMEN;
+                case FRACTION:
+                    return ResourceType.FRACTION;
+                case INTEGER:
+                    return ResourceType.INTEGER;
+
+                // No direct corresponding resource type
+                case ENUM:
+                case FLAG:
+                case FLOAT:
+                case REFERENCE:
+                    return null;
+            }
+
+            return null;
         }
     }
 

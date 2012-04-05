@@ -58,6 +58,44 @@ public class DescriptorsUtilsTest extends TestCase {
         assertEquals("The Y axis", DescriptorsUtils.prettyAttributeUiName("theYAxis"));
         assertEquals("The Z axis", DescriptorsUtils.prettyAttributeUiName("theZAxis"));
         assertEquals("The t axis", DescriptorsUtils.prettyAttributeUiName("theTAxis"));
+
+        // Special cases for "uri" and "sdk" etc
+        assertEquals("Grant URI permission",
+                DescriptorsUtils.prettyAttributeUiName("grantUriPermission"));
+        assertEquals("URI permission",
+                DescriptorsUtils.prettyAttributeUiName("uriPermission"));
+        assertEquals("Min SDK version", DescriptorsUtils.prettyAttributeUiName("minSdkVersion"));
+        assertEquals("SDK version", DescriptorsUtils.prettyAttributeUiName("sdkVersion"));
+        assertEquals("IME action method",
+                DescriptorsUtils.prettyAttributeUiName("imeActionMethod"));
+    }
+
+    public void testCapitalize() {
+        assertEquals("", DescriptorsUtils.capitalize(""));
+
+        assertEquals("Max Width For View",
+                DescriptorsUtils.capitalize("maxWidthForView"));
+
+        assertEquals("Layout Width",
+                DescriptorsUtils.capitalize("layout_width"));
+
+        assertEquals("Axis X", DescriptorsUtils.capitalize("axisX"));
+        assertEquals("Axis Y", DescriptorsUtils.capitalize("axisY"));
+        assertEquals("Axis Z", DescriptorsUtils.capitalize("axisZ"));
+        assertEquals("Axis T", DescriptorsUtils.capitalize("axisT"));
+
+        assertEquals("The X Axis", DescriptorsUtils.capitalize("theXAxis"));
+        assertEquals("The Y Axis", DescriptorsUtils.capitalize("theYAxis"));
+        assertEquals("The Z Axis", DescriptorsUtils.capitalize("theZAxis"));
+        assertEquals("The T Axis", DescriptorsUtils.capitalize("theTAxis"));
+
+        // Special cases for "uri" and "sdk" etc
+        assertEquals("Grant URI Permission", DescriptorsUtils.capitalize("grantUriPermission"));
+        assertEquals("Min SDK Version", DescriptorsUtils.capitalize("minSdkVersion"));
+        assertEquals("IME Action Method", DescriptorsUtils.capitalize("imeActionMethod"));
+        assertEquals("URI Permission", DescriptorsUtils.capitalize("uriPermission"));
+        assertEquals("SDK Version", DescriptorsUtils.capitalize("sdkVersion"));
+        assertEquals("Grant IME", DescriptorsUtils.capitalize("GrantIme"));
     }
 
     public void testFormatTooltip() {

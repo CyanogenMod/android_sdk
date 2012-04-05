@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ViewInfo;
@@ -179,7 +181,7 @@ public class ViewHierarchy {
                     if (root != null) {
                         infos = CanvasViewInfo.create(root, layoutlib5);
                         if (DUMP_INFO) {
-                            dump(root, 0);
+                            dump(session, root, 0);
                         }
                     } else {
                         infos = null;
@@ -693,12 +695,27 @@ public class ViewHierarchy {
     }
 
     /**
+     * Returns a map of the default properties for the given view object in this session
+     *
+     * @param viewObject the object to look up the properties map for
+     * @return the map of properties, or null if not found
+     */
+    @Nullable
+    public Map<String, String> getDefaultProperties(@NonNull Object viewObject) {
+        if (mSession != null) {
+            return mSession.getDefaultProperties(viewObject);
+        }
+
+        return null;
+    }
+
+    /**
      * Dumps a {@link ViewInfo} hierarchy to stdout
      *
      * @param info the {@link ViewInfo} object to dump
      * @param depth the depth to indent it to
      */
-    public static void dump(ViewInfo info, int depth) {
+    public static void dump(RenderSession session, ViewInfo info, int depth) {
         if (DUMP_INFO) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < depth; i++) {
@@ -724,11 +741,19 @@ public class ViewHierarchy {
             } else if (cookie != null) {
                 sb.append(" " + cookie); //$NON-NLS-1$
             }
+            /* Display defaults?
+            if (info.getViewObject() != null) {
+                Map<String, String> defaults = session.getDefaultProperties(info.getCookie());
+                sb.append(" - defaults: "); //$NON-NLS-1$
+                sb.append(defaults);
+                sb.append('\n');
+            }
+            */
 
             System.out.println(sb.toString());
 
             for (ViewInfo child : info.getChildren()) {
-                dump(child, depth + 1);
+                dump(session, child, depth + 1);
             }
         }
     }
