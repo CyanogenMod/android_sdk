@@ -124,6 +124,9 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
     private static final String BOOL = "boolean";                           //$NON-NLS-1$
     private static final String BOOLEAN = "Boolean";                        //$NON-NLS-1$
     private static final String LONG = "Long";                              //$NON-NLS-1$
+    private static final String CHARACTER = "Character";                    //$NON-NLS-1$
+    private static final String DOUBLE = "Double";                          //$NON-NLS-1$
+    private static final String FLOAT = "Float";                            //$NON-NLS-1$
     private static final String HASH_MAP = "HashMap";                       //$NON-NLS-1$
     private static final String CANVAS = "Canvas";                          //$NON-NLS-1$
     private static final String ON_DRAW = "onDraw";                         //$NON-NLS-1$
@@ -204,11 +207,12 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
                     TypeReference reference = node.astTypeReference();
                     typeName = reference.astParts().last().astIdentifier().astValue();
                 }
-                if ((typeName.equals("Integer")             //$NON-NLS-1$
-                        || typeName.equals("Boolean")       //$NON-NLS-1$
-                        || typeName.equals("Float")         //$NON-NLS-1$
-                        || typeName.equals("Character")     //$NON-NLS-1$
-                        || typeName.equals("Double"))       //$NON-NLS-1$
+                if ((typeName.equals(INTEGER)
+                        || typeName.equals(BOOLEAN)
+                        || typeName.equals(FLOAT)
+                        || typeName.equals(CHARACTER)
+                        || typeName.equals(LONG)
+                        || typeName.equals(DOUBLE))
                         && node.astTypeReference().astParts().size() == 1
                         && node.astArguments().size() == 1) {
                     String argument = node.astArguments().first().toString();

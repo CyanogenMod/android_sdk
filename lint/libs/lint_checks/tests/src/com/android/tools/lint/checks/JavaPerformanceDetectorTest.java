@@ -34,6 +34,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
             "JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect\n" +
             "JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
             "JavaPerformanceTest.java:145: Warning: Use Integer.valueOf(42) instead\n" +
+            "JavaPerformanceTest.java:146: Warning: Use Long.valueOf(42L) instead\n" +
             "JavaPerformanceTest.java:147: Warning: Use Boolean.valueOf(true) instead\n" +
             "JavaPerformanceTest.java:148: Warning: Use Character.valueOf('c') instead\n" +
             "JavaPerformanceTest.java:149: Warning: Use Float.valueOf(1.0f) instead\n" +
