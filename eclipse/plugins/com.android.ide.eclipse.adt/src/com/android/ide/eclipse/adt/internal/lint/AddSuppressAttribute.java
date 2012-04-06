@@ -115,7 +115,7 @@ class AddSuppressAttribute implements ICompletionProposal {
 
                 // Use the non-namespace form of set attribute since we can't
                 // reference the namespace until the model has been reloaded
-                mElement.setAttribute(prefix + ':' + ATTR_IGNORE, mId);
+                mElement.setAttribute(prefix + ':' + ATTR_IGNORE, ignore);
 
                 UiElementNode rootUiNode = mEditor.getUiRootNode();
                 if (rootUiNode != null) {
