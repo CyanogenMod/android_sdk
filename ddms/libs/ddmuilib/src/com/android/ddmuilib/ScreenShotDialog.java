@@ -321,6 +321,10 @@ public class ScreenShotDialog extends Dialog {
             // the value the dialog was initialized with. It does however return
             // the full path as its return value, so just pick the path from
             // there.
+            if (!fileName.endsWith(".png")) {
+                fileName = fileName + ".png";
+            }
+
             String saveDir = new File(fileName).getParent();
             if (saveDir != null) {
                 DdmUiPreferences.getStore().setValue("lastImageSaveDir", saveDir);
