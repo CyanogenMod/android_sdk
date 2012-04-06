@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.xml.ui.internal.contentoutline.JFaceNodeLabelProvider;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 
 /** Label provider for the XML outlines and quick outlines: Use our own icons,
@@ -52,18 +53,18 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
         String text = super.getText(element);
         if (element instanceof Element) {
             Element e = (Element) element;
-            String id = e.getAttributeNS(ANDROID_URI, ATTR_ID);
+            String id = getAttributeNS(e, ANDROID_URI, ATTR_ID);
             if (id == null || id.length() == 0) {
-                id = e.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                id = getAttributeNS(e, ANDROID_URI, ATTR_NAME);
                 if (id == null || id.length() == 0) {
                     id = e.getAttribute(ATTR_NAME);
                     if (id == null || id.length() == 0) {
-                        id = e.getAttributeNS(ANDROID_URI, ATTR_TEXT);
+                        id = getAttributeNS(e, ANDROID_URI, ATTR_TEXT);
                         if (id != null && id.length() > 15) {
                             id = id.substring(0, 12) + "...";
                         }
                         if (id == null || id.length() == 0) {
-                            id = e.getAttributeNS(ANDROID_URI, ATTR_SRC);
+                            id = getAttributeNS(e, ANDROID_URI, ATTR_SRC);
                             if (id != null && id.length() > 0) {
                                 if (id.startsWith(DRAWABLE_PREFIX)) {
                                     id = id.substring(DRAWABLE_PREFIX.length());
@@ -86,5 +87,21 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
             }
         }
         return text;
+    }
+
+    /**
+     * Wrapper around {@link Element#getAttributeNS(String, String)}.
+     * <p/>
+     * The implementation used in Eclipse's XML editor sometimes internally throws
+     * an NPE instead of politely returning null.
+     *
+     * @see Element#getAttributeNS(String, String)
+     */
+    private String getAttributeNS(Element e, String uri, String name) throws DOMException {
+        try {
+            return e.getAttributeNS(uri, name);
+        } catch (NullPointerException ignore) {
+            return null;
+        }
     }
 }
