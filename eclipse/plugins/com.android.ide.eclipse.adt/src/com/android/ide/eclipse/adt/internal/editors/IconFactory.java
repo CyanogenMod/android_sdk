@@ -373,5 +373,4 @@ public class IconFactory {
             return data;
         }
     }
-
 }

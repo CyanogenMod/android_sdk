@@ -16,6 +16,11 @@
 
 package com.android.ide.eclipse.adt;
 
+import static com.android.sdklib.SdkConstants.CURRENT_PLATFORM;
+import static com.android.sdklib.SdkConstants.PLATFORM_DARWIN;
+import static com.android.sdklib.SdkConstants.PLATFORM_LINUX;
+import static com.android.sdklib.SdkConstants.PLATFORM_WINDOWS;
+
 import com.android.AndroidConstants;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
@@ -94,6 +99,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
+import org.eclipse.wb.internal.core.DesignerPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -257,6 +263,14 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // load preferences.
         AdtPrefs.getPrefs().loadValues(null /*event*/);
 
+        // initialize property-sheet library
+        DesignerPlugin.initialize(
+                this,
+                PLUGIN_ID,
+                CURRENT_PLATFORM == PLATFORM_WINDOWS,
+                CURRENT_PLATFORM == PLATFORM_DARWIN,
+                CURRENT_PLATFORM == PLATFORM_LINUX);
+
         // initialize editors
         startEditors();
 
@@ -285,6 +299,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         stopEditors();
         IncludeFinder.stop();
+
+        DesignerPlugin.dispose();
 
         mRed.dispose();
         synchronized (AdtPlugin.class) {
@@ -668,18 +684,19 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
-     * Reads the contents of an {@link InputStreamReader} and return it as a String
+     * Reads the contents of a {@link Reader} and return it as a String. This
+     * method will close the input reader.
      *
-     * @param inputStream the input stream to be read from
-     * @return the String read from the stream, or null if there was an error
+     * @param reader the reader to be read from
+     * @return the String read from reader, or null if there was an error
      */
-    public static String readFile(Reader inputStream) {
-        BufferedReader reader = null;
+    public static String readFile(Reader reader) {
+        BufferedReader bufferedReader = null;
         try {
-            reader = new BufferedReader(inputStream);
+            bufferedReader = new BufferedReader(reader);
             StringBuilder sb = new StringBuilder(2000);
             while (true) {
-                int c = reader.read();
+                int c = bufferedReader.read();
                 if (c == -1) {
                     return sb.toString();
                 } else {
@@ -690,8 +707,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             // pass -- ignore files we can't read
         } finally {
             try {
-                if (reader != null) {
-                    reader.close();
+                if (bufferedReader != null) {
+                    bufferedReader.close();
                 }
             } catch (IOException e) {
                 AdtPlugin.log(e, "Can't read input stream"); //$NON-NLS-1$

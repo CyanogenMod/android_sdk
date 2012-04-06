@@ -36,8 +36,9 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorP
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.OutlinePage;
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.PropertySheetPage;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertySheetPage;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -54,6 +55,8 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -476,6 +479,16 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             // https://bugs.eclipse.org/bugs/show_bug.cgi?id=1917
             if (mMultiOutline == null || mMultiOutline.isDisposed()) {
                 mMultiOutline = new XmlEditorMultiOutline();
+                mMultiOutline.addSelectionChangedListener(new ISelectionChangedListener() {
+                    @Override
+                    public void selectionChanged(SelectionChangedEvent event) {
+                        ISelection selection = event.getSelection();
+                        getEditor().getSite().getSelectionProvider().setSelection(selection);
+                        SelectionManager manager =
+                                mGraphicalEditor.getCanvasControl().getSelectionManager();
+                        manager.setSelection(selection);
+                    }
+                });
                 updateOutline(getEditor().getActivePageInstance());
             }
 
@@ -484,7 +497,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
         if (IPropertySheetPage.class == adapter && mGraphicalEditor != null) {
             if (mPropertyPage == null) {
-                mPropertyPage = new PropertySheetPage();
+                mPropertyPage = new PropertySheetPage(mGraphicalEditor);
             }
 
             return mPropertyPage;
