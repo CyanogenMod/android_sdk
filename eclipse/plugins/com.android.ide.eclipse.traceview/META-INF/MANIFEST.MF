@@ -14,3 +14,4 @@ Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  libs/traceview.jar
 Bundle-Vendor: The Android Open Source Project
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

@@ -16,3 +16,4 @@ Require-Bundle: org.eclipse.core.runtime,
  com.android.ide.eclipse.adt
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.jface.text.formatter
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

@@ -14,3 +14,4 @@ Require-Bundle: org.eclipse.ui,
 Bundle-ClassPath: .,
  libs/hierarchyviewerlib.jar
 Export-Package: com.android.ide.eclipse.hierarchyviewer
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
