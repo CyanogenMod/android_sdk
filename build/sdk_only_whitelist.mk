@@ -39,6 +39,7 @@ subdirs += \
 
 ifneq (,$(shell which javac 2>/dev/null))
 subdirs += \
+	external/eclipse-windowbuilder/propertysheet \
 	sdk/archquery \
 	sdk/androidprefs \
 	sdk/annotations \
