@@ -100,3 +100,4 @@ Export-Package: com.android,
  org.apache.http.params,
  org.apache.http.protocol,
  org.apache.http.util
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

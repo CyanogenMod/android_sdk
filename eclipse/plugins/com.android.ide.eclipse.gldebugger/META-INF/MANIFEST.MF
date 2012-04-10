@@ -21,3 +21,4 @@ Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.e
  com.android.ide.eclipse.gltrace;x-friends:="com.android.ide.eclipse.gldebugger.tests",
  com.android.ide.eclipse.gltrace.format;x-friends:="com.android.ide.eclipse.gldebugger.tests",
  com.android.ide.eclipse.gltrace.model;x-friends:="com.android.ide.eclipse.gldebugger.tests"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

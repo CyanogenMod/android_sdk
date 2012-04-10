@@ -128,5 +128,6 @@ Export-Package: com.android.ide.common.layout;x-friends:="com.android.ide.eclips
  org.kxml2.wap.wml;x-friends:="com.android.ide.eclipse.tests",
  org.kxml2.wap.wv;x-friends:="com.android.ide.eclipse.tests",
  org.xmlpull.v1;x-friends:="com.android.ide.eclipse.tests"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 
 
