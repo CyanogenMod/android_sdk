@@ -54,14 +54,6 @@ public final class FileListingService {
     /** Application folder. */
     public final static String DIRECTORY_APP = "app"; //$NON-NLS-1$
 
-    private final static String[] sRootLevelApprovedItems = {
-        DIRECTORY_DATA,
-        DIRECTORY_SDCARD,
-        DIRECTORY_SYSTEM,
-        DIRECTORY_TEMP,
-        DIRECTORY_MNT,
-    };
-
     public static final long REFRESH_RATE = 5000L;
     /**
      * Refresh test has to be slightly lower for precision issue.
@@ -437,22 +429,6 @@ public final class FileListingService {
 
                 // get the name
                 String name = m.group(7);
-
-                // if the parent is root, we only accept selected items
-                if (mParentEntry.isRoot()) {
-                    boolean found = false;
-                    for (String approved : sRootLevelApprovedItems) {
-                        if (approved.equals(name)) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // if it's not in the approved list we skip this entry.
-                    if (found == false) {
-                        continue;
-                    }
-                }
 
                 // get the rest of the groups
                 String permissions = m.group(1);
