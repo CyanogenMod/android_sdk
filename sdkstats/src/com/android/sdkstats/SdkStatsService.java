@@ -23,11 +23,17 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Utility class to send "ping" usage reports to the server. */
 public class SdkStatsService {
+
+    protected static final String SYS_PROP_OS_ARCH      = "os.arch";        //$NON-NLS-1$
+    protected static final String SYS_PROP_JAVA_VERSION = "java.version";   //$NON-NLS-1$
+    protected static final String SYS_PROP_OS_VERSION   = "os.version";     //$NON-NLS-1$
+    protected static final String SYS_PROP_OS_NAME      = "os.name";        //$NON-NLS-1$
 
     /** Minimum interval between ping, in milliseconds. */
     private static final long PING_INTERVAL_MSEC = 86400 * 1000;  // 1 day
@@ -42,7 +48,7 @@ public class SdkStatsService {
      * elapsed since the last ping, and if the user has not opted out.<br>
      *
      * The ping will not be sent if the user opt out dialog has not been shown yet.
-     * Use {@link #getUserPermissionForPing(Shell)} to display the dialog requesting
+     * Use {@link #checkUserPermissionForPing(Shell)} to display the dialog requesting
      * user permissions.<br>
      *
      * Note: The actual ping (if any) is sent in a <i>non-daemon</i> background thread.
@@ -58,8 +64,8 @@ public class SdkStatsService {
      * Display a dialog to the user providing information about the ping service,
      * and whether they'd like to opt-out of it.
      *
-     * Once the dialog has been shown, it sets a preference internally indicating that the user has
-     * viewed this dialog. This setting can be queried using {@link #pingPermissionsSet()}.
+     * Once the dialog has been shown, it sets a preference internally indicating
+     * that the user has viewed this dialog.
      */
     public void checkUserPermissionForPing(Shell parent) {
         if (!mStore.hasPingId()) {
@@ -137,7 +143,7 @@ public class SdkStatsService {
      * @param id of the local installation
      * @throws IOException if the ping failed
      */
-    private static void actuallySendPing(String app, String version, long id)
+    private void actuallySendPing(String app, String version, long id)
                 throws IOException {
         String osName  = URLEncoder.encode(getOsName(),  "UTF-8");
         String osArch  = URLEncoder.encode(getOsArch(),  "UTF-8");
@@ -173,26 +179,28 @@ public class SdkStatsService {
      * For Windows and Mac also append the version, so for example
      * Win XP will return win-5.1.
      */
-    private static String getOsName() {
-        String os = System.getProperty("os.name");          //$NON-NLS-1$
+    protected String getOsName() {                   // made protected for testing
+        String os = getSystemProperty(SYS_PROP_OS_NAME);
 
         if (os == null || os.length() == 0) {
             return "unknown";                               //$NON-NLS-1$
         }
 
-        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+        String os2 = os.toLowerCase(Locale.US);
+
+        if (os2.startsWith("mac")) {                        //$NON-NLS-1$
             os = "mac";                                     //$NON-NLS-1$
             String osVers = getOsVersion();
             if (osVers != null) {
                 os = os + '-' + osVers;
             }
-        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
+        } else if (os2.startsWith("win")) {                 //$NON-NLS-1$
             os = "win";                                     //$NON-NLS-1$
             String osVers = getOsVersion();
             if (osVers != null) {
                 os = os + '-' + osVers;
             }
-        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+        } else if (os2.startsWith("linux")) {               //$NON-NLS-1$
             os = "linux";                                   //$NON-NLS-1$
 
         } else if (os.length() > 32) {
@@ -208,7 +216,7 @@ public class SdkStatsService {
      * This may differ or be equal to the JVM architecture in the sense that
      * a 64-bit OS can run a 32-bit JVM.
      */
-    private static String getOsArch() {
+    protected String getOsArch() {                   // made protected for testing
         String arch = getJvmArch();
 
         if ("x86_64".equals(arch)) {                                    //$NON-NLS-1$
@@ -229,16 +237,16 @@ public class SdkStatsService {
                 // it sets PROCESSOR_ARCHITEW6432 to AMD64 or IA64 accordingly.
                 // Ref: http://msdn.microsoft.com/en-us/library/aa384274(v=vs.85).aspx
 
-                String w6432 = System.getenv("PROCESSOR_ARCHITEW6432"); //$NON-NLS-1$
+                String w6432 = getSystemEnv("PROCESSOR_ARCHITEW6432");  //$NON-NLS-1$
                 if (w6432 != null && w6432.indexOf("64") != -1) {       //$NON-NLS-1$
                     return "x86_64";                                    //$NON-NLS-1$
                 }
             } else if (os.startsWith("linux")) {                        //$NON-NLS-1$
                 // Let's try the obvious. This works in Ubuntu and Debian
-                String s = System.getenv("HOSTTYPE");                   //$NON-NLS-1$
+                String s = getSystemEnv("HOSTTYPE");                    //$NON-NLS-1$
 
                 s = sanitizeOsArch(s);
-                if (s.indexOf("86") != -1) {
+                if (s.indexOf("86") != -1) {                            //$NON-NLS-1$
                     arch = s;
                 }
             }
@@ -253,15 +261,17 @@ public class SdkStatsService {
      * Example of returned versions can be found at http://lopica.sourceforge.net/os.html
      * <p/>
      * This method removes any exiting micro versions.
+     * Returns null if the version doesn't match X.Y.Z.
      */
-    private static String getOsVersion() {
-        Pattern p = Pattern.compile("(\\d+)\\.(\\d+).*"); //$NON-NLS-1$
-        String osVers = System.getProperty("os.version"); //$NON-NLS-1$
-        Matcher m = p.matcher(osVers);
-        if (m.matches()) {
-            return m.group(1) + '.' + m.group(2);
+    protected String getOsVersion() {                           // made protected for testing
+        Pattern p = Pattern.compile("(\\d+)\\.(\\d+).*");       //$NON-NLS-1$
+        String osVers = getSystemProperty(SYS_PROP_OS_VERSION);
+        if (osVers != null && osVers.length() > 0) {
+            Matcher m = p.matcher(osVers);
+            if (m.matches()) {
+                return m.group(1) + '.' + m.group(2);
+            }
         }
-
         return null;
     }
 
@@ -269,7 +279,7 @@ public class SdkStatsService {
      * Detects and returns the JVM info: version + architecture.
      * Examples: 1.4-ppc, 1.6-x86, 1.7-x86_64
      */
-    private static String getJvmInfo() {
+    protected String getJvmInfo() {                      // made protected for testing
         return getJvmVersion() + '-' + getJvmArch();
     }
 
@@ -279,8 +289,8 @@ public class SdkStatsService {
      * The "java.version" property returns something like "1.6.0_20"
      * of which we want to return "1.6".
      */
-    private static String getJvmVersion() {
-        String version = System.getProperty("java.version");    //$NON-NLS-1$
+    protected String getJvmVersion() {                   // made protected for testing
+        String version = getSystemProperty(SYS_PROP_JAVA_VERSION);
 
         if (version == null || version.length() == 0) {
             return "unknown";                                   //$NON-NLS-1$
@@ -318,12 +328,12 @@ public class SdkStatsService {
      * Mac        untested      x86_64
      * </pre>
      */
-    private static String getJvmArch() {
-        String arch = System.getProperty("os.arch");        //$NON-NLS-1$
+    protected String getJvmArch() {                  // made protected for testing
+        String arch = getSystemProperty(SYS_PROP_OS_ARCH);
         return sanitizeOsArch(arch);
     }
 
-    private static String sanitizeOsArch(String arch) {
+    private String sanitizeOsArch(String arch) {
         if (arch == null || arch.length() == 0) {
             return "unknown";                               //$NON-NLS-1$
         }
@@ -334,7 +344,7 @@ public class SdkStatsService {
             return "x86_64";                                //$NON-NLS-1$
         }
 
-        if (arch.length() == 4 && arch.charAt(0) == 'i' && arch.lastIndexOf("86") == 2) {
+        if (arch.length() >= 4 && arch.charAt(0) == 'i' && arch.indexOf("86") == 2) { //$NON-NLS-1$
             // Any variation of iX86 counts as x86 (i386, i486, i686).
             return "x86";                                   //$NON-NLS-1$
         }
@@ -356,7 +366,7 @@ public class SdkStatsService {
      * @param version supplied by caller
      * @return normalized dotted quad version
      */
-    private static String normalizeVersion(String app, String version) {
+    private String normalizeVersion(String app, String version) {
         // Application name must contain only word characters (no punctuation)
         if (!app.matches("\\w+")) {                                             //$NON-NLS-1$
             throw new IllegalArgumentException("Bad app name: " + app);         //$NON-NLS-1$
@@ -379,5 +389,23 @@ public class SdkStatsService {
             normal.append('.').append(i < numbers.length ? numbers[i] : "0");   //$NON-NLS-1$
         }
         return normal.toString();
+    }
+
+    /**
+     * Calls {@link System#getProperty(String)}.
+     * Allows unit-test to override the return value.
+     * @see System#getProperty(String)
+     */
+    protected String getSystemProperty(String name) {
+        return System.getProperty(name);
+    }
+
+    /**
+     * Calls {@link System#getenv(String)}.
+     * Allows unit-test to override the return value.
+     * @see System#getenv(String)
+     */
+    protected String getSystemEnv(String name) {
+        return System.getenv(name);
     }
 }
