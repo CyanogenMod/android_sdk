@@ -32,7 +32,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -192,7 +191,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
     /**
      * Returns the list of known packages found by the last call to load().
      * This is null when the source hasn't been loaded yet -- caller should
-     * then call {@link #load(ITaskMonitor, boolean)} to load the packages.
+     * then call {@link #load} to load the packages.
      */
     public Package[] getPackages() {
         return mPackages;
@@ -306,7 +305,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      * null in case of error, in which case {@link #getFetchError()} can be used to an
      * error message.
      */
-    public void load(ITaskMonitor monitor, boolean forceHttp) {
+    public void load(DownloadCache cache, ITaskMonitor monitor, boolean forceHttp) {
 
         setDefaultDescription();
         monitor.setProgressMax(7);
@@ -338,7 +337,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         String[] defaultNames = getDefaultXmlFileUrls();
         String firstDefaultName = defaultNames.length > 0 ? defaultNames[0] : "";
 
-        InputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
+        InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
         if (xml != null) {
             int version = getXmlSchemaVersion(xml);
             if (version == 0) {
@@ -365,7 +364,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                 if (newUrl.equals(url)) {
                     continue;
                 }
-                xml = fetchUrl(newUrl, subMonitor.createSubMonitor(1), exception);
+                xml = fetchUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
                 if (xml != null) {
                     int version = getXmlSchemaVersion(xml);
                     if (version == 0) {
@@ -394,7 +393,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             }
             url += firstDefaultName;
 
-            xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
+            xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
             usingAlternateUrl = true;
         } else {
             monitor.incProgress(1);
@@ -467,7 +466,8 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                         }
                         url += firstDefaultName;
 
-                        xml = fetchUrl(url, subMonitor.createSubMonitor(1), null /* outException */);
+                        xml = fetchUrl(url, cache, subMonitor.createSubMonitor(1),
+                                null /* outException */);
                         subMonitor.incProgress(1);
                         // Loop to try the alternative document
                         if (xml != null) {
@@ -596,40 +596,12 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      *            happens during the fetch.
      * @see UrlOpener UrlOpener, which handles all URL logic.
      */
-    private InputStream fetchUrl(String urlString, ITaskMonitor monitor, Exception[] outException) {
+    private InputStream fetchUrl(String urlString,
+            DownloadCache cache,
+            ITaskMonitor monitor,
+            Exception[] outException) {
         try {
-
-            InputStream is = null;
-
-            int inc = 65536;
-            int curr = 0;
-            byte[] result = new byte[inc];
-
-            try {
-                is = UrlOpener.openUrl(urlString, monitor);
-
-                int n;
-                while ((n = is.read(result, curr, result.length - curr)) != -1) {
-                    curr += n;
-                    if (curr == result.length) {
-                        byte[] temp = new byte[curr + inc];
-                        System.arraycopy(result, 0, temp, 0, curr);
-                        result = temp;
-                    }
-                }
-
-                return new ByteArrayInputStream(result, 0, curr);
-
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException e) {
-                        // pass
-                    }
-                }
-            }
-
+            return cache.openCachedUrl(urlString, monitor);
         } catch (Exception e) {
             if (outException != null) {
                 outException[0] = e;

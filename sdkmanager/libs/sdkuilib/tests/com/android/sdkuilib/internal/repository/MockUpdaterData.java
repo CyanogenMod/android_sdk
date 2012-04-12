@@ -20,6 +20,7 @@ import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ArchiveInstaller;
 import com.android.sdklib.internal.repository.ArchiveReplacement;
+import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -30,6 +31,7 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.graphics.Image;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,8 @@ public class MockUpdaterData extends UpdaterData {
     public final static String SDK_PATH = "/tmp/SDK";
 
     private final List<ArchiveReplacement> mInstalled = new ArrayList<ArchiveReplacement>();
+
+    private DownloadCache mMockDownloadCache;
 
     public MockUpdaterData() {
         super(SDK_PATH, new MockLog());
@@ -76,11 +80,31 @@ public class MockUpdaterData extends UpdaterData {
                     String osSdkRoot,
                     boolean forceHttp,
                     SdkManager sdkManager,
+                    DownloadCache cache,
                     ITaskMonitor monitor) {
                 mInstalled.add(archiveInfo);
                 return true;
             }
         };
+    }
+
+    /**
+     * Lazily initializes and returns a mock download cache that doesn't use the
+     * local disk and doesn't cache anything.
+     */
+    @Override
+    public DownloadCache getDownloadCache() {
+        if (mMockDownloadCache == null) {
+            mMockDownloadCache = new DownloadCache(DownloadCache.Strategy.DIRECT) {
+                @Override
+                protected File initCacheRoot() {
+                    // returns null, preventing the cache from using the default
+                    // $HOME/.android folder; this effectively disables the cache.
+                    return null;
+                }
+            };
+        }
+        return mMockDownloadCache;
     }
 
     //------------
@@ -91,6 +115,7 @@ public class MockUpdaterData extends UpdaterData {
             start(title, null /*parentMonitor*/, task);
         }
 
+        @SuppressWarnings("unused") // works by side-effect of creating a new MockTask.
         @Override
         public void start(String title, ITaskMonitor parentMonitor, ITask task) {
             new MockTask(task);

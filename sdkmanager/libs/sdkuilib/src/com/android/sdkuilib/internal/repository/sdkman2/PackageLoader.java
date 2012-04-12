@@ -17,6 +17,7 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
@@ -44,7 +45,7 @@ class PackageLoader {
 
     /**
      * Interface for the callback called by
-     * {@link PackageLoader#loadPackages(ISourceLoadedCallback)}.
+     * {@link PackageLoader#loadPackages(DownloadCache, ISourceLoadedCallback)}.
      * <p/>
      * After processing each source, the package loader calls {@link #onUpdateSource}
      * with the list of packages found in that source.
@@ -144,11 +145,19 @@ class PackageLoader {
      * after each source is finished loaded. In return the callback tells the loader
      * whether to continue loading sources.
      */
-    public void loadPackages(final ISourceLoadedCallback sourceLoadedCallback) {
+    public void loadPackages(
+            DownloadCache downloadCache,
+            final ISourceLoadedCallback sourceLoadedCallback) {
         try {
             if (mUpdaterData == null) {
                 return;
             }
+
+            if (downloadCache == null) {
+                downloadCache = mUpdaterData.getDownloadCache();
+            }
+
+            final DownloadCache downloadCache2 = downloadCache;
 
             mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
                 @Override
@@ -177,7 +186,9 @@ class PackageLoader {
                             for (SdkSource source : sources) {
                                 Package[] pkgs = source.getPackages();
                                 if (pkgs == null) {
-                                    source.load(subMonitor.createSubMonitor(1), forceHttp);
+                                    source.load(downloadCache2,
+                                            subMonitor.createSubMonitor(1),
+                                            forceHttp);
                                     pkgs = source.getPackages();
                                 }
                                 if (pkgs == null) {
@@ -204,7 +215,8 @@ class PackageLoader {
     }
 
     /**
-     * Load packages, source by source using {@link #loadPackages(ISourceLoadedCallback)},
+     * Load packages, source by source using
+     * {@link #loadPackages(DownloadCache, ISourceLoadedCallback)},
      * and executes the given {@link IAutoInstallTask} on the current package list.
      * That is for each package known, the install task is queried to find if
      * the package is the one to be installed or updated.
@@ -236,7 +248,8 @@ class PackageLoader {
             final int installFlags,
             final IAutoInstallTask installTask) {
 
-        loadPackages(new ISourceLoadedCallback() {
+        loadPackages(mUpdaterData.getDownloadCache(),
+                     new ISourceLoadedCallback() {
             List<Archive> mArchivesToInstall = new ArrayList<Archive>();
             Map<Package, File> mInstallPaths = new HashMap<Package, File>();
 

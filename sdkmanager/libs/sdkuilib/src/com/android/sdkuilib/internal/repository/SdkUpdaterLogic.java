@@ -1276,7 +1276,7 @@ class SdkUpdaterLogic {
                     Package[] pkgs = remoteSrc.getPackages();
 
                     if (pkgs == null) {
-                        remoteSrc.load(monitor, forceHttp);
+                        remoteSrc.load(mUpdaterData.getDownloadCache(), monitor, forceHttp);
                         pkgs = remoteSrc.getPackages();
                     }
 

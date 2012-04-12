@@ -24,7 +24,6 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
-import com.android.sdkuilib.internal.repository.IPageListener;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -86,8 +85,7 @@ import java.util.Map.Entry;
  * remote available packages. This gives an overview of what is installed
  * vs what is available and allows the user to update or install packages.
  */
-public class PackagesPage extends UpdaterPage
-        implements ISdkChangeListener, IPageListener {
+public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
 
     static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
     static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
@@ -169,13 +167,9 @@ public class PackagesPage extends UpdaterPage
         postCreate();  //$hide$
     }
 
-    @Override
-    public void onPageSelected() {
-        List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
-        if (cats == null || cats.isEmpty()) {
-            // Initialize the package list the first time the page is shown.
-            loadPackages();
-        }
+    public void performFirstLoad() {
+        // Initialize the package list the first time the page is shown.
+        loadPackages(true /*isFirstLoad*/);
     }
 
     @SuppressWarnings("unused")
@@ -583,6 +577,10 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void loadPackages() {
+        loadPackages(false /*isFirstLoad*/);
+    }
+
+    private void loadPackages(final boolean isFirstLoad) {
         if (mUpdaterData == null) {
             return;
         }
@@ -601,7 +599,9 @@ public class PackagesPage extends UpdaterPage
         }
 
         mDiffLogic.updateStart();
-        mDiffLogic.getPackageLoader().loadPackages(new ISourceLoadedCallback() {
+        mDiffLogic.getPackageLoader().loadPackages(
+                mUpdaterData.getDownloadCache(), // TODO do a first pass with Cache=SERVE_CACHE
+                new ISourceLoadedCallback() {
             @Override
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.

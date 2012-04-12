@@ -29,7 +29,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,13 +81,14 @@ public class AddonsListFetcher {
     /**
      * Fetches the addons list from the given URL.
      *
-     * @param monitor A monitor to report errors. Cannot be null.
      * @param url The URL of an XML file resource that conforms to the latest sdk-addons-list-N.xsd.
      *   For the default operation, use {@link SdkAddonsListConstants#URL_ADDON_LIST}.
      *   Cannot be null.
+     * @param cache The {@link DownloadCache} instance to use. Cannot be null.
+     * @param monitor A monitor to report errors. Cannot be null.
      * @return An array of {@link Site} on success (possibly empty), or null on error.
      */
-    public Site[] fetch(ITaskMonitor monitor, String url) {
+    public Site[] fetch(String url, DownloadCache cache, ITaskMonitor monitor) {
 
         url = url == null ? "" : url.trim();
 
@@ -102,7 +102,7 @@ public class AddonsListFetcher {
         Document validatedDoc = null;
         String validatedUri = null;
 
-        ByteArrayInputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
+        InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
 
         if (xml != null) {
             monitor.setDescription("Validate XML");
@@ -187,41 +187,12 @@ public class AddonsListFetcher {
      *            happens during the fetch.
      * @see UrlOpener UrlOpener, which handles all URL logic.
      */
-    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor,
+    private InputStream fetchUrl(String urlString,
+            DownloadCache cache,
+            ITaskMonitor monitor,
             Exception[] outException) {
         try {
-
-            InputStream is = null;
-
-            int inc = 65536;
-            int curr = 0;
-            byte[] result = new byte[inc];
-
-            try {
-                is = UrlOpener.openUrl(urlString, monitor);
-
-                int n;
-                while ((n = is.read(result, curr, result.length - curr)) != -1) {
-                    curr += n;
-                    if (curr == result.length) {
-                        byte[] temp = new byte[curr + inc];
-                        System.arraycopy(result, 0, temp, 0, curr);
-                        result = temp;
-                    }
-                }
-
-                return new ByteArrayInputStream(result, 0, curr);
-
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException e) {
-                        // pass
-                    }
-                }
-            }
-
+            return cache.openCachedUrl(urlString, monitor);
         } catch (Exception e) {
             if (outException != null) {
                 outException[0] = e;

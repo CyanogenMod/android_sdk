@@ -484,7 +484,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         mUpdaterData.broadcastOnSdkLoaded();
 
         // Tell the one page its the selected one
-        mPkgPage.onPageSelected();
+        mPkgPage.performFirstLoad();
 
         return true;
     }
