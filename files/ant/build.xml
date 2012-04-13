@@ -96,6 +96,10 @@
             classname="com.android.ant.ComputeProjectClasspathTask"
             classpathref="android.antlibs" />
 
+    <taskdef name="getemmafilter"
+            classname="com.android.ant.GetEmmaFilterTask"
+            classpathref="android.antlibs" />
+
     <taskdef name="aapt"
             classname="com.android.ant.AaptExecTask"
             classpathref="android.antlibs" />
@@ -730,13 +734,20 @@
             <if condition="${build.is.instrumented}">
                 <then>
                     <echo level="info">Instrumenting classes from ${out.absolute.dir}/classes...</echo>
+
+                    <!-- build the filter to remove R, Manifest, BuildConfig -->
+                    <getemmafilter
+                            appPackage="${project.app.package}"
+                            libraryPackagesRefId="project.library.packages"
+                            filterOut="emma.default.filter"/>
+
                     <!-- It only instruments class files, not any external libs -->
                     <emma enabled="true">
                         <instr verbosity="${verbosity}"
                                mode="overwrite"
                                instrpath="${out.absolute.dir}/classes"
                                outdir="${out.absolute.dir}/classes">
-                            <filter excludes="${project.app.package}.R,${project.app.package}.R$$*,${project.app.package}.BuildConfig" />
+                            <filter excludes="${emma.default.filter}" />
                             <filter value="${emma.filter}" />
                         </instr>
                     </emma>
