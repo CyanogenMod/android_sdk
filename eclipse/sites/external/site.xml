@@ -3,19 +3,19 @@
    <description url="https://dl-ssl.google.com/android/eclipse/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_19.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_20.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ddms_19.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ddms_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.hierarchyviewer_19.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.hierarchyviewer_20.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.traceview_19.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.traceview_20.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ndk_19.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ndk_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="20.0.0.qualifier">
       <category name="ndk"/>
    </feature>
    <category-def name="developer" label="Developer Tools">
