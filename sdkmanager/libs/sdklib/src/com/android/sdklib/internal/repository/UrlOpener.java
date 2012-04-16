@@ -16,9 +16,15 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.util.Pair;
+
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthState;
 import org.apache.http.auth.Credentials;
@@ -30,6 +36,7 @@ import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
+import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
@@ -46,9 +53,9 @@ import java.util.Map;
 
 /**
  * This class holds methods for adding URLs management.
- * @see #openUrl(String, ITaskMonitor)
+ * @see #openUrl(String, ITaskMonitor, Header[])
  */
-public class UrlOpener {
+class UrlOpener {
 
     public static class CanceledByUserException extends Exception {
         private static final long serialVersionUID = -7669346110926032403L;
@@ -79,35 +86,50 @@ public class UrlOpener {
      * - {@code http://hc.apache.org/httpcomponents-client-ga/} <br/>
      * - {@code http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/conn/ProxySelectorRoutePlanner.html}
      * <p/>
-     * There's a very simple <b>cache</b> implementation.
+     * There's a very simple realm cache implementation.
      * Login/Password for each realm are stored in a static {@link Map}.
-     * Before asking the user the method verifies if the information is already available in cache.
+     * Before asking the user the method verifies if the information is already
+     * available in the memory cache.
      *
      * @param url the URL string to be opened.
      * @param monitor {@link ITaskMonitor} which is related to this URL
      *            fetching.
-     * @return Returns an {@link InputStream} holding the URL content.
+     * @param headers An optional array of HTTP headers to use in the GET request.
+     * @return Returns an {@link InputStream} holding the URL content and
+     *      the HttpResponse (locale, headers and an status line).
+     *      This never returns null; an exception is thrown instead in case of
+     *      error or if the user canceled an authentication dialog.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
      * @throws CanceledByUserException Exception thrown if the user cancels the
      *              authentication dialog.
      */
-    static InputStream openUrl(String url, ITaskMonitor monitor)
+    static @NonNull Pair<InputStream, HttpResponse> openUrl(
+            @NonNull String url,
+            @NonNull ITaskMonitor monitor,
+            @Nullable Header[] headers)
         throws IOException, CanceledByUserException {
 
         try {
-            return openWithHttpClient(url, monitor);
+            return openWithHttpClient(url, monitor, headers);
 
         } catch (ClientProtocolException e) {
             // If the protocol is not supported by HttpClient (e.g. file:///),
             // revert to the standard java.net.Url.open
 
             URL u = new URL(url);
-            return u.openStream();
+            InputStream is = u.openStream();
+            HttpResponse response = new BasicHttpResponse(
+                    new ProtocolVersion(u.getProtocol(), 1, 0),
+                    200, "");
+            return Pair.of(is, response);
         }
     }
 
-    private static InputStream openWithHttpClient(String url, ITaskMonitor monitor)
+    private static @NonNull Pair<InputStream, HttpResponse> openWithHttpClient(
+            @NonNull String url,
+            @NonNull ITaskMonitor monitor,
+            Header[] headers)
             throws IOException, ClientProtocolException, CanceledByUserException {
         UserCredentials result = null;
         String realm = null;
@@ -117,7 +139,12 @@ public class UrlOpener {
 
         // create local execution context
         HttpContext localContext = new BasicHttpContext();
-        HttpGet httpget = new HttpGet(url);
+        final HttpGet httpGet = new HttpGet(url);
+        if (headers != null) {
+            for (Header header : headers) {
+                httpGet.addHeader(header);
+            }
+        }
 
         // retrieve local java configured network in case there is the need to
         // authenticate a proxy
@@ -143,7 +170,7 @@ public class UrlOpener {
         // loop while the response is being fetched
         while (trying) {
             // connect and get status code
-            HttpResponse response = httpClient.execute(httpget, localContext);
+            HttpResponse response = httpClient.execute(httpGet, localContext);
             int statusCode = response.getStatusLine().getStatusCode();
 
             // check whether any authentication is required
@@ -158,7 +185,7 @@ public class UrlOpener {
                 authenticationState = (AuthState) localContext
                         .getAttribute(ClientContext.PROXY_AUTH_STATE);
             }
-            if (statusCode == HttpStatus.SC_OK) {
+            if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NOT_MODIFIED) {
                 // in case the status is OK and there is a realm and result,
                 // cache it
                 if (realm != null && result != null) {
@@ -226,8 +253,7 @@ public class UrlOpener {
                     // Note: don't use something like a BufferedHttpEntity since it would consume
                     // all content and store it in memory, resulting in an OutOfMemory exception
                     // on a large download.
-
-                    return new FilterInputStream(entity.getContent()) {
+                    InputStream is = new FilterInputStream(entity.getContent()) {
                         @Override
                         public void close() throws IOException {
                             // Since Http Client is no longer needed, close it.
@@ -240,7 +266,20 @@ public class UrlOpener {
                             super.close();
                         }
                     };
+
+                    HttpResponse outResponse = new BasicHttpResponse(response.getStatusLine());
+                    outResponse.setHeaders(response.getAllHeaders());
+                    outResponse.setLocale(response.getLocale());
+
+                    return Pair.of(is, outResponse);
                 }
+            } else if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
+                // It's ok to not have an entity (e.g. nothing to download) for a 304
+                HttpResponse outResponse = new BasicHttpResponse(response.getStatusLine());
+                outResponse.setHeaders(response.getAllHeaders());
+                outResponse.setLocale(response.getLocale());
+
+                return Pair.of(null, outResponse);
             }
         }
 

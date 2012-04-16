@@ -96,6 +96,7 @@ public class ArchiveInstaller {
             String osSdkRoot,
             boolean forceHttp,
             SdkManager sdkManager,
+            DownloadCache cache,
             ITaskMonitor monitor) {
 
         Archive newArchive = archiveInfo.getNewArchive();
@@ -122,7 +123,7 @@ public class ArchiveInstaller {
             return false;
         }
 
-        archiveFile = downloadFile(newArchive, osSdkRoot, monitor, forceHttp);
+        archiveFile = downloadFile(newArchive, osSdkRoot, cache, monitor, forceHttp);
         if (archiveFile != null) {
             // Unarchive calls the pre/postInstallHook methods.
             if (unarchive(archiveInfo, osSdkRoot, archiveFile, sdkManager, monitor)) {
@@ -143,6 +144,7 @@ public class ArchiveInstaller {
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected File downloadFile(Archive archive,
             String osSdkRoot,
+            DownloadCache cache,
             ITaskMonitor monitor,
             boolean forceHttp) {
 
@@ -219,7 +221,7 @@ public class ArchiveInstaller {
             mFileOp.deleteFileOrFolder(tmpFile);
         }
 
-        if (fetchUrl(archive, tmpFile, link, pkgName, monitor)) {
+        if (fetchUrl(archive, tmpFile, link, pkgName, cache, monitor)) {
             // Fetching was successful, let's use this file.
             return tmpFile;
         } else {
@@ -303,12 +305,13 @@ public class ArchiveInstaller {
             File tmpFile,
             String urlString,
             String pkgName,
+            DownloadCache cache,
             ITaskMonitor monitor) {
 
         FileOutputStream os = null;
         InputStream is = null;
         try {
-            is = UrlOpener.openUrl(urlString, monitor);
+            is = cache.openDirectUrl(urlString, monitor);
             os = new FileOutputStream(tmpFile);
 
             MessageDigest digester = archive.getChecksumType().getMessageDigest();

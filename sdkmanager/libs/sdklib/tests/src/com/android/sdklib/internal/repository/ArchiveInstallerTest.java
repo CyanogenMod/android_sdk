@@ -58,6 +58,7 @@ public class ArchiveInstallerTest extends TestCase {
         protected File downloadFile(
                 Archive archive,
                 String osSdkRoot,
+                DownloadCache cache,
                 ITaskMonitor monitor,
                 boolean forceHttp) {
             File file = mDownloadMap.get(archive);
@@ -102,7 +103,8 @@ public class ArchiveInstallerTest extends TestCase {
         MockEmptyPackage p = new MockEmptyPackage("testPkg");
         ArchiveReplacement ar = new ArchiveReplacement(p.getArchives()[0], null /*replaced*/);
 
-        assertFalse(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan, mMon));
+        assertFalse(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+                null /*UrlCache*/, mMon));
         assertTrue(mMon.getCapturedLog().indexOf("Skipping already installed archive") != -1);
     }
 
@@ -116,7 +118,8 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 p.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan, mMon));
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+                null /*UrlCache*/, mMon));
 
         // check what was created
         assertEquals(
@@ -162,7 +165,8 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 newPkg.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan, mMon));
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+                null /*UrlCache*/, mMon));
 
         // check what was created
         assertEquals(
@@ -237,7 +241,8 @@ public class ArchiveInstallerTest extends TestCase {
         mArchInst.setDownloadResponse(
                 newPkg.getArchives()[0], createFile("/sdk", "tmp", "download1.zip"));
 
-        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan, mMon));
+        assertTrue(mArchInst.install(ar, mSdkRoot, false /*forceHttp*/, mSdkMan,
+                null /*UrlCache*/, mMon));
 
         // check what was created
         assertEquals(

@@ -29,6 +29,7 @@ import com.android.sdklib.internal.repository.MockToolPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.widgets.Shell;
@@ -56,6 +57,11 @@ public class UpdaterLogicTest extends TestCase {
 
         @Override
         public ISdkLog getSdkLog() {
+            return null;
+        }
+
+        @Override
+        public DownloadCache getDownloadCache() {
             return null;
         }
 

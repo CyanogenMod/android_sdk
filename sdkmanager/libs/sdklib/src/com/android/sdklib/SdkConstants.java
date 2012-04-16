@@ -260,6 +260,9 @@ public final class SdkConstants {
     /** Name of the addon libs folder. */
     public final static String FD_ADDON_LIBS = "libs";                  //$NON-NLS-1$
 
+    /** Name of the cache folder in the $HOME/.android. */
+    public final static String FD_CACHE = "cache";                      //$NON-NLS-1$
+
     /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
     public final static String NS_RESOURCES =
         "http://schemas.android.com/apk/res/android";                   //$NON-NLS-1$

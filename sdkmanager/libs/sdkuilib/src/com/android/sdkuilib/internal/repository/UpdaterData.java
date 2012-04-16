@@ -29,6 +29,7 @@ import com.android.sdklib.internal.repository.AddonsListFetcher;
 import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ArchiveInstaller;
+import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -83,18 +84,13 @@ public class UpdaterData implements IUpdaterData {
 
     private SdkManager mSdkManager;
     private AvdManager mAvdManager;
-
+    private DownloadCache mDownloadCache; // lazily created in getDownloadCache
     private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
     private final SdkSources mSources = new SdkSources();
-
     private ImageFactory mImageFactory;
-
     private final SettingsController mSettingsController;
-
     private final ArrayList<ISdkChangeListener> mListeners = new ArrayList<ISdkChangeListener>();
-
     private Shell mWindowShell;
-
     private AndroidLocationException mAvdManagerInitError;
 
     /**
@@ -115,6 +111,7 @@ public class UpdaterData implements IUpdaterData {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
 
+        mDownloadCache = getDownloadCache();
         mSettingsController = new SettingsController(this);
 
         initSdk();
@@ -124,6 +121,14 @@ public class UpdaterData implements IUpdaterData {
 
     public String getOsSdkRoot() {
         return mOsSdkRoot;
+    }
+
+    @Override
+    public DownloadCache getDownloadCache() {
+        if (mDownloadCache == null) {
+            mDownloadCache = new DownloadCache(DownloadCache.Strategy.FRESH_CACHE);
+        }
+        return mDownloadCache;
     }
 
     public void setTaskFactory(ITaskFactory taskFactory) {
@@ -441,6 +446,7 @@ public class UpdaterData implements IUpdaterData {
                                               mOsSdkRoot,
                                               forceHttp,
                                               mSdkManager,
+                                              mDownloadCache,
                                               monitor)) {
                             // We installed this archive.
                             newlyInstalledArchives.add(archive);
@@ -1003,7 +1009,7 @@ public class UpdaterData implements IUpdaterData {
                     if (forceFetching ||
                             source.getPackages() != null ||
                             source.getFetchError() != null) {
-                        source.load(monitor.createSubMonitor(1), forceHttp);
+                        source.load(mDownloadCache, monitor.createSubMonitor(1), forceHttp);
                     }
                     monitor.incProgress(1);
                 }
@@ -1053,7 +1059,7 @@ public class UpdaterData implements IUpdaterData {
         boolean fetch3rdParties = System.getenv("SDK_SKIP_3RD_PARTIES") == null;
 
         AddonsListFetcher fetcher = new AddonsListFetcher();
-        Site[] sites = fetcher.fetch(monitor, url);
+        Site[] sites = fetcher.fetch(url, mDownloadCache, monitor);
         if (sites != null) {
             mSources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
 
