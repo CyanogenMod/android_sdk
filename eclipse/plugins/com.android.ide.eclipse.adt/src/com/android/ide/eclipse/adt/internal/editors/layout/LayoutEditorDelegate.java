@@ -158,6 +158,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             if (delegate instanceof LayoutEditorDelegate) {
                 return ((LayoutEditorDelegate) delegate);
             }
+        } else if (editorPart instanceof GraphicalEditorPart) {
+            GraphicalEditorPart part = (GraphicalEditorPart) editorPart;
+            return part.getEditorDelegate();
         }
         return null;
     }
