@@ -11,7 +11,7 @@
          this package needs to link against the android.test library,
          which is needed when building test cases.
     -->
-    <application>
+    <application android:label="testProjectTest-testapp">
         <uses-library android:name="android.test.runner" />
     </application>
 

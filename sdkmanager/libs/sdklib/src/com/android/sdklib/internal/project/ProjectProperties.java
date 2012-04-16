@@ -55,7 +55,7 @@ import java.util.regex.Pattern;
  * {@link #makeWorkingCopy()}.
  *
  */
-public class ProjectProperties {
+public class ProjectProperties implements IPropertySource {
     protected final static Pattern PATTERN_PROP = Pattern.compile(
     "^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");
 
@@ -343,6 +343,7 @@ public class ProjectProperties {
      * @param name the name of the property.
      * @return the property value or null if the property is not set.
      */
+    @Override
     public synchronized String getProperty(String name) {
         return mProperties.get(name);
     }
