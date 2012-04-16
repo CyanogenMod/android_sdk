@@ -248,56 +248,9 @@ class ClientRulesEngine implements IClientRulesEngine {
 
     private String displayResourceInput(String resourceTypeName, String currentValue,
             IInputValidator validator) {
-        GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
-        AndroidXmlEditor editor = graphicalEditor.getEditorDelegate().getEditor();
-        IProject project = editor.getProject();
         ResourceType type = ResourceType.getEnum(resourceTypeName);
-        if (project != null) {
-            // get the resource repository for this project and the system resources.
-            ResourceRepository projectRepository = ResourceManager.getInstance()
-                    .getProjectResources(project);
-            Shell shell = AdtPlugin.getDisplay().getActiveShell();
-            if (shell == null) {
-                return null;
-            }
-
-            AndroidTargetData data = editor.getTargetData();
-            ResourceRepository systemRepository = data.getFrameworkResources();
-
-            // open a resource chooser dialog for specified resource type.
-            ResourceChooser dlg = new ResourceChooser(project, type, projectRepository,
-                    systemRepository, shell);
-            dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
-
-            // When editing Strings, allow editing the value text directly. When we
-            // get inline editing support (where values entered directly into the
-            // textual widget are translated automatically into a resource) this can
-            // go away.
-            if (resourceTypeName.equals(ResourceType.STRING.getName())) {
-                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
-                dlg.setShowValueText(true);
-            } else if (resourceTypeName.equals(ResourceType.DIMEN.getName())
-                    || resourceTypeName.equals(ResourceType.INTEGER.getName())) {
-                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
-            }
-
-            if (validator != null) {
-                // Ensure wide enough to accommodate validator error message
-                dlg.setSize(85, 10);
-                dlg.setInputValidator(validator);
-            }
-
-            dlg.setCurrentResource(currentValue);
-
-            int result = dlg.open();
-            if (result == ResourceChooser.CLEAR_RETURN_CODE) {
-                return ""; //$NON-NLS-1$
-            } else if (result == Window.OK) {
-                return dlg.getCurrentResource();
-            }
-        }
-
-        return null;
+        GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
+        return ResourceChooser.chooseResource(graphicalEditor, type, currentValue, validator);
     }
 
     @Override
