@@ -3,31 +3,31 @@
    <description url="https://android.corp.google.com/adt/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_19.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_20.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ddms_19.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="19.0.0.qualifier">
-      <category name="developer"/>
-      <category name="platform"/>
-   </feature>
-   <feature url="features/com.android.ide.eclipse.hierarchyviewer_19.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ddms_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="20.0.0.qualifier">
       <category name="developer"/>
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.tests_19.0.0.qualifier.jar" id="com.android.ide.eclipse.tests" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.hierarchyviewer_20.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="20.0.0.qualifier">
+      <category name="developer"/>
+      <category name="platform"/>
+   </feature>
+   <feature url="features/com.android.ide.eclipse.tests_20.0.0.qualifier.jar" id="com.android.ide.eclipse.tests" version="20.0.0.qualifier">
       <category name="test"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.pdt_19.0.0.qualifier.jar" id="com.android.ide.eclipse.pdt" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.pdt_20.0.0.qualifier.jar" id="com.android.ide.eclipse.pdt" version="20.0.0.qualifier">
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.traceview_19.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.traceview_20.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="20.0.0.qualifier">
       <category name="developer"/>
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.gldebugger_19.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.gldebugger_20.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="20.0.0.qualifier">
       <category name="preview"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ndk_19.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="19.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ndk_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="20.0.0.qualifier">
       <category name="preview"/>
    </feature>
    <category-def name="developer" label="Application Developer Tools">
