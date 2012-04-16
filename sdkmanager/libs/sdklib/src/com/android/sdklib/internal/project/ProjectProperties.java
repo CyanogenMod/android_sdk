@@ -29,7 +29,6 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -186,8 +185,10 @@ public class ProjectProperties implements IPropertySource {
            "#\n" +
            "# To enable ProGuard to shrink and obfuscate your code, uncomment this "
                + "(available properties: sdk.dir, user.home):\n" +
-           "#" + PROPERTY_PROGUARD_CONFIG + "=${" + PROPERTY_SDK +"}" + File.separator
-               + FD_TOOLS + File.separator + FD_PROGUARD + File.separator
+           // Note: always use / separators in the properties paths. Both Ant and
+           // our ExportHelper will convert them properly according to the platform.
+           "#" + PROPERTY_PROGUARD_CONFIG + "=${" + PROPERTY_SDK +"}/"
+               + FD_TOOLS + '/' + FD_PROGUARD + '/'
                + FN_ANDROID_PROGUARD_FILE + ':' + FN_PROJECT_PROGUARD_FILE +'\n' +
            "\n";
 
