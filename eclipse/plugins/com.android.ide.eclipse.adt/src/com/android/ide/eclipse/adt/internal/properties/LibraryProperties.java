@@ -347,7 +347,7 @@ final class LibraryProperties {
         }
         item.setData(data);
         item.setText(0, data.relativePath);
-        item.setImage( data.project != null ? mMatchIcon : mErrorIcon);
+        item.setImage(data.project != null ? mMatchIcon : mErrorIcon);
         item.setText(1, data.project != null ? data.project.getName() : "?");
     }
 

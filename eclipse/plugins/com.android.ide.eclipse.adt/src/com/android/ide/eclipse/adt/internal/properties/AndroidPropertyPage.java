@@ -92,17 +92,6 @@ public class AndroidPropertyPage extends PropertyPage {
 
         mLibraryDependencies = new LibraryProperties(libraryGroup);
 
-        /*
-         * APK-SPLIT: This is not yet supported, so we hide the UI
-        Group g = new Group(top, SWT.NONE);
-        g.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        g.setLayout(new GridLayout(1, false));
-        g.setText("APK Generation");
-
-        mSplitByDensity = new Button(g, SWT.CHECK);
-        mSplitByDensity.setText("One APK per density");
-
-*/
         // fill the ui
         fillUi();
 
@@ -188,13 +177,6 @@ public class AndroidPropertyPage extends PropertyPage {
 
             mIsLibrary.setSelection(state.isLibrary());
             mLibraryDependencies.setContent(state, mPropertiesWorkingCopy);
-
-            /*
-             * APK-SPLIT: This is not yet supported, so we hide the UI
-            // get the project settings
-            ApkSettings settings = currentSdk.getApkSettings(mProject);
-            mSplitByDensity.setSelection(settings.isSplitByDpi());
-            */
         }
 
     }
