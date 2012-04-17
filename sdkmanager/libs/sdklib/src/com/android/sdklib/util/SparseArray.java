@@ -303,6 +303,79 @@ public class SparseArray<E> {
         mSize = pos + 1;
     }
 
+    public SparseArray<E> getUnmodifiable() {
+        final SparseArray<E> mStorage = this;
+        return new SparseArray<E>() {
+
+            @Override
+            public E get(int key) {
+                return mStorage.get(key);
+            }
+
+            @Override
+            public E get(int key, E valueIfKeyNotFound) {
+                return mStorage.get(key, valueIfKeyNotFound);
+            }
+
+            @Override
+            public void delete(int key) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void remove(int key) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void put(int key, E value) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int size() {
+                return mStorage.size();
+            }
+
+            @Override
+            public int keyAt(int index) {
+                return mStorage.keyAt(index);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public E valueAt(int index) {
+                return mStorage.valueAt(index);
+            }
+
+            @Override
+            public void setValueAt(int index, E value) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int indexOfKey(int key) {
+                return mStorage.indexOfKey(key);
+            }
+
+            @Override
+            public int indexOfValue(E value) {
+                return mStorage.indexOfValue(value);
+            }
+
+            @Override
+            public void clear() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void append(int key, E value) {
+                throw new UnsupportedOperationException();
+            }
+
+        };
+    }
+
     private static int binarySearch(int[] a, int start, int len, int key) {
         int high = start + len, low = start - 1, guess;
 
