@@ -110,13 +110,13 @@ CP_FILES=""
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
 BASE_PLUGIN_LIBS="common sdkstats androidprefs sdklib"
 BASE_PLUGIN_PREBUILTS="\
-    prebuilt/common/commons-compress/commons-compress-1.0.jar \
+    prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \
     prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
-    prebuilt/common/http-client/commons-logging-1.1.1.jar \
-    prebuilt/common/http-client/commons-codec-1.4.jar \
-    prebuilt/common/http-client/httpclient-4.1.1.jar \
-    prebuilt/common/http-client/httpcore-4.1.jar \
-    prebuilt/common/http-client/httpmime-4.1.1.jar"
+    prebuilts/tools/common/http-client/commons-logging-1.1.1.jar \
+    prebuilts/tools/common/http-client/commons-codec-1.4.jar \
+    prebuilts/tools/common/http-client/httpclient-4.1.1.jar \
+    prebuilts/tools/common/http-client/httpcore-4.1.jar \
+    prebuilts/tools/common/http-client/httpmime-4.1.1.jar"
 
 LIBS="$LIBS $BASE_PLUGIN_LIBS"
 CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS"
