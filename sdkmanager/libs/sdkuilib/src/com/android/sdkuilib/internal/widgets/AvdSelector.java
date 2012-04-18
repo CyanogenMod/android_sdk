@@ -31,9 +31,9 @@ import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
-import com.android.sdkuilib.repository.SdkUpdaterWindow;
-import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
+import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -345,7 +345,7 @@ public final class AvdSelector {
             mManagerButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    onManager();
+                    onAvdManager();
                 }
             });
         } else {
@@ -1007,7 +1007,7 @@ public final class AvdSelector {
         }
     }
 
-    private void onManager() {
+    private void onAvdManager() {
 
         // get the current Display
         Display display = mTable.getDisplay();
@@ -1020,12 +1020,16 @@ public final class AvdSelector {
             log = new MessageBoxLog("Result of SDK Manager", display, true /*logErrorsOnly*/);
         }
 
-        SdkUpdaterWindow window = new SdkUpdaterWindow(
-                mTable.getShell(),
-                log,
-                mAvdManager.getSdkManager().getLocation(),
-                SdkInvocationContext.AVD_SELECTOR);
-        window.open();
+        try {
+            AvdManagerWindowImpl1 win = new AvdManagerWindowImpl1(
+                    mTable.getShell(),
+                    log,
+                    mOsSdkPath,
+                    AvdInvocationContext.DIALOG);
+
+            win.open();
+        } catch (Exception ignore) {}
+
         refresh(true /*reload*/); // UpdaterWindow uses its own AVD manager so this one must reload.
 
         if (log instanceof MessageBoxLog) {

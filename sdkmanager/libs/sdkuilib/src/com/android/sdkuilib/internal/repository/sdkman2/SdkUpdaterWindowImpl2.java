@@ -566,7 +566,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
             AvdManagerWindowImpl1 win = new AvdManagerWindowImpl1(
                     mShell,
                     mUpdaterData,
-                    AvdInvocationContext.SDK_MANAGER);
+                    AvdInvocationContext.DIALOG);
 
             win.open();
         } catch (Exception e) {
