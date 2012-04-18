@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorMatchingStrategy;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
@@ -25,6 +26,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorMatchingStrategy;
 import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.FileEditorInput;
 
 /**
@@ -46,6 +48,18 @@ public class CommonMatchingStrategy implements IEditorMatchingStrategy {
 
                 LayoutEditorMatchingStrategy m = new LayoutEditorMatchingStrategy();
                 return m.matches(editorRef, fileInput);
+            } else {
+                // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
+                // is expensive so try exclude files that definitely don't match, such
+                // as those with the wrong extension or wrong file name
+                if (iFile.getName().equals(editorRef.getName()) &&
+                        editorRef.getId().equals(CommonXmlEditor.ID)) {
+                    try {
+                        return input.equals(editorRef.getEditorInput());
+                    } catch (PartInitException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                }
             }
         }
         return false;

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
 
@@ -42,6 +43,14 @@ public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
             // get the IFile object and check it's in one of the layout folders.
             IFile iFile = fileInput.getFile();
             ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+
+            // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
+            // is expensive so try exclude files that definitely don't match, such
+            // as those with the wrong extension or wrong file name
+            if (!iFile.getName().equals(editorRef.getName()) ||
+                    !editorRef.getId().equals(CommonXmlEditor.ID)) {
+                return false;
+            }
 
             // if it's a layout, we now check the name of the fileInput against the name of the
             // file being currently edited by the editor since those are independent of the config.
