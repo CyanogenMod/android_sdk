@@ -226,8 +226,7 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
             }
         }
 
-        value = value.replaceAll("\\\\", "\\\\\\\\");
-        writer.write(String.format("%s=%s\n", key, value));
+        writer.write(String.format("%s=%s\n", key, escape(value)));
     }
 
     /**
