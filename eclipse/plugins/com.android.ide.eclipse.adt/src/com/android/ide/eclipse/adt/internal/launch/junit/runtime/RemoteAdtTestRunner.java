@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.launch.junit.runtime;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
@@ -103,6 +104,11 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
 
         if (mLaunchInfo.getTestPackage() != null) {
             runner.setTestPackageName(mLaunchInfo.getTestPackage());
+        }
+
+        TestSize size = mLaunchInfo.getTestSize();
+        if (size != null) {
+            runner.setTestSize(size);
         }
 
         // set log only to first collect test case info, so Eclipse has correct test case count/
