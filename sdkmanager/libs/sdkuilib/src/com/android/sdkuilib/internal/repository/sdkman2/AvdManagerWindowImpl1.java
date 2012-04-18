@@ -58,6 +58,8 @@ public class AvdManagerWindowImpl1 {
     private final AvdInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
+    /** True if this window created the UpdaterData, in which case it needs to dispose it. */
+    private final boolean mOwnUpdaterData;
 
     // --- UI members ---
 
@@ -82,6 +84,7 @@ public class AvdManagerWindowImpl1 {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
+        mOwnUpdaterData = true;
     }
 
     /**
@@ -102,6 +105,7 @@ public class AvdManagerWindowImpl1 {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = updaterData;
+        mOwnUpdaterData = false;
     }
 
     /**
@@ -146,13 +150,8 @@ public class AvdManagerWindowImpl1 {
         mShell.addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {
-                ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);
-
-                if (mContext != AvdInvocationContext.SDK_MANAGER) {
-                    // When invoked from the sdk manager, don't dispose
-                    // resources that the sdk manager still needs.
-                    onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
-                }
+                ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);    //$hide$
+                onAndroidSdkUpdaterDispose();                               //$hide$
             }
         });
 
@@ -322,7 +321,7 @@ public class AvdManagerWindowImpl1 {
      * Callback called when the window shell is disposed.
      */
     private void onAndroidSdkUpdaterDispose() {
-        if (mUpdaterData != null) {
+        if (mOwnUpdaterData && mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
                 imgFactory.dispose();
