@@ -16,11 +16,30 @@
 #ifndef _OPENGL_RENDERER_RENDER_API_H
 #define _OPENGL_RENDERER_RENDER_API_H
 
+/* This header and its declarations must be usable from C code.
+ *
+ * If RENDER_API_NO_PROTOTYPES is #defined before including this header, only
+ * the interface function pointer types will be declared, not the prototypes.
+ * This allows the client to use those names for its function pointer variables.
+ *
+ * All interfaces which can fail return an int, with zero indicating failure
+ * and anything else indicating success.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "render_api_platform_types.h"
+
+#if defined(RENDER_API_NO_PROTOTYPES)
+#define DECL(ret, name, args) \
+	typedef ret (* name##Fn) args
+#else
+#define DECL(ret, name, args) \
+	typedef ret (* name##Fn) args ; \
+	ret name args
+#endif
 
 /* If a function with this signature is passed to initOpenGLRenderer(),
  * it will be called by the renderer just before each new frame is displayed,
@@ -54,80 +73,69 @@ extern "C" {
 typedef void (*OnPostFn)(void* context, int width, int height, int ydir,
                          int format, int type, unsigned char* pixels);
 
-// initLibrary - initialize the library and tries to load the corresponding
-//     GLES translator libraries. This function must be called before anything
-//     else to ensure that everything works. If it returns an error, then
-//     you cannot use the library at all (this can happen under certain
-//     environments where the desktop GL libraries are not available)
-//
-// returns true if the library could be initialized successfully;
-//
-bool initLibrary(void);
+/* initLibrary - initialize the library and tries to load the corresponding
+ *     GLES translator libraries. This function must be called before anything
+ *     else to ensure that everything works. If it returns an error, then
+ *     you cannot use the library at all (this can happen under certain
+ *     environments where the desktop GL libraries are not available)
+ */
+DECL(int, initLibrary, (void));
 
-// list of constants to be passed to setStreamMode, which determines
-// which
+/* list of constants to be passed to setStreamMode */
 #define STREAM_MODE_DEFAULT   0
 #define STREAM_MODE_TCP       1
 #define STREAM_MODE_UNIX      2
 #define STREAM_MODE_PIPE      3
 
-// Change the stream mode. This must be called before initOpenGLRenderer
-int setStreamMode(int mode);
+/* Change the stream mode. This must be called before initOpenGLRenderer */
+DECL(int, setStreamMode, (int mode));
 
-//
-// initOpenGLRenderer - initialize the OpenGL renderer process.
-//     portNum is the tcp port number the renderer is listening to.
-//     width and height are the framebuffer dimensions that will be
-//     reported to the guest display driver.
-//
-// returns true if renderer has been started successfully;
-//
-// This function is *NOT* thread safe and should be called first
-// to initialize the renderer after initLibrary().
-//
-bool initOpenGLRenderer(int width, int height, int portNum,
-                        OnPostFn onPost, void* onPostContext);
+/* initOpenGLRenderer - initialize the OpenGL renderer process.
+ *     portNum is the tcp port number the renderer is listening to.
+ *     width and height are the framebuffer dimensions that will be
+ *     reported to the guest display driver.
+ *
+ * This function is *NOT* thread safe and should be called first
+ * to initialize the renderer after initLibrary().
+ */
+DECL(int, initOpenGLRenderer, (int width, int height, int portNum,
+		OnPostFn onPost, void* onPostContext));
 
-//
-// createOpenGLSubwindow -
-//     Create a native subwindow which is a child of 'window'
-//     to be used for framebuffer display.
-//     Framebuffer will not get displayed if a subwindow is not
-//     created.
-//     x,y,width,height are the dimensions of the rendering subwindow.
-//     zRot is the rotation to apply on the framebuffer display image.
-//
-bool createOpenGLSubwindow(FBNativeWindowType window,
-                           int x, int y, int width, int height, float zRot);
+/* createOpenGLSubwindow -
+ *     Create a native subwindow which is a child of 'window'
+ *     to be used for framebuffer display.
+ *     Framebuffer will not get displayed if a subwindow is not
+ *     created.
+ *     x,y,width,height are the dimensions of the rendering subwindow.
+ *     zRot is the rotation to apply on the framebuffer display image.
+ */
+DECL(int, createOpenGLSubwindow, (FBNativeWindowType window,
+		int x, int y, int width, int height, float zRot));
 
-//
-// destroyOpenGLSubwindow -
-//   destroys the created native subwindow. Once destroyed,
-//   Framebuffer content will not be visible until a new
-//   subwindow will be created.
-//
-bool destroyOpenGLSubwindow();
+/* destroyOpenGLSubwindow -
+ *   destroys the created native subwindow. Once destroyed,
+ *   Framebuffer content will not be visible until a new
+ *   subwindow will be created.
+ */
+DECL(int, destroyOpenGLSubwindow, (void));
 
-//
-// setOpenGLDisplayRotation -
-//    set the framebuffer display image rotation in units
-//    of degrees around the z axis
-//
-void setOpenGLDisplayRotation(float zRot);
+/* setOpenGLDisplayRotation -
+ *    set the framebuffer display image rotation in units
+ *    of degrees around the z axis
+ */
+DECL(void, setOpenGLDisplayRotation, (float zRot));
 
-//
-// repaintOpenGLDisplay -
-//    causes the OpenGL subwindow to get repainted with the
-//    latest framebuffer content.
-//
-void repaintOpenGLDisplay();
+/* repaintOpenGLDisplay -
+ *    causes the OpenGL subwindow to get repainted with the
+ *    latest framebuffer content.
+ */
+DECL(void, repaintOpenGLDisplay, (void));
 
-//
-// stopOpenGLRenderer - stops the OpenGL renderer process.
-//     This functions is *NOT* thread safe and should be called
-//     only if previous initOpenGLRenderer has returned true.
-//
-bool stopOpenGLRenderer();
+/* stopOpenGLRenderer - stops the OpenGL renderer process.
+ *     This functions is *NOT* thread safe and should be called
+ *     only if previous initOpenGLRenderer has returned true.
+ */
+DECL(int, stopOpenGLRenderer, (void));
 
 #ifdef __cplusplus
 }

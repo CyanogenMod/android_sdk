@@ -50,7 +50,7 @@ static IOStream *createRenderThread(int p_stream_buffer_size,
 #define  RENDER_API_USE_THREAD
 //#endif
 
-bool initLibrary(void)
+int initLibrary(void)
 {
     //
     // Load EGL Plugin
@@ -76,7 +76,7 @@ bool initLibrary(void)
     return true;
 }
 
-bool initOpenGLRenderer(int width, int height, int portNum,
+int initOpenGLRenderer(int width, int height, int portNum,
         OnPostFn onPost, void* onPostContext)
 {
 
@@ -191,7 +191,7 @@ bool initOpenGLRenderer(int width, int height, int portNum,
     return true;
 }
 
-bool stopOpenGLRenderer()
+int stopOpenGLRenderer(void)
 {
     bool ret = false;
 
@@ -224,7 +224,7 @@ bool stopOpenGLRenderer()
     return ret;
 }
 
-bool createOpenGLSubwindow(FBNativeWindowType window,
+int createOpenGLSubwindow(FBNativeWindowType window,
                            int x, int y, int width, int height, float zRot)
 {
     if (s_renderThread) {
@@ -240,7 +240,7 @@ bool createOpenGLSubwindow(FBNativeWindowType window,
     return false;
 }
 
-bool destroyOpenGLSubwindow()
+int destroyOpenGLSubwindow(void)
 {
     if (s_renderThread) {
         return FrameBuffer::removeSubWindow();
@@ -272,7 +272,7 @@ void setOpenGLDisplayRotation(float zRot)
     }
 }
 
-void repaintOpenGLDisplay()
+void repaintOpenGLDisplay(void)
 {
     if (s_renderThread) {
         FrameBuffer *fb = FrameBuffer::getFB();
@@ -352,8 +352,8 @@ setStreamMode(int mode)
 #endif /* _WIN32 */
         default:
             // Invalid stream mode
-            return -1;
+            return false;
     }
     gRendererStreamMode = mode;
-    return 0;
+    return true;
 }
