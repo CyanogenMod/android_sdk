@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A base class for ant tasks that use a single dependency files to control (re)execution.
+ * A base class for ant tasks that use a single dependency file to control (re)execution.
  */
 public abstract class SingleDependencyTask extends BuildTypedTask {
 

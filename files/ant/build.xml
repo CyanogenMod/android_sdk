@@ -56,6 +56,9 @@
     <property name="renderscript.debug.opt.level" value="O0" />
     <property name="renderscript.release.opt.level" value="O3" />
 
+    <!-- manifest merger default value -->
+    <property name="manifestmerger.disable" value="true" />
+
     <!-- instrumentation options -->
     <property name="emma.filter" value="" />
 
@@ -98,6 +101,10 @@
 
     <taskdef name="getemmafilter"
             classname="com.android.ant.GetEmmaFilterTask"
+            classpathref="android.antlibs" />
+
+    <taskdef name="mergemanifest"
+            classname="com.android.ant.ManifestMergerTask"
             classpathref="android.antlibs" />
 
     <taskdef name="aapt"
@@ -171,11 +178,15 @@
     <property name="jar.libs.absolute.dir" location="${jar.libs.dir}" />
     <property name="native.libs.absolute.dir" location="libs" />
 
+    <property name="manifest.file" value="AndroidManifest.xml" />
+    <property name="manifest.abs.file" location="${manifest.file}" />
+
     <!-- Output directories -->
     <property name="out.dir" value="bin" />
     <property name="out.absolute.dir" location="${out.dir}" />
     <property name="out.classes.absolute.dir" location="${out.dir}/classes" />
     <property name="out.res.absolute.dir" location="${out.dir}/res" />
+    <property name="out.manifest.abs.file" location="${out.dir}/AndroidManifest.xml" />
 
     <!-- tools location -->
     <property name="android.tools.dir" location="${sdk.dir}/tools" />
@@ -456,8 +467,44 @@
             </then>
         </if>
 
+        <!-- If the "debug" build type changed, clear out the compiled code.
+             This is to make sure the new BuildConfig.DEBUG value is picked up
+             as javac can't deal with this type of change in its dependency computation. -->
+        <if>
+            <condition>
+                <and>
+                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
+                    <not><equals
+                            arg1="${build.is.packaging.debug}"
+                            arg2="${build.last.is.packaging.debug}" /></not>
+                </and>
+            </condition>
+            <then>
+                <echo level="info">Switching between debug and non debug build: Deleting previous compilation output...</echo>
+                <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
+            </then>
+            <else>
+                <!-- Else, we may still need to clean the code, for another reason.
+                     special case for instrumented: if the previous build was
+                     instrumented but not this one, clear out the compiled code -->
+                <if>
+                    <condition>
+                        <and>
+                            <istrue value="${build.last.is.instrumented}" />
+                            <isfalse value="${build.is.instrumented}" />
+                        </and>
+                    </condition>
+                    <then>
+                        <echo level="info">Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
+                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
+                    </then>
+                </if>
+            </else>
+        </if>
+
+
         <!-- get the project manifest package -->
-        <xpath input="AndroidManifest.xml"
+        <xpath input="${manifest.abs.file}"
                 expression="/manifest/@package" output="project.app.package" />
 
     </target>
@@ -532,7 +579,7 @@
                 minSdkVersionOut="project.minSdkVersion" />
 
         <!-- Value of the hasCode attribute (Application node) extracted from manifest file -->
-        <xpath input="AndroidManifest.xml" expression="/manifest/application/@android:hasCode"
+        <xpath input="${manifest.abs.file}" expression="/manifest/application/@android:hasCode"
                     output="manifest.hasCode" default="true"/>
 
         <echo level="info">----------</echo>
@@ -551,6 +598,7 @@
         <dependency
                 libraryFolderPathOut="project.library.folder.path"
                 libraryPackagesOut="project.library.packages"
+                libraryManifestFilePathOut="project.library.manifest.file.path"
                 libraryResFolderPathOut="project.library.res.folder.path"
                 libraryNativeFolderPathOut="project.library.native.folder.path"
                 jarLibraryPathOut="project.all.jars.path"
@@ -613,42 +661,6 @@
                 <path id="tested.project.classpath" />
             </else>
         </if>
-
-
-        <!-- If the "debug" build type changed, clear out the compiled code.
-             This is to make sure the new BuildConfig.DEBUG value is picked up
-             as javac can't deal with this type of change in its dependency computation. -->
-        <if>
-            <condition>
-                <and>
-                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
-                    <not><equals
-                            arg1="${build.is.packaging.debug}"
-                            arg2="${build.last.is.packaging.debug}" /></not>
-                </and>
-            </condition>
-            <then>
-                <echo level="info">Switching between debug and non debug build: Deleting previous compilation output...</echo>
-                <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
-            </then>
-            <else>
-                <!-- Else, we may still need to clean the code, for another reason.
-                     special case for instrumented: if the previous build was
-                     instrumented but not this one, clear out the compiled code -->
-                <if>
-                    <condition>
-                        <and>
-                            <istrue value="${build.last.is.instrumented}" />
-                            <isfalse value="${build.is.instrumented}" />
-                        </and>
-                    </condition>
-                    <then>
-                        <echo level="info">Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
-                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
-                    </then>
-                </if>
-            </else>
-        </if>
     </target>
 
     <!-- empty default pre-build target. Create a similar target in
@@ -657,6 +669,14 @@
 
     <!-- Code Generation: compile resources (aapt -> R.java), aidl, renderscript -->
     <target name="-code-gen">
+        <!-- always merge manifest -->
+        <mergemanifest
+                appManifest="${manifest.abs.file}"
+                outManifest="${out.manifest.abs.file}"
+                disable="${manifestmerger.disable}">
+            <library refid="project.library.manifest.file.path" />
+        </mergemanifest>
+    
         <do-only-if-manifest-hasCode
                 elseText="hasCode = false. Skipping aidl/renderscript/R.java">
             <echo level="info">Handling aidl files...</echo>
@@ -684,7 +704,7 @@
             <aapt executable="${aapt}"
                     command="package"
                     verbose="${verbose}"
-                    manifest="AndroidManifest.xml"
+                    manifest="${out.manifest.abs.file}"
                     androidjar="${project.target.android.jar}"
                     rfolder="${gen.absolute.dir}"
                     nonConstantId="${android.library}"
@@ -922,7 +942,7 @@
                     versioncode="${version.code}"
                     versionname="${version.name}"
                     debug="${build.is.packaging.debug}"
-                    manifest="AndroidManifest.xml"
+                    manifest="${out.manifest.abs.file}"
                     assets="${asset.absolute.dir}"
                     androidjar="${project.target.android.jar}"
                     apkfolder="${out.absolute.dir}"
@@ -1094,7 +1114,7 @@
 
         <!-- release mode is only valid if the manifest does not explicitly
              set debuggable to true. default is false. -->
-        <xpath input="AndroidManifest.xml" expression="/manifest/application/@android:debuggable"
+        <xpath input="${manifest.abs.file}" expression="/manifest/application/@android:debuggable"
                 output="build.is.packaging.debug" default="false"/>
 
         <!-- signing mode: release -->

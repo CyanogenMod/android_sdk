@@ -107,6 +107,8 @@ framework/mkidentity-prebuilt.jar tools/lib/mkidentity.jar
 framework/lint.jar               tools/lib/lint.jar
 framework/lint_api.jar           tools/lib/lint_api.jar
 framework/lint_checks.jar        tools/lib/lint_checks.jar
+framework/manifmerger.jar        tools/lib/manifmerger.jar
+
 
 # 3rd Party java libraries
 framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
@@ -162,6 +164,5 @@ framework/sdklib-tests.jar        tests/libtests/sdklib-tests.jar
 framework/sdkuilib-tests.jar      tests/libtests/sdkuilib-tests.jar
 framework/layoutlib_api.jar       tests/libtests/layoutlib_api.jar
 #FIXME breaks build, manifmerger jar files not properly built
-#framework/manifmerger.jar         tests/libtests/manifmerger.jar
 #framework/manifmerger-tests.jar   tests/libtests/manifmerger-tests.jar
 
