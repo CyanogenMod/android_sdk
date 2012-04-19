@@ -66,9 +66,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     public final static String ATTR_TIME_OUT =
         DdmsPlugin.PLUGIN_ID + ".timeOut"; //$NON-NLS-1$
 
-    public final static String ATTR_LOGCAT_GOTO_PROBLEM =
-        DdmsPlugin.PLUGIN_ID + ".logcatGoToProblem"; //$NON-NLS-1$
-
     public final static String ATTR_USE_ADBHOST =
         DdmsPlugin.PLUGIN_ID + ".useAdbHost"; //$NON-NLS-1$
 
@@ -113,7 +110,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(ATTR_TIME_OUT, DdmPreferences.DEFAULT_TIMEOUT);
 
-        store.setDefault(ATTR_LOGCAT_GOTO_PROBLEM, LogCatView.CHOICE_ERROR_LINE);
         store.setDefault(ATTR_USE_ADBHOST, DdmPreferences.DEFAULT_USE_ADBHOST);
         store.setDefault(ATTR_ADBHOST_VALUE, DdmPreferences.DEFAULT_ADBHOST_VALUE);
         store.setDefault(ATTR_SWITCH_PERSPECTIVE, LogCatView.DEFAULT_SWITCH_PERSPECTIVE);
