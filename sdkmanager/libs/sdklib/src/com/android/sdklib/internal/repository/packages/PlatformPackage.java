@@ -222,13 +222,13 @@ public class PlatformPackage extends MinToolsPackage
         if (mVersion.isPreview()) {
             s = String.format("SDK Platform Android %1$s Preview, revision %2$s%3$s",
                     getVersionName(),
-                    getRevision(),
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
         } else {
             s = String.format("SDK Platform Android %1$s, API %2$d, revision %3$s%4$s",
                 getVersionName(),
                 mVersion.getApiLevel(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");      //$NON-NLS-2$
         }
 
@@ -249,8 +249,8 @@ public class PlatformPackage extends MinToolsPackage
         }
 
         if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
+            s += String.format("\nRevision %1$s%2$s",
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 

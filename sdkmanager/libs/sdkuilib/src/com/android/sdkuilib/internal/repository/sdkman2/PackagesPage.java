@@ -1313,7 +1313,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
             } else if (mColumn == mColumnRevision) {
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
-                    return pkg.getRevisionStr();
+                    return pkg.getRevision().toShortString();
                 }
 
             } else if (mColumn == mColumnStatus) {
@@ -1343,7 +1343,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
 
                 } else if (element instanceof Package) {
                     // This is an update package.
-                    return "New revision " + Integer.toString(((Package) element).getRevision());
+                    return "New revision " + ((Package) element).getRevision().toShortString();
                 }
             }
 

@@ -227,12 +227,12 @@ public class SourcePackage extends Package implements IAndroidVersionProvider {
         if (mVersion.isPreview()) {
             return String.format("Sources for Android '%1$s' Preview SDK, revision %2$s%3$s",
                 mVersion.getCodename(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
         } else {
             return String.format("Sources for Android SDK, API %1$d, revision %2$s%3$s",
                 mVersion.getApiLevel(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
         }
     }
@@ -251,8 +251,8 @@ public class SourcePackage extends Package implements IAndroidVersionProvider {
         }
 
         if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
+            s += String.format("\nRevision %1$s%2$s",
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 

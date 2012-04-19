@@ -44,10 +44,12 @@ import java.util.regex.Pattern;
 /**
  * Represents a tool XML node in an SDK repository.
  */
-public class ToolPackage extends PreviewVersionPackage implements IMinPlatformToolsDependency {
+public class ToolPackage extends FullRevisionPackage implements IMinPlatformToolsDependency {
 
     /** The value returned by {@link ToolPackage#installId()}. */
     public static final String INSTALL_ID = "tools";                             //$NON-NLS-1$
+    /** The value returned by {@link ToolPackage#installId()}. */
+    private static final String INSTALL_ID_PREVIEW = "tools-preview";            //$NON-NLS-1$
 
     /**
      * The minimal revision of the platform-tools package required by this package
@@ -163,13 +165,17 @@ public class ToolPackage extends PreviewVersionPackage implements IMinPlatformTo
 
     /**
      * Returns a string identifier to install this package from the command line.
-     * For tools, we use "tools" since this package is unique.
+     * For tools, we use "tools" or "tools-preview" since this package is unique.
      * <p/>
      * {@inheritDoc}
      */
     @Override
     public String installId() {
-        return INSTALL_ID;
+        if (getRevision().isPreview()) {
+            return INSTALL_ID_PREVIEW;
+        } else {
+            return INSTALL_ID;
+        }
     }
 
     /**
@@ -189,7 +195,7 @@ public class ToolPackage extends PreviewVersionPackage implements IMinPlatformTo
     @Override
     public String getShortDescription() {
         return String.format("Android SDK Tools, revision %1$s%2$s",
-                getPreviewVersion().toShortString(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -203,7 +209,7 @@ public class ToolPackage extends PreviewVersionPackage implements IMinPlatformTo
 
         if (s.indexOf("revision") == -1) {
             s += String.format("\nRevision %1$s%2$s",
-                    getPreviewVersion().toShortString(),
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 
@@ -225,10 +231,29 @@ public class ToolPackage extends PreviewVersionPackage implements IMinPlatformTo
         return new File(osSdkRoot, SdkConstants.FD_TOOLS);
     }
 
+    /**
+     * Check whether 2 tool packages are the same <em>and</em> have the
+     * same preview bit.
+     */
     @Override
     public boolean sameItemAs(Package pkg) {
+        // Only one tool package so any tool package is the same item
+        return sameItemAs(pkg, false /*ignorePreviews*/);
+    }
+
+    @Override
+    public boolean sameItemAs(Package pkg, boolean ignorePreviews) {
         // only one tool package so any tool package is the same item.
-        return pkg instanceof ToolPackage;
+        if (pkg instanceof ToolPackage) {
+            if (ignorePreviews) {
+                return true;
+            } else {
+                // however previews can only match previews by default, unless we ignore that check.
+                return ((ToolPackage) pkg).getRevision().isPreview() ==
+                    getRevision().isPreview();
+            }
+        }
+        return false;
     }
 
     @Override

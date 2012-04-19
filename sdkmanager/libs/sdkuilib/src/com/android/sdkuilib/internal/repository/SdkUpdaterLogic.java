@@ -23,12 +23,14 @@ import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.DocPackage;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
+import com.android.sdklib.internal.repository.packages.FullRevision;
+import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
 import com.android.sdklib.internal.repository.packages.IExactApiLevelDependency;
 import com.android.sdklib.internal.repository.packages.IMinApiLevelDependency;
 import com.android.sdklib.internal.repository.packages.IMinPlatformToolsDependency;
 import com.android.sdklib.internal.repository.packages.IMinToolsDependency;
 import com.android.sdklib.internal.repository.packages.IPlatformDependency;
-import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
+import com.android.sdklib.internal.repository.packages.MajorRevision;
 import com.android.sdklib.internal.repository.packages.MinToolsPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
@@ -184,6 +186,14 @@ class SdkUpdaterLogic {
         return archives;
     }
 
+    private double getRevisionRank(FullRevision rev) {
+        int p = rev.isPreview() ? 999 : 999 - rev.getPreview();
+        return  rev.getMajor() +
+                rev.getMinor() / 1000.d +
+                rev.getMicro() / 1000000.d +
+                p              / 1000000000.d;
+    }
+
     /**
      * Finds new packages that the user does not have in his/her local SDK
      * and adds them to the list of archives to install.
@@ -212,15 +222,15 @@ class SdkUpdaterLogic {
         ArchiveInfo[] localArchives = createLocalArchives(localPkgs);
 
         // Find the highest platform installed
-        float currentPlatformScore = 0;
-        float currentSampleScore = 0;
-        float currentAddonScore = 0;
-        float currentDocScore = 0;
-        HashMap<String, Float> currentExtraScore = new HashMap<String, Float>();
+        double currentPlatformScore = 0;
+        double currentSampleScore = 0;
+        double currentAddonScore = 0;
+        double currentDocScore = 0;
+        HashMap<String, Double> currentExtraScore = new HashMap<String, Double>();
         if (!includeAll) {
             if (localPkgs != null) {
                 for (Package p : localPkgs) {
-                    int rev = p.getRevision();
+                    double rev = getRevisionRank(p.getRevision());
                     int api = 0;
                     boolean isPreview = false;
                     if (p instanceof IAndroidVersionProvider) {
@@ -229,10 +239,10 @@ class SdkUpdaterLogic {
                         isPreview = vers.isPreview();
                     }
 
-                    // The score is 10*api + (1 if preview) + rev/100
+                    // The score is 1000*api + (999 if preview) + rev
                     // This allows previews to rank above a non-preview and
                     // allows revisions to rank appropriately.
-                    float score = api * 10 + (isPreview ? 1 : 0) + rev/100.f;
+                    double score = api * 1000 + (isPreview ? 999 : 0) + rev;
 
                     if (p instanceof PlatformPackage) {
                         currentPlatformScore = Math.max(currentPlatformScore, score);
@@ -261,7 +271,7 @@ class SdkUpdaterLogic {
                 continue;
             }
 
-            int rev = p.getRevision();
+            double rev = getRevisionRank(p.getRevision());
             int api = 0;
             boolean isPreview = false;
             if (p instanceof IAndroidVersionProvider) {
@@ -270,7 +280,7 @@ class SdkUpdaterLogic {
                 isPreview = vers.isPreview();
             }
 
-            float score = api * 10 + (isPreview ? 1 : 0) + rev/100.f;
+            double score = api * 1000 + (isPreview ? 999 : 0) + rev;
 
             boolean shouldAdd = false;
             if (p instanceof PlatformPackage) {
@@ -282,7 +292,7 @@ class SdkUpdaterLogic {
             } else if (p instanceof ExtraPackage) {
                 String key = ((ExtraPackage) p).getPath();
                 shouldAdd = !currentExtraScore.containsKey(key) ||
-                    score > currentExtraScore.get(key).floatValue();
+                    score > currentExtraScore.get(key).doubleValue();
             } else if (p instanceof DocPackage) {
                 // We don't want all the doc, only the most recent one
                 if (score > currentDocScore) {
@@ -673,12 +683,14 @@ class SdkUpdaterLogic {
             SdkSource[] remoteSources,
             ArchiveInfo[] localArchives) {
         // This is the requirement to match.
-        int rev = pkg.getMinToolsRevision();
+        int revInt = pkg.getMinToolsRevision();         // FIXME support micro min-tools-rev
 
-        if (rev == MinToolsPackage.MIN_TOOLS_REV_NOT_SPECIFIED) {
+        if (revInt == MinToolsPackage.MIN_TOOLS_REV_NOT_SPECIFIED) {
             // Well actually there's no requirement.
             return null;
         }
+
+        MajorRevision rev = new MajorRevision(revInt);
 
         // First look in locally installed packages.
         for (ArchiveInfo ai : localArchives) {
@@ -686,7 +698,7 @@ class SdkUpdaterLogic {
             if (a != null) {
                 Package p = a.getParentPackage();
                 if (p instanceof ToolPackage) {
-                    if (((ToolPackage) p).getRevision() >= rev) {
+                    if (((ToolPackage) p).getRevision().compareTo(rev) >= 0) {
                         // We found one already installed.
                         return null;
                     }
@@ -700,7 +712,7 @@ class SdkUpdaterLogic {
             if (a != null) {
                 Package p = a.getParentPackage();
                 if (p instanceof ToolPackage) {
-                    if (((ToolPackage) p).getRevision() >= rev) {
+                    if (((ToolPackage) p).getRevision().compareTo(rev) >= 0) {
                         // The dependency is already scheduled for install, nothing else to do.
                         return ai;
                     }
@@ -713,7 +725,7 @@ class SdkUpdaterLogic {
             for (Archive a : selectedArchives) {
                 Package p = a.getParentPackage();
                 if (p instanceof ToolPackage) {
-                    if (((ToolPackage) p).getRevision() >= rev) {
+                    if (((ToolPackage) p).getRevision().compareTo(rev) >= 0) {
                         // It's not already in the list of things to install, so add it now
                         return insertArchive(a,
                                 outArchives,
@@ -731,7 +743,7 @@ class SdkUpdaterLogic {
         fetchRemotePackages(remotePkgs, remoteSources);
         for (Package p : remotePkgs) {
             if (p instanceof ToolPackage) {
-                if (((ToolPackage) p).getRevision() >= rev) {
+                if (((ToolPackage) p).getRevision().compareTo(rev) >= 0) {
                     // It's not already in the list of things to install, so add the
                     // first compatible archive we can find.
                     for (Archive a : p.getArchives()) {
@@ -752,7 +764,7 @@ class SdkUpdaterLogic {
         // We end up here if nothing matches. We don't have a good platform to match.
         // We need to indicate this extra depends on a missing platform archive
         // so that it can be impossible to install later on.
-        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_TOOL, rev);
+        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_TOOL, revInt);
     }
 
     /**
@@ -771,12 +783,13 @@ class SdkUpdaterLogic {
             SdkSource[] remoteSources,
             ArchiveInfo[] localArchives) {
         // This is the requirement to match.
-        int rev = pkg.getMinPlatformToolsRevision();
+        int revInt = pkg.getMinPlatformToolsRevision(); // FIXME support micro min-plat-tools-rev
+        FullRevision rev = new MajorRevision(revInt);
         boolean findMax = false;
         ArchiveInfo aiMax = null;
         Archive aMax = null;
 
-        if (rev == IMinPlatformToolsDependency.MIN_PLATFORM_TOOLS_REV_INVALID) {
+        if (revInt == IMinPlatformToolsDependency.MIN_PLATFORM_TOOLS_REV_INVALID) {
             // The requirement is invalid, which is not supposed to happen since this
             // property is mandatory. However in a typical upgrade scenario we can end
             // up with the previous updater managing a new package and not dealing
@@ -792,11 +805,11 @@ class SdkUpdaterLogic {
             if (a != null) {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
-                    int r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r > rev) {
+                    FullRevision r = ((PlatformToolPackage) p).getRevision();
+                    if (findMax && r.compareTo(rev) > 0) {
                         rev = r;
                         aiMax = ai;
-                    } else if (!findMax && r >= rev) {
+                    } else if (!findMax && r.compareTo(rev) >= 0) {
                         // We found one already installed.
                         return null;
                     }
@@ -810,11 +823,11 @@ class SdkUpdaterLogic {
             if (a != null) {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
-                    int r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r > rev) {
+                    FullRevision r = ((PlatformToolPackage) p).getRevision();
+                    if (findMax && r.compareTo(rev) > 0) {
                         rev = r;
                         aiMax = ai;
-                    } else if (!findMax && r >= rev) {
+                    } else if (!findMax && r.compareTo(rev) >= 0) {
                         // The dependency is already scheduled for install, nothing else to do.
                         return ai;
                     }
@@ -827,12 +840,12 @@ class SdkUpdaterLogic {
             for (Archive a : selectedArchives) {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
-                    int r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r > rev) {
+                    FullRevision r = ((PlatformToolPackage) p).getRevision();
+                    if (findMax && r.compareTo(rev) > 0) {
                         rev = r;
                         aiMax = null;
                         aMax = a;
-                    } else if (!findMax && r >= rev) {
+                    } else if (!findMax && r.compareTo(rev) >= 0) {
                         // It's not already in the list of things to install, so add it now
                         return insertArchive(a,
                                 outArchives,
@@ -850,16 +863,16 @@ class SdkUpdaterLogic {
         fetchRemotePackages(remotePkgs, remoteSources);
         for (Package p : remotePkgs) {
             if (p instanceof PlatformToolPackage) {
-                int r = ((PlatformToolPackage) p).getRevision();
-                if (r >= rev) {
+                FullRevision r = ((PlatformToolPackage) p).getRevision();
+                if (r.compareTo(rev) >= 0) {
                     // Make sure there's at least one valid archive here
                     for (Archive a : p.getArchives()) {
                         if (a.isCompatible()) {
-                            if (findMax && r > rev) {
+                            if (findMax && r.compareTo(rev) > 0) {
                                 rev = r;
                                 aiMax = null;
                                 aMax = a;
-                            } else if (!findMax && r >= rev) {
+                            } else if (!findMax && r.compareTo(rev) >= 0) {
                                 // It's not already in the list of things to install, so add the
                                 // first compatible archive we can find.
                                 return insertArchive(a,
@@ -893,7 +906,7 @@ class SdkUpdaterLogic {
         // We end up here if nothing matches. We don't have a good platform to match.
         // We need to indicate this package depends on a missing platform archive
         // so that it can be impossible to install later on.
-        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_PLATFORM_TOOL, rev);
+        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_PLATFORM_TOOL, revInt);
     }
 
     /**

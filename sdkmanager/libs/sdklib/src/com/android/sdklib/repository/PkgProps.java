@@ -29,8 +29,7 @@ package com.android.sdklib.repository;
 public class PkgProps {
 
     // Base Package
-
-    public static final String PKG_REVISION             = "Pkg.Revision";           //$NON-NLS-1$
+    public static final String PKG_MAJOR_REV            = "Pkg.Revision";           //$NON-NLS-1$
     public static final String PKG_LICENSE              = "Pkg.License";            //$NON-NLS-1$
     public static final String PKG_DESC                 = "Pkg.Desc";               //$NON-NLS-1$
     public static final String PKG_DESC_URL             = "Pkg.DescUrl";            //$NON-NLS-1$
@@ -39,16 +38,16 @@ public class PkgProps {
     public static final String PKG_SOURCE_URL           = "Pkg.SourceUrl";          //$NON-NLS-1$
     public static final String PKG_OBSOLETE             = "Pkg.Obsolete";           //$NON-NLS-1$
 
+    // FullRevision
+
+    public static final String PKG_MINOR_REV            = "Pkg.MinorRev";           //$NON-NLS-1$
+    public static final String PKG_MICRO_REV            = "Pkg.MicroRev";           //$NON-NLS-1$
+    public static final String PKG_PREVIEW_REV          = "Pkg.PreviewRev";         //$NON-NLS-1$
+
     // AndroidVersion
 
     public static final String VERSION_API_LEVEL        = "AndroidVersion.ApiLevel";//$NON-NLS-1$
     public static final String VERSION_CODENAME         = "AndroidVersion.CodeName";//$NON-NLS-1$
-
-    // PreviewVersion
-
-    public static final String PKG_MINOR_REV            = "PreviewVersion.MinorRev";//$NON-NLS-1$
-    public static final String PKG_MICRO_REV            = "PreviewVersion.MicroRev";//$NON-NLS-1$
-    public static final String PKG_PREVIEW_REV          = "PreviewVersion.Preview"; //$NON-NLS-1$
 
 
     // AddonPackage

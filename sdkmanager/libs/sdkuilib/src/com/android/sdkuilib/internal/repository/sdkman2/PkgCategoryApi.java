@@ -31,7 +31,9 @@ class PkgCategoryApi extends PkgCategory {
     // them.
     // (Note: don't use integer.max to avoid integers wrapping in comparisons. We can
     // revisit the day we get 2^30 platforms.)
-    public final static AndroidVersion KEY_TOOLS = new AndroidVersion(Integer.MAX_VALUE / 2, null);;
+    public final static AndroidVersion KEY_TOOLS = new AndroidVersion(Integer.MAX_VALUE / 2, null);
+    public final static AndroidVersion KEY_TOOLS_PREVIEW =
+                                               new AndroidVersion(Integer.MAX_VALUE / 2 - 1, null);
     public final static AndroidVersion KEY_EXTRA = new AndroidVersion(-1, null);
 
     public PkgCategoryApi(AndroidVersion version, String platformName, Object iconRef) {
@@ -55,6 +57,8 @@ class PkgCategoryApi extends PkgCategory {
         AndroidVersion key = (AndroidVersion) getKey();
         if (key.equals(KEY_TOOLS)) {
             return "TOOLS";             //$NON-NLS-1$ // for internal debug use only
+        } else if (key.equals(KEY_TOOLS_PREVIEW)) {
+                return "TOOLS-PREVIEW"; //$NON-NLS-1$ // for internal debug use only
         } else if (key.equals(KEY_EXTRA)) {
             return "EXTRAS";            //$NON-NLS-1$ // for internal debug use only
         } else {
@@ -70,6 +74,8 @@ class PkgCategoryApi extends PkgCategory {
 
             if (key.equals(KEY_TOOLS)) {
                 label = "Tools";
+            } else if (key.equals(KEY_TOOLS_PREVIEW)) {
+                label = "Tools (Beta Channel)";
             } else if (key.equals(KEY_EXTRA)) {
                 label = "Extras";
             } else {

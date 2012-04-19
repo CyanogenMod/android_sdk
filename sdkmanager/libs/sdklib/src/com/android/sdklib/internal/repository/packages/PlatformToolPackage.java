@@ -39,10 +39,12 @@ import java.util.Set;
 /**
  * Represents a platform-tool XML node in an SDK repository.
  */
-public class PlatformToolPackage extends PreviewVersionPackage {
+public class PlatformToolPackage extends FullRevisionPackage {
 
     /** The value returned by {@link PlatformToolPackage#installId()}. */
     public static final String INSTALL_ID = "platform-tools";                       //$NON-NLS-1$
+    /** The value returned by {@link PlatformToolPackage#installId()}. */
+    public static final String INSTALL_ID_PREVIEW = "platform-tools-preview";       //$NON-NLS-1$
 
     /**
      * Creates a new platform-tool package from the attributes and elements of the given XML node.
@@ -153,13 +155,18 @@ public class PlatformToolPackage extends PreviewVersionPackage {
 
     /**
      * Returns a string identifier to install this package from the command line.
-     * For platform-tools, we use "platform-tools" since this package type is unique.
+     * For platform-tools, we use "platform-tools" or "platform-tools-preview" since
+     * this package type is unique.
      * <p/>
      * {@inheritDoc}
      */
     @Override
     public String installId() {
-        return INSTALL_ID;
+        if (getRevision().isPreview()) {
+            return INSTALL_ID_PREVIEW;
+        } else {
+            return INSTALL_ID;
+        }
     }
 
     /**
@@ -179,7 +186,7 @@ public class PlatformToolPackage extends PreviewVersionPackage {
     @Override
     public String getShortDescription() {
         return String.format("Android SDK Platform-tools, revision %1$s%2$s",
-                getPreviewVersion().toShortString(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -193,7 +200,7 @@ public class PlatformToolPackage extends PreviewVersionPackage {
 
         if (s.indexOf("revision") == -1) {
             s += String.format("\nRevision %1$s%2$s",
-                    getPreviewVersion().toShortString(),
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 
@@ -215,10 +222,28 @@ public class PlatformToolPackage extends PreviewVersionPackage {
         return new File(osSdkRoot, SdkConstants.FD_PLATFORM_TOOLS);
     }
 
+    /**
+     * Check whether 2 platform-tool packages are the same <em>and</em> have the
+     * same preview bit.
+     */
     @Override
     public boolean sameItemAs(Package pkg) {
+        return sameItemAs(pkg, false /*ignorePreviews*/);
+    }
+
+    @Override
+    public boolean sameItemAs(Package pkg, boolean ignorePreviews) {
         // only one platform-tool package so any platform-tool package is the same item.
-        return pkg instanceof PlatformToolPackage;
+        if (pkg instanceof PlatformToolPackage) {
+            if (ignorePreviews) {
+                return true;
+            } else {
+                // however previews can only match previews by default, unless we ignore that check.
+                return ((PlatformToolPackage) pkg).getRevision().isPreview() ==
+                    getRevision().isPreview();
+            }
+        }
+        return false;
     }
 
     /**

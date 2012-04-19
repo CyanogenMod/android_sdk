@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository.packages;
 
 import junit.framework.TestCase;
 
-public class PreviewVersionTest extends TestCase {
+public class FullRevisionTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
@@ -30,26 +30,26 @@ public class PreviewVersionTest extends TestCase {
         super.tearDown();
     }
 
-    public final void testPreviewVersion() {
-        PreviewVersion p = new PreviewVersion(5);
+    public final void testFullRevision() {
+        FullRevision p = new FullRevision(5);
         assertEquals(5, p.getMajor());
-        assertEquals(PreviewVersion.IMPLICIT_MINOR_REV, p.getMinor());
-        assertEquals(PreviewVersion.IMPLICIT_MICRO_REV, p.getMicro());
-        assertEquals(PreviewVersion.NOT_A_PREVIEW, p.getPreview());
+        assertEquals(FullRevision.IMPLICIT_MINOR_REV, p.getMinor());
+        assertEquals(FullRevision.IMPLICIT_MICRO_REV, p.getMicro());
+        assertEquals(FullRevision.NOT_A_PREVIEW, p.getPreview());
         assertFalse (p.isPreview());
         assertEquals("5", p.toShortString());
         assertEquals("5.0.0", p.toString());
 
-        p = new PreviewVersion(5, 0, 0, 6);
+        p = new FullRevision(5, 0, 0, 6);
         assertEquals(5, p.getMajor());
-        assertEquals(PreviewVersion.IMPLICIT_MINOR_REV, p.getMinor());
-        assertEquals(PreviewVersion.IMPLICIT_MICRO_REV, p.getMicro());
+        assertEquals(FullRevision.IMPLICIT_MINOR_REV, p.getMinor());
+        assertEquals(FullRevision.IMPLICIT_MICRO_REV, p.getMicro());
         assertEquals(6, p.getPreview());
         assertTrue  (p.isPreview());
         assertEquals("5 rc6", p.toShortString());
         assertEquals("5.0.0 rc6", p.toString());
 
-        p = new PreviewVersion(6, 7, 0);
+        p = new FullRevision(6, 7, 0);
         assertEquals(6, p.getMajor());
         assertEquals(7, p.getMinor());
         assertEquals(0, p.getMicro());
@@ -58,7 +58,7 @@ public class PreviewVersionTest extends TestCase {
         assertEquals("6.7", p.toShortString());
         assertEquals("6.7.0", p.toString());
 
-        p = new PreviewVersion(10, 11, 12, PreviewVersion.NOT_A_PREVIEW);
+        p = new FullRevision(10, 11, 12, FullRevision.NOT_A_PREVIEW);
         assertEquals(10, p.getMajor());
         assertEquals(11, p.getMinor());
         assertEquals(12, p.getMicro());
@@ -67,7 +67,7 @@ public class PreviewVersionTest extends TestCase {
         assertEquals("10.11.12", p.toShortString());
         assertEquals("10.11.12", p.toString());
 
-        p = new PreviewVersion(10, 11, 12, 13);
+        p = new FullRevision(10, 11, 12, 13);
         assertEquals(10, p.getMajor());
         assertEquals(11, p.getMinor());
         assertEquals(12, p.getMicro());
@@ -78,13 +78,13 @@ public class PreviewVersionTest extends TestCase {
     }
 
     public final void testCompareTo() {
-        PreviewVersion s4 = new PreviewVersion(4);
-        PreviewVersion i4 = new PreviewVersion(4);
-        PreviewVersion g5 = new PreviewVersion(5, 1, 0, 6);
-        PreviewVersion y5 = new PreviewVersion(5);
-        PreviewVersion c5 = new PreviewVersion(5, 1, 0, 6);
-        PreviewVersion o5 = new PreviewVersion(5, 0, 0, 7);
-        PreviewVersion p5 = new PreviewVersion(5, 1, 0, 0);
+        FullRevision s4 = new FullRevision(4);
+        FullRevision i4 = new FullRevision(4);
+        FullRevision g5 = new FullRevision(5, 1, 0, 6);
+        FullRevision y5 = new FullRevision(5);
+        FullRevision c5 = new FullRevision(5, 1, 0, 6);
+        FullRevision o5 = new FullRevision(5, 0, 0, 7);
+        FullRevision p5 = new FullRevision(5, 1, 0, 0);
 
         assertEquals(s4, i4);                   // 4.0.0-0 == 4.0.0-0
         assertEquals(g5, c5);                   // 5.1.0-6 == 5.1.0-6

@@ -21,7 +21,9 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
+import com.android.sdklib.internal.repository.packages.IFullRevisionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.SystemImagePackage;
@@ -80,11 +82,12 @@ class PackagesDiffLogic {
     /**
      * Mark all new and update PkgItems as checked.
      *
-     * @param selectNew If true, select all new packages
-     * @param selectUpdates If true, select all update packages
-     * @param selectTop If true, select the top platform. If the top platform has nothing installed,
-     *   select all items in it; if it is partially installed, at least select the platform and
-     *   system images if none of the system images are installed.
+     * @param selectNew If true, select all new packages (except the rc/preview ones).
+     * @param selectUpdates If true, select all update packages.
+     * @param selectTop If true, select the top platform.
+     *   If the top platform has nothing installed, select all items in it (except the rc/preview);
+     *   If it is partially installed, at least select the platform and system images if none of
+     *   the system images are installed.
      * @param currentPlatform The {@link SdkConstants#currentPlatform()} value.
      */
     public void checkNewUpdateItems(
@@ -97,7 +100,8 @@ class PackagesDiffLogic {
         SparseArray<List<PkgItem>> platformItems = new SparseArray<List<PkgItem>>();
 
         // sort items in platforms... directly deal with new/update items
-        for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
+        List<PkgItem> allItems = getAllPkgItems(true /*byApi*/, true /*bySource*/);
+        for (PkgItem item : allItems) {
             if (!item.hasCompatibleArchive()) {
                 // Ignore items that have no archive compatible with the current platform.
                 continue;
@@ -129,8 +133,42 @@ class PackagesDiffLogic {
                 items.add(item);
             }
 
-            if ((selectNew && item.getState() == PkgState.NEW) ||
-                    (selectUpdates && item.hasUpdatePkg())) {
+            if ((selectUpdates || selectNew) &&
+                    item.getState() == PkgState.NEW &&
+                    !item.getRevision().isPreview()) {
+                boolean sameFound = false;
+                Package newPkg = item.getMainPackage();
+                if (newPkg instanceof IFullRevisionProvider) {
+                    // We have a potential new non-preview package; but this kind of package
+                    // supports having previews, which means we want to make sure we're not
+                    // offering an older "new" non-preview if there's a newer preview installed.
+                    //
+                    // We should get into this odd situation only when updating an RC/preview
+                    // by a final release pkg.
+
+                    IFullRevisionProvider newPkg2 = (IFullRevisionProvider) newPkg;
+                    for (PkgItem item2 : allItems) {
+                        if (item2.getState() == PkgState.INSTALLED) {
+                            Package installed = item2.getMainPackage();
+
+                            if (installed.getRevision().isPreview() &&
+                                    newPkg2.sameItemAs(installed, true /*ignorePreviews*/)) {
+                                sameFound = true;
+
+                                if (installed.canBeUpdatedBy(newPkg) == UpdateInfo.UPDATE) {
+                                    item.setChecked(true);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (selectNew && !sameFound) {
+                    item.setChecked(true);
+                }
+
+            } else if (selectUpdates && item.hasUpdatePkg()) {
                 item.setChecked(true);
             }
         }
@@ -140,7 +178,8 @@ class PackagesDiffLogic {
             if (!installedPlatforms.contains(maxApi)) {
                 // If the top platform has nothing installed at all, select everything in it
                 for (PkgItem item : items) {
-                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                    if ((item.getState() == PkgState.NEW && !item.getRevision().isPreview()) ||
+                            item.hasUpdatePkg()) {
                         item.setChecked(true);
                     }
                 }
@@ -151,7 +190,8 @@ class PackagesDiffLogic {
                 // First make sure the platform package itself is installed, or select it.
                 for (PkgItem item : items) {
                      Package p = item.getMainPackage();
-                     if (p instanceof PlatformPackage && item.getState() == PkgState.NEW) {
+                     if (p instanceof PlatformPackage &&
+                             item.getState() == PkgState.NEW && !item.getRevision().isPreview()) {
                          item.setChecked(true);
                          break;
                      }
@@ -163,7 +203,7 @@ class PackagesDiffLogic {
                     Package p = item.getMainPackage();
                     if (p instanceof PlatformPackage && item.getState() == PkgState.INSTALLED) {
                         if (item.hasUpdatePkg() && item.isChecked()) {
-                            // If the installed platform is schedule for update, look for the
+                            // If the installed platform is scheduled for update, look for the
                             // system image in the update package, not the current one.
                             p = item.getUpdatePkg();
                             if (p instanceof PlatformPackage) {
@@ -190,6 +230,7 @@ class PackagesDiffLogic {
                          Package p = item.getMainPackage();
                          if (p instanceof PlatformPackage) {
                              if (item.getState() == PkgState.NEW &&
+                                     !item.getRevision().isPreview() &&
                                      ((PlatformPackage) p).getIncludedAbi() != null) {
                                  item.setChecked(true);
                                  hasSysImg = true;
@@ -220,7 +261,9 @@ class PackagesDiffLogic {
             // On Windows, we'll also auto-select the USB driver
             for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
                 Package p = item.getMainPackage();
-                if (p instanceof ExtraPackage && item.getState() == PkgState.NEW) {
+                if (p instanceof ExtraPackage &&
+                        item.getState() == PkgState.NEW &&
+                        !item.getRevision().isPreview()) {
                     ExtraPackage ep = (ExtraPackage) p;
                     if (ep.getVendorId().equals("google") &&            //$NON-NLS-1$
                             ep.getPath().equals("usb_driver")) {        //$NON-NLS-1$
@@ -519,7 +562,7 @@ class PackagesDiffLogic {
 
                         switch (currItem.getState()) {
                         case NEW:
-                            if (newPkg.getRevision() < mainPkg.getRevision()) {
+                            if (newPkg.getRevision().compareTo(mainPkg.getRevision()) < 0) {
                                 if (!op.isKeep(currItem)) {
                                     // The new item has a lower revision than the current one,
                                     // but the current one hasn't been marked as being kept so
@@ -528,7 +571,7 @@ class PackagesDiffLogic {
                                     addNewItem(op, newPkg, PkgState.NEW);
                                     hasChanged = true;
                                 }
-                            } else if (newPkg.getRevision() > mainPkg.getRevision()) {
+                            } else if (newPkg.getRevision().compareTo(mainPkg.getRevision()) > 0) {
                                 // We have a more recent new version, remove the current one
                                 // and replace by a new one
                                 currItemIt.remove();
@@ -538,7 +581,7 @@ class PackagesDiffLogic {
                             break;
                         case INSTALLED:
                             // if newPkg.revision<=mainPkg.revision: it's already installed, ignore.
-                            if (newPkg.getRevision() > mainPkg.getRevision()) {
+                            if (newPkg.getRevision().compareTo(mainPkg.getRevision()) > 0) {
                                 // This is a new update for the main package.
                                 if (currItem.mergeUpdate(newPkg)) {
                                     op.keep(currItem.getUpdatePkg());
@@ -611,8 +654,11 @@ class PackagesDiffLogic {
                 return ((IAndroidVersionProvider) pkg).getAndroidVersion();
 
             } else if (pkg instanceof ToolPackage || pkg instanceof PlatformToolPackage) {
-                return PkgCategoryApi.KEY_TOOLS;
-
+                if (pkg.getRevision().isPreview()) {
+                    return PkgCategoryApi.KEY_TOOLS_PREVIEW;
+                } else {
+                    return PkgCategoryApi.KEY_TOOLS;
+                }
             } else {
                 return PkgCategoryApi.KEY_EXTRA;
             }
