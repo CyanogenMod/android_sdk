@@ -75,9 +75,15 @@ class ImageTransferHandler extends TransferHandler {
     }
 
     @Override
-    public boolean canImport(JComponent component, DataFlavor[] dataFlavors) {
-        for (DataFlavor flavor : dataFlavors) {
+    public boolean canImport(TransferSupport support) {
+        boolean isCopySupported
+                = (COPY & support.getSourceDropActions()) == COPY;
+        if (!isCopySupported) {
+            return false;
+        }
+        for (DataFlavor flavor : support.getDataFlavors()) {
             if (flavor.isFlavorJavaFileListType() || flavor.isFlavorTextType()) {
+                support.setDropAction(COPY);
                 return true;
             }
         }
