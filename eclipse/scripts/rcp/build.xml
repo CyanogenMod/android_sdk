@@ -3,7 +3,7 @@
     <property name="ANDROID_SRC" location="../../../../" />
 
     <!-- Host Eclipse used for building the RCP -->
-    <property name="basebuilder" value="${ANDROID_SRC}/vendor/eclipse/basebuilder-3.6.2/org.eclipse.releng.basebuilder/" />
+    <property name="basebuilder" value="${ANDROID_SRC}/external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/" />
 
     <!-- Source for target prebuilts -->
     <property name="targetSrcDir" value="${ANDROID_SRC}/prebuilts/eclipse/" />
@@ -67,8 +67,8 @@
         <mkdir dir="${targetDir}/deltapack" />
         <mkdir dir="${targetDir}/repos" />
 
-        <unzip src="${targetSrcDir}/deltapack/eclipse-3.6.2-delta-pack.zip" dest="${targetDir}/deltapack" overwrite="false" />
-        <unzip src="${targetSrcDir}/platform/org.eclipse.platform.source-3.6.2.zip" dest="${targetDir}/repos/platform" overwrite="false" />
+        <unzip src="${targetSrcDir}/deltapack/eclipse-3.7.2-delta-pack.zip" dest="${targetDir}/deltapack" overwrite="false" />
+        <unzip src="${targetSrcDir}/platform/org.eclipse.platform-3.7.2.zip" dest="${targetDir}/repos/platform" overwrite="false" />
     </target>
 
     <!-- Launch pde build -->
