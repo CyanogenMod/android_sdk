@@ -17,6 +17,7 @@
 package com.android.tools.sdkcontroller.views;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -186,19 +187,19 @@ public class MultiTouchView extends View {
     /**
      * Constructs touch event message to be send to emulator.
      *
-     * @param sb String builder where to construct the message.
+     * @param bb ByteBuffer where to construct the message.
      * @param event Event for which to construct the message.
      * @param ptr_index Index of the motion pointer for which to construct the
      *            message.
      */
-    public void constructEventMessage(StringBuilder sb, MotionEvent event, int ptr_index) {
-        sb.append(" pid=").append(event.getPointerId(ptr_index));
+    public void constructEventMessage(ByteBuffer bb, MotionEvent event, int ptr_index) {
+        bb.putInt(event.getPointerId(ptr_index));
         if (mRotateDisplay == false) {
-            sb.append(" x=").append((int) (event.getX(ptr_index) / mDx));
-            sb.append(" y=").append((int) (event.getY(ptr_index) / mDy));
+            bb.putInt((int) (event.getX(ptr_index) / mDx));
+            bb.putInt((int) (event.getY(ptr_index) / mDy));
         } else {
-            sb.append(" x=").append((int) (event.getY(ptr_index) / mDy));
-            sb.append(" y=").append((int) (getWidth() - event.getX(ptr_index) / mDx));
+            bb.putInt((int) (event.getY(ptr_index) / mDy));
+            bb.putInt((int) (getWidth() - event.getX(ptr_index) / mDx));
         }
         // At the system level the input reader takes integers in the range
         // 0 - 100 for the pressure.
@@ -207,7 +208,7 @@ public class MultiTouchView extends View {
         if (pressure > 100) {
             pressure = 100;
         }
-        sb.append(" pressure=").append(pressure);
+        bb.putInt(pressure);
     }
 
     /***************************************************************************

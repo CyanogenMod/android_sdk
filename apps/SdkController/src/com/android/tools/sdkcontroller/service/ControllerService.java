@@ -17,9 +17,7 @@
 package com.android.tools.sdkcontroller.service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -33,33 +31,32 @@ import android.util.Log;
 
 import com.android.tools.sdkcontroller.R;
 import com.android.tools.sdkcontroller.activities.MainActivity;
-import com.android.tools.sdkcontroller.handlers.BaseHandler;
-import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
-import com.android.tools.sdkcontroller.handlers.MultiTouchHandler;
-import com.android.tools.sdkcontroller.handlers.SensorsHandler;
-import com.android.tools.sdkcontroller.lib.EmulatorConnection;
-import com.android.tools.sdkcontroller.lib.EmulatorConnection.EmulatorConnectionType;
-import com.android.tools.sdkcontroller.lib.EmulatorListener;
+import com.android.tools.sdkcontroller.handlers.MultiTouchChannel;
+import com.android.tools.sdkcontroller.handlers.SensorChannel;
+import com.android.tools.sdkcontroller.lib.Connection;
+import com.android.tools.sdkcontroller.lib.Channel;
 
 /**
  * The background service of the SdkController.
  * There can be only one instance of this.
  * <p/>
- * The service manages a number of action "handlers" which can be seen as individual tasks
- * that the user might want to accomplish, for example "sending sensor data to the emulator"
- * or "sending multi-touch data and displaying an emulator screen".
+ * The service manages a number of SDK controller channels which can be seen as
+ * individual tasks that the user might want to accomplish, for example "sending
+ * sensor data to the emulator" or "sending multi-touch data and displaying an
+ * emulator screen".
  * <p/>
- * Each handler currently has its own emulator connection associated to it (cf class
- * {@code EmuCnxHandler} below. However our goal is to later move to a single connection channel
- * with all data multiplexed on top of it.
+ * Each channel connects to the emulator via UNIX-domain socket that is bound to
+ * "android.sdk.controller" port. Connection class provides a socket server that
+ * listens to emulator connections on this port, and binds new connection with a
+ * channel, based on channel name.
  * <p/>
- * All the handlers are created when the service starts, and whether the emulator connection
- * is successful or not, and whether there's any UI to control it. It's up to the handlers
- * to deal with these specific details. <br/>
- * For example the {@link SensorsHandler} initializes its sensor list as soon as created
- * and then tries to send data as soon as there's an emulator connection.
- * On the other hand the {@link MultiTouchHandler} lays dormant till there's an UI interacting
- * with it.
+ * All the channels are created when the service starts, and whether the emulator
+ * connection is successful or not, and whether there's any UI to control it.
+ * It's up to the channels to deal with these specific details. <br/>
+ * For example the {@link SensorChannel} initializes its sensor list as soon as
+ * created and then tries to send data as soon as there's an emulator
+ * connection. On the other hand the {@link MultiTouchChannel} lays dormant till
+ * there's an UI interacting with it.
  */
 public class ControllerService extends Service {
 
@@ -68,11 +65,16 @@ public class ControllerService extends Service {
      * http://developer.android.com/reference/android/app/Service.html#LocalServiceSample
      */
 
+    /** Tag for logging messages. */
     public static String TAG = ControllerService.class.getSimpleName();
+    /** Controls debug log. */
     private static boolean DEBUG = true;
-
     /** Identifier for the notification. */
     private static int NOTIF_ID = 'S' << 24 + 'd' << 16 + 'k' << 8 + 'C' << 0;
+
+    /** Connection to the emulator. */
+    public Connection mConnection;
+
 
     private final IBinder mBinder = new ControllerBinder();
 
@@ -85,8 +87,6 @@ public class ControllerService extends Service {
 
     /** Internal error reported by the service. */
     private String mServiceError = "";
-
-    private final Set<EmuCnxHandler> mHandlers = new HashSet<ControllerService.EmuCnxHandler>();
 
     /**
      * Interface that the service uses to notify binded activities.
@@ -119,7 +119,7 @@ public class ControllerService extends Service {
         public void addControllerListener(ControllerListener listener) {
             assert listener != null;
             if (listener != null) {
-                synchronized(mListeners) {
+                synchronized (mListeners) {
                     if (!mListeners.contains(listener)) {
                         mListeners.add(listener);
                     }
@@ -134,7 +134,7 @@ public class ControllerService extends Service {
          */
         public void removeControllerListener(ControllerListener listener) {
             assert listener != null;
-            synchronized(mListeners) {
+            synchronized (mListeners) {
                 mListeners.remove(listener);
             }
         }
@@ -149,34 +149,24 @@ public class ControllerService extends Service {
         }
 
         /**
-         * Indicates when <em>all</all> the communication channels for all handlers
-         * are properly connected.
+         * Indicates when <em>any</all> of the SDK controller channels is connected
+         * with the emulator.
          *
-         * @return True if all the handler's communication channels are connected.
+         * @return True if any of the SDK controller channels is connected with the
+         *         emulator.
          */
         public boolean isEmuConnected() {
-            for (EmuCnxHandler handler : mHandlers) {
-                if (!handler.isConnected()) {
-                    return false;
-                }
-            }
-            return true;
+            return mConnection.isEmulatorConnected();
         }
 
         /**
-         * Returns the handler for the given type.
+         * Returns the channel instance for the given type.
          *
-         * @param type One of the {@link HandlerType}s. Must not be null.
+         * @param name One of the channel names. Must not be null.
          * @return Null if the type is not found, otherwise the handler's unique instance.
          */
-        public BaseHandler getHandler(HandlerType type) {
-            for (EmuCnxHandler handler : mHandlers) {
-                BaseHandler h = handler.getHandler();
-                if (h.getType() == type) {
-                    return h;
-                }
-            }
-            return null;
+        public Channel getChannel(String name) {
+            return mConnection.getChannel(name);
         }
     }
 
@@ -220,101 +210,10 @@ public class ControllerService extends Service {
         super.onDestroy();
     }
 
-    // ------
-
-    /**
-     * Wrapper that associates one {@link EmulatorConnection} with
-     * one {@link BaseHandler}. Ideally we would not need this if all
-     * the action handlers were using the same port, so this wrapper
-     * is just temporary.
-     */
-    private class EmuCnxHandler implements EmulatorListener {
-
-        private EmulatorConnection mCnx;
-        private boolean mConnected;
-        private final BaseHandler mHandler;
-
-        public EmuCnxHandler(BaseHandler handler) {
-            mHandler = handler;
-        }
-
-        @Override
-        public void onEmulatorConnected() {
-            mConnected = true;
-            notifyStatusChanged();
-        }
-
-        @Override
-        public void onEmulatorDisconnected() {
-            mConnected = false;
-            notifyStatusChanged();
-        }
-
-        @Override
-        public String onEmulatorQuery(String query, String param) {
-            if (DEBUG) Log.d(TAG, mHandler.getType().toString() +  " Query " + query);
-            return mHandler.onEmulatorQuery(query, param);
-        }
-
-        @Override
-        public String onEmulatorBlobQuery(byte[] array) {
-            if (DEBUG) Log.d(TAG, mHandler.getType().toString() +  " BlobQuery " + array.length);
-            return mHandler.onEmulatorBlobQuery(array);
-        }
-
-        EmuCnxHandler connect() {
-            assert mCnx == null;
-
-            mCnx = new EmulatorConnection(this);
-
-            // Apps targeting Honeycomb SDK can't do network IO on their main UI
-            // thread. So just start the connection from a thread.
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // This will call onEmulatorBindResult with the result.
-                    mCnx.connect(mHandler.getPort(), EmulatorConnectionType.SYNC_CONNECTION);
-                }
-            }, "EmuCnxH.connect-" + mHandler.getType().toString());
-            t.start();
-
-            return this;
-        }
-
-        @Override
-        public void onEmulatorBindResult(boolean success, Exception e) {
-            if (success) {
-                mHandler.onStart(mCnx, ControllerService.this /*context*/);
-            } else {
-                Log.e(TAG, "EmuCnx failed for " + mHandler.getType(), e);
-                String msg = mHandler.getType().toString() + " failed: " +
-                    (e == null ? "n/a" : e.toString());
-                addError(msg);
-            }
-        }
-
-        void disconnect() {
-            if (mCnx != null) {
-                mHandler.onStop();
-                mCnx.disconnect();
-                mCnx = null;
-            }
-        }
-
-        boolean isConnected() {
-            return mConnected;
-        }
-
-        public BaseHandler getHandler() {
-            return mHandler;
-        }
-    }
-
     private void disconnectAll() {
-        for(EmuCnxHandler handler : mHandlers) {
-            handler.disconnect();
+        if (mConnection != null) {
+            mConnection.disconnect();
         }
-        mHandlers.clear();
     }
 
     /**
@@ -324,9 +223,15 @@ public class ControllerService extends Service {
         try {
             disconnectAll();
 
-            assert mHandlers.isEmpty();
-            mHandlers.add(new EmuCnxHandler(new MultiTouchHandler()).connect());
-            mHandlers.add(new EmuCnxHandler(new SensorsHandler()).connect());
+            // Bind to SDK controller port, and start accepting emulator
+            // connections.
+            mConnection = new Connection(ControllerService.this);
+            mConnection.connect();
+
+            // Create and register sensors channel.
+            mConnection.registerChannel(new SensorChannel(ControllerService.this));
+            // Create and register multi-touch channel.
+            mConnection.registerChannel(new MultiTouchChannel(ControllerService.this));
         } catch (Exception e) {
             addError("Connection failed: " + e.toString());
         }
@@ -340,15 +245,15 @@ public class ControllerService extends Service {
     }
 
     private void notifyErrorChanged() {
-        synchronized(mListeners) {
+        synchronized (mListeners) {
             for (ControllerListener listener : mListeners) {
                 listener.onErrorChanged();
             }
         }
     }
 
-    private void notifyStatusChanged() {
-        synchronized(mListeners) {
+    public void notifyStatusChanged() {
+        synchronized (mListeners) {
             for (ControllerListener listener : mListeners) {
                 listener.onStatusChanged();
             }
@@ -368,7 +273,7 @@ public class ControllerService extends Service {
      * An internal utility method to add a line to the error string and notify listeners.
      * @param error A non-null non-empty error line. \n will be added automatically.
      */
-    private void addError(String error) {
+    public void addError(String error) {
         Log.e(TAG, error);
         if (mServiceError.length() > 0) {
             mServiceError += "\n";
@@ -397,10 +302,10 @@ public class ControllerService extends Service {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(
-                this,     //context
-                0,        //requestCode
-                intent,   //intent
-                0         // pending intent flags
+                this,   //context
+                0,      //requestCode
+                intent, //intent
+                0       //pending intent flags
                 );
         n.setLatestEventInfo(this, text, text, pi);
 

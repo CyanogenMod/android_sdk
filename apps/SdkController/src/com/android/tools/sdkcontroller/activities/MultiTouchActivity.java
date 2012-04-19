@@ -30,15 +30,16 @@ import android.view.View.OnTouchListener;
 import android.widget.TextView;
 
 import com.android.tools.sdkcontroller.R;
-import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
-import com.android.tools.sdkcontroller.handlers.MultiTouchHandler;
+import com.android.tools.sdkcontroller.handlers.MultiTouchChannel;
+import com.android.tools.sdkcontroller.lib.Channel;
+import com.android.tools.sdkcontroller.lib.ProtocolConstants;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
 import com.android.tools.sdkcontroller.utils.ApiHelper;
 import com.android.tools.sdkcontroller.views.MultiTouchView;
 
 /**
- * Activity that controls and displays the {@link MultiTouchHandler}.
+ * Activity that controls and displays the {@link MultiTouchChannel}.
  */
 public class MultiTouchActivity extends BaseBindingActivity
         implements android.os.Handler.Callback {
@@ -47,14 +48,7 @@ public class MultiTouchActivity extends BaseBindingActivity
     private static String TAG = MultiTouchActivity.class.getSimpleName();
     private static boolean DEBUG = true;
 
-    /** Received frame is JPEG image. */
-    private static final int FRAME_JPEG = 1;
-    /** Received frame is RGB565 bitmap. */
-    private static final int FRAME_RGB565 = 2;
-    /** Received frame is RGB888 bitmap. */
-    private static final int FRAME_RGB888 = 3;
-
-    private volatile MultiTouchHandler mHandler;
+    private volatile MultiTouchChannel mHandler;
 
     private TextView mTextError;
     private TextView mTextStatus;
@@ -108,8 +102,9 @@ public class MultiTouchActivity extends BaseBindingActivity
     @Override
     protected void onServiceConnected() {
         if (DEBUG) Log.d(TAG, "onServiceConnected");
-        mHandler = (MultiTouchHandler) getServiceBinder().getHandler(HandlerType.MultiTouch);
+        mHandler = (MultiTouchChannel) getServiceBinder().getChannel(Channel.MULTITOUCH_CHANNEL);
         if (mHandler != null) {
+            mHandler.setViewSize(mImageView.getWidth(), mImageView.getHeight());
             mHandler.addUiHandler(mUiHandler);
         }
     }
@@ -150,7 +145,7 @@ public class MultiTouchActivity extends BaseBindingActivity
                     if (binder != null) {
                         boolean connected = binder.isEmuConnected();
                         mImageView.setEnabled(connected);
-                        updateStatus(connected ? "Emulated connected" : "Emulator disconnected");
+                        updateStatus(connected ? "Emulator connected" : "Emulator disconnected");
                     }
                 }
             });
@@ -169,43 +164,67 @@ public class MultiTouchActivity extends BaseBindingActivity
          */
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            StringBuilder sb = new StringBuilder();
+            ByteBuffer bb = null;
             final int action = event.getAction();
             final int action_code = action & MotionEvent.ACTION_MASK;
             final int action_pid_index = action >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+            int msg_type = 0;
+            MultiTouchChannel h = mHandler;
 
             // Build message for the emulator.
             switch (action_code) {
                 case MotionEvent.ACTION_MOVE:
-                    sb.append("action=move");
-                    for (int n = 0; n < event.getPointerCount(); n++) {
-                        mImageView.constructEventMessage(sb, event, n);
+                    if (h != null) {
+                        bb = ByteBuffer.allocate(
+                                event.getPointerCount() * ProtocolConstants.MT_EVENT_ENTRY_SIZE);
+                        bb.order(h.getEndian());
+                        for (int n = 0; n < event.getPointerCount(); n++) {
+                            mImageView.constructEventMessage(bb, event, n);
+                        }
+                        msg_type = ProtocolConstants.MT_MOVE;
                     }
                     break;
                 case MotionEvent.ACTION_DOWN:
-                    sb.append("action=down");
-                    mImageView.constructEventMessage(sb, event, action_pid_index);
+                    if (h != null) {
+                        bb = ByteBuffer.allocate(ProtocolConstants.MT_EVENT_ENTRY_SIZE);
+                        bb.order(h.getEndian());
+                        mImageView.constructEventMessage(bb, event, action_pid_index);
+                        msg_type = ProtocolConstants.MT_FISRT_DOWN;
+                    }
                     break;
                 case MotionEvent.ACTION_UP:
-                    sb.append("action=up pid=").append(event.getPointerId(action_pid_index));
+                    if (h != null) {
+                        bb = ByteBuffer.allocate(ProtocolConstants.MT_EVENT_ENTRY_SIZE);
+                        bb.order(h.getEndian());
+                        bb.putInt(event.getPointerId(action_pid_index));
+                        msg_type = ProtocolConstants.MT_LAST_UP;
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
-                    sb.append("action=pdown");
-                    mImageView.constructEventMessage(sb, event, action_pid_index);
+                    if (h != null) {
+                        bb = ByteBuffer.allocate(ProtocolConstants.MT_EVENT_ENTRY_SIZE);
+                        bb.order(h.getEndian());
+                        mImageView.constructEventMessage(bb, event, action_pid_index);
+                        msg_type = ProtocolConstants.MT_POINTER_DOWN;
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_UP:
-                    sb.append("action=pup pid=").append(event.getPointerId(action_pid_index));
+                    if (h != null) {
+                        bb = ByteBuffer.allocate(ProtocolConstants.MT_EVENT_ENTRY_SIZE);
+                        bb.order(h.getEndian());
+                        bb.putInt(event.getPointerId(action_pid_index));
+                        msg_type = ProtocolConstants.MT_POINTER_UP;
+                    }
                     break;
                 default:
                     Log.w(TAG, "Unknown action type: " + action_code);
                     return true;
             }
 
-            if (DEBUG) Log.d(TAG, sb.toString());
+            if (DEBUG && bb != null) Log.d(TAG, bb.toString());
 
-            MultiTouchHandler h = mHandler;
-            if (h != null) {
-                h.sendEventToEmulator(sb.toString() + '\0');
+            if (h != null && bb != null) {
+                h.postMessage(msg_type, bb);
             }
             return true;
         }
@@ -215,18 +234,18 @@ public class MultiTouchActivity extends BaseBindingActivity
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
-        case MultiTouchHandler.EVENT_MT_START:
-            MultiTouchHandler h = mHandler;
+        case MultiTouchChannel.EVENT_MT_START:
+            MultiTouchChannel h = mHandler;
             if (h != null) {
-                mHandler.setViewSize(mImageView.getWidth(), mImageView.getHeight());
+                mImageView.setEnabled(true);
                 mImageView.setOnTouchListener(mTouchListener);
             }
             break;
-        case MultiTouchHandler.EVENT_MT_STOP:
+        case MultiTouchChannel.EVENT_MT_STOP:
             mImageView.setOnTouchListener(null);
             break;
-        case MultiTouchHandler.EVENT_FRAME_BUFFER:
-            onFrameBuffer((byte[]) msg.obj);
+        case MultiTouchChannel.EVENT_FRAME_BUFFER:
+            onFrameBuffer(((ByteBuffer) msg.obj).array());
             break;
         }
         return true; // we consumed this message
@@ -267,7 +286,7 @@ public class MultiTouchActivity extends BaseBindingActivity
         // Update application display.
         updateDisplay(disp_width, disp_height);
 
-        if (format == FRAME_JPEG) {
+        if (format == ProtocolConstants.MT_FRAME_JPEG) {
             /*
              * Framebuffer is in JPEG format.
              */
@@ -293,7 +312,7 @@ public class MultiTouchActivity extends BaseBindingActivity
             }
 
             // Convert the blob bitmap into bitmap that we will display.
-            if (format == FRAME_RGB565) {
+            if (format == ProtocolConstants.MT_FRAME_RGB565) {
                 for (int n = 0; n < pixel_num; n++) {
                     // Blob bitmap is in RGB565 format.
                     final int color = bb.getShort();
@@ -302,7 +321,7 @@ public class MultiTouchActivity extends BaseBindingActivity
                     final int b = ((color & 0x1f) << 3) | ((color & 0x1f) >> 2);
                     mColors[n] = Color.rgb(r, g, b);
                 }
-            } else if (format == FRAME_RGB888) {
+            } else if (format == ProtocolConstants.MT_FRAME_RGB888) {
                 for (int n = 0; n < pixel_num; n++) {
                     // Blob bitmap is in RGB565 format.
                     final int r = bb.getChar();

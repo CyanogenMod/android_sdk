@@ -35,14 +35,14 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.android.tools.sdkcontroller.R;
-import com.android.tools.sdkcontroller.handlers.BaseHandler.HandlerType;
-import com.android.tools.sdkcontroller.handlers.SensorsHandler;
-import com.android.tools.sdkcontroller.handlers.SensorsHandler.MonitoredSensor;
+import com.android.tools.sdkcontroller.handlers.SensorChannel;
+import com.android.tools.sdkcontroller.handlers.SensorChannel.MonitoredSensor;
+import com.android.tools.sdkcontroller.lib.Channel;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerBinder;
 import com.android.tools.sdkcontroller.service.ControllerService.ControllerListener;
 
 /**
- * Activity that displays and controls the sensors from {@link SensorsHandler}.
+ * Activity that displays and controls the sensors from {@link SensorChannel}.
  * For each sensor it displays a checkbox that is enabled if the sensor is supported
  * by the emulator. The user can select whether the sensor is active. It also displays
  * data from the sensor when available.
@@ -61,10 +61,10 @@ public class SensorActivity extends BaseBindingActivity
     private TextView mTextStatus;
     private TextView mTextTargetHz;
     private TextView mTextActualHz;
-    private SensorsHandler mSensorHandler;
+    private SensorChannel mSensorHandler;
 
     private final Map<MonitoredSensor, DisplayInfo> mDisplayedSensors =
-        new HashMap<SensorsHandler.MonitoredSensor, SensorActivity.DisplayInfo>();
+        new HashMap<SensorChannel.MonitoredSensor, SensorActivity.DisplayInfo>();
     private final android.os.Handler mUiHandler = new android.os.Handler(this);
     private int mTargetSampleRate;
     private long mLastActualUpdateMs;
@@ -173,7 +173,7 @@ public class SensorActivity extends BaseBindingActivity
             removeSensorUi();
         }
 
-        mSensorHandler = (SensorsHandler) getServiceBinder().getHandler(HandlerType.Sensor);
+        mSensorHandler = (SensorChannel) getServiceBinder().getChannel(Channel.SENSOR_CHANNEL);
         if (mSensorHandler != null) {
             mSensorHandler.addUiHandler(mUiHandler);
             mUiHandler.sendEmptyMessage(MSG_UPDATE_ACTUAL_HZ);
@@ -261,19 +261,19 @@ public class SensorActivity extends BaseBindingActivity
     public boolean handleMessage(Message msg) {
         DisplayInfo info = null;
         switch (msg.what) {
-        case SensorsHandler.SENSOR_STATE_CHANGED:
+        case SensorChannel.SENSOR_STATE_CHANGED:
             info = mDisplayedSensors.get(msg.obj);
             if (info != null) {
                 info.updateState();
             }
             break;
-        case SensorsHandler.SENSOR_DISPLAY_MODIFIED:
+        case SensorChannel.SENSOR_DISPLAY_MODIFIED:
             info = mDisplayedSensors.get(msg.obj);
             if (info != null) {
                 info.updateValue();
             }
             if (mSensorHandler != null) {
-                updateStatus(Integer.toString(mSensorHandler.getEventSentCount()) + " events sent");
+                updateStatus(Integer.toString(mSensorHandler.getMsgSentCount()) + " events sent");
 
                 // Update the "actual rate" field if the value has changed
                 long ms = mSensorHandler.getActualUpdateMs();
