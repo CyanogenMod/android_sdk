@@ -18,6 +18,7 @@ package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
 import com.android.prefs.AndroidLocation;
+import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -41,10 +42,12 @@ public class MonitorApplication implements IApplication {
     public Object start(IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
 
+        // set workspace location
         Location instanceLoc = Platform.getInstanceLocation();
         IPath workspacePath = new Path(AndroidLocation.getFolder()).append(MONITOR_WORKSPACE_PATH);
         instanceLoc.set(workspacePath.toFile().toURI().toURL(), true);
 
+        // figure out path to SDK
         String sdkPath = findSdkPath(display);
         if (!isValidSdkLocation(sdkPath)) {
             // exit with return code -1
@@ -52,6 +55,13 @@ public class MonitorApplication implements IApplication {
         }
         MonitorPlugin.getDefault().setSdkPath(sdkPath);
 
+        // If this is the first time using ddms or adt, open up the stats service
+        // opt out dialog, and request user for permissions.
+        // Note that the actual ping is performed in MonitorStartup
+        SdkStatsService stats = new SdkStatsService();
+        stats.checkUserPermissionForPing(new Shell(display));
+
+        // open up RCP
         try {
             int returnCode = PlatformUI.createAndRunWorkbench(display,
                     new MonitorWorkbenchAdvisor());

@@ -85,4 +85,10 @@
             name="Android">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="com.android.ide.eclipse.monitor.MonitorStartup">
+      </startup>
+   </extension>
 </plugin>
