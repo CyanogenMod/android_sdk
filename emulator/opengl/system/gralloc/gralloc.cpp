@@ -144,13 +144,16 @@ static int gralloc_alloc(alloc_device_t* dev,
     if (hw_write && sw_write) {
         return -EINVAL;
     }
+    bool sw_read = (0 != (usage & GRALLOC_USAGE_SW_READ_MASK));
 
     int ashmem_size = 0;
-    *pStride = 0;
+    int stride = w;
+
     GLenum glFormat = 0;
     GLenum glType = 0;
 
     int bpp = 0;
+    int align = 1;
     switch (format) {
         case HAL_PIXEL_FORMAT_RGBA_8888:
         case HAL_PIXEL_FORMAT_RGBX_8888:
@@ -179,7 +182,16 @@ static int gralloc_alloc(alloc_device_t* dev,
             glFormat = GL_RGBA4_OES;
             glType = GL_UNSIGNED_SHORT_4_4_4_4;
             break;
-
+        case HAL_PIXEL_FORMAT_RAW_SENSOR:
+            bpp = 2;
+            align = 16*bpp;
+            if (! (sw_read && sw_write) ) {
+                // Raw sensor data cannot be used by HW
+                return -EINVAL;
+            }
+            glFormat = GL_LUMINANCE;
+            glType = GL_UNSIGNED_SHORT;
+            break;
         default:
             return -EINVAL;
     }
@@ -189,15 +201,16 @@ static int gralloc_alloc(alloc_device_t* dev,
         ashmem_size += sizeof(uint32_t);
     }
 
-    if (usage & (GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK)) {
+    if (sw_read || sw_write) {
         // keep space for image on guest memory if SW access is needed
-        int align = 1;
+
         size_t bpr = (w*bpp + (align-1)) & ~(align-1);
         ashmem_size += (bpr * h);
-        *pStride = bpr / bpp;
+        stride = bpr / bpp;
     }
 
-    D("gralloc_alloc ashmem_size=%d, tid %d\n", ashmem_size, gettid());
+    D("gralloc_alloc ashmem_size=%d, stride=%d, tid %d\n", ashmem_size, stride,
+            gettid());
 
     //
     // Allocate space in ashmem if needed
@@ -209,7 +222,8 @@ static int gralloc_alloc(alloc_device_t* dev,
 
         fd = ashmem_create_region("gralloc-buffer", ashmem_size);
         if (fd < 0) {
-            ALOGE("gralloc_alloc failed to create ashmem region: %s\n", strerror(errno));
+            ALOGE("gralloc_alloc failed to create ashmem region: %s\n",
+                    strerror(errno));
             return -errno;
         }
     }
@@ -265,6 +279,7 @@ static int gralloc_alloc(alloc_device_t* dev,
     pthread_mutex_unlock(&grdev->lock);
 
     *pHandle = cb;
+    *pStride = stride;
     return 0;
 }
 
@@ -576,12 +591,13 @@ static int gralloc_lock(gralloc_module_t const* module,
             return -EBUSY;
         }
 
-        //
-        // is virtual address required ?
-        //
-        if (sw_read || sw_write) {
-            *vaddr = cpu_addr;
-        }
+    }
+
+    //
+    // is virtual address required ?
+    //
+    if (sw_read || sw_write) {
+        *vaddr = cpu_addr;
     }
 
     if (sw_write) {
