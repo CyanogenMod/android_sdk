@@ -77,9 +77,6 @@ public class Messages extends NLS {
     public static String FileExplorerView_Push_File_Onto_Device;
     public static String LogCatPreferencePage_Display_Font;
     public static String LogCatPreferencePage_MaxMessages;
-    public static String LogCatPreferencePage_Double_Click_Action;
-    public static String LogCatPreferencePage_Go_To_Problem_Declararion;
-    public static String LogCatPreferencePage_Go_To_Problem_Error_Line;
     public static String LogCatPreferencePage_Switch_Perspective;
     public static String LogCatPreferencePage_Switch_To;
     public static String LogCatPreferencePage_AutoMonitorLogcat;
@@ -93,8 +90,6 @@ public class Messages extends NLS {
     public static String LogCatView_Edit_Filter_Tooltip;
     public static String LogCatView_Export_Selection_As_Text;
     public static String LogCatView_Export_Selection_As_Text_Tooltip;
-    public static String LogCatView_Go_To_Problem_Error_Line;
-    public static String LogCatView_Go_To_Problem_Method;
     public static String LogCatView_Select_All;
     public static String PreferencePage_ADB_Connection_Time_Out;
     public static String PreferencePage_Adbhost_value;

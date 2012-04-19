@@ -66,24 +66,11 @@ public class JavaSourceRevealer {
         return false;
     }
 
-    public static boolean revealLine(String fileName, int lineNumber, String perspective) {
+    public static boolean revealMethod(String fqmn, String fileName, int linenumber,
+            String perspective) {
         for (ISourceRevealer revealer : sSourceRevealers) {
             try {
-                if (revealer.revealLine(fileName, lineNumber, perspective)) {
-                    return true;
-                }
-            } catch (Throwable t) {
-                // ignore, we'll just not use this implementation.
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean revealMethod(String fqmn, String perspective) {
-        for (ISourceRevealer revealer : sSourceRevealers) {
-            try {
-                if (revealer.revealMethod(fqmn, perspective)) {
+                if (revealer.revealMethod(fqmn, fileName, linenumber, perspective)) {
                     return true;
                 }
             } catch (Throwable t) {

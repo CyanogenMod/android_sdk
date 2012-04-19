@@ -18,8 +18,6 @@ package com.android.ide.eclipse.pdt.internal;
 
 import com.android.ide.eclipse.ddms.ISourceRevealer;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -48,7 +46,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
-import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
@@ -117,29 +114,7 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
     }
 
     @Override
-    public boolean revealLine(String fileName, int lineNumber, String perspective) {
-        SearchEngine se = new SearchEngine();
-        SearchPattern searchPattern = SearchPattern.createPattern(
-                fileName,
-                IJavaSearchConstants.CLASS,
-                IJavaSearchConstants.DECLARATIONS,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        LineSearchRequestor requestor = new LineSearchRequestor(lineNumber, perspective);
-        try {
-            se.search(searchPattern,
-                    new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-                    SearchEngine.createWorkspaceScope(),
-                    requestor,
-                    new NullProgressMonitor());
-        } catch (CoreException e) {
-            return false;
-        }
-
-        return requestor.didMatch();
-    }
-
-    @Override
-    public boolean revealMethod(String fqmn, String perspective) {
+    public boolean revealMethod(String fqmn, String fileName, int lineNumber, String perspective) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
                 fqmn,
@@ -158,39 +133,6 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         }
 
         return requestor.didMatch();
-    }
-
-    private static class LineSearchRequestor extends SearchRequestor {
-        private boolean mFoundMatch = false;
-        private int mLineNumber;
-        private final String mPerspective;
-
-        public LineSearchRequestor(int lineNumber, String perspective) {
-            mLineNumber = lineNumber;
-            mPerspective = perspective;
-        }
-
-        public boolean didMatch() {
-            return mFoundMatch;
-        }
-
-        @Override
-        public void acceptSearchMatch(SearchMatch match) throws CoreException {
-            if (match.getResource() instanceof IFile && !mFoundMatch) {
-                if (mPerspective != null) {
-                    SourceRevealer.switchToPerspective(mPerspective);
-                }
-
-                IFile matchedFile = (IFile) match.getResource();
-                IMarker marker = matchedFile.createMarker(IMarker.TEXT);
-                marker.setAttribute(IMarker.LINE_NUMBER, mLineNumber);
-                IDE.openEditor(
-                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(),
-                        marker);
-                marker.delete();
-                mFoundMatch = true;
-            }
-        }
     }
 
     private static class MethodSearchRequestor extends SearchRequestor {

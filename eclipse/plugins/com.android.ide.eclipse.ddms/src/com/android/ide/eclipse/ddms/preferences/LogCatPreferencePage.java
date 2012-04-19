@@ -22,7 +22,6 @@ import com.android.ide.eclipse.base.InstallDetails;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.LogCatMonitor;
 import com.android.ide.eclipse.ddms.i18n.Messages;
-import com.android.ide.eclipse.ddms.views.LogCatView;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
@@ -67,18 +66,6 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     }
 
     private void createAdtSpecificFieldEditors() {
-        ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM,
-                Messages.LogCatPreferencePage_Double_Click_Action, new String[][] {
-                        {
-                                Messages.LogCatPreferencePage_Go_To_Problem_Declararion,
-                                LogCatView.CHOICE_METHOD_DECLARATION
-                        },
-                        {
-                                Messages.LogCatPreferencePage_Go_To_Problem_Error_Line,
-                                LogCatView.CHOICE_ERROR_LINE
-                        },
-                }, getFieldEditorParent());
-        addField(cfe);
         mSwitchPerspective = new BooleanFieldEditor(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE,
                 Messages.LogCatPreferencePage_Switch_Perspective, getFieldEditorParent());
         addField(mSwitchPerspective);

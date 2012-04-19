@@ -24,33 +24,17 @@ import com.android.ide.eclipse.ddms.JavaSourceRevealer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IPerspectiveRegistry;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.actions.ActionFactory;
 
 public class LogCatView extends SelectionDependentViewPart {
     /** LogCatView ID as defined in plugin.xml. */
     public static final String ID = "com.android.ide.eclipse.ddms.views.LogCatView"; //$NON-NLS-1$
-
-    /** Constant indicating that double clicking on a stack trace should
-     * open the method declaration. */
-    public static final String CHOICE_METHOD_DECLARATION =
-            DdmsPlugin.PLUGIN_ID + ".logcat.MethodDeclaration"; //$NON-NLS-1$
-
-    /** Constant indicating that double clicking on a stack trace should
-     * open the line at which error occurred. */
-    public static final String CHOICE_ERROR_LINE =
-            DdmsPlugin.PLUGIN_ID + ".logcat.ErrorLine"; //$NON-NLS-1$
 
     /** Switch perspective when a Java file is opened from logcat view. */
     public static final boolean DEFAULT_SWITCH_PERSPECTIVE = true;
@@ -110,22 +94,16 @@ public class LogCatView extends SelectionDependentViewPart {
         }
 
         IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
-        String jumpToLocation = store.getString(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM);
-
         String perspectiveId = null;
         if (store.getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE)) {
             perspectiveId = store.getString(PreferenceInitializer.ATTR_PERSPECTIVE_ID);
         }
 
 
-        if (jumpToLocation.equals(CHOICE_ERROR_LINE)) {
-            String fileName = mStackTraceParser.getFileName(msg);
-            int lineNumber = mStackTraceParser.getLineNumber(msg);
-            JavaSourceRevealer.revealLine(fileName, lineNumber, perspectiveId);
-        } else {
-            String methodName = mStackTraceParser.getMethodName(msg);
-            JavaSourceRevealer.revealMethod(methodName, perspectiveId);
-        }
+        String fileName = mStackTraceParser.getFileName(msg);
+        int lineNumber = mStackTraceParser.getLineNumber(msg);
+        String methodName = mStackTraceParser.getMethodName(msg);
+        JavaSourceRevealer.revealMethod(methodName, fileName, lineNumber, perspectiveId);
     }
 
     public void selectTransientAppFilter(String appName) {
