@@ -333,14 +333,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         /*
          * Launch logic:
+         * - Use Last Launched Device/AVD set.
+         *       If user requested to use same device for future launches, and the last launched
+         *       device/avd is still present, then simply launch on the same device/avd.
          * - Manually Mode
          *       Always display a UI that lets a user see the current running emulators/devices.
          *       The UI must show which devices are compatibles, and allow launching new emulators
          *       with compatible (and not yet running) AVD.
          * - Automatic Way
-         *     * Last Launched Device/AVD set.
-         *           If the last launched device/avd is still present, then simply launch
-         *           on the same device/avd.
          *     * Preferred AVD set.
          *           If Preferred AVD is not running: launch it.
          *           Launch the application on the preferred AVD.
@@ -349,19 +349,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *           If != 1, display a UI similar to manual mode.
          *           If == 1, launch the application on this AVD/device.
          */
+        IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
+        IDevice deviceUsedInLastLaunch = getDeviceUsedForLastLaunch(devices,
+                launch.getLaunchConfiguration().getName());
+        if (deviceUsedInLastLaunch != null) {
+            response.setDeviceToUse(deviceUsedInLastLaunch);
+            continueLaunch(response, project, launch, launchInfo, config);
+            return;
+        }
 
         if (config.mTargetMode == TargetMode.AUTO) {
-            // if we are in automatic target mode, we need to find the current devices
-            IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
-
-            IDevice deviceUsedInLastLaunch = getDeviceUsedForLastLaunch(devices,
-                    launch.getLaunchConfiguration().getName());
-            if (deviceUsedInLastLaunch != null) {
-                response.setDeviceToUse(deviceUsedInLastLaunch);
-                continueLaunch(response, project, launch, launchInfo, config);
-                return;
-            }
-
             // first check if we have a preferred AVD name, and if it actually exists, and is valid
             // (ie able to run the project).
             // We need to check this in case the AVD was recreated with a different target that is
