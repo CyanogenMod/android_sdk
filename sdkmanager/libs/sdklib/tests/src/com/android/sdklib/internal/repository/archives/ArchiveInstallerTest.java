@@ -366,7 +366,7 @@ public class ArchiveInstallerTest extends TestCase {
             int min_platform_tools_rev) {
         Properties props = new Properties();
         props.setProperty(PkgProps.EXTRA_OLD_PATHS, oldPaths);
-        props.setProperty(ToolPackage.PROP_MIN_PLATFORM_TOOLS_REV,
+        props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                 Integer.toString((min_platform_tools_rev)));
         return new MockExtraPackage(source, props, vendor, newPath, revision) {
             @Override

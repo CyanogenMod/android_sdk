@@ -346,7 +346,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
             boolean accept(Package pkg) {
                 if (pkg instanceof PlatformPackage) {
                     PlatformPackage pp = (PlatformPackage) pkg;
-                    AndroidVersion v = pp.getVersion();
+                    AndroidVersion v = pp.getAndroidVersion();
                     return !v.isPreview() && v.getApiLevel() == mApiLevel;
                 }
                 return false;
@@ -359,7 +359,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                         pkg instanceof PlatformPackage &&
                         !pkg.isLocal()) {
                     PlatformPackage pp = (PlatformPackage) pkg;
-                    AndroidVersion v = pp.getVersion();
+                    AndroidVersion v = pp.getAndroidVersion();
                     if (!v.isPreview()) {
                         int api = v.getApiLevel();
                         if (api > mApiLevel) {
@@ -388,7 +388,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                 if (!pkg.isLocal()) {
                     if (pkg instanceof PlatformPackage) {
                         PlatformPackage pp = (PlatformPackage) pkg;
-                        AndroidVersion v = pp.getVersion();
+                        AndroidVersion v = pp.getAndroidVersion();
                         if (!v.isPreview()) {
                             int level = v.getApiLevel();
                             if ((mFindMaxApi && level == mMaxApiLevel) ||
@@ -418,7 +418,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                         pkg instanceof PlatformPackage &&
                         !pkg.isLocal()) {
                     PlatformPackage pp = (PlatformPackage) pkg;
-                    AndroidVersion v = pp.getVersion();
+                    AndroidVersion v = pp.getAndroidVersion();
                     if (!v.isPreview()) {
                         int api = v.getApiLevel();
                         if (api > mMaxApiLevel) {

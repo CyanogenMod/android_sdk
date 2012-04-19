@@ -20,6 +20,9 @@ import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.PkgProps;
+
+import java.util.Properties;
 
 /**
  * A mock {@link PlatformToolPackage} for testing.
@@ -56,6 +59,37 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
             Arch.getCurrentArch(), // archiveArch,
             "foo" // archiveOsPath
             );
+    }
+
+    /**
+     * Creates a {@link MockPlatformToolPackage} with the given revision and hardcoded defaults
+     * for everything else.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
+     */
+    public MockPlatformToolPackage(SdkSource source, PreviewVersion previewVersion) {
+        super(
+                source, // source,
+                createProps(previewVersion), // props,
+                previewVersion.getMajor(),
+                null, // license,
+                "desc", // description,
+                "url", // descUrl,
+                Os.getCurrentOs(), // archiveOs,
+                Arch.getCurrentArch(), // archiveArch,
+                "foo" // archiveOsPath
+                );
+    }
+
+    private static Properties createProps(PreviewVersion previewVersion) {
+        Properties props = new Properties();
+        props.setProperty(PkgProps.PKG_MINOR_REV,
+                          Integer.toString(previewVersion.getMinor()));
+        props.setProperty(PkgProps.PKG_MICRO_REV,
+                          Integer.toString(previewVersion.getMicro()));
+        props.setProperty(PkgProps.PKG_PREVIEW_REV,
+                          Integer.toString(previewVersion.getPreview()));
+        return props;
     }
 }
 

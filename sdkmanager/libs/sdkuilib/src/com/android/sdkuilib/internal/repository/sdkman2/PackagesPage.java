@@ -1313,7 +1313,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
             } else if (mColumn == mColumnRevision) {
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
-                    return Integer.toString(pkg.getRevision());
+                    return pkg.getRevisionStr();
                 }
 
             } else if (mColumn == mColumnStatus) {

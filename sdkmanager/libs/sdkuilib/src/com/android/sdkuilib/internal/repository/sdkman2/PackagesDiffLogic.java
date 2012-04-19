@@ -20,7 +20,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
-import com.android.sdklib.internal.repository.packages.IPackageVersion;
+import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
@@ -107,8 +107,8 @@ class PackagesDiffLogic {
             // since by definition they should target the same API level.
             int api = 0;
             Package p = item.getMainPackage();
-            if (p instanceof IPackageVersion) {
-                api = ((IPackageVersion) p).getVersion().getApiLevel();
+            if (p instanceof IAndroidVersionProvider) {
+                api = ((IAndroidVersionProvider) p).getAndroidVersion().getApiLevel();
             }
 
             if (selectTop && api > 0) {
@@ -607,8 +607,8 @@ class PackagesDiffLogic {
         public Object getCategoryKey(Package pkg) {
             // Sort by API
 
-            if (pkg instanceof IPackageVersion) {
-                return ((IPackageVersion) pkg).getVersion();
+            if (pkg instanceof IAndroidVersionProvider) {
+                return ((IAndroidVersionProvider) pkg).getAndroidVersion();
 
             } else if (pkg instanceof ToolPackage || pkg instanceof PlatformToolPackage) {
                 return PkgCategoryApi.KEY_TOOLS;

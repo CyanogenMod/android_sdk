@@ -44,6 +44,13 @@ public class PkgProps {
     public static final String VERSION_API_LEVEL        = "AndroidVersion.ApiLevel";//$NON-NLS-1$
     public static final String VERSION_CODENAME         = "AndroidVersion.CodeName";//$NON-NLS-1$
 
+    // PreviewVersion
+
+    public static final String PKG_MINOR_REV            = "PreviewVersion.MinorRev";//$NON-NLS-1$
+    public static final String PKG_MICRO_REV            = "PreviewVersion.MicroRev";//$NON-NLS-1$
+    public static final String PKG_PREVIEW_REV          = "PreviewVersion.Preview"; //$NON-NLS-1$
+
+
     // AddonPackage
 
     public static final String ADDON_NAME               = "Addon.Name";             //$NON-NLS-1$
@@ -81,7 +88,10 @@ public class PkgProps {
     public static final String PLATFORM_VERSION         = "Platform.Version";       //$NON-NLS-1$
     public static final String PLATFORM_INCLUDED_ABI    = "Platform.Included.Abi";  //$NON-NLS-1$
 
-    // PlatformToolPackage
+    // ToolPackage
+
+    public static final String MIN_PLATFORM_TOOLS_REV   = "Platform.MinPlatformToolsRev";//$NON-NLS-1$
+
 
     // SamplePackage
 

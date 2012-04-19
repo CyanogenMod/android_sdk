@@ -39,7 +39,7 @@ import java.util.Set;
 /**
  * Represents a platform-tool XML node in an SDK repository.
  */
-public class PlatformToolPackage extends Package {
+public class PlatformToolPackage extends PreviewVersionPackage {
 
     /** The value returned by {@link PlatformToolPackage#installId()}. */
     public static final String INSTALL_ID = "platform-tools";                       //$NON-NLS-1$
@@ -178,8 +178,8 @@ public class PlatformToolPackage extends Package {
      */
     @Override
     public String getShortDescription() {
-        return String.format("Android SDK Platform-tools, revision %1$d%2$s",
-                getRevision(),
+        return String.format("Android SDK Platform-tools, revision %1$s%2$s",
+                getPreviewVersion().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -192,8 +192,8 @@ public class PlatformToolPackage extends Package {
         }
 
         if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
+            s += String.format("\nRevision %1$s%2$s",
+                    getPreviewVersion().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 

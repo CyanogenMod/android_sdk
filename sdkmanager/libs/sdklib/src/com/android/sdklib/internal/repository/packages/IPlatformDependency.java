@@ -25,13 +25,13 @@ import com.android.sdklib.AndroidVersion;
  * A package that has this dependency can only be installed if a platform with at least the
  * requested API level is present or installed at the same time.
  * <p/>
- * Note that although this interface looks like {@link IPackageVersion}, it does not convey
- * the same semantic, that is {@link IPackageVersion} does <em>not</em> imply any dependency being
- * a limiting factor as far as installation is concerned.
+ * Note that although this interface looks like {@link IAndroidVersionProvider}, it does
+ * not convey the same semantic since {@link IAndroidVersionProvider} does <em>not</em>
+ * imply any dependency being a limiting factor as far as installation is concerned.
  */
 public interface IPlatformDependency {
 
     /** Returns the version of the platform dependency of this package. */
-    AndroidVersion getVersion();
+    AndroidVersion getAndroidVersion();
 
 }

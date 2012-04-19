@@ -15,9 +15,9 @@
  * limitations under the License.
 -->
 <xsd:schema
-    targetNamespace="http://schemas.android.com/sdk/android/repository/6"
+    targetNamespace="http://schemas.android.com/sdk/android/repository/7"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:sdk="http://schemas.android.com/sdk/android/repository/6"
+    xmlns:sdk="http://schemas.android.com/sdk/android/repository/7"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     version="1">
@@ -68,6 +68,12 @@
             - <platform>, <system-image>, <source>, <tool>, <platform-tool>, <doc>
               and <sample> get a new optional field <beta-rc> which can be used to indicate
               the package is a Beta Release Candidate and not a final release.
+
+         - v7 is used by the SDK Manager in Tools r20:
+            - <tool> and <platform-tool> packages have new <minor-rev> and
+              <micro-rev> numbers.
+            - The <beta-rc> element is no longer supported, it is replaced by <preview>
+              which is only for <tool> and <platform-tool> packages.
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />
@@ -138,11 +144,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"      type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"       type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -207,11 +208,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -268,11 +264,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -286,7 +277,18 @@
         <xsd:all>
             <!-- The revision, an int > 0, incremented each time a new
                  package is generated. -->
-            <xsd:element name="revision"     type="xsd:positiveInteger" />
+            <xsd:element name="revision"      type="xsd:positiveInteger" />
+            <!-- The minor revision, an int >= 0, incremented each time a new
+                 package is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="minor-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The micro revision, an int >= 0, incremented each time a new
+                 package is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="micro-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The preview/release candidate revision, an int > 0,
+                 incremented each time a new preview is generated.
+                 Not present for final releases. -->
+            <xsd:element name="preview"       type="xsd:positiveInteger" minOccurs="0" />
+
             <!-- The optional license of this package. If present, users will have
                  to agree to it before downloading. -->
             <xsd:element name="uses-license" type="sdk:usesLicenseType" minOccurs="0" />
@@ -308,11 +310,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -326,7 +323,18 @@
         <xsd:all>
             <!-- The revision, an int > 0, incremented each time a new
                  package is generated. -->
-            <xsd:element name="revision"     type="xsd:positiveInteger" />
+            <xsd:element name="revision"      type="xsd:positiveInteger" />
+            <!-- The minor revision, an int >= 0, incremented each time a new
+                 package is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="minor-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The micro revision, an int >= 0, incremented each time a new
+                 package is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="micro-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The preview/release candidate revision, an int > 0,
+                 incremented each time a new preview is generated.
+                 Not present for final releases. -->
+            <xsd:element name="preview"       type="xsd:positiveInteger" minOccurs="0" />
+
             <!-- The optional license of this package. If present, users will have
                  to agree to it before downloading. -->
             <xsd:element name="uses-license" type="sdk:usesLicenseType" minOccurs="0" />
@@ -344,11 +352,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -386,11 +389,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 
@@ -431,11 +429,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 

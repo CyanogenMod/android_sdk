@@ -47,7 +47,8 @@ import java.util.Properties;
  * Represents an add-on XML node in an SDK repository.
  */
 public class AddonPackage extends Package
-    implements IPackageVersion, IPlatformDependency, IExactApiLevelDependency, ILayoutlibVersion {
+        implements IAndroidVersionProvider, IPlatformDependency,
+                   IExactApiLevelDependency, ILayoutlibVersion {
 
     private final String mVendorId;
     private final String mVendorDisplay;
@@ -428,8 +429,8 @@ public class AddonPackage extends Package
      * <p/>
      * An add-on has the same {@link AndroidVersion} as the platform it depends on.
      */
-    @Override
-    public @NonNull AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -601,7 +602,7 @@ public class AddonPackage extends Package
 
             // check they are the same add-on.
             if (getNameId().equals(newPkg.getNameId()) &&
-                    getVersion().equals(newPkg.getVersion())) {
+                    getAndroidVersion().equals(newPkg.getAndroidVersion())) {
                 // Check the vendor-id field.
                 if (getVendorId().equals(newPkg.getVendorId())) {
                     return true;

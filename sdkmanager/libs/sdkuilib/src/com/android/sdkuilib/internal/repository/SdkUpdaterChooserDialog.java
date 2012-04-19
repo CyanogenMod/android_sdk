@@ -19,7 +19,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.archives.Archive;
-import com.android.sdklib.internal.repository.packages.IPackageVersion;
+import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -428,9 +428,10 @@ final class SdkUpdaterChooserDialog extends GridDialog {
 
             boolean showRev = true;
 
-            if (pNew instanceof IPackageVersion && pOld instanceof IPackageVersion) {
-                AndroidVersion vOld = ((IPackageVersion) pOld).getVersion();
-                AndroidVersion vNew = ((IPackageVersion) pNew).getVersion();
+            if (pNew instanceof IAndroidVersionProvider &&
+                    pOld instanceof IAndroidVersionProvider) {
+                AndroidVersion vOld = ((IAndroidVersionProvider) pOld).getAndroidVersion();
+                AndroidVersion vNew = ((IAndroidVersionProvider) pNew).getAndroidVersion();
 
                 if (!vOld.equals(vNew)) {
                     // Versions are different, so indicate more than just the revision.
