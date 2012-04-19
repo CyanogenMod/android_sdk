@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
+import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunch;
@@ -55,6 +56,9 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
     /** Launch config attribute that stores instrumentation runner. */
     static final String ATTR_INSTR_NAME = AdtPlugin.PLUGIN_ID + ".instrumentation"; //$NON-NLS-1$
 
+    /** Launch config attribute that stores the test size annotation to run. */
+    static final String ATTR_TEST_SIZE = AdtPlugin.PLUGIN_ID + ".testSize"; //$NON-NLS-1$
+
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
     @Override
@@ -87,6 +91,7 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
         junitLaunchInfo.setTestPackage(getTestPackage(configuration));
         junitLaunchInfo.setTestMethod(getTestMethod(configuration));
         junitLaunchInfo.setLaunch(androidLaunch);
+        junitLaunchInfo.setTestSize(getTestSize(configuration));
         IAndroidLaunchAction junitLaunch = new AndroidJUnitLaunchAction(junitLaunchInfo);
 
         controller.launch(project, mode, applicationPackage, testAppPackage, targetAppPackage,
@@ -152,6 +157,29 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
     private String getTestMethod(ILaunchConfiguration configuration) {
         return getStringLaunchAttribute(JUnitLaunchConfigurationConstants.ATTR_TEST_METHOD_NAME,
                 configuration);
+    }
+
+    /**
+     * Returns the test sizes to run as saved in the launch configuration.
+     * @return {@link TestSize} if only tests of specific sizes should be run,
+     *         null if all tests should be run
+     */
+    private TestSize getTestSize(ILaunchConfiguration configuration) {
+        String testSizeAnnotation = getStringLaunchAttribute(
+                AndroidJUnitLaunchConfigDelegate.ATTR_TEST_SIZE,
+                configuration);
+        if (testSizeAnnotation.equals(
+                AndroidJUnitLaunchConfigurationTab.SMALL_TEST_ANNOTATION)) {
+            return TestSize.SMALL;
+        } else if (testSizeAnnotation.equals(
+                AndroidJUnitLaunchConfigurationTab.MEDIUM_TEST_ANNOTATION)) {
+            return TestSize.MEDIUM;
+        } else if (testSizeAnnotation.equals(
+                AndroidJUnitLaunchConfigurationTab.LARGE_TEST_ANNOTATION)) {
+            return TestSize.LARGE;
+        } else {
+            return null;
+        }
     }
 
     /**

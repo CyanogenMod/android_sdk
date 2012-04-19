@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
+import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -60,6 +61,7 @@ import org.eclipse.jdt.ui.JavaElementComparator;
 import org.eclipse.jdt.ui.JavaElementLabelProvider;
 import org.eclipse.jdt.ui.StandardJavaElementContentProvider;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -89,6 +91,8 @@ import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The launch config UI tab for Android JUnit
@@ -120,11 +124,22 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     // Android specific members
     private Image mTabIcon = null;
     private Combo mInstrumentationCombo;
+    private Combo mTestSizeCombo;
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
     private static final String TAG = "AndroidJUnitLaunchConfigurationTab"; //$NON-NLS-1$
     private String[] mInstrumentations = null;
     private InstrumentationRunnerValidator mInstrValidator = null;
     private ProjectChooserHelper mProjectChooserHelper;
+
+    public static final String SMALL_TEST_ANNOTATION = "@SmallTest";        //$NON-NLS-1$
+    public static final String MEDIUM_TEST_ANNOTATION = "@MediumTest";      //$NON-NLS-1$
+    public static final String LARGE_TEST_ANNOTATION = "@LargeTest";        //$NON-NLS-1$
+    private static final List<String> TEST_SIZE_OPTIONS = Arrays.asList(
+            "All Tests",
+            SMALL_TEST_ANNOTATION,
+            MEDIUM_TEST_ANNOTATION,
+            LARGE_TEST_ANNOTATION
+    );
 
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
@@ -146,8 +161,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         createSpacer(comp);
 
         createInstrumentationGroup(comp);
-
-        createSpacer(comp);
+        createSizeSelector(comp);
 
         Dialog.applyDialogFont(comp);
         // TODO: add help link here when available
@@ -291,12 +305,32 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         loaderLabel.setLayoutData(gd);
 
         mInstrumentationCombo = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
-        mInstrumentationCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        GridDataFactory.defaultsFor(mInstrumentationCombo)
+            .span(2, 1)
+            .applyTo(mInstrumentationCombo);
         mInstrumentationCombo.clearSelection();
         mInstrumentationCombo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 validatePage();
+                updateLaunchConfigurationDialog();
+            }
+        });
+    }
+
+    private void createSizeSelector(Composite comp) {
+        Label l = new Label(comp, SWT.NONE);
+        l.setText(LaunchMessages.AndroidJUnitTab_SizeLabel);
+        GridData gd = new GridData();
+        gd.horizontalIndent = 0;
+        l.setLayoutData(gd);
+
+        mTestSizeCombo = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mTestSizeCombo.setItems(TEST_SIZE_OPTIONS.toArray(new String[TEST_SIZE_OPTIONS.size()]));
+        mTestSizeCombo.select(0);
+        mTestSizeCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
             }
         });
@@ -339,6 +373,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         IProject proj = mProjectChooserHelper.getAndroidProject(projectName);
         loadInstrumentations(proj);
         updateInstrumentationFromConfig(config);
+        updateTestSizeFromConfig(config);
 
         validatePage();
     }
@@ -363,6 +398,19 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         }
         if (!found) {
             mInstrumentationCombo.clearSelection();
+        }
+    }
+
+    private void updateTestSizeFromConfig(ILaunchConfiguration config) {
+        try {
+            String testSize = config.getAttribute(
+                    AndroidJUnitLaunchConfigDelegate.ATTR_TEST_SIZE, EMPTY_STRING);
+            int index = TEST_SIZE_OPTIONS.indexOf(testSize);
+            if (index >= 0 && mTestSizeCombo != null) {
+                mTestSizeCombo.select(index);
+            }
+        } catch (CoreException e) {
+            // ignore
         }
     }
 
@@ -469,6 +517,8 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
 
         config.setAttribute(AndroidJUnitLaunchConfigDelegate.ATTR_INSTR_NAME,
                 getSelectedInstrumentation());
+        config.setAttribute(AndroidJUnitLaunchConfigDelegate.ATTR_TEST_SIZE,
+                getSelectedTestSize());
     }
 
     private void mapResources(ILaunchConfigurationWorkingCopy config)  throws CoreException {
@@ -715,6 +765,15 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
             return mInstrumentations[selectionIndex];
         }
         return null;
+    }
+
+    private String getSelectedTestSize() {
+        if (mTestSizeCombo != null) {
+            int index = mTestSizeCombo.getSelectionIndex();
+            return TEST_SIZE_OPTIONS.get(index);
+        } else {
+            return null;
+        }
     }
 
     private void setEnableContainerTestGroup(boolean enabled) {
