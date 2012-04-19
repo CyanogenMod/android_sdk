@@ -355,7 +355,17 @@ public abstract class ResourceRepository {
      * @return the {@link ResourceFolder} or null if it was not found.
      */
     public ResourceFolder getResourceFolder(IAbstractFolder folder) {
-        for (List<ResourceFolder> list : mFolderMap.values()) {
+        Collection<List<ResourceFolder>> values = mFolderMap.values();
+
+        if (values.isEmpty()) { // This shouldn't be necessary, but has been observed
+            try {
+                loadResources(folder.getParentFolder());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (List<ResourceFolder> list : values) {
             for (ResourceFolder resFolder : list) {
                 IAbstractFolder wrapper = resFolder.getFolder();
                 if (wrapper.equals(folder)) {
