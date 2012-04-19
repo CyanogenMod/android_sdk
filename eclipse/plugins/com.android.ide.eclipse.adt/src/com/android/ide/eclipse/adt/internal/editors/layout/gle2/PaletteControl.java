@@ -46,8 +46,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDe
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
-import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
-import com.android.ide.eclipse.adt.internal.editors.ui.IDecorContent;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
@@ -58,6 +56,7 @@ import com.android.util.Pair;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -94,6 +93,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.wb.internal.core.editor.structure.IPage;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -127,24 +127,14 @@ import java.util.Set;
 public class PaletteControl extends Composite {
 
     /**
-     * Wrapper to create a {@link PaletteControl} into a {@link DecorComposite}.
+     * Wrapper to create a {@link PaletteControl}
      */
-    public static class PaletteDecor implements IDecorContent {
+    static class PalettePage implements IPage {
         private final GraphicalEditorPart mEditorPart;
         private PaletteControl mControl;
 
-        public PaletteDecor(GraphicalEditorPart editor) {
+        PalettePage(GraphicalEditorPart editor) {
             mEditorPart = editor;
-        }
-
-        @Override
-        public String getTitle() {
-            return "Palette";
-        }
-
-        @Override
-        public Image getImage() {
-            return IconFactory.getInstance().getIcon("editor_palette");  //$NON-NLS-1$
         }
 
         @Override
@@ -158,7 +148,21 @@ public class PaletteControl extends Composite {
         }
 
         @Override
-        public void createToolbarItems(final ToolBar toolbar) {
+        public void dispose() {
+            mControl.dispose();
+        }
+
+        @Override
+        public void setToolBar(IToolBarManager toolBarManager) {
+            assert false; // Call createToolbarItems instead
+        }
+
+        /**
+         * Add tool bar items to the given toolbar
+         *
+         * @param toolbar the toolbar to add items into
+         */
+        void createToolbarItems(final ToolBar toolbar) {
             final ToolItem popupMenuItem = new ToolItem(toolbar, SWT.PUSH);
             popupMenuItem.setToolTipText("View Menu");
             popupMenuItem.setImage(IconFactory.getInstance().getIcon("view_menu"));
@@ -172,6 +176,11 @@ public class PaletteControl extends Composite {
                     mControl.showMenu(point.x, point.y);
                 }
             });
+        }
+
+        @Override
+        public void setFocus() {
+            mControl.setFocus();
         }
     }
 

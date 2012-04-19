@@ -95,6 +95,7 @@ equidistant
 exec
 fallback
 flux
+flyout
 foo
 foreach
 fqcn

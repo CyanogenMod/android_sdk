@@ -50,6 +50,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertySheetPage;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
@@ -65,6 +66,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.JFacePreferences;
@@ -82,6 +84,7 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
@@ -92,18 +95,18 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.INullSelectionListener;
-import org.eclipse.ui.IPageLayout;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
+import org.eclipse.wb.core.controls.SelfOrientingSashForm;
+import org.eclipse.wb.internal.core.editor.structure.IPage;
+import org.eclipse.wb.internal.core.editor.structure.PageSiteComposite;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -125,7 +128,7 @@ import java.util.Set;
  * (on which both the layout editor part and the property sheet page listen.)
  */
 public class OutlinePage extends ContentOutlinePage
-    implements ISelectionListener, INullSelectionListener {
+    implements INullSelectionListener, IPage {
 
     /** Label which separates outline text from additional attributes like text prefix or url */
     private static final String LABEL_SEPARATOR = " - ";
@@ -149,6 +152,14 @@ public class OutlinePage extends ContentOutlinePage
      * The actions delegate to the current GraphicalEditorPart.
      */
     private MenuManager mMenuManager;
+
+    private Composite mControl;
+    private PropertySheetPage mPropertySheet;
+    private PageSiteComposite mPropertySheetComposite;
+    private boolean mShowPropertySheet;
+    private boolean mShowHeader;
+    private boolean mIgnoreSelection;
+    private boolean mActive = true;
 
     /** Action to Select All in the tree */
     private final Action mTreeSelectAllAction = new Action() {
@@ -204,13 +215,124 @@ public class OutlinePage extends ContentOutlinePage
         }
     };
 
+    /**
+     * Creates a new {@link OutlinePage} associated with the given editor
+     *
+     * @param graphicalEditorPart the editor associated with this outline
+     */
     public OutlinePage(GraphicalEditorPart graphicalEditorPart) {
         super();
         mGraphicalEditorPart = graphicalEditorPart;
     }
 
     @Override
+    public Control getControl() {
+        // We've injected some controls between the root of the outline page
+        // and the tree control, so return the actual root (a sash form) rather
+        // than the superclass' implementation which returns the tree. If we don't
+        // do this, various checks in the outline page which checks that getControl().getParent()
+        // is the outline window itself will ignore this page.
+        return mControl;
+    }
+
+    void setActive(boolean active) {
+        if (active != mActive) {
+            mActive = active;
+
+            // Outlines are by default active when they are created; this is intended
+            // for deactivating a hidden outline and later reactivating it
+            assert mControl != null;
+            if (active) {
+                getSite().getPage().addSelectionListener(this);
+                setModel(mGraphicalEditorPart.getCanvasControl().getViewHierarchy().getRoot());
+            } else {
+                getSite().getPage().removeSelectionListener(this);
+                mRootWrapper.setRoot(null);
+                if (mPropertySheet != null) {
+                    mPropertySheet.selectionChanged(null, TreeSelection.EMPTY);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set whether the outline should be shown in the header
+     *
+     * @param show whether a header should be shown
+     */
+    public void setShowHeader(boolean show) {
+        mShowHeader = show;
+    }
+
+    /**
+     * Set whether the property sheet should be shown within this outline
+     *
+     * @param show whether the property sheet should show
+     */
+    public void setShowPropertySheet(boolean show) {
+        if (show != mShowPropertySheet) {
+            mShowPropertySheet = show;
+            if (mControl == null) {
+                return;
+            }
+
+            if (show && mPropertySheet == null) {
+                createPropertySheet();
+            } else if (!show) {
+                mPropertySheetComposite.dispose();
+                mPropertySheetComposite = null;
+                mPropertySheet.dispose();
+                mPropertySheet = null;
+            }
+
+            mControl.layout();
+        }
+    }
+
+    @Override
     public void createControl(Composite parent) {
+        mControl = new SelfOrientingSashForm(parent, SWT.VERTICAL);
+
+        if (mShowHeader) {
+            PageSiteComposite mOutlineComposite = new PageSiteComposite(mControl, SWT.BORDER);
+            mOutlineComposite.setTitleText("Outline");
+            mOutlineComposite.setTitleImage(IconFactory.getInstance().getIcon("components_view"));
+            mOutlineComposite.setPage(new IPage() {
+                @Override
+                public void createControl(Composite outlineParent) {
+                    createOutline(outlineParent);
+                }
+
+                @Override
+                public void dispose() {
+                }
+
+                @Override
+                public Control getControl() {
+                    return getTreeViewer().getTree();
+                }
+
+                @Override
+                public void setToolBar(IToolBarManager toolBarManager) {
+                    makeContributions(null, toolBarManager, null);
+                    toolBarManager.update(false);
+                }
+
+                @Override
+                public void setFocus() {
+                    getControl().setFocus();
+                }
+            });
+        } else {
+            createOutline(mControl);
+        }
+
+        if (mShowPropertySheet) {
+            createPropertySheet();
+        }
+    }
+
+    private void createOutline(Composite parent) {
         super.createControl(parent);
 
         TreeViewer tv = getTreeViewer();
@@ -218,6 +340,7 @@ public class OutlinePage extends ContentOutlinePage
         tv.setContentProvider(new ContentProvider());
         tv.setLabelProvider(new LabelProvider());
         tv.setInput(mRootWrapper);
+        tv.expandToLevel(mRootWrapper.getRoot(), 2);
 
         int supportedOperations = DND.DROP_COPY | DND.DROP_MOVE;
         Transfer[] transfers = new Transfer[] {
@@ -263,12 +386,25 @@ public class OutlinePage extends ContentOutlinePage
         tv.addDoubleClickListener(new IDoubleClickListener() {
             @Override
             public void doubleClick(DoubleClickEvent event) {
+                // This used to open the property view, but now that properties are docked
+                // let's use it for something else -- such as showing the editor source
+                /*
                 // Front properties panel; its selection is already linked
                 IWorkbenchPage page = getSite().getPage();
                 try {
                     page.showView(IPageLayout.ID_PROP_SHEET, null, IWorkbenchPage.VIEW_ACTIVATE);
                 } catch (PartInitException e) {
                     AdtPlugin.log(e, "Could not activate property sheet");
+                }
+                */
+
+                TreeItem[] selection = getTreeViewer().getTree().getSelection();
+                if (selection.length > 0) {
+                    CanvasViewInfo vi = getViewInfo(selection[0].getData());
+                    if (vi != null) {
+                        LayoutCanvas canvas = mGraphicalEditorPart.getCanvasControl();
+                        canvas.show(vi);
+                    }
                 }
             }
         });
@@ -307,12 +443,24 @@ public class OutlinePage extends ContentOutlinePage
         });
     }
 
+    private void createPropertySheet() {
+        mPropertySheetComposite = new PageSiteComposite(mControl, SWT.BORDER);
+        mPropertySheetComposite.setTitleText("Properties");
+        mPropertySheetComposite.setTitleImage(IconFactory.getInstance().getIcon("properties_view"));
+        mPropertySheet = new PropertySheetPage(mGraphicalEditorPart);
+        mPropertySheetComposite.setPage(mPropertySheet);
+    }
+
     @Override
     public void dispose() {
         mRootWrapper.setRoot(null);
 
         getSite().getPage().removeSelectionListener(this);
         super.dispose();
+        if (mPropertySheet != null) {
+            mPropertySheet.dispose();
+            mPropertySheet = null;
+        }
     }
 
     /**
@@ -321,6 +469,10 @@ public class OutlinePage extends ContentOutlinePage
      * @param rootViewInfo The root of the view info hierarchy. Can be null.
      */
     public void setModel(CanvasViewInfo rootViewInfo) {
+        if (!mActive) {
+            return;
+        }
+
         mRootWrapper.setRoot(rootViewInfo);
 
         TreeViewer tv = getTreeViewer();
@@ -354,6 +506,9 @@ public class OutlinePage extends ContentOutlinePage
         if (selection == null) {
             selection = TreeSelection.EMPTY;
         }
+        if (selection.equals(TreeSelection.EMPTY)) {
+            return;
+        }
 
         super.setSelection(selection);
 
@@ -369,6 +524,14 @@ public class OutlinePage extends ContentOutlinePage
         }
     }
 
+    @Override
+    protected void fireSelectionChanged(ISelection selection) {
+        super.fireSelectionChanged(selection);
+        if (mPropertySheet != null && !mIgnoreSelection) {
+            mPropertySheet.selectionChanged(null, selection);
+        }
+    }
+
     /**
      * Listens to a workbench selection.
      * Only listen on selection coming from {@link LayoutEditorDelegate}, which avoid
@@ -376,10 +539,23 @@ public class OutlinePage extends ContentOutlinePage
      */
     @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+        if (mIgnoreSelection) {
+            return;
+        }
+
         if (part instanceof IEditorPart) {
             LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor((IEditorPart) part);
             if (delegate != null) {
-                setSelection(selection);
+                try {
+                    mIgnoreSelection = true;
+                    setSelection(selection);
+
+                    if (mPropertySheet != null) {
+                        mPropertySheet.selectionChanged(part, selection);
+                    }
+                } finally {
+                    mIgnoreSelection = false;
+                }
             }
         }
     }
@@ -760,10 +936,10 @@ public class OutlinePage extends ContentOutlinePage
                 mGraphicalEditorPart.getCanvasControl(),
                 mMenuManager);
 
-        getControl().setMenu(mMenuManager.createContextMenu(getControl()));
+        getTreeViewer().getTree().setMenu(mMenuManager.createContextMenu(getControl()));
 
         // Update Move Up/Move Down state only when the menu is opened
-        getControl().addMenuDetectListener(new MenuDetectListener() {
+        getTreeViewer().getTree().addMenuDetectListener(new MenuDetectListener() {
             @Override
             public void menuDetected(MenuDetectEvent e) {
                 mMenuManager.update(IAction.ENABLED);
@@ -1084,5 +1260,11 @@ public class OutlinePage extends ContentOutlinePage
         }
 
         return text;
+    }
+
+    @Override
+    public void setToolBar(IToolBarManager toolBarManager) {
+        makeContributions(null, toolBarManager, null);
+        toolBarManager.update(false);
     }
 }

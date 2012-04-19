@@ -30,7 +30,12 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
+import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
+import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
+import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
+import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_OPEN;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.rendering.LayoutLibrary;
@@ -61,9 +66,10 @@ import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configu
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.PaletteControl.PalettePage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertyFactory;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
@@ -106,11 +112,14 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.preferences.BuildPathsPropertyPage;
 import org.eclipse.jdt.ui.actions.OpenNewClassWizardAction;
 import org.eclipse.jdt.ui.wizards.NewClassWizardPage;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -122,10 +131,13 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -134,6 +146,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -141,8 +154,12 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.EditorPart;
 import org.eclipse.ui.part.FileEditorInput;
-import org.eclipse.ui.part.IPage;
+import org.eclipse.ui.part.IPageSite;
 import org.eclipse.ui.part.PageBookView;
+import org.eclipse.wb.core.controls.flyout.FlyoutControlComposite;
+import org.eclipse.wb.core.controls.flyout.IFlyoutListener;
+import org.eclipse.wb.core.controls.flyout.PluginFlyoutPreferences;
+import org.eclipse.wb.internal.core.editor.structure.PageSiteComposite;
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -173,7 +190,7 @@ import java.util.Set;
  * @since GLE2
  */
 public class GraphicalEditorPart extends EditorPart
-    implements IPageImageProvider, INullSelectionListener {
+    implements IPageImageProvider, INullSelectionListener, IFlyoutListener {
 
     /*
      * Useful notes:
@@ -215,9 +232,6 @@ public class GraphicalEditorPart extends EditorPart
     /** The configuration composite at the top of the layout editor. */
     private ConfigurationComposite mConfigComposite;
 
-    /** The sash that splits the palette from the canvas. */
-    private SashForm mSashPalette;
-
     /** The sash that splits the palette from the error view.
      * The error view is shown only when needed. */
     private SashForm mSashError;
@@ -251,6 +265,10 @@ public class GraphicalEditorPart extends EditorPart
     private int mMinSdkVersion;
     private int mTargetSdkVersion;
     private LayoutActionBar mActionBar;
+    private OutlinePage mOutlinePage;
+    private FlyoutControlComposite mStructureFlyout;
+    private FlyoutControlComposite mPaletteComposite;
+    private PropertyFactory mPropertyFactory;
 
     /**
      * Flags which tracks whether this editor is currently active which is set whenever
@@ -334,15 +352,37 @@ public class GraphicalEditorPart extends EditorPart
 
         mConfigComposite = new ConfigurationComposite(mConfigListener, parent,
                 SWT.BORDER, initialState);
+        PluginFlyoutPreferences preferences =
+                new PluginFlyoutPreferences(AdtPlugin.getDefault().getPreferenceStore(),
+                        "design.palette"); //$NON-NLS-1$
+        preferences.initializeDefaults(DOCK_WEST, STATE_OPEN, 200);
+        mPaletteComposite = new FlyoutControlComposite(parent, SWT.NONE, preferences);
+        mPaletteComposite.setTitleText("Palette");
+        mPaletteComposite.setMinWidth(100);
+        Composite paletteParent = mPaletteComposite.getFlyoutParent();
+        Composite editorParent = mPaletteComposite.getClientParent();
+        mPaletteComposite.setListener(this);
 
-        mSashPalette = new SashForm(parent, SWT.HORIZONTAL);
-        mSashPalette.setLayoutData(new GridData(GridData.FILL_BOTH));
+        mPaletteComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        DecorComposite paletteDecor = new DecorComposite(mSashPalette, SWT.BORDER);
-        paletteDecor.setContent(new PaletteControl.PaletteDecor(this));
-        mPalette = (PaletteControl) paletteDecor.getContentControl();
+        PageSiteComposite paletteComposite = new PageSiteComposite(paletteParent, SWT.BORDER);
+        paletteComposite.setTitleText("Palette");
+        paletteComposite.setTitleImage(IconFactory.getInstance().getIcon("palette"));
+        PalettePage decor = new PalettePage(this);
+        paletteComposite.setPage(decor);
+        mPalette = (PaletteControl) decor.getControl();
+        decor.createToolbarItems(paletteComposite.getToolBar());
 
-        Composite layoutBarAndCanvas = new Composite(mSashPalette, SWT.NONE);
+        // Create the shared structure+editor area
+        preferences = new PluginFlyoutPreferences(AdtPlugin.getDefault().getPreferenceStore(),
+                "design.structure"); //$NON-NLS-1$
+        preferences.initializeDefaults(DOCK_EAST, STATE_OPEN, 300);
+        mStructureFlyout = new FlyoutControlComposite(editorParent, SWT.NONE, preferences);
+        mStructureFlyout.setTitleText("Structure");
+        mStructureFlyout.setMinWidth(150);
+        mStructureFlyout.setListener(this);
+
+        Composite layoutBarAndCanvas = new Composite(mStructureFlyout.getClientParent(), SWT.NONE);
         GridLayout gridLayout = new GridLayout(1, false);
         gridLayout.horizontalSpacing = 0;
         gridLayout.verticalSpacing = 0;
@@ -368,15 +408,156 @@ public class GraphicalEditorPart extends EditorPart
         mErrorLabel.setForeground(d.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
         mErrorLabel.addMouseListener(new ErrorLabelListener());
 
-        mSashPalette.setWeights(new int[] { 20, 80 });
         mSashError.setWeights(new int[] { 80, 20 });
         mSashError.setMaximizedControl(mCanvasViewer.getControl());
+
+        // Create the structure views. We really should do this *lazily*, but that
+        // seems to cause a bug: property sheet won't update. Track this down later.
+        createStructureViews(mStructureFlyout.getFlyoutParent(), false);
+        showStructureViews(false, false, false);
 
         // Initialize the state
         reloadPalette();
 
-        getSite().setSelectionProvider(mCanvasViewer);
-        getSite().getPage().addSelectionListener(this);
+        IWorkbenchPartSite site = getSite();
+        site.setSelectionProvider(mCanvasViewer);
+        site.getPage().addSelectionListener(this);
+    }
+
+    private void createStructureViews(Composite parent, boolean createPropertySheet) {
+        mOutlinePage = new OutlinePage(this);
+        mOutlinePage.setShowPropertySheet(createPropertySheet);
+        mOutlinePage.setShowHeader(true);
+
+        IPageSite pageSite = new IPageSite() {
+
+            @Override
+            public IWorkbenchPage getPage() {
+                return getSite().getPage();
+            }
+
+            @Override
+            public ISelectionProvider getSelectionProvider() {
+                return getSite().getSelectionProvider();
+            }
+
+            @Override
+            public Shell getShell() {
+                return getSite().getShell();
+            }
+
+            @Override
+            public IWorkbenchWindow getWorkbenchWindow() {
+                return getSite().getWorkbenchWindow();
+            }
+
+            @Override
+            public void setSelectionProvider(ISelectionProvider provider) {
+                getSite().setSelectionProvider(provider);
+            }
+
+            @Override
+            public Object getAdapter(Class adapter) {
+                return getSite().getAdapter(adapter);
+            }
+
+            @Override
+            public Object getService(Class api) {
+                return getSite().getService(api);
+            }
+
+            @Override
+            public boolean hasService(Class api) {
+                return getSite().hasService(api);
+            }
+
+            @Override
+            public void registerContextMenu(String menuId, MenuManager menuManager,
+                    ISelectionProvider selectionProvider) {
+            }
+
+            @Override
+            public IActionBars getActionBars() {
+                return null;
+            }
+        };
+        mOutlinePage.init(pageSite);
+        mOutlinePage.createControl(parent);
+        mOutlinePage.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
+            public void selectionChanged(SelectionChangedEvent event) {
+                getCanvasControl().getSelectionManager().setSelection(event.getSelection());
+            }
+        });
+    }
+
+    /** Shows the embedded (within the layout editor) outline and or properties */
+    void showStructureViews(final boolean showOutline, final boolean showProperties,
+            final boolean updateLayout) {
+        Display display = mConfigComposite.getDisplay();
+        if (display.getThread() != Thread.currentThread()) {
+            display.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (!mConfigComposite.isDisposed()) {
+                        showStructureViews(showOutline, showProperties, updateLayout);
+                    }
+                }
+
+            });
+            return;
+        }
+
+        boolean show = showOutline || showProperties;
+
+        Control[] children = mStructureFlyout.getFlyoutParent().getChildren();
+        if (children.length == 0) {
+            if (show) {
+                createStructureViews(mStructureFlyout.getFlyoutParent(), showProperties);
+            }
+            return;
+        }
+
+        mOutlinePage.setShowPropertySheet(showProperties);
+
+        Control control = children[0];
+        if (show != control.getVisible()) {
+            control.setVisible(show);
+            mOutlinePage.setActive(show); // disable/re-enable listeners etc
+            if (show) {
+                ISelection selection = getCanvasControl().getSelectionManager().getSelection();
+                mOutlinePage.selectionChanged(getEditorDelegate().getEditor(), selection);
+            }
+            if (updateLayout) {
+                mStructureFlyout.layout();
+            }
+            // TODO: *dispose* the non-showing widgets to save memory?
+        }
+    }
+
+    /**
+     * Returns the property factory associated with this editor
+     *
+     * @return the factory
+     */
+    @NonNull
+    public PropertyFactory getPropertyFactory() {
+        if (mPropertyFactory == null) {
+            mPropertyFactory = new PropertyFactory(this);
+        }
+
+        return mPropertyFactory;
+    }
+
+    /**
+     * Invoked by {@link LayoutCanvas} to set the model (a.k.a. the root view info).
+     *
+     * @param rootViewInfo The root of the view info hierarchy. Can be null.
+     */
+    public void setModel(CanvasViewInfo rootViewInfo) {
+        if (mOutlinePage != null) {
+            mOutlinePage.setModel(rootViewInfo);
+        }
     }
 
     /**
@@ -393,7 +574,7 @@ public class GraphicalEditorPart extends EditorPart
         if (delegate == null) {
             if (part instanceof PageBookView) {
                 PageBookView pbv = (PageBookView) part;
-                IPage currentPage = pbv.getCurrentPage();
+                 org.eclipse.ui.part.IPage currentPage = pbv.getCurrentPage();
                 if (currentPage instanceof OutlinePage) {
                     LayoutCanvas canvas = getCanvasControl();
                     if (canvas != null && canvas.getOutlinePage() != currentPage) {
@@ -2520,5 +2701,19 @@ public class GraphicalEditorPart extends EditorPart
      */
     public int getMinSdkVersion() {
         return mMinSdkVersion;
+    }
+
+    /** If the flyout hover is showing, dismiss it */
+    public void dismissHoverPalette() {
+        mPaletteComposite.dismissHover();
+    }
+
+    @Override
+    public void stateChanged(int oldState, int newState) {
+        // Auto zoom the surface if you open or close flyout windows such as the palette
+        // or the property/outline views
+        if (newState == STATE_OPEN || newState == STATE_COLLAPSED && oldState == STATE_OPEN) {
+            getCanvasControl().setFitScale(true /*onlyZoomOut*/);
+        }
     }
 }

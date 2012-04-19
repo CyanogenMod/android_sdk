@@ -47,6 +47,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.Page;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
+import org.eclipse.wb.internal.core.editor.structure.IPage;
 import org.eclipse.wb.internal.core.model.property.Property;
 import org.eclipse.wb.internal.core.model.property.table.IPropertyExceptionHandler;
 import org.eclipse.wb.internal.core.model.property.table.PropertyTable;
@@ -60,10 +61,10 @@ import java.util.List;
 /**
  * Property sheet page used when the graphical layout editor is chosen
  */
-public class PropertySheetPage extends Page implements IPropertySheetPage, IUiUpdateListener {
+public class PropertySheetPage extends Page
+        implements IPropertySheetPage, IUiUpdateListener, IPage {
     private PropertyTable mPropertyTable;
     private final GraphicalEditorPart mEditor;
-    private PropertyFactory mPropertyFactory;
     private Property mActiveProperty;
     private Action mDefaultValueAction;
     private Action mShowAdvancedPropertiesAction;
@@ -89,17 +90,13 @@ public class PropertySheetPage extends Page implements IPropertySheetPage, IUiUp
         mEditor = editor;
     }
 
-    PropertyFactory getPropertyFactory() {
-        if (mPropertyFactory == null) {
-            assert mPropertyTable != null;
-            mPropertyFactory = new PropertyFactory(mEditor, mPropertyTable);
-        }
-
-        return mPropertyFactory;
+    private PropertyFactory getPropertyFactory() {
+        return mEditor.getPropertyFactory();
     }
 
     @Override
     public void createControl(Composite parent) {
+        assert parent != null;
         mPropertyTable = new PropertyTable(parent, SWT.NONE);
         mPropertyTable.setExceptionHandler(new IPropertyExceptionHandler() {
             @Override
@@ -120,6 +117,38 @@ public class PropertySheetPage extends Page implements IPropertySheetPage, IUiUp
         if (selection instanceof TreeSelection
                 && mPropertyTable != null && !mPropertyTable.isDisposed()) {
             TreeSelection treeSelection = (TreeSelection) selection;
+
+            // We get a lot of repeated selection requests for the same selection
+            // as before, so try to eliminate these
+            if (mSelection != null) {
+                if (mSelection.isEmpty()) {
+                    if (treeSelection.isEmpty()) {
+                        return;
+                    }
+                } else {
+                    int selectionCount = treeSelection.size();
+                    if (selectionCount == mSelection.size()) {
+                        boolean same = true;
+                        Iterator<?> iterator = treeSelection.iterator();
+                        for (int i = 0, n = selectionCount; i < n && iterator.hasNext(); i++) {
+                            Object next = iterator.next();
+                            if (next instanceof CanvasViewInfo) {
+                                CanvasViewInfo info = (CanvasViewInfo) next;
+                                if (info != mSelection.get(i)) {
+                                    same = false;
+                                    break;
+                                }
+                            } else {
+                                same = false;
+                                break;
+                            }
+                        }
+                        if (same) {
+                            return;
+                        }
+                    }
+                }
+            }
 
             stopTrackingSelection();
 
@@ -363,5 +392,11 @@ public class PropertySheetPage extends Page implements IPropertySheetPage, IUiUp
                     assert false : mAction;
             }
         }
+    }
+
+    @Override
+    public void setToolBar(IToolBarManager toolBarManager) {
+        makeContributions(null, toolBarManager, null);
+        toolBarManager.update(false);
     }
 }

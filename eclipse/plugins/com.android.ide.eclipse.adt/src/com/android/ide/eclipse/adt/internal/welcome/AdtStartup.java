@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.welcome;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutWindowCoordinator;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsService;
@@ -65,6 +66,8 @@ public class AdtStartup implements IStartup {
         } else if (mStore.isPingOptIn()) {
             sendUsageStats();
         }
+
+        initializeWindowCoordinator();
     }
 
     private boolean isFirstTime() {
@@ -108,6 +111,19 @@ public class AdtStartup implements IStartup {
 
         // Check whether we've run this wizard before.
         return !mStore.isAdtUsed();
+    }
+
+    private void initializeWindowCoordinator() {
+        final IWorkbench workbench = PlatformUI.getWorkbench();
+        workbench.getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+                if (window != null) {
+                    LayoutWindowCoordinator.start(window);
+                }
+            }
+        });
     }
 
     private void showWelcomeWizard() {

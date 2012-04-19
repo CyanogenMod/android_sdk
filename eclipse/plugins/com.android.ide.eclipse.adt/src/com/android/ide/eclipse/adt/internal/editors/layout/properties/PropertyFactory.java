@@ -42,7 +42,6 @@ import org.eclipse.wb.internal.core.model.property.ComplexProperty;
 import org.eclipse.wb.internal.core.model.property.Property;
 import org.eclipse.wb.internal.core.model.property.category.PropertyCategory;
 import org.eclipse.wb.internal.core.model.property.editor.PropertyEditor;
-import org.eclipse.wb.internal.core.model.property.table.PropertyTable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +64,7 @@ import java.util.WeakHashMap;
  * TODO: For any properties that are *set* in XML, they should NOT be labeled as
  * advanced (which would make them disappear)
  */
-class PropertyFactory {
+public class PropertyFactory {
     /** Disable cache during development only */
     private static final boolean CACHE_ENABLED = true || !LintUtils.assertionsEnabled();
     static {
@@ -81,7 +80,6 @@ class PropertyFactory {
     private static final int PRIO_LAST = 100000;
 
     private final GraphicalEditorPart mGraphicalEditorPart;
-    private final PropertyTable mPropertyTable;
     private Map<UiViewElementNode, Property[]> mCache =
             new WeakHashMap<UiViewElementNode, Property[]>();
     private UiViewElementNode mCurrentViewCookie;
@@ -99,9 +97,8 @@ class PropertyFactory {
     private SortingMode mSortMode = DEFAULT_MODE;
     private SortingMode mCacheSortMode;
 
-    PropertyFactory(GraphicalEditorPart graphicalEditorPart, PropertyTable propertyTable) {
+    public PropertyFactory(GraphicalEditorPart graphicalEditorPart) {
         mGraphicalEditorPart = graphicalEditorPart;
-        mPropertyTable = propertyTable;
     }
 
     /**
@@ -148,7 +145,7 @@ class PropertyFactory {
             properties = null;
         }
         if (properties == null) {
-            Collection<? extends Property> propertyList = getProperties(node, mPropertyTable);
+            Collection<? extends Property> propertyList = getProperties(node);
             if (propertyList == null) {
                 properties = new Property[0];
             } else {
@@ -160,9 +157,7 @@ class PropertyFactory {
     }
 
 
-    protected Collection<? extends Property> getProperties(
-            UiViewElementNode node,
-            PropertyTable propertyTable) {
+    protected Collection<? extends Property> getProperties(UiViewElementNode node) {
         ViewMetadataRepository repository = ViewMetadataRepository.get();
         ViewElementDescriptor viewDescriptor = (ViewElementDescriptor) node.getDescriptor();
         String fqcn = viewDescriptor.getFullClassName();
@@ -668,10 +663,6 @@ class PropertyFactory {
         Collections.sort(collapsed, Property.PRIORITY);
 
         return collapsed;
-    }
-
-    PropertyTable getPropertyTable() {
-        return mPropertyTable;
     }
 
     @Nullable
