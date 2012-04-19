@@ -462,7 +462,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 choices = currentUiNode.getAttributeDescriptors();
             } else {
                 ElementDescriptor parentDesc = getDescriptor(parent);
-                choices = parentDesc.getAttributes();
+                if (parentDesc != null) {
+                    choices = parentDesc.getAttributes();
+                }
             }
         }
         return choices;
