@@ -21,7 +21,7 @@ import org.w3c.dom.Node;
 /**
  * Misc utilities to help extracting elements and attributes out of an XML document.
  */
-class XmlParserUtils {
+public class XmlParserUtils {
 
     /**
      * Returns the first child element with the given XML local name.

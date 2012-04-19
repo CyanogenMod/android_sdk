@@ -16,8 +16,8 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.internal.repository.SdkRepoSource;
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkRepoSource;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 
 

@@ -25,11 +25,11 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
-import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.ExtraPackage;
+import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.repository.PkgProps;
 import com.android.util.Pair;
 

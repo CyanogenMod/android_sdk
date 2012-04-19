@@ -30,7 +30,7 @@ import java.util.Map;
  * A mock PlatformTarget.
  * This reimplements the minimum needed from the interface for our limited testing needs.
  */
-class MockPlatformTarget implements IAndroidTarget {
+public class MockPlatformTarget implements IAndroidTarget {
 
     private final int mApiLevel;
     private final int mRevision;
