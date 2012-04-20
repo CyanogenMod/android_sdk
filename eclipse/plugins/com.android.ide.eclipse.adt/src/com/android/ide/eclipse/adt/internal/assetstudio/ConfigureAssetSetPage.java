@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
+import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
+
 import com.android.assetstudiolib.ActionBarIconGenerator;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.assetstudiolib.GraphicGeneratorContext;
@@ -24,6 +26,7 @@ import com.android.assetstudiolib.MenuIconGenerator;
 import com.android.assetstudiolib.NotificationIconGenerator;
 import com.android.assetstudiolib.TabIconGenerator;
 import com.android.assetstudiolib.TextRenderUtil;
+import com.android.assetstudiolib.Util;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
@@ -69,6 +72,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.Text;
 
+import java.awt.Paint;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -272,10 +276,10 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         new Label(mConfigurationArea, SWT.NONE);
 
         mTrimCheckBox = new Button(mConfigurationArea, SWT.CHECK);
-        mTrimCheckBox.setEnabled(false);
         mTrimCheckBox.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
         mTrimCheckBox.setSelection(false);
         mTrimCheckBox.setText("Trim Surrounding Blank Space");
+        mTrimCheckBox.addSelectionListener(this);
         new Label(mConfigurationArea, SWT.NONE);
 
         Label paddingLabel = new Label(mConfigurationArea, SWT.NONE);
@@ -912,6 +916,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         CreateAssetSetWizard wizard = (CreateAssetSetWizard) getWizard();
         AssetType type = wizard.getAssetType();
+        boolean crop = mTrimCheckBox.getSelection();
 
         BufferedImage sourceImage = null;
         if (mImageRadio.getSelection()) {
@@ -930,6 +935,15 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
             setErrorMessage(null);
             sourceImage = getImage(path, false);
+            if (sourceImage != null) {
+                if (crop) {
+                    sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                }
+                int padding = getPadding();
+                if (padding != 0) {
+                    sourceImage = Util.paddedImage(sourceImage, padding);
+                }
+            }
         } else if (mTextRadio.getSelection()) {
             String text = mText.getText();
             TextRenderUtil.Options options = new TextRenderUtil.Options();
@@ -942,11 +956,36 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             }
             options.foregroundColor = color;
             sourceImage = TextRenderUtil.renderTextImage(text, getPadding(), options);
+
+            if (crop) {
+                sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+            }
+
+            int padding = getPadding();
+            if (padding != 0) {
+                sourceImage = Util.paddedImage(sourceImage, padding);
+            }
         } else {
             assert mClipartRadio.getSelection();
             assert mSelectedClipart != null;
             try {
                 sourceImage = GraphicGenerator.getClipartImage(mSelectedClipart);
+
+                if (crop) {
+                    sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                }
+
+                if (type.needsColors()) {
+                    int color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8)
+                            | mFgColor.blue;
+                    Paint paint = new java.awt.Color(color);
+                    sourceImage = Util.filledImage(sourceImage, paint);
+                }
+
+                int padding = getPadding();
+                if (padding != 0) {
+                    sourceImage = Util.paddedImage(sourceImage, padding);
+                }
             } catch (IOException e) {
                 AdtPlugin.log(e, null);
                 return categoryMap;
