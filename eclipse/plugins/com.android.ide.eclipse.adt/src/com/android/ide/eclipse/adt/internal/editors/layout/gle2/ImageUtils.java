@@ -125,6 +125,23 @@ public class ImageUtils {
      *         and cropping completely removed everything
      */
     public static BufferedImage cropBlank(BufferedImage image, Rect initialCrop) {
+        return cropBlank(image, initialCrop, image.getType());
+    }
+
+    /**
+     * Crops blank pixels from the edges of the image and returns the cropped result. We
+     * crop off pixels that are blank (meaning they have an alpha value = 0). Note that
+     * this is not the same as pixels that aren't opaque (an alpha value other than 255).
+     *
+     * @param image the image to be cropped
+     * @param initialCrop If not null, specifies a rectangle which contains an initial
+     *            crop to continue. This can be used to crop an image where you already
+     *            know about margins in the image
+     * @param imageType the type of {@link BufferedImage} to create
+     * @return a cropped version of the source image, or null if the whole image was blank
+     *         and cropping completely removed everything
+     */
+    public static BufferedImage cropBlank(BufferedImage image, Rect initialCrop, int imageType) {
         CropFilter filter = new CropFilter() {
             @Override
             public boolean crop(BufferedImage bufferedImage, int x, int y) {
@@ -134,7 +151,7 @@ public class ImageUtils {
                 // visual results -- e.g. check <= 0x80000000
             }
         };
-        return crop(image, filter, initialCrop);
+        return crop(image, filter, initialCrop, imageType);
     }
 
     /**
@@ -152,13 +169,32 @@ public class ImageUtils {
      */
     public static BufferedImage cropColor(BufferedImage image,
             final int blankArgb, Rect initialCrop) {
+        return cropColor(image, blankArgb, initialCrop, image.getType());
+    }
+
+    /**
+     * Crops pixels of a given color from the edges of the image and returns the cropped
+     * result.
+     *
+     * @param image the image to be cropped
+     * @param blankArgb the color considered to be blank, as a 32 pixel integer with 8
+     *            bits of alpha, red, green and blue
+     * @param initialCrop If not null, specifies a rectangle which contains an initial
+     *            crop to continue. This can be used to crop an image where you already
+     *            know about margins in the image
+     * @param imageType the type of {@link BufferedImage} to create
+     * @return a cropped version of the source image, or null if the whole image was blank
+     *         and cropping completely removed everything
+     */
+    public static BufferedImage cropColor(BufferedImage image,
+            final int blankArgb, Rect initialCrop, int imageType) {
         CropFilter filter = new CropFilter() {
             @Override
             public boolean crop(BufferedImage bufferedImage, int x, int y) {
                 return blankArgb == bufferedImage.getRGB(x, y);
             }
         };
-        return crop(image, filter, initialCrop);
+        return crop(image, filter, initialCrop, imageType);
     }
 
     /**
@@ -177,7 +213,8 @@ public class ImageUtils {
         boolean crop(BufferedImage image, int x, int y);
     }
 
-    private static BufferedImage crop(BufferedImage image, CropFilter filter, Rect initialCrop) {
+    private static BufferedImage crop(BufferedImage image, CropFilter filter, Rect initialCrop,
+            int imageType) {
         if (image == null) {
             return null;
         }
@@ -265,7 +302,8 @@ public class ImageUtils {
         int height = y2 - y1;
 
         // Now extract the sub-image
-        BufferedImage cropped = new BufferedImage(width, height, image.getType());
+        BufferedImage cropped = new BufferedImage(width, height,
+                imageType != -1 ? imageType : image.getType());
         Graphics g = cropped.getGraphics();
         g.drawImage(image, 0, 0, width, height, x1, y1, x2, y2, null);
 
