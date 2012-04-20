@@ -132,6 +132,9 @@ public final class LogCatPanel extends SelectionDependentPanel
     private List<LogCatFilter> mLogCatFilters;
     private int mCurrentSelectedFilterIndex;
 
+    private int mRemovedEntriesCount = 0;
+    private int mPreviousRemainingCapacity = 0;
+
     private ToolItem mNewFilterToolItem;
     private ToolItem mDeleteFilterToolItem;
     private ToolItem mEditFilterToolItem;
@@ -554,6 +557,8 @@ public final class LogCatPanel extends SelectionDependentPanel
                     mReceiver.clearMessages();
                     refreshLogCatTable();
 
+                    mRemovedEntriesCount = 0;
+
                     // the filters view is not cleared unless the filters are re-applied.
                     updateAppliedFilters();
                 }
@@ -685,7 +690,9 @@ public final class LogCatPanel extends SelectionDependentPanel
         List<LogCatMessage> filteredItems = applyCurrentFilters((LogCatMessageList) input);
         List<LogCatMessage> selectedMessages = new ArrayList<LogCatMessage>(indices.length);
         for (int i : indices) {
-            if (i < filteredItems.size()) {
+            // consider removed logcat message entries
+            i -= mRemovedEntriesCount;
+            if (i >= 0 && i < filteredItems.size()) {
                 LogCatMessage m = filteredItems.get(i);
                 selectedMessages.add(m);
             }
@@ -1030,8 +1037,18 @@ public final class LogCatPanel extends SelectionDependentPanel
     public void messageReceived(List<LogCatMessage> receivedMessages) {
         refreshLogCatTable();
 
-        updateUnreadCount(receivedMessages);
-        refreshFiltersTable();
+        if (mShouldScrollToLatestLog) {
+            updateUnreadCount(receivedMessages);
+            refreshFiltersTable();
+        } else {
+            LogCatMessageList messageList = mReceiver.getMessages();
+            int remainingCapacity = messageList.remainingCapacity();
+            if (remainingCapacity == 0) {
+                mRemovedEntriesCount +=
+                        receivedMessages.size() - mPreviousRemainingCapacity;
+            }
+            mPreviousRemainingCapacity = remainingCapacity;
+        }
     }
 
     /**
@@ -1098,6 +1115,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /** Scroll to the last line. */
     private void scrollToLatestLog() {
+        mRemovedEntriesCount = 0;
         mViewer.getTable().setTopIndex(mViewer.getTable().getItemCount() - 1);
     }
 
@@ -1170,10 +1188,12 @@ public final class LogCatPanel extends SelectionDependentPanel
             sb.append('\n');
         }
 
-        clipboard.setContents(
-                new Object[] {sb.toString()},
-                new Transfer[] {TextTransfer.getInstance()}
-                );
+        if (sb.length() > 0) {
+            clipboard.setContents(
+                    new Object[] {sb.toString()},
+                    new Transfer[] {TextTransfer.getInstance()}
+                    );
+        }
     }
 
     /** Select all items in the logcat table. */
