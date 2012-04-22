@@ -18,14 +18,14 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.internal.repository.ArchiveInstaller;
-import com.android.sdklib.internal.repository.ArchiveReplacement;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.MockEmptySdkManager;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
+import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
+import com.android.sdklib.internal.repository.archives.ArchiveReplacement;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 

@@ -16,10 +16,10 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;

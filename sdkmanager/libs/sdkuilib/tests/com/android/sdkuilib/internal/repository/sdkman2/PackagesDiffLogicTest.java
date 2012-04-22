@@ -17,18 +17,18 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.repository.BrokenPackage;
-import com.android.sdklib.internal.repository.MockAddonPackage;
-import com.android.sdklib.internal.repository.MockBrokenPackage;
-import com.android.sdklib.internal.repository.MockEmptyPackage;
-import com.android.sdklib.internal.repository.MockExtraPackage;
-import com.android.sdklib.internal.repository.MockPlatformPackage;
-import com.android.sdklib.internal.repository.MockPlatformToolPackage;
-import com.android.sdklib.internal.repository.MockSystemImagePackage;
-import com.android.sdklib.internal.repository.MockToolPackage;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkRepoSource;
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.packages.BrokenPackage;
+import com.android.sdklib.internal.repository.packages.MockAddonPackage;
+import com.android.sdklib.internal.repository.packages.MockBrokenPackage;
+import com.android.sdklib.internal.repository.packages.MockEmptyPackage;
+import com.android.sdklib.internal.repository.packages.MockExtraPackage;
+import com.android.sdklib.internal.repository.packages.MockPlatformPackage;
+import com.android.sdklib.internal.repository.packages.MockPlatformToolPackage;
+import com.android.sdklib.internal.repository.packages.MockSystemImagePackage;
+import com.android.sdklib.internal.repository.packages.MockToolPackage;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.sources.SdkRepoSource;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdkuilib.internal.repository.MockUpdaterData;
 

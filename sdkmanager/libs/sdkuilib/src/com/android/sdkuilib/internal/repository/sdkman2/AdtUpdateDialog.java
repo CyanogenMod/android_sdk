@@ -19,12 +19,12 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.internal.repository.ExtraPackage;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.PlatformPackage;
-import com.android.sdklib.internal.repository.PlatformToolPackage;
-import com.android.sdklib.internal.repository.SdkSource;
-import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdklib.internal.repository.packages.ExtraPackage;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.PlatformPackage;
+import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
+import com.android.sdklib.internal.repository.packages.ToolPackage;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.IAutoInstallTask;

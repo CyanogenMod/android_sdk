@@ -16,14 +16,14 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 
 import org.eclipse.swt.widgets.Display;

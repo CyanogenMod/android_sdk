@@ -16,10 +16,10 @@
 
 package com.android.sdkuilib.internal.repository.icons;
 
-import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkSource;
-import com.android.sdklib.internal.repository.SdkSourceCategory;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgContentProvider;
 
 import org.eclipse.swt.SWTException;

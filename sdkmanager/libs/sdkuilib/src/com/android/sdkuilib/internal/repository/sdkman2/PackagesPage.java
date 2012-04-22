@@ -17,13 +17,13 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.ArchiveInstaller;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
