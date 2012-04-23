@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.monitor;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -38,8 +39,12 @@ public class MonitorStartup implements IStartup {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 SdkStatsService stats = new SdkStatsService();
-                String toolsPath = new Path(MonitorPlugin.getDefault().getSdkPath())
-                                                .append("tools").toString();
+                String sdkPath = MonitorPlugin.getDefault().getSdkPath();
+                if (sdkPath == null) {
+                    return Status.OK_STATUS;
+                }
+
+                String toolsPath = new Path(sdkPath).append(SdkConstants.FD_TOOLS).toString();
                 ping(stats, toolsPath);
                 return Status.OK_STATUS;
             }
