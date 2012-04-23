@@ -236,7 +236,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "]>\n" +
                 "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    android:orientation=\"vertical\" >\n" +
-                "    <![CDATA[\n" +
+                " <![CDATA[\n" +
                 "This is character data!\n" +
                 "<!-- This is not a comment! -->\n" +
                 "and <this is not an element>\n" +
@@ -872,6 +872,46 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <string name=\"untitled\">&lt;untitled2></string>\n" +
                 "    <string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
                 "    <string name=\"untitled3\">&apos;untitled3&quot;</string>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testCData1() throws Exception {
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <string name=\"foo\"><![CDATA[bar]]></string>\n" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"foo\"><![CDATA[bar]]></string>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testCData2() throws Exception {
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <string name=\"foo1\"><![CDATA[bar1\n" +
+                "bar2\n" +
+                "bar3]]></string>\n" +
+                "    <string name=\"foo2\"><![CDATA[bar]]></string>\n" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"foo1\">\n" +
+                "<![CDATA[bar1\n" +
+                "bar2\n" +
+                "bar3]]>\n" +
+                "    </string>\n" +
+                "    <string name=\"foo2\"><![CDATA[bar]]></string>\n" +
                 "\n" +
                 "</resources>");
     }
