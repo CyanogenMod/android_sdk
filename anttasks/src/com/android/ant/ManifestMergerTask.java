@@ -112,7 +112,7 @@ public class ManifestMergerTask extends SingleDependencyTask {
             if (mDisable) {
                 System.out.println("Manifest merger disabled. Using project manifest only.");
             } else {
-                System.out.println("No libraries. Using app manifest only.");
+                System.out.println("No libraries. Using project manifest only.");
             }
             // no merge (disabled or nothing to merge)? do a simple copy.
             try {

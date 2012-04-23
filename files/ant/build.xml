@@ -75,81 +75,7 @@
     </path>
 
     <!-- Custom tasks -->
-    <taskdef name="checkenv"
-            classname="com.android.ant.CheckEnvTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="gettype"
-            classname="com.android.ant.GetTypeTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="gettarget"
-            classname="com.android.ant.GetTargetTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="getlibs"
-            classname="com.android.ant.GetLibraryListTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="dependency"
-            classname="com.android.ant.ComputeDependencyTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="testedprojectclasspath"
-            classname="com.android.ant.ComputeProjectClasspathTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="getemmafilter"
-            classname="com.android.ant.GetEmmaFilterTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="mergemanifest"
-            classname="com.android.ant.ManifestMergerTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="aapt"
-            classname="com.android.ant.AaptExecTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="aidl"
-            classname="com.android.ant.AidlExecTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="renderscript"
-            classname="com.android.ant.RenderScriptTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="buildconfig"
-            classname="com.android.ant.BuildConfigTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="dex"
-            classname="com.android.ant.DexExecTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="apkbuilder"
-            classname="com.android.ant.ApkBuilderTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="signapk"
-            classname="com.android.ant.SignApkTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="zipalign"
-            classname="com.android.ant.ZipAlignTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="xpath"
-            classname="com.android.ant.XPathTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="if"
-            classname="com.android.ant.IfElseTask"
-            classpathref="android.antlibs" />
-
-    <taskdef name="propertybyreplace"
-            classname="com.android.ant.PropertyByReplaceTask"
-            classpathref="android.antlibs" />
+    <taskdef resource="anttasks.properties" classpathref="android.antlibs" />
 
     <!-- Emma configuration -->
     <property name="emma.dir" value="${sdk.dir}/tools/lib" />
@@ -676,7 +602,7 @@
                 disable="${manifestmerger.disable}">
             <library refid="project.library.manifest.file.path" />
         </mergemanifest>
-    
+
         <do-only-if-manifest-hasCode
                 elseText="hasCode = false. Skipping aidl/renderscript/R.java">
             <echo level="info">Handling aidl files...</echo>
