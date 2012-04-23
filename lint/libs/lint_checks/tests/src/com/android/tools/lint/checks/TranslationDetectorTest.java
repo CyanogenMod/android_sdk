@@ -104,4 +104,14 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                     "res/values-es/strings_ignore.xml=>res/values-es/strings.xml",
                     "res/values-nl-rNL/strings.xml=>res/values-nl-rNL/strings.xml"));
     }
+
+    public void testMixedTranslationArrays() throws Exception {
+        // See issue http://code.google.com/p/android/issues/detail?id=29263
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                        "res/values/strings3.xml=>res/values/strings.xml",
+                        "res/values-fr/strings.xml=>res/values-fr/strings.xml"));
+    }
 }
