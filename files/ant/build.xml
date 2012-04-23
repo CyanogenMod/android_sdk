@@ -1250,7 +1250,7 @@
                     <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
                                       verbosity="${verbosity}">
                         <!-- TODO: report.dir or something like should be introduced if necessary -->
-                        <infileset dir=".">
+                        <infileset dir="${out.absolute.dir}">
                             <include name="coverage.ec" />
                             <include name="coverage.em" />
                         </infileset>
@@ -1259,8 +1259,8 @@
                    </report>
                 </emma>
                 <echo level="info">Cleaning up temporary files...</echo>
-                <delete file="coverage.ec" />
-                <delete file="coverage.em" />
+                <delete file="${out.absolute.dir}/coverage.ec" />
+                <delete file="${out.absolute.dir}/coverage.em" />
                 <echo level="info">Saving the report file in ${basedir}/coverage/coverage.html</echo>
             </then>
             <else>
