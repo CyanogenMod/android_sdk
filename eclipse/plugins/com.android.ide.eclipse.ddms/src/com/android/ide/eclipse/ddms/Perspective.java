@@ -53,11 +53,6 @@ public class Perspective implements IPerspectiveFactory {
         folder.addPlaceholder(DeviceView.ID + ":*"); //$NON-NLS-1$
         folder.addView(DeviceView.ID);
 
-        folder = layout.createFolder("emulator", IPageLayout.BOTTOM, 0.5f, //$NON-NLS-1$
-                "devices"); //$NON-NLS-1$
-        folder.addPlaceholder(EmulatorControlView.ID + ":*"); //$NON-NLS-1$
-        folder.addView(EmulatorControlView.ID);
-
         folder = layout.createFolder("ddms-detail", IPageLayout.RIGHT, 0.5f, //$NON-NLS-1$
                 editorArea);
         folder.addPlaceholder(ThreadView.ID + ":*"); //$NON-NLS-1$
@@ -66,6 +61,7 @@ public class Perspective implements IPerspectiveFactory {
         folder.addView(AllocTrackerView.ID);
         folder.addView(NetworkStatisticsView.ID);
         folder.addView(FileExplorerView.ID);
+        folder.addView(EmulatorControlView.ID);
 
         layout.addPerspectiveShortcut("org.eclipse.ui.resourcePerspective"); //$NON-NLS-1$
         layout.addPerspectiveShortcut("org.eclipse.debug.ui.DebugPerspective"); //$NON-NLS-1$
