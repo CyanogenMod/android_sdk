@@ -264,11 +264,17 @@ public class XmlPrettyPrinter {
     }
 
     private void printCharacterData(int depth, Node node) {
-        indent(depth);
+        String nodeValue = node.getNodeValue();
+        boolean separateLine = nodeValue.indexOf('\n') != -1;
+        if (separateLine && !endsWithLineSeparator()) {
+            mOut.append(mLineSeparator);
+        }
         mOut.append("<![CDATA["); //$NON-NLS-1$
-        mOut.append(node.getNodeValue());
-        mOut.append("]]>");     //$NON-NLS-1$
-        mOut.append(mLineSeparator);
+        mOut.append(nodeValue);
+        mOut.append("]]>");       //$NON-NLS-1$
+        if (separateLine) {
+            mOut.append(mLineSeparator);
+        }
     }
 
     private void printText(Node node) {
