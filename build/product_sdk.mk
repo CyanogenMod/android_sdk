@@ -35,6 +35,7 @@ PRODUCT_PACKAGES += \
 	lint \
 	mksdcard \
 	monkeyrunner \
+	monitor \
 	traceview
 
 # Native host Java libraries that are parts of the SDK.

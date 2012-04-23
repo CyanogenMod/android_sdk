@@ -2,7 +2,7 @@ To build the Monitor RCP based application, do:
 
 $ lunch sdk-eng
 $ ./sdk/eclipse/scripts/create_all_symlinks.sh
-$ cd sdk/eclipse/scripts/rcp
+$ cd sdk/monitor
 $ ant
 
 This will build the RCP for all the platforms in the folder:

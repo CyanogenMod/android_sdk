@@ -54,6 +54,7 @@ subdirs += \
 	sdk/jarutils \
 	sdk/layoutlib_api \
 	sdk/manifmerger \
+	sdk/monitor \
 	sdk/ninepatch \
 	sdk/rule_api \
 	sdk/lint \

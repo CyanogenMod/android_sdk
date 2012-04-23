@@ -1,6 +1,6 @@
 <project name="com.android.eclipse.rcp.build" default="build">
     <!-- Root of Android Source Tree -->
-    <property name="ANDROID_SRC" location="../../../../" />
+    <property name="ANDROID_SRC" location="../../" />
 
     <!-- Host Eclipse used for building the RCP -->
     <property name="basebuilder" value="${ANDROID_SRC}/external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/" />
@@ -80,6 +80,8 @@
             <arg value="${pde.build.dir}/scripts/productBuild/productBuild.xml" />
             <arg value="-data" />
             <arg value="${buildDir}/workspace" />
+            <arg value="-configuration" />
+            <arg value="${buildDir}/configuration" />
             <arg value="-Dtimestamp=${timestamp}" />
             <arg value="-DeclipseLocation=${baseBuilder}" />
             <arg value="-DbuildDirectory=${buildDir}" />
