@@ -21,7 +21,7 @@
             name="Android Device Monitor">
          <property
                name="appName"
-               value="androidMonitor">
+               value="Monitor">
          </property>
          <property
                name="preferenceCustomization"
@@ -29,7 +29,7 @@
          </property>
          <property
                name="windowImages"
-               value="images/ddms-16.png,images/ddms-32.png">
+               value="images/ddms-16.png,images/ddms-32.png,images/ddms-128.png">
          </property>
          <property
                name="aboutImage"
@@ -37,7 +37,7 @@
          </property>
          <property
                name="aboutText"
-               value="Android Device Monitor, Copyright 2012, The Android Open Source Project">
+               value="%aboutText">
          </property>
 
       </product>
