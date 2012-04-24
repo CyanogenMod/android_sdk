@@ -44,7 +44,7 @@ public class ManifestMergerTask extends SingleDependencyTask {
         mOutManifest = TaskHelper.checkSinglePath("outManifest", outManifest);
     }
 
-    public void setEnable(boolean enabled) {
+    public void setEnabled(boolean enabled) {
         mEnabled  = enabled;
     }
 
