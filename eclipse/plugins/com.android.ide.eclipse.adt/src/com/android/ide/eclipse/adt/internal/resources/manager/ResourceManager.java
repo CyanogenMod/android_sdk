@@ -155,7 +155,14 @@ public final class ResourceManager {
      */
     public ProjectResources getProjectResources(IProject project) {
         synchronized (mMap) {
-            return mMap.get(project);
+            ProjectResources resources = mMap.get(project);
+
+            if (resources == null) {
+                resources = new ProjectResources(project);
+                mMap.put(project, resources);
+            }
+
+            return resources;
         }
     }
 
