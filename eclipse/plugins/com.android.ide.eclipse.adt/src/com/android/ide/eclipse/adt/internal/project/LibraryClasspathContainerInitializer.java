@@ -36,6 +36,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -43,12 +45,22 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 public class LibraryClasspathContainerInitializer extends BaseClasspathContainerInitializer {
+
+    private final static String ATTR_SRC = "src"; //$NON-NLS-1$
+    private final static String ATTR_DOC = "doc"; //$NON-NLS-1$
+    private final static String DOT_PROPERTIES = ".properties"; //$NON-NLS-1$
 
     public LibraryClasspathContainerInitializer() {
     }
@@ -265,9 +277,68 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                             e.getExtraAttributes(),
                             true /*isExported*/));
                 } else {
-                    entries.add(JavaCore.newLibraryEntry(new Path(jarFile.getAbsolutePath()),
-                            null /*sourceAttachmentPath*/, null /*sourceAttachmentRootPath*/,
-                            true /*isExported*/));
+                    String jarPath = jarFile.getAbsolutePath();
+
+                    IPath sourceAttachmentPath = null;
+                    IClasspathAttribute javaDocAttribute = null;
+
+                    File jarProperties = new File(jarPath + DOT_PROPERTIES);
+                    if (jarProperties.isFile()) {
+                        Properties p = new Properties();
+                        InputStream is = null;
+                        try {
+                            p.load(is = new FileInputStream(jarProperties));
+
+                            String value = p.getProperty(ATTR_SRC);
+                            if (value != null) {
+                                File srcPath = getFile(jarFile, value);
+
+                                if (srcPath.exists()) {
+                                    sourceAttachmentPath = new Path(srcPath.getAbsolutePath());
+                                }
+                            }
+
+                            value = p.getProperty(ATTR_DOC);
+                            if (value != null) {
+                                File docPath = getFile(jarFile, value);
+                                if (docPath.exists()) {
+                                    try {
+                                        javaDocAttribute = JavaCore.newClasspathAttribute(
+                                                IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,
+                                                docPath.toURI().toURL().toString());
+                                    } catch (MalformedURLException e) {
+                                        AdtPlugin.log(e, "Failed to process 'doc' attribute for %s",
+                                                jarProperties.getAbsolutePath());
+                                    }
+                                }
+                            }
+
+                        } catch (FileNotFoundException e) {
+                            // shouldn't happen since we check upfront
+                        } catch (IOException e) {
+                            AdtPlugin.log(e, "Failed to read %s", jarProperties.getAbsolutePath());
+                        } finally {
+                            if (is != null) {
+                                try {
+                                    is.close();
+                                } catch (IOException e) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+
+                    if (javaDocAttribute != null) {
+                        entries.add(JavaCore.newLibraryEntry(new Path(jarPath),
+                                sourceAttachmentPath, null /*sourceAttachmentRootPath*/,
+                                new IAccessRule[0],
+                                new IClasspathAttribute[] { javaDocAttribute },
+                                true /*isExported*/));
+                    } else {
+                        entries.add(JavaCore.newLibraryEntry(new Path(jarPath),
+                                sourceAttachmentPath, null /*sourceAttachmentRootPath*/,
+                                true /*isExported*/));
+                    }
                 }
             }
         } catch (DifferentLibException e) {
@@ -285,6 +356,15 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                 new Path(AdtConstants.CONTAINER_LIBRARIES),
                 "Android Dependencies",
                 IClasspathContainer.K_APPLICATION);
+    }
+
+    private static File getFile(File root, String value) {
+        File file = new File(value);
+        if (file.isAbsolute() == false) {
+            file = new File(root.getParentFile(), value);
+        }
+
+        return file;
     }
 
     /**
