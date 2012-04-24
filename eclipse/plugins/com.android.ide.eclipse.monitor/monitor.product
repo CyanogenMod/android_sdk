@@ -3,6 +3,7 @@
 
 <product name="monitor" uid="com.android.ide.eclipse.monitor.product.config" id="com.android.ide.eclipse.monitor.product" application="com.android.ide.eclipse.monitor.Application" version="20.0.0" useFeatures="false" includeLaunchers="true">
 
+
    <configIni use="default">
    </configIni>
 
@@ -13,7 +14,10 @@
 
    <windowImages/>
 
+   <splash
+      location="com.android.ide.eclipse.monitor" />
    <launcher>
+      <macosx icon="/com.android.ide.eclipse.monitor/images/ddms.icns"/>
       <solaris/>
       <win useIco="false">
          <bmp/>
