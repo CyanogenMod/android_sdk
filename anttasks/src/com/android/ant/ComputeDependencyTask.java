@@ -53,12 +53,17 @@ import java.util.List;
  */
 public class ComputeDependencyTask extends GetLibraryListTask {
 
+    private String mLibraryManifestFilePathOut;
     private String mLibraryResFolderPathOut;
     private String mLibraryPackagesOut;
     private String mJarLibraryPathOut;
     private String mLibraryNativeFolderPathOut;
     private int mTargetApi = -1;
     private boolean mVerbose = false;
+
+    public void setLibraryManifestFilePathOut(String libraryManifestFilePathOut) {
+        mLibraryManifestFilePathOut = libraryManifestFilePathOut;
+    }
 
     public void setLibraryResFolderPathOut(String libraryResFolderPathOut) {
         mLibraryResFolderPathOut = libraryResFolderPathOut;
@@ -90,6 +95,9 @@ public class ComputeDependencyTask extends GetLibraryListTask {
 
     @Override
     public void execute() throws BuildException {
+        if (mLibraryManifestFilePathOut == null) {
+            throw new BuildException("Missing attribute libraryManifestFilePathOut");
+        }
         if (mLibraryResFolderPathOut == null) {
             throw new BuildException("Missing attribute libraryResFolderPathOut");
         }
@@ -112,6 +120,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         File sdkDir = TaskHelper.getSdkLocation(antProject);
 
         // prepare several paths for future tasks
+        final Path manifestFilePath = new Path(antProject);
         final Path resFolderPath = new Path(antProject);
         final Path nativeFolderPath = new Path(antProject);
         final StringBuilder packageStrBuilder = new StringBuilder();
@@ -122,9 +131,14 @@ public class ComputeDependencyTask extends GetLibraryListTask {
                 // let the super class handle the jar files
                 super.processLibrary(libRootPath);
 
-                // get the res path. Always $PROJECT/res as well as the crunch cache.
-                // FIXME: support renamed folder.
-                PathElement element = resFolderPath.createPathElement();
+                // get the AndroidManifest.xml path.
+                // FIXME: support renamed location.
+                PathElement element = manifestFilePath.createPathElement();
+                element.setPath(libRootPath + "/" + SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+                // get the res path. $PROJECT/res as well as the crunch cache.
+                // FIXME: support renamed folders.
+                element = resFolderPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
                         "/" + SdkConstants.FD_RES);
                 element = resFolderPath.createPathElement();
@@ -191,6 +205,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         // even with no libraries, always setup these so that various tasks in Ant don't complain
         // (the task themselves can handle a ref to an empty Path)
         antProject.addReference(mLibraryNativeFolderPathOut, nativeFolderPath);
+        antProject.addReference(mLibraryManifestFilePathOut, manifestFilePath);
 
         // the rest is done only if there's a library.
         if (hasLibraries) {

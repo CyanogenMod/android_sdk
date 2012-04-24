@@ -23,6 +23,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 
 LOCAL_JAVA_LIBRARIES := \
         sdklib \
+        manifmerger \
         ant
 
 LOCAL_MODULE := anttasks

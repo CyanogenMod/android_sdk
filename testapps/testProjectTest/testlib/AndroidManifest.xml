@@ -13,17 +13,6 @@
     -->
     <application android:label="testProjectTest-testlib">
         <uses-library android:name="android.test.runner" />
-
-        <activity
-            android:name="com.android.tests.testprojecttest.lib.LibActivity"
-            android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
     </application>
 
     <!--
