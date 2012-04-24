@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.launch.junit.runtime;
 
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.debug.core.ILaunch;
@@ -34,6 +35,7 @@ public class AndroidJUnitLaunchInfo {
     private String mTestClass = null;
     private String mTestMethod = null;
     private ILaunch mLaunch = null;
+    private TestSize mTestSize = null;
 
     public AndroidJUnitLaunchInfo(IProject project, String appPackage, String runner) {
         mProject = project;
@@ -59,6 +61,14 @@ public class AndroidJUnitLaunchInfo {
     
     public void setDebugMode(boolean debugMode) {
         mDebugMode = debugMode;
+    }
+
+    public TestSize getTestSize() {
+        return mTestSize;
+    }
+
+    public void setTestSize(TestSize size) {
+        mTestSize = size;
     }
 
     public IDevice getDevice() {
