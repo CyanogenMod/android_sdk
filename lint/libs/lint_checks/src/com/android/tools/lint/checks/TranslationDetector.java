@@ -98,6 +98,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             Scope.ALL_RESOURCES_SCOPE);
 
     private Set<String> mNames;
+    private Set<String> mTranslatedArrays;
     private boolean mIgnoreFile;
     private Map<File, Set<String>> mFileToNames;
 
@@ -359,6 +360,9 @@ public class TranslationDetector extends ResourceXmlDetector {
                         }
 
                         for (String s : difference) {
+                            if (mTranslatedArrays != null && mTranslatedArrays.contains(s)) {
+                                continue;
+                            }
                             mExtraLocations.put(s, null);
                             String message = String.format(
                                 "\"%1$s\" is translated here but not found in default locale", s);
@@ -464,6 +468,13 @@ public class TranslationDetector extends ResourceXmlDetector {
                 //       <item>@string/item1</item>
                 //       <item>@string/item2</item>
                 //    </string-array>
+                // However, we need to remember these names such that we don't consider
+                // these arrays "extra" if one of the *translated* versions of the array
+                // perform an inline translation of an array item
+                if (mTranslatedArrays == null) {
+                    mTranslatedArrays = new HashSet<String>();
+                }
+                mTranslatedArrays.add(name);
                 return;
             }
 
