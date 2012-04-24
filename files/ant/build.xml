@@ -57,7 +57,7 @@
     <property name="renderscript.release.opt.level" value="O3" />
 
     <!-- manifest merger default value -->
-    <property name="manifestmerger.disable" value="true" />
+    <property name="manifestmerger.enabled" value="false" />
 
     <!-- instrumentation options -->
     <property name="emma.filter" value="" />
@@ -599,7 +599,7 @@
         <mergemanifest
                 appManifest="${manifest.abs.file}"
                 outManifest="${out.manifest.abs.file}"
-                disable="${manifestmerger.disable}">
+                enabled="${manifestmerger.enabled}">
             <library refid="project.library.manifest.file.path" />
         </mergemanifest>
 

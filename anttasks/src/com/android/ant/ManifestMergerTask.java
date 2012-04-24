@@ -34,7 +34,7 @@ public class ManifestMergerTask extends SingleDependencyTask {
     private String mOutManifest;
 
     private ArrayList<Path> mLibraryPaths;
-    private boolean mDisable = true;
+    private boolean mEnabled = false;
 
     public void setAppManifest(Path appManifest) {
         mAppManifest = TaskHelper.checkSinglePath("appManifest", appManifest);
@@ -44,8 +44,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
         mOutManifest = TaskHelper.checkSinglePath("outManifest", outManifest);
     }
 
-    public void setDisable(boolean disable) {
-        mDisable  = disable;
+    public void setEnable(boolean enabled) {
+        mEnabled  = enabled;
     }
 
     /**
@@ -88,8 +88,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
         File appManifestFile = new File(mAppManifest);
         allInputs.add(appManifestFile);
 
-        // if not disabled, the libraries
-        if (mDisable == false) {
+        // if enabled: add the libraries
+        if (mEnabled) {
             allInputs.addAll(libraries);
         }
 
@@ -108,8 +108,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
 
         System.out.println("Merging AndroidManifest files into one.");
 
-        if (mDisable || libraries.size() == 0) {
-            if (mDisable) {
+        if (mEnabled == false || libraries.size() == 0) {
+            if (mEnabled == false) {
                 System.out.println("Manifest merger disabled. Using project manifest only.");
             } else {
                 System.out.println("No libraries. Using project manifest only.");
