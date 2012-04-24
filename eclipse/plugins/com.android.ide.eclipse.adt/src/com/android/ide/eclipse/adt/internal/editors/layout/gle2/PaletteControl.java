@@ -154,7 +154,6 @@ public class PaletteControl extends Composite {
 
         @Override
         public void setToolBar(IToolBarManager toolBarManager) {
-            assert false; // Call createToolbarItems instead
         }
 
         /**
