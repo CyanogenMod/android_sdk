@@ -19,10 +19,12 @@ package com.android.ide.eclipse.adt;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.ddms.ISourceRevealer;
+import com.google.common.base.Predicate;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IMethod;
@@ -33,12 +35,24 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
+import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.ide.IDE;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the com.android.ide.ddms.sourceRevealer extension point.
@@ -55,15 +69,217 @@ public class SourceRevealer implements ISourceRevealer {
         return false;
     }
 
+    /**
+     * Reveal the source for given fully qualified method name.<br>
+     *
+     * The method should take care of the following scenarios:<ol>
+     * <li> A search for fqmn might provide only 1 result. In such a case, just open that result. </li>
+     * <li> The search might not provide any results. e.g, the method name may be of the form
+     *    "com.x.y$1.methodName". Searches for methods within anonymous classes will fail. In
+     *    such a case, if the fileName:lineNumber argument is available, a search for that
+     *    should be made instead. </li>
+     * <li> The search might provide multiple results. In such a case, the fileName/lineNumber
+     *    values should be utilized to narrow down the results.</li>
+     * </ol>
+     *
+     * @param fqmn fully qualified method name
+     * @param fileName file name in which the method is present, null if not known
+     * @param lineNumber line number in the file which should be given focus, -1 if not known.
+     *        Line numbers begin at 1, not 0.
+     * @param perspective perspective to switch to before the source is revealed, null to not
+     *        switch perspectives
+     */
     @Override
-    public boolean revealLine(String fileName, int lineNumber, String perspective) {
+    public boolean revealMethod(String fqmn, String fileName, int lineNumber, String perspective) {
+        List<SearchMatch> matches = searchForMethod(fqmn);
+
+        // display the unique match
+        if (matches.size() == 1) {
+            return displayMethod((IMethod) matches.get(0).getElement(), perspective);
+        }
+
+        // no matches for search by method, so search by filename
+        if (matches.size() == 0) {
+            if (fileName != null) {
+                return revealLineMatch(searchForFile(fileName),
+                    fileName, lineNumber, perspective);
+            } else {
+                return false;
+            }
+        }
+
+        // multiple matches for search by method, narrow down by filename
+        if (fileName != null) {
+            return revealLineMatch(
+                    filterMatchByFileName(matches, fileName),
+                    fileName, lineNumber, perspective);
+        }
+
+        // prompt the user
+        SearchMatch match = getMatchToDisplay(matches, fqmn);
+        if (match == null) {
+            return false;
+        } else {
+            return displayMethod((IMethod) match.getElement(), perspective);
+        }
+    }
+
+    private boolean revealLineMatch(List<SearchMatch> matches, String fileName, int lineNumber,
+            String perspective) {
+        SearchMatch match = getMatchToDisplay(matches,
+                String.format("%s:%d", fileName, lineNumber));
+        if (match == null) {
+            return false;
+        }
+
+        if (perspective != null) {
+            SourceRevealer.switchToPerspective(perspective);
+        }
+
+        return displayFile((IFile) match.getResource(), lineNumber);
+    }
+
+    private boolean displayFile(IFile file, int lineNumber) {
+        try {
+            IMarker marker = file.createMarker(IMarker.TEXT);
+            marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+            IDE.openEditor(
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(),
+                    marker);
+            marker.delete();
+            return true;
+        } catch (CoreException e) {
+            AdtPlugin.printErrorToConsole(e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean displayMethod(IMethod method, String perspective) {
+        if (perspective != null) {
+            SourceRevealer.switchToPerspective(perspective);
+        }
+
+        try {
+            JavaUI.openInEditor(method);
+            return true;
+        } catch (Exception e) {
+            AdtPlugin.printErrorToConsole(e.getMessage());
+            return false;
+        }
+    }
+
+    private List<SearchMatch> filterMatchByFileName(List<SearchMatch> matches, String fileName) {
+        if (fileName == null) {
+            return matches;
+        }
+
+        // Use a map to collapse multiple matches in a single file into just one match since
+        // we know the line number in the file.
+        Map<IResource, SearchMatch> matchesPerFile =
+                new HashMap<IResource, SearchMatch>(matches.size());
+
+        for (SearchMatch m: matches) {
+            if (m.getResource() instanceof IFile
+                    && m.getResource().getName().startsWith(fileName)) {
+                matchesPerFile.put(m.getResource(), m);
+            }
+        }
+
+        List<SearchMatch> filteredMatches = new ArrayList<SearchMatch>(matchesPerFile.values());
+
+        // sort results, first by project name, then by file name
+        Collections.sort(filteredMatches, new Comparator<SearchMatch>() {
+            @Override
+            public int compare(SearchMatch m1, SearchMatch m2) {
+                String p1 = m1.getResource().getProject().getName();
+                String p2 = m2.getResource().getProject().getName();
+
+                if (!p1.equals(p2)) {
+                    return p1.compareTo(p2);
+                }
+
+                String r1 = m1.getResource().getName();
+                String r2 = m2.getResource().getName();
+                return r1.compareTo(r2);
+            }
+        });
+        return filteredMatches;
+    }
+
+    private SearchMatch getMatchToDisplay(List<SearchMatch> matches, String searchTerm) {
+        // no matches for given search
+        if (matches.size() == 0) {
+            return null;
+        }
+
+        // there is only 1 match, so we return that
+        if (matches.size() == 1) {
+            return matches.get(0);
+        }
+
+        // multiple matches, prompt the user to select
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window == null) {
+            return null;
+        }
+
+        ListDialog dlg = new ListDialog(window.getShell());
+        dlg.setMessage("Multiple files match search: " + searchTerm);
+        dlg.setTitle("Select file to open");
+        dlg.setInput(matches);
+        dlg.setContentProvider(new IStructuredContentProvider() {
+            @Override
+            public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            }
+
+            @Override
+            public void dispose() {
+            }
+
+            @Override
+            public Object[] getElements(Object inputElement) {
+                return ((List<?>) inputElement).toArray();
+            }
+        });
+        dlg.setLabelProvider(new LabelProvider() {
+           @Override
+           public String getText(Object element) {
+               SearchMatch m = (SearchMatch) element;
+               return String.format("/%s/%s",    //$NON-NLS-1$
+                       m.getResource().getProject().getName(),
+                       m.getResource().getProjectRelativePath().toString());
+           }
+        });
+        dlg.setInitialSelections(new Object[] { matches.get(0) });
+        dlg.setHelpAvailable(false);
+
+        if (dlg.open() == Window.OK) {
+            Object[] selectedMatches = dlg.getResult();
+            if (selectedMatches.length > 0) {
+                return (SearchMatch) selectedMatches[0];
+            }
+        }
+
+        return null;
+    }
+
+    private List<SearchMatch> searchForFile(String fileName) {
+        return searchForPattern(fileName, IJavaSearchConstants.CLASS, MATCH_IS_FILE_PREDICATE);
+    }
+
+    private List<SearchMatch> searchForMethod(String fqmn) {
+        return searchForPattern(fqmn, IJavaSearchConstants.METHOD, MATCH_IS_METHOD_PREDICATE);
+    }
+
+    private List<SearchMatch> searchForPattern(String pattern, int searchFor,
+            Predicate<SearchMatch> filterPredicate) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
-                fileName,
-                IJavaSearchConstants.CLASS,
+                pattern,
+                searchFor,
                 IJavaSearchConstants.DECLARATIONS,
                 SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        LineSearchRequestor requestor = new LineSearchRequestor(lineNumber, perspective);
+        SearchResultAccumulator requestor = new SearchResultAccumulator(filterPredicate);
         try {
             se.search(searchPattern,
                     new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
@@ -72,96 +288,49 @@ public class SourceRevealer implements ISourceRevealer {
                     new NullProgressMonitor());
         } catch (CoreException e) {
             AdtPlugin.printErrorToConsole(e.getMessage());
-            return false;
+            return Collections.emptyList();
         }
 
-        return requestor.didMatch();
+        return requestor.getMatches();
     }
 
-    @Override
-    public boolean revealMethod(String fqmn, String perspective) {
-        SearchEngine se = new SearchEngine();
-        SearchPattern searchPattern = SearchPattern.createPattern(
-                fqmn,
-                IJavaSearchConstants.METHOD,
-                IJavaSearchConstants.DECLARATIONS,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        MethodSearchRequestor requestor = new MethodSearchRequestor(perspective);
-        try {
-            se.search(searchPattern,
-                    new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-                    SearchEngine.createWorkspaceScope(),
-                    requestor,
-                    new NullProgressMonitor());
-        } catch (CoreException e) {
-            AdtPlugin.printErrorToConsole(e.getMessage());
-            return false;
+    private static final Predicate<SearchMatch> MATCH_IS_FILE_PREDICATE =
+            new Predicate<SearchMatch>() {
+                @Override
+                public boolean apply(SearchMatch match) {
+                    return match.getResource() instanceof IFile;
+                }
+            };
+
+    private static final Predicate<SearchMatch> MATCH_IS_METHOD_PREDICATE =
+            new Predicate<SearchMatch>() {
+                @Override
+                public boolean apply(SearchMatch match) {
+                    return match.getResource() instanceof IFile;
+                }
+            };
+
+    private static class SearchResultAccumulator extends SearchRequestor {
+        private final List<SearchMatch> mSearchMatches = new ArrayList<SearchMatch>();
+        private final Predicate<SearchMatch> mPredicate;
+
+        public SearchResultAccumulator(Predicate<SearchMatch> filterPredicate) {
+            mPredicate = filterPredicate;
         }
 
-        return requestor.didMatch();
-    }
-
-    private static class LineSearchRequestor extends SearchRequestor {
-        private boolean mFoundMatch = false;
-        private int mLineNumber;
-        private final String mPerspective;
-
-        public LineSearchRequestor(int lineNumber, String perspective) {
-            mLineNumber = lineNumber;
-            mPerspective = perspective;
-        }
-
-        public boolean didMatch() {
-            return mFoundMatch;
+        public List<SearchMatch> getMatches() {
+            return mSearchMatches;
         }
 
         @Override
         public void acceptSearchMatch(SearchMatch match) throws CoreException {
-            if (match.getResource() instanceof IFile && !mFoundMatch) {
-                if (mPerspective != null) {
-                    SourceRevealer.switchToPerspective(mPerspective);
-                }
-
-                IFile matchedFile = (IFile) match.getResource();
-                IMarker marker = matchedFile.createMarker(IMarker.TEXT);
-                marker.setAttribute(IMarker.LINE_NUMBER, mLineNumber);
-                IDE.openEditor(
-                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(),
-                        marker);
-                marker.delete();
-                mFoundMatch = true;
+            if (mPredicate.apply(match)) {
+                mSearchMatches.add(match);
             }
         }
     }
 
-    private static class MethodSearchRequestor extends SearchRequestor {
-        private boolean mFoundMatch = false;
-        private final String mPerspective;
-
-        public MethodSearchRequestor(String perspective) {
-            mPerspective = perspective;
-        }
-
-        public boolean didMatch() {
-            return mFoundMatch;
-        }
-
-        @Override
-        public void acceptSearchMatch(SearchMatch match) throws CoreException {
-            Object element = match.getElement();
-            if (element instanceof IMethod && !mFoundMatch) {
-                if (mPerspective != null) {
-                    SourceRevealer.switchToPerspective(mPerspective);
-                }
-
-                IMethod method = (IMethod) element;
-                JavaUI.openInEditor(method);
-                mFoundMatch = true;
-            }
-        }
-    }
-
-    public static void switchToPerspective(String perspectiveId) {
+    private static void switchToPerspective(String perspectiveId) {
         IWorkbench workbench = PlatformUI.getWorkbench();
         IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
         IPerspectiveRegistry perspectiveRegistry = workbench.getPerspectiveRegistry();
