@@ -394,7 +394,7 @@ public class ProjectProperties implements IPropertySource {
 
                     Matcher m = PATTERN_PROP.matcher(line);
                     if (m.matches()) {
-                        map.put(m.group(1), m.group(2));
+                        map.put(m.group(1), unescape(m.group(2)));
                     } else {
                         log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
                                 propFile.getOsLocation(),
@@ -430,7 +430,6 @@ public class ProjectProperties implements IPropertySource {
         return null;
     }
 
-
     /**
      * Private constructor.
      * <p/>
@@ -442,5 +441,13 @@ public class ProjectProperties implements IPropertySource {
         mProjectFolder = projectFolder;
         mProperties = map;
         mType = type;
+    }
+
+    private static String unescape(String value) {
+        return value.replaceAll("\\\\\\\\", "\\\\");
+    }
+
+    protected static String escape(String value) {
+        return value.replaceAll("\\\\", "\\\\\\\\");
     }
 }
