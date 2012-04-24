@@ -17,7 +17,7 @@
 package com.android.sdklib.repository;
 
 
-import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSource;
 
 import java.io.InputStream;
 

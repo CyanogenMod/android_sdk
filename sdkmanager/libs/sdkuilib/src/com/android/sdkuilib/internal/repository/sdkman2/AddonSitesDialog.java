@@ -16,11 +16,11 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.internal.repository.SdkAddonSource;
-import com.android.sdklib.internal.repository.SdkSource;
-import com.android.sdklib.internal.repository.SdkSourceCategory;
-import com.android.sdklib.internal.repository.SdkSourceProperties;
-import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdklib.internal.repository.sources.SdkAddonSource;
+import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
+import com.android.sdklib.internal.repository.sources.SdkSourceProperties;
+import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdkuilib.internal.repository.UpdaterBaseDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.ui.GridDataBuilder;

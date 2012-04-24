@@ -55,7 +55,7 @@ import java.util.Map;
  * This class holds methods for adding URLs management.
  * @see #openUrl(String, ITaskMonitor, Header[])
  */
-class UrlOpener {
+public class UrlOpener {
 
     public static class CanceledByUserException extends Exception {
         private static final long serialVersionUID = -7669346110926032403L;
