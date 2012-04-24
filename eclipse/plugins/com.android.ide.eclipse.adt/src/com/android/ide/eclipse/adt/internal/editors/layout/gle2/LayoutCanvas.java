@@ -281,8 +281,12 @@ public class LayoutCanvas extends Canvas {
             @Override
             public void controlResized(ControlEvent e) {
                 super.controlResized(e);
+
                 mHScale.setClientSize(getClientArea().width);
                 mVScale.setClientSize(getClientArea().height);
+
+                // Update the zoom level in the canvas when you toggle the zoom
+                getDisplay().asyncExec(mZoomCheck);
             }
         });
 
@@ -309,7 +313,28 @@ public class LayoutCanvas extends Canvas {
         }
     }
 
-    public void handleKeyPressed(KeyEvent e) {
+    private Runnable mZoomCheck = new Runnable() {
+        private Boolean mWasZoomed;
+
+        @Override
+        public void run() {
+            if (isDisposed()) {
+                return;
+            }
+
+            IEditorPart editor = getEditorDelegate().getEditor();
+            IWorkbenchPage page = editor.getSite().getPage();
+            Boolean zoomed = page.isPageZoomed();
+            if (mWasZoomed != zoomed) {
+                if (mWasZoomed != null) {
+                    setFitScale(true /*onlyZoomOut*/);
+                }
+                mWasZoomed = zoomed;
+            }
+        }
+    };
+
+    void handleKeyPressed(KeyEvent e) {
         // Set up backspace as an alias for the delete action within the canvas.
         // On most Macs there is no delete key - though there IS a key labeled
         // "Delete" and it sends a backspace key code! In short, for Macs we should
@@ -565,6 +590,7 @@ public class LayoutCanvas extends Canvas {
             Image image = mImageOverlay.setImage(session.getImage(), session.isAlphaChannelImage());
 
             mOutlinePage.setModel(mViewHierarchy.getRoot());
+            mEditorDelegate.getGraphicalEditor().setModel(mViewHierarchy.getRoot());
 
             if (image != null) {
                 mHScale.setSize(image.getImageData().width, getClientArea().width);

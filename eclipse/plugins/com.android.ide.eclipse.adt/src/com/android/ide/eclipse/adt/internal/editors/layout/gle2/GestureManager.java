@@ -581,6 +581,7 @@ public class GestureManager {
         @Override
         public void dragEnter(DropTargetEvent event) {
             mCanvas.showInvisibleViews(true);
+            mCanvas.getEditorDelegate().getGraphicalEditor().dismissHoverPalette();
 
             if (mCurrentGesture == null) {
                 Gesture newGesture = mZombieGesture;
