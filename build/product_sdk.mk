@@ -25,50 +25,35 @@
 # packaged in the SDK.
 #
 
-# Host tools that are parts of the SDK.
+# Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
 	android \
-	emulator \
-	ddms \
-	draw9patch \
-	hierarchyviewer \
-	lint \
-	mksdcard \
-	monkeyrunner \
-	monitor \
-	traceview
-
-# Native host Java libraries that are parts of the SDK.
-PRODUCT_PACKAGES += \
 	androidprefs \
 	annotations \
 	anttasks \
 	archquery \
-	commons-compress-1.0 \
+	assetstudio \
 	common-tests \
-	ddms \
 	ddmlib \
 	ddmlib-tests \
+	ddms \
 	ddmuilib \
 	draw9patch \
+	emulator \
 	hierarchyviewer \
+	ide_common \
 	lint \
-	traceview \
-	jcommon-1.0.12 \
-	jfreechart-1.0.9 \
-	jfreechart-1.0.9-swt \
+	manifmerger \
+	mksdcard \
+	monitor \
 	monkeyrunner \
-	org.eclipse.core.commands_3.4.0.I20080509-2000 \
-	org.eclipse.equinox.common_3.4.0.v20080421-2006 \
-	org.eclipse.jface_3.4.2.M20090107-0800 \
-	osgi \
 	ninepatch-tests \
-	sdkmanager \
+	rule_api \
 	sdklib \
 	sdklib-tests \
+	sdkmanager \
 	sdkstats \
 	sdkuilib \
 	sdkuilib-tests \
-	swing-worker-1.1 \
-	swtmenubar
-
+	swtmenubar \
+	traceview
