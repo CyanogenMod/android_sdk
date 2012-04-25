@@ -1,5 +1,8 @@
 # Copyright 2012 The Android Open Source Project
 
+# Expose the Monitor RCP only for the SDK builds.
+ifdef is_sdk_build
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
@@ -44,3 +47,6 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86)    ; \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86_64) ; \
 	fi
+
+endif
+
