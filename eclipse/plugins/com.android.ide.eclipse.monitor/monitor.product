@@ -17,7 +17,7 @@
    <splash
       location="com.android.ide.eclipse.monitor" />
    <launcher>
-      <macosx icon="/com.android.ide.eclipse.monitor/images/ddms.icns"/>
+      <macosx icon="images/ddms.icns"/>
       <solaris/>
       <win useIco="false">
          <bmp/>
