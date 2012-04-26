@@ -22,6 +22,8 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_JPG;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
 import static com.android.ide.eclipse.adt.AdtUtils.endsWithIgnoreCase;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
 
 import org.eclipse.swt.graphics.RGB;
@@ -124,7 +126,10 @@ public class ImageUtils {
      * @return a cropped version of the source image, or null if the whole image was blank
      *         and cropping completely removed everything
      */
-    public static BufferedImage cropBlank(BufferedImage image, Rect initialCrop) {
+    @Nullable
+    public static BufferedImage cropBlank(
+            @NonNull BufferedImage image,
+            @Nullable Rect initialCrop) {
         return cropBlank(image, initialCrop, image.getType());
     }
 
@@ -167,8 +172,11 @@ public class ImageUtils {
      * @return a cropped version of the source image, or null if the whole image was blank
      *         and cropping completely removed everything
      */
-    public static BufferedImage cropColor(BufferedImage image,
-            final int blankArgb, Rect initialCrop) {
+    @Nullable
+    public static BufferedImage cropColor(
+            @NonNull BufferedImage image,
+            final int blankArgb,
+            @Nullable Rect initialCrop) {
         return cropColor(image, blankArgb, initialCrop, image.getType());
     }
 
