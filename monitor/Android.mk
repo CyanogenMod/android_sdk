@@ -1,7 +1,7 @@
 # Copyright 2012 The Android Open Source Project
 
 # Expose the Monitor RCP only for the SDK builds.
-ifdef is_sdk_build
+ifneq (,$(is_sdk_build)$(filter sdk,$(TARGET_PRODUCT)))
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
@@ -49,4 +49,3 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 	fi
 
 endif
-
