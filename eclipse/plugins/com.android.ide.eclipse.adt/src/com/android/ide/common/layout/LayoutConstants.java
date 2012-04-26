@@ -172,6 +172,7 @@ public class LayoutConstants {
      * The top level android package as a prefix, "android.".
      */
     public static final String ANDROID_PKG_PREFIX = ANDROID_PKG + '.';
+    public static final String ANDROID_SUPPORT_PKG_PREFIX = ANDROID_PKG_PREFIX + "support."; //$NON-NLS-1$
 
     /** The android.view. package prefix */
     public static final String ANDROID_VIEW_PKG = ANDROID_PKG_PREFIX + "view."; //$NON-NLS-1$

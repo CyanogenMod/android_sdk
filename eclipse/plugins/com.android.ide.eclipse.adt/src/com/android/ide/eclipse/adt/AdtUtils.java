@@ -219,6 +219,22 @@ public class AdtUtils {
     }
 
     /**
+     * Strips the given suffix from the given string, provided that the string ends with
+     * the suffix.
+     *
+     * @param string the full string to strip from
+     * @param suffix the suffix to strip out
+     * @return the string without the suffix at the end
+     */
+    public static String stripSuffix(@NonNull String string, @NonNull String suffix) {
+        if (string.endsWith(suffix)) {
+            return string.substring(0, string.length() - suffix.length());
+        }
+
+        return string;
+    }
+
+    /**
      * Capitalizes the string, i.e. transforms the initial [a-z] into [A-Z].
      * Returns the string unmodified if the first character is not [a-z].
      *

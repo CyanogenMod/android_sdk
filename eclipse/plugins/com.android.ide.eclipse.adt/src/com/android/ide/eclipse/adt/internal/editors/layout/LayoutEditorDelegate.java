@@ -750,7 +750,10 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
             // Check if we can find a custom view specific to this project.
             // This only works if there's an actual matching custom class in the project.
-            desc = CustomViewDescriptorService.getInstance().getDescriptor(project, xmlLocalName);
+            if (xmlLocalName.indexOf('.') != -1) {
+                desc = CustomViewDescriptorService.getInstance().getDescriptor(project,
+                        xmlLocalName);
+            }
 
             if (desc == null) {
                 // If we didn't find a custom view, create a synthetic one using the

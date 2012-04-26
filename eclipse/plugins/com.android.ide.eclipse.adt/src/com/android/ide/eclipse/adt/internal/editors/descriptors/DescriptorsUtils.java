@@ -54,6 +54,7 @@ import org.eclipse.swt.graphics.Image;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -100,7 +101,7 @@ public final class DescriptorsUtils {
      *        entries in the form "elem-name/attr-name". Elem-name can be "*".
      * @param overrides A map [attribute name => ITextAttributeCreator creator].
      */
-    public static void appendAttributes(ArrayList<AttributeDescriptor> attributes,
+    public static void appendAttributes(List<AttributeDescriptor> attributes,
             String elementXmlName,
             String nsUri, AttributeInfo[] infos,
             Set<String> requiredAttributes,
@@ -131,7 +132,7 @@ public final class DescriptorsUtils {
      *        a "*" to its UI name as a hint for the user.)
      * @param overrides A map [attribute name => ITextAttributeCreator creator].
      */
-    public static void appendAttribute(ArrayList<AttributeDescriptor> attributes,
+    public static void appendAttribute(List<AttributeDescriptor> attributes,
             String elementXmlName,
             String nsUri,
             AttributeInfo info, boolean required,
