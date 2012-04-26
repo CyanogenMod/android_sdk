@@ -157,12 +157,6 @@ public class ImageUtilsTest extends TestCase {
         assertEquals(0xFFFF0000, crop.getRGB(49, 49));
     }
 
-    public void testNullOk() throws Exception {
-        ImageUtils.cropBlank(null, null);
-        ImageUtils.cropColor(null, 0, null);
-    }
-
-
     public void testNothingTodo() throws Exception {
         BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB_PRE);
         Graphics g = image.getGraphics();
