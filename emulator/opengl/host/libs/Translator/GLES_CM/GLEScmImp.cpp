@@ -248,16 +248,13 @@ GL_API GLenum GL_APIENTRY  glGetError(void) {
 GL_API const GLubyte * GL_APIENTRY  glGetString( GLenum name) {
 
     GET_CTX_RET(NULL)
-    static const GLubyte VENDOR[]  = "Google";
-    static const GLubyte VERSION[] = "OpenGL ES-CM 1.1";
-
     switch(name) {
         case GL_VENDOR:
-            return VENDOR;
+            return (const GLubyte*)ctx->getVendorString();
         case GL_RENDERER:
             return (const GLubyte*)ctx->getRendererString();
         case GL_VERSION:
-            return VERSION;
+            return (const GLubyte*)ctx->getVersionString();
         case GL_EXTENSIONS:
             return (const GLubyte*)ctx->getExtensionString();
         default:
