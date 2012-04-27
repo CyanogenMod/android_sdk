@@ -71,7 +71,7 @@ public class DownloadCache {
      *     http://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6.1.1
      */
 
-    private static final boolean DEBUG = System.getenv("SDKMAN_DEBUG_CACHE") != null;
+    private static final boolean DEBUG = System.getenv("SDKMAN_DEBUG_CACHE") != null; //$NON-NLS-1$
 
     /** Key for the Status-Code in the info properties. */
     private static final String KEY_STATUS_CODE = "Status-Code";        //$NON-NLS-1$
@@ -156,6 +156,12 @@ public class DownloadCache {
     /** Creates a default instance of the URL cache */
     public DownloadCache(Strategy strategy) {
         mCacheRoot = initCacheRoot();
+
+        // If this is defined in the environment, never use the cache. Useful for testing.
+        if (System.getenv("SDKMAN_DISABLE_CACHE") != null) {                 //$NON-NLS-1$
+            strategy = Strategy.DIRECT;
+        }
+
         mStrategy = mCacheRoot == null ? Strategy.DIRECT : strategy;
     }
 
