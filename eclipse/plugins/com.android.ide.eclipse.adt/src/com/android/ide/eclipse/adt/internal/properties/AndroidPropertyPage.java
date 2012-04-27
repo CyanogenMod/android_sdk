@@ -143,7 +143,9 @@ public class AndroidPropertyPage extends PropertyPage {
                     mPropertiesWorkingCopy.save();
 
                     IResource projectProp = mProject.findMember(SdkConstants.FN_PROJECT_PROPERTIES);
-                    projectProp.refreshLocal(IResource.DEPTH_ZERO, new NullProgressMonitor());
+                    if (projectProp != null) {
+                        projectProp.refreshLocal(IResource.DEPTH_ZERO, new NullProgressMonitor());
+                    }
                 } catch (Exception e) {
                     String msg = String.format(
                             "Failed to save %1$s for project %2$s",
