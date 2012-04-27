@@ -3,6 +3,7 @@
 *.pyc
 Thumbs.db
 *.class
+*.DS_Store
 testapps/testSensors/proguard.cfg
 
 # Hide temporary files created by the build_server script

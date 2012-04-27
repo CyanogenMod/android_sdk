@@ -648,6 +648,9 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     float factor = getMdpiScalingFactor(file.getParentFile().getName());
                     if (factor > 0) {
                         Dimension size = pixelSizes.get(file);
+                        if (size == null) {
+                            continue;
+                        }
                         Dimension dip = new Dimension(
                                 Math.round(size.width / factor),
                                 Math.round(size.height / factor));
