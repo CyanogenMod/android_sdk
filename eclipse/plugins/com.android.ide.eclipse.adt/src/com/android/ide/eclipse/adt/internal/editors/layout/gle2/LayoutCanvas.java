@@ -1392,7 +1392,7 @@ public class LayoutCanvas extends Canvas {
         if (ViewMetadataRepository.INSETS_SUPPORTED) {
             ConfigurationComposite configComposite =
                     mEditorDelegate.getGraphicalEditor().getConfigurationComposite();
-            String theme = configComposite.getTheme();
+            String theme = configComposite.getThemeName();
             Density density = configComposite.getDensity();
             return ViewMetadataRepository.getInsets(fqcn, density, theme);
         } else {

@@ -60,12 +60,14 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.IDocumentProvider;
@@ -75,10 +77,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -160,6 +163,9 @@ public class ManifestInfo {
      * with respect to the manifest file
      */
     private void sync() {
+        // TODO: Add a last synced timestamp so that I can avoid doing all this with rapid
+        // burst calls on separate methods which all call sync() first!
+
         if (mManifestFile == null) {
             IFolderWrapper projectFolder = new IFolderWrapper(mProject);
             mManifestFile = AndroidManifest.getManifest(projectFolder);
@@ -298,6 +304,17 @@ public class ManifestInfo {
     }
 
     /**
+     * Returns the manifest theme registered on the application, if any
+     *
+     * @return a manifest theme, or null if none was registered
+     */
+    @Nullable
+    public String getmManifestTheme() {
+        sync();
+        return mManifestTheme;
+    }
+
+    /**
      * Returns the default theme for this project, by looking at the manifest default
      * theme registration, target SDK, rendering target, etc.
      *
@@ -405,7 +422,27 @@ public class ManifestInfo {
      */
     @Nullable
     public static String guessActivity(IProject project, String layoutName, String pkg) {
-        final AtomicReference<String> activity = new AtomicReference<String>();
+        List<String> activities = guessActivities(project, layoutName, pkg);
+        if (activities.size() > 0) {
+            return activities.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the activities associated with the given layout file. Makes an educated guess
+     * by peeking at the usages of the R.layout.name field corresponding to the layout and
+     * if it finds a usage.
+     *
+     * @param project the project containing the layout
+     * @param layoutName the layout whose activity we want to look up
+     * @param pkg the package containing activities
+     * @return the activity name
+     */
+    @NonNull
+    public static List<String> guessActivities(IProject project, String layoutName, String pkg) {
+        final LinkedList<String> activities = new LinkedList<String>();
         SearchRequestor requestor = new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -414,11 +451,13 @@ public class ManifestInfo {
                     IMethod method = (IMethod) element;
                     IType declaringType = method.getDeclaringType();
                     String fqcn = declaringType.getFullyQualifiedName();
-                    if (activity.get() == null
-                            || (declaringType.getSuperclassName() != null &&
-                                    declaringType.getSuperclassName().endsWith("Activity")) //$NON-NLS-1$
-                            || method.getElementName().equals("onCreate")) { //$NON-NLS-1$
-                        activity.set(fqcn);
+
+                    if ((declaringType.getSuperclassName() != null &&
+                            declaringType.getSuperclassName().endsWith("Activity")) //$NON-NLS-1$
+                        || method.getElementName().equals("onCreate")) { //$NON-NLS-1$
+                        activities.addFirst(fqcn);
+                    } else {
+                        activities.addLast(fqcn);
                     }
                 }
             }
@@ -453,8 +492,45 @@ public class ManifestInfo {
             AdtPlugin.log(e, null);
         }
 
-        return activity.get();
+        return activities;
     }
+
+    /**
+     * Returns all activities found in the given project (including those in libraries,
+     * except for android.jar itself)
+     *
+     * @param project the project
+     * @return a list of activity classes as fully qualified class names
+     */
+    @SuppressWarnings("restriction") // BinaryType
+    @NonNull
+    public static List<String> getProjectActivities(IProject project) {
+        final List<String> activities = new ArrayList<String>();
+        try {
+            final IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+            if (javaProject != null) {
+                IType[] activityTypes = new IType[0];
+                IType activityType = javaProject.findType(SdkConstants.CLASS_ACTIVITY);
+                if (activityType != null) {
+                    ITypeHierarchy hierarchy =
+                        activityType.newTypeHierarchy(javaProject, new NullProgressMonitor());
+                    activityTypes = hierarchy.getAllSubtypes(activityType);
+                    for (IType type : activityTypes) {
+                        if (type instanceof BinaryType && (type.getClassFile() == null
+                                    || type.getClassFile().getResource() == null)) {
+                            continue;
+                        }
+                        activities.add(type.getFullyQualifiedName());
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
+
+        return activities;
+    }
+
 
     /**
      * Returns the activity associated with the given layout file.

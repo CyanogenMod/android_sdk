@@ -262,6 +262,8 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             }
 
             try {
+                // See if the current active file is the one containing this marker;
+                // if so we can take some shortcuts
                 IEditorPart activeEditor = AdtUtils.getActiveEditor();
                 IEditorPart part = null;
                 if (activeEditor != null) {

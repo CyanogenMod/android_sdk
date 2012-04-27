@@ -375,7 +375,7 @@ public class PaletteControl extends Composite {
      */
     public void reloadPalette(IAndroidTarget target) {
         ConfigurationComposite configuration = mEditor.getConfigurationComposite();
-        String theme = configuration.getTheme();
+        String theme = configuration.getThemeName();
         String device = configuration.getDevice();
         AndroidTargetData targetData =
             target != null ? Sdk.getCurrent().getTargetData(target) : null;

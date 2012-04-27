@@ -53,9 +53,11 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ChangeFlags;
@@ -73,6 +75,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -160,6 +163,7 @@ import org.eclipse.wb.core.controls.flyout.FlyoutControlComposite;
 import org.eclipse.wb.core.controls.flyout.IFlyoutListener;
 import org.eclipse.wb.core.controls.flyout.PluginFlyoutPreferences;
 import org.eclipse.wb.internal.core.editor.structure.PageSiteComposite;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.File;
@@ -350,8 +354,6 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        mConfigComposite = new ConfigurationComposite(mConfigListener, parent,
-                SWT.BORDER, initialState);
         PluginFlyoutPreferences preferences =
                 new PluginFlyoutPreferences(AdtPlugin.getDefault().getPreferenceStore(),
                         "design.palette"); //$NON-NLS-1$
@@ -389,8 +391,13 @@ public class GraphicalEditorPart extends EditorPart
         gridLayout.marginWidth = 0;
         gridLayout.marginHeight = 0;
         layoutBarAndCanvas.setLayout(gridLayout);
+
+        mConfigComposite = new ConfigurationComposite(mConfigListener, layoutBarAndCanvas,
+                SWT.NONE /*SWT.BORDER*/, initialState);
+        mConfigComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
         mActionBar = new LayoutActionBar(layoutBarAndCanvas, SWT.NONE, this);
-        GridData detailsData = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+        GridData detailsData = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
         mActionBar.setLayoutData(detailsData);
         if (file != null) {
             mActionBar.updateErrorIndicator(EclipseLintClient.hasMarkers(file));
@@ -695,7 +702,15 @@ public class GraphicalEditorPart extends EditorPart
                     // display the error.
                     FolderConfiguration currentConfig = mConfigComposite.getCurrentConfig();
                     displayError(
-                            "No resources match the configuration\n \n\t%1$s\n \nChange the configuration or create:\n \n\tres/%2$s/%3$s\n \nYou can also click the 'Create' button above.",
+                            "No resources match the configuration\n" +
+                            " \n" +
+                            "\t%1$s\n" +
+                            " \n" +
+                            "Change the configuration or create:\n" +
+                            " \n" +
+                            "\tres/%2$s/%3$s\n" +
+                            " \n" +
+                            "You can also click the 'Create New...' item in the configuration dropdown menu above.",
                             currentConfig.toDisplayString(),
                             currentConfig.getFolderName(ResourceFolderType.LAYOUT),
                             mEditedFile.getName());
@@ -726,6 +741,21 @@ public class GraphicalEditorPart extends EditorPart
 
                 createAlternateLayout(config);
             }
+        }
+
+        @Override
+        public void onSetActivity(String activity) {
+            ManifestInfo manifest = ManifestInfo.get(mEditedFile.getProject());
+            String pkg = manifest.getPackage();
+            if (activity.startsWith(pkg) && activity.length() > pkg.length()
+                    && activity.charAt(pkg.length()) == '.') {
+                activity = activity.substring(pkg.length());
+            }
+            CommonXmlEditor editor = getEditorDelegate().getEditor();
+            Element element = editor.getUiRootNode().getXmlDocument().getDocumentElement();
+            AdtUtils.setToolsAttribute(editor,
+                    element, "Choose Activity", ConfigurationComposite.ATTR_CONTEXT,
+                    activity, false /*reveal*/, false /*append*/);
         }
 
         @Override
@@ -912,6 +942,12 @@ public class GraphicalEditorPart extends EditorPart
                                 // pass
                             }
                         });
+
+                        // Switch to the new file as well
+                        IFile file = AdtUtils.fileToIFile(newLayoutFile);
+                        if (file != null) {
+                            AdtPlugin.openFile(file, null, false);
+                        }
                     } catch (IOException e2) {
                         String message = String.format(
                                 "Failed to create File 'res/%1$s/%2$s' : %3$s",
@@ -1588,7 +1624,7 @@ public class GraphicalEditorPart extends EditorPart
      */
     public ResourceResolver getResourceResolver() {
         if (mResourceResolver == null) {
-            String theme = mConfigComposite.getTheme();
+            String theme = mConfigComposite.getThemeName();
             if (theme == null) {
                 displayError("Missing theme.");
                 return null;
@@ -1643,12 +1679,7 @@ public class GraphicalEditorPart extends EditorPart
      * @return the resource name of this layout, NOT including the @layout/ prefix
      */
     public String getLayoutResourceName() {
-        String name = mEditedFile.getName();
-        int dotIndex = name.indexOf('.');
-        if (dotIndex != -1) {
-            name = name.substring(0, dotIndex);
-        }
-        return name;
+        return ResourceHelper.getLayoutName(mEditedFile);
     }
 
     /**

@@ -16,8 +16,13 @@
 
 package com.android.ide.eclipse.adt;
 
+import static com.android.tools.lint.detector.api.LintConstants.TOOLS_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 
@@ -36,6 +41,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -44,6 +50,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -566,4 +576,90 @@ public class AdtUtils {
 
         return "";
     }
+
+    /**
+     * Sets the given tools: attribute in the given XML editor document, adding
+     * the tools name space declaration if necessary, formatting the affected
+     * document region, and optionally comma-appending to an existing value and
+     * optionally opening and revealing the attribute.
+     *
+     * @param editor the associated editor
+     * @param element the associated element
+     * @param description the description of the attribute (shown in the undo
+     *            event)
+     * @param name the name of the attribute
+     * @param value the attribute value
+     * @param reveal if true, open the editor and select the given attribute
+     *            node
+     * @param appendValue if true, add this value as a comma separated value to
+     *            the existing attribute value, if any
+     */
+    @SuppressWarnings("restriction") // DOM model
+    public static void setToolsAttribute(
+            @NonNull final AndroidXmlEditor editor,
+            @NonNull final Element element,
+            @NonNull final String description,
+            @NonNull final String name,
+            @NonNull final String value,
+            final boolean reveal,
+            final boolean appendValue) {
+        editor.wrapUndoEditXmlModel(description, new Runnable() {
+            @Override
+            public void run() {
+                String prefix = UiElementNode.lookupNamespacePrefix(element,
+                        TOOLS_URI, null);
+                if (prefix == null) {
+                    // Add in new prefix...
+                    prefix = UiElementNode.lookupNamespacePrefix(element,
+                            TOOLS_URI, TOOLS_PREFIX);
+                    // ...and ensure that the header is formatted such that
+                    // the XML namespace declaration is placed in the right
+                    // position and wrapping is applied etc.
+                    editor.scheduleNodeReformat(editor.getUiRootNode(),
+                            true /*attributesOnly*/);
+                }
+
+                String v = value;
+                if (appendValue) {
+                    String prev = element.getAttributeNS(TOOLS_URI, name);
+                    if (prev.length() > 0) {
+                        v = prev + ',' + value;
+                    }
+                }
+
+                // Use the non-namespace form of set attribute since we can't
+                // reference the namespace until the model has been reloaded
+                element.setAttribute(prefix + ':' + name, v);
+
+                UiElementNode rootUiNode = editor.getUiRootNode();
+                if (rootUiNode != null) {
+                    final UiElementNode uiNode = rootUiNode.findXmlNode(element);
+                    if (uiNode != null) {
+                        editor.scheduleNodeReformat(uiNode, true /*attributesOnly*/);
+
+                        if (reveal) {
+                            // Update editor selection after format
+                            Display display = AdtPlugin.getDisplay();
+                            if (display != null) {
+                                display.asyncExec(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Node xmlNode = uiNode.getXmlNode();
+                                        Attr attribute = ((Element) xmlNode).getAttributeNodeNS(
+                                                TOOLS_URI, name);
+                                        if (attribute instanceof IndexedRegion) {
+                                            IndexedRegion region = (IndexedRegion) attribute;
+                                            editor.getStructuredTextEditor().selectAndReveal(
+                                                    region.getStartOffset(), region.getLength());
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
 }
