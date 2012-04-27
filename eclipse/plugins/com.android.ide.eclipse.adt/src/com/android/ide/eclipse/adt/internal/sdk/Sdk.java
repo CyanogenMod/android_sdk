@@ -442,6 +442,10 @@ public final class Sdk  {
 
                             // delete the old file.
                             ProjectProperties.delete(projectLocation, PropertyType.LEGACY_DEFAULT);
+
+                            // make sure to use the new properties
+                            properties = ProjectProperties.load(projectLocation,
+                                    PropertyType.PROJECT);
                         } catch (Exception e) {
                             AdtPlugin.log(IStatus.ERROR,
                                     "Failed to rename properties file to %1$s for project '%s2$'",
