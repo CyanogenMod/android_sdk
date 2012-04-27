@@ -60,6 +60,7 @@ public class UiViewElementNode extends UiElementNode {
         AttributeDescriptor[] direct_attrs = super.getAttributeDescriptors();
         mCachedAttributeDescriptors = direct_attrs;
 
+        // Compute layout attributes: These depend on the *parent* this widget is within
         AttributeDescriptor[] layout_attrs = null;
         boolean need_xmlns = false;
 

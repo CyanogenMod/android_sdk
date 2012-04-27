@@ -75,6 +75,15 @@ public class AttributeInfo implements IAttributeInfo {
         mDeprecatedDoc = info.mDeprecatedDoc;
     }
 
+    /**
+     * Sets the XML Name of the attribute
+     *
+     * @param name the new name to assign
+     */
+    public void setName(String name) {
+        mName = name;
+    }
+
     /** Returns the XML Name of the attribute */
     @Override
     public String getName() {

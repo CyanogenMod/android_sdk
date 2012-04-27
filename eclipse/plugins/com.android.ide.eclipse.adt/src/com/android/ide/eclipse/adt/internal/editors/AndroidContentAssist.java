@@ -305,7 +305,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 Node attr = attrs.item(n);
                 if (XmlnsAttributeDescriptor.XMLNS.equals(attr.getPrefix())) {
                     String uri = attr.getNodeValue();
-                    if (SdkConstants.NS_RESOURCES.equals(uri)) {
+                    if (nsUri.equals(uri)) {
                         return attr.getLocalName();
                     }
                     visited.add(uri);
@@ -316,7 +316,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         // Use a sensible default prefix if we can't find one.
         // We need to make sure the prefix is not one that was declared in the scope
         // visited above.
-        prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "ns"; //$NON-NLS-1$ //$NON-NLS-2$
+        prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "app"; //$NON-NLS-1$ //$NON-NLS-2$
         String base = prefix;
         for (int i = 1; visited.contains(prefix); i++) {
             prefix = base + Integer.toString(i);

@@ -51,6 +51,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -441,7 +442,11 @@ public class ManifestInfo {
                 IField field = type.getField(layoutName);
                 if (field.exists()) {
                     SearchPattern pattern = SearchPattern.createPattern(field, REFERENCES);
-                    search(requestor, javaProject, pattern);
+                    try {
+                        search(requestor, javaProject, pattern);
+                    } catch (OperationCanceledException canceled) {
+                        // pass
+                    }
                 }
             }
         } catch (CoreException e) {

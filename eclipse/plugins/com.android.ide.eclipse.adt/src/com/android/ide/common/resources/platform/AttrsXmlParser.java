@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.platform.ViewClassInfo.LayoutParamsInfo;
+import com.android.ide.eclipse.adt.AdtUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -197,7 +198,7 @@ public final class AttrsXmlParser {
             String xmlName = String.format("%1$s_%2$s", //$NON-NLS-1$
                     viewLayoutClass.getShortClassName(),
                     info.getShortClassName());
-            xmlName = xmlName.replaceFirst("Params$", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            xmlName = AdtUtils.stripSuffix(xmlName, "Params"); //$NON-NLS-1$
 
             DeclareStyleableInfo style = mStyleMap.get(xmlName);
             if (style != null) {

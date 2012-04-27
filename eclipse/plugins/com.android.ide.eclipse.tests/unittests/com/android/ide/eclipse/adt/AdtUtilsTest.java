@@ -114,4 +114,14 @@ public class AdtUtilsTest extends TestCase {
         assertSame("Foo", AdtUtils.capitalize("Foo"));
         assertNull(null, AdtUtils.capitalize(null));
     }
+
+    public void testStripSuffix() {
+        assertEquals("Foo", AdtUtils.stripSuffix("Foo", ""));
+        assertEquals("Fo", AdtUtils.stripSuffix("Foo", "o"));
+        assertEquals("F", AdtUtils.stripSuffix("Fo", "o"));
+        assertEquals("", AdtUtils.stripSuffix("Foo", "Foo"));
+        assertEquals("LinearLayout_Layout",
+                AdtUtils.stripSuffix("LinearLayout_LayoutParams", "Params"));
+        assertEquals("Foo", AdtUtils.stripSuffix("Foo", "Bar"));
+    }
 }

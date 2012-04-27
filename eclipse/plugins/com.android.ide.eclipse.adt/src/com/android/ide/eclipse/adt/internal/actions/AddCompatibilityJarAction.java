@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.actions;
 
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
@@ -35,7 +36,9 @@ import org.eclipse.core.filesystem.IFileSystem;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -245,12 +248,16 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         final IProject newProject;
         try {
             IProgressMonitor monitor = new NullProgressMonitor();
-            IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+            IWorkspaceRoot root = workspace.getRoot();
 
             String name = AdtUtils.getUniqueProjectName(
                     "gridlayout_v7", "_"); //$NON-NLS-1$ //$NON-NLS-2$
             newProject = root.getProject(name);
-            newProject.create(monitor);
+            IProjectDescription description = workspace.newProjectDescription(name);
+            String[] natures = new String[] { AdtConstants.NATURE_DEFAULT, JavaCore.NATURE_ID };
+            description.setNatureIds(natures);
+            newProject.create(description, monitor);
 
             // Copy in the files recursively
             IFileSystem fileSystem = EFS.getLocalFileSystem();

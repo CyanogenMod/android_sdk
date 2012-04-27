@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_SUPPORT_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
@@ -48,7 +50,6 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -1165,10 +1166,19 @@ public class UiElementNode implements IPropertySource {
             if (xmlChild.getNodeType() == Node.ELEMENT_NODE) {
                 String elementName = xmlChild.getNodeName();
                 UiElementNode uiNode = null;
+                CustomViewDescriptorService service = CustomViewDescriptorService.getInstance();
                 if (mUiChildren.size() <= uiIndex) {
                     // A new node is being added at the end of the list
                     ElementDescriptor desc = mDescriptor.findChildrenDescriptor(elementName,
                             false /* recursive */);
+                    if (desc == null && elementName.indexOf('.') != -1 &&
+                            (!elementName.startsWith(ANDROID_PKG_PREFIX)
+                                    || elementName.startsWith(ANDROID_SUPPORT_PKG_PREFIX))) {
+                        AndroidXmlEditor editor = getEditor();
+                        if (editor != null && editor.getProject() != null) {
+                            desc = service.getDescriptor(editor.getProject(), elementName);
+                        }
+                    }
                     if (desc == null) {
                         // Unknown node. Create a temporary descriptor for it.
                         // We'll add unknown attributes to it later.
@@ -1227,11 +1237,12 @@ public class UiElementNode implements IPropertySource {
                         // Inserting new node
                         ElementDescriptor desc = mDescriptor.findChildrenDescriptor(elementName,
                                 false /* recursive */);
-                        if (desc == null && elementName.indexOf('.') != -1) {
-                            IProject project = getEditor().getProject();
-                            if (project != null) {
-                                desc = CustomViewDescriptorService.getInstance().getDescriptor(
-                                        project, elementName);
+                        if (desc == null && elementName.indexOf('.') != -1 &&
+                                (!elementName.startsWith(ANDROID_PKG_PREFIX)
+                                        || elementName.startsWith(ANDROID_SUPPORT_PKG_PREFIX))) {
+                            AndroidXmlEditor editor = getEditor();
+                            if (editor != null && editor.getProject() != null) {
+                                desc = service.getDescriptor(editor.getProject(), elementName);
                             }
                         }
                         if (desc == null) {
