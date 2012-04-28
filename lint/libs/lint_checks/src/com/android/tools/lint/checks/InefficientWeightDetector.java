@@ -40,7 +40,7 @@ import org.w3c.dom.Node;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +93,7 @@ public class InefficientWeightDetector extends LayoutDetector {
      * Map from element to whether that element has a non-zero linear layout
      * weight or has an ancestor which does
      */
-    private Map<Node, Boolean> mInsideWeight = new HashMap<Node, Boolean>();
+    private Map<Node, Boolean> mInsideWeight = new IdentityHashMap<Node, Boolean>();
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {
@@ -116,7 +116,6 @@ public class InefficientWeightDetector extends LayoutDetector {
         boolean multipleWeights = false;
         Element weightChild = null;
         boolean checkNesting = context.isEnabled(NESTED_WEIGHTS);
-        Node parent = element.getParentNode();
         for (Element child : children) {
             if (child.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)) {
                 if (weightChild != null) {
@@ -127,11 +126,11 @@ public class InefficientWeightDetector extends LayoutDetector {
                 }
 
                 if (checkNesting) {
-                    mInsideWeight.put(element, Boolean.TRUE);
+                    mInsideWeight.put(child, Boolean.TRUE);
 
-                    Boolean inside = mInsideWeight.get(parent);
+                    Boolean inside = mInsideWeight.get(element);
                     if (inside == null) {
-                        mInsideWeight.put(parent, Boolean.FALSE);
+                        mInsideWeight.put(element, Boolean.FALSE);
                     } else if (inside) {
                         Attr sizeNode = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT);
                         context.report(NESTED_WEIGHTS, sizeNode,
