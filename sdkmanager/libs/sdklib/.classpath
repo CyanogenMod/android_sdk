@@ -12,6 +12,6 @@
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/http-client/httpclient-4.1.1.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/http-client/src/httpcomponents-client-4.1.1-src.zip"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/http-client/httpcore-4.1.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/http-client/src/httpcomponents-core-4.1-src.zip"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/http-client/httpmime-4.1.1.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/http-client/src/httpcomponents-client-4.1.1-src.zip"/>
-	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/mkidentity/mkidentity-prebuilt.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/mkidentity/mkidentity-prebuilt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
