@@ -165,7 +165,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      * on the dialog is valid or not. If it is not valid, the message
      * field stores the reason why it isn't.
      */
-    private final class DialogStatus {
+    private static final class DialogStatus {
         final boolean valid;
         final String message;
 

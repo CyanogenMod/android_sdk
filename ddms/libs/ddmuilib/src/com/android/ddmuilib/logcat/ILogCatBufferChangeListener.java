@@ -19,11 +19,13 @@ package com.android.ddmuilib.logcat;
 import java.util.List;
 
 /**
- * Listeners interested in log cat messages should implement this interface.
+ * Listeners interested in changes in the logcat buffer should implement this interface.
  */
-public interface ILogCatMessageEventListener {
-    /** Called on reception of logcat messages.
-     * @param receivedMessages list of messages received
+public interface ILogCatBufferChangeListener {
+    /**
+     * Called when the logcat buffer changes.
+     * @param addedMessages list of messages that were added to the logcat buffer
+     * @param deletedMessages list of messages that were removed from the logcat buffer
      */
-    void messageReceived(List<LogCatMessage> receivedMessages);
+    void bufferChanged(List<LogCatMessage> addedMessages, List<LogCatMessage> deletedMessages);
 }
