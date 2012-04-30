@@ -29,34 +29,35 @@ import java.util.Collections;
 import java.util.List;
 
 import lombok.ast.AstVisitor;
-import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
-import lombok.ast.IntegralLiteral;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
 import lombok.ast.Return;
-import lombok.ast.StrictListAccessor;
+import lombok.ast.VariableDefinition;
+import lombok.ast.VariableDefinitionEntry;
 
-/** Detector looking for Toast.makeText() without a corresponding show() call */
-public class ToastDetector extends Detector implements Detector.JavaScanner {
+/**
+ * Detector looking for SharedPreferences.edit() calls without a corresponding
+ * commit() or apply() call
+ */
+public class SharedPrefsDetector extends Detector implements Detector.JavaScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ShowToast", //$NON-NLS-1$
-            "Looks for code creating a Toast but forgetting to call show() on it",
+            "CommitPrefEdits", //$NON-NLS-1$
+            "Looks for code editing a SharedPreference but forgetting to call commit() on it",
 
-            "Toast.makeText() creates a Toast but does *not* show it. You must call " +
-            "show() on the resulting object to actually make the Toast appear.",
+            "After calling edit() on a SharedPreference, you must call commit() or apply() on " +
+            "the editor to save the results.",
 
             Category.CORRECTNESS,
             6,
             Severity.WARNING,
-            ToastDetector.class,
+            SharedPrefsDetector.class,
             Scope.JAVA_FILE_SCOPE);
 
-
-    /** Constructs a new {@link ToastDetector} check */
-    public ToastDetector() {
+    /** Constructs a new {@link SharedPrefsDetector} check */
+    public SharedPrefsDetector() {
     }
 
     @Override
@@ -74,7 +75,7 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("makeText"); //$NON-NLS-1$
+        return Collections.singletonList("edit"); //$NON-NLS-1$
     }
 
     private MethodDeclaration findSurroundingMethod(Node scope) {
@@ -94,29 +95,23 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
 
     @Override
     public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
-        assert node.astName().astValue().equals("makeText");
+        assert node.astName().astValue().equals("edit");
         if (node.astOperand() == null) {
-            // "makeText()" in the code with no operand
             return;
         }
 
-        String operand = node.astOperand().toString();
-        if (!(operand.equals("Toast") || operand.endsWith(".Toast"))) {
+        // Looking for the specific pattern where you assign the edit() result
+        // to a local variable; this means we won't recognize some other usages
+        // of the API (e.g. assigning it to a previously declared variable) but
+        // is needed until we have type attribution in the AST itself.
+        if (!(node.getParent() instanceof VariableDefinitionEntry &&
+                node.getParent().getParent() instanceof VariableDefinition)) {
             return;
         }
-
-        // Make sure you pass the right kind of duration: it's not a delay, it's
-        //  LENGTH_SHORT or LENGTH_LONG
-        // (see http://code.google.com/p/android/issues/detail?id=3655)
-        StrictListAccessor<Expression, MethodInvocation> args = node.astArguments();
-        if (args.size() == 3) {
-            Expression duration = args.last();
-            if (duration instanceof IntegralLiteral) {
-                context.report(ISSUE, context.getLocation(duration),
-                        "Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom " +
-                        "duration value is not supported",
-                        null);
-            }
+        VariableDefinition definition = (VariableDefinition) node.getParent().getParent();
+        String type = definition.astTypeReference().toString();
+        if (!type.endsWith("SharedPreferences.Editor")) { //$NON-NLS-1$
+            return;
         }
 
         MethodDeclaration method = findSurroundingMethod(node.getParent());
@@ -124,23 +119,24 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
             return;
         }
 
-        ShowFinder finder = new ShowFinder(node);
+        CommitFinder finder = new CommitFinder(node);
         method.accept(finder);
-        if (!finder.isShowCalled()) {
+        if (!finder.isCommitCalled()) {
             context.report(ISSUE, method, context.getLocation(node),
-                    "Toast created but not shown: did you forget to call show() ?", null);
+                    "SharedPreferences.edit() without a corresponding commit() or apply() call",
+                    null);
         }
     }
 
-    private class ShowFinder extends ForwardingAstVisitor {
-        /** Whether we've found the show method */
+    private class CommitFinder extends ForwardingAstVisitor {
+        /** Whether we've found one of the commit/cancel methods */
         private boolean mFound;
-        /** The target makeText call */
+        /** The target edit call */
         private MethodInvocation mTarget;
-        /** Whether we've seen the target makeText node yet */
+        /** Whether we've seen the target edit node yet */
         private boolean mSeenTarget;
 
-        private ShowFinder(MethodInvocation target) {
+        private CommitFinder(MethodInvocation target) {
             mTarget = target;
         }
 
@@ -148,11 +144,13 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
         public boolean visitMethodInvocation(MethodInvocation node) {
             if (node == mTarget) {
                 mSeenTarget = true;
-            } else if ((mSeenTarget || node.astOperand() == mTarget)
-                    && "show".equals(node.astName().astValue())) { //$NON-NLS-1$
-                // TODO: Do more flow analysis to see whether we're really calling show
-                // on the right type of object?
-                mFound = true;
+            } else if (mSeenTarget || node.astOperand() == mTarget) {
+                String name = node.astName().astValue();
+                if ("commit".equals(name) || "apply".equals(name)) { //$NON-NLS-1$ //$NON-NLS-2$
+                    // TODO: Do more flow analysis to see whether we're really calling commit/apply
+                    // on the right type of object?
+                    mFound = true;
+                }
             }
 
             return true;
@@ -161,13 +159,13 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
         @Override
         public boolean visitReturn(Return node) {
             if (node.astValue() == mTarget) {
-                // If you just do "return Toast.makeText(...) don't warn
+                // If you just do "return editor.commit() don't warn
                 mFound = true;
             }
             return super.visitReturn(node);
         }
 
-        boolean isShowCalled() {
+        boolean isCommitCalled() {
             return mFound;
         }
     }
