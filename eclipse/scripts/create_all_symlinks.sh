@@ -126,7 +126,7 @@ CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS
 ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
 ADT_LIBS="layoutlib_api lint_api lint_checks ide_common rule_api ninepatch sdkuilib assetstudio propertysheet"
 ADT_PREBUILTS="\
-    prebuilt/common/kxml2/kxml2-2.3.0.jar \
+    prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
     prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"
@@ -152,7 +152,7 @@ CP_FILES="$CP_FILES @:$DDMS_DEST $DDMS_LIBS $DDMS_PREBUILTS"
 
 TEST_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.tests"
 TEST_LIBS="easymock"
-TEST_PREBUILTS="prebuilt/common/kxml2/kxml2-2.3.0.jar"
+TEST_PREBUILTS="prebuilts/misc/common/kxml2/kxml2-2.3.0.jar"
 
 LIBS="$LIBS $TEST_LIBS"
 CP_FILES="$CP_FILES @:$TEST_DEST $TEST_LIBS $TEST_PREBUILTS"
