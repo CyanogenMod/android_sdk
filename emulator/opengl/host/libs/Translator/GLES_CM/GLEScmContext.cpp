@@ -31,13 +31,10 @@ void GLEScmContext::init() {
         m_texCoords = new GLESpointer[s_glSupport.maxTexUnits];
         m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_clientActiveTexture];
 
-        const char* baseRenderer = (const char*)dispatcher().glGetString(GL_RENDERER);
-        size_t baseRendererLen = strlen(baseRenderer);
-        s_glRenderer.clear();
-        s_glRenderer.reserve(19 + baseRendererLen);
-        s_glRenderer.append("OpenGL ES-CM 1.1 (", 18);
-        s_glRenderer.append(baseRenderer, baseRendererLen);
-        s_glRenderer.append(")", 1);
+        buildStrings((const char*)dispatcher().glGetString(GL_VENDOR),
+                     (const char*)dispatcher().glGetString(GL_RENDERER),
+                     (const char*)dispatcher().glGetString(GL_VERSION),
+                     "OpenGL ES-CM 1.1");
     }
     m_initialized = true;
 }

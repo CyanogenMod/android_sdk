@@ -1316,16 +1316,14 @@ GL_APICALL void  GL_APIENTRY glGetShaderSource(GLuint shader, GLsizei bufsize, G
 
 GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name){
     GET_CTX_RET(NULL)
-    static const GLubyte VENDOR[]  = "Google";
-    static const GLubyte VERSION[] = "OpenGL ES 2.0";
     static const GLubyte SHADING[] = "OpenGL ES GLSL ES 1.0.17";
     switch(name) {
         case GL_VENDOR:
-            return VENDOR;
+            return (const GLubyte*)ctx->getVendorString();
         case GL_RENDERER:
             return (const GLubyte*)ctx->getRendererString();
         case GL_VERSION:
-            return VERSION;
+            return (const GLubyte*)ctx->getVersionString();
         case GL_SHADING_LANGUAGE_VERSION:
             return SHADING;
         case GL_EXTENSIONS:

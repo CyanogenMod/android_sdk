@@ -101,6 +101,13 @@ DECL(int, setStreamMode, (int mode));
 DECL(int, initOpenGLRenderer, (int width, int height, int portNum,
 		OnPostFn onPost, void* onPostContext));
 
+/* getHardwareStrings - describe the GPU hardware and driver.
+ *    The underlying GL's vendor/renderer/version strings are returned to the
+ *    caller. The pointers become invalid after a call to stopOpenGLRenderer().
+ */
+DECL(void, getHardwareStrings, (const char** vendor, const char** renderer,
+		const char** version));
+
 /* createOpenGLSubwindow -
  *     Create a native subwindow which is a child of 'window'
  *     to be used for framebuffer display.

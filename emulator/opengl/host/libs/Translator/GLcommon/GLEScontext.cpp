@@ -86,7 +86,9 @@ void GLESConversionArrays::operator++(){
 GLDispatch     GLEScontext::s_glDispatch;
 android::Mutex GLEScontext::s_lock;
 std::string*   GLEScontext::s_glExtensions= NULL;
+std::string    GLEScontext::s_glVendor;
 std::string    GLEScontext::s_glRenderer;
+std::string    GLEScontext::s_glVersion;
 GLSupport      GLEScontext::s_glSupport;
 
 Version::Version():m_major(0),
@@ -483,8 +485,16 @@ const char * GLEScontext::getExtensionString() {
     return ret;
 }
 
+const char * GLEScontext::getVendorString() const {
+    return s_glVendor.c_str();
+}
+
 const char * GLEScontext::getRendererString() const {
     return s_glRenderer.c_str();
+}
+
+const char * GLEScontext::getVersionString() const {
+    return s_glVersion.c_str();
 }
 
 void GLEScontext::getGlobalLock() {
@@ -545,6 +555,38 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     if (strstr(cstring,"GL_OES_standard_derivatives ")!=NULL)
         s_glSupport.GL_OES_STANDARD_DERIVATIVES = true;
 
+}
+
+void GLEScontext::buildStrings(const char* baseVendor,
+        const char* baseRenderer, const char* baseVersion, const char* version)
+{
+    static const char VENDOR[]   = {"Google ("};
+    static const char RENDERER[] = {"Android Emulator OpenGL ES Translator ("};
+    const size_t VENDOR_LEN   = sizeof(VENDOR) - 1;
+    const size_t RENDERER_LEN = sizeof(RENDERER) - 1;
+
+    size_t baseVendorLen = strlen(baseVendor);
+    s_glVendor.clear();
+    s_glVendor.reserve(baseVendorLen + VENDOR_LEN + 1);
+    s_glVendor.append(VENDOR, VENDOR_LEN);
+    s_glVendor.append(baseVendor, baseVendorLen);
+    s_glVendor.append(")", 1);
+
+    size_t baseRendererLen = strlen(baseRenderer);
+    s_glRenderer.clear();
+    s_glRenderer.reserve(baseRendererLen + RENDERER_LEN + 1);
+    s_glRenderer.append(RENDERER, RENDERER_LEN);
+    s_glRenderer.append(baseRenderer, baseRendererLen);
+    s_glRenderer.append(")", 1);
+
+    size_t baseVersionLen = strlen(baseVersion);
+    size_t versionLen = strlen(version);
+    s_glVersion.clear();
+    s_glVersion.reserve(baseVersionLen + versionLen + 3);
+    s_glVersion.append(version, versionLen);
+    s_glVersion.append(" (", 2);
+    s_glVersion.append(baseVersion, baseVersionLen);
+    s_glVersion.append(")", 1);
 }
 
 bool GLEScontext::isTextureUnitEnabled(GLenum unit) {

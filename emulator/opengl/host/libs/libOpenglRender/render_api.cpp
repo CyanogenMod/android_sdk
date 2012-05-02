@@ -191,6 +191,16 @@ int initOpenGLRenderer(int width, int height, int portNum,
     return true;
 }
 
+void getHardwareStrings(const char** vendor, const char** renderer, const char** version)
+{
+    FrameBuffer* fb = FrameBuffer::getFB();
+    if (fb) {
+        fb->getGLStrings(vendor, renderer, version);
+    } else {
+        *vendor = *renderer = *version = NULL;
+    }
+}
+
 int stopOpenGLRenderer(void)
 {
     bool ret = false;

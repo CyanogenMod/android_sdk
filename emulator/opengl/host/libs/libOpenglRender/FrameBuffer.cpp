@@ -345,6 +345,14 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
         }
     }
 
+    //
+    // Cache the GL strings so we don't have to think about threading or
+    // current-context when asked for them.
+    //
+    fb->m_glVendor = (const char*)s_gl.glGetString(GL_VENDOR);
+    fb->m_glRenderer = (const char*)s_gl.glGetString(GL_RENDERER);
+    fb->m_glVersion = (const char*)s_gl.glGetString(GL_VERSION);
+
     // release the FB context
     fb->unbind_locked();
 
@@ -366,7 +374,7 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
     m_prevContext(EGL_NO_CONTEXT),
     m_prevReadSurf(EGL_NO_SURFACE),
     m_prevDrawSurf(EGL_NO_SURFACE),
-    m_subWin(NULL),
+    m_subWin((EGLNativeWindowType)0),
     m_subWinDisplay(NULL),
     m_lastPostedColorBuffer(0),
     m_zRot(0.0f),
@@ -375,7 +383,10 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
     m_statsStartTime(0LL),
     m_onPost(onPost),
     m_onPostContext(onPostContext),
-    m_fbImage(NULL)
+    m_fbImage(NULL),
+    m_glVendor(NULL),
+    m_glRenderer(NULL),
+    m_glVersion(NULL)
 {
     m_fpsStats = getenv("SHOW_FPS_STATS") != NULL;
 }
@@ -412,7 +423,7 @@ bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
                 if (fb->m_eglSurface == EGL_NO_SURFACE) {
                     ERR("Failed to create surface\n");
                     destroySubWindow(fb->m_subWinDisplay, fb->m_subWin);
-                    fb->m_subWin = NULL;
+                    fb->m_subWin = (EGLNativeWindowType)0;
                 }
                 else if (fb->bindSubwin_locked()) {
                     // Subwin creation was successfull,
@@ -445,7 +456,7 @@ bool FrameBuffer::removeSubWindow()
                              s_theFrameBuffer->m_subWin);
 
             s_theFrameBuffer->m_eglSurface = EGL_NO_SURFACE;
-            s_theFrameBuffer->m_subWin = NULL;
+            s_theFrameBuffer->m_subWin = (EGLNativeWindowType)0;
             removed = true;
         }
         s_theFrameBuffer->m_lock.unlock();
