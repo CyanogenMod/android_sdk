@@ -28,16 +28,13 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     public void testWeights() throws Exception {
         assertEquals(
             "inefficient_weight.xml:10: Warning: Use a layout_width of 0dip instead of match_parent for better performance\n" +
-            "inefficient_weight.xml:24: Warning: Use a layout_height of 0dip instead of wrap_content for better performance\n" +
-            "inefficient_weight.xml:25: Warning: Nested weights are bad for performance\n" +
-            "inefficient_weight.xml:40: Warning: Nested weights are bad for performance",
+            "inefficient_weight.xml:24: Warning: Use a layout_height of 0dip instead of wrap_content for better performance",
             lintFiles("res/layout/inefficient_weight.xml"));
     }
 
     public void testWeights2() throws Exception {
         assertEquals(
-            "nested_weights.xml:22: Warning: Nested weights are bad for performance\n" +
-            "nested_weights.xml:28: Warning: Use a layout_width of 0dip instead of match_parent for better performance",
+            "nested_weights.xml:23: Warning: Nested weights are bad for performance",
             lintFiles("res/layout/nested_weights.xml"));
     }
 
@@ -68,5 +65,12 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
             lintFiles("res/layout/inefficient_weight2.xml"));
     }
 
+    public void testNestedWeights() throws Exception {
+        // Regression test for http://code.google.com/p/android/issues/detail?id=22889
+        // (Comment 8)
+        assertEquals(
+                "No warnings.",
 
+                lintFiles("res/layout/nested_weights2.xml"));
+    }
 }
