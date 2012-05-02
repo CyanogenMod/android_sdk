@@ -126,9 +126,17 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             assert awtImage instanceof SwtReadyBufferedImage;
 
             if (isAlphaChannelImage) {
+                if (mImage != null) {
+                    mImage.dispose();
+                }
+
                 mImage = SwtUtils.convertToSwt(mCanvas.getDisplay(), awtImage, true, -1);
             } else {
+                Image prev = mImage;
                 mImage = ((SwtReadyBufferedImage)awtImage).getSwtImage();
+                if (prev != mImage && prev != null) {
+                    prev.dispose();
+                }
             }
         }
 
@@ -195,6 +203,9 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                         scaledAwtImage = ImageUtils.scale(mAwtImage, xScale, yScale);
                     }
                     assert scaledAwtImage.getWidth() == hi.getScalledImgSize();
+                    if (mPreScaledImage != null && !mPreScaledImage.isDisposed()) {
+                        mPreScaledImage.dispose();
+                    }
                     mPreScaledImage = SwtUtils.convertToSwt(mCanvas.getDisplay(), scaledAwtImage,
                             true /*transferAlpha*/, -1);
                 }
