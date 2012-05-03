@@ -54,7 +54,7 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
      * The minimal revision of the platform-tools package required by this package
      * or {@link #MIN_PLATFORM_TOOLS_REV_INVALID} if the value was missing.
      */
-    private final int mMinPlatformToolsRevision;
+    private final FullRevision mMinPlatformToolsRevision;
 
     /**
      * Creates a new tool package from the attributes and elements of the given XML node.
@@ -72,11 +72,11 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mMinPlatformToolsRevision = PackageParserUtils.getXmlInt(
-                packageNode,
-                SdkRepoConstants.NODE_MIN_PLATFORM_TOOLS_REV,
-                MIN_PLATFORM_TOOLS_REV_INVALID);
-        if (mMinPlatformToolsRevision == MIN_PLATFORM_TOOLS_REV_INVALID) {
+        mMinPlatformToolsRevision = PackageParserUtils.parseFullRevisionElement(
+                PackageParserUtils.findChildElement(packageNode,
+                                                    SdkRepoConstants.NODE_MIN_PLATFORM_TOOLS_REV));
+
+        if (mMinPlatformToolsRevision.equals(MIN_PLATFORM_TOOLS_REV_INVALID)) {
             // This revision number is mandatory starting with sdk-repository-3.xsd
             // and did not exist before. Complain if the URI has level >= 3.
 
@@ -144,8 +144,16 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
                 archiveArch,
                 archiveOsPath);
 
-        mMinPlatformToolsRevision = getPropertyInt(props, PkgProps.MIN_PLATFORM_TOOLS_REV,
-                                                          MIN_PLATFORM_TOOLS_REV_INVALID);
+        String revStr = getProperty(props, PkgProps.MIN_PLATFORM_TOOLS_REV, null);
+
+        FullRevision rev = MIN_PLATFORM_TOOLS_REV_INVALID;
+        if (revStr != null) {
+            try {
+                rev = FullRevision.parseRevision(revStr);
+            } catch (NumberFormatException ignore) {}
+        }
+
+        mMinPlatformToolsRevision = rev;
     }
 
     /**
@@ -155,7 +163,7 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
     * This attribute is mandatory and should not be normally missing.
      */
     @Override
-    public int getMinPlatformToolsRevision() {
+    public FullRevision getMinPlatformToolsRevision() {
         return mMinPlatformToolsRevision;
     }
 
@@ -256,9 +264,9 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
     public void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        if (getMinPlatformToolsRevision() != MIN_PLATFORM_TOOLS_REV_INVALID) {
+        if (!getMinPlatformToolsRevision().equals(MIN_PLATFORM_TOOLS_REV_INVALID)) {
             props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
-                              Integer.toString(getMinPlatformToolsRevision()));
+                    getMinPlatformToolsRevision().toShortString());
         }
     }
 
@@ -335,7 +343,8 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + mMinPlatformToolsRevision;
+        result = prime * result
+                 + ((mMinPlatformToolsRevision == null) ? 0 : mMinPlatformToolsRevision.hashCode());
         return result;
     }
 
@@ -351,7 +360,11 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
             return false;
         }
         ToolPackage other = (ToolPackage) obj;
-        if (mMinPlatformToolsRevision != other.mMinPlatformToolsRevision) {
+        if (mMinPlatformToolsRevision == null) {
+            if (other.mMinPlatformToolsRevision != null) {
+                return false;
+            }
+        } else if (!mMinPlatformToolsRevision.equals(other.mMinPlatformToolsRevision)) {
             return false;
         }
         return true;

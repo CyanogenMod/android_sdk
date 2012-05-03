@@ -303,7 +303,7 @@ public class ValidateRepositoryXmlTest extends TestCase {
             OPEN_TAG_REPO +
             "<r:license id=\"lic1\"> some license </r:license> " +
             "<r:tool> <r:uses-license ref=\"lic2\" /> <r:revision> <r:major>1</r:major> </r:revision> " +
-            "<r:min-platform-tools-rev>1</r:min-platform-tools-rev> " +
+            "<r:min-platform-tools-rev> <r:major>1</r:major> </r:min-platform-tools-rev> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:tool>" +
             CLOSE_TAG_REPO;

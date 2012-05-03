@@ -70,10 +70,11 @@
               the package is a Beta Release Candidate and not a final release.
 
          - v7 is used by the SDK Manager in Tools r20:
-            - <tool> and <platform-tool> packages have new <minor-rev> and
-              <micro-rev> numbers.
-            - The <beta-rc> element is no longer supported, it is replaced by <preview>
-              which is only for <tool> and <platform-tool> packages.
+            - For <tool> and <platform-tool> packages, the <revision> element becomes a
+              a "full revision" element with <major>, <minor>, <micro> and <preview> sub-elements.
+            - The <beta-rc> element is no longer supported, it is replaced by
+              <revision> -> <preview> and is only for <tool> and <platform-tool> packages.
+            - <min-tools-rev> and <min-platform-tools-rev> also become a full revision element.
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />
@@ -132,8 +133,8 @@
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"      type="sdk:archivesType" />
             <!-- The minimal revision of tools required by this package.
-                 Optional. If present, must be an int > 0. -->
-            <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
+                 Optional. If present, must be a revision element. -->
+            <xsd:element name="min-tools-rev" type="sdk:revisionType" minOccurs="0" />
 
             <!-- The ABI of the system image *included* in this platform, if any.
                  When the field is present, it means the platform already embeds one
@@ -294,8 +295,8 @@
             <xsd:element name="archives"     type="sdk:archivesType" />
 
             <!-- The minimal revision of platform-tools required by this package.
-                 Mandatory. Must be an int > 0. -->
-            <xsd:element name="min-platform-tools-rev" type="xsd:positiveInteger" />
+                 Mandatory. Must be a revision element. -->
+            <xsd:element name="min-platform-tools-rev" type="sdk:revisionType" />
 
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
@@ -402,8 +403,8 @@
             <!-- A list of file archives for this package. -->
             <xsd:element name="archives"     type="sdk:archivesType" />
             <!-- The minimal revision of tools required by this package.
-                 Optional. If present, must be an int > 0. -->
-            <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
+                 Optional. If present, must be a revision element. -->
+            <xsd:element name="min-tools-rev" type="sdk:revisionType" minOccurs="0" />
 
 
             <!-- An optional element indicating the package is obsolete.

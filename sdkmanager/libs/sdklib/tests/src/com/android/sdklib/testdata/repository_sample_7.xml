@@ -42,7 +42,11 @@
             for this package. It's a free multi-line text.
         </sdk:release-note>
         <sdk:release-url>http://some/url/for/the/release/note.html</sdk:release-url>
-        <sdk:min-tools-rev>2</sdk:min-tools-rev>
+        <sdk:min-tools-rev>
+            <sdk:major>2</sdk:major>
+            <!-- minor is missing and equivalent to 0 -->
+            <sdk:micro>1</sdk:micro>
+        </sdk:min-tools-rev>
         <!-- The archives node is mandatory and it cannot be empty. -->
         <sdk:archives>
             <sdk:archive os="any">
@@ -195,7 +199,9 @@
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
         <sdk:uses-license ref="license1" />
-        <sdk:min-platform-tools-rev>4</sdk:min-platform-tools-rev>
+        <sdk:min-platform-tools-rev>
+            <sdk:major>4</sdk:major>
+        </sdk:min-platform-tools-rev>
         <sdk:archives>
             <sdk:archive os="any">
                 <sdk:size>65536</sdk:size>
@@ -233,7 +239,12 @@
             <sdk:major>42</sdk:major>
         </sdk:revision>
         <sdk:uses-license ref="license1" />
-        <sdk:min-platform-tools-rev>3</sdk:min-platform-tools-rev>
+        <sdk:min-platform-tools-rev>
+            <sdk:major>4</sdk:major>
+            <sdk:minor>0</sdk:minor>
+            <sdk:micro>0</sdk:micro>
+            <sdk:preview>5</sdk:preview>
+        </sdk:min-platform-tools-rev>
         <sdk:archives>
             <sdk:archive os="windows">
                 <sdk:size>65536</sdk:size>
@@ -292,7 +303,30 @@
         </sdk:archives>
         <sdk:description>Some sample package</sdk:description>
         <sdk:desc-url>http://www.example.com/sample.html</sdk:desc-url>
-        <sdk:min-tools-rev>5</sdk:min-tools-rev>
+        <sdk:min-tools-rev>
+            <sdk:major>5</sdk:major>
+        </sdk:min-tools-rev>
+        <sdk:obsolete>This is obsolete</sdk:obsolete>
+    </sdk:sample>
+
+    <sdk:sample>
+        <sdk:api-level>14</sdk:api-level>
+        <sdk:revision>25</sdk:revision>
+        <sdk:archives>
+            <sdk:archive os="any" arch="any">
+                <sdk:size>65537</sdk:size>
+                <sdk:checksum type="sha1">3822ae37115ebf13412bbef91339ee0d9454525e</sdk:checksum>
+                <sdk:url>distrib/sample_duff.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+        <sdk:description>Some sample package</sdk:description>
+        <sdk:desc-url>http://www.example.com/sample.html</sdk:desc-url>
+        <sdk:min-tools-rev>
+            <sdk:major>5</sdk:major>
+            <sdk:minor>1</sdk:minor>
+            <sdk:micro>2</sdk:micro>
+            <sdk:preview>3</sdk:preview>
+        </sdk:min-tools-rev>
         <sdk:obsolete>This is obsolete</sdk:obsolete>
     </sdk:sample>
 
