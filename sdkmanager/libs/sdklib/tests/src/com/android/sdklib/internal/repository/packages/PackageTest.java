@@ -197,4 +197,20 @@ public class PackageTest extends TestCase {
                  "Vendor Path, revision 5]",
                 Arrays.toString(list.toArray()));
     }
+
+    public void testGetPropertyInt() {
+        Properties p = new Properties();
+
+        assertEquals(42, Package.getPropertyInt(p, "key", 42));
+
+        p.setProperty("key", "");
+        assertEquals(43, Package.getPropertyInt(p, "key", 43));
+
+        p.setProperty("key", "I am not a number");
+        assertEquals(44, Package.getPropertyInt(p, "key", 44));
+
+        p.setProperty("key", "6");
+        assertEquals(6, Package.getPropertyInt(p, "key", 45));
+    }
+
 }
