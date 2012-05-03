@@ -22,8 +22,10 @@ package com.android.sdklib.internal.repository.packages;
  * (major.minor.micro) and an optional preview revision
  * (the lack of a preview number indicates it's not a preview
  *  but a final package.)
+ *
+ *  @see MajorRevision
  */
-public class PreviewVersion implements Comparable<PreviewVersion> {
+public class FullRevision implements Comparable<FullRevision> {
 
     public static final int IMPLICIT_MINOR_REV = 0;
     public static final int IMPLICIT_MICRO_REV = 0;
@@ -34,15 +36,15 @@ public class PreviewVersion implements Comparable<PreviewVersion> {
     private final int mMicro;
     private final int mPreview;
 
-    public PreviewVersion(int major) {
+    public FullRevision(int major) {
         this(major, 0, 0);
     }
 
-    public PreviewVersion(int major, int minor, int micro) {
+    public FullRevision(int major, int minor, int micro) {
         this(major, minor, micro, NOT_A_PREVIEW);
     }
 
-    public PreviewVersion(int major, int minor, int micro, int preview) {
+    public FullRevision(int major, int minor, int micro, int preview) {
         mMajor = major;
         mMinor = minor;
         mMicro = micro;
@@ -130,10 +132,10 @@ public class PreviewVersion implements Comparable<PreviewVersion> {
         if (rhs == null) {
             return false;
         }
-        if (!(rhs instanceof PreviewVersion)) {
+        if (!(rhs instanceof FullRevision)) {
             return false;
         }
-        PreviewVersion other = (PreviewVersion) rhs;
+        FullRevision other = (FullRevision) rhs;
         if (mMajor != other.mMajor) {
             return false;
         }
@@ -150,7 +152,7 @@ public class PreviewVersion implements Comparable<PreviewVersion> {
     }
 
     /**
-     * Trivial comparision of a version, e.g 17.1.2 < 18.0.0.
+     * Trivial comparison of a version, e.g 17.1.2 < 18.0.0.
      *
      * Note that preview/release candidate are released before their final version,
      * so "18.0.0 rc1" comes below "18.0.0". The best way to think of it as if the
@@ -159,7 +161,7 @@ public class PreviewVersion implements Comparable<PreviewVersion> {
      * and more than "18.1.2.4"
      */
     @Override
-    public int compareTo(PreviewVersion rhs) {
+    public int compareTo(FullRevision rhs) {
         int delta = mMajor - rhs.mMajor;
         if (delta != 0) {
             return delta;

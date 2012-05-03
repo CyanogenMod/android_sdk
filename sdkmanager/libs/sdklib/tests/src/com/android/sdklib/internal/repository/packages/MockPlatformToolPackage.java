@@ -67,11 +67,11 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
      * <p/>
      * By design, this creates a package with one and only one archive.
      */
-    public MockPlatformToolPackage(SdkSource source, PreviewVersion previewVersion) {
+    public MockPlatformToolPackage(SdkSource source, FullRevision revision) {
         super(
                 source, // source,
-                createProps(previewVersion), // props,
-                previewVersion.getMajor(),
+                createProps(revision), // props,
+                revision.getMajor(),
                 null, // license,
                 "desc", // description,
                 "url", // descUrl,
@@ -81,14 +81,14 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
                 );
     }
 
-    private static Properties createProps(PreviewVersion previewVersion) {
+    private static Properties createProps(FullRevision revision) {
         Properties props = new Properties();
         props.setProperty(PkgProps.PKG_MINOR_REV,
-                          Integer.toString(previewVersion.getMinor()));
+                          Integer.toString(revision.getMinor()));
         props.setProperty(PkgProps.PKG_MICRO_REV,
-                          Integer.toString(previewVersion.getMicro()));
+                          Integer.toString(revision.getMicro()));
         props.setProperty(PkgProps.PKG_PREVIEW_REV,
-                          Integer.toString(previewVersion.getPreview()));
+                          Integer.toString(revision.getPreview()));
         return props;
     }
 }

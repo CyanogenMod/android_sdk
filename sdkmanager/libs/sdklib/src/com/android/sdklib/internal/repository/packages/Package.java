@@ -58,7 +58,7 @@ import java.util.Properties;
  */
 public abstract class Package implements IDescription, Comparable<Package> {
 
-    private final int mRevision;
+    private final MajorRevision mRevision;
     private final String mObsolete;
     private final String mLicense;
     private final String mDescription;
@@ -104,7 +104,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
      */
     Package(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
         mSource = source;
-        mRevision    = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_REVISION, 0);
+        mRevision    = new MajorRevision(
+                       XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_REVISION, 0));
         mDescription = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESCRIPTION);
         mDescUrl     = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESC_URL);
         mReleaseNote = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_RELEASE_NOTE);
@@ -144,8 +145,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
             descUrl = "";
         }
 
-        mRevision = Integer.parseInt(
-                       getProperty(props, PkgProps.PKG_REVISION, Integer.toString(revision)));
+        mRevision = new MajorRevision(Integer.parseInt(
+                       getProperty(props, PkgProps.PKG_MAJOR_REV, Integer.toString(revision))));
         mLicense     = getProperty(props, PkgProps.PKG_LICENSE,      license);
         mDescription = getProperty(props, PkgProps.PKG_DESC,         description);
         mDescUrl     = getProperty(props, PkgProps.PKG_DESC_URL,     descUrl);
@@ -222,7 +223,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * These properties will later be give the constructor that takes a {@link Properties} object.
      */
     public void saveProperties(Properties props) {
-        props.setProperty(PkgProps.PKG_REVISION, Integer.toString(mRevision));
+        props.setProperty(PkgProps.PKG_MAJOR_REV, Integer.toString(mRevision.getMajor()));
         if (mLicense != null && mLicense.length() > 0) {
             props.setProperty(PkgProps.PKG_LICENSE, mLicense);
         }
@@ -328,7 +329,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Returns the revision, an int > 0, for all packages (platform, add-on, tool, doc).
      * Can be 0 if this is a local package of unknown revision.
      */
-    public int getRevision() {
+    public FullRevision getRevision() {
         return mRevision;
     }
 
@@ -484,8 +485,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
             sb.append("\n");
         }
 
-        sb.append(String.format("Revision %1$d%2$s",
-                getRevision(),
+        sb.append(String.format("Revision %1$s%2$s",
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : ""));
 
         s = getDescUrl();
@@ -615,8 +616,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * <p/>
      * Two packages are considered the same if they represent the same thing, except for the
      * revision number.
-     * @param pkg the package to compare
-     * @return true if the item
+     * @param pkg the package to compare.
+     * @return true if the item as equivalent.
      */
     public abstract boolean sameItemAs(Package pkg);
 
@@ -638,12 +639,12 @@ public abstract class Package implements IDescription, Comparable<Package> {
         }
 
         // check they are the same item.
-        if (sameItemAs(replacementPackage) == false) {
+        if (!sameItemAs(replacementPackage)) {
             return UpdateInfo.INCOMPATIBLE;
         }
 
         // check revision number
-        if (replacementPackage.getRevision() > this.getRevision()) {
+        if (replacementPackage.getRevision().compareTo(this.getRevision()) > 0) {
             return UpdateInfo.UPDATE;
         }
 
@@ -652,7 +653,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
     }
 
     /**
-     * Returns an ordering like this: <br/>
+     * Returns an ordering <b>suitable for display</b> like this: <br/>
      * - Tools <br/>
      * - Platform-Tools <br/>
      * - Docs. <br/>
@@ -668,6 +669,10 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Important: this must NOT be used to compare if two packages are the same thing.
      * This is achieved by {@link #sameItemAs(Package)} or {@link #canBeUpdatedBy(Package)}.
      * <p/>
+     * The order done here is suitable for display, and this may not be the appropriate
+     * order when comparing whether packages are equal or of greater revision -- if you need
+     * to compare revisions, then use {@link #getRevision()}{@code .compareTo(rev)} directly.
+     * <p/>
      * This {@link #compareTo(Package)} method is purely an implementation detail to
      * perform the right ordering of the packages in the list of available or installed packages.
      * <p/>
@@ -679,7 +684,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
         String s1 = this.comparisonKey();
         String s2 = other.comparisonKey();
 
-        return s1.compareTo(s2);
+        int r = s1.compareTo(s2);
+        return r;
     }
 
     /**
@@ -728,7 +734,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
 
 
         // We insert the package version here because it is more important
-        // than the revision number. We want package version to be sorted
+        // than the revision number.
+        // In the list display, we want package version to be sorted
         // top-down, so we'll use 10k-api as the sorting key. The day we
         // reach 10k APIs, we'll need to revisit this.
         sb.append("|v:");                                                       //$NON-NLS-1$
@@ -743,10 +750,18 @@ public abstract class Package implements IDescription, Comparable<Package> {
 
         // Append revision number
         sb.append("|r:");                                                       //$NON-NLS-1$
-        if (this instanceof IPreviewVersionProvider) {
-            sb.append(String.format("%1$s", ((IPreviewVersionProvider) this).getPreviewVersion()));
+        FullRevision rev = getRevision();
+        sb.append(rev.getMajor()).append('.')
+          .append(rev.getMinor()).append('.')
+          .append(rev.getMicro()).append('.');
+        // Hack: When comparing packages for installation purposes, we want to treat
+        // "final releases" packages as more important than rc/preview packages.
+        // However like for the API level above, when sorting for list display purposes
+        // we want the final release package listed before its rc/preview packages.
+        if (rev.isPreview()) {
+            sb.append(rev.getPreview());
         } else {
-            sb.append(String.format("%1$04d", getRevision()));                  //$NON-NLS-1$
+            sb.append('0'); // 0=Final (!preview), to make "18.0" < "18.1" (18 Final < 18 RC1)
         }
 
         sb.append('|');
@@ -759,7 +774,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
         int result = 1;
         result = prime * result + Arrays.hashCode(mArchives);
         result = prime * result + ((mObsolete == null) ? 0 : mObsolete.hashCode());
-        result = prime * result + mRevision;
+        result = prime * result + mRevision.hashCode();
         result = prime * result + ((mSource == null) ? 0 : mSource.hashCode());
         return result;
     }
@@ -786,7 +801,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
         } else if (!mObsolete.equals(other.mObsolete)) {
             return false;
         }
-        if (mRevision != other.mRevision) {
+        if (!mRevision.equals(other.mRevision)) {
             return false;
         }
         if (mSource == null) {

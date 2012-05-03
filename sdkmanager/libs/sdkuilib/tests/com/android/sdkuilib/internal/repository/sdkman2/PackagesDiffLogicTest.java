@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.packages.BrokenPackage;
+import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.packages.MockAddonPackage;
 import com.android.sdklib.internal.repository.packages.MockBrokenPackage;
 import com.android.sdklib.internal.repository.packages.MockEmptyPackage;
@@ -1290,7 +1291,6 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testBrokenAddon() {
-
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
         SdkSource src2 = new SdkRepoSource("http://2.example.com/url2", "repo2");
 
@@ -1383,8 +1383,6 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testToolsUpdate() {
-        //
-
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
         SdkSource src2 = new SdkRepoSource("http://2.example.com/url2", "repo2");
         MockPlatformPackage p1;
@@ -1427,6 +1425,327 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:The addon B from vendor 1, Android API 1, revision 6>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
+
+    public void testToolsMinorUpdate() {
+        // Test: Check a minor revision updates an installed major revision.
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(3, 3),                                          // Tools 3.0.0
+                new MockPlatformToolPackage(src1, 3),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1), 3),          // Tools 3.0.1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "PkgCategorySource <source=repo1 (1.example.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testToolsPreviews() {
+        // Test: No local tools installed. The remote server has both tools and platforms
+        // in release and RC versions.
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(2, 0, 0), 3),          // Tools 2
+                new MockToolPackage(src1, new FullRevision(4, 0, 0, 1), 3),       // Tools 4 rc1
+                new MockPlatformToolPackage(src1, new FullRevision(3, 0, 0)),     // Plat-T 3
+                new MockPlatformToolPackage(src1, new FullRevision(5, 0, 0, 1)),  // Plat-T 5 rc1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 2>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 5 rc1>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=4>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 5 rc1>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testPreviewUpdateInstalledRelease() {
+        // Test: Local release Tools 3.0.0 installed, server has both a release 3.0.1 available
+        // and a Tools Preview 4.0.0 rc1 available.
+        // => v3 is updated by 3.0.1
+        // => v4.0.0rc1 does not update 3.0.0, instead it's a separate download.
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(3, 3),    // tool package has no source defined
+                new MockPlatformToolPackage(src1, 3),
+                new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, 3, 3),                                  // Tools 3
+                new MockToolPackage(src1, new FullRevision(3, 0, 1), 3),          // Tools 3.0.1
+                new MockToolPackage(src1, new FullRevision(4, 0, 0, 1), 3),       // Tools 4 rc1
+                new MockPlatformToolPackage(src1, new FullRevision(3, 0, 1)),     // PT    3.0.1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 0, 1)),  // PT    4 rc1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "PkgCategorySource <source=repo1 (1.example.com), #items=4>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now request to check new items and updates:
+        // Tools 4 rc1 is greater than the installed Tools 3, but it's a preview so we will NOT
+        //   auto-select it by default even though we requested to select "NEW" packages. We
+        //   want the user to manually opt-in into the rc/preview package.
+        // However Tools 3 has a 3.0.1 update that we'll auto-select.
+        m.checkNewUpdateItems(true, true, false, SdkConstants.PLATFORM_LINUX);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
+                "PkgCategorySource <source=repo1 (1.example.com), #items=4>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+    }
+
+    public void testPreviewUpdateInstalledPreview() {
+        // Test: Local preview Tools 3.0.1rc1 installed, server has both a release 3.0.0 available
+        // and a Tools Preview 3.0.1 rc2 available.
+        // => Installed 3.0.1rc1 can be updated by 3.0.1rc2
+        // => There's a separate "new" download for 3.0.0, not installed and NOT updating 3.0.1rc1.
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1, 1), 4),       //  T 3.0.1rc1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1, 1)),  // PT 4.0.1rc1
+                new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 0), 4),          //  T 3.0.0
+                new MockToolPackage(src1, new FullRevision(3, 0, 1, 2), 4),       //  T 3.0.1rc2
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 0)),     // PT 4.0.0
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1, 2)),  // PT 4.0.1 rc2
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=5>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Auto select new and update items. In this case:
+        // - the previews have updates available.
+        // - we're not selecting the non-installed "3.0" version that is older than the
+        //   currently installed "3.0.1rc1" version since that would be a downgrade.
+        m.checkNewUpdateItems(true, true, false, SdkConstants.PLATFORM_LINUX);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=5>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
+                "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // -----
+
+        // Now simulate that the server has a final package (3.0.1) to replace the
+        // installed 3.0.1rc1 package. It's not installed yet, just available.
+        // - A new 3.0.1 will be available.
+        // - The server no longer lists the RC since there's a final package, yet it is
+        //   still locally installed.
+        // - The 3.0.1 rc1 is not listed as having an update, since we treat the previews
+        //   separately. TODO: consider having the 3.0.1 show up as both a new item /and/
+        //   as an update to the 3.0.1rc1. That may have some other side effects.
+
+        m.uncheckAllItems();
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1, 1), 4),       //  T 3.0.1rc1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1, 1)),  // PT 4.0.1rc1
+                new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1), 4),          //  T 3.0.1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1)),     // PT 4.0.1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=5>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Auto select new and update items. In this case the new items are considered
+        // updates and yet new at the same time.
+        // Test by selecting new items only:
+        m.checkNewUpdateItems(true, false, false, SdkConstants.PLATFORM_LINUX);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- < * NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+
+        // Test by selecting update items only:
+        m.uncheckAllItems();
+        m.checkNewUpdateItems(false, true, false, SdkConstants.PLATFORM_LINUX);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- < * NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+
+
+        // -----
+
+        // Now simulate that the user has installed the final package (3.0.1) to replace the
+        // installed 3.0.1rc1 package.
+        // - The 3.0.1 is installed.
+        // - The 3.0.1 rc1 isn't listed anymore by the server.
+
+        m.uncheckAllItems();
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1), 4),          //  T 3.0.1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1)),     // PT 4.0.1
+                new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(3, 0, 1), 4),          //  T 3.0.1
+                new MockPlatformToolPackage(src1, new FullRevision(4, 0, 1)),     // PT 4.0.1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=3>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+
+
     // ----
 
     /**

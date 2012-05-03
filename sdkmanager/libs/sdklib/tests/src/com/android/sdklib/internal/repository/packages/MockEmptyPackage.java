@@ -134,7 +134,7 @@ public class MockEmptyPackage extends Package {
     public String getShortDescription() {
         StringBuilder sb = new StringBuilder(this.getClass().getSimpleName());
         sb.append(" '").append(mTestHandle).append('\'');
-        if (getRevision() > 0) {
+        if (getRevision().getMajor() > 0) {
             sb.append(" rev=").append(getRevision());
         }
         return sb.toString();

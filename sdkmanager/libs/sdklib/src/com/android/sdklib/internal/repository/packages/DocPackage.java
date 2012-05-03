@@ -170,12 +170,12 @@ public class DocPackage extends Package implements IAndroidVersionProvider {
         if (mVersion.isPreview()) {
             return String.format("Documentation for Android '%1$s' Preview SDK, revision %2$s%3$s",
                     mVersion.getCodename(),
-                    getRevision(),
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         } else {
             return String.format("Documentation for Android SDK, API %1$d, revision %2$s%3$s",
                     mVersion.getApiLevel(),
-                    getRevision(),
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
     }
@@ -194,8 +194,8 @@ public class DocPackage extends Package implements IAndroidVersionProvider {
         }
 
         if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
+            s += String.format("\nRevision %1$s%2$s",
+                    getRevision().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 
@@ -257,7 +257,7 @@ public class DocPackage extends Package implements IAndroidVersionProvider {
         // Check if they're the same exact (api and codename)
         if (replacementVersion.equals(mVersion)) {
             // exact same version, so check the revision level
-            if (replacementPackage.getRevision() > this.getRevision()) {
+            if (replacementPackage.getRevision().compareTo(this.getRevision()) > 0) {
                 return UpdateInfo.UPDATE;
             }
         } else {

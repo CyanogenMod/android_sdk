@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,22 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.annotations.NonNull;
-
 
 /**
- * Interface for packages that provide a {@link PreviewVersion},
- * which is a multi-part revision number (major.minor.micro) and an optional preview revision.
+ * Package revision number composed of a <em>single</em> major revision.
+ * <p/>
+ * Contrary to a {@link FullRevision}, a {@link MajorRevision} does not
+ * provide minor, micro and preview revision numbers -- these are all
+ * set to zero.
  */
-public interface IPreviewVersionProvider {
+public class MajorRevision extends FullRevision {
 
-    /**
-     * Returns a {@link PreviewVersion} for this package. Never null.
-     */
-    public abstract @NonNull PreviewVersion getPreviewVersion();
+    public MajorRevision(int major) {
+        super(major, 0, 0);
+    }
+
+    @Override
+    public String toString() {
+        return super.toShortString();
+    }
 }

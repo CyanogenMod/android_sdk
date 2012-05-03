@@ -136,7 +136,7 @@ public class PackageTest extends TestCase {
         Properties props = new Properties();
 
         // Package properties
-        props.setProperty(PkgProps.PKG_REVISION, "42");
+        props.setProperty(PkgProps.PKG_MAJOR_REV, "42");
         props.setProperty(PkgProps.PKG_LICENSE, "The License");
         props.setProperty(PkgProps.PKG_DESC, "Some description.");
         props.setProperty(PkgProps.PKG_DESC_URL, "http://description/url");
@@ -155,7 +155,7 @@ public class PackageTest extends TestCase {
      */
     protected void testCreatedPackage(Package p) {
         // Package properties
-        assertEquals(42, p.getRevision());
+        assertEquals("42", p.getRevision().toShortString());
         assertEquals("The License", p.getLicense());
         assertEquals("Some description.", p.getDescription());
         assertEquals("http://description/url", p.getDescUrl());

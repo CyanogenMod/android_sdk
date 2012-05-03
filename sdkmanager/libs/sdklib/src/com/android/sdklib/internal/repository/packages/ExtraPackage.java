@@ -490,9 +490,9 @@ public class ExtraPackage extends MinToolsPackage
      */
     @Override
     public String getShortDescription() {
-        String s = String.format("%1$s, revision %2$d%3$s",
+        String s = String.format("%1$s, revision %2$s%3$s",
                 getDisplayName(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
 
         return s;
@@ -506,9 +506,9 @@ public class ExtraPackage extends MinToolsPackage
      */
     @Override
     public String getLongDescription() {
-        String s = String.format("%1$s, revision %2$d%3$s\nBy %4$s",
+        String s = String.format("%1$s, revision %2$s%3$s\nBy %4$s",
                 getDisplayName(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "",  //$NON-NLS-2$
                 getVendorDisplay());
 

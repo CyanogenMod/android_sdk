@@ -16,10 +16,10 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.annotations.NonNull;
 import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
+import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -30,13 +30,13 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Represents a package in an SDK repository that has a {@link PreviewVersion},
+ * Represents a package in an SDK repository that has a {@link FullRevision},
  * which is a multi-part revision number (major.minor.micro) and an optional preview revision.
  */
-public abstract class PreviewVersionPackage extends Package
-        implements IPreviewVersionProvider {
+public abstract class FullRevisionPackage extends Package
+        implements IFullRevisionProvider {
 
-    private final PreviewVersion mPreviewVersion;
+    private final FullRevision mPreviewVersion;
 
     /**
      * Creates a new package from the attributes and elements of the given XML node.
@@ -48,25 +48,25 @@ public abstract class PreviewVersionPackage extends Package
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    PreviewVersionPackage(SdkSource source,
+    FullRevisionPackage(SdkSource source,
             Node packageNode,
             String nsUri,
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        // The major revision is getRevision(), already handled by Package.
-
+        // The major revision is in Package.getRevision()
+        int majorRevision = super.getRevision().getMajor();
         int minorRevision = XmlParserUtils.getXmlInt(packageNode,
                 SdkRepoConstants.NODE_MINOR_REV,
-                PreviewVersion.IMPLICIT_MINOR_REV);
+                FullRevision.IMPLICIT_MINOR_REV);
         int microRevision = XmlParserUtils.getXmlInt(packageNode,
                 SdkRepoConstants.NODE_MICRO_REV,
-                PreviewVersion.IMPLICIT_MICRO_REV);
+                FullRevision.IMPLICIT_MICRO_REV);
         int preview = XmlParserUtils.getXmlInt(packageNode,
                 SdkRepoConstants.NODE_PREVIEW,
-                PreviewVersion.NOT_A_PREVIEW);
+                FullRevision.NOT_A_PREVIEW);
 
-        mPreviewVersion = new PreviewVersion(getRevision(), minorRevision, microRevision, preview);
+        mPreviewVersion = new FullRevision(majorRevision, minorRevision, microRevision, preview);
     }
 
     /**
@@ -78,7 +78,7 @@ public abstract class PreviewVersionPackage extends Package
      * <p/>
      * By design, this creates a package with one and only one archive.
      */
-    public PreviewVersionPackage(
+    public FullRevisionPackage(
             SdkSource source,
             Properties props,
             int revision,
@@ -91,26 +91,26 @@ public abstract class PreviewVersionPackage extends Package
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        // The major revision is getRevision(), already handled by Package.
-
+        // The major revision is in Package.getRevision()
+        int majorRevision = super.getRevision().getMajor();
         int minorRevision = Integer.parseInt(
                 getProperty(props,
                         PkgProps.PKG_MINOR_REV,
-                        Integer.toString(PreviewVersion.IMPLICIT_MINOR_REV)));
+                        Integer.toString(FullRevision.IMPLICIT_MINOR_REV)));
         int microRevision = Integer.parseInt(
                 getProperty(props,
                         PkgProps.PKG_MICRO_REV,
-                        Integer.toString(PreviewVersion.IMPLICIT_MINOR_REV)));
+                        Integer.toString(FullRevision.IMPLICIT_MINOR_REV)));
         int preview = Integer.parseInt(
                 getProperty(props,
                         PkgProps.PKG_PREVIEW_REV,
-                        Integer.toString(PreviewVersion.NOT_A_PREVIEW)));
+                        Integer.toString(FullRevision.NOT_A_PREVIEW)));
 
-        mPreviewVersion = new PreviewVersion(getRevision(), minorRevision, microRevision, preview);
+        mPreviewVersion = new FullRevision(majorRevision, minorRevision, microRevision, preview);
     }
 
-    @Override @NonNull
-    public PreviewVersion getPreviewVersion() {
+    @Override
+    public FullRevision getRevision() {
         return mPreviewVersion;
     }
 
@@ -118,11 +118,9 @@ public abstract class PreviewVersionPackage extends Package
     public void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        // The major revision is getRevision(), already handled by Package.
-        assert mPreviewVersion.getMajor() == getRevision();
-
-        props.setProperty(PkgProps.PKG_MINOR_REV, Integer.toString(mPreviewVersion.getMinor()));
-        props.setProperty(PkgProps.PKG_MICRO_REV, Integer.toString(mPreviewVersion.getMicro()));
+        props.setProperty(PkgProps.PKG_MAJOR_REV,   Integer.toString(mPreviewVersion.getMajor()));
+        props.setProperty(PkgProps.PKG_MINOR_REV,   Integer.toString(mPreviewVersion.getMinor()));
+        props.setProperty(PkgProps.PKG_MICRO_REV,   Integer.toString(mPreviewVersion.getMicro()));
         props.setProperty(PkgProps.PKG_PREVIEW_REV, Integer.toString(mPreviewVersion.getPreview()));
     }
 
@@ -142,10 +140,10 @@ public abstract class PreviewVersionPackage extends Package
         if (!super.equals(obj)) {
             return false;
         }
-        if (!(obj instanceof PreviewVersionPackage)) {
+        if (!(obj instanceof FullRevisionPackage)) {
             return false;
         }
-        PreviewVersionPackage other = (PreviewVersionPackage) obj;
+        FullRevisionPackage other = (FullRevisionPackage) obj;
         if (mPreviewVersion == null) {
             if (other.mPreviewVersion != null) {
                 return false;
@@ -155,4 +153,38 @@ public abstract class PreviewVersionPackage extends Package
         }
         return true;
     }
+
+    /**
+     * Computes whether the given package is a suitable update for the current package.
+     * <p/>
+     * A specific case here is that a release package can update a preview, whereas
+     * a preview can only update another preview.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+        if (replacementPackage == null) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check they are the same item, ignoring the preview bit.
+        if (!sameItemAs(replacementPackage, true /*ignorePreviews*/)) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // a preview cannot update a non-preview
+        if (!getRevision().isPreview() && replacementPackage.getRevision().isPreview()) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check revision number
+        if (replacementPackage.getRevision().compareTo(this.getRevision()) > 0) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // not an upgrade but not incompatible either.
+        return UpdateInfo.NOT_UPDATE;
+    }
+
 }

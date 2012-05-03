@@ -17,8 +17,8 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
-import com.android.sdklib.internal.repository.packages.IPreviewVersionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -90,15 +90,8 @@ public class PkgItem implements Comparable<PkgItem> {
         return mMainPkg.getListDescription();
     }
 
-    public int getRevision() {
+    public FullRevision getRevision() {
         return mMainPkg.getRevision();
-    }
-
-    public String getRevisionStr() {
-        if (mMainPkg instanceof IPreviewVersionProvider) {
-            return ((IPreviewVersionProvider) mMainPkg).getPreviewVersion().toShortString();
-        }
-        return Integer.toString(mMainPkg.getRevision());
     }
 
     public String getDescription() {
@@ -157,24 +150,24 @@ public class PkgItem implements Comparable<PkgItem> {
 
     /**
      * Checks whether the main packages are of the same type and are
-     * not an update of each other.
+     * not an update of each other and have the same revision number.
      */
     public boolean isSameMainPackageAs(Package pkg) {
         if (mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
             // package revision numbers must match
-            return mMainPkg.getRevision() == pkg.getRevision();
+            return mMainPkg.getRevision().equals(pkg.getRevision());
         }
         return false;
     }
 
     /**
      * Checks whether the update packages are of the same type and are
-     * not an update of each other.
+     * not an update of each other and have the same revision numbers.
      */
     public boolean isSameUpdatePackageAs(Package pkg) {
         if (mUpdatePkg != null && mUpdatePkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
             // package revision numbers must match
-            return mUpdatePkg.getRevision() == pkg.getRevision();
+            return mUpdatePkg.getRevision().equals(pkg.getRevision());
         }
         return false;
     }

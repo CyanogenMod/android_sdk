@@ -69,12 +69,12 @@ public class MockToolPackage extends ToolPackage {
      */
     public MockToolPackage(
             SdkSource source,
-            PreviewVersion previewVersion,
+            FullRevision revision,
             int minPlatformToolsRev) {
         super(
                 source, // source,
-                createProps(previewVersion, minPlatformToolsRev), // props,
-                previewVersion.getMajor(),
+                createProps(revision, minPlatformToolsRev), // props,
+                revision.getMajor(),
                 null, // license,
                 "desc", // description,
                 "url", // descUrl,
@@ -84,17 +84,17 @@ public class MockToolPackage extends ToolPackage {
                 );
     }
 
-    private static Properties createProps(PreviewVersion previewVersion, int minPlatformToolsRev) {
+    private static Properties createProps(FullRevision revision, int minPlatformToolsRev) {
         Properties props = new Properties();
         props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                           Integer.toString((minPlatformToolsRev)));
-        if (previewVersion != null) {
+        if (revision != null) {
             props.setProperty(PkgProps.PKG_MINOR_REV,
-                              Integer.toString(previewVersion.getMinor()));
+                              Integer.toString(revision.getMinor()));
             props.setProperty(PkgProps.PKG_MICRO_REV,
-                              Integer.toString(previewVersion.getMicro()));
+                              Integer.toString(revision.getMicro()));
             props.setProperty(PkgProps.PKG_PREVIEW_REV,
-                              Integer.toString(previewVersion.getPreview()));
+                              Integer.toString(revision.getPreview()));
         }
         return props;
     }
