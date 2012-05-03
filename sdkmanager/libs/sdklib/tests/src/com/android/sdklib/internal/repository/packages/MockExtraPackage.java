@@ -18,9 +18,8 @@ package com.android.sdklib.internal.repository.packages;
 
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
-import com.android.sdklib.internal.repository.packages.ExtraPackage;
-import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -73,7 +72,7 @@ public class MockExtraPackage extends ExtraPackage {
 
     private static Properties createProps(int min_platform_tools_rev) {
         Properties props = new Properties();
-        props.setProperty(ToolPackage.PROP_MIN_PLATFORM_TOOLS_REV,
+        props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                           Integer.toString((min_platform_tools_rev)));
         return props;
     }

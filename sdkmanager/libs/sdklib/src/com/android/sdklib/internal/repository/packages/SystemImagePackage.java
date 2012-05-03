@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
@@ -42,7 +43,7 @@ import java.util.Properties;
  * Represents a system-image XML node in an SDK repository.
  */
 public class SystemImagePackage extends Package
-        implements IPackageVersion, IPlatformDependency {
+        implements IAndroidVersionProvider, IPlatformDependency {
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -217,8 +218,8 @@ public class SystemImagePackage extends Package
      * <p/>
      * A system-image has the same {@link AndroidVersion} as the platform it depends on.
      */
-    @Override
-    public AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -314,7 +315,7 @@ public class SystemImagePackage extends Package
 
             // check they are the same abi and version.
             return getAbi().equals(newPkg.getAbi()) &&
-                    getVersion().equals(newPkg.getVersion());
+                    getAndroidVersion().equals(newPkg.getAndroidVersion());
         }
 
         return false;

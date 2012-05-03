@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
@@ -35,11 +36,11 @@ import java.util.Properties;
 /**
  * Represents a doc XML node in an SDK repository.
  * <p/>
- * Note that a doc package has a version and thus implements {@link IPackageVersion}.
+ * Note that a doc package has a version and thus implements {@link IAndroidVersionProvider}.
  * However there is no mandatory dependency that limits installation so this does not
  * implement {@link IPlatformDependency}.
  */
-public class DocPackage extends Package implements IPackageVersion {
+public class DocPackage extends Package implements IAndroidVersionProvider {
 
     private final AndroidVersion mVersion;
 
@@ -53,7 +54,10 @@ public class DocPackage extends Package implements IPackageVersion {
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    public DocPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    public DocPackage(SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
@@ -124,8 +128,8 @@ public class DocPackage extends Package implements IPackageVersion {
      * Returns the version, for platform, add-on and doc packages.
      * Can be 0 if this is a local package of unknown api-level.
      */
-    @Override
-    public AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -220,8 +224,8 @@ public class DocPackage extends Package implements IPackageVersion {
     @Override
     public boolean sameItemAs(Package pkg) {
         if (pkg instanceof DocPackage) {
-            AndroidVersion rev2 = ((DocPackage) pkg).getVersion();
-            return this.getVersion().equals(rev2);
+            AndroidVersion rev2 = ((DocPackage) pkg).getAndroidVersion();
+            return this.getAndroidVersion().equals(rev2);
         }
 
         return false;
@@ -248,7 +252,7 @@ public class DocPackage extends Package implements IPackageVersion {
 
         DocPackage replacementDoc = (DocPackage)replacementPackage;
 
-        AndroidVersion replacementVersion = replacementDoc.getVersion();
+        AndroidVersion replacementVersion = replacementDoc.getAndroidVersion();
 
         // Check if they're the same exact (api and codename)
         if (replacementVersion.equals(mVersion)) {

@@ -75,7 +75,7 @@ public class PlatformPackageTest extends MinToolsPackageTest {
         super.testCreatedPackage(p);
 
         // Package properties
-        assertEquals("API 5", p.getVersion().toString());
+        assertEquals("API 5", p.getAndroidVersion().toString());
         assertEquals("armeabi", p.getIncludedAbi());
     }
 

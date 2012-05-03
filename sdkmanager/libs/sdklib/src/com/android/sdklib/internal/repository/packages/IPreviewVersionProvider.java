@@ -16,21 +16,17 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.sdklib.AndroidVersion;
+import com.android.annotations.NonNull;
+
 
 /**
- * Interface for packages that provide an {@link AndroidVersion}.
- * <p/>
- * Note that {@link IPlatformDependency} is a similar interface, but with a different semantic.
- * The {@link IPlatformDependency} denotes that a given package can only be installed if the
- * requested platform is present, whereas this interface denotes that the given package simply
- * has a version, which is not necessarily a dependency.
+ * Interface for packages that provide a {@link PreviewVersion},
+ * which is a multi-part revision number (major.minor.micro) and an optional preview revision.
  */
-public interface IPackageVersion {
+public interface IPreviewVersionProvider {
 
     /**
-     * Returns the version, for platform, add-on and doc packages.
-     * Can be 0 if this is a local package of unknown api-level.
+     * Returns a {@link PreviewVersion} for this package. Never null.
      */
-    public abstract AndroidVersion getVersion();
+    public abstract @NonNull PreviewVersion getPreviewVersion();
 }

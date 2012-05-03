@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
@@ -40,7 +41,8 @@ import java.util.Properties;
 /**
  * Represents a platform XML node in an SDK repository.
  */
-public class PlatformPackage extends MinToolsPackage implements IPackageVersion, ILayoutlibVersion {
+public class PlatformPackage extends MinToolsPackage
+        implements IAndroidVersionProvider, ILayoutlibVersion {
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -145,8 +147,8 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
     }
 
     /** Returns the package version, for platform, add-on and doc packages. */
-    @Override
-    public AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -279,7 +281,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
 
         File platforms = new File(osSdkRoot, SdkConstants.FD_PLATFORMS);
         File folder = new File(platforms,
-                String.format("android-%s", getVersion().getApiString())); //$NON-NLS-1$
+                String.format("android-%s", getAndroidVersion().getApiString())); //$NON-NLS-1$
 
         return folder;
     }
@@ -290,7 +292,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
             PlatformPackage newPkg = (PlatformPackage)pkg;
 
             // check they are the same version.
-            return newPkg.getVersion().equals(this.getVersion());
+            return newPkg.getAndroidVersion().equals(this.getAndroidVersion());
         }
 
         return false;

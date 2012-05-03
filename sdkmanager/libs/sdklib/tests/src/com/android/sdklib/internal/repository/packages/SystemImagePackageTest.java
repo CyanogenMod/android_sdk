@@ -85,7 +85,7 @@ public class SystemImagePackageTest extends PackageTest {
         super.testCreatedPackage(p);
 
         // SystemImagePackage properties
-        assertEquals("API 5", p.getVersion().toString());
+        assertEquals("API 5", p.getAndroidVersion().toString());
         assertEquals("armeabi-v7a", p.getAbi());
     }
 

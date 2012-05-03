@@ -79,7 +79,7 @@ public class SourcePackageTest extends PackageTest {
         super.testCreatedPackage(p);
 
         // SourcePackageTest properties
-        assertEquals("API 5", p.getVersion().toString());
+        assertEquals("API 5", p.getAndroidVersion().toString());
     }
 
     // ----

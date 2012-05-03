@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
@@ -42,11 +43,11 @@ import java.util.Properties;
 /**
  * Represents a source XML node in an SDK repository.
  * <p/>
- * Note that a source package has a version and thus implements {@link IPackageVersion}.
+ * Note that a source package has a version and thus implements {@link IAndroidVersionProvider}.
  * However there is no mandatory dependency that limits installation so this does not
  * implement {@link IPlatformDependency}.
  */
-public class SourcePackage extends Package implements IPackageVersion {
+public class SourcePackage extends Package implements IAndroidVersionProvider {
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -184,8 +185,8 @@ public class SourcePackage extends Package implements IPackageVersion {
     /**
      * Returns the android version of this package.
      */
-    @Override
-    public AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -300,7 +301,7 @@ public class SourcePackage extends Package implements IPackageVersion {
             SourcePackage newPkg = (SourcePackage)pkg;
 
             // check they are the same version.
-            return getVersion().equals(newPkg.getVersion());
+            return getAndroidVersion().equals(newPkg.getAndroidVersion());
         }
 
         return false;

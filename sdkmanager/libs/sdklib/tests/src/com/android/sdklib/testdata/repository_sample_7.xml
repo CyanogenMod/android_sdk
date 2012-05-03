@@ -15,7 +15,7 @@
  * limitations under the License.
 -->
 <sdk:sdk-repository
-    xmlns:sdk="http://schemas.android.com/sdk/android/repository/6">
+    xmlns:sdk="http://schemas.android.com/sdk/android/repository/7">
 
     <!-- Define a couple of licenses. These will be referenced by uses-license later. -->
 
@@ -187,6 +187,9 @@
 
     <sdk:tool>
         <sdk:revision>1</sdk:revision>
+        <sdk:minor-rev>2</sdk:minor-rev>
+        <sdk:micro-rev>3</sdk:micro-rev>
+        <sdk:preview>4</sdk:preview>
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
         <sdk:uses-license ref="license1" />
@@ -248,6 +251,9 @@
 
     <sdk:platform-tool>
         <sdk:revision>3</sdk:revision>
+        <sdk:minor-rev>0</sdk:minor-rev>
+        <sdk:micro-rev>0</sdk:micro-rev>
+        <sdk:preview>5</sdk:preview>
         <sdk:uses-license ref="license1" />
         <sdk:archives>
             <sdk:archive os="windows">

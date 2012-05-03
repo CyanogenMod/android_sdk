@@ -678,7 +678,7 @@ public class SdkRepoSourceTest extends TestCase {
         for (Package p : pkgs) {
             if (p instanceof SystemImagePackage) {
                 SystemImagePackage sip = (SystemImagePackage) p;
-                String v = sip.getVersion().getApiString();
+                String v = sip.getAndroidVersion().getApiString();
                 String a = sip.getAbi();
                 sysImgVersionAbi.add(String.format("%1$s %2$s", v, a)); //$NON-NLS-1$
             }
@@ -694,7 +694,7 @@ public class SdkRepoSourceTest extends TestCase {
         for (Package p : pkgs) {
             if (p instanceof SourcePackage) {
                 SourcePackage sp = (SourcePackage) p;
-                String v = sp.getVersion().getApiString();
+                String v = sp.getAndroidVersion().getApiString();
                 sourceVersion.add(v);
             }
         }
@@ -820,7 +820,7 @@ public class SdkRepoSourceTest extends TestCase {
         for (Package p : pkgs) {
             if (p instanceof SystemImagePackage) {
                 SystemImagePackage sip = (SystemImagePackage) p;
-                String v = sip.getVersion().getApiString();
+                String v = sip.getAndroidVersion().getApiString();
                 String a = sip.getAbi();
                 sysImgVersionAbi.add(String.format("%1$s %2$s", v, a)); //$NON-NLS-1$
             }
@@ -837,7 +837,150 @@ public class SdkRepoSourceTest extends TestCase {
         for (Package p : pkgs) {
             if (p instanceof SourcePackage) {
                 SourcePackage sp = (SourcePackage) p;
-                String v = sp.getVersion().getApiString();
+                String v = sp.getAndroidVersion().getApiString();
+                sourceVersion.add(v);
+            }
+        }
+        assertEquals(
+                "[42, 2, 1]",
+                Arrays.toString(sourceVersion.toArray()));
+    }
+
+    /**
+     * Validate what we can load from repository in schema version 6
+     */
+    public void testLoadXml_7() throws Exception {
+        InputStream xmlStream = getTestResource(
+                    "/com/android/sdklib/testdata/repository_sample_7.xml");
+
+        // guess the version from the XML document
+        int version = mSource._getXmlSchemaVersion(xmlStream);
+        assertEquals(7, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://" + SdkRepoConstants.URL_DEFAULT_FILENAME;
+
+        String uri = mSource._validateXml(xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkRepoConstants.getSchemaUri(7), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mSource._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the packages
+        assertTrue(mSource._parsePackages(doc, uri, monitor));
+
+        assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
+                     "Found Documentation for Android SDK, API 1, revision 1\n" +
+                     "Found Sources for Android SDK, API 1, revision 1\n" +
+                     "Found SDK Platform Android 1.1, API 2, revision 12\n" +
+                     "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
+                     "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
+                     "Found Sources for Android SDK, API 2, revision 2\n" +
+                     "Found SDK Platform Android Pastry Preview, revision 3\n" +
+                     "Found Android SDK Tools, revision 1.2.3 rc4\n" +
+                     "Found Documentation for Android SDK, API 2, revision 42\n" +
+                     "Found Android SDK Tools, revision 42\n" +
+                     "Found Android SDK Platform-tools, revision 3 rc5\n" +
+                     "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
+                     "Found ARM EABI System Image, Android API 42, revision 12\n" +
+                     "Found Mips System Image, Android API 42, revision 12\n" +
+                     "Found Sources for Android SDK, API 42, revision 12\n",
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+
+        // check the packages we found... we expected to find 13 packages with each at least
+        // one archive.
+        // Note the order doesn't necessary match the one from the
+        // assertEquald(getCapturedVerboseLog) because packages are sorted using the
+        // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
+        Package[] pkgs = mSource.getPackages();
+
+        assertEquals(16, pkgs.length);
+        for (Package p : pkgs) {
+            assertTrue(p.getArchives().length >= 1);
+        }
+
+        // Check the layoutlib & included-abi of the platform packages.
+        ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
+        ArrayList<String> includedAbi = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof PlatformPackage) {
+                layoutlibVers.add(((PlatformPackage) p).getLayoutlibVersion());
+                String abi = ((PlatformPackage) p).getIncludedAbi();
+                includedAbi.add(abi == null ? "(null)" : abi);
+            }
+        }
+        assertEquals(
+                "[Pair [first=1, second=0], " +         // platform API 5 preview
+                 "Pair [first=5, second=31415], " +     // platform API 2
+                 "Pair [first=5, second=0]]",           // platform API 1
+                Arrays.toString(layoutlibVers.toArray()));
+        assertEquals(
+                "[(null), " +                           // platform API 5 preview
+                 "x86, " +                              // platform API 2
+                 "armeabi]",                            // platform API 1
+                Arrays.toString(includedAbi.toArray()));
+
+        // Check the extra packages path, vendor, install folder, project-files, old-paths
+
+        final String osSdkPath = "SDK";
+        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+
+        ArrayList<String> extraPaths    = new ArrayList<String>();
+        ArrayList<String> extraVendors  = new ArrayList<String>();
+        ArrayList<File>   extraInstall  = new ArrayList<File>();
+        ArrayList<ArrayList<String>> extraFilePaths = new ArrayList<ArrayList<String>>();
+        for (Package p : pkgs) {
+            if (p instanceof ExtraPackage) {
+                ExtraPackage ep = (ExtraPackage) p;
+                // combine path and old-paths in the form "path [old_path1, old_path2]"
+                extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
+                extraVendors.add(ep.getVendorId() + "/" + ep.getVendorDisplay());
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+
+                ArrayList<String> filePaths = new ArrayList<String>();
+                for (String filePath : ep.getProjectFiles()) {
+                    filePaths.add(filePath);
+                }
+                extraFilePaths.add(filePaths);
+            }
+        }
+
+        // There are no extra packages anymore in repository-6
+        assertEquals("[]", Arrays.toString(extraPaths.toArray()));
+        assertEquals("[]", Arrays.toString(extraVendors.toArray()));
+        assertEquals("[]", Arrays.toString(extraInstall.toArray()));
+        assertEquals("[]", Arrays.toString(extraFilePaths.toArray()));
+
+        // Check the system-image packages
+        ArrayList<String> sysImgVersionAbi = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof SystemImagePackage) {
+                SystemImagePackage sip = (SystemImagePackage) p;
+                String v = sip.getAndroidVersion().getApiString();
+                String a = sip.getAbi();
+                sysImgVersionAbi.add(String.format("%1$s %2$s", v, a)); //$NON-NLS-1$
+            }
+        }
+        assertEquals(
+                "[42 armeabi, " +
+                 "42 mips, " +
+                 "2 armeabi-v7a, " +
+                 "2 x86]",
+                Arrays.toString(sysImgVersionAbi.toArray()));
+
+        // Check the source packages
+        ArrayList<String> sourceVersion = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof SourcePackage) {
+                SourcePackage sp = (SourcePackage) p;
+                String v = sp.getAndroidVersion().getApiString();
                 sourceVersion.add(v);
             }
         }

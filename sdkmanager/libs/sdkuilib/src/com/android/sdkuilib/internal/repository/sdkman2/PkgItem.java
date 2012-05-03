@@ -17,7 +17,8 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.internal.repository.archives.Archive;
-import com.android.sdklib.internal.repository.packages.IPackageVersion;
+import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
+import com.android.sdklib.internal.repository.packages.IPreviewVersionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -93,6 +94,13 @@ public class PkgItem implements Comparable<PkgItem> {
         return mMainPkg.getRevision();
     }
 
+    public String getRevisionStr() {
+        if (mMainPkg instanceof IPreviewVersionProvider) {
+            return ((IPreviewVersionProvider) mMainPkg).getPreviewVersion().toShortString();
+        }
+        return Integer.toString(mMainPkg.getRevision());
+    }
+
     public String getDescription() {
         return mMainPkg.getDescription();
     }
@@ -110,8 +118,8 @@ public class PkgItem implements Comparable<PkgItem> {
     }
 
     public int getApi() {
-        return mMainPkg instanceof IPackageVersion ?
-                ((IPackageVersion) mMainPkg).getVersion().getApiLevel() :
+        return mMainPkg instanceof IAndroidVersionProvider ?
+                ((IAndroidVersionProvider) mMainPkg).getAndroidVersion().getApiLevel() :
                     -1;
     }
 

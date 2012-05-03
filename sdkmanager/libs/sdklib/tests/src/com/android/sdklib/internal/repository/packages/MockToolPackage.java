@@ -20,6 +20,7 @@ import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -46,10 +47,10 @@ public class MockToolPackage extends ToolPackage {
      * <p/>
      * By design, this creates a package with one and only one archive.
      */
-    public MockToolPackage(SdkSource source, int revision, int min_platform_tools_rev) {
+    public MockToolPackage(SdkSource source, int revision, int minPlatformToolsRev) {
         super(
             source, // source,
-            createProps(min_platform_tools_rev), // props,
+            createProps(null /*version*/, minPlatformToolsRev), // props,
             revision,
             null, // license,
             "desc", // description,
@@ -60,10 +61,41 @@ public class MockToolPackage extends ToolPackage {
             );
     }
 
-    private static Properties createProps(int min_platform_tools_rev) {
+    /**
+     * Creates a {@link MockToolPackage} with the given revision and hardcoded defaults
+     * for everything else.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
+     */
+    public MockToolPackage(
+            SdkSource source,
+            PreviewVersion previewVersion,
+            int minPlatformToolsRev) {
+        super(
+                source, // source,
+                createProps(previewVersion, minPlatformToolsRev), // props,
+                previewVersion.getMajor(),
+                null, // license,
+                "desc", // description,
+                "url", // descUrl,
+                Os.getCurrentOs(), // archiveOs,
+                Arch.getCurrentArch(), // archiveArch,
+                "foo" // archiveOsPath
+                );
+    }
+
+    private static Properties createProps(PreviewVersion previewVersion, int minPlatformToolsRev) {
         Properties props = new Properties();
-        props.setProperty(ToolPackage.PROP_MIN_PLATFORM_TOOLS_REV,
-                          Integer.toString((min_platform_tools_rev)));
+        props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
+                          Integer.toString((minPlatformToolsRev)));
+        if (previewVersion != null) {
+            props.setProperty(PkgProps.PKG_MINOR_REV,
+                              Integer.toString(previewVersion.getMinor()));
+            props.setProperty(PkgProps.PKG_MICRO_REV,
+                              Integer.toString(previewVersion.getMicro()));
+            props.setProperty(PkgProps.PKG_PREVIEW_REV,
+                              Integer.toString(previewVersion.getPreview()));
+        }
         return props;
     }
 }

@@ -27,6 +27,7 @@ import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
@@ -43,13 +44,10 @@ import java.util.regex.Pattern;
 /**
  * Represents a tool XML node in an SDK repository.
  */
-public class ToolPackage extends Package implements IMinPlatformToolsDependency {
+public class ToolPackage extends PreviewVersionPackage implements IMinPlatformToolsDependency {
 
     /** The value returned by {@link ToolPackage#installId()}. */
     public static final String INSTALL_ID = "tools";                             //$NON-NLS-1$
-
-    public static final String PROP_MIN_PLATFORM_TOOLS_REV =
-                                                "Platform.MinPlatformToolsRev";  //$NON-NLS-1$
 
     /**
      * The minimal revision of the platform-tools package required by this package
@@ -67,7 +65,10 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    public ToolPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    public ToolPackage(SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
         mMinPlatformToolsRevision = XmlParserUtils.getXmlInt(
@@ -145,7 +146,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
         mMinPlatformToolsRevision = Integer.parseInt(
                 getProperty(
                         props,
-                        PROP_MIN_PLATFORM_TOOLS_REV,
+                        PkgProps.MIN_PLATFORM_TOOLS_REV,
                         Integer.toString(MIN_PLATFORM_TOOLS_REV_INVALID)));
     }
 
@@ -187,8 +188,8 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
      */
     @Override
     public String getShortDescription() {
-        return String.format("Android SDK Tools, revision %1$d%2$s",
-                getRevision(),
+        return String.format("Android SDK Tools, revision %1$s%2$s",
+                getPreviewVersion().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -201,8 +202,8 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
         }
 
         if (s.indexOf("revision") == -1) {
-            s += String.format("\nRevision %1$d%2$s",
-                    getRevision(),
+            s += String.format("\nRevision %1$s%2$s",
+                    getPreviewVersion().toShortString(),
                     isObsolete() ? " (Obsolete)" : "");
         }
 
@@ -235,7 +236,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
         super.saveProperties(props);
 
         if (getMinPlatformToolsRevision() != MIN_PLATFORM_TOOLS_REV_INVALID) {
-            props.setProperty(PROP_MIN_PLATFORM_TOOLS_REV,
+            props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                               Integer.toString(getMinPlatformToolsRevision()));
         }
     }

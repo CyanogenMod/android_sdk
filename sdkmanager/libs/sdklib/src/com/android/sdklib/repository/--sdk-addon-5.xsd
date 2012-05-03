@@ -53,6 +53,10 @@
               and the display in the UI.
             - <addon> does the same, where <name> is replaced by <name-id> and <name-display>
               and <vendor> is replaced by <vendor-id> and <vendor-display>.
+
+         - v5 is not used yet:
+            - The <beta-rc> element is no longer supported. It was never implemented anyway.
+
     -->
 
     <xsd:element name="sdk-addon" type="sdk:repositoryType" />
@@ -134,12 +138,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"  type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package.
-                 DEPRECATED. TODO remove in sdk-addon-5. -->
-            <xsd:element name="beta-rc"   type="xsd:positiveInteger" minOccurs="0" />
 
             <!-- Optional information on the layoutlib packaged in this platform. -->
             <xsd:element name="layoutlib" type="sdk:layoutlibType"  minOccurs="0" />
@@ -237,11 +235,6 @@
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"      type="xsd:string" minOccurs="0" />
-
-            <!-- An optional element indicating the package is a beta/preview.
-                 When present, it indicates the release-candidate number.
-                 When the element is absent, it indicates this is a released package. -->
-            <xsd:element name="beta-rc"       type="xsd:positiveInteger" minOccurs="0" />
 
             <!-- A list of project files contributed by this package. Optional. -->
             <xsd:element name="project-files" type="sdk:projectFilesType" minOccurs="0" />

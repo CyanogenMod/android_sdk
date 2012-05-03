@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.IAndroidTarget;
@@ -49,7 +50,7 @@ import java.util.Properties;
  * Represents a sample XML node in an SDK repository.
  */
 public class SamplePackage extends MinToolsPackage
-    implements IPackageVersion, IMinApiLevelDependency {
+        implements IAndroidVersionProvider, IMinApiLevelDependency {
 
     /** The matching platform version. */
     private final AndroidVersion mVersion;
@@ -70,7 +71,10 @@ public class SamplePackage extends MinToolsPackage
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    public SamplePackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    public SamplePackage(SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
@@ -133,7 +137,8 @@ public class SamplePackage extends MinToolsPackage
      * @throws AndroidVersionException if the {@link AndroidVersion} can't be restored
      *                                 from properties.
      */
-    public static Package create(String archiveOsPath, Properties props) throws AndroidVersionException {
+    public static Package create(String archiveOsPath, Properties props)
+            throws AndroidVersionException {
         return new SamplePackage(archiveOsPath, props);
     }
 
@@ -182,8 +187,8 @@ public class SamplePackage extends MinToolsPackage
     }
 
     /** Returns the matching platform version. */
-    @Override
-    public AndroidVersion getVersion() {
+    @Override @NonNull
+    public AndroidVersion getAndroidVersion() {
         return mVersion;
     }
 
@@ -284,12 +289,12 @@ public class SamplePackage extends MinToolsPackage
 
         // Otherwise, get a suitable default
         File folder = new File(samplesRoot,
-                String.format("android-%s", getVersion().getApiString())); //$NON-NLS-1$
+                String.format("android-%s", getAndroidVersion().getApiString())); //$NON-NLS-1$
 
         for (int n = 1; folder.exists(); n++) {
             // Keep trying till we find an unused directory.
             folder = new File(samplesRoot,
-                    String.format("android-%s_%d", getVersion().getApiString(), n)); //$NON-NLS-1$
+                    String.format("android-%s_%d", getAndroidVersion().getApiString(), n)); //$NON-NLS-1$
         }
 
         return folder;
@@ -301,7 +306,7 @@ public class SamplePackage extends MinToolsPackage
             SamplePackage newPkg = (SamplePackage)pkg;
 
             // check they are the same version.
-            return newPkg.getVersion().equals(this.getVersion());
+            return newPkg.getAndroidVersion().equals(this.getAndroidVersion());
         }
 
         return false;
