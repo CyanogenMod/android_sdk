@@ -38,7 +38,7 @@ public final class LogCatReceiver {
     private LogCatMessageList mLogMessages;
     private IDevice mCurrentDevice;
     private LogCatOutputReceiver mCurrentLogCatOutputReceiver;
-    private Set<ILogCatMessageEventListener> mLogCatMessageListeners;
+    private Set<ILogCatBufferChangeListener> mLogCatMessageListeners;
     private LogCatMessageParser mLogCatMessageParser;
     private LogCatPidToNameMapper mPidToNameMapper;
     private IPreferenceStore mPrefStore;
@@ -55,7 +55,7 @@ public final class LogCatReceiver {
         mCurrentDevice = device;
         mPrefStore = prefStore;
 
-        mLogCatMessageListeners = new HashSet<ILogCatMessageEventListener>();
+        mLogCatMessageListeners = new HashSet<ILogCatBufferChangeListener>();
         mLogCatMessageParser = new LogCatMessageParser();
         mPidToNameMapper = new LogCatPidToNameMapper(mCurrentDevice);
 
@@ -147,14 +147,16 @@ public final class LogCatReceiver {
     }
 
     private void processLogLines(String[] lines) {
-        List<LogCatMessage> messages = mLogCatMessageParser.processLogLines(lines,
+        List<LogCatMessage> newMessages = mLogCatMessageParser.processLogLines(lines,
                 mPidToNameMapper);
 
-        if (messages.size() > 0) {
-            for (LogCatMessage m : messages) {
-                mLogMessages.appendMessage(m);
+        if (newMessages.size() > 0) {
+            List<LogCatMessage> deletedMessages;
+            synchronized (mLogMessages) {
+                deletedMessages = mLogMessages.ensureSpace(newMessages.size());
+                mLogMessages.appendMessages(newMessages);
             }
-            sendMessageReceivedEvent(messages);
+            sendLogChangedEvent(newMessages, deletedMessages);
         }
     }
 
@@ -177,17 +179,18 @@ public final class LogCatReceiver {
      * Add to list of message event listeners.
      * @param l listener to notified when messages are received from the device
      */
-    public void addMessageReceivedEventListener(ILogCatMessageEventListener l) {
+    public void addMessageReceivedEventListener(ILogCatBufferChangeListener l) {
         mLogCatMessageListeners.add(l);
     }
 
-    public void removeMessageReceivedEventListener(ILogCatMessageEventListener l) {
+    public void removeMessageReceivedEventListener(ILogCatBufferChangeListener l) {
         mLogCatMessageListeners.remove(l);
     }
 
-    private void sendMessageReceivedEvent(List<LogCatMessage> messages) {
-        for (ILogCatMessageEventListener l : mLogCatMessageListeners) {
-            l.messageReceived(messages);
+    private void sendLogChangedEvent(List<LogCatMessage> addedMessages,
+            List<LogCatMessage> deletedMessages) {
+        for (ILogCatBufferChangeListener l : mLogCatMessageListeners) {
+            l.bufferChanged(addedMessages, deletedMessages);
         }
     }
 

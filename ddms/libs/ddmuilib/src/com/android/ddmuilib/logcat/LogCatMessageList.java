@@ -16,6 +16,8 @@
 
 package com.android.ddmuilib.logcat;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -33,7 +35,6 @@ public final class LogCatMessageList {
 
     private int mFifoSize;
     private BlockingQueue<LogCatMessage> mQ;
-    private LogCatMessage[] mQArray;
 
     /**
      * Construct an empty message list.
@@ -43,7 +44,6 @@ public final class LogCatMessageList {
         mFifoSize = maxMessages;
 
         mQ = new ArrayBlockingQueue<LogCatMessage>(mFifoSize);
-        mQArray = new LogCatMessage[mFifoSize];
     }
 
     /**
@@ -64,8 +64,6 @@ public final class LogCatMessageList {
                 mQ.offer(curMessages[i]);
             }
         }
-
-        mQArray = new LogCatMessage[mFifoSize];
     }
 
     /**
@@ -73,17 +71,30 @@ public final class LogCatMessageList {
      * message will be popped off of it.
      * @param m log to be inserted
      */
-    public synchronized void appendMessage(final LogCatMessage m) {
-        if (mQ.remainingCapacity() == 0) {
-            /* make space by removing the first entry */
-            mQ.poll();
+    public synchronized void appendMessages(final List<LogCatMessage> messages) {
+        ensureSpace(messages.size());
+        for (LogCatMessage m: messages) {
+            mQ.offer(m);
         }
-        mQ.offer(m);
     }
 
     /**
-     * Returns the number of additional elements that this queue can 
-     * ideally (in the absence of memory or resource constraints) 
+     * Ensure that there is sufficient space for given number of messages.
+     * @return list of messages that were deleted to create additional space.
+     */
+    public synchronized List<LogCatMessage> ensureSpace(int messageCount) {
+        List<LogCatMessage> l = new ArrayList<LogCatMessage>(messageCount);
+
+        while (mQ.remainingCapacity() < messageCount) {
+            l.add(mQ.poll());
+        }
+
+        return l;
+    }
+
+    /**
+     * Returns the number of additional elements that this queue can
+     * ideally (in the absence of memory or resource constraints)
      * accept without blocking.
      * @return the remaining capacity
      */
@@ -91,25 +102,13 @@ public final class LogCatMessageList {
         return mQ.remainingCapacity();
     }
 
-    /**
-     * Clear all messages in the list.
-     */
+    /** Clear all messages in the list. */
     public synchronized void clear() {
         mQ.clear();
     }
 
-    /**
-     * Obtain all the messages currently present in the list.
-     * @return array containing all the log messages
-     */
-    public Object[] toArray() {
-        if (mQ.size() == mFifoSize) {
-            /*
-             * Once the queue is full, it stays full until the user explicitly clears
-             * all the logs. Optimize for this case by not reallocating the array.
-             */
-            return mQ.toArray(mQArray);
-        }
-        return mQ.toArray();
+    /** Obtain a copy of the message list. */
+    public synchronized List<LogCatMessage> getAllMessages() {
+        return new ArrayList<LogCatMessage>(mQ);
     }
 }

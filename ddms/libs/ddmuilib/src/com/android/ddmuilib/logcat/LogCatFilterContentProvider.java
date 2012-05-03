@@ -39,10 +39,6 @@ public final class LogCatFilterContentProvider implements IStructuredContentProv
      */
     @Override
     public Object[] getElements(Object model) {
-        if (model instanceof List<?>) {
-            return ((List<?>) model).toArray();
-        }
-        return null;
+        return ((List<?>) model).toArray();
     }
-
 }

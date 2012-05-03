@@ -19,7 +19,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.logcat.ILogCatMessageEventListener;
+import com.android.ddmuilib.logcat.ILogCatBufferChangeListener;
 import com.android.ddmuilib.logcat.LogCatMessage;
 import com.android.ddmuilib.logcat.LogCatReceiver;
 import com.android.ddmuilib.logcat.LogCatReceiverFactory;
@@ -98,7 +98,7 @@ public class LogCatMonitor {
             return;
         }
 
-        data.receiver.removeMessageReceivedEventListener(data.messageEventListener);
+        data.receiver.removeMessageReceivedEventListener(data.bufferChangeListener);
     }
 
     public void monitorDevice(final IDevice device) {
@@ -113,10 +113,11 @@ public class LogCatMonitor {
         }
 
         LogCatReceiver r = LogCatReceiverFactory.INSTANCE.newReceiver(device, mPrefStore);
-        ILogCatMessageEventListener l = new ILogCatMessageEventListener() {
+        ILogCatBufferChangeListener l = new ILogCatBufferChangeListener() {
             @Override
-            public void messageReceived(List<LogCatMessage> receivedMessages) {
-                checkMessages(receivedMessages, device);
+            public void bufferChanged(List<LogCatMessage> addedMessages,
+                    List<LogCatMessage> deletedMessages) {
+                checkMessages(addedMessages, device);
             }
         };
         r.addMessageReceivedEventListener(l);
@@ -205,11 +206,11 @@ public class LogCatMonitor {
 
     private static class DeviceData {
         public final LogCatReceiver receiver;
-        public final ILogCatMessageEventListener messageEventListener;
+        public final ILogCatBufferChangeListener bufferChangeListener;
 
-        public DeviceData(LogCatReceiver r, ILogCatMessageEventListener l) {
+        public DeviceData(LogCatReceiver r, ILogCatBufferChangeListener l) {
             receiver = r;
-            messageEventListener = l;
+            bufferChangeListener = l;
         }
     }
 }
