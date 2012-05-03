@@ -18,11 +18,7 @@ package com.android.sdklib.internal.repository.packages;
 
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
-import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
-import com.android.sdklib.repository.PkgProps;
-
-import java.util.Properties;
 
 /**
  * A mock {@link PlatformToolPackage} for testing.
@@ -70,7 +66,7 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
     public MockPlatformToolPackage(SdkSource source, FullRevision revision) {
         super(
                 source, // source,
-                createProps(revision), // props,
+                FullRevisionPackageTest.createProps(revision), // props,
                 revision.getMajor(),
                 null, // license,
                 "desc", // description,
@@ -79,17 +75,6 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
                 Arch.getCurrentArch(), // archiveArch,
                 "foo" // archiveOsPath
                 );
-    }
-
-    private static Properties createProps(FullRevision revision) {
-        Properties props = new Properties();
-        props.setProperty(PkgProps.PKG_MINOR_REV,
-                          Integer.toString(revision.getMinor()));
-        props.setProperty(PkgProps.PKG_MICRO_REV,
-                          Integer.toString(revision.getMicro()));
-        props.setProperty(PkgProps.PKG_PREVIEW_REV,
-                          Integer.toString(revision.getPreview()));
-        return props;
     }
 }
 

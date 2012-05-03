@@ -80,14 +80,19 @@ public class SdkRepoConstants extends RepoConstants {
     /** The root sdk-repository element */
     public static final String NODE_SDK_REPOSITORY = "sdk-repository";        //$NON-NLS-1$
 
+    /* The major revision for tool and platform-tool package
+     * (the full revision number is revision.minor.micro + preview#.)
+     * Mandatory int > 0. 0 when missing, which should not happen in
+     * a valid document. */
+    public static final String NODE_MAJOR_REV       = "major";                //$NON-NLS-1$
     /* The minor revision for tool and platform-tool package
      * (the full revision number is revision.minor.micro + preview#.)
      * Optional int >= 0. Implied to be 0 when missing. */
-    public static final String NODE_MINOR_REV       = "minor-rev";            //$NON-NLS-1$
+    public static final String NODE_MINOR_REV       = "minor";                //$NON-NLS-1$
     /* The micro revision for tool and platform-tool package
      * (the full revision number is revision.minor.micro + preview#.)
      * Optional int >= 0. Implied to be 0 when missing. */
-    public static final String NODE_MICRO_REV       = "micro-rev";            //$NON-NLS-1$
+    public static final String NODE_MICRO_REV       = "micro";                //$NON-NLS-1$
     /* The preview revision for tool and platform-tool package.
      * Int > 0, only present for "preview / release candidate" packages. */
     public static final String NODE_PREVIEW         = "preview";              //$NON-NLS-1$

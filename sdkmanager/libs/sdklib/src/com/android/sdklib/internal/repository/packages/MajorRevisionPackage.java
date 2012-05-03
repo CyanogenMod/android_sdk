@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,12 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Represents an XML node in an SDK repository that has a min-tools-rev requirement.
+ * Represents a package in an SDK repository that has a {@link MajorRevision},
+ * which is a single major revision number (not minor, micro or previews).
  */
-public abstract class MinToolsPackage extends MajorRevisionPackage implements IMinToolsDependency {
+public abstract class MajorRevisionPackage extends Package {
 
-    /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
-     */
-    private final int mMinToolsRevision;
+    private final MajorRevision mRevision;
 
     /**
      * Creates a new package from the attributes and elements of the given XML node.
@@ -48,12 +45,14 @@ public abstract class MinToolsPackage extends MajorRevisionPackage implements IM
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    MinToolsPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    MajorRevisionPackage(SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mMinToolsRevision = PackageParserUtils.getXmlInt(packageNode,
-                SdkRepoConstants.NODE_MIN_TOOLS_REV,
-                MIN_TOOLS_REV_NOT_SPECIFIED);
+        mRevision = new MajorRevision(
+                PackageParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_REVISION, 0));
     }
 
     /**
@@ -65,7 +64,7 @@ public abstract class MinToolsPackage extends MajorRevisionPackage implements IM
      * <p/>
      * By design, this creates a package with one and only one archive.
      */
-    public MinToolsPackage(
+    public MajorRevisionPackage(
             SdkSource source,
             Properties props,
             int revision,
@@ -78,54 +77,45 @@ public abstract class MinToolsPackage extends MajorRevisionPackage implements IM
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        mMinToolsRevision = Integer.parseInt(
-            getProperty(props,
-                    PkgProps.MIN_TOOLS_REV,
-                    Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
+        mRevision = new MajorRevision(Integer.parseInt(
+                getProperty(props, PkgProps.PKG_MAJOR_REV, Integer.toString(revision))));
     }
 
     /**
-     * The minimal revision of the tools package required by this extra package, if > 0,
-     * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
+     * Returns the revision, an int > 0, for all packages (platform, add-on, tool, doc).
+     * Can be 0 if this is a local package of unknown revision.
      */
     @Override
-    public int getMinToolsRevision() {
-        return mMinToolsRevision;
+    public FullRevision getRevision() {
+        return mRevision;
     }
+
 
     @Override
     public void saveProperties(Properties props) {
         super.saveProperties(props);
-
-        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            props.setProperty(PkgProps.MIN_TOOLS_REV,
-                    Integer.toString(getMinToolsRevision()));
-        }
+        props.setProperty(PkgProps.PKG_MAJOR_REV, Integer.toString(mRevision.getMajor()));
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + mMinToolsRevision;
-        return result;
+    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
+        if (replacementPackage == null) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check they are the same item.
+        if (!sameItemAs(replacementPackage)) {
+            return UpdateInfo.INCOMPATIBLE;
+        }
+
+        // check revision number
+        if (replacementPackage.getRevision().compareTo(this.getRevision()) > 0) {
+            return UpdateInfo.UPDATE;
+        }
+
+        // not an upgrade but not incompatible either.
+        return UpdateInfo.NOT_UPDATE;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (!(obj instanceof MinToolsPackage)) {
-            return false;
-        }
-        MinToolsPackage other = (MinToolsPackage) obj;
-        if (mMinToolsRevision != other.mMinToolsRevision) {
-            return false;
-        }
-        return true;
-    }
+
 }

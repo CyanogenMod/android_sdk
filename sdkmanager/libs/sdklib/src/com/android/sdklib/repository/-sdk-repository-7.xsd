@@ -275,19 +275,9 @@
             <xsd:documentation>An SDK tool package.</xsd:documentation>
         </xsd:annotation>
         <xsd:all>
-            <!-- The revision, an int > 0, incremented each time a new
-                 package is generated. -->
-            <xsd:element name="revision"      type="xsd:positiveInteger" />
-            <!-- The minor revision, an int >= 0, incremented each time a new
-                 package is generated. Assumed to be 0 if missing. -->
-            <xsd:element name="minor-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
-            <!-- The micro revision, an int >= 0, incremented each time a new
-                 package is generated. Assumed to be 0 if missing. -->
-            <xsd:element name="micro-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
-            <!-- The preview/release candidate revision, an int > 0,
-                 incremented each time a new preview is generated.
-                 Not present for final releases. -->
-            <xsd:element name="preview"       type="xsd:positiveInteger" minOccurs="0" />
+            <!-- The full revision (major.minor.micro.preview), incremented each
+                 time a new package is generated. -->
+            <xsd:element name="revision"      type="sdk:revisionType" />
 
             <!-- The optional license of this package. If present, users will have
                  to agree to it before downloading. -->
@@ -321,19 +311,9 @@
             <xsd:documentation>An SDK platform-tool package.</xsd:documentation>
         </xsd:annotation>
         <xsd:all>
-            <!-- The revision, an int > 0, incremented each time a new
-                 package is generated. -->
-            <xsd:element name="revision"      type="xsd:positiveInteger" />
-            <!-- The minor revision, an int >= 0, incremented each time a new
-                 package is generated. Assumed to be 0 if missing. -->
-            <xsd:element name="minor-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
-            <!-- The micro revision, an int >= 0, incremented each time a new
-                 package is generated. Assumed to be 0 if missing. -->
-            <xsd:element name="micro-rev"     type="xsd:nonNegativeInteger" minOccurs="0" />
-            <!-- The preview/release candidate revision, an int > 0,
-                 incremented each time a new preview is generated.
-                 Not present for final releases. -->
-            <xsd:element name="preview"       type="xsd:positiveInteger" minOccurs="0" />
+            <!-- The full revision (major.minor.micro.preview), incremented each
+                 time a new package is generated. -->
+            <xsd:element name="revision"      type="sdk:revisionType" />
 
             <!-- The optional license of this package. If present, users will have
                  to agree to it before downloading. -->
@@ -551,6 +531,35 @@
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
+    </xsd:complexType>
+
+
+    <!-- A full revision, with a major.minor.micro and an optional preview number.
+         The major number is mandatory, the other elements are optional.
+     -->
+
+    <xsd:complexType name="revisionType">
+        <xsd:annotation>
+            <xsd:documentation>
+                A full revision, with a major.minor.micro and an
+                optional preview number. The major number is mandatory.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- The major revision, an int > 0, incremented each time a new
+                 package is generated. -->
+            <xsd:element name="major"      type="xsd:positiveInteger" />
+            <!-- The minor revision, an int >= 0, incremented each time a new
+                 minor package is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="minor"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The micro revision, an int >= 0, incremented each time a new
+                 buf fix is generated. Assumed to be 0 if missing. -->
+            <xsd:element name="micro"     type="xsd:nonNegativeInteger" minOccurs="0" />
+            <!-- The preview/release candidate revision, an int > 0,
+                 incremented each time a new preview is generated.
+                 Not present for final releases. -->
+            <xsd:element name="preview"   type="xsd:positiveInteger" minOccurs="0" />
+        </xsd:all>
     </xsd:complexType>
 
 

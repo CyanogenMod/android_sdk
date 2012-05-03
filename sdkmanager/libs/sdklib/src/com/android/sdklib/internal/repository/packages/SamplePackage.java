@@ -24,7 +24,6 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
@@ -77,15 +76,18 @@ public class SamplePackage extends MinToolsPackage
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
+        int apiLevel =
+            PackageParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+        String codeName =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
 
-        mMinApiLevel = XmlParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_MIN_API_LEVEL,
-                MIN_API_LEVEL_NOT_SPECIFIED);
+        mMinApiLevel = PackageParserUtils.getXmlInt(packageNode,
+                    SdkRepoConstants.NODE_MIN_API_LEVEL,
+                    MIN_API_LEVEL_NOT_SPECIFIED);
     }
 
     /**

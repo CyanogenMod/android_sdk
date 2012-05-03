@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.internal.repository;
+package com.android.sdklib.internal.repository.packages;
 
 import org.w3c.dom.Node;
 
 /**
  * Misc utilities to help extracting elements and attributes out of an XML document.
  */
-public class XmlParserUtils {
+public class PackageParserUtils {
 
     /**
      * Returns the first child element with the given XML local name.
      * If xmlLocalName is null, returns the very first child element.
      */
-    public static Node getFirstChild(Node node, String xmlLocalName) {
-
-        String nsUri = node.getNamespaceURI();
-        for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
-            if (child.getNodeType() == Node.ELEMENT_NODE &&
-                    nsUri.equals(child.getNamespaceURI())) {
-                if (xmlLocalName == null || xmlLocalName.equals(child.getLocalName())) {
-                    return child;
+    public static Node findChildElement(Node node, String xmlLocalName) {
+        if (node != null) {
+            String nsUri = node.getNamespaceURI();
+            for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
+                if (child.getNodeType() == Node.ELEMENT_NODE &&
+                        nsUri.equals(child.getNamespaceURI())) {
+                    if (xmlLocalName == null || xmlLocalName.equals(child.getLocalName())) {
+                        return child;
+                    }
                 }
             }
         }
-
         return null;
     }
 
@@ -56,7 +56,7 @@ public class XmlParserUtils {
      *         is missing or empty, so you can't tell the difference.
      */
     public static String getXmlString(Node node, String xmlLocalName) {
-        Node child = getFirstChild(node, xmlLocalName);
+        Node child = findChildElement(node, xmlLocalName);
 
         return child == null ? "" : child.getTextContent();  //$NON-NLS-1$
     }
@@ -75,7 +75,7 @@ public class XmlParserUtils {
      *         Returns an empty string whether the element is present but empty.
      */
     public static String getOptionalXmlString(Node node, String xmlLocalName) {
-        Node child = getFirstChild(node, xmlLocalName);
+        Node child = findChildElement(node, xmlLocalName);
 
         return child == null ? null : child.getTextContent();  //$NON-NLS-1$
     }

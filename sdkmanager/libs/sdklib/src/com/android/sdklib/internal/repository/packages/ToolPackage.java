@@ -22,7 +22,6 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
@@ -73,7 +72,7 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mMinPlatformToolsRevision = XmlParserUtils.getXmlInt(
+        mMinPlatformToolsRevision = PackageParserUtils.getXmlInt(
                 packageNode,
                 SdkRepoConstants.NODE_MIN_PLATFORM_TOOLS_REV,
                 MIN_PLATFORM_TOOLS_REV_INVALID);

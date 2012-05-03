@@ -209,7 +209,7 @@ public class SdkRepoSourceTest extends TestCase {
     /**
      * Validate we can still load an old repository in schema version 1
      */
-    public void testLoadOldXml_1() throws Exception {
+    public void testLoadXml_1() throws Exception {
         InputStream xmlStream = getTestResource(
                     "/com/android/sdklib/testdata/repository_sample_1.xml");
 
@@ -287,7 +287,7 @@ public class SdkRepoSourceTest extends TestCase {
     /**
      * Validate we can still load an old repository in schema version 2
      */
-    public void testLoadOldXml_2() throws Exception {
+    public void testLoadXml_2() throws Exception {
         InputStream xmlStream = getTestResource(
                     "/com/android/sdklib/testdata/repository_sample_2.xml");
 

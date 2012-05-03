@@ -25,7 +25,6 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -42,7 +41,7 @@ import java.util.Properties;
 /**
  * Represents a system-image XML node in an SDK repository.
  */
-public class SystemImagePackage extends Package
+public class SystemImagePackage extends MajorRevisionPackage
         implements IAndroidVersionProvider, IPlatformDependency {
 
     /** The package version, for platform, add-on and doc packages. */
@@ -67,14 +66,16 @@ public class SystemImagePackage extends Package
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        int apiLevel = XmlParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
+        int apiLevel =
+            PackageParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+        String codeName =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
 
-        mAbi = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_ABI);
+        mAbi = PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_ABI);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)

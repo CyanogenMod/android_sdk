@@ -23,7 +23,6 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
@@ -58,7 +57,6 @@ import java.util.Properties;
  */
 public abstract class Package implements IDescription, Comparable<Package> {
 
-    private final MajorRevision mRevision;
     private final String mObsolete;
     private final String mLicense;
     private final String mDescription;
@@ -104,18 +102,20 @@ public abstract class Package implements IDescription, Comparable<Package> {
      */
     Package(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
         mSource = source;
-        mRevision    = new MajorRevision(
-                       XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_REVISION, 0));
-        mDescription = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESCRIPTION);
-        mDescUrl     = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESC_URL);
-        mReleaseNote = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_RELEASE_NOTE);
-        mReleaseUrl  = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_RELEASE_URL);
-        mObsolete    = XmlParserUtils.getOptionalXmlString(
-                                                   packageNode, SdkRepoConstants.NODE_OBSOLETE);
+        mDescription =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESCRIPTION);
+        mDescUrl     =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_DESC_URL);
+        mReleaseNote =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_RELEASE_NOTE);
+        mReleaseUrl  =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_RELEASE_URL);
+        mObsolete    =
+            PackageParserUtils.getOptionalXmlString(packageNode, SdkRepoConstants.NODE_OBSOLETE);
 
         mLicense  = parseLicense(packageNode, licenses);
-        mArchives = parseArchives(XmlParserUtils.getFirstChild(
-                                  packageNode, SdkRepoConstants.NODE_ARCHIVES));
+        mArchives = parseArchives(
+                PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_ARCHIVES));
     }
 
     /**
@@ -145,8 +145,6 @@ public abstract class Package implements IDescription, Comparable<Package> {
             descUrl = "";
         }
 
-        mRevision = new MajorRevision(Integer.parseInt(
-                       getProperty(props, PkgProps.PKG_MAJOR_REV, Integer.toString(revision))));
         mLicense     = getProperty(props, PkgProps.PKG_LICENSE,      license);
         mDescription = getProperty(props, PkgProps.PKG_DESC,         description);
         mDescUrl     = getProperty(props, PkgProps.PKG_DESC_URL,     descUrl);
@@ -223,11 +221,9 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * These properties will later be give the constructor that takes a {@link Properties} object.
      */
     public void saveProperties(Properties props) {
-        props.setProperty(PkgProps.PKG_MAJOR_REV, Integer.toString(mRevision.getMajor()));
         if (mLicense != null && mLicense.length() > 0) {
             props.setProperty(PkgProps.PKG_LICENSE, mLicense);
         }
-
         if (mDescription != null && mDescription.length() > 0) {
             props.setProperty(PkgProps.PKG_DESC, mDescription);
         }
@@ -244,7 +240,6 @@ public abstract class Package implements IDescription, Comparable<Package> {
         if (mObsolete != null) {
             props.setProperty(PkgProps.PKG_OBSOLETE, mObsolete);
         }
-
         if (mSource != null) {
             props.setProperty(PkgProps.PKG_SOURCE_URL,  mSource.getUrl());
         }
@@ -256,8 +251,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * license of this name defined.
      */
     private String parseLicense(Node packageNode, Map<String, String> licenses) {
-        Node usesLicense = XmlParserUtils.getFirstChild(
-                                            packageNode, SdkRepoConstants.NODE_USES_LICENSE);
+        Node usesLicense =
+            PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_USES_LICENSE);
         if (usesLicense != null) {
             Node ref = usesLicense.getAttributes().getNamedItem(SdkRepoConstants.ATTR_REF);
             if (ref != null) {
@@ -298,13 +293,13 @@ public abstract class Package implements IDescription, Comparable<Package> {
     private Archive parseArchive(Node archiveNode) {
         Archive a = new Archive(
                     this,
-                    (Os)   XmlParserUtils.getEnumAttribute(archiveNode, SdkRepoConstants.ATTR_OS,
-                            Os.values(), null),
-                    (Arch) XmlParserUtils.getEnumAttribute(archiveNode, SdkRepoConstants.ATTR_ARCH,
-                            Arch.values(), Arch.ANY),
-                    XmlParserUtils.getXmlString(archiveNode, SdkRepoConstants.NODE_URL),
-                    XmlParserUtils.getXmlLong  (archiveNode, SdkRepoConstants.NODE_SIZE, 0),
-                    XmlParserUtils.getXmlString(archiveNode, SdkRepoConstants.NODE_CHECKSUM)
+                    (Os)   PackageParserUtils.getEnumAttribute(
+                            archiveNode, SdkRepoConstants.ATTR_OS, Os.values(), null),
+                    (Arch) PackageParserUtils.getEnumAttribute(
+                            archiveNode, SdkRepoConstants.ATTR_ARCH, Arch.values(), Arch.ANY),
+                    PackageParserUtils.getXmlString(archiveNode, SdkRepoConstants.NODE_URL),
+                    PackageParserUtils.getXmlLong  (archiveNode, SdkRepoConstants.NODE_SIZE, 0),
+                    PackageParserUtils.getXmlString(archiveNode, SdkRepoConstants.NODE_CHECKSUM)
                 );
 
         return a;
@@ -329,9 +324,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Returns the revision, an int > 0, for all packages (platform, add-on, tool, doc).
      * Can be 0 if this is a local package of unknown revision.
      */
-    public FullRevision getRevision() {
-        return mRevision;
-    }
+    public abstract FullRevision getRevision();
 
     /**
      * Returns the optional description for all packages (platform, add-on, tool, doc) or
@@ -633,24 +626,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      *
      * @see #sameItemAs(Package)
      */
-    public UpdateInfo canBeUpdatedBy(Package replacementPackage) {
-        if (replacementPackage == null) {
-            return UpdateInfo.INCOMPATIBLE;
-        }
-
-        // check they are the same item.
-        if (!sameItemAs(replacementPackage)) {
-            return UpdateInfo.INCOMPATIBLE;
-        }
-
-        // check revision number
-        if (replacementPackage.getRevision().compareTo(this.getRevision()) > 0) {
-            return UpdateInfo.UPDATE;
-        }
-
-        // not an upgrade but not incompatible either.
-        return UpdateInfo.NOT_UPDATE;
-    }
+    public abstract UpdateInfo canBeUpdatedBy(Package replacementPackage);
 
     /**
      * Returns an ordering <b>suitable for display</b> like this: <br/>
@@ -774,7 +750,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
         int result = 1;
         result = prime * result + Arrays.hashCode(mArchives);
         result = prime * result + ((mObsolete == null) ? 0 : mObsolete.hashCode());
-        result = prime * result + mRevision.hashCode();
+        result = prime * result + getRevision().hashCode();
         result = prime * result + ((mSource == null) ? 0 : mSource.hashCode());
         return result;
     }
@@ -801,7 +777,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
         } else if (!mObsolete.equals(other.mObsolete)) {
             return false;
         }
-        if (!mRevision.equals(other.mRevision)) {
+        if (!getRevision().equals(other.getRevision())) {
             return false;
         }
         if (mSource == null) {

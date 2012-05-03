@@ -85,17 +85,9 @@ public class MockToolPackage extends ToolPackage {
     }
 
     private static Properties createProps(FullRevision revision, int minPlatformToolsRev) {
-        Properties props = new Properties();
+        Properties props = FullRevisionPackageTest.createProps(revision);
         props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                           Integer.toString((minPlatformToolsRev)));
-        if (revision != null) {
-            props.setProperty(PkgProps.PKG_MINOR_REV,
-                              Integer.toString(revision.getMinor()));
-            props.setProperty(PkgProps.PKG_MICRO_REV,
-                              Integer.toString(revision.getMicro()));
-            props.setProperty(PkgProps.PKG_PREVIEW_REV,
-                              Integer.toString(revision.getPreview()));
-        }
         return props;
     }
 }

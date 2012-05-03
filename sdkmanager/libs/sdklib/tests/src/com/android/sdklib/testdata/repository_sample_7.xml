@@ -186,10 +186,12 @@
     </sdk:platform>
 
     <sdk:tool>
-        <sdk:revision>1</sdk:revision>
-        <sdk:minor-rev>2</sdk:minor-rev>
-        <sdk:micro-rev>3</sdk:micro-rev>
-        <sdk:preview>4</sdk:preview>
+        <sdk:revision>
+            <sdk:major>1</sdk:major>
+            <sdk:minor>2</sdk:minor>
+            <sdk:micro>3</sdk:micro>
+            <sdk:preview>4</sdk:preview>
+        </sdk:revision>
         <sdk:description>Some optional description</sdk:description>
         <sdk:desc-url>http://www.example.com/tools.html</sdk:desc-url>
         <sdk:uses-license ref="license1" />
@@ -227,7 +229,9 @@
     </sdk:doc>
 
     <sdk:tool>
-        <sdk:revision>42</sdk:revision>
+        <sdk:revision>
+            <sdk:major>42</sdk:major>
+        </sdk:revision>
         <sdk:uses-license ref="license1" />
         <sdk:min-platform-tools-rev>3</sdk:min-platform-tools-rev>
         <sdk:archives>
@@ -250,10 +254,12 @@
     </sdk:tool>
 
     <sdk:platform-tool>
-        <sdk:revision>3</sdk:revision>
-        <sdk:minor-rev>0</sdk:minor-rev>
-        <sdk:micro-rev>0</sdk:micro-rev>
-        <sdk:preview>5</sdk:preview>
+        <sdk:revision>
+            <sdk:major>3</sdk:major>
+            <sdk:minor>0</sdk:minor>
+            <sdk:micro>0</sdk:micro>
+            <sdk:preview>5</sdk:preview>
+        </sdk:revision>
         <sdk:uses-license ref="license1" />
         <sdk:archives>
             <sdk:archive os="windows">
