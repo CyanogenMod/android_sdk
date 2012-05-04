@@ -463,7 +463,7 @@ public class SdkManager {
             int revision = 1;
             LayoutlibVersion layoutlibVersion = null;
             try {
-                revision = Integer.parseInt(platformProp.get(PkgProps.PKG_MAJOR_REV));
+                revision = Integer.parseInt(platformProp.get(PkgProps.PKG_REVISION));
             } catch (NumberFormatException e) {
                 // do nothing, we'll keep the default value of 1.
             }

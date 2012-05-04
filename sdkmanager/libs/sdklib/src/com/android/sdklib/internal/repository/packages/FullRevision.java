@@ -16,6 +16,11 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * Package multi-part revision number composed of a tuple
@@ -31,6 +36,10 @@ public class FullRevision implements Comparable<FullRevision> {
     public static final int IMPLICIT_MINOR_REV = 0;
     public static final int IMPLICIT_MICRO_REV = 0;
     public static final int NOT_A_PREVIEW      = 0;
+
+    private final static Pattern FULL_REVISION_PATTERN =
+        //                   1=major       2=minor       3=micro              4=preview
+        Pattern.compile("\\s*([0-9]+)(?:\\.([0-9]+)(?:\\.([0-9]+))?)?\\s*(?:rc([0-9]+))?\\s*");
 
     private final int mMajor;
     private final int mMinor;
@@ -70,6 +79,52 @@ public class FullRevision implements Comparable<FullRevision> {
 
     public int getPreview() {
         return mPreview;
+    }
+
+    /**
+     * Parses a string of format "major.minor.micro rcPreview" and returns
+     * a new {@link FullRevision} for it. All the fields except major are
+     * optional.
+     * <p/>
+     * The parsing is equivalent to the pseudo-BNF/regexp:
+     * <pre>
+     *   Major/Minor/Micro/Preview := [0-9]+
+     *   Revision := Major ('.' Minor ('.' Micro)? )? \s* ('rc'Preview)?
+     * </pre>
+     *
+     * @param revision A non-null revision to parse.
+     * @return A new non-null {@link FullRevision}.
+     * @throws NumberFormatException if the parsing failed.
+     */
+    public static @NonNull FullRevision parseRevision(@NonNull String revision)
+            throws NumberFormatException {
+
+        if (revision == null) {
+            throw new NumberFormatException("revision is <null>"); //$NON-NLS-1$
+        }
+
+        Throwable cause = null;
+        try {
+            Matcher m = FULL_REVISION_PATTERN.matcher(revision);
+            if (m != null && m.matches()) {
+                int major = Integer.parseInt(m.group(1));
+                String s = m.group(2);
+                int minor = s == null ? IMPLICIT_MINOR_REV : Integer.parseInt(s);
+                s = m.group(3);
+                int micro = s == null ? IMPLICIT_MICRO_REV : Integer.parseInt(s);
+                s = m.group(4);
+                int preview = s == null ? NOT_A_PREVIEW : Integer.parseInt(s);
+
+                return new FullRevision(major, minor, micro, preview);
+            }
+        } catch (Throwable t) {
+            cause = t;
+        }
+
+        NumberFormatException n = new NumberFormatException(
+                "Invalid full revision: " + revision); //$NON-NLS-1$
+        n.initCause(cause);
+        throw n;
     }
 
     /**
