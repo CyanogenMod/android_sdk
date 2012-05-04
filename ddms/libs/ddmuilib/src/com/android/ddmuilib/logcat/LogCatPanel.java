@@ -986,7 +986,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             mDeletedLogCount = 0;
         }
 
-        if (mReceiver == null) {
+        if (mReceiver == null || mReceiver.getMessages() == null) {
             return;
         }
 

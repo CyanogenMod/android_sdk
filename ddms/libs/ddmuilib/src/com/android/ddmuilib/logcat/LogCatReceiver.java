@@ -20,9 +20,11 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.Log.LogLevel;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +36,9 @@ import java.util.Set;
 public final class LogCatReceiver {
     private static final String LOGCAT_COMMAND = "logcat -v long";
     private static final int DEVICE_POLL_INTERVAL_MSEC = 1000;
+    private static LogCatMessage DEVICE_DISCONNECTED_MESSAGE =
+            new LogCatMessage(LogLevel.ERROR, "", "", "",
+                    "", "", "Device disconnected");
 
     private LogCatMessageList mLogMessages;
     private IDevice mCurrentDevice;
@@ -72,9 +77,11 @@ public final class LogCatReceiver {
             /* stop the current logcat command */
             mCurrentLogCatOutputReceiver.mIsCancelled = true;
             mCurrentLogCatOutputReceiver = null;
+
+            // add a message to the log indicating that the device has been disconnected.
+            processLogMessages(Collections.singletonList(DEVICE_DISCONNECTED_MESSAGE));
         }
 
-        mLogMessages = null;
         mCurrentDevice = null;
     }
 
@@ -149,7 +156,10 @@ public final class LogCatReceiver {
     private void processLogLines(String[] lines) {
         List<LogCatMessage> newMessages = mLogCatMessageParser.processLogLines(lines,
                 mPidToNameMapper);
+        processLogMessages(newMessages);
+    }
 
+    private void processLogMessages(List<LogCatMessage> newMessages) {
         if (newMessages.size() > 0) {
             List<LogCatMessage> deletedMessages;
             synchronized (mLogMessages) {
