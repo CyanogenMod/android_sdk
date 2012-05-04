@@ -25,7 +25,6 @@ import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -46,7 +45,7 @@ import java.util.Properties;
 /**
  * Represents an add-on XML node in an SDK repository.
  */
-public class AddonPackage extends Package
+public class AddonPackage extends MajorRevisionPackage
         implements IAndroidVersionProvider, IPlatformDependency,
                    IExactApiLevelDependency, ILayoutlibVersion {
 
@@ -143,12 +142,12 @@ public class AddonPackage extends Package
         // that only provide name and vendor. If the addon provides neither set of fields,
         // it will simply not work as expected.
 
-        String nameId   = XmlParserUtils.getXmlString(packageNode,
-                                                      SdkRepoConstants.NODE_NAME_ID);
-        String nameDisp = XmlParserUtils.getXmlString(packageNode,
-                                                      SdkRepoConstants.NODE_NAME_DISPLAY);
-        String name     = XmlParserUtils.getXmlString(packageNode,
-                                                      SdkRepoConstants.NODE_NAME);
+        String nameId   = PackageParserUtils.getXmlString(packageNode,
+                                                          SdkRepoConstants.NODE_NAME_ID);
+        String nameDisp = PackageParserUtils.getXmlString(packageNode,
+                                                          SdkRepoConstants.NODE_NAME_DISPLAY);
+        String name     = PackageParserUtils.getXmlString(packageNode,
+                                                          SdkRepoConstants.NODE_NAME);
 
         // The old <name> is equivalent to the new <name-display>
         if (nameDisp.length() == 0) {
@@ -169,12 +168,12 @@ public class AddonPackage extends Package
         // --- vendor id/display ---
         // Same processing for vendor id vs display
 
-        String vendorId   = XmlParserUtils.getXmlString(packageNode,
-                                                        SdkAddonConstants.NODE_VENDOR_ID);
-        String vendorDisp = XmlParserUtils.getXmlString(packageNode,
-                                                        SdkAddonConstants.NODE_VENDOR_DISPLAY);
-        String vendor     = XmlParserUtils.getXmlString(packageNode,
-                                                        SdkAddonConstants.NODE_VENDOR);
+        String vendorId   = PackageParserUtils.getXmlString(packageNode,
+                                                            SdkAddonConstants.NODE_VENDOR_ID);
+        String vendorDisp = PackageParserUtils.getXmlString(packageNode,
+                                                            SdkAddonConstants.NODE_VENDOR_DISPLAY);
+        String vendor     = PackageParserUtils.getXmlString(packageNode,
+                                                            SdkAddonConstants.NODE_VENDOR);
 
         // The old <vendor> is equivalent to the new <vendor-display>
         if (vendorDisp.length() == 0) {
@@ -195,10 +194,12 @@ public class AddonPackage extends Package
 
         // --- other attributes
 
-        int apiLevel = XmlParserUtils.getXmlInt(packageNode, SdkAddonConstants.NODE_API_LEVEL, 0);
+        int apiLevel =
+            PackageParserUtils.getXmlInt(packageNode, SdkAddonConstants.NODE_API_LEVEL, 0);
         mVersion = new AndroidVersion(apiLevel, null /*codeName*/);
 
-        mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkAddonConstants.NODE_LIBS));
+        mLibs = parseLibs(
+                PackageParserUtils.findChildElement(packageNode, SdkAddonConstants.NODE_LIBS));
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }
@@ -400,8 +401,8 @@ public class AddonPackage extends Package
      * Parses a <lib> element from a <libs> container.
      */
     private Lib parseLib(Node libNode) {
-        return new Lib(XmlParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_NAME),
-                       XmlParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_DESCRIPTION));
+        return new Lib(PackageParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_NAME),
+                       PackageParserUtils.getXmlString(libNode, SdkRepoConstants.NODE_DESCRIPTION));
     }
 
     /** Returns the vendor id, a string, for add-on packages. */

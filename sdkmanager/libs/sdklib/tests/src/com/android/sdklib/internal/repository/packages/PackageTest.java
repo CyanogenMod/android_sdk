@@ -39,7 +39,7 @@ public class PackageTest extends TestCase {
     protected static final String LOCAL_ARCHIVE_PATH = "/local/archive/path";
 
     /** Local class used to test the abstract Package class */
-    protected static class MockPackage extends Package {
+    protected static class MockPackage extends MajorRevisionPackage {
         public MockPackage(
                 SdkSource source,
                 Properties props,

@@ -25,7 +25,6 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
@@ -103,22 +102,25 @@ public class ExtraPackage extends MinToolsPackage
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mPath   = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_PATH);
+        mPath   = PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_PATH);
 
         // Read name-display, vendor-display and vendor-id, introduced in addon-4.xsd.
         // These are not optional, they are mandatory in addon-4 but we still treat them
         // as optional so that we can fallback on using <vendor> which was the only one
         // defined in addon-3.xsd.
-        String name  = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_NAME_DISPLAY);
-        String vname = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_DISPLAY);
-        String vid   = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_ID);
+        String name  =
+            PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_NAME_DISPLAY);
+        String vname =
+            PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_DISPLAY);
+        String vid   =
+            PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR_ID);
 
         if (vid.length() == 0) {
             // If vid is missing, use the old <vendor> attribute.
             // Note that in a valid XML, vendor-id cannot be an empty string.
             // The only reason vid can be empty is when <vendor-id> is missing, which
             // happens in an addon-3 schema, in which case the old <vendor> needs to be used.
-            String vendor = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR);
+            String vendor = PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR);
             vid = sanitizeLegacyVendor(vendor);
             if (vname.length() == 0) {
                 vname = vendor;
@@ -137,13 +139,13 @@ public class ExtraPackage extends MinToolsPackage
         }
         mDisplayName   = name.trim();
 
-        mMinApiLevel = XmlParserUtils.getXmlInt(
+        mMinApiLevel = PackageParserUtils.getXmlInt(
                 packageNode, RepoConstants.NODE_MIN_API_LEVEL, MIN_API_LEVEL_NOT_SPECIFIED);
 
         mProjectFiles = parseProjectFiles(
-                XmlParserUtils.getFirstChild(packageNode, RepoConstants.NODE_PROJECT_FILES));
+                PackageParserUtils.findChildElement(packageNode, RepoConstants.NODE_PROJECT_FILES));
 
-        mOldPaths = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_OLD_PATHS);
+        mOldPaths = PackageParserUtils.getXmlString(packageNode, RepoConstants.NODE_OLD_PATHS);
     }
 
     private String[] parseProjectFiles(Node projectFilesNode) {

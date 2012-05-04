@@ -20,7 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.XmlParserUtils;
+import com.android.sdklib.internal.repository.packages.PackageParserUtils;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 
@@ -340,14 +340,14 @@ public class SdkRepoSource extends SdkSource {
                                                 prefix,
                                                 RepoConstants.NODE_ARCHIVE)) != null) {
                         try {
-                            Os os = (Os) XmlParserUtils.getEnumAttribute(archive,
-                                    RepoConstants.ATTR_OS,
-                                    Os.values(),
-                                    null /*default*/);
-                            Arch arch = (Arch) XmlParserUtils.getEnumAttribute(archive,
-                                    RepoConstants.ATTR_ARCH,
-                                    Arch.values(),
-                                    Arch.ANY);
+                            Os os = (Os) PackageParserUtils.getEnumAttribute(archive,
+                                            RepoConstants.ATTR_OS,
+                                            Os.values(),
+                                            null /*default*/);
+                            Arch arch = (Arch) PackageParserUtils.getEnumAttribute(archive,
+                                            RepoConstants.ATTR_ARCH,
+                                            Arch.values(),
+                                            Arch.ANY);
                             if (os == null || !os.isCompatible() ||
                                     arch == null || !arch.isCompatible()) {
                                 continue;

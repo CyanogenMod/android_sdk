@@ -21,7 +21,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -40,7 +39,7 @@ import java.util.Properties;
  * However there is no mandatory dependency that limits installation so this does not
  * implement {@link IPlatformDependency}.
  */
-public class DocPackage extends Package implements IAndroidVersionProvider {
+public class DocPackage extends MajorRevisionPackage implements IAndroidVersionProvider {
 
     private final AndroidVersion mVersion;
 
@@ -60,8 +59,10 @@ public class DocPackage extends Package implements IAndroidVersionProvider {
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
+        int apiLevel =
+            PackageParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+        String codeName =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }

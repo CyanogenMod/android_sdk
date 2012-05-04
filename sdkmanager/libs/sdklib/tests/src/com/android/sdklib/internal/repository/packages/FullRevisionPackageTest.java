@@ -16,13 +16,35 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.sdklib.repository.PkgProps;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
 public class FullRevisionPackageTest extends TestCase {
+
+    /**
+     * Helper that creates the {@link Properties} from a {@link FullRevision}
+     * as expected by {@link FullRevisionPackage}.
+     */
+    public static Properties createProps(FullRevision revision) {
+        Properties props = new Properties();
+        if (revision != null) {
+            props.setProperty(PkgProps.PKG_MAJOR_REV,
+                              Integer.toString(revision.getMajor()));
+            props.setProperty(PkgProps.PKG_MINOR_REV,
+                              Integer.toString(revision.getMinor()));
+            props.setProperty(PkgProps.PKG_MICRO_REV,
+                              Integer.toString(revision.getMicro()));
+            props.setProperty(PkgProps.PKG_PREVIEW_REV,
+                              Integer.toString(revision.getPreview()));
+        }
+        return props;
+    }
 
     public void testCompareTo() throws Exception {
         // Test order of full revision packages.

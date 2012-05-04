@@ -27,6 +27,7 @@ package com.android.sdklib.internal.repository.packages;
  */
 public class FullRevision implements Comparable<FullRevision> {
 
+    public static final int MISSING_MAJOR_REV  = 0;
     public static final int IMPLICIT_MINOR_REV = 0;
     public static final int IMPLICIT_MICRO_REV = 0;
     public static final int NOT_A_PREVIEW      = 0;

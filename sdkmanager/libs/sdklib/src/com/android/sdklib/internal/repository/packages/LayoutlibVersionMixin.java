@@ -16,7 +16,6 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.util.Pair;
@@ -51,11 +50,12 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
         int api = LAYOUTLIB_API_NOT_SPECIFIED;
         int rev = LAYOUTLIB_REV_NOT_SPECIFIED;
 
-        Node layoutlibNode = XmlParserUtils.getFirstChild(pkgNode, RepoConstants.NODE_LAYOUT_LIB);
+        Node layoutlibNode =
+            PackageParserUtils.findChildElement(pkgNode, RepoConstants.NODE_LAYOUT_LIB);
 
         if (layoutlibNode != null) {
-            api = XmlParserUtils.getXmlInt(layoutlibNode, RepoConstants.NODE_API, 0);
-            rev = XmlParserUtils.getXmlInt(layoutlibNode, RepoConstants.NODE_REVISION, 0);
+            api = PackageParserUtils.getXmlInt(layoutlibNode, RepoConstants.NODE_API, 0);
+            rev = PackageParserUtils.getXmlInt(layoutlibNode, RepoConstants.NODE_REVISION, 0);
         }
 
         mLayoutlibVersion = Pair.of(api, rev);

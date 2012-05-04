@@ -30,7 +30,7 @@ import java.util.Properties;
  * A mock empty package, of no particular subpackage type.
  * {@link #sameItemAs(Package)} will return true if these packages have the same handle.
  */
-public class MockEmptyPackage extends Package {
+public class MockEmptyPackage extends MajorRevisionPackage {
     private final String mTestHandle;
 
     /**

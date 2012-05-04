@@ -24,7 +24,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.XmlParserUtils;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;
 import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -66,20 +65,27 @@ public class PlatformPackage extends MinToolsPackage
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    public PlatformPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
+    public PlatformPackage(
+            SdkSource source,
+            Node packageNode,
+            String nsUri,
+            Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mVersionName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VERSION);
+        mVersionName =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VERSION);
 
-        int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
+        int apiLevel =
+            PackageParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
+        String codeName =
+            PackageParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
 
-        mIncludedAbi = XmlParserUtils.getOptionalXmlString(
-                packageNode, SdkRepoConstants.NODE_ABI_INCLUDED);
+        mIncludedAbi = PackageParserUtils.getOptionalXmlString(packageNode,
+                                        SdkRepoConstants.NODE_ABI_INCLUDED);
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }

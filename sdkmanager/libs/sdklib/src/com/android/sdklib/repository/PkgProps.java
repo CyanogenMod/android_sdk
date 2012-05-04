@@ -29,7 +29,6 @@ package com.android.sdklib.repository;
 public class PkgProps {
 
     // Base Package
-    public static final String PKG_MAJOR_REV            = "Pkg.Revision";           //$NON-NLS-1$
     public static final String PKG_LICENSE              = "Pkg.License";            //$NON-NLS-1$
     public static final String PKG_DESC                 = "Pkg.Desc";               //$NON-NLS-1$
     public static final String PKG_DESC_URL             = "Pkg.DescUrl";            //$NON-NLS-1$
@@ -39,7 +38,8 @@ public class PkgProps {
     public static final String PKG_OBSOLETE             = "Pkg.Obsolete";           //$NON-NLS-1$
 
     // FullRevision
-
+    // Note that MajorRev keeps the legacy "Pkg.Revision" property name for legacy compatibility.
+    public static final String PKG_MAJOR_REV            = "Pkg.Revision";           //$NON-NLS-1$
     public static final String PKG_MINOR_REV            = "Pkg.MinorRev";           //$NON-NLS-1$
     public static final String PKG_MICRO_REV            = "Pkg.MicroRev";           //$NON-NLS-1$
     public static final String PKG_PREVIEW_REV          = "Pkg.PreviewRev";         //$NON-NLS-1$
