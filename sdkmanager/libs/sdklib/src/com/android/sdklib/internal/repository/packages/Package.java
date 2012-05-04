@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
@@ -209,11 +211,40 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * @return The string value of the given key in the properties, or null if the key
      *   isn't found or if {@code props} is null.
      */
-    static String getProperty(Properties props, String propKey, String defaultValue) {
+    @Nullable
+    static String getProperty(
+            @Nullable Properties props,
+            @NonNull String propKey,
+            @Nullable String defaultValue) {
         if (props == null) {
             return defaultValue;
         }
         return props.getProperty(propKey, defaultValue);
+    }
+
+    /**
+     * Utility method that returns an integer property from a {@link Properties} object.
+     * Returns the default value if props is null or if the property is not defined or
+     * cannot be parsed to an integer.
+     *
+     * @param props The {@link Properties} to search into.
+     *   If null, the default value is returned.
+     * @param propKey The name of the property. Must not be null.
+     * @param defaultValue The default value to return if {@code props} is null or if the
+     *   key is not found. Can be null.
+     * @return The integer value of the given key in the properties, or the {@code defaultValue}.
+     */
+    static int getPropertyInt(
+            @Nullable Properties props,
+            @NonNull String propKey,
+            int defaultValue) {
+        String s = props != null ? props.getProperty(propKey, null) : null;
+        if (s != null) {
+            try {
+                return Integer.parseInt(s);
+            } catch (Exception ignore) {}
+        }
+        return defaultValue;
     }
 
     /**

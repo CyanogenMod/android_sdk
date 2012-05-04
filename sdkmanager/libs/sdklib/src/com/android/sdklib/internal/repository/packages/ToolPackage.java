@@ -144,11 +144,8 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
                 archiveArch,
                 archiveOsPath);
 
-        mMinPlatformToolsRevision = Integer.parseInt(
-                getProperty(
-                        props,
-                        PkgProps.MIN_PLATFORM_TOOLS_REV,
-                        Integer.toString(MIN_PLATFORM_TOOLS_REV_INVALID)));
+        mMinPlatformToolsRevision = getPropertyInt(props, PkgProps.MIN_PLATFORM_TOOLS_REV,
+                                                          MIN_PLATFORM_TOOLS_REV_INVALID);
     }
 
     /**

@@ -65,12 +65,10 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
      * Parses the layoutlib version optionally available in the given {@link Properties}.
      */
     public LayoutlibVersionMixin(Properties props) {
-        int layoutlibApi = Integer.parseInt(
-            Package.getProperty(props, PkgProps.LAYOUTLIB_API,
-                                Integer.toString(LAYOUTLIB_API_NOT_SPECIFIED)));
-        int layoutlibRev = Integer.parseInt(
-                Package.getProperty(props, PkgProps.LAYOUTLIB_REV,
-                                    Integer.toString(LAYOUTLIB_REV_NOT_SPECIFIED)));
+        int layoutlibApi = Package.getPropertyInt(props, PkgProps.LAYOUTLIB_API,
+                                                         LAYOUTLIB_API_NOT_SPECIFIED);
+        int layoutlibRev = Package.getPropertyInt(props, PkgProps.LAYOUTLIB_REV,
+                                                         LAYOUTLIB_REV_NOT_SPECIFIED);
         mLayoutlibVersion = Pair.of(layoutlibApi, layoutlibRev);
     }
 

@@ -121,10 +121,8 @@ public class SamplePackage extends MinToolsPackage
 
         mVersion = target.getVersion();
 
-        mMinApiLevel = Integer.parseInt(
-            getProperty(props,
-                    PkgProps.SAMPLE_MIN_API_LEVEL,
-                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+        mMinApiLevel = getPropertyInt(props, PkgProps.SAMPLE_MIN_API_LEVEL,
+                                             MIN_API_LEVEL_NOT_SPECIFIED);
     }
 
     /**
@@ -158,10 +156,8 @@ public class SamplePackage extends MinToolsPackage
 
         mVersion = new AndroidVersion(props);
 
-        mMinApiLevel = Integer.parseInt(
-            getProperty(props,
-                    PkgProps.SAMPLE_MIN_API_LEVEL,
-                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+        mMinApiLevel = getPropertyInt(props, PkgProps.SAMPLE_MIN_API_LEVEL,
+                                             MIN_API_LEVEL_NOT_SPECIFIED);
     }
 
     /**

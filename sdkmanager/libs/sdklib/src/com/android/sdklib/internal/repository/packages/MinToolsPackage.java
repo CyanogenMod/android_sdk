@@ -78,10 +78,8 @@ public abstract class MinToolsPackage extends MajorRevisionPackage implements IM
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        mMinToolsRevision = Integer.parseInt(
-            getProperty(props,
-                    PkgProps.MIN_TOOLS_REV,
-                    Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
+        mMinToolsRevision = getPropertyInt(props, PkgProps.MIN_TOOLS_REV,
+                                                  MIN_TOOLS_REV_NOT_SPECIFIED);
     }
 
     /**

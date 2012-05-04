@@ -77,8 +77,7 @@ public abstract class MajorRevisionPackage extends Package {
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        mRevision = new MajorRevision(Integer.parseInt(
-                getProperty(props, PkgProps.PKG_MAJOR_REV, Integer.toString(revision))));
+        mRevision = new MajorRevision(getPropertyInt(props, PkgProps.PKG_MAJOR_REV, revision));
     }
 
     /**

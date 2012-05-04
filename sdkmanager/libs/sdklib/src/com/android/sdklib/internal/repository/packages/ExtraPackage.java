@@ -256,10 +256,8 @@ public class ExtraPackage extends MinToolsPackage
 
         mOldPaths = getProperty(props, PkgProps.EXTRA_OLD_PATHS, null);
 
-        mMinApiLevel = Integer.parseInt(
-            getProperty(props,
-                    PkgProps.EXTRA_MIN_API_LEVEL,
-                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+        mMinApiLevel = getPropertyInt(props, PkgProps.EXTRA_MIN_API_LEVEL,
+                MIN_API_LEVEL_NOT_SPECIFIED);
 
         String projectFiles = getProperty(props, PkgProps.EXTRA_PROJECT_FILES, null);
         ArrayList<String> filePaths = new ArrayList<String>();

@@ -102,22 +102,10 @@ public abstract class FullRevisionPackage extends Package
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        int major = Integer.parseInt(
-                getProperty(props,
-                        PkgProps.PKG_MAJOR_REV,
-                        Integer.toString(revision)));
-        int minor = Integer.parseInt(
-                getProperty(props,
-                        PkgProps.PKG_MINOR_REV,
-                        Integer.toString(FullRevision.IMPLICIT_MINOR_REV)));
-        int micro = Integer.parseInt(
-                getProperty(props,
-                        PkgProps.PKG_MICRO_REV,
-                        Integer.toString(FullRevision.IMPLICIT_MINOR_REV)));
-        int preview = Integer.parseInt(
-                getProperty(props,
-                        PkgProps.PKG_PREVIEW_REV,
-                        Integer.toString(FullRevision.NOT_A_PREVIEW)));
+        int major = getPropertyInt(props, PkgProps.PKG_MAJOR_REV,revision);
+        int minor = getPropertyInt(props, PkgProps.PKG_MINOR_REV, FullRevision.IMPLICIT_MINOR_REV);
+        int micro = getPropertyInt(props, PkgProps.PKG_MICRO_REV, FullRevision.IMPLICIT_MINOR_REV);
+        int preview = getPropertyInt(props, PkgProps.PKG_PREVIEW_REV, FullRevision.NOT_A_PREVIEW);
 
         mPreviewVersion = new FullRevision(major, minor, micro, preview);
     }
