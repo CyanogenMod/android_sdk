@@ -57,7 +57,7 @@ public final class VersionCheck {
     private final static Pattern sPluginVersionPattern = Pattern.compile(
             "^plugin.version=(\\d+)\\.(\\d+)\\.(\\d+).*$"); //$NON-NLS-1$
     private final static Pattern sSourcePropPattern = Pattern.compile(
-            "^" + PkgProps.PKG_REVISION + "=(\\d+).*$"); //$NON-NLS-1$
+            "^" + PkgProps.PKG_MAJOR_REV + "=(\\d+).*$"); //$NON-NLS-1$
 
     /**
      * Checks the plugin and the SDK have compatible versions.
