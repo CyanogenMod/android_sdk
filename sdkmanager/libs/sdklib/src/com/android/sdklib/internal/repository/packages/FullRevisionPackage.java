@@ -102,12 +102,19 @@ public abstract class FullRevisionPackage extends Package
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        int major = getPropertyInt(props, PkgProps.PKG_MAJOR_REV,revision);
-        int minor = getPropertyInt(props, PkgProps.PKG_MINOR_REV, FullRevision.IMPLICIT_MINOR_REV);
-        int micro = getPropertyInt(props, PkgProps.PKG_MICRO_REV, FullRevision.IMPLICIT_MINOR_REV);
-        int preview = getPropertyInt(props, PkgProps.PKG_PREVIEW_REV, FullRevision.NOT_A_PREVIEW);
+        String revStr = getProperty(props, PkgProps.PKG_REVISION, null);
 
-        mPreviewVersion = new FullRevision(major, minor, micro, preview);
+        FullRevision rev = null;
+        if (revStr != null) {
+            try {
+                rev = FullRevision.parseRevision(revStr);
+            } catch (NumberFormatException ignore) {}
+        }
+        if (rev == null) {
+            rev = new FullRevision(revision);
+        }
+
+        mPreviewVersion = rev;
     }
 
     @Override
@@ -118,11 +125,7 @@ public abstract class FullRevisionPackage extends Package
     @Override
     public void saveProperties(Properties props) {
         super.saveProperties(props);
-
-        props.setProperty(PkgProps.PKG_MAJOR_REV,   Integer.toString(mPreviewVersion.getMajor()));
-        props.setProperty(PkgProps.PKG_MINOR_REV,   Integer.toString(mPreviewVersion.getMinor()));
-        props.setProperty(PkgProps.PKG_MICRO_REV,   Integer.toString(mPreviewVersion.getMicro()));
-        props.setProperty(PkgProps.PKG_PREVIEW_REV, Integer.toString(mPreviewVersion.getPreview()));
+        props.setProperty(PkgProps.PKG_REVISION, mPreviewVersion.toString());
     }
 
     @Override

@@ -77,7 +77,19 @@ public abstract class MajorRevisionPackage extends Package {
         super(source, props, revision, license, description, descUrl,
                 archiveOs, archiveArch, archiveOsPath);
 
-        mRevision = new MajorRevision(getPropertyInt(props, PkgProps.PKG_MAJOR_REV, revision));
+        String revStr = getProperty(props, PkgProps.PKG_REVISION, null);
+
+        MajorRevision rev = null;
+        if (revStr != null) {
+            try {
+                rev = MajorRevision.parseRevision(revStr);
+            } catch (NumberFormatException ignore) {}
+        }
+        if (rev == null) {
+            rev = new MajorRevision(revision);
+        }
+
+        mRevision = rev;
     }
 
     /**
@@ -93,7 +105,7 @@ public abstract class MajorRevisionPackage extends Package {
     @Override
     public void saveProperties(Properties props) {
         super.saveProperties(props);
-        props.setProperty(PkgProps.PKG_MAJOR_REV, Integer.toString(mRevision.getMajor()));
+        props.setProperty(PkgProps.PKG_REVISION, mRevision.toString());
     }
 
     @Override

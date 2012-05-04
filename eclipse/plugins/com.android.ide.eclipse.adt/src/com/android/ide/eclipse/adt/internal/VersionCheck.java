@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 
 import org.osgi.framework.Constants;
@@ -48,7 +49,7 @@ public final class VersionCheck {
     /**
      * The minimum version of the SDK Tools that this version of ADT requires.
      */
-    private final static int MIN_TOOLS_REV = 17;
+    private final static FullRevision MIN_TOOLS_REV = new FullRevision(17);
 
     /**
      * Pattern to get the minimum plugin version supported by the SDK. This is read from
@@ -57,7 +58,7 @@ public final class VersionCheck {
     private final static Pattern sPluginVersionPattern = Pattern.compile(
             "^plugin.version=(\\d+)\\.(\\d+)\\.(\\d+).*$"); //$NON-NLS-1$
     private final static Pattern sSourcePropPattern = Pattern.compile(
-            "^" + PkgProps.PKG_MAJOR_REV + "=(\\d+).*$"); //$NON-NLS-1$
+            "^" + PkgProps.PKG_REVISION + "=(.*)$"); //$NON-NLS-1$
 
     /**
      * Checks the plugin and the SDK have compatible versions.
@@ -136,7 +137,7 @@ public final class VersionCheck {
 
         // now check whether the tools are new enough.
         String osTools = osSdkPath + SdkConstants.OS_SDK_TOOLS_FOLDER;
-        int toolsRevision = Integer.MAX_VALUE;
+        FullRevision toolsRevision = new FullRevision(Integer.MAX_VALUE);
         try {
             reader = new FileReader(osTools + SdkConstants.FN_SOURCE_PROP);
             BufferedReader bReader = new BufferedReader(reader);
@@ -144,7 +145,9 @@ public final class VersionCheck {
             while ((line = bReader.readLine()) != null) {
                 Matcher m = sSourcePropPattern.matcher(line);
                 if (m.matches()) {
-                    toolsRevision = Integer.parseInt(m.group(1));
+                    try {
+                        toolsRevision = FullRevision.parseRevision(m.group(1));
+                    } catch (NumberFormatException ignore) {}
                     break;
                 }
             }
@@ -163,7 +166,7 @@ public final class VersionCheck {
             }
         }
 
-        if (toolsRevision < MIN_TOOLS_REV) {
+        if (toolsRevision.compareTo(MIN_TOOLS_REV) < 0) {
             // this is a warning only as we need to parse the SDK to allow updating
             // of the tools!
             return errorHandler.handleWarning(

@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.NonNull;
+
 
 /**
  * Package revision number composed of a <em>single</em> major revision.
@@ -33,5 +35,22 @@ public class MajorRevision extends FullRevision {
     @Override
     public String toString() {
         return super.toShortString();
+    }
+
+    /**
+     * Parses a single-integer string and returns a new {@link MajorRevision} for it.
+     *
+     * @param revision A non-null revision to parse.
+     * @return A new non-null {@link MajorRevision}.
+     * @throws NumberFormatException if the parsing failed.
+     */
+    public static @NonNull MajorRevision parseRevision(@NonNull String revision)
+            throws NumberFormatException {
+
+        if (revision == null) {
+            throw new NumberFormatException("revision is <null>"); //$NON-NLS-1$
+        }
+
+        return new MajorRevision(Integer.parseInt(revision.trim()));
     }
 }

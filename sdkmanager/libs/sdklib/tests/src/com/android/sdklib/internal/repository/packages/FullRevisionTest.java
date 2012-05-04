@@ -20,16 +20,6 @@ import junit.framework.TestCase;
 
 public class FullRevisionTest extends TestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     public final void testFullRevision() {
         FullRevision p = new FullRevision(5);
         assertEquals(5, p.getMajor());
@@ -38,7 +28,9 @@ public class FullRevisionTest extends TestCase {
         assertEquals(FullRevision.NOT_A_PREVIEW, p.getPreview());
         assertFalse (p.isPreview());
         assertEquals("5", p.toShortString());
+        assertEquals(p, FullRevision.parseRevision("5"));
         assertEquals("5.0.0", p.toString());
+        assertEquals(p, FullRevision.parseRevision("5.0.0"));
 
         p = new FullRevision(5, 0, 0, 6);
         assertEquals(5, p.getMajor());
@@ -47,7 +39,9 @@ public class FullRevisionTest extends TestCase {
         assertEquals(6, p.getPreview());
         assertTrue  (p.isPreview());
         assertEquals("5 rc6", p.toShortString());
+        assertEquals(p, FullRevision.parseRevision("5 rc6"));
         assertEquals("5.0.0 rc6", p.toString());
+        assertEquals(p, FullRevision.parseRevision("5.0.0 rc6"));
 
         p = new FullRevision(6, 7, 0);
         assertEquals(6, p.getMajor());
@@ -56,7 +50,9 @@ public class FullRevisionTest extends TestCase {
         assertEquals(0, p.getPreview());
         assertFalse (p.isPreview());
         assertEquals("6.7", p.toShortString());
+        assertEquals(p, FullRevision.parseRevision("6.7"));
         assertEquals("6.7.0", p.toString());
+        assertEquals(p, FullRevision.parseRevision("6.7.0"));
 
         p = new FullRevision(10, 11, 12, FullRevision.NOT_A_PREVIEW);
         assertEquals(10, p.getMajor());
@@ -66,6 +62,7 @@ public class FullRevisionTest extends TestCase {
         assertFalse (p.isPreview());
         assertEquals("10.11.12", p.toShortString());
         assertEquals("10.11.12", p.toString());
+        assertEquals(p, FullRevision.parseRevision("10.11.12"));
 
         p = new FullRevision(10, 11, 12, 13);
         assertEquals(10, p.getMajor());
@@ -75,6 +72,48 @@ public class FullRevisionTest extends TestCase {
         assertTrue  (p.isPreview());
         assertEquals("10.11.12 rc13", p.toShortString());
         assertEquals("10.11.12 rc13", p.toString());
+        assertEquals(p, FullRevision.parseRevision("10.11.12 rc13"));
+        assertEquals(p, FullRevision.parseRevision("   10.11.12 rc13"));
+        assertEquals(p, FullRevision.parseRevision("10.11.12 rc13   "));
+        assertEquals(p, FullRevision.parseRevision("   10.11.12   rc13   "));
+    }
+
+    public final void testParseError() {
+        String errorMsg = null;
+        try {
+            FullRevision.parseRevision("not a number");
+            fail("FullRevision.parseRevision should thrown NumberFormatException");
+        } catch (NumberFormatException e) {
+            errorMsg = e.getMessage();
+        }
+        assertEquals("Invalid full revision: not a number", errorMsg);
+
+        errorMsg = null;
+        try {
+            FullRevision.parseRevision("5 .6 .7");
+            fail("FullRevision.parseRevision should thrown NumberFormatException");
+        } catch (NumberFormatException e) {
+            errorMsg = e.getMessage();
+        }
+        assertEquals("Invalid full revision: 5 .6 .7", errorMsg);
+
+        errorMsg = null;
+        try {
+            FullRevision.parseRevision("5.0.0 preview 1");
+            fail("FullRevision.parseRevision should thrown NumberFormatException");
+        } catch (NumberFormatException e) {
+            errorMsg = e.getMessage();
+        }
+        assertEquals("Invalid full revision: 5.0.0 preview 1", errorMsg);
+
+        errorMsg = null;
+        try {
+            FullRevision.parseRevision("  5.1.2 rc 42  ");
+            fail("FullRevision.parseRevision should thrown NumberFormatException");
+        } catch (NumberFormatException e) {
+            errorMsg = e.getMessage();
+        }
+        assertEquals("Invalid full revision:   5.1.2 rc 42  ", errorMsg);
     }
 
     public final void testCompareTo() {

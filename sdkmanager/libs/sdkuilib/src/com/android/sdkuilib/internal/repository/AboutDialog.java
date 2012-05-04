@@ -107,7 +107,7 @@ public class AboutDialog extends UpdaterBaseDialog {
                 }
             }
 
-            String revision = p.getProperty(PkgProps.PKG_MAJOR_REV);
+            String revision = p.getProperty(PkgProps.PKG_REVISION);
             if (revision != null) {
                 return revision;
             }
