@@ -53,8 +53,7 @@ final class PlatformTarget implements IAndroidTarget {
      *
      * @param sdkOsPath the root folder of the SDK
      * @param platformOSPath the root folder of the platform component
-     * @param apiLevel the API Level
-     * @param codeName the codename. can be null.
+     * @param apiVersion the API Level + codename.
      * @param versionName the version name of the platform.
      * @param revision the revision of the platform component.
      * @param layoutlibVersion The {@link LayoutlibVersion}. May be null.
@@ -65,8 +64,7 @@ final class PlatformTarget implements IAndroidTarget {
     PlatformTarget(
             String sdkOsPath,
             String platformOSPath,
-            int apiLevel,
-            String codeName,
+            AndroidVersion apiVersion,
             String versionName,
             int revision,
             LayoutlibVersion layoutlibVersion,
@@ -77,7 +75,7 @@ final class PlatformTarget implements IAndroidTarget {
         }
         mRootFolderOsPath = platformOSPath;
         mProperties = Collections.unmodifiableMap(properties);
-        mVersion = new AndroidVersion(apiLevel, codeName);
+        mVersion = apiVersion;
         mVersionName = versionName;
         mRevision = revision;
         mLayoutlibVersion = layoutlibVersion;

@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.annotations.Nullable;
 import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
@@ -61,7 +62,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
      */
     public AndroidVersion(int apiLevel, String codename) {
         mApiLevel = apiLevel;
-        mCodename = codename;
+        mCodename = sanitizeCodename(codename);
     }
 
     /**
@@ -73,11 +74,12 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     public AndroidVersion(Properties properties, int defaultApiLevel, String defaultCodeName) {
         if (properties == null) {
             mApiLevel = defaultApiLevel;
-            mCodename = defaultCodeName;
+            mCodename = sanitizeCodename(defaultCodeName);
         } else {
             mApiLevel = Integer.parseInt(properties.getProperty(PkgProps.VERSION_API_LEVEL,
-                    Integer.toString(defaultApiLevel)));
-            mCodename = properties.getProperty(PkgProps.VERSION_CODENAME, defaultCodeName);
+                                                                Integer.toString(defaultApiLevel)));
+            mCodename = sanitizeCodename(
+                            properties.getProperty(PkgProps.VERSION_CODENAME, defaultCodeName));
         }
     }
 
@@ -95,7 +97,8 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
         if (apiLevel != null) {
             try {
                 mApiLevel = Integer.parseInt(apiLevel);
-                mCodename = properties.getProperty(PkgProps.VERSION_CODENAME, null/*defaultValue*/);
+                mCodename = sanitizeCodename(properties.getProperty(PkgProps.VERSION_CODENAME,
+                                                                    null/*defaultValue*/));
                 return;
             } catch (NumberFormatException e) {
                 error = e;
@@ -297,5 +300,26 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
      */
     public boolean isGreaterOrEqualThan(int api) {
         return compareTo(api, null /*codename*/) >= 0;
+    }
+
+    /**
+     * Sanitizes the codename string according to the following rules:
+     * - A codename should be {@code null} for a release version or it should be a non-empty
+     *   string for an actual preview.
+     * - In input, spacing is trimmed since it is irrelevant.
+     * - An empty string or the special codename "REL" means a release version
+     *   and is converted to {@code null}.
+     *
+     * @param codename A possible-null codename.
+     * @return Null for a release version or a non-empty codename.
+     */
+    private @Nullable String sanitizeCodename(@Nullable String codename) {
+        if (codename != null) {
+            codename = codename.trim();
+            if (codename.length() == 0 || SdkConstants.CODENAME_RELEASE.equals(codename)) {
+                codename = null;
+            }
+        }
+        return codename;
     }
 }
