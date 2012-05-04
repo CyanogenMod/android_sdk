@@ -78,6 +78,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * LogCatPanel displays a table listing the logcat messages.
@@ -128,6 +130,12 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /** Index of the default filter in the saved filters column. */
     private static final int DEFAULT_FILTER_INDEX = 0;
+
+    /* Text colors for the filter box */
+    private static final Color VALID_FILTER_REGEX_COLOR =
+            Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
+    private static final Color INVALID_FILTER_REGEX_COLOR =
+            Display.getDefault().getSystemColor(SWT.COLOR_RED);
 
     private LogCatReceiver mReceiver;
     private IPreferenceStore mPrefStore;
@@ -542,6 +550,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mLiveFilterText.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent arg0) {
+                updateFilterTextColor();
                 updateAppliedFilters();
             }
         });
@@ -615,6 +624,19 @@ public final class LogCatPanel extends SelectionDependentPanel
                 setScrollToLatestLog(!scrollLock);
             }
         });
+    }
+
+    /** Sets the foreground color of filter text based on whether the regex is valid. */
+    private void updateFilterTextColor() {
+        String text = mLiveFilterText.getText();
+        Color c;
+        try {
+            Pattern.compile(text.trim());
+            c = VALID_FILTER_REGEX_COLOR;
+        } catch (PatternSyntaxException e) {
+            c = INVALID_FILTER_REGEX_COLOR;
+        }
+        mLiveFilterText.setForeground(c);
     }
 
     private void updateFiltersColumn(boolean showFilters) {
