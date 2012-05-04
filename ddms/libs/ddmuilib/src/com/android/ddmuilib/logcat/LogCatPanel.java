@@ -25,6 +25,8 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -49,6 +51,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -59,6 +63,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -369,9 +374,11 @@ public final class LogCatPanel extends SelectionDependentPanel
         });
     }
 
-    private void addNewFilter() {
+    private void addNewFilter(String defaultTag, String defaultText, String defaultPid,
+            String defaultAppName, LogLevel defaultLevel) {
         LogCatFilterSettingsDialog d = new LogCatFilterSettingsDialog(
                 Display.getCurrent().getActiveShell());
+        d.setDefaults("", defaultTag, defaultText, defaultPid, defaultAppName, defaultLevel);
         if (d.open() != Window.OK) {
             return;
         }
@@ -392,6 +399,11 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         filterSelectionChanged();
         saveFilterPreferences();
+    }
+
+    private void addNewFilter() {
+        addNewFilter("", "", "",
+                "", LogLevel.VERBOSE);
     }
 
     private void deleteSelectedFilter() {
@@ -794,8 +806,47 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         });
 
+        addRightClickMenu(mTable);
         initDoubleClickListener();
         recomputeWrapWidth();
+    }
+
+    /** Setup menu to be displayed when right clicking a log message. */
+    private void addRightClickMenu(final Table table) {
+        // This action will pop up a create filter dialog pre-populated with current selection
+        final Action filterAction = new Action("Filter similar messages..") {
+            @Override
+            public void run() {
+                List<LogCatMessage> selectedMessages = getSelectedLogCatMessages();
+                if (selectedMessages.size() == 0) {
+                    addNewFilter();
+                } else {
+                    LogCatMessage m = selectedMessages.get(0);
+                    addNewFilter(m.getTag(), m.getMessage(), m.getPid(), m.getAppName(),
+                            m.getLogLevel());
+                }
+            }
+        };
+
+        final MenuManager mgr = new MenuManager();
+        mgr.add(filterAction);
+        final Menu menu = mgr.createContextMenu(table);
+
+        table.addListener(SWT.MenuDetect, new Listener() {
+            @Override
+            public void handleEvent(Event event) {
+                Point pt = table.getDisplay().map(null, table, new Point(event.x, event.y));
+                Rectangle clientArea = table.getClientArea();
+
+                // The click location is in the header if it is between
+                // clientArea.y and clientArea.y + header height
+                boolean header = pt.y > clientArea.y
+                                    && pt.y < (clientArea.y + table.getHeaderHeight());
+
+                // Show the menu only if it is not inside the header
+                table.setMenu(header ? null : menu);
+            }
+        });
     }
 
     public void recomputeWrapWidth() {
