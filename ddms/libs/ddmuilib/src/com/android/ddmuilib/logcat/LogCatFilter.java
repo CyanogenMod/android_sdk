@@ -15,7 +15,6 @@
  */
 package com.android.ddmuilib.logcat;
 
-import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
 
 import java.util.ArrayList;
@@ -96,8 +95,6 @@ public final class LogCatFilter {
                 mAppNamePattern = Pattern.compile(mAppName, getPatternCompileFlags(mAppName));
                 mCheckAppName = true;
             } catch (PatternSyntaxException e) {
-                Log.e("LogCatFilter", "Ignoring invalid app name regex.");
-                Log.e("LogCatFilter", e.getMessage());
                 mCheckAppName = false;
             }
         }
@@ -107,8 +104,6 @@ public final class LogCatFilter {
                 mTagPattern = Pattern.compile(mTag, getPatternCompileFlags(mTag));
                 mCheckTag = true;
             } catch (PatternSyntaxException e) {
-                Log.e("LogCatFilter", "Ignoring invalid tag regex.");
-                Log.e("LogCatFilter", e.getMessage());
                 mCheckTag = false;
             }
         }
@@ -118,8 +113,6 @@ public final class LogCatFilter {
                 mTextPattern = Pattern.compile(mText, getPatternCompileFlags(mText));
                 mCheckText = true;
             } catch (PatternSyntaxException e) {
-                Log.e("LogCatFilter", "Ignoring invalid text regex.");
-                Log.e("LogCatFilter", e.getMessage());
                 mCheckText = false;
             }
         }
