@@ -168,6 +168,8 @@ public final class SdkConstants {
 
     /** global Android proguard config file */
     public final static String FN_ANDROID_PROGUARD_FILE = "proguard-android.txt";   //$NON-NLS-1$
+    /** global Android proguard config file with optimization enabled */
+    public final static String FN_ANDROID_OPT_PROGUARD_FILE = "proguard-android-optimize.txt";  //$NON-NLS-1$
     /** default proguard config file with new file extension (for project specific stuff) */
     public final static String FN_PROJECT_PROGUARD_FILE = "proguard-project.txt";   //$NON-NLS-1$
 
