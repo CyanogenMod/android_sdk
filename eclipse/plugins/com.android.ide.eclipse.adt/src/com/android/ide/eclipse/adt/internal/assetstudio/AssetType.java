@@ -19,7 +19,7 @@ package com.android.ide.eclipse.adt.internal.assetstudio;
 /**
  * The type of asset to create: launcher icon, menu icon, etc.
  */
-enum AssetType {
+public enum AssetType {
     /** Launcher icon to be shown in the application list */
     LAUNCHER("Launcher Icons", "ic_launcher"),                     //$NON-NLS-2$
 

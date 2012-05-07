@@ -59,6 +59,8 @@ public abstract class GraphicGenerator {
 
     /** Shapes that can be used for icon backgrounds */
     public static enum Shape {
+        /** No background */
+        NONE("none"),
         /** Circular background */
         CIRCLE("circle"),
         /** Square background */

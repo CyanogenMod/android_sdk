@@ -21,7 +21,6 @@ import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.Project
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceFolderType;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -41,25 +40,19 @@ import org.eclipse.swt.widgets.Text;
 
 /** Page for choosing the type of asset to create, as well as the target project */
 public class ChooseAssetTypePage extends WizardPage implements SelectionListener, ModifyListener {
+    private final CreateAssetSetWizardState mValues;
     private ProjectCombo mProjectButton;
     private Button mClipboardButton;
-    private IProject mProject;
     private Text mNameText;
-    /**
-     * The type of asset being created. This field is static such that when you
-     * bring up the wizard repeatedly (for example to create multiple
-     * notification icons) you don't have to keep selecting the same type over
-     * and over.
-     */
-    private static AssetType sType = AssetType.LAUNCHER;
     private boolean mNameModified;
     private Label mResourceName;
 
     /**
      * Create the wizard.
      */
-    public ChooseAssetTypePage() {
+    public ChooseAssetTypePage(CreateAssetSetWizardState values) {
         super("chooseAssetTypePage");
+        mValues = values;
         setTitle("Choose Icon Set Type");
         setDescription("Select the type of icon set to create:");
     }
@@ -80,7 +73,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
             Button button = new Button(container, SWT.RADIO);
             button.setData(type);
             button.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-            button.setSelection(type == sType);
+            button.setSelection(type == mValues.type);
             button.setText(type.getDisplayName());
             button.addSelectionListener(this);
         }
@@ -96,7 +89,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
 
         ProjectChooserHelper helper =
                 new ProjectChooserHelper(getShell(), null /* filter */);
-        mProjectButton = new ProjectCombo(helper, container, mProject);
+        mProjectButton = new ProjectCombo(helper, container, mValues.project);
         mProjectButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mProjectButton.addSelectionListener(this);
 
@@ -135,8 +128,10 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         if (!mNameModified) {
             // Default name suggestion, possibly as a suffix, e.g. "ic_menu_<name>"
             String replace = "name";
-            String suggestedName = String.format(getAssetType().getDefaultNameFormat(), replace);
+            String suggestedName = String.format(mValues.type.getDefaultNameFormat(), replace);
             mNameText.setText(suggestedName);
+            mValues.outputName = suggestedName;
+
             updateResourceLabel();
             mNameModified = false;
             int start = suggestedName.indexOf(replace);
@@ -154,24 +149,16 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         mResourceName.setText("@drawable/" + getOutputName()); //$NON-NLS-1$
     }
 
-    void setProject(IProject project) {
-        mProject = project;
-    }
-
-    IProject getProject() {
-        return mProject;
-    }
-
     @Override
     public boolean canFlipToNextPage() {
-        return mProject != null;
+        return mValues.project != null;
     }
 
     @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mProjectButton) {
-            mProject = mProjectButton.getSelectedProject();
+            mValues.project = mProjectButton.getSelectedProject();
             validatePage();
         } else if (source == mClipboardButton) {
             Clipboard clipboard = new Clipboard(getShell().getDisplay());
@@ -184,7 +171,8 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
             // User selected a different asset type to be created
             Object data = ((Button) source).getData();
             if (data instanceof AssetType) {
-                sType = (AssetType) data;
+                mValues.type = (AssetType) data;
+                CreateAssetSetWizardState.sLastType = mValues.type;
                 updateAssetType();
             }
         }
@@ -199,24 +187,21 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         Object source = e.getSource();
         if (source == mNameText) {
             mNameModified = true;
+            mValues.outputName = mNameText.getText().trim();
             updateResourceLabel();
         }
 
         validatePage();
     }
 
-    String getOutputName() {
+    private String getOutputName() {
         return mNameText.getText().trim();
-    }
-
-    AssetType getAssetType() {
-        return sType;
     }
 
     private void validatePage() {
         String error = null;
 
-        if (getProject() == null) {
+        if (mValues.project == null) {
             error = "Please select an Android project.";
         } else {
             String outputName = getOutputName();
