@@ -114,6 +114,9 @@ class LayoutCanvasViewer extends Viewer implements IPostSelectionProvider {
      */
     @Override
     public void setSelection(ISelection selection, boolean reveal) {
+        if (mEditorDelegate.getEditor().getIgnoreXmlUpdate()) {
+            return;
+        }
         mCanvas.getSelectionManager().setSelection(selection);
     }
 
