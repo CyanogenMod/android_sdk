@@ -21,6 +21,8 @@ import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentTypeIdForXML.ContentTypeID_XML;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.util.Pair;
@@ -70,7 +72,8 @@ public class DomUtilities {
      * @param node2 the second node to test
      * @return the nearest common parent of the two given nodes
      */
-    public static Node getCommonAncestor(Node node1, Node node2) {
+    @Nullable
+    public static Node getCommonAncestor(@NonNull Node node1, @NonNull Node node2) {
         while (node2 != null) {
             Node current = node1;
             while (current != null && current != node2) {
@@ -92,13 +95,14 @@ public class DomUtilities {
      * @param node the node to search from
      * @return all elements in the subtree formed by the node parameter
      */
-    public static List<Element> getAllElements(Node node) {
+    @NonNull
+    public static List<Element> getAllElements(@NonNull Node node) {
         List<Element> elements = new ArrayList<Element>(64);
         addElements(node, elements);
         return elements;
     }
 
-    private static void addElements(Node node, List<Element> elements) {
+    private static void addElements(@NonNull Node node, @NonNull List<Element> elements) {
         if (node instanceof Element) {
             elements.add((Element) node);
         }
@@ -116,7 +120,7 @@ public class DomUtilities {
      * @param node the node to test
      * @return the depth in the document
      */
-    public static int getDepth(Node node) {
+    public static int getDepth(@NonNull Node node) {
         int depth = -1;
         while (node != null) {
             depth++;
@@ -132,7 +136,7 @@ public class DomUtilities {
      * @param node the node to test for element children
      * @return true if the node has one or more element children
      */
-    public static boolean hasElementChildren(Node node) {
+    public static boolean hasElementChildren(@NonNull Node node) {
         NodeList children = node.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -151,7 +155,8 @@ public class DomUtilities {
      * @param offset The offset to look up the node for
      * @return The node containing the offset, or null
      */
-    public static Node getNode(IDocument document, int offset) {
+    @Nullable
+    public static Node getNode(@NonNull IDocument document, int offset) {
         Node node = null;
         IModelManager modelManager = StructuredModelManager.getModelManager();
         if (modelManager == null) {
@@ -204,7 +209,8 @@ public class DomUtilities {
      *         return the parent. Note that the method can also return null if no
      *         document or model could be obtained or if the offset is invalid.
      */
-    public static Pair<Node, Node> getNodeContext(IDocument document, int offset) {
+    @Nullable
+    public static Pair<Node, Node> getNodeContext(@NonNull IDocument document, int offset) {
         Node node = null;
         IModelManager modelManager = StructuredModelManager.getModelManager();
         if (modelManager == null) {
@@ -283,7 +289,8 @@ public class DomUtilities {
      * @return the node which surrounds the given offset, or the node adjacent to the offset
      *    where the side depends on the forward parameter
      */
-    public static Node getNode(IDocument document, int offset, boolean forward) {
+    @Nullable
+    public static Node getNode(@NonNull IDocument document, int offset, boolean forward) {
         Node node = getNode(document, offset);
 
         if (node instanceof IndexedRegion) {
@@ -318,8 +325,9 @@ public class DomUtilities {
      * @param endOffset the ending offset of the range
      * @return a pair of begin+end elements, or null
      */
-    public static Pair<Element, Element> getElementRange(IDocument document, int beginOffset,
-            int endOffset) {
+    @Nullable
+    public static Pair<Element, Element> getElementRange(@NonNull IDocument document,
+            int beginOffset, int endOffset) {
         Element beginElement = null;
         Element endElement = null;
         Node beginNode = getNode(document, beginOffset, true);
@@ -383,7 +391,8 @@ public class DomUtilities {
      * @param node the starting node
      * @return the next sibling element, or null
      */
-    public static Element getNextElement(Node node) {
+    @Nullable
+    public static Element getNextElement(@NonNull Node node) {
         while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
             node = node.getNextSibling();
         }
@@ -397,7 +406,8 @@ public class DomUtilities {
      * @param node the starting node
      * @return the previous sibling element, or null
      */
-    public static Element getPreviousElement(Node node) {
+    @Nullable
+    public static Element getPreviousElement(@NonNull Node node) {
         while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
             node = node.getPreviousSibling();
         }
@@ -411,7 +421,8 @@ public class DomUtilities {
      * @param node the starting node
      * @return the closest parent element, or null
      */
-    public static Element getParentElement(Node node) {
+    @Nullable
+    public static Element getParentElement(@NonNull Node node) {
         while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
             node = node.getParentNode();
         }
@@ -426,7 +437,8 @@ public class DomUtilities {
      * @param attrValue the value to be escaped
      * @return the escaped value
      */
-    public static String toXmlAttributeValue(String attrValue) {
+    @NonNull
+    public static String toXmlAttributeValue(@NonNull String attrValue) {
         for (int i = 0, n = attrValue.length(); i < n; i++) {
             char c = attrValue.charAt(i);
             if (c == '"' || c == '\'' || c == '<' || c == '&') {
@@ -446,7 +458,8 @@ public class DomUtilities {
      * @param sb the string builder
      * @param attrValue the attribute value to be appended and escaped
      */
-    public static void appendXmlAttributeValue(StringBuilder sb, String attrValue) {
+    public static void appendXmlAttributeValue(@NonNull StringBuilder sb,
+            @NonNull String attrValue) {
         int n = attrValue.length();
         // &, ", ' and < are illegal in attributes; see http://www.w3.org/TR/REC-xml/#NT-AttValue
         // (' legal in a " string and " is legal in a ' string but here we'll stay on the safe
@@ -474,7 +487,7 @@ public class DomUtilities {
      * @param sb the string builder
      * @param textValue the text value to be appended and escaped
      */
-    public static void appendXmlTextValue(StringBuilder sb, String textValue) {
+    public static void appendXmlTextValue(@NonNull StringBuilder sb, @NonNull String textValue) {
         for (int i = 0, n = textValue.length(); i < n; i++) {
             char c = textValue.charAt(i);
             if (c == '<') {
@@ -488,7 +501,7 @@ public class DomUtilities {
     }
 
     /** Utility used by {@link #getFreeWidgetId(Element)} */
-    private static void addLowercaseIds(Element root, Set<String> seen) {
+    private static void addLowercaseIds(@NonNull Element root, @NonNull Set<String> seen) {
         if (root.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             String id = root.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (id.startsWith(NEW_ID_PREFIX)) {
@@ -514,7 +527,10 @@ public class DomUtilities {
      * @return a unique id, never null, which does not include the {@code @id/} prefix
      * @see DescriptorsUtils#getFreeWidgetId
      */
-    public static String getFreeWidgetId(Element element, Set<String> reserved, String prefix) {
+    public static String getFreeWidgetId(
+            @NonNull Element element,
+            @Nullable Set<String> reserved,
+            @Nullable String prefix) {
         Set<String> ids = new HashSet<String>();
         if (reserved != null) {
             for (String id : reserved) {
@@ -545,7 +561,8 @@ public class DomUtilities {
      * @param element the parent element
      * @return a list of child elements, possibly empty but never null
      */
-    public static List<Element> getChildren(Element element) {
+    @NonNull
+    public static List<Element> getChildren(@NonNull Element element) {
         // Convenience to avoid lots of ugly DOM access casting
         NodeList children = element.getChildNodes();
         // An iterator would have been more natural (to directly drive the child list
@@ -568,7 +585,7 @@ public class DomUtilities {
      * @param elements the elements to be tested
      * @return true if the elements are contiguous siblings with no gaps
      */
-    public static boolean isContiguous(List<Element> elements) {
+    public static boolean isContiguous(@NonNull List<Element> elements) {
         if (elements.size() > 1) {
             // All elements must be siblings (e.g. same parent)
             Node parent = elements.get(0).getParentNode();
@@ -621,7 +638,7 @@ public class DomUtilities {
      * @param element2 the second element to compare
      * @return true if the two element hierarchies are logically equal
      */
-    public static boolean isEquivalent(Element element1, Element element2) {
+    public static boolean isEquivalent(@Nullable Element element1, @Nullable Element element2) {
         if (element1 == null || element2 == null) {
             return false;
         }
@@ -713,7 +730,8 @@ public class DomUtilities {
      * @param document the document to search for an equivalent element in
      * @return an equivalent element, or null
      */
-    public static Element findCorresponding(Element element, Document document) {
+    @Nullable
+    public static Element findCorresponding(@NonNull Element element, @NonNull Document document) {
         // Make sure the method is called correctly -- the element is for a different
         // document than the one we are searching
         assert element.getOwnerDocument() != document;
@@ -736,7 +754,8 @@ public class DomUtilities {
     }
 
     /** Helper method for {@link #findCorresponding(Element, Document)} */
-    private static Element findCorresponding(Element element, String targetId) {
+    @Nullable
+    private static Element findCorresponding(@NonNull Element element, @NonNull String targetId) {
         String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
         if (id != null) { // Work around DOM bug
             if (id.equals(targetId)) {
@@ -772,7 +791,8 @@ public class DomUtilities {
      * @param xml the XML content to be parsed (must be well formed)
      * @return the DOM document, or null
      */
-    public static Document parseStructuredDocument(String xml) {
+    @Nullable
+    public static Document parseStructuredDocument(@NonNull String xml) {
         IStructuredModel model = createStructuredModel(xml);
         if (model instanceof IDOMModel) {
             IDOMModel domModel = (IDOMModel) model;
@@ -788,7 +808,8 @@ public class DomUtilities {
      * @param xml the XML content to be parsed (must be well formed)
      * @return the structured model
      */
-    public static IStructuredModel createStructuredModel(String xml) {
+    @Nullable
+    public static IStructuredModel createStructuredModel(@NonNull String xml) {
         IStructuredModel model = createEmptyModel();
         IStructuredDocument document = model.getStructuredDocument();
         model.aboutToChangeModel();
@@ -803,6 +824,7 @@ public class DomUtilities {
      *
      * @return a new Eclipse XML model
      */
+    @NonNull
     public static IStructuredModel createEmptyModel() {
         IModelManager modelManager = StructuredModelManager.getModelManager();
         return modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
@@ -813,6 +835,7 @@ public class DomUtilities {
      *
      * @return an empty Eclipse XML document
      */
+    @Nullable
     public static Document createEmptyDocument() {
         IStructuredModel model = createEmptyModel();
         if (model instanceof IDOMModel) {
@@ -832,7 +855,8 @@ public class DomUtilities {
      *            silently return null
      * @return the DOM document, or null
      */
-    public static Document parseDocument(String xml, boolean logParserErrors) {
+    @Nullable
+    public static Document parseDocument(@NonNull String xml, boolean logParserErrors) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         InputSource is = new InputSource(new StringReader(xml));
         factory.setNamespaceAware(true);
