@@ -263,6 +263,9 @@ public final class SdkConstants {
     /** Name of the cache folder in the $HOME/.android. */
     public final static String FD_CACHE = "cache";                      //$NON-NLS-1$
 
+    /** API codename of a release (non preview) system image or platform. **/
+    public final static String CODENAME_RELEASE = "REL";                //$NON-NLS-1$
+
     /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
     public final static String NS_RESOURCES =
         "http://schemas.android.com/apk/res/android";                   //$NON-NLS-1$
@@ -377,7 +380,6 @@ public final class SdkConstants {
             FN_FRAMEWORK_RENDERSCRIPT + File.separator + FN_FRAMEWORK_INCLUDE_CLANG;
 
     /* Folder paths relative to a addon folder */
-
     /** Path of the images directory relative to a folder folder.
      *  This is an OS path, ending with a separator. */
     public final static String OS_ADDON_LIBS_FOLDER = FD_ADDON_LIBS + File.separator;

@@ -437,12 +437,10 @@ public class SdkManager {
                 }
             }
 
-            // codename (optional)
-            String apiCodename = platformProp.get(PROP_VERSION_CODENAME);
-            if (apiCodename != null && apiCodename.equals("REL")) {
-                apiCodename = null; // REL means it's a release version and therefore the
-                                    // codename is irrelevant at this point.
-            }
+            // Codename must be either null or a platform codename.
+            // REL means it's a release version and therefore the codename should be null.
+            AndroidVersion apiVersion =
+                new AndroidVersion(apiNumber, platformProp.get(PROP_VERSION_CODENAME));
 
             // version string
             String apiName = platformProp.get(PkgProps.PLATFORM_VERSION);
@@ -489,14 +487,13 @@ public class SdkManager {
             }
 
             ISystemImage[] systemImages =
-                getPlatformSystemImages(sdkOsPath, platformFolder, apiNumber, apiCodename);
+                getPlatformSystemImages(sdkOsPath, platformFolder, apiVersion);
 
             // create the target.
             PlatformTarget target = new PlatformTarget(
                     sdkOsPath,
                     platformFolder.getAbsolutePath(),
-                    apiNumber,
-                    apiCodename,
+                    apiVersion,
                     apiName,
                     revision,
                     layoutlibVersion,
@@ -574,16 +571,14 @@ public class SdkManager {
      *
      * @param sdkOsPath The path to the SDK.
      * @param root Root of the platform target being loaded.
-     * @param apiNumber API level of platform being loaded
-     * @param apiCodename Optional codename of platform being loaded
+     * @param version API level + codename of platform being loaded.
      * @return an array of ISystemImage containing all the system images for the target.
      *              The list can be empty.
     */
     private static ISystemImage[] getPlatformSystemImages(
             String sdkOsPath,
             File root,
-            int apiNumber,
-            String apiCodename) {
+            AndroidVersion version) {
         Set<ISystemImage> found = new TreeSet<ISystemImage>();
         Set<String> abiFound = new HashSet<String>();
 
@@ -591,8 +586,6 @@ public class SdkManager {
         // We require/enforce the system image to have a valid properties file.
         // The actual directory names are irrelevant.
         // If we find multiple occurrences of the same platform/abi, the first one read wins.
-
-        AndroidVersion version = new AndroidVersion(apiNumber, apiCodename);
 
         File[] firstLevelFiles = new File(sdkOsPath, SdkConstants.FD_SYSTEM_IMAGES).listFiles();
         if (firstLevelFiles != null) {
