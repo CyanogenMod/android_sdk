@@ -25,6 +25,9 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.util.XmlUtils;
 
 import org.eclipse.core.filesystem.URIUtil;
@@ -36,6 +39,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
@@ -43,6 +47,8 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextUtilities;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -61,6 +67,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -167,7 +174,8 @@ public class AdtUtils {
      * @return the string as a Java class, or null if a class name could not be
      *         extracted
      */
-    public static String extractClassName(String string) {
+    @Nullable
+    public static String extractClassName(@NonNull String string) {
         StringBuilder sb = new StringBuilder(string.length());
         int n = string.length();
 
@@ -261,6 +269,62 @@ public class AdtUtils {
         StringBuilder sb = new StringBuilder();
         sb.append(Character.toUpperCase(str.charAt(0)));
         sb.append(str.substring(1));
+        return sb.toString();
+    }
+
+    /**
+     * Converts a CamelCase word into an underlined_word
+     *
+     * @param string the CamelCase version of the word
+     * @return the underlined version of the word
+     */
+    public static String camelCaseToUnderlines(String string) {
+        if (string.isEmpty()) {
+            return string;
+        }
+
+        StringBuilder sb = new StringBuilder(2 * string.length());
+        int n = string.length();
+        boolean lastWasUpperCase = Character.isUpperCase(string.charAt(0));
+        for (int i = 0; i < n; i++) {
+            char c = string.charAt(i);
+            boolean isUpperCase = Character.isUpperCase(c);
+            if (isUpperCase && !lastWasUpperCase) {
+                sb.append('_');
+            }
+            lastWasUpperCase = isUpperCase;
+            c = Character.toLowerCase(c);
+            sb.append(c);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Converts an underlined_word into a CamelCase word
+     *
+     * @param string the underlined word to convert
+     * @return the CamelCase version of the word
+     */
+    public static String underlinesToCamelCase(String string) {
+        StringBuilder sb = new StringBuilder(string.length());
+        int n = string.length();
+
+        int i = 0;
+        boolean upcaseNext = true;
+        for (; i < n; i++) {
+            char c = string.charAt(i);
+            if (c == '_') {
+                upcaseNext = true;
+            } else {
+                if (upcaseNext) {
+                    c = Character.toUpperCase(c);
+                }
+                upcaseNext = false;
+                sb.append(c);
+            }
+        }
+
         return sb.toString();
     }
 
@@ -561,7 +625,10 @@ public class AdtUtils {
             String name = i == 1 ? base : base + conjunction + Integer.toString(i);
             boolean found = false;
             for (IProject project : projects) {
-                if (project.getName().equals(name)) {
+                // Need to make case insensitive comparison, since otherwise we can hit
+                // org.eclipse.core.internal.resources.ResourceException:
+                // A resource exists with a different case: '/test'.
+                if (project.getName().equalsIgnoreCase(name)) {
                     found = true;
                     break;
                 }
@@ -686,4 +753,149 @@ public class AdtUtils {
         });
     }
 
+    /**
+     * Returns the Android version and code name of the given API level
+     *
+     * @param api the api level
+     * @return a suitable version display name
+     */
+    public static String getAndroidName(int api) {
+        // See http://source.android.com/source/build-numbers.html
+        switch (api) {
+            case 1:  return "API 1: Android 1.0";
+            case 2:  return "API 2: Android 1.1";
+            case 3:  return "API 3: Android 1.5 (Cupcake)";
+            case 4:  return "API 4: Android 1.6 (Donut)";
+            case 5:  return "API 5: Android 2.0 (Eclair)";
+            case 6:  return "API 6: Android 2.0.1 (Eclair)";
+            case 7:  return "API 7: Android 2.1 (Eclair)";
+            case 8:  return "API 8: Android 2.2 (Froyo)";
+            case 9:  return "API 9: Android 2.3 (Gingerbread)";
+            case 10: return "API 10: Android 2.3.3 (Gingerbread)";
+            case 11: return "API 11: Android 3.0 (Honeycomb)";
+            case 12: return "API 12: Android 3.1 (Honeycomb)";
+            case 13: return "API 13: Android 3.2 (Honeycomb)";
+            case 14: return "API 14: Android 4.0 (IceCreamSandwich)";
+            case 15: return "API 15: Android 4.0.3 (IceCreamSandwich)";
+            default: {
+                // Consult SDK manager to see if we know any more (later) names,
+                // installed by user
+                Sdk sdk = Sdk.getCurrent();
+                if (sdk != null) {
+                    for (IAndroidTarget target : sdk.getTargets()) {
+                        if (target.isPlatform()) {
+                            AndroidVersion version = target.getVersion();
+                            if (version.getApiLevel() == api) {
+                                return version.getApiString();
+                            }
+                        }
+                    }
+                }
+
+                return "API " + api;
+
+            }
+        }
+    }
+
+    /**
+     * Returns a list of known API names
+     *
+     * @return a list of string API names, starting from 1 and up through the
+     *         maximum known versions (with no gaps)
+     */
+    public static String[] getKnownVersions() {
+        int max = 15;
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            for (IAndroidTarget target : sdk.getTargets()) {
+                if (target.isPlatform()) {
+                    AndroidVersion version = target.getVersion();
+                    if (!version.isPreview()) {
+                        max = Math.max(max, version.getApiLevel());
+                    }
+                }
+            }
+        }
+
+        String[] versions = new String[max];
+        for (int api = 1; api <= max; api++) {
+            versions[api-1] = getAndroidName(api);
+        }
+
+        return versions;
+    }
+
+    /**
+     * Returns the Android project(s) that are selected or active, if any. This
+     * considers the selection, the active editor, etc.
+     *
+     * @param selection the current selection
+     * @return a list of projects, possibly empty (but never null)
+     */
+    @NonNull
+    public static List<IProject> getSelectedProjects(@Nullable ISelection selection) {
+        List<IProject> projects = new ArrayList<IProject>();
+
+        if (selection instanceof IStructuredSelection) {
+            IStructuredSelection structuredSelection = (IStructuredSelection) selection;
+            // get the unique selected item.
+            Iterator<?> iterator = structuredSelection.iterator();
+            while (iterator.hasNext()) {
+                Object element = iterator.next();
+
+                // First look up the resource (since some adaptables
+                // provide an IResource but not an IProject, and we can
+                // always go from IResource to IProject)
+                IResource resource = null;
+                if (element instanceof IResource) { // may include IProject
+                   resource = (IResource) element;
+                } else if (element instanceof IAdaptable) {
+                    IAdaptable adaptable = (IAdaptable)element;
+                    Object adapter = adaptable.getAdapter(IResource.class);
+                    resource = (IResource) adapter;
+                }
+
+                // get the project object from it.
+                IProject project = null;
+                if (resource != null) {
+                    project = resource.getProject();
+                } else if (element instanceof IAdaptable) {
+                    project = (IProject) ((IAdaptable) element).getAdapter(IProject.class);
+                }
+
+                if (project != null && !projects.contains(project)) {
+                    projects.add(project);
+                }
+            }
+        }
+
+        if (projects.isEmpty()) {
+            // Try to look at the active editor instead
+            IFile file = AdtUtils.getActiveFile();
+            if (file != null) {
+                projects.add(file.getProject());
+            }
+        }
+
+        if (projects.isEmpty()) {
+            // If we didn't find a default project based on the selection, check how many
+            // open Android projects we can find in the current workspace. If there's only
+            // one, we'll just select it by default.
+            IJavaProject[] open = AdtUtils.getOpenAndroidProjects();
+            for (IJavaProject project : open) {
+                projects.add(project.getProject());
+            }
+            return projects;
+        } else {
+            // Make sure all the projects are Android projects
+            List<IProject> androidProjects = new ArrayList<IProject>(projects.size());
+            for (IProject project : projects) {
+                if (BaseProjectHelper.isAndroidProject(project)) {
+                    androidProjects.add(project);
+                }
+            }
+            return androidProjects;
+        }
+    }
 }

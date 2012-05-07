@@ -47,6 +47,7 @@ import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.commands.Command;
@@ -123,7 +124,7 @@ import java.util.List;
 /**
  * The activator class controls the plug-in life cycle
  */
-public class AdtPlugin extends AbstractUIPlugin implements ILogger {
+public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     /**
      * Temporary logging code to help track down
      * http://code.google.com/p/android/issues/detail?id=15003
@@ -729,15 +730,18 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             InputStream is = readEmbeddedFileAsStream(filepath);
             if (is != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                try {
+                    String line;
+                    StringBuilder total = new StringBuilder(reader.readLine());
+                    while ((line = reader.readLine()) != null) {
+                        total.append('\n');
+                        total.append(line);
+                    }
 
-                String line;
-                StringBuilder total = new StringBuilder(reader.readLine());
-                while ((line = reader.readLine()) != null) {
-                    total.append('\n');
-                    total.append(line);
+                    return total.toString();
+                } finally {
+                    reader.close();
                 }
-
-                return total.toString();
             }
         } catch (IOException e) {
             // we'll just return null
@@ -759,16 +763,19 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             if (is != null) {
                 // create a buffered reader to facilitate reading.
                 BufferedInputStream stream = new BufferedInputStream(is);
+                try {
+                    // get the size to read.
+                    int avail = stream.available();
 
-                // get the size to read.
-                int avail = stream.available();
+                    // create the buffer and reads it.
+                    byte[] buffer = new byte[avail];
+                    stream.read(buffer);
 
-                // create the buffer and reads it.
-                byte[] buffer = new byte[avail];
-                stream.read(buffer);
-
-                // and return.
-                return buffer;
+                    // and return.
+                    return buffer;
+                } finally {
+                    stream.close();
+                }
             }
         } catch (IOException e) {
             // we'll just return null;.
@@ -1852,6 +1859,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     public static void openFile(IFile file, IRegion region) throws PartInitException {
         openFile(file, region, true);
     }
+
+    // TODO: Make an openEditor which does the above, and make the above pass false for showEditor
 
     /**
      * Opens the given file and shows the given (optional) region

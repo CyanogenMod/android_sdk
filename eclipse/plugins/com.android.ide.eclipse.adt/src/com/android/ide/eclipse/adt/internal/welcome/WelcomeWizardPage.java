@@ -171,6 +171,7 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
             String file = dialog.open();
             String path = mExistingDirText.getText().trim();
             if (path.length() > 0) {
+                // TODO: Shouldn't this be done before the open() call?
                 dialog.setFilterPath(path);
             }
             if (file != null) {

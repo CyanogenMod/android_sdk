@@ -16,6 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
@@ -60,7 +63,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
      *            the control is disposed (unless the {@link #setDisposeImage} method is
      *            called to turn off auto dispose)
      */
-    public ImageControl(Composite parent, int style, Image image) {
+    public ImageControl(@NonNull Composite parent, int style, @Nullable Image image) {
         super(parent, style | SWT.NO_FOCUS | SWT.DOUBLE_BUFFERED);
         this.mImage = image;
 
@@ -72,11 +75,32 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         });
     }
 
-    public void setImage(Image image) {
-        if (mDisposeImage) {
+    @Nullable
+    public Image getImage() {
+        return mImage;
+    }
+
+    public void setImage(@Nullable Image image) {
+        if (mDisposeImage && mImage != null) {
             mImage.dispose();
         }
         mImage = image;
+        redraw();
+    }
+
+    public void fitToWidth(int width) {
+        if (mImage == null) {
+            return;
+        }
+        Rectangle imageRect = mImage.getBounds();
+        int imageWidth = imageRect.width;
+        if (imageWidth <= width) {
+            mScale = 1.0f;
+            return;
+        }
+
+        mScale = width / (float) imageWidth;
+        redraw();
     }
 
     public void setScale(float scale) {
@@ -87,13 +111,17 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         return mScale;
     }
 
-    public void setHoverColor(Color hoverColor) {
+    public void setHoverColor(@Nullable Color hoverColor) {
+        if (mHoverColor != null) {
+            removeMouseTrackListener(this);
+        }
         mHoverColor = hoverColor;
         if (hoverColor != null) {
             addMouseTrackListener(this);
         }
     }
 
+    @Nullable
     public Color getHoverColor() {
         return mHoverColor;
     }
@@ -102,7 +130,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
     public void dispose() {
         super.dispose();
 
-        if (mDisposeImage) {
+        if (mDisposeImage && mImage != null && !mImage.isDisposed()) {
             mImage.dispose();
         }
         mImage = null;

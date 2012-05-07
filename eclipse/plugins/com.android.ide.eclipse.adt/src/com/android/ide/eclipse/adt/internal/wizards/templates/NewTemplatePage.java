@@ -1,0 +1,646 @@
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.eclipse.org/org/documents/epl-v10.php
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.ide.eclipse.adt.internal.wizards.templates;
+
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_THUMB;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
+
+import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
+import com.android.tools.lint.detector.api.LintUtils;
+import com.google.common.collect.Lists;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.fieldassist.ControlDecoration;
+import org.eclipse.jface.fieldassist.FieldDecoration;
+import org.eclipse.jface.fieldassist.FieldDecorationRegistry;
+import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * First wizard page in the "New Project From Template" wizard (which is parameterized
+ * via template.xml files)
+ */
+public class NewTemplatePage extends WizardPage
+        implements ModifyListener, SelectionListener, FocusListener {
+    /** The default width to use for the wizard page */
+    static final int WIZARD_PAGE_WIDTH = 600;
+
+    private final NewTemplateWizardState mValues;
+    private final boolean mChooseProject;
+    private boolean mIgnore;
+    private boolean mShown;
+    private Control mFirst;
+    // TODO: Move decorators to the Parameter objects?
+    private Map<String, ControlDecoration> mDecorations = new HashMap<String, ControlDecoration>();
+    private Label mHelpIcon;
+    private Label mTipLabel;
+    private ImageControl mPreview;
+    private Image mPreviewImage;
+    private ProjectCombo mProjectButton;
+    private List<Parameter> mParameters;
+    private StringEvaluator mEvaluator;
+
+    NewTemplatePage(NewTemplateWizardState values, boolean chooseProject) {
+        super("newTemplatePage"); //$NON-NLS-1$
+        mValues = values;
+        mChooseProject = chooseProject;
+    }
+
+    @Override
+    public void createControl(Composite parent2) {
+        Composite parent = new Composite(parent2, SWT.NULL);
+        setControl(parent);
+        GridLayout parentLayout = new GridLayout(3, false);
+        parentLayout.verticalSpacing = 0;
+        parentLayout.marginWidth = 0;
+        parentLayout.marginHeight = 0;
+        parentLayout.horizontalSpacing = 0;
+        parent.setLayout(parentLayout);
+
+        // Reserve enough width (since the panel is created lazily later)
+        Label label = new Label(parent, SWT.NONE);
+        GridData data = new GridData();
+        data.widthHint = WIZARD_PAGE_WIDTH;
+        label.setLayoutData(data);
+    }
+
+    @SuppressWarnings("unused") // SWT constructors have side effects and aren't unused
+    private void onEnter() {
+        Composite parent = (Composite) getControl();
+
+        Control[] children = parent.getChildren();
+        if (children.length > 0) {
+            for (Control c : parent.getChildren()) {
+                c.dispose();
+            }
+            for (ControlDecoration decoration : mDecorations.values()) {
+                decoration.dispose();
+            }
+            mDecorations.clear();
+        }
+
+        Composite container = new Composite(parent, SWT.NULL);
+        container.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridLayout gl_container = new GridLayout(3, false);
+        gl_container.horizontalSpacing = 10;
+        container.setLayout(gl_container);
+
+        if (mChooseProject) {
+            // Project: [button]
+            String tooltip = "The Android Project where the new resource will be created.";
+            Label projectLabel = new Label(container, SWT.NONE);
+            projectLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+            projectLabel.setText("Project:");
+            projectLabel.setToolTipText(tooltip);
+
+            ProjectChooserHelper helper =
+                    new ProjectChooserHelper(getShell(), null /* filter */);
+            mProjectButton = new ProjectCombo(helper, container, mValues.project);
+            mProjectButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+            mProjectButton.setToolTipText(tooltip);
+            mProjectButton.addSelectionListener(this);
+
+            //Label projectSeparator = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
+            //projectSeparator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1));
+        }
+
+        // Add parameters
+        mFirst = null;
+        Document doc = mValues.getTemplate().getMetadataDocument();
+        String thumb = null;
+        if (doc != null) {
+            Element root = doc.getDocumentElement();
+            thumb = root.getAttribute(ATTR_THUMB);
+            String title = root.getAttribute(ATTR_NAME);
+            if (!title.isEmpty()) {
+                setTitle(title);
+            }
+            String description = root.getAttribute(ATTR_DESCRIPTION);
+            if (!description.isEmpty()) {
+                setDescription(description);
+            }
+
+            Map<String, String> defaults = mValues.defaults;
+            Set<String> seen = null;
+            if (LintUtils.assertionsEnabled()) {
+                seen = new HashSet<String>();
+            }
+
+
+            List<Parameter> parameters = Parameter.getParameters(doc);
+            mParameters = new ArrayList<Parameter>(parameters.size());
+            for (Parameter parameter : parameters) {
+                Parameter.Type type = parameter.type;
+
+                if (type == Parameter.Type.SEPARATOR) {
+                    Label separator = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
+                    separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1));
+                    continue;
+                }
+
+                String id = parameter.id;
+                assert id != null && !id.isEmpty() : ATTR_ID;
+                mParameters.add(parameter);
+                String value = defaults.get(id);
+                if (value == null) {
+                    value = parameter.initial;
+                }
+
+                String name = parameter.name;
+                String help = parameter.help;
+
+                // Required
+                assert name != null && !name.isEmpty() : ATTR_NAME;
+                // Ensure id's are unique:
+                assert seen != null && seen.add(id) : id;
+
+                // Skip attributes that were already provided by the surrounding
+                // context. For example, when adding into an existing project,
+                // provide the minimum SDK automatically from the project.
+                if (mValues.hidden != null && mValues.hidden.contains(id)) {
+                    continue;
+                }
+
+                if (type == Parameter.Type.STRING) {
+                    // TODO: Look at the constraints to add validators here
+                    // TODO: If I type.equals("layout") add resource validator for layout
+                    // names
+                    // TODO: If I type.equals("class") make class validator
+
+                    // TODO: Handle package and id better later
+                    Label label = new Label(container, SWT.NONE);
+                    label.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+                    label.setText(name);
+
+                    Text text = new Text(container, SWT.BORDER);
+                    text.setData(parameter);
+                    parameter.control = text;
+                    text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+                    if (value != null && !value.isEmpty()){
+                        text.setText(value);
+                        mValues.parameters.put(id, value);
+                    }
+
+                    text.addModifyListener(this);
+                    text.addFocusListener(this);
+
+                    if (mFirst == null) {
+                        mFirst = text;
+                    }
+
+                    if (help != null && !help.isEmpty()) {
+                        text.setToolTipText(help);
+                        ControlDecoration decoration = createFieldDecoration(id, text, help);
+                    }
+                } else if (type == Parameter.Type.BOOLEAN) {
+                    Label label = new Label(container, SWT.NONE);
+                    label.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+
+                    Button checkBox = new Button(container, SWT.CHECK);
+                    checkBox.setText(name);
+                    checkBox.setData(parameter);
+                    parameter.control = checkBox;
+                    checkBox.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+                    if (value != null && !value.isEmpty()){
+                        Boolean selected = Boolean.valueOf(value);
+                        checkBox.setSelection(selected);
+                        mValues.parameters.put(id, value);
+                    }
+
+                    checkBox.addSelectionListener(this);
+                    checkBox.addFocusListener(this);
+
+                    if (mFirst == null) {
+                        mFirst = checkBox;
+                    }
+
+                    if (help != null && !help.isEmpty()) {
+                        checkBox.setToolTipText(help);
+                        ControlDecoration decoration = createFieldDecoration(id, checkBox, help);
+                    }
+
+                } else if (type == Parameter.Type.ENUM) {
+                    Label label = new Label(container, SWT.NONE);
+                    label.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+                    label.setText(name);
+
+                    Combo combo = new Combo(container, SWT.READ_ONLY);
+                    combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+                    List<Element> options = DomUtilities.getChildren(parameter.element);
+                    assert options.size() > 0;
+                    int selected = 0;
+                    List<String> ids = Lists.newArrayList();
+                    List<String> labels = Lists.newArrayList();
+                    List<String> thumbs = Lists.newArrayList();
+                    for (int i = 0, n = options.size(); i < n; i++) {
+                        Element option = options.get(i);
+                        String optionId = option.getAttribute(ATTR_ID);
+                        assert optionId != null && !optionId.isEmpty() : ATTR_ID;
+                        String optionThumb = option.getAttribute(ATTR_THUMB);
+                        String isDefault = option.getAttribute(ATTR_DEFAULT);
+                        if (isDefault != null && !isDefault.isEmpty() &&
+                                Boolean.valueOf(isDefault)) {
+                            selected = i;
+                            if (optionThumb != null && !optionThumb.isEmpty()) {
+                                thumb = optionThumb;
+                            }
+                        }
+                        NodeList childNodes = option.getChildNodes();
+                        assert childNodes.getLength() == 1 &&
+                                childNodes.item(0).getNodeType() == Node.TEXT_NODE;
+                        String optionLabel = childNodes.item(0).getNodeValue().trim();
+                        ids.add(optionId);
+                        labels.add(optionLabel);
+                        thumbs.add(optionThumb);
+                    }
+                    combo.setData(parameter);
+                    parameter.control = combo;
+                    combo.setData(ATTR_THUMB, thumbs.toArray(new String[thumbs.size()]));
+                    combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
+                    assert labels.size() > 0;
+                    combo.setItems(labels.toArray(new String[labels.size()]));
+                    combo.select(selected);
+                    mValues.parameters.put(id, ids.get(selected));
+
+                    combo.addSelectionListener(this);
+                    combo.addFocusListener(this);
+
+                    if (mFirst == null) {
+                        mFirst = combo;
+                    }
+
+                    if (help != null && !help.isEmpty()) {
+                        combo.setToolTipText(help);
+                        ControlDecoration decoration = createFieldDecoration(id, combo, help);
+                    }
+                } else {
+                    assert false : type;
+                }
+            }
+        }
+
+        // Preview
+        mPreview = new ImageControl(parent, SWT.NONE, null);
+        GridData gd_mImage = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1);
+        gd_mImage.widthHint = PREVIEW_WIDTH + 2 * PREVIEW_PADDING;
+        mPreview.setLayoutData(gd_mImage);
+
+        Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
+        GridData separatorData = new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1);
+        separatorData.heightHint = 16;
+        separator.setLayoutData(separatorData);
+
+        // Generic help
+        mHelpIcon = new Label(parent, SWT.NONE);
+        mHelpIcon.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 1));
+        Image icon = IconFactory.getInstance().getIcon("quickfix");
+        mHelpIcon.setImage(icon);
+        mHelpIcon.setVisible(false);
+        mTipLabel = new Label(parent, SWT.WRAP);
+        mTipLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+
+        if (thumb != null && !thumb.isEmpty()) {
+            setPreview(thumb);
+        }
+
+        parent.layout(true, true);
+        // TODO: This is a workaround for the fact that (at least on OSX) you end up
+        // with some visual artifacts from the control decorations in the upper left corner
+        // (outside the parent widget itself) from the initial control decoration placement
+        // prior to layout. Therefore, perform a redraw. A better solution would be to
+        // delay creation of the control decorations until layout has been performed.
+        // Let's do that soon.
+        parent.getParent().redraw();
+    }
+
+    private void setPreview(String thumb) {
+        Image oldImage = mPreviewImage;
+        mPreviewImage = null;
+
+        byte[] data = mValues.getTemplate().readTemplateResource(thumb);
+        if (data != null) {
+            try {
+                mPreviewImage = new Image(getControl().getDisplay(),
+                        new ByteArrayInputStream(data));
+            } catch (Exception e) {
+                AdtPlugin.log(e, null);
+            }
+        }
+
+        mPreview.setImage(mPreviewImage);
+        mPreview.fitToWidth(PREVIEW_WIDTH);
+
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        if (mPreviewImage != null) {
+            mPreviewImage.dispose();
+            mPreviewImage = null;
+        }
+    }
+
+    private ControlDecoration createFieldDecoration(String id, Control control,
+            String description) {
+        ControlDecoration decoration = new ControlDecoration(control, SWT.LEFT);
+        decoration.setMarginWidth(2);
+        FieldDecoration errorFieldIndicator = FieldDecorationRegistry.getDefault().
+           getFieldDecoration(FieldDecorationRegistry.DEC_INFORMATION);
+        decoration.setImage(errorFieldIndicator.getImage());
+        decoration.setDescriptionText(description);
+        control.setToolTipText(description);
+        mDecorations.put(id, decoration);
+
+        return decoration;
+    }
+
+    @Override
+    public boolean isPageComplete() {
+        // Force user to reach this page before hitting Finish
+        return mShown;
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        if (visible) {
+            onEnter();
+        }
+
+        super.setVisible(visible);
+
+        if (mFirst != null) {
+            mFirst.setFocus();
+        }
+
+        if (visible) {
+            mShown = true;
+        }
+
+        validatePage();
+    }
+
+    /** Returns the parameter associated with the given control */
+    @Nullable
+    private Parameter getParameter(Control control) {
+        return (Parameter) control.getData();
+    }
+
+    // ---- Validation ----
+
+    private void validatePage() {
+        IStatus status = null;
+
+        // -- validate project
+        if (mChooseProject && mValues.project == null) {
+            status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                    "Please select an Android project.");
+        }
+
+        for (Parameter parameter : mParameters) {
+            IInputValidator validator = parameter.getValidator(mValues.project);
+            if (validator != null) {
+               ControlDecoration decoration = mDecorations.get(parameter.id);
+               String value = parameter.value == null ? "" : parameter.value.toString();
+               String error = validator.isValid(value);
+               if (error != null) {
+                   status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID, error);
+                   if (decoration != null) {
+                       updateDecorator(decoration, status, parameter.help);
+                   }
+               } else if (decoration != null) {
+                   updateDecorator(decoration, null, parameter.help);
+               }
+            }
+        }
+
+        setPageComplete(status == null || status.getSeverity() != IStatus.ERROR);
+        if (status != null) {
+            setMessage(status.getMessage(),
+                    status.getSeverity() == IStatus.ERROR
+                        ? IMessageProvider.ERROR : IMessageProvider.WARNING);
+        } else {
+            setErrorMessage(null);
+            setMessage(null);
+        }
+    }
+
+    private void updateDecorator(ControlDecoration decorator, IStatus status, String help) {
+        if (help != null && !help.isEmpty()) {
+            decorator.setDescriptionText(status != null ? status.getMessage() : help);
+
+            int severity = status != null ? status.getSeverity() : IStatus.OK;
+            String id;
+            if (severity == IStatus.ERROR) {
+                id = FieldDecorationRegistry.DEC_ERROR;
+            } else if (severity == IStatus.WARNING) {
+                id = FieldDecorationRegistry.DEC_WARNING;
+            } else {
+                id = FieldDecorationRegistry.DEC_INFORMATION;
+            }
+            FieldDecoration errorFieldIndicator = FieldDecorationRegistry.getDefault().
+                    getFieldDecoration(id);
+            decorator.setImage(errorFieldIndicator.getImage());
+        } else {
+            if (status == null || status.isOK()) {
+                decorator.hide();
+            } else {
+                decorator.show();
+            }
+        }
+    }
+
+    // ---- Implements ModifyListener ----
+
+    @Override
+    public void modifyText(ModifyEvent e) {
+        if (mIgnore) {
+            return;
+        }
+
+        Object source = e.getSource();
+        if (source instanceof Text) {
+            Text text = (Text) source;
+            editParameter(text, text.getText().trim());
+        }
+
+        validatePage();
+    }
+
+    // ---- Implements SelectionListener ----
+
+    @Override
+    public void widgetSelected(SelectionEvent e) {
+        if (mIgnore) {
+            return;
+        }
+
+        Object source = e.getSource();
+        if (source == mProjectButton) {
+            mValues.project = mProjectButton.getSelectedProject();
+        } else if (source instanceof Combo) {
+            Combo combo = (Combo) source;
+            String[] optionIds = (String[]) combo.getData(ATTR_ID);
+            int index = combo.getSelectionIndex();
+            if (index != -1 && index < optionIds.length) {
+                String optionId = optionIds[index];
+                editParameter(combo, optionId);
+                String[] thumbs = (String[]) combo.getData(ATTR_THUMB);
+                String thumb = thumbs[index];
+                if (thumb != null && !thumb.isEmpty()) {
+                    setPreview(thumb);
+                }
+            }
+        } else if (source instanceof Button) {
+            Button button = (Button) source;
+            editParameter(button, button.getSelection());
+        }
+
+        validatePage();
+    }
+
+    private void editParameter(Control control, Object value) {
+        Parameter parameter = getParameter(control);
+        if (parameter != null) {
+            String id = parameter.id;
+            parameter.value = value;
+            parameter.edited = value != null && !value.toString().isEmpty();
+            mValues.parameters.put(id, value);
+
+            // Update dependent variables, if any
+            for (Parameter p : mParameters) {
+                if (p == parameter || p.suggest == null || p.edited) {
+                    continue;
+                }
+                p.suggest.indexOf(id);
+                if (!p.suggest.contains(id)) {
+                    continue;
+                }
+
+                try {
+                    if (mEvaluator == null) {
+                        mEvaluator = new StringEvaluator();
+                    }
+                    String updated = mEvaluator.evaluate(p.suggest, mParameters);
+                    if (updated != null && !updated.equals(p.value)) {
+                        p.value = updated;
+                        mValues.parameters.put(p.id, updated);
+
+                        // Update form widgets
+                        boolean prevIgnore = mIgnore;
+                        try {
+                            mIgnore = true;
+                            if (p.control instanceof Text) {
+                                ((Text) p.control).setText(updated);
+                            } else if (p.control instanceof Button) {
+                                // TODO: Handle
+                            } else if (p.control instanceof Combo) {
+                                // TODO: Handle
+                            } else if (p.control != null) {
+                                assert false : p.control;
+                            }
+                        } finally {
+                            mIgnore = prevIgnore;
+                        }
+                    }
+                } catch (Throwable t) {
+                    // Pass: Ignore updating if something wrong happens
+                    t.printStackTrace(); // during development only
+                }
+            }
+        }
+    }
+
+    @Override
+    public void widgetDefaultSelected(SelectionEvent e) {
+    }
+
+    // ---- Implements FocusListener ----
+
+    @Override
+    public void focusGained(FocusEvent e) {
+        Object source = e.getSource();
+        String tip = "";
+
+        if (source instanceof Control) {
+            Control control = (Control) source;
+            Parameter parameter = getParameter(control);
+            if (parameter != null) {
+                ControlDecoration decoration = mDecorations.get(parameter.id);
+                if (decoration != null) {
+                    tip = decoration.getDescriptionText();
+                }
+            }
+        }
+
+        mTipLabel.setText(tip);
+        mHelpIcon.setVisible(tip.length() > 0);
+    }
+
+    @Override
+    public void focusLost(FocusEvent e) {
+        mTipLabel.setText("");
+        mHelpIcon.setVisible(false);
+    }
+}

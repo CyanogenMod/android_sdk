@@ -1,6 +1,7 @@
 &apos;
 aapt
 accessor
+accessors
 adb
 addon
 adt
@@ -42,6 +43,7 @@ checkboxes
 classloader
 classpath
 clickable
+clipart
 clipboard
 clipboards
 clueless
@@ -279,10 +281,12 @@ subregion
 superclasses
 supertype
 symlinks
+synced
 syncs
 synthetically
 tad
 temp
+templated
 textfield
 textfields
 thematically
@@ -317,6 +321,7 @@ url
 urls
 utf
 validator
+validators
 varargs
 verbosity
 viewport

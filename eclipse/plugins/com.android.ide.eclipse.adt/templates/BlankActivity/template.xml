@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<template
+    name="New Blank Activity"
+    description="Creates a new blank activity, with optional inner navigation."
+    thumb="template_blank_activity.png">
+
+    <category value="Activities" />
+
+    <parameter
+        id="activityClass"
+        name="Activity Name"
+        type="string"
+        constraints="class|nonempty"
+        suggest="${layoutToActivity(layoutName)}"
+        default="MainActivity"
+        help="The name of the activity class to create" />
+
+    <parameter
+        id="layoutName"
+        name="Layout Name"
+        type="string"
+        constraints="layout|unique"
+        suggest="${activityToLayout(activityClass)}"
+        default="main"
+        help="The name of the layout to create for the activity" />
+
+    <parameter
+        id="navType"
+        name="Navigation Type"
+        type="enum"
+        default="none"
+        help="The type of navigation to use for the activity" >
+        <option id="none" default="true" thumb="template_blank_activity.png">None</option>
+        <option id="tabs" thumb="template_blank_activity_tabs.png">Tabs</option>
+        <option id="tabs_pager" thumb="template_blank_activity_tabs_pager.png">Tabs + Swipe</option>
+        <option id="pager_strip" thumb="template_blank_activity_pager.png">Swipe Views + Title Strip</option>
+        <option id="dropdown" thumb="template_blank_activity_dropdown.png">Dropdown</option>
+    </parameter>
+
+    <parameter
+        id="appTitle"
+        name="Title"
+        type="string"
+        constraints="nonempty"
+        default="My Application"
+        help="The name of the activity. For launcher activities, the application title." />
+
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
+    <globals file="globals.xml.ftl" />
+    <execute file="recipe.xml.ftl" />
+
+</template>

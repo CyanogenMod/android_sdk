@@ -115,6 +115,24 @@ public class AdtUtilsTest extends TestCase {
         assertNull(null, AdtUtils.capitalize(null));
     }
 
+    public void testCamelCaseToUnderlines() {
+        assertEquals("", AdtUtils.camelCaseToUnderlines(""));
+        assertEquals("foo", AdtUtils.camelCaseToUnderlines("foo"));
+        assertEquals("foo", AdtUtils.camelCaseToUnderlines("Foo"));
+        assertEquals("foo_bar", AdtUtils.camelCaseToUnderlines("FooBar"));
+        assertEquals("test_xml", AdtUtils.camelCaseToUnderlines("testXML"));
+        assertEquals("test_foo", AdtUtils.camelCaseToUnderlines("testFoo"));
+    }
+
+    public void testUnderlinesToCamelCase() {
+        assertEquals("", AdtUtils.underlinesToCamelCase(""));
+        assertEquals("", AdtUtils.underlinesToCamelCase("_"));
+        assertEquals("Foo", AdtUtils.underlinesToCamelCase("foo"));
+        assertEquals("FooBar", AdtUtils.underlinesToCamelCase("foo_bar"));
+        assertEquals("FooBar", AdtUtils.underlinesToCamelCase("foo__bar"));
+        assertEquals("Foo", AdtUtils.underlinesToCamelCase("foo_"));
+    }
+
     public void testStripSuffix() {
         assertEquals("Foo", AdtUtils.stripSuffix("Foo", ""));
         assertEquals("Fo", AdtUtils.stripSuffix("Foo", "o"));
