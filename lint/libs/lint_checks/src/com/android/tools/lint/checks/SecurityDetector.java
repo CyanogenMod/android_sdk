@@ -52,7 +52,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -81,7 +80,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             5,
             Severity.WARNING,
             SecurityDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Exported content providers */
     public static final Issue EXPORTED_PROVIDER = Issue.create(
@@ -96,7 +95,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             5,
             Severity.WARNING,
             SecurityDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Content provides which grant all URIs access */
     public static final Issue OPEN_PROVIDER = Issue.create(
@@ -109,7 +108,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             7,
             Severity.WARNING,
             SecurityDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Using the world-writable flag */
     public static final Issue WORLD_WRITEABLE = Issue.create(

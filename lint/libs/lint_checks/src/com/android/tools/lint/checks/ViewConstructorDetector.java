@@ -31,7 +31,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -65,7 +64,7 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
             3,
             Severity.WARNING,
             ViewConstructorDetector.class,
-            EnumSet.of(Scope.CLASS_FILE));
+            Scope.CLASS_FILE_SCOPE);
 
     /** Constructs a new {@link ViewConstructorDetector} check */
     public ViewConstructorDetector() {

@@ -38,7 +38,6 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             4,
             Severity.WARNING,
             FieldGetterDetector.class,
-            EnumSet.of(Scope.CLASS_FILE)).
+            Scope.CLASS_FILE_SCOPE).
             // This is a micro-optimization: not enabled by default
             setEnabledByDefault(false).setMoreInfo(
            "http://developer.android.com/guide/practices/design/performance.html#internal_get_set"); //$NON-NLS-1$

@@ -124,7 +124,7 @@ public abstract class IssueRegistry {
                 }
 
                 // Determine if the scope matches
-                if (!scope.containsAll(issueScope)) {
+                if (!issue.isAdequate(scope)) {
                     continue;
                 }
 

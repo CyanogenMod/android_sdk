@@ -34,7 +34,6 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
             3,
             Severity.WARNING,
             MathDetector.class,
-            EnumSet.of(Scope.CLASS_FILE)).setMoreInfo(
+            Scope.CLASS_FILE_SCOPE).setMoreInfo(
                //"http://developer.android.com/reference/android/util/FloatMath.html"); //$NON-NLS-1$
                "http://developer.android.com/guide/practices/design/performance.html#avoidfloat"); //$NON-NLS-1$
 

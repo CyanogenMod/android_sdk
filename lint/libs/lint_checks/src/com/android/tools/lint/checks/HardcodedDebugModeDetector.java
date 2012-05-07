@@ -34,7 +34,6 @@ import org.w3c.dom.Attr;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 
 /**
  * Checks for hardcoded debug mode in manifest files
@@ -59,7 +58,7 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
             5,
             Severity.WARNING,
             HardcodedDebugModeDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Constructs a new {@link HardcodedDebugModeDetector} check */
     public HardcodedDebugModeDetector() {

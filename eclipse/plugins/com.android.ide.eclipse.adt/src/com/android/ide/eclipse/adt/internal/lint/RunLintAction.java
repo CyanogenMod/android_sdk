@@ -76,7 +76,7 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
         List<IProject> projects = getProjects(mSelection, true /* warn */);
 
         if (!projects.isEmpty()) {
-            EclipseLintRunner.startLint(projects, null, false /*fatalOnly*/, true /*show*/);
+            EclipseLintRunner.startLint(projects, null, null, false /*fatalOnly*/, true /*show*/);
         } else {
             MessageDialog.openWarning(AdtPlugin.getDisplay().getActiveShell(), "Lint",
                     "Could not run Lint: Select a project first.");
@@ -210,7 +210,7 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
 
         ISharedImages images = PlatformUI.getWorkbench().getSharedImages();
         ImageDescriptor clear = images.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVEALL);
-        LintMenuAction clearAction = new LintMenuAction("Clear Lint Markers", clear, true, null);
+        LintMenuAction clearAction = new LintMenuAction("Clear Lint Warnings", clear, true, null);
         addSeparator();
         addAction(clearAction);
 
@@ -271,7 +271,8 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
             if (mClear) {
                 EclipseLintClient.clearMarkers(resources);
             } else {
-                EclipseLintRunner.startLint(resources, null, false /*fatalOnly*/, true /*show*/);
+                EclipseLintRunner.startLint(resources, null, null, false /*fatalOnly*/,
+                        true /*show*/);
             }
         }
     }
