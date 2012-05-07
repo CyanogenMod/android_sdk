@@ -23,6 +23,8 @@ import com.android.ide.eclipse.ddms.views.LogCatView;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmuilib.DdmUiPreferences;
 
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -106,7 +108,15 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(ATTR_LOGCAT_FONT,
                 new FontData("Courier", 10, SWT.NORMAL).toString()); //$NON-NLS-1$
 
+        // When obtaining hprof files from the device, default to opening the file
+        // only if there is a registered content type for the hprof extension.
         store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_SAVE);
+        for (IContentType contentType: Platform.getContentTypeManager().getAllContentTypes()) {
+            if (contentType.isAssociatedWith(HProfHandler.DOT_HPROF)) {
+                store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_OPEN);
+                break;
+            }
+        }
 
         store.setDefault(ATTR_TIME_OUT, DdmPreferences.DEFAULT_TIMEOUT);
 
