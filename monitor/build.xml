@@ -53,10 +53,11 @@
     <!-- create the build directory, copy plugins and features into it -->
     <target name="copy_srcs">
         <mkdir dir="${buildDir}" />
-        <copy todir="${buildDir}">
+        <copy todir="${buildDir}" preservelastmodified="true">
             <fileset dir="${srcDir}/">
                 <include name="plugins/**" />
                 <include name="features/**" />
+                <exclude name="plugins/*/bin/**" />
             </fileset>
         </copy>
     </target>
