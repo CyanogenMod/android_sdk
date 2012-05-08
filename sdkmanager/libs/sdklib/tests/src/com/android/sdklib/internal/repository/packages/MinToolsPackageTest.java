@@ -124,7 +124,7 @@ public class MinToolsPackageTest extends PackageTest {
         Properties props = super.createProps();
 
         // MinToolsPackage properties
-        props.setProperty(PkgProps.MIN_TOOLS_REV, "3");
+        props.setProperty(PkgProps.MIN_TOOLS_REV, "3.0.1");
 
         return props;
     }
@@ -133,6 +133,6 @@ public class MinToolsPackageTest extends PackageTest {
         super.testCreatedPackage(p);
 
         // MinToolsPackage properties
-        assertEquals(3, p.getMinToolsRevision());
+        assertEquals("3.0.1", p.getMinToolsRevision().toShortString());
     }
 }

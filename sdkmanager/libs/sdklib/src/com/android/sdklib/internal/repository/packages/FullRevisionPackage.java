@@ -52,32 +52,8 @@ public abstract class FullRevisionPackage extends Package
             Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        // This needs to support to modes:
-        // - For repository XSD >= 7, <revision> contains sub-elements such as <major> or <minor>.
-        // - Otherwise for repository XSD < 7, <revision> contains an integer.
-        // The <major> element is mandatory, so it's easy to distinguish between both cases.
-        int major = 0, minor = 0, micro = 0, preview = 0;
-        Node revision =
-            PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_REVISION);
-        if (revision != null) {
-            if (PackageParserUtils.findChildElement(revision,
-                                                    SdkRepoConstants.NODE_MAJOR_REV) != null) {
-                // <revision> has a <major> sub-element, so it's a repository XSD >= 7.
-                major = PackageParserUtils.getXmlInt(revision,
-                        SdkRepoConstants.NODE_MAJOR_REV, FullRevision.MISSING_MAJOR_REV);
-                minor = PackageParserUtils.getXmlInt(revision,
-                        SdkRepoConstants.NODE_MINOR_REV, FullRevision.IMPLICIT_MINOR_REV);
-                micro = PackageParserUtils.getXmlInt(revision,
-                        SdkRepoConstants.NODE_MICRO_REV, FullRevision.IMPLICIT_MICRO_REV);
-                preview = PackageParserUtils.getXmlInt(revision,
-                        SdkRepoConstants.NODE_PREVIEW,   FullRevision.NOT_A_PREVIEW);
-            } else {
-                major =
-                    PackageParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_REVISION, 0);
-            }
-        }
-
-        mPreviewVersion = new FullRevision(major, minor, micro, preview);
+        mPreviewVersion = PackageParserUtils.parseFullRevisionElement(
+                PackageParserUtils.findChildElement(packageNode, SdkRepoConstants.NODE_REVISION));
     }
 
     /**
@@ -125,7 +101,7 @@ public abstract class FullRevisionPackage extends Package
     @Override
     public void saveProperties(Properties props) {
         super.saveProperties(props);
-        props.setProperty(PkgProps.PKG_REVISION, mPreviewVersion.toString());
+        props.setProperty(PkgProps.PKG_REVISION, mPreviewVersion.toShortString());
     }
 
     @Override
