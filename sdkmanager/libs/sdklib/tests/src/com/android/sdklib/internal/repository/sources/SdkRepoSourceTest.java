@@ -21,6 +21,8 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.MockEmptySdkManager;
 import com.android.sdklib.internal.repository.MockMonitor;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
+import com.android.sdklib.internal.repository.packages.IMinPlatformToolsDependency;
+import com.android.sdklib.internal.repository.packages.IMinToolsDependency;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformPackage;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
@@ -887,6 +889,7 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Android SDK Tools, revision 42\n" +
                      "Found Android SDK Platform-tools, revision 3 rc5\n" +
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
+                     "Found Samples for SDK API 14, revision 25 (Obsolete)\n" +
                      "Found ARM EABI System Image, Android API 42, revision 12\n" +
                      "Found Mips System Image, Android API 42, revision 12\n" +
                      "Found Sources for Android SDK, API 42, revision 12\n",
@@ -901,7 +904,7 @@ public class SdkRepoSourceTest extends TestCase {
         // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
         Package[] pkgs = mSource.getPackages();
 
-        assertEquals(16, pkgs.length);
+        assertEquals(17, pkgs.length);
         for (Package p : pkgs) {
             assertTrue(p.getArchives().length >= 1);
         }
@@ -958,6 +961,7 @@ public class SdkRepoSourceTest extends TestCase {
         assertEquals("[]", Arrays.toString(extraInstall.toArray()));
         assertEquals("[]", Arrays.toString(extraFilePaths.toArray()));
 
+
         // Check the system-image packages
         ArrayList<String> sysImgVersionAbi = new ArrayList<String>();
         for (Package p : pkgs) {
@@ -975,6 +979,7 @@ public class SdkRepoSourceTest extends TestCase {
                  "2 x86]",
                 Arrays.toString(sysImgVersionAbi.toArray()));
 
+
         // Check the source packages
         ArrayList<String> sourceVersion = new ArrayList<String>();
         for (Package p : pkgs) {
@@ -987,6 +992,37 @@ public class SdkRepoSourceTest extends TestCase {
         assertEquals(
                 "[42, 2, 1]",
                 Arrays.toString(sourceVersion.toArray()));
+
+
+        // Check the min-tools-rev
+        ArrayList<String> minToolsRevs = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof IMinToolsDependency) {
+                minToolsRevs.add(p.getListDescription() + ": " +
+                        ((IMinToolsDependency) p).getMinToolsRevision().toShortString());
+            }
+        }
+        assertEquals(
+                "[SDK Platform Android Pastry Preview: 0, " +
+                 "SDK Platform Android 1.1: 0, " +
+                 "SDK Platform Android 1.0: 2.0.1, " +
+                 "Samples for SDK API 14 (Obsolete): 5, " +
+                 "Samples for SDK API 14 (Obsolete): 5.1.2 rc3]",
+                Arrays.toString(minToolsRevs.toArray()));
+
+
+        // Check the min-platform-tools-rev
+        ArrayList<String> minPlatToolsRevs = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof IMinPlatformToolsDependency) {
+                minPlatToolsRevs.add(p.getListDescription() + ": " +
+                  ((IMinPlatformToolsDependency) p).getMinPlatformToolsRevision().toShortString());
+            }
+        }
+        assertEquals(
+                "[Android SDK Tools: 4, " +
+                 "Android SDK Tools: 4 rc5]",
+                Arrays.toString(minPlatToolsRevs.toArray()));
     }
 
     /**

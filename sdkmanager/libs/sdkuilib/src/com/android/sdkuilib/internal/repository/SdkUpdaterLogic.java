@@ -30,7 +30,6 @@ import com.android.sdklib.internal.repository.packages.IMinApiLevelDependency;
 import com.android.sdklib.internal.repository.packages.IMinPlatformToolsDependency;
 import com.android.sdklib.internal.repository.packages.IMinToolsDependency;
 import com.android.sdklib.internal.repository.packages.IPlatformDependency;
-import com.android.sdklib.internal.repository.packages.MajorRevision;
 import com.android.sdklib.internal.repository.packages.MinToolsPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
@@ -683,14 +682,12 @@ class SdkUpdaterLogic {
             SdkSource[] remoteSources,
             ArchiveInfo[] localArchives) {
         // This is the requirement to match.
-        int revInt = pkg.getMinToolsRevision();         // FIXME support micro min-tools-rev
+        FullRevision rev = pkg.getMinToolsRevision();
 
-        if (revInt == MinToolsPackage.MIN_TOOLS_REV_NOT_SPECIFIED) {
+        if (rev.equals(MinToolsPackage.MIN_TOOLS_REV_NOT_SPECIFIED)) {
             // Well actually there's no requirement.
             return null;
         }
-
-        MajorRevision rev = new MajorRevision(revInt);
 
         // First look in locally installed packages.
         for (ArchiveInfo ai : localArchives) {
@@ -764,7 +761,7 @@ class SdkUpdaterLogic {
         // We end up here if nothing matches. We don't have a good platform to match.
         // We need to indicate this extra depends on a missing platform archive
         // so that it can be impossible to install later on.
-        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_TOOL, revInt);
+        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_TOOL, rev);
     }
 
     /**
@@ -783,13 +780,12 @@ class SdkUpdaterLogic {
             SdkSource[] remoteSources,
             ArchiveInfo[] localArchives) {
         // This is the requirement to match.
-        int revInt = pkg.getMinPlatformToolsRevision(); // FIXME support micro min-plat-tools-rev
-        FullRevision rev = new MajorRevision(revInt);
+        FullRevision rev = pkg.getMinPlatformToolsRevision();
         boolean findMax = false;
         ArchiveInfo aiMax = null;
         Archive aMax = null;
 
-        if (revInt == IMinPlatformToolsDependency.MIN_PLATFORM_TOOLS_REV_INVALID) {
+        if (rev.equals(IMinPlatformToolsDependency.MIN_PLATFORM_TOOLS_REV_INVALID)) {
             // The requirement is invalid, which is not supposed to happen since this
             // property is mandatory. However in a typical upgrade scenario we can end
             // up with the previous updater managing a new package and not dealing
@@ -906,7 +902,7 @@ class SdkUpdaterLogic {
         // We end up here if nothing matches. We don't have a good platform to match.
         // We need to indicate this package depends on a missing platform archive
         // so that it can be impossible to install later on.
-        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_PLATFORM_TOOL, revInt);
+        return new MissingArchiveInfo(MissingArchiveInfo.TITLE_PLATFORM_TOOL, rev);
     }
 
     /**
@@ -1398,7 +1394,7 @@ class SdkUpdaterLogic {
      */
     private static class MissingArchiveInfo extends ArchiveInfo {
 
-        private final int mRevision;
+        private final FullRevision mRevision;
         private final String mTitle;
 
         public static final String TITLE_TOOL = "Tools";
@@ -1411,7 +1407,7 @@ class SdkUpdaterLogic {
          * @param title Typically "Tools" or "Platform-tools".
          * @param revision The required revision.
          */
-        public MissingArchiveInfo(String title, int revision) {
+        public MissingArchiveInfo(String title, FullRevision revision) {
             super(null /*newArchive*/, null /*replaced*/, null /*dependsOn*/);
             mTitle = title;
             mRevision = revision;
@@ -1431,7 +1427,9 @@ class SdkUpdaterLogic {
 
         @Override
         public String getShortDescription() {
-            return String.format("Missing Android SDK %1$s, revision %2$d", mTitle, mRevision);
+            return String.format("Missing Android SDK %1$s, revision %2$s",
+                    mTitle,
+                    mRevision.toShortString());
         }
     }
 }

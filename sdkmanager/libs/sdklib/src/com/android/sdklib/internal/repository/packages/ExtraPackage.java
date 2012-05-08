@@ -517,8 +517,9 @@ public class ExtraPackage extends MinToolsPackage
             s += '\n' + d;
         }
 
-        if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            s += String.format("\nRequires tools revision %1$d", getMinToolsRevision());
+        if (!getMinToolsRevision().equals(MIN_TOOLS_REV_NOT_SPECIFIED)) {
+            s += String.format("\nRequires tools revision %1$s",
+                               getMinToolsRevision().toShortString());
         }
 
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
