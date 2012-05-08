@@ -246,6 +246,18 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         mIgnoreXmlUpdate = ignore;
     }
 
+    /**
+     * Returns whether XML model events are ignored or not. This is the case
+     * when we are deliberately modifying the document in a way which does not
+     * change the semantics (such as formatting), or when we have already
+     * directly updated the model ourselves.
+     *
+     * @return true if XML events should be ignored
+     */
+    public boolean getIgnoreXmlUpdate() {
+        return mIgnoreXmlUpdate;
+    }
+
     // ---- Base Class Overrides, Interfaces Implemented ----
 
     @Override

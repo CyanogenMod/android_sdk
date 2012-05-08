@@ -487,6 +487,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
                     public void selectionChanged(SelectionChangedEvent event) {
                         ISelection selection = event.getSelection();
                         getEditor().getSite().getSelectionProvider().setSelection(selection);
+                        if (getEditor().getIgnoreXmlUpdate()) {
+                            return;
+                        }
                         SelectionManager manager =
                                 mGraphicalEditor.getCanvasControl().getSelectionManager();
                         manager.setSelection(selection);
