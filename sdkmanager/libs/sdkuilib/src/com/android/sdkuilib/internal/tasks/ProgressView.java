@@ -100,6 +100,13 @@ public final class ProgressView implements IProgressUiProvider {
     /**
      * Starts the task and block till it's either finished or canceled.
      * This can be called from a non-UI thread safely.
+     * <p/>
+     * When a task is started from within a monitor, it reuses the thread
+     * from the parent. Otherwise it starts a new thread and runs it own
+     * UI loop. This means the task can perform UI operations using
+     * {@link Display#asyncExec(Runnable)}.
+     * <p/>
+     * In either case, the method only returns when the task has finished.
      */
     public void startTask(
             final String title,

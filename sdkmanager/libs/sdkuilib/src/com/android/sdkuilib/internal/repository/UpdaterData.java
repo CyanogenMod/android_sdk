@@ -24,31 +24,28 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.AdbWrapper;
-import com.android.sdklib.internal.repository.AddonsListFetcher;
-import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
-import com.android.sdklib.internal.repository.archives.Archive;
-import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
-import com.android.sdklib.internal.repository.packages.AddonPackage;
-import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
-import com.android.sdklib.internal.repository.packages.ToolPackage;
-import com.android.sdklib.internal.repository.sources.SdkAddonSource;
-import com.android.sdklib.internal.repository.sources.SdkRepoSource;
-import com.android.sdklib.internal.repository.sources.SdkSource;
-import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
-import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
+import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
+import com.android.sdklib.internal.repository.packages.AddonPackage;
+import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
+import com.android.sdklib.internal.repository.packages.ToolPackage;
+import com.android.sdklib.internal.repository.sources.SdkRepoSource;
+import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
+import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.repository.SdkAddonConstants;
-import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader;
 import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
@@ -79,27 +76,32 @@ public class UpdaterData implements IUpdaterData {
 
     private String mOsSdkRoot;
 
-    private final ISdkLog mSdkLog;
-    private ITaskFactory mTaskFactory;
-
-    private SdkManager mSdkManager;
-    private AvdManager mAvdManager;
-    private DownloadCache mDownloadCache; // lazily created in getDownloadCache
     private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
     private final SdkSources mSources = new SdkSources();
-    private ImageFactory mImageFactory;
     private final SettingsController mSettingsController;
     private final ArrayList<ISdkChangeListener> mListeners = new ArrayList<ISdkChangeListener>();
+    private final ISdkLog mSdkLog;
+    private ITaskFactory mTaskFactory;
     private Shell mWindowShell;
-    private AndroidLocationException mAvdManagerInitError;
-
+    private SdkManager mSdkManager;
+    private AvdManager mAvdManager;
     /**
-     * 0 = need to fetch remote addons list once..
-     * 1 = fetch succeeded, don't need to do it any more.
-     * -1= fetch failed, do it again only if the user requests a refresh
-     *     or changes the force-http setting.
+     * The current {@link PackageLoader} to use.
+     * Lazily created in {@link #getPackageLoader()}.
      */
-    private int mStateFetchRemoteAddonsList;
+    private PackageLoader mPackageLoader;
+    /**
+     * The current {@link DownloadCache} to use.
+     * Lazily created in {@link #getDownloadCache()}.
+     */
+    private DownloadCache mDownloadCache;
+    /**
+     * The current {@link ImageFactory}.
+     * Set via {@link #setImageFactory(ImageFactory)} by the window implementation.
+     * It is null when invoked using the command-line interface.
+     */
+    private ImageFactory mImageFactory;
+    private AndroidLocationException mAvdManagerInitError;
 
     /**
      * Creates a new updater data.
@@ -111,7 +113,6 @@ public class UpdaterData implements IUpdaterData {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
 
-        mDownloadCache = getDownloadCache();
         mSettingsController = new SettingsController(this);
 
         initSdk();
@@ -196,6 +197,14 @@ public class UpdaterData implements IUpdaterData {
     @Override
     public Shell getWindowShell() {
         return mWindowShell;
+    }
+
+    public PackageLoader getPackageLoader() {
+        // The package loader is lazily initialized here.
+        if (mPackageLoader == null) {
+            mPackageLoader = new PackageLoader(this);
+        }
+        return mPackageLoader;
     }
 
     /**
@@ -446,7 +455,7 @@ public class UpdaterData implements IUpdaterData {
                                               mOsSdkRoot,
                                               forceHttp,
                                               mSdkManager,
-                                              mDownloadCache,
+                                              getDownloadCache(),
                                               monitor)) {
                             // We installed this archive.
                             newlyInstalledArchives.add(archive);
@@ -698,7 +707,7 @@ public class UpdaterData implements IUpdaterData {
                 includeObsoletes);
 
         if (selectedArchives == null) {
-            loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
+            getPackageLoader().loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
             ul.addNewPlatforms(
                     archives,
                     getSources(),
@@ -733,7 +742,7 @@ public class UpdaterData implements IUpdaterData {
      */
     private List<ArchiveInfo> getRemoteArchives_NoGUI(boolean includeAll) {
         refreshSources(true);
-        loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
+        getPackageLoader().loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
 
         List<ArchiveInfo> archives;
         SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
@@ -998,9 +1007,7 @@ public class UpdaterData implements IUpdaterData {
             @Override
             public void run(ITaskMonitor monitor) {
 
-                if (mStateFetchRemoteAddonsList <= 0) {
-                    loadRemoteAddonsListInTask(monitor);
-                }
+                getPackageLoader().loadRemoteAddonsList(monitor);
 
                 SdkSource[] sources = mSources.getAllSources();
                 monitor.setDescription("Refresh Sources");
@@ -1009,73 +1016,12 @@ public class UpdaterData implements IUpdaterData {
                     if (forceFetching ||
                             source.getPackages() != null ||
                             source.getFetchError() != null) {
-                        source.load(mDownloadCache, monitor.createSubMonitor(1), forceHttp);
+                        source.load(getDownloadCache(), monitor.createSubMonitor(1), forceHttp);
                     }
                     monitor.incProgress(1);
                 }
             }
         });
-    }
-
-    /**
-     * Loads the remote add-ons list.
-     */
-    public void loadRemoteAddonsList(ITaskMonitor monitor) {
-
-        if (mStateFetchRemoteAddonsList != 0) {
-            return;
-        }
-
-        mTaskFactory.start("Load Add-ons List", monitor, new ITask() {
-            @Override
-            public void run(ITaskMonitor subMonitor) {
-                loadRemoteAddonsListInTask(subMonitor);
-            }
-        });
-    }
-
-    private void loadRemoteAddonsListInTask(ITaskMonitor monitor) {
-        mStateFetchRemoteAddonsList = -1;
-
-        String url = SdkAddonsListConstants.URL_ADDON_LIST;
-
-        // We override SdkRepoConstants.URL_GOOGLE_SDK_SITE if this is defined
-        String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
-        if (baseUrl != null) {
-            if (baseUrl.length() > 0 && baseUrl.endsWith("/")) {        //$NON-NLS-1$
-                if (url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
-                    url = baseUrl + url.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
-                }
-            } else {
-                monitor.logError("Ignoring invalid SDK_TEST_BASE_URL: %1$s", baseUrl);  //$NON-NLS-1$
-            }
-        }
-
-        if (getSettingsController().getForceHttp()) {
-            url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        // Hook to bypass loading 3rd party addons lists.
-        boolean fetch3rdParties = System.getenv("SDK_SKIP_3RD_PARTIES") == null;
-
-        AddonsListFetcher fetcher = new AddonsListFetcher();
-        Site[] sites = fetcher.fetch(url, mDownloadCache, monitor);
-        if (sites != null) {
-            mSources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
-
-            if (fetch3rdParties) {
-                for (Site s : sites) {
-                    mSources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
-                                 new SdkAddonSource(s.getUrl(), s.getUiName()));
-                }
-            }
-
-            mSources.notifyChangeListeners();
-
-            mStateFetchRemoteAddonsList = 1;
-        }
-
-        monitor.setDescription("Fetched Add-ons List successfully");
     }
 
     /**
