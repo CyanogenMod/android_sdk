@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -33,7 +32,6 @@ import com.android.tools.lint.detector.api.Speed;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
 import java.util.EnumSet;
@@ -97,26 +95,7 @@ public class HandlerDetector extends Detector implements ClassScanner {
                     return;
                 }
 
-                // Attempt to find a proper location for this class. This is tricky
-                // since classes do not have line number entries in the class file; we need
-                // to find a method, look up the corresponding line number then search
-                // around it for a suitable tag, such as the class name.
-                String pattern;
-                if (isAnonymousClass(classNode.name)) {
-                    pattern = "Handler"; //$NON-NLS-1$
-                } else {
-                    pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1);
-                }
-
-                int firstLineNo = -1;
-                if (classNode.methods != null && !classNode.methods.isEmpty()) {
-                    MethodNode firstMethod = getFirstRealMethod(classNode);
-                    if (firstMethod != null) {
-                        firstLineNo = ClassContext.findLineNumber(firstMethod);
-                    }
-                }
-
-                Location location = context.getLocationForLine(firstLineNo, pattern, null);
+                Location location = context.getLocation(classNode);
                 context.report(ISSUE, location, String.format(
                         "This Handler class should be static or leaks might occur (%1$s)",
                             ClassContext.createSignature(classNode.name, null, null)),
@@ -125,28 +104,6 @@ public class HandlerDetector extends Detector implements ClassScanner {
             }
             name = driver.getSuperClass(name);
         }
-    }
-
-    @Nullable
-    private MethodNode getFirstRealMethod(@NonNull ClassNode classNode) {
-        // Return the first method in the class for line number purposes. Skip <init>,
-        // since it's typically not located near the real source of the method.
-        if (classNode.methods != null) {
-            @SuppressWarnings("rawtypes") // ASM API
-            List methods = classNode.methods;
-            for (Object m : methods) {
-                MethodNode method = (MethodNode) m;
-                if (method.name.charAt(0) != '<') {
-                    return method;
-                }
-            }
-
-            if (classNode.methods.size() > 0) {
-                return (MethodNode) classNode.methods.get(0);
-            }
-        }
-
-        return null;
     }
 
     private boolean isStaticInnerClass(@NonNull ClassNode classNode) {
@@ -160,15 +117,5 @@ public class HandlerDetector extends Detector implements ClassScanner {
         }
 
         return true;
-    }
-
-    private boolean isAnonymousClass(@NonNull String fqcn) {
-        int lastIndex = fqcn.lastIndexOf('$');
-        if (lastIndex != -1 && lastIndex < fqcn.length() - 1) {
-            if (Character.isDigit(fqcn.charAt(lastIndex + 1))) {
-                return true;
-            }
-        }
-        return false;
     }
 }
