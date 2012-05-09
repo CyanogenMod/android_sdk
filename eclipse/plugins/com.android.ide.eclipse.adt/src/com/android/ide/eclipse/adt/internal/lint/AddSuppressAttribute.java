@@ -18,16 +18,14 @@ package com.android.ide.eclipse.adt.internal.lint;
 
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -36,9 +34,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -90,60 +85,8 @@ class AddSuppressAttribute implements ICompletionProposal {
 
     @Override
     public void apply(IDocument document) {
-        mEditor.wrapUndoEditXmlModel("Suppress Lint Warning", new Runnable() {
-            @Override
-            public void run() {
-                String prefix = UiElementNode.lookupNamespacePrefix(mElement,
-                        TOOLS_URI, null);
-                if (prefix == null) {
-                    // Add in new prefix...
-                    prefix = UiElementNode.lookupNamespacePrefix(mElement,
-                            TOOLS_URI, TOOLS_PREFIX);
-                    // ...and ensure that the header is formatted such that
-                    // the XML namespace declaration is placed in the right
-                    // position and wrapping is applied etc.
-                    mEditor.scheduleNodeReformat(mEditor.getUiRootNode(),
-                            true /*attributesOnly*/);
-                }
-
-                String ignore = mElement.getAttributeNS(TOOLS_URI, ATTR_IGNORE);
-                if (ignore.length() > 0) {
-                    ignore = ignore + ',' + mId;
-                } else {
-                    ignore = mId;
-                }
-
-                // Use the non-namespace form of set attribute since we can't
-                // reference the namespace until the model has been reloaded
-                mElement.setAttribute(prefix + ':' + ATTR_IGNORE, ignore);
-
-                UiElementNode rootUiNode = mEditor.getUiRootNode();
-                if (rootUiNode != null) {
-                    final UiElementNode uiNode = rootUiNode.findXmlNode(mElement);
-                    if (uiNode != null) {
-                        mEditor.scheduleNodeReformat(uiNode, true /*attributesOnly*/);
-
-                        // Update editor selection after format
-                        Display display = AdtPlugin.getDisplay();
-                        if (display != null) {
-                            display.asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Node xmlNode = uiNode.getXmlNode();
-                                    Attr attribute = ((Element) xmlNode).getAttributeNodeNS(
-                                            TOOLS_URI, ATTR_IGNORE);
-                                    if (attribute instanceof IndexedRegion) {
-                                        IndexedRegion region = (IndexedRegion) attribute;
-                                        mEditor.getStructuredTextEditor().selectAndReveal(
-                                                region.getStartOffset(), region.getLength());
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        });
+        AdtUtils.setToolsAttribute(mEditor, mElement, "Suppress Lint Warning", ATTR_IGNORE, mId,
+                true /*reveal*/, true /*append*/);
 
         try {
             // Remove the marker now that the suppress attribute has been added

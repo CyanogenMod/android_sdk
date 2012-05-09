@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
@@ -145,6 +146,41 @@ public class DomUtilities {
         }
 
         return false;
+    }
+
+    /**
+     * Returns the DOM document for the given file
+     *
+     * @param file the XML file
+     * @return the document, or null if not found or not parsed properly (no
+     *         errors are generated/thrown)
+     */
+    @Nullable
+    public static Document getDocument(@NonNull IFile file) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        if (modelManager == null) {
+            return null;
+        }
+        try {
+            IStructuredModel model = modelManager.getExistingModelForRead(file);
+            if (model == null) {
+                model = modelManager.getModelForRead(file);
+            }
+            if (model != null) {
+                if (model instanceof IDOMModel) {
+                    IDOMModel domModel = (IDOMModel) model;
+                    return domModel.getDocument();
+                }
+                try {
+                } finally {
+                    model.releaseFromRead();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore exceptions.
+        }
+
+        return null;
     }
 
     /**

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.resources;
 import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
@@ -507,8 +508,27 @@ public class ResourceHelper {
             style = style.substring(PREFIX_STYLE.length());
         } else if (style.startsWith(PREFIX_ANDROID_STYLE)) {
             style = style.substring(PREFIX_ANDROID_STYLE.length());
+        } else if (style.startsWith(PREFIX_RESOURCE_REF)) {
+            // @package:style/foo
+            int index = style.indexOf('/');
+            if (index != -1) {
+                style = style.substring(index + 1);
+            }
         }
         return style;
+    }
+
+    /**
+     * Returns true if the given style represents a project theme
+     *
+     * @param style a theme style string
+     * @return true if the style string represents a project theme, as opposed
+     *         to a framework theme
+     */
+    public static boolean isProjectStyle(String style) {
+        assert style.startsWith(PREFIX_STYLE) || style.startsWith(PREFIX_ANDROID_STYLE) : style;
+
+        return style.startsWith(PREFIX_STYLE);
     }
 
     /**

@@ -41,6 +41,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -90,10 +91,10 @@ public class LayoutActionBar extends Composite {
         GridLayout layout = new GridLayout(3, false);
         setLayout(layout);
 
-        mLayoutToolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
-        mLayoutToolBar.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
+        mLayoutToolBar = new ToolBar(this, /*SWT.WRAP |*/ SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
+        mLayoutToolBar.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
         mZoomToolBar = createZoomControls();
-        mZoomToolBar.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, false));
+        mZoomToolBar.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
         mLintToolBar = createLintControls();
 
         GridData lintData = new GridData(SWT.END, SWT.BEGINNING, false, false);
@@ -423,10 +424,6 @@ public class LayoutActionBar extends Composite {
         Listener menuListener = new Listener() {
             @Override
             public void handleEvent(Event event) {
-                // if (event.detail == SWT.ARROW) {
-                Point point = new Point(event.x, event.y);
-                point = combo.getDisplay().map(mLayoutToolBar, null, point);
-
                 Menu menu = new Menu(mLayoutToolBar.getShell(), SWT.POP_UP);
                 RuleAction.Choices choices = (Choices) combo.getData();
                 List<URL> icons = choices.getIconUrls();
@@ -460,9 +457,10 @@ public class LayoutActionBar extends Composite {
                     });
                 }
 
-                // TODO - how do I dispose of this?
-
-                menu.setLocation(point);
+                Rectangle bounds = combo.getBounds();
+                Point location = new Point(bounds.x, bounds.y + bounds.height);
+                location = combo.getParent().toDisplay(location);
+                menu.setLocation(location.x, location.y);
                 menu.setVisible(true);
             }
         };

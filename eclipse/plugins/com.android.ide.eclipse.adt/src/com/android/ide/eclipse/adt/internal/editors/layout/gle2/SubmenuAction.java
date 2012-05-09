@@ -14,10 +14,10 @@ import org.eclipse.swt.widgets.MenuItem;
 /**
  * Action which creates a submenu that is dynamically populated by subclasses
  */
-abstract class SubmenuAction extends Action implements MenuListener, IMenuCreator {
+public abstract class SubmenuAction extends Action implements MenuListener, IMenuCreator {
     private Menu mMenu;
 
-    SubmenuAction(String title) {
+    public SubmenuAction(String title) {
         super(title, IAction.AS_DROP_DOWN_MENU);
     }
 

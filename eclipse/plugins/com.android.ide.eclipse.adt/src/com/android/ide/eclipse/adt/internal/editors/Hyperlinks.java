@@ -39,6 +39,8 @@ import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.sdklib.xml.AndroidManifest.NODE_SERVICE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
@@ -1079,14 +1081,25 @@ public class Hyperlinks {
         return getResourceLinks(range, url);
     }
 
+    private static IHyperlink[] getResourceLinks(@Nullable IRegion range, @NonNull String url) {
+        IProject project = Hyperlinks.getProject();
+        FolderConfiguration configuration = getConfiguration();
+        return getResourceLinks(range, url, project, configuration);
+    }
+
     /**
      * Computes hyperlinks to resource definitions for resource urls (e.g.
      * {@code @android:string/ok} or {@code @layout/foo}. May create multiple links.
+     * @param range TBD
+     * @param url the resource url
+     * @param project the relevant project
+     * @param configuration the applicable configuration
+     * @return an array of hyperlinks, or null
      */
-    private static IHyperlink[] getResourceLinks(IRegion range, String url) {
+    @Nullable
+    public static IHyperlink[] getResourceLinks(@Nullable IRegion range, @NonNull String url,
+            @NonNull IProject project,  @Nullable FolderConfiguration configuration) {
         List<IHyperlink> links = new ArrayList<IHyperlink>();
-        IProject project = Hyperlinks.getProject();
-        FolderConfiguration configuration = getConfiguration();
 
         Pair<ResourceType,String> resource = ResourceHelper.parseResource(url);
         if (resource == null || resource.getFirst() == null) {

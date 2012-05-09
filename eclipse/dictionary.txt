@@ -58,6 +58,7 @@ configurability
 congrats
 coords
 credentials
+cyclical
 dalvik
 ddms
 deactivated
@@ -153,6 +154,7 @@ locale
 locales
 logo
 lombok
+lopsided
 lowercase
 luminance
 mac
@@ -166,6 +168,7 @@ metadata
 micro
 min
 mipmap
+misaligned
 monospace
 monte
 ms
@@ -271,6 +274,7 @@ stylesheet
 subclassed
 subclassing
 submenu
+submenus
 subregion
 superclasses
 supertype
@@ -317,6 +321,7 @@ varargs
 verbosity
 viewport
 vs
+wallpaper
 webtools
 whilst
 workflow
