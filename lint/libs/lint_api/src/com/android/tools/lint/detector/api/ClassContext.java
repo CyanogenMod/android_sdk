@@ -344,7 +344,7 @@ public class ClassContext extends Context {
      * @param node the instruction node to get a line number for
      * @return the closest line number, or -1 if not known
      */
-    public static int findLineNumber(AbstractInsnNode node) {
+    public static int findLineNumber(@NonNull AbstractInsnNode node) {
         AbstractInsnNode curr = node;
 
         // First search backwards
@@ -373,12 +373,85 @@ public class ClassContext extends Context {
      * @param node the method node to get a line number for
      * @return the closest line number, or -1 if not known
      */
-    public static int findLineNumber(MethodNode node) {
+    public static int findLineNumber(@NonNull MethodNode node) {
         if (node.instructions != null && node.instructions.size() > 0) {
             return findLineNumber(node.instructions.get(0));
         }
 
         return -1;
+    }
+
+    /**
+     * Finds the line number closest to the given class declaration
+     *
+     * @param node the method node to get a line number for
+     * @return the closest line number, or -1 if not known
+     */
+    public static int findLineNumber(@NonNull ClassNode node) {
+        if (node.methods != null && !node.methods.isEmpty()) {
+            MethodNode firstMethod = getFirstRealMethod(node);
+            if (firstMethod != null) {
+                return ClassContext.findLineNumber(firstMethod);
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns a location for the given {@link ClassNode}, where class node is
+     * either the top level class, or an inner class, in the current context.
+     *
+     * @param classNode the class in the current context
+     * @return a location pointing to the class declaration, or as close to it
+     *         as possible
+     */
+    @NonNull
+    public Location getLocation(@NonNull ClassNode classNode) {
+        // Attempt to find a proper location for this class. This is tricky
+        // since classes do not have line number entries in the class file; we need
+        // to find a method, look up the corresponding line number then search
+        // around it for a suitable tag, such as the class name.
+        String pattern;
+        if (isAnonymousClass(classNode.name)) {
+            pattern = classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1);
+        } else {
+            pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1);
+        }
+
+        return getLocationForLine(findLineNumber(classNode), pattern, null);
+    }
+
+    @Nullable
+    private static MethodNode getFirstRealMethod(@NonNull ClassNode classNode) {
+        // Return the first method in the class for line number purposes. Skip <init>,
+        // since it's typically not located near the real source of the method.
+        if (classNode.methods != null) {
+            @SuppressWarnings("rawtypes") // ASM API
+            List methods = classNode.methods;
+            for (Object m : methods) {
+                MethodNode method = (MethodNode) m;
+                if (method.name.charAt(0) != '<') {
+                    return method;
+                }
+            }
+
+            if (classNode.methods.size() > 0) {
+                return (MethodNode) classNode.methods.get(0);
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isAnonymousClass(@NonNull String fqcn) {
+        int lastIndex = fqcn.lastIndexOf('$');
+        if (lastIndex != -1 && lastIndex < fqcn.length() - 1) {
+            if (Character.isDigit(fqcn.charAt(lastIndex + 1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -443,7 +516,8 @@ public class ClassContext extends Context {
      * @param fqcn the fully qualified class name
      * @return the internal class name
      */
-    public static String getInternalName(String fqcn) {
+    @NonNull
+    public static String getInternalName(@NonNull String fqcn) {
         String[] parts = fqcn.split("\\."); //$NON-NLS-1$
         StringBuilder sb = new StringBuilder();
         String prev = null;

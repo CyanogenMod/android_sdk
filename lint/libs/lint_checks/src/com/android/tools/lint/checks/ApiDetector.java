@@ -295,7 +295,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             "Class requires API level %1$d (current min is %2$d): %3$s",
                             api, minSdk, fqcn);
                         AbstractInsnNode first = nodes.size() > 0 ? nodes.get(0) : null;
-                        report(context, message, first, method, null, null);
+                        report(context, message, first, method, method.name, null);
                     }
                 }
             }
@@ -458,6 +458,15 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     private void report(final ClassContext context, String message, AbstractInsnNode node,
             MethodNode method, String patternStart, String patternEnd) {
         int lineNumber = node != null ? ClassContext.findLineNumber(node) : -1;
+
+        // If looking for a constructor, the string we'll see in the source is not the
+        // method name (<init>) but the class name
+        if (patternStart != null && patternStart.equals("<init>") //$NON-NLS-1$
+                && node instanceof MethodInsnNode) {
+            String owner = ((MethodInsnNode) node).owner;
+            patternStart = owner.substring(owner.lastIndexOf('/') + 1);
+        }
+
         Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd);
         context.report(UNSUPPORTED, method, location, message, null);
     }
