@@ -76,8 +76,7 @@ int initLibrary(void)
     return true;
 }
 
-int initOpenGLRenderer(int width, int height, int portNum,
-        OnPostFn onPost, void* onPostContext)
+int initOpenGLRenderer(int width, int height, int portNum)
 {
 
     //
@@ -94,7 +93,7 @@ int initOpenGLRenderer(int width, int height, int portNum,
     // initialize the renderer and listen to connections
     // on a thread in the current process.
     //
-    bool inited = FrameBuffer::initialize(width, height, onPost, onPostContext);
+    bool inited = FrameBuffer::initialize(width, height);
     if (!inited) {
         return false;
     }
@@ -189,6 +188,27 @@ int initOpenGLRenderer(int width, int height, int portNum,
 #endif
 
     return true;
+}
+
+void setPostCallback(OnPostFn onPost, void* onPostContext)
+{
+#ifdef RENDER_API_USE_THREAD  // should be defined for mac
+    FrameBuffer* fb = FrameBuffer::getFB();
+    if (fb) {
+        fb->setPostCallback(onPost, onPostContext);
+    }
+#else
+    if (onPost) {
+        // onPost callback not supported with separate renderer process.
+        //
+        // If we ever revive separate process support, we could make the choice
+        // between thread and process at runtime instead of compile time, and
+        // choose the thread path if an onPost callback is requested. Or, the
+        // callback could be supported with a separate process using shmem or
+        // other IPC mechanism.
+        return false;
+    }
+#endif
 }
 
 void getHardwareStrings(const char** vendor, const char** renderer, const char** version)

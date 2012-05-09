@@ -101,7 +101,7 @@ void FrameBuffer::finalize(){
     }
 }
 
-bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPostContext)
+bool FrameBuffer::initialize(int width, int height)
 {
     if (s_theFrameBuffer != NULL) {
         return true;
@@ -110,7 +110,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     //
     // allocate space for the FrameBuffer object
     //
-    FrameBuffer *fb = new FrameBuffer(width, height, onPost, onPostContext);
+    FrameBuffer *fb = new FrameBuffer(width, height);
     if (!fb) {
         ERR("Failed to create fb\n");
         return false;
@@ -335,17 +335,6 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     fb->initGLState();
 
     //
-    // Allocate space for the onPost framebuffer image
-    //
-    if (onPost) {
-        fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
-        if (!fb->m_fbImage) {
-            delete fb;
-            return false;
-        }
-    }
-
-    //
     // Cache the GL strings so we don't have to think about threading or
     // current-context when asked for them.
     //
@@ -363,8 +352,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     return true;
 }
 
-FrameBuffer::FrameBuffer(int p_width, int p_height,
-        OnPostFn onPost, void* onPostContext) :
+FrameBuffer::FrameBuffer(int p_width, int p_height) :
     m_width(p_width),
     m_height(p_height),
     m_eglDisplay(EGL_NO_DISPLAY),
@@ -381,8 +369,8 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
     m_eglContextInitialized(false),
     m_statsNumFrames(0),
     m_statsStartTime(0LL),
-    m_onPost(onPost),
-    m_onPostContext(onPostContext),
+    m_onPost(NULL),
+    m_onPostContext(NULL),
     m_fbImage(NULL),
     m_glVendor(NULL),
     m_glRenderer(NULL),
@@ -394,6 +382,22 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
 FrameBuffer::~FrameBuffer()
 {
     free(m_fbImage);
+}
+
+void FrameBuffer::setPostCallback(OnPostFn onPost, void* onPostContext)
+{
+    android::Mutex::Autolock mutex(m_lock);
+    m_onPost = onPost;
+    m_onPostContext = onPostContext;
+    if (m_onPost && !m_fbImage) {
+        m_fbImage = (unsigned char*)malloc(4 * m_width * m_height);
+        if (!m_fbImage) {
+            ERR("out of memory, cancelling OnPost callback");
+            m_onPost = NULL;
+            m_onPostContext = NULL;
+            return;
+        }
+    }
 }
 
 bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,

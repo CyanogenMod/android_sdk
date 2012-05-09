@@ -46,7 +46,7 @@ struct FrameBufferCaps
 class FrameBuffer
 {
 public:
-    static bool initialize(int width, int height, OnPostFn onPost, void* onPostContext);
+    static bool initialize(int width, int height);
     static bool setupSubWindow(FBNativeWindowType p_window,
                                 int x, int y,
                                 int width, int height, float zRot);
@@ -58,6 +58,8 @@ public:
 
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
+
+    void setPostCallback(OnPostFn onPost, void* onPostContext);
 
     void getGLStrings(const char** vendor, const char** renderer, const char** version) const {
         *vendor = m_glVendor;
@@ -96,7 +98,7 @@ public:
     }
 
 private:
-    FrameBuffer(int p_width, int p_height, OnPostFn onPost, void* onPostContext);
+    FrameBuffer(int p_width, int p_height);
     ~FrameBuffer();
     HandleType genHandle();
     bool bindSubwin_locked();
