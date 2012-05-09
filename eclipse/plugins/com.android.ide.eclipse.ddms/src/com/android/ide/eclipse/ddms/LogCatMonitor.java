@@ -28,7 +28,9 @@ import com.android.ide.eclipse.ddms.views.LogCatView;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -38,6 +40,7 @@ import org.eclipse.ui.PlatformUI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * LogCatMonitor helps in monitoring the logcat output from a set of devices.
@@ -45,15 +48,27 @@ import java.util.Map;
  * if any message is deemed important.
  */
 public class LogCatMonitor {
-    public static final String AUTO_MONITOR_PREFKEY = "ddms.logcat.automonitor";
+    public static final String AUTO_MONITOR_PREFKEY = "ddms.logcat.automonitor"; //$NON-NLS-1$
+    public static final String AUTO_MONITOR_LOGLEVEL = "ddms.logcat.auotmonitor.level"; //$NON-NLS-1$
+    private static final String AUTO_MONITOR_PROMPT_SHOWN = "ddms.logcat.automonitor.userprompt"; //$NON-NLS-1$
 
     private IPreferenceStore mPrefStore;
     private Map<String, DeviceData> mMonitoredDevices;
     private IDebuggerConnector[] mConnectors;
 
+    private int mMinMessagePriority;
+
+    /**
+     * Flag that controls when the logcat stream is checked. This flag is set when the user
+     * performs a launch, and is reset as soon as the logcat view is displayed.
+     */
+    final AtomicBoolean mMonitorEnabled = new AtomicBoolean(false);
+
     public LogCatMonitor(IDebuggerConnector[] debuggerConnectors, IPreferenceStore prefStore) {
         mConnectors = debuggerConnectors;
         mPrefStore = prefStore;
+        mMinMessagePriority =
+                LogLevel.getByString(mPrefStore.getString(AUTO_MONITOR_LOGLEVEL)).getPriority();
 
         mMonitoredDevices = new HashMap<String, DeviceData>();
 
@@ -79,6 +94,9 @@ public class LogCatMonitor {
                 if (AUTO_MONITOR_PREFKEY.equals(event.getProperty())
                         && event.getNewValue().equals(false)) {
                     unmonitorAllDevices();
+                } else if (AUTO_MONITOR_LOGLEVEL.equals(event.getProperty())) {
+                    mMinMessagePriority =
+                            LogLevel.getByString((String) event.getNewValue()).getPriority();
                 }
             }
         });
@@ -107,6 +125,8 @@ public class LogCatMonitor {
             return;
         }
 
+        mMonitorEnabled.set(true);
+
         if (mMonitoredDevices.keySet().contains(device.getSerialNumber())) {
             // the device is already monitored
             return;
@@ -126,12 +146,20 @@ public class LogCatMonitor {
     }
 
     private void checkMessages(List<LogCatMessage> receivedMessages, IDevice device) {
+        if (!mMonitorEnabled.get()) {
+            return;
+        }
+
         // check the received list of messages to see if any of them are
         // significant enough to be seen by the user. If so, activate the logcat view
         // to display those messages
         for (LogCatMessage m : receivedMessages) {
             if (isImportantMessage(m)) {
                 focusLogCatView(device, m.getAppName());
+
+                // now that logcat view is active, no need to check messages until the next
+                // time user launches an application.
+                mMonitorEnabled.set(false);
                 break;
             }
         }
@@ -142,7 +170,7 @@ public class LogCatMonitor {
      * it is of severity level error or higher, and it belongs to an app currently in the workspace.
      */
     private boolean isImportantMessage(LogCatMessage m) {
-        if (m.getLogLevel().getPriority() < LogLevel.ERROR.getPriority()) {
+        if (m.getLogLevel().getPriority() < mMinMessagePriority) {
             return false;
         }
 
@@ -170,6 +198,15 @@ public class LogCatMonitor {
                     return;
                 }
 
+                // if the logcat view is not visible, then prompt the user once to set
+                // logcat monitoring preferences
+                if (!isLogCatViewVisible(page)) {
+                    boolean showLogCatView = promptUserOnce(page.getWorkbenchWindow().getShell());
+                    if (!showLogCatView) {
+                        return;
+                    }
+                }
+
                 // display view
                 final LogCatView v = displayLogCatView(page);
                 if (v == null) {
@@ -181,6 +218,11 @@ public class LogCatMonitor {
 
                 // select appropriate filter
                 v.selectTransientAppFilter(appName);
+            }
+
+            private boolean isLogCatViewVisible(IWorkbenchPage page) {
+                IViewPart view = page.findView(LogCatView.ID);
+                return view != null && page.isPartVisible(view);
             }
 
             private LogCatView displayLogCatView(IWorkbenchPage page) {
@@ -201,6 +243,25 @@ public class LogCatMonitor {
                     return null;
                 }
             }
+
+            private boolean promptUserOnce(Shell shell) {
+                // see if this prompt was already displayed
+                boolean promptShown = mPrefStore.getBoolean(AUTO_MONITOR_PROMPT_SHOWN);
+                if (promptShown) {
+                    return mPrefStore.getBoolean(AUTO_MONITOR_PREFKEY);
+                }
+
+                LogCatMonitorDialog dlg = new LogCatMonitorDialog(shell);
+                int r = dlg.open();
+
+                // save preference indicating that this dialog has been displayed once
+                mPrefStore.setValue(AUTO_MONITOR_PROMPT_SHOWN, true);
+                mPrefStore.setValue(AUTO_MONITOR_PREFKEY, dlg.shouldMonitor());
+                mPrefStore.setValue(AUTO_MONITOR_LOGLEVEL, dlg.getMinimumPriority());
+
+                return r == Window.OK && dlg.shouldMonitor();
+            }
+
         });
     }
 

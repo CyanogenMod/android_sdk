@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
+import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ide.eclipse.base.InstallDetails;
@@ -43,6 +44,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     private ComboFieldEditor mWhichPerspective;
     private IntegerFieldEditor mMaxMessages;
     private BooleanFieldEditor mAutoMonitorLogcat;
+    private ComboFieldEditor mAutoMonitorLogcatLevel;
 
     public LogCatPreferencePage() {
         super(GRID);
@@ -92,6 +94,22 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
                 Messages.LogCatPreferencePage_AutoMonitorLogcat,
                 getFieldEditorParent());
         addField(mAutoMonitorLogcat);
+
+        mAutoMonitorLogcatLevel = new ComboFieldEditor(LogCatMonitor.AUTO_MONITOR_LOGLEVEL,
+                Messages.LogCatPreferencePage_SessionFilterLogLevel,
+                new String[][] {
+                    { LogLevel.VERBOSE.toString(), LogLevel.VERBOSE.getStringValue() },
+                    { LogLevel.DEBUG.toString(), LogLevel.DEBUG.getStringValue() },
+                    { LogLevel.INFO.toString(), LogLevel.INFO.getStringValue() },
+                    { LogLevel.WARN.toString(), LogLevel.WARN.getStringValue() },
+                    { LogLevel.ERROR.toString(), LogLevel.ERROR.getStringValue() },
+                    { LogLevel.ASSERT.toString(), LogLevel.ASSERT.getStringValue() },
+                },
+                getFieldEditorParent());
+        mAutoMonitorLogcatLevel.setEnabled(
+                getPreferenceStore().getBoolean(LogCatMonitor.AUTO_MONITOR_PREFKEY),
+                getFieldEditorParent());
+        addField(mAutoMonitorLogcatLevel);
     }
 
     @Override
@@ -101,8 +119,11 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     @Override
     public void propertyChange(PropertyChangeEvent event) {
         if (event.getSource().equals(mSwitchPerspective)) {
-            mWhichPerspective.setEnabled(mSwitchPerspective.getBooleanValue()
-                    , getFieldEditorParent());
+            mWhichPerspective.setEnabled(mSwitchPerspective.getBooleanValue(),
+                    getFieldEditorParent());
+        } else if (event.getSource().equals(mAutoMonitorLogcat)) {
+            mAutoMonitorLogcatLevel.setEnabled(mAutoMonitorLogcat.getBooleanValue(),
+                    getFieldEditorParent());
         }
     }
 
@@ -113,5 +134,8 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
 
         mMaxMessages.setStringValue(
                 Integer.toString(LogCatMessageList.MAX_MESSAGES_DEFAULT));
+
+        mAutoMonitorLogcatLevel.setEnabled(mAutoMonitorLogcat.getBooleanValue(),
+                getFieldEditorParent());
     }
 }
