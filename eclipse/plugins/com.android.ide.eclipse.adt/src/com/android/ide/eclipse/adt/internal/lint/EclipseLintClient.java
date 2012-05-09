@@ -266,8 +266,12 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
-    /** Clears any lint markers from the given resource (project, folder or file) */
-    static void clearMarkers(IResource resource) {
+    /**
+     * Clears any lint markers from the given resource (project, folder or file)
+     *
+     * @param resource the resource to remove markers from
+     */
+    public static void clearMarkers(@NonNull IResource resource) {
         clearMarkers(Collections.singletonList(resource));
     }
 

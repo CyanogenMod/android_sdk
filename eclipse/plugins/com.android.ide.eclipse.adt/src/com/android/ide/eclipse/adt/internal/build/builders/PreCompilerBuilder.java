@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.internal.build.AidlProcessor;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.RenderScriptProcessor;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -641,6 +642,9 @@ public class PreCompilerBuilder extends BaseBuilder {
         removeMarkersFromContainer(project, AdtConstants.MARKER_AIDL);
         removeMarkersFromContainer(project, AdtConstants.MARKER_RENDERSCRIPT);
         removeMarkersFromContainer(project, AdtConstants.MARKER_ANDROID);
+
+        // Also clean up lint
+        EclipseLintClient.clearMarkers(project);
     }
 
     @Override
