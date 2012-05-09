@@ -134,8 +134,8 @@ public class PostCompilerBuilder extends BaseBuilder {
         // Get the project.
         IProject project = getProject();
 
-        if (DEBUG) {
-            System.out.println("CLEAN(POST) " + project.getName());
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s CLEAN(POST)", project.getName());
         }
 
         // Clear the project of the generic markers
@@ -167,8 +167,8 @@ public class PostCompilerBuilder extends BaseBuilder {
         // get a project object
         IProject project = getProject();
 
-        if (DEBUG) {
-            System.out.println("BUILD(POST) " + project.getName());
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s BUILD(POST)", project.getName());
         }
 
         // Benchmarking start
@@ -228,8 +228,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Apk_Build);
 
-                if (DEBUG) {
-                    System.out.println("\tfull build!");
+                if (DEBUG_LOG) {
+                    AdtPlugin.log(IStatus.INFO, "%s full build!", project.getName());
                 }
 
                 // Full build: we do all the steps.
@@ -248,28 +248,31 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
                 } else {
-                    PatternBasedDeltaVisitor dv = new PatternBasedDeltaVisitor(project,
-                            project.getName());
-                    dv.addSet(ChangedFileSetHelper.MANIFEST);
-                    ChangedFileSet resCFS = ChangedFileSetHelper.getResCfs(project);
-                    dv.addSet(resCFS);
+                    PatternBasedDeltaVisitor dv = new PatternBasedDeltaVisitor(
+                            project, project,
+                            "POST:Main");
 
-                    ChangedFileSet androidCodeCFS = ChangedFileSetHelper.getCodeCfs(project);
-                    dv.addSet(androidCodeCFS);
+                    ChangedFileSet manifestCfs = ChangedFileSetHelper.getMergedManifestCfs(project);
+                    dv.addSet(manifestCfs);
 
-                    ChangedFileSet javaResCFS = ChangedFileSetHelper.getJavaResCfs(project);
-                    dv.addSet(javaResCFS);
+                    ChangedFileSet resCfs = ChangedFileSetHelper.getResCfs(project);
+                    dv.addSet(resCfs);
+
+                    ChangedFileSet androidCodeCfs = ChangedFileSetHelper.getCodeCfs(project);
+                    dv.addSet(androidCodeCfs);
+
+                    ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(project);
+                    dv.addSet(javaResCfs);
                     dv.addSet(ChangedFileSetHelper.NATIVE_LIBS);
 
                     delta.accept(dv);
 
                     // save the state
-                    mPackageResources |= dv.checkSet(ChangedFileSetHelper.MANIFEST) ||
-                            dv.checkSet(resCFS);
+                    mPackageResources |= dv.checkSet(manifestCfs) || dv.checkSet(resCfs);
 
-                    mConvertToDex |= dv.checkSet(androidCodeCFS);
+                    mConvertToDex |= dv.checkSet(androidCodeCfs);
 
-                    mBuildFinalPackage |= dv.checkSet(javaResCFS) ||
+                    mBuildFinalPackage |= dv.checkSet(javaResCfs) ||
                             dv.checkSet(ChangedFileSetHelper.NATIVE_LIBS);
                 }
 
@@ -279,17 +282,18 @@ public class PostCompilerBuilder extends BaseBuilder {
                         delta = getDelta(libProject);
                         if (delta != null) {
                             PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
-                                    libProject, project.getName());
+                                    project, libProject,
+                                    "POST:Lib");
 
-                            ChangedFileSet libResCFS = ChangedFileSetHelper.getFullResCfs(
+                            ChangedFileSet libResCfs = ChangedFileSetHelper.getFullResCfs(
                                     libProject);
-                            visitor.addSet(libResCFS);
+                            visitor.addSet(libResCfs);
                             visitor.addSet(ChangedFileSetHelper.NATIVE_LIBS);
                             // FIXME: add check on the library.jar?
 
                             delta.accept(visitor);
 
-                            mPackageResources |= visitor.checkSet(libResCFS);
+                            mPackageResources |= visitor.checkSet(libResCfs);
                             mBuildFinalPackage |= visitor.checkSet(
                                     ChangedFileSetHelper.NATIVE_LIBS);
                         }
@@ -303,19 +307,20 @@ public class PostCompilerBuilder extends BaseBuilder {
                     delta = getDelta(referencedJavaProject.getProject());
                     if (delta != null) {
                         PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
-                                referencedJavaProject.getProject(), project.getName());
+                                project, referencedJavaProject.getProject(),
+                                "POST:RefedProject");
 
-                        ChangedFileSet javaResCFS = ChangedFileSetHelper.getJavaResCfs(project);
-                        visitor.addSet(javaResCFS);
+                        ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(project);
+                        visitor.addSet(javaResCfs);
 
-                        ChangedFileSet bytecodeCFS = ChangedFileSetHelper.getByteCodeCfs(project);
-                        visitor.addSet(bytecodeCFS);
+                        ChangedFileSet bytecodeCfs = ChangedFileSetHelper.getByteCodeCfs(project);
+                        visitor.addSet(bytecodeCfs);
 
                         delta.accept(visitor);
 
                         // save the state
-                        mConvertToDex |= visitor.checkSet(bytecodeCFS);
-                        mBuildFinalPackage |= visitor.checkSet(javaResCFS);
+                        mConvertToDex |= visitor.checkSet(bytecodeCfs);
+                        mBuildFinalPackage |= visitor.checkSet(javaResCfs);
                     }
                 }
             }
@@ -350,8 +355,8 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // also update the crunch cache always since aapt does it smartly only
                 // on the files that need it.
-                if (DEBUG) {
-                    System.out.println("\trunning crunch!");
+                if (DEBUG_LOG) {
+                    AdtPlugin.log(IStatus.INFO, "%s running crunch!", project.getName());
                 }
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
@@ -365,8 +370,8 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 if (mConvertToDex) { // in this case this means some class files changed and
                                      // we need to update the jar file.
-                    if (DEBUG) {
-                        System.out.println("\tupdating jar!");
+                    if (DEBUG_LOG) {
+                        AdtPlugin.log(IStatus.INFO, "%s updating jar!", project.getName());
                     }
 
                     // resource to the AndroidManifest.xml file
@@ -473,8 +478,17 @@ public class PostCompilerBuilder extends BaseBuilder {
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);
 
+                IPath androidBinLocation = androidOutputFolder.getLocation();
+                if (androidBinLocation == null) {
+                    markProject(AdtConstants.MARKER_PACKAGING, Messages.Output_Missing,
+                            IMarker.SEVERITY_ERROR);
+                    return allRefProjects;
+                }
+                String osAndroidBinPath = androidBinLocation.toOSString();
+
                 // resource to the AndroidManifest.xml file
-                IFile manifestFile = project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
+                IFile manifestFile = androidOutputFolder.getFile(
+                        SdkConstants.FN_ANDROID_MANIFEST_XML);
 
                 if (manifestFile == null || manifestFile.exists() == false) {
                     // mark project and exit
@@ -483,14 +497,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                     markProject(AdtConstants.MARKER_PACKAGING, msg, IMarker.SEVERITY_ERROR);
                     return allRefProjects;
                 }
-
-                IPath androidBinLocation = androidOutputFolder.getLocation();
-                if (androidBinLocation == null) {
-                    markProject(AdtConstants.MARKER_PACKAGING, Messages.Output_Missing,
-                            IMarker.SEVERITY_ERROR);
-                    return allRefProjects;
-                }
-                String osAndroidBinPath = androidBinLocation.toOSString();
 
                 // Remove the old .apk.
                 // This make sure that if the apk is corrupted, then dx (which would attempt
@@ -507,8 +513,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                 if (mPackageResources) {
                     // also update the crunch cache always since aapt does it smartly only
                     // on the files that need it.
-                    if (DEBUG) {
-                        System.out.println("\trunning crunch!");
+                    if (DEBUG_LOG) {
+                        AdtPlugin.log(IStatus.INFO, "%s running crunch!", project.getName());
                     }
                     if (updateCrunchCache(project, helper) == false) {
                         return allRefProjects;
@@ -517,8 +523,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                     // refresh recursively bin/res folder
                     resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
 
-                    if (DEBUG) {
-                        System.out.println("\tpackaging resources!");
+                    if (DEBUG_LOG) {
+                        AdtPlugin.log(IStatus.INFO, "%s packaging resources!", project.getName());
                     }
                     // remove some aapt_package only markers.
                     removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_PACKAGE);
@@ -562,8 +568,8 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // then we check if we need to package the .class into classes.dex
                 if (mConvertToDex) {
-                    if (DEBUG) {
-                        System.out.println("\trunning dex!");
+                    if (DEBUG_LOG) {
+                        AdtPlugin.log(IStatus.INFO, "%s running dex!", project.getName());
                     }
                     try {
                         Collection<String> dxInputPaths = helper.getCompiledCodePaths();
@@ -600,8 +606,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // This is the default package with all the resources.
 
                 try {
-                    if (DEBUG) {
-                        System.out.println("\tmaking final package!");
+                    if (DEBUG_LOG) {
+                        AdtPlugin.log(IStatus.INFO, "%s making final package!", project.getName());
                     }
                     helper.finalDebugPackage(
                             osAndroidBinPath + File.separator + AdtConstants.FN_RESOURCES_AP_,

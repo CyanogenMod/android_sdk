@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,18 +45,26 @@ import java.util.Map;
  */
 class PatternBasedDeltaVisitor implements IResourceDeltaVisitor {
 
-    private final boolean DEBUG_LOG = "1".equals(              //$NON-NLS-1$
-            System.getenv("ANDROID_VISITOR_DEBUG"));           //$NON-NLS-1$
+    private final static boolean DEBUG_LOG = "1".equals(              //$NON-NLS-1$
+            System.getenv("ANDROID_VISITOR_DEBUG"));                  //$NON-NLS-1$
+
+    private final IProject mMainProject;
+    private final IProject mDeltaProject;
 
     private final List<ChangedFileSet> mSets = new ArrayList<ChangedFileSet>();
-    private final IProject mProject;
+    private final Map<ChangedFileSet, Boolean> mResults =
+            new IdentityHashMap<ChangedFileSet, Boolean>();
 
-    private final Map<ChangedFileSet, Boolean> mResults = new HashMap<ChangedFileSet, Boolean>();
     private final String mLogName;
 
-    PatternBasedDeltaVisitor(IProject project, String logName) {
-        mProject = project;
+    PatternBasedDeltaVisitor(IProject mainProject, IProject deltaProject, String logName) {
+        mMainProject = mainProject;
+        mDeltaProject = deltaProject;
         mLogName = logName;
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s (%s): Delta for %s",               //$NON-NLS-1$
+                    mMainProject.getName(), mLogName, mDeltaProject.getName());
+        }
     }
 
     void addSet(ChangedFileSet bundle) {
@@ -81,7 +89,7 @@ class PatternBasedDeltaVisitor implements IResourceDeltaVisitor {
             return BuildHelper.checkFolderForPackaging((IFolder)resource);
 
         } else if (resource.getType() == IResource.FILE) {
-            IPath path = resource.getFullPath().makeRelativeTo(mProject.getFullPath());
+            IPath path = resource.getFullPath().makeRelativeTo(mDeltaProject.getFullPath());
 
             // FIXME: no need to loop through all the sets once they have all said they need something (return false below and above)
             for (ChangedFileSet set : mSets) {
@@ -95,12 +103,13 @@ class PatternBasedDeltaVisitor implements IResourceDeltaVisitor {
                         String cfs_logName = set.getLogName();
 
                         if (cfs_logName != null) {
-                            AdtPlugin.log(IStatus.INFO, "%s (%s): %s",               //$NON-NLS-1$
-                                    mLogName, cfs_logName,
+                            AdtPlugin.log(IStatus.INFO, "%s (%s:%s): %s",              //$NON-NLS-1$
+                                    mMainProject.getName(), mLogName, cfs_logName,
                                     resource.getFullPath().toString());
                         } else {
-                            AdtPlugin.log(IStatus.INFO, "%s: %s",                    //$NON-NLS-1$
-                                    mLogName, resource.getFullPath().toString());
+                            AdtPlugin.log(IStatus.INFO, "%s (%s): %s",                 //$NON-NLS-1$
+                                    mMainProject.getName(), mLogName,
+                                    resource.getFullPath().toString());
                         }
                     }
 
@@ -112,12 +121,12 @@ class PatternBasedDeltaVisitor implements IResourceDeltaVisitor {
                         String cfs_logName = set.getLogName();
 
                         if (cfs_logName != null) {
-                            AdtPlugin.log(IStatus.INFO, "%s (%s): REMOVED: %s",      //$NON-NLS-1$
-                                    mLogName, cfs_logName,
+                            AdtPlugin.log(IStatus.INFO, "%s (%s:%s): %s",              //$NON-NLS-1$
+                                    mMainProject.getName(), mLogName, cfs_logName,
                                     resource.getFullPath().toString());
                         } else {
-                            AdtPlugin.log(IStatus.INFO, "%s: REMOVED: %s",           //$NON-NLS-1$
-                                    mLogName,
+                            AdtPlugin.log(IStatus.INFO, "%s (%s): %s",                 //$NON-NLS-1$
+                                    mMainProject.getName(), mLogName,
                                     resource.getFullPath().toString());
                         }
                     }

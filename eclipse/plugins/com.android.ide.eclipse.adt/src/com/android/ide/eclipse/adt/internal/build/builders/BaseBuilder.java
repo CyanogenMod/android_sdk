@@ -57,7 +57,8 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public abstract class BaseBuilder extends IncrementalProjectBuilder {
 
-    protected final static boolean DEBUG = false;
+    protected static final boolean DEBUG_LOG = "1".equals(              //$NON-NLS-1$
+            System.getenv("ANDROID_BUILD_DEBUG"));                      //$NON-NLS-1$
 
     /** SAX Parser factory. */
     private SAXParserFactory mParserFactory;

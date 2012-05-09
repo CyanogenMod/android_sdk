@@ -237,12 +237,16 @@ public class AdtConstants {
      * from the {@link PreCompilerBuilder} */
     public final static String MARKER_ANDROID = LEGACY_PLUGIN_ID + ".androidProblem"; //$NON-NLS-1$
 
+
     /** aapt marker error when running the package command, only to be used in
      * {@link PostCompilerBuilder} */
     public final static String MARKER_AAPT_PACKAGE = LEGACY_PLUGIN_ID + ".aapt2Problem"; //$NON-NLS-1$
 
     /** final packaging error marker, only to be used in {@link PostCompilerBuilder} */
     public final static String MARKER_PACKAGING = AdtPlugin.PLUGIN_ID + ".packagingProblem"; //$NON-NLS-1$
+
+    /** manifest merger error, only to be used in {@link PreCompilerBuilder} */
+    public final static String MARKER_MANIFMERGER = AdtPlugin.PLUGIN_ID + ".manifMergerProblem"; //$NON-NLS-1$
 
     /** Marker for lint errors */
     public final static String MARKER_LINT = AdtPlugin.PLUGIN_ID + ".lintProblem"; //$NON-NLS-1$
