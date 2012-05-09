@@ -92,6 +92,7 @@ import javax.imageio.ImageIO;
  */
 public class ConfigureAssetSetPage extends WizardPage implements SelectionListener,
         GraphicGeneratorContext, ModifyListener {
+    private final CreateAssetSetWizardState mValues;
 
     private static final int PREVIEW_AREA_WIDTH = 120;
 
@@ -101,6 +102,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
      * creating icons that don't fit in.
      */
     private static boolean SUPPORT_LAUNCHER_ICON_TYPES = false;
+
+    private boolean mShown;
 
     private Composite mConfigurationArea;
     private Button mImageRadio;
@@ -112,6 +115,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private Label mPercentLabel;
     private Button mCropRadio;
     private Button mCenterRadio;
+    private Button mNoShapeRadio;
     private Button mSquareRadio;
     private Button mCircleButton;
     private Button mBgButton;
@@ -132,7 +136,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private RGB mBgColor;
     private RGB mFgColor;
     private Text mText;
-    private String mSelectedClipart;
 
     /** Most recently set image path: preserved across wizard sessions */
     private static String sImagePath;
@@ -151,11 +154,17 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private Label mEffectsLabel;
     private Composite mEffectsComposite;
 
+    private boolean mIgnore;
+
     /**
      * Create the wizard.
+     *
+     * @param values the wizard state
      */
-    public ConfigureAssetSetPage() {
+    public ConfigureAssetSetPage(CreateAssetSetWizardState values) {
         super("configureAssetPage");
+        mValues = values;
+
         setTitle("Configure Icon Set");
         setDescription("Configure the attributes of the icon set");
     }
@@ -261,7 +270,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         textLabel.setText("Text:");
 
         mText = new Text(mTextForm, SWT.BORDER);
-        mText.setText("Aa");
         mText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mText.addModifyListener(this);
 
@@ -292,12 +300,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         // This doesn't work right -- not sure why. For now just use a plain slider
         // and subtract 10 from it to get the real range.
         //mPaddingSlider.setValues(0, -10, 50, 0, 1, 10);
-        mPaddingSlider.setSelection(10 + 15);
+        //mPaddingSlider.setSelection(10 + 15);
         mPaddingSlider.addSelectionListener(this);
 
         mPercentLabel = new Label(mConfigurationArea, SWT.NONE);
         mPercentLabel.setText("  15%"); // Enough available space for -10%
-
         mScalingLabel = new Label(mConfigurationArea, SWT.NONE);
         mScalingLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mScalingLabel.setText("Foreground Scaling:");
@@ -324,9 +331,13 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         mShapeComposite = new Composite(mConfigurationArea, SWT.NONE);
         mShapeComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-        GridLayout gl_mShapeComposite = new GridLayout(5, false);
+        GridLayout gl_mShapeComposite = new GridLayout(6, false);
         gl_mShapeComposite.horizontalSpacing = 0;
         mShapeComposite.setLayout(gl_mShapeComposite);
+
+        mNoShapeRadio = new Button(mShapeComposite, SWT.FLAT | SWT.TOGGLE);
+        mNoShapeRadio.setText("None");
+        mNoShapeRadio.addSelectionListener(this);
 
         mSquareRadio = new Button(mShapeComposite, SWT.FLAT | SWT.TOGGLE);
         mSquareRadio.setSelection(true);
@@ -427,17 +438,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         // Initial color
         Display display = parent.getDisplay();
-        //updateColor(display, new RGB(0xa4, 0xc6, 0x39), true /*background*/);
-        updateColor(display, new RGB(0xff, 0x00, 0x00), true /*background*/);
-        updateColor(display, new RGB(0x00, 0x00, 0x00), false /*background*/);
+        updateColor(display, mValues.background, true /*background*/);
+        updateColor(display, mValues.foreground, false /*background*/);
 
-        // Start out showing the image form
-        //mImageRadio.setSelection(true);
-        //chooseForegroundTab(mImageRadio, mImageForm);
-        // No, start out showing the text, since the user doesn't have to enter anything
-        // initially and we still get images
-        mTextRadio.setSelection(true);
-        chooseForegroundTab(mTextRadio, mTextForm);
+        setSourceType(mValues.sourceType);
+
         new Label(mConfigurationArea, SWT.NONE);
         new Label(mConfigurationArea, SWT.NONE);
         new Label(mConfigurationArea, SWT.NONE);
@@ -482,6 +487,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         // that method is called when the wizard is created, and we want to wait until the
         // user has chosen a project before attempting to look up the right default image to use
         if (visible) {
+            mShown = true;
+
             // Clear out old previews - important if the user goes back to page one, changes
             // asset type and steps into page 2 - at that point we arrive here and we might
             // display the old previews for a brief period until the preview delay timer expires.
@@ -492,15 +499,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
             // Update asset type configuration: will show/hide parameter controls depending
             // on which asset type is chosen
-            CreateAssetSetWizard wizard = (CreateAssetSetWizard) getWizard();
-            AssetType type = wizard.getAssetType();
+            AssetType type = mValues.type;
             assert type != null;
             configureAssetType(type);
 
             // Initial image - use the most recently used image, or the default launcher
             // icon created in our default projects, if there
             if (sImagePath == null) {
-                IProject project = wizard.getProject();
+                IProject project = mValues.project;
                 if (project != null) {
                     IResource icon = project.findMember("res/drawable-hdpi/icon.png"); //$NON-NLS-1$
                     if (icon != null) {
@@ -511,8 +517,42 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 }
             }
             if (sImagePath != null) {
+                mValues.imagePath = new File(sImagePath);
                 mImagePathText.setText(sImagePath);
             }
+
+            try {
+                mIgnore = true;
+
+                mTrimCheckBox.setSelection(mValues.trim);
+
+                // This doesn't work right -- not sure why. For now just use a plain slider
+                // and subtract 10 from it to get the real range.
+                //mPaddingSlider.setValues(0, -10, 50, 0, 1, 10);
+                //mPaddingSlider.setSelection(10 + 15);
+                mPaddingSlider.setSelection(mValues.padding + 10);
+                mPercentLabel.setText(Integer.toString(mValues.padding) + '%');
+
+                if (mValues.imagePath != null) {
+                    mImagePathText.setText(mValues.imagePath.getPath());
+                }
+
+                if (mValues.text != null) {
+                    mText.setText(mValues.text);
+                }
+
+                setSourceType(mValues.sourceType);
+                setShape(mValues.shape);
+
+                // Initial color
+                Display display = mPreviewArea.getDisplay();
+                //updateColor(display, new RGB(0xa4, 0xc6, 0x39), true /*background*/);
+                updateColor(display, mValues.background, true /*background*/);
+                updateColor(display, mValues.foreground, false /*background*/);
+            } finally {
+                mIgnore = false;
+            }
+
             validatePage();
 
             requestUpdatePreview(true /*quickly*/);
@@ -523,13 +563,25 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
     }
 
+    private void setSourceType(CreateAssetSetWizardState.SourceType sourceType) {
+        if (sourceType == CreateAssetSetWizardState.SourceType.IMAGE) {
+            chooseForegroundTab(mImageRadio, mImageForm);
+        } else if (sourceType == CreateAssetSetWizardState.SourceType.CLIPART) {
+            chooseForegroundTab(mClipartRadio, mClipartForm);
+        } else if (sourceType == CreateAssetSetWizardState.SourceType.TEXT) {
+            updateFontLabel(mFontButton.getFont());
+            chooseForegroundTab(mTextRadio, mTextForm);
+            mText.setFocus();
+        }
+    }
+
     private boolean validatePage() {
         String error = null;
         //String warning = null;
 
         if (mImageRadio.getSelection()) {
-            String path = mImagePathText.getText().trim();
-            if (path.length() == 0) {
+            String path = mValues.imagePath != null ? mValues.imagePath.getPath() : null;
+            if (path == null || path.length() == 0) {
                 error = "Select an image";
             } else if (!(new File(path).exists())) {
                 error = String.format("%1$s does not exist", path);
@@ -538,13 +590,12 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 sImagePath = path;
             }
         } else if (mTextRadio.getSelection()) {
-            String text = mText.getText().trim();
-            if (text.length() == 0) {
+            if (mValues.text.length() == 0) {
                 error = "Enter text";
             }
         } else {
             assert mClipartRadio.getSelection();
-            if (mSelectedClipart == null) {
+            if (mValues.clipartName == null) {
                 error = "Select clip art";
             }
         }
@@ -565,16 +616,22 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     @Override
     public boolean isPageComplete() {
         // Force user to reach second page before hitting Finish
-        return isCurrentPage();
+        return mShown;
     }
 
     // ---- Implements ModifyListener ----
 
     @Override
     public void modifyText(ModifyEvent e) {
+        if (mIgnore) {
+            return;
+        }
+
         if (e.getSource() == mImagePathText) {
+            mValues.imagePath = new File(mImagePathText.getText().trim());
             requestUpdatePreview(false);
         } else if (e.getSource() == mText) {
+            mValues.text = mText.getText().trim();
             requestUpdatePreview(false);
         }
 
@@ -590,15 +647,22 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
     @Override
     public void widgetSelected(SelectionEvent e) {
+        if (mIgnore) {
+            return;
+        }
+
         Object source = e.getSource();
         boolean updateQuickly = true;
 
         // Tabs
         if (source == mImageRadio) {
+            mValues.sourceType = CreateAssetSetWizardState.SourceType.IMAGE;
             chooseForegroundTab((Button) source, mImageForm);
         } else if (source == mClipartRadio) {
+            mValues.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
             chooseForegroundTab((Button) source, mClipartForm);
         } else if (source == mTextRadio) {
+            mValues.sourceType = CreateAssetSetWizardState.SourceType.TEXT;
             updateFontLabel(mFontButton.getFont());
             chooseForegroundTab((Button) source, mTextForm);
             mText.setFocus();
@@ -609,6 +673,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             FileDialog dialog = new FileDialog(mPickImageButton.getShell(), SWT.OPEN);
             String file = dialog.open();
             if (file != null) {
+                mValues.imagePath = new File(file);
                 mImagePathText.setText(file);
             }
         }
@@ -622,11 +687,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             mCropRadio.setSelection(false);
         }
         if (source == mSquareRadio) {
-            mSquareRadio.setSelection(true);
-            mCircleButton.setSelection(false);
+            mValues.shape = GraphicGenerator.Shape.SQUARE;
+            setShape(mValues.shape);
         } else if (source == mCircleButton) {
-            mCircleButton.setSelection(true);
-            mSquareRadio.setSelection(false);
+            mValues.shape = GraphicGenerator.Shape.CIRCLE;
+            setShape(mValues.shape);
+        } else if (source == mNoShapeRadio) {
+            mValues.shape = GraphicGenerator.Shape.NONE;
+            setShape(mValues.shape);
         }
 
         if (SUPPORT_LAUNCHER_ICON_TYPES) {
@@ -643,6 +711,10 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 mSimpleRadio.setSelection(false);
                 mFancyRadio.setSelection(false);
             }
+        }
+
+        if (source == mTrimCheckBox) {
+            mValues.trim = mTrimCheckBox.getSelection();
         }
 
         if (source == mHoloDarkRadio) {
@@ -683,7 +755,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                             // Clicked on some of the sample art
                             if (event.widget instanceof ImageControl) {
                                 ImageControl image = (ImageControl) event.widget;
-                                mSelectedClipart = (String) image.getData();
+                                mValues.clipartName = (String) image.getData();
                                 close();
 
                                 for (Control c : mClipartPreviewPanel.getChildren()) {
@@ -691,8 +763,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                                 }
                                 if (mClipartPreviewPanel.getChildren().length == 0) {
                                     try {
-                                        BufferedImage icon =
-                                                GraphicGenerator.getClipartIcon(mSelectedClipart);
+                                        BufferedImage icon = GraphicGenerator.getClipartIcon(
+                                                mValues.clipartName);
                                         if (icon != null) {
                                             Display display = mClipartForm.getDisplay();
                                             Image swtImage = SwtUtils.convertToSwt(display, icon,
@@ -746,6 +818,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             if (rgb != null) {
                 // Dispose the old color, create the
                 // new one, and set into the label
+                mValues.background = rgb;
                 updateColor(mBgButton.getDisplay(), rgb, true /*background*/);
             }
         } else if (source == mFgButton) {
@@ -756,6 +829,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             if (rgb != null) {
                 // Dispose the old color, create the
                 // new one, and set into the label
+                mValues.foreground = rgb;
                 updateColor(mFgButton.getDisplay(), rgb, false /*background*/);
             }
         }
@@ -782,6 +856,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         if (source == mPaddingSlider) {
+            mValues.padding = getPadding();
             mPercentLabel.setText(Integer.toString(getPadding()) + '%');
 
             // When dragging the slider, only do periodic updates
@@ -789,6 +864,24 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         requestUpdatePreview(updateQuickly);
+    }
+
+    private void setShape(GraphicGenerator.Shape shape) {
+        if (shape == GraphicGenerator.Shape.SQUARE) {
+            mSquareRadio.setSelection(true);
+            mCircleButton.setSelection(false);
+            mNoShapeRadio.setSelection(false);
+        } else if (shape == GraphicGenerator.Shape.CIRCLE) {
+            mCircleButton.setSelection(true);
+            mSquareRadio.setSelection(false);
+            mNoShapeRadio.setSelection(false);
+        } else if (shape == GraphicGenerator.Shape.NONE) {
+            mNoShapeRadio.setSelection(true);
+            mCircleButton.setSelection(false);
+            mSquareRadio.setSelection(false);
+        } else {
+            assert false : shape;
+        }
     }
 
     private void updateFontLabel(Font f) {
@@ -909,86 +1002,90 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mPreviewArea.layout(true);
     }
 
-    Map<String, Map<String, BufferedImage>> generateImages(boolean previewOnly) {
+    public Map<String, Map<String, BufferedImage>> generateImages(boolean previewOnly) {
         // Map of ids to images: Preserve insertion order (the densities)
         Map<String, Map<String, BufferedImage>> categoryMap =
                 new LinkedHashMap<String, Map<String, BufferedImage>>();
 
-        CreateAssetSetWizard wizard = (CreateAssetSetWizard) getWizard();
-        AssetType type = wizard.getAssetType();
-        boolean crop = mTrimCheckBox.getSelection();
+        AssetType type = mValues.type;
+        boolean trim = mValues.trim;
 
         BufferedImage sourceImage = null;
-        if (mImageRadio.getSelection()) {
-            // Load the image
-            // TODO: Only do this when the source image type is image
-            String path = mImagePathText.getText().trim();
-            if (path.length() == 0) {
-                setErrorMessage("Enter a filename");
-                return Collections.emptyMap();
-            }
-            File file = new File(path);
-            if (!file.exists()) {
-                setErrorMessage(String.format("%1$s does not exist", file.getPath()));
-                return Collections.emptyMap();
-            }
-
-            setErrorMessage(null);
-            sourceImage = getImage(path, false);
-            if (sourceImage != null) {
-                if (crop) {
-                    sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+        switch (mValues.sourceType) {
+            case IMAGE: {
+                // Load the image
+                // TODO: Only do this when the source image type is image
+                String path = mValues.imagePath != null ? mValues.imagePath.getPath() : "";
+                if (path.length() == 0) {
+                    setErrorMessage("Enter a filename");
+                    return Collections.emptyMap();
                 }
-                int padding = getPadding();
-                if (padding != 0) {
-                    sourceImage = Util.paddedImage(sourceImage, padding);
-                }
-            }
-        } else if (mTextRadio.getSelection()) {
-            String text = mText.getText();
-            TextRenderUtil.Options options = new TextRenderUtil.Options();
-            options.font = getSelectedFont();
-            int color;
-            if (type.needsColors()) {
-                color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8) | mFgColor.blue;
-            } else {
-                color = 0xFFFFFFFF;
-            }
-            options.foregroundColor = color;
-            sourceImage = TextRenderUtil.renderTextImage(text, getPadding(), options);
-
-            if (crop) {
-                sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
-            }
-
-            int padding = getPadding();
-            if (padding != 0) {
-                sourceImage = Util.paddedImage(sourceImage, padding);
-            }
-        } else {
-            assert mClipartRadio.getSelection();
-            assert mSelectedClipart != null;
-            try {
-                sourceImage = GraphicGenerator.getClipartImage(mSelectedClipart);
-
-                if (crop) {
-                    sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                File file = new File(path);
+                if (!file.exists()) {
+                    setErrorMessage(String.format("%1$s does not exist", file.getPath()));
+                    return Collections.emptyMap();
                 }
 
+                setErrorMessage(null);
+                sourceImage = getImage(path, false);
+                if (sourceImage != null) {
+                    if (trim) {
+                        sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                    }
+                    if (mValues.padding != 0) {
+                        sourceImage = Util.paddedImage(sourceImage, mValues.padding);
+                    }
+                }
+                break;
+            }
+            case CLIPART: {
+                try {
+                    sourceImage = GraphicGenerator.getClipartImage(mValues.clipartName);
+
+                    if (trim) {
+                        sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                    }
+
+                    if (type.needsColors()) {
+                        int color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8)
+                                | mFgColor.blue;
+                        Paint paint = new java.awt.Color(color);
+                        sourceImage = Util.filledImage(sourceImage, paint);
+                    }
+
+                    int padding = mValues.padding;
+                    if (padding != 0) {
+                        sourceImage = Util.paddedImage(sourceImage, padding);
+                    }
+                } catch (IOException e) {
+                    AdtPlugin.log(e, null);
+                    return categoryMap;
+                }
+                break;
+            }
+            case TEXT: {
+                String text = mValues.text;
+                TextRenderUtil.Options options = new TextRenderUtil.Options();
+                options.font = getSelectedFont();
+                int color;
                 if (type.needsColors()) {
-                    int color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8)
-                            | mFgColor.blue;
-                    Paint paint = new java.awt.Color(color);
-                    sourceImage = Util.filledImage(sourceImage, paint);
+                    color = 0xFF000000
+                            | (mFgColor.red << 16) | (mFgColor.green << 8) | mFgColor.blue;
+                } else {
+                    color = 0xFFFFFFFF;
+                }
+                options.foregroundColor = color;
+                sourceImage = TextRenderUtil.renderTextImage(text, mValues.padding, options);
+
+                if (trim) {
+                    sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
                 }
 
-                int padding = getPadding();
+                int padding = mValues.padding;
                 if (padding != 0) {
                     sourceImage = Util.paddedImage(sourceImage, padding);
                 }
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-                return categoryMap;
+                break;
             }
         }
 
@@ -999,8 +1096,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 generator = new LauncherIconGenerator();
                 LauncherIconGenerator.LauncherOptions launcherOptions =
                         new LauncherIconGenerator.LauncherOptions();
-                launcherOptions.shape = mCircleButton.getSelection()
-                        ? GraphicGenerator.Shape.CIRCLE : GraphicGenerator.Shape.SQUARE;
+                if (mCircleButton.getSelection()) {
+                    launcherOptions.shape = GraphicGenerator.Shape.CIRCLE;
+                } else if (mSquareRadio.getSelection()) {
+                    launcherOptions.shape = GraphicGenerator.Shape.SQUARE;
+                } else {
+                    assert mNoShapeRadio.getSelection();
+                    launcherOptions.shape = GraphicGenerator.Shape.NONE;
+                }
                 launcherOptions.crop = mCropRadio.getSelection();
 
                 if (SUPPORT_LAUNCHER_ICON_TYPES) {
@@ -1038,8 +1141,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 generator = new NotificationIconGenerator();
                 NotificationIconGenerator.NotificationOptions notificationOptions =
                         new NotificationIconGenerator.NotificationOptions();
-                notificationOptions.shape = mCircleButton.getSelection()
-                        ? GraphicGenerator.Shape.CIRCLE : GraphicGenerator.Shape.SQUARE;
+                notificationOptions.shape = mValues.shape;
                 options = notificationOptions;
                 break;
             }
@@ -1054,11 +1156,15 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         options.sourceImage = sourceImage;
 
-        IProject project = wizard.getProject();
-        Pair<Integer, Integer> v = ManifestInfo.computeSdkVersions(project);
-        options.minSdk = v.getFirst();
+        IProject project = mValues.project;
+        if (mValues.minSdk != -1) {
+            options.minSdk = mValues.minSdk;
+        } else {
+            Pair<Integer, Integer> v = ManifestInfo.computeSdkVersions(project);
+            options.minSdk = v.getFirst();
+        }
 
-        String baseName = wizard.getBaseName();
+        String baseName = mValues.outputName;
         generator.generate(null, categoryMap, this, options, baseName);
 
         return categoryMap;

@@ -42,12 +42,17 @@ public class LauncherIconGenerator extends GraphicGenerator {
             density = launcherOptions.density.getResourceValue();
         }
         String shape = launcherOptions.shape.id;
-        BufferedImage mBackImage = context.loadImageResource("/images/launcher_stencil/"
+        BufferedImage mBackImage = null;
+        BufferedImage mForeImage = null;
+        BufferedImage mMaskImage = null;
+        if (launcherOptions.shape != Shape.NONE) {
+            mBackImage = context.loadImageResource("/images/launcher_stencil/"
                 + shape + "/" + density + "/back.png");
-        BufferedImage mForeImage = context.loadImageResource("/images/launcher_stencil/"
+            mForeImage = context.loadImageResource("/images/launcher_stencil/"
                 + shape + "/" + density + "/" + launcherOptions.style.id + ".png");
-        BufferedImage mMaskImage = context.loadImageResource("/images/launcher_stencil/"
+            mMaskImage = context.loadImageResource("/images/launcher_stencil/"
                 + shape + "/" + density + "/mask.png");
+        }
 
         float scaleFactor = GraphicGenerator.getMdpiScaleFactor(launcherOptions.density);
         if (launcherOptions.isWebGraphic) {
@@ -59,14 +64,18 @@ public class LauncherIconGenerator extends GraphicGenerator {
 
         BufferedImage outImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g = (Graphics2D) outImage.getGraphics();
-        g.drawImage(mBackImage, 0, 0, null);
+        if (mBackImage != null) {
+            g.drawImage(mBackImage, 0, 0, null);
+        }
 
         BufferedImage tempImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g2 = (Graphics2D) tempImage.getGraphics();
-        g2.drawImage(mMaskImage, 0, 0, null);
-        g2.setComposite(AlphaComposite.SrcAtop);
-        g2.setPaint(new Color(launcherOptions.backgroundColor));
-        g2.fillRect(0, 0, imageRect.width, imageRect.height);
+        if (mMaskImage != null) {
+            g2.drawImage(mMaskImage, 0, 0, null);
+            g2.setComposite(AlphaComposite.SrcAtop);
+            g2.setPaint(new Color(launcherOptions.backgroundColor));
+            g2.fillRect(0, 0, imageRect.width, imageRect.height);
+        }
 
         if (launcherOptions.crop) {
             Util.drawCenterCrop(g2, launcherOptions.sourceImage, targetRect);
@@ -75,7 +84,9 @@ public class LauncherIconGenerator extends GraphicGenerator {
         }
 
         g.drawImage(tempImage, 0, 0, null);
-        g.drawImage(mForeImage, 0, 0, null);
+        if (mForeImage != null) {
+            g.drawImage(mForeImage, 0, 0, null);
+        }
 
         g.dispose();
         g2.dispose();
