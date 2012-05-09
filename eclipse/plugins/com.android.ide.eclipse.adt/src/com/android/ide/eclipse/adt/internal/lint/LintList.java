@@ -48,7 +48,6 @@ import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
-import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -64,6 +63,8 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TreeEvent;
+import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -83,6 +84,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +105,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
     private final IWorkbenchPartSite mSite;
     private final TreeViewer mTreeViewer;
     private final Tree mTree;
+    private Set<String> mExpandedIds;
     private ContentProvider mContentProvider;
     private String mSelectedId;
     private List<? extends IResource> mResources;
@@ -176,6 +179,34 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                 List<IMarker> markers = getSelectedMarkers();
                 if (markers.size() > 0) {
                     mSelectedId = EclipseLintClient.getId(markers.get(0));
+                }
+            }
+        });
+        mTree.addTreeListener(new TreeListener() {
+            @Override
+            public void treeExpanded(TreeEvent e) {
+                Object data = e.item.getData();
+                if (data instanceof IMarker) {
+                    String id = EclipseLintClient.getId((IMarker) data);
+                    if (id != null) {
+                        if (mExpandedIds == null) {
+                            mExpandedIds = new HashSet<String>();
+                        }
+                        mExpandedIds.add(id);
+                    }
+                }
+            }
+
+            @Override
+            public void treeCollapsed(TreeEvent e) {
+                if (mExpandedIds != null) {
+                    Object data = e.item.getData();
+                    if (data instanceof IMarker) {
+                        String id = EclipseLintClient.getId((IMarker) data);
+                        if (id != null) {
+                            mExpandedIds.remove(id);
+                        }
+                    }
                 }
             }
         });
@@ -479,9 +510,6 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                 return Status.CANCEL_STATUS;
             }
 
-            Object[] expandedElements = mTreeViewer.getExpandedElements();
-            TreePath[] expandedTreePaths = mTreeViewer.getExpandedTreePaths();
-
             mTreeViewer.setInput(null);
             List<IMarker> markerList = getMarkers();
             if (markerList.size() == 0) {
@@ -504,8 +532,21 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             mTreeViewer.setInput(markerList);
             mTreeViewer.refresh();
 
-            mTreeViewer.setExpandedElements(expandedElements);
-            mTreeViewer.setExpandedTreePaths(expandedTreePaths);
+            if (mExpandedIds != null) {
+                List<IMarker> expanded = new ArrayList<IMarker>(mExpandedIds.size());
+                IMarker[] topMarkers = mContentProvider.getTopMarkers();
+                if (topMarkers != null) {
+                    for (IMarker marker : topMarkers) {
+                        String id = EclipseLintClient.getId(marker);
+                        if (id != null && mExpandedIds.contains(id)) {
+                            expanded.add(marker);
+                        }
+                    }
+                }
+                if (!expanded.isEmpty()) {
+                    mTreeViewer.setExpandedElements(expanded.toArray());
+                }
+            }
 
             if (mSelectedId != null) {
                 IMarker[] topMarkers = mContentProvider.getTopMarkers();
