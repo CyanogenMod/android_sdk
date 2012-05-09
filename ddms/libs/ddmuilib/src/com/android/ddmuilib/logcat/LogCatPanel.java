@@ -499,8 +499,11 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void selectFilterAt(final int index) {
         mFiltersTableViewer.refresh();
-        mFiltersTableViewer.getTable().setSelection(index);
-        filterSelectionChanged();
+
+        if (index != mFiltersTableViewer.getTable().getSelectionIndex()) {
+            mFiltersTableViewer.getTable().setSelection(index);
+            filterSelectionChanged();
+        }
     }
 
     private void createFiltersTable(Composite parent) {

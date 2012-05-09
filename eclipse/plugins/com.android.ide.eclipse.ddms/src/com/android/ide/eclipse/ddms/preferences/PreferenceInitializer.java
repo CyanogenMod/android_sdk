@@ -21,6 +21,7 @@ import com.android.ide.eclipse.ddms.LogCatMonitor;
 import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
 import com.android.ide.eclipse.ddms.views.LogCatView;
 import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 
 import org.eclipse.core.runtime.Platform;
@@ -126,6 +127,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(ATTR_PERSPECTIVE_ID, LogCatView.DEFAULT_PERSPECTIVE_ID);
 
         store.setDefault(LogCatMonitor.AUTO_MONITOR_PREFKEY, true);
+        store.setDefault(LogCatMonitor.AUTO_MONITOR_LOGLEVEL, LogLevel.VERBOSE.getStringValue());
     }
 
     /**
