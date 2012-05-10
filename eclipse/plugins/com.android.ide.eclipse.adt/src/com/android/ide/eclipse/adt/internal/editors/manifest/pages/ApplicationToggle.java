@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.manifest.pages;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.ui.UiElementPart;
@@ -219,7 +220,7 @@ final class ApplicationToggle extends UiElementPart {
                 }
                 mUndoXmlParent.insertBefore(mUndoXmlNode, next);
                 if (next == null) {
-                    Text sep = mUndoXmlDocument.createTextNode("\n");  //$NON-NLS-1$
+                    Text sep = mUndoXmlDocument.createTextNode(AdtUtils.getLineSeparator());
                     mUndoXmlParent.insertBefore(sep, null);  // insert separator before end tag
                 }
                 success = true;

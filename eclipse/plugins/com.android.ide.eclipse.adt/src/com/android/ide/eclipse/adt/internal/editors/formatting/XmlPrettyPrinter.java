@@ -83,7 +83,7 @@ public class XmlPrettyPrinter {
         mPrefs = prefs;
         mStyle = style;
         if (lineSeparator == null) {
-            lineSeparator = System.getProperty("line.separator"); //$NON-NLS-1$
+            lineSeparator = AdtUtils.getLineSeparator();
         }
         mLineSeparator = lineSeparator;
     }

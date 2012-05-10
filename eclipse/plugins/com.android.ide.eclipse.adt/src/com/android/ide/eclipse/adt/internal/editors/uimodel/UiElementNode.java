@@ -32,6 +32,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -50,9 +51,11 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1034,7 +1037,14 @@ public class UiElementNode implements IPropertySource {
         }
 
         // Insert indent text node before the new element
-        Text indentNode = doc.createTextNode("\n" + indent); //$NON-NLS-1$
+        IStructuredDocument document = editor.getStructuredDocument();
+        String newLine;
+        if (document != null) {
+            newLine = TextUtilities.getDefaultLineDelimiter(document);
+        } else {
+            newLine = AdtUtils.getLineSeparator();
+        }
+        Text indentNode = doc.createTextNode(newLine + indent);
         parentXmlNode.insertBefore(indentNode, xmlNextSibling);
 
         // Insert the element itself
@@ -1044,7 +1054,7 @@ public class UiElementNode implements IPropertySource {
         // a tag into an area where there was no whitespace before
         // (e.g. a new child of <LinearLayout></LinearLayout>).
         if (insertAfter != null) {
-            Text sep = doc.createTextNode("\n" + insertAfter); //$NON-NLS-1$
+            Text sep = doc.createTextNode(newLine + insertAfter);
             parentXmlNode.insertBefore(sep, xmlNextSibling);
         }
 

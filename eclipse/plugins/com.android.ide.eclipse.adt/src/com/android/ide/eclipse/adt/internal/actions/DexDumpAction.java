@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.actions;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
@@ -164,15 +165,7 @@ public class DexDumpAction implements IObjectActionDelegate {
 
                 final BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
-                String sep = System.getProperty("line.separator");                  //$NON-NLS-1$
-                if (sep == null || sep.length() < 1) {
-                    if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                        sep = "\r\n";                                               //$NON-NLS-1$
-                    } else {
-                        sep = "\n";                                                 //$NON-NLS-1$
-                    }
-                }
-                final String lineSep = sep;
+                final String lineSep = AdtUtils.getLineSeparator();
 
                 int err = GrabProcessOutput.grabProcessOutput(
                         process,

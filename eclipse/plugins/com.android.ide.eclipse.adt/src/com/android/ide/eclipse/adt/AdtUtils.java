@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -260,6 +261,29 @@ public class AdtUtils {
         sb.append(Character.toUpperCase(str.charAt(0)));
         sb.append(str.substring(1));
         return sb.toString();
+    }
+
+    /** For use by {@link #getLineSeparator()} */
+    private static String sLineSeparator;
+
+    /**
+     * Returns the default line separator to use.
+     * <p>
+     * NOTE: If you have an associated {@link IDocument}, it is better to call
+     * {@link TextUtilities#getDefaultLineDelimiter(IDocument)} since that will
+     * allow (for example) editing a \r\n-delimited document on a \n-delimited
+     * platform and keep a consistent usage of delimiters in the file.
+     *
+     * @return the delimiter string to use
+     */
+    @NonNull
+    public static String getLineSeparator() {
+        if (sLineSeparator == null) {
+            // This is guaranteed to exist:
+            sLineSeparator = System.getProperty("line.separator"); //$NON-NLS-1$
+        }
+
+        return sLineSeparator;
     }
 
     /**
