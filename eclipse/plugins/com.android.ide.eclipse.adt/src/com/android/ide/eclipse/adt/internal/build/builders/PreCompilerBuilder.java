@@ -121,7 +121,6 @@ public class PreCompilerBuilder extends BaseBuilder {
      */
     private DerivedProgressMonitor mDerivedProgressMonitor;
 
-
     /**
      * Progress monitor waiting the end of the process to set a persistent value
      * in a file. This is typically used in conjunction with <code>IResource.refresh()</code>,
@@ -678,7 +677,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                 mLastBuildConfigMode = v;
             }
 
-
             IJavaProject javaProject = JavaCore.create(project);
 
             // load the source processors
@@ -687,7 +685,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                     mGenFolder);
             mProcessors.add(aidlProcessor);
             mProcessors.add(renderScriptProcessor);
-
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
         }

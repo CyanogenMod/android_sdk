@@ -53,7 +53,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -61,7 +60,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -115,87 +113,6 @@ public class PostCompilerBuilder extends BaseBuilder {
     private AndroidPrintStream mOutStream = null;
     private AndroidPrintStream mErrStream = null;
 
-    /**
-     * Basic Resource Delta Visitor class to check if a referenced project had a change in its
-     * compiled java files.
-     */
-    private static class ReferencedProjectDeltaVisitor implements IResourceDeltaVisitor {
-
-        private boolean mConvertToDex = false;
-        private boolean mMakeFinalPackage;
-
-        private IPath mOutputFolder;
-        private List<IPath> mSourceFolders;
-
-        private ReferencedProjectDeltaVisitor(IJavaProject javaProject) {
-            try {
-                mOutputFolder = javaProject.getOutputLocation();
-                mSourceFolders = BaseProjectHelper.getSourceClasspaths(javaProject);
-            } catch (JavaModelException e) {
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         * @throws CoreException
-         */
-        @Override
-        public boolean visit(IResourceDelta delta) throws CoreException {
-            //  no need to keep looking if we already know we need to convert
-            // to dex and make the final package.
-            if (mConvertToDex && mMakeFinalPackage) {
-                return false;
-            }
-
-            // get the resource and the path segments.
-            IResource resource = delta.getResource();
-            IPath resourceFullPath = resource.getFullPath();
-
-            if (mOutputFolder.isPrefixOf(resourceFullPath)) {
-                int type = resource.getType();
-                if (type == IResource.FILE) {
-                    String ext = resource.getFileExtension();
-                    if (AdtConstants.EXT_CLASS.equals(ext)) {
-                        mConvertToDex = true;
-                    }
-                }
-                return true;
-            } else {
-                for (IPath sourceFullPath : mSourceFolders) {
-                    if (sourceFullPath.isPrefixOf(resourceFullPath)) {
-                        int type = resource.getType();
-                        if (type == IResource.FILE) {
-                            // check if the file is a valid file that would be
-                            // included during the final packaging.
-                            if (BuildHelper.checkFileForPackaging((IFile)resource)) {
-                                mMakeFinalPackage = true;
-                            }
-
-                            return false;
-                        } else if (type == IResource.FOLDER) {
-                            // if this is a folder, we check if this is a valid folder as well.
-                            // If this is a folder that needs to be ignored, we must return false,
-                            // so that we ignore its content.
-                            return BuildHelper.checkFolderForPackaging((IFolder)resource);
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /**
-         * Returns if one of the .class file was modified.
-         */
-        boolean needDexConvertion() {
-            return mConvertToDex;
-        }
-
-        boolean needMakeFinalPackage() {
-            return mMakeFinalPackage;
-        }
-    }
 
     private ResourceMarker mResourceMarker = new ResourceMarker() {
         @Override
@@ -261,7 +178,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             String msg = "BENCHMARK ADT: Ending Compilation \n BENCHMARK ADT: Time Elapsed: " +    //$NON-NLS-1$
                          (System.nanoTime() - BuildHelper.sStartJavaCTime)/Math.pow(10, 6) + "ms"; //$NON-NLS-1$
             AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
-            msg = "BENCHMARK ADT: Starting PostCompilation";                                        //$NON-NLS-1$
+            msg = "BENCHMARK ADT: Starting PostCompilation";                                       //$NON-NLS-1$
             AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
             startBuildTime = System.nanoTime();
         }
@@ -302,12 +219,8 @@ public class PostCompilerBuilder extends BaseBuilder {
             IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
             IFolder resOutputFolder = androidOutputFolder.getFolder(SdkConstants.FD_RES);
 
-            // now we need to get the classpath list
-            List<IPath> sourceList = BaseProjectHelper.getSourceClasspaths(javaProject);
-
             // First thing we do is go through the resource delta to not
             // lose it if we have to abort the build for any reason.
-            PostCompilerDeltaVisitor dv = null;
             if (args.containsKey(POST_C_REQUESTED)
                     && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
                 // Skip over flag setting
@@ -335,51 +248,74 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
                 } else {
-                    dv = new PostCompilerDeltaVisitor(this, sourceList, androidOutputFolder);
+                    PatternBasedDeltaVisitor dv = new PatternBasedDeltaVisitor(project,
+                            project.getName());
+                    dv.addSet(ChangedFileSetHelper.MANIFEST);
+                    ChangedFileSet resCFS = ChangedFileSetHelper.getResCfs(project);
+                    dv.addSet(resCFS);
+
+                    ChangedFileSet androidCodeCFS = ChangedFileSetHelper.getCodeCfs(project);
+                    dv.addSet(androidCodeCFS);
+
+                    ChangedFileSet javaResCFS = ChangedFileSetHelper.getJavaResCfs(project);
+                    dv.addSet(javaResCFS);
+                    dv.addSet(ChangedFileSetHelper.NATIVE_LIBS);
+
                     delta.accept(dv);
 
                     // save the state
-                    mPackageResources |= dv.getPackageResources();
-                    mConvertToDex |= dv.getConvertToDex();
-                    mBuildFinalPackage |= dv.getMakeFinalPackage();
+                    mPackageResources |= dv.checkSet(ChangedFileSetHelper.MANIFEST) ||
+                            dv.checkSet(resCFS);
+
+                    mConvertToDex |= dv.checkSet(androidCodeCFS);
+
+                    mBuildFinalPackage |= dv.checkSet(javaResCFS) ||
+                            dv.checkSet(ChangedFileSetHelper.NATIVE_LIBS);
                 }
 
-                // if the main resources didn't change, then we check for the library
-                // ones (will trigger resource repackaging too)
-                if ((mPackageResources == false || mBuildFinalPackage == false) &&
-                        libProjects.size() > 0) {
+                // check the libraries
+                if (libProjects.size() > 0) {
                     for (IProject libProject : libProjects) {
                         delta = getDelta(libProject);
                         if (delta != null) {
-                            LibraryDeltaVisitor visitor = new LibraryDeltaVisitor();
+                            PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
+                                    libProject, project.getName());
+
+                            ChangedFileSet libResCFS = ChangedFileSetHelper.getFullResCfs(
+                                    libProject);
+                            visitor.addSet(libResCFS);
+                            visitor.addSet(ChangedFileSetHelper.NATIVE_LIBS);
+                            // FIXME: add check on the library.jar?
+
                             delta.accept(visitor);
 
-                            mPackageResources |= visitor.getResChange();
-                            mBuildFinalPackage |= visitor.getLibChange();
-
-                            if (mPackageResources && mBuildFinalPackage) {
-                                break;
-                            }
+                            mPackageResources |= visitor.checkSet(libResCFS);
+                            mBuildFinalPackage |= visitor.checkSet(
+                                    ChangedFileSetHelper.NATIVE_LIBS);
                         }
                     }
                 }
 
-                // also go through the delta for all the referenced projects, until we are forced to
-                // compile anyway
+                // also go through the delta for all the referenced projects
                 final int referencedCount = referencedJavaProjects.size();
-                for (int i = 0 ; i < referencedCount &&
-                        (mBuildFinalPackage == false || mConvertToDex == false); i++) {
+                for (int i = 0 ; i < referencedCount; i++) {
                     IJavaProject referencedJavaProject = referencedJavaProjects.get(i);
                     delta = getDelta(referencedJavaProject.getProject());
                     if (delta != null) {
-                        ReferencedProjectDeltaVisitor refProjectDv =
-                                new ReferencedProjectDeltaVisitor(referencedJavaProject);
+                        PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
+                                referencedJavaProject.getProject(), project.getName());
 
-                        delta.accept(refProjectDv);
+                        ChangedFileSet javaResCFS = ChangedFileSetHelper.getJavaResCfs(project);
+                        visitor.addSet(javaResCFS);
+
+                        ChangedFileSet bytecodeCFS = ChangedFileSetHelper.getByteCodeCfs(project);
+                        visitor.addSet(bytecodeCFS);
+
+                        delta.accept(visitor);
 
                         // save the state
-                        mConvertToDex |= refProjectDv.needDexConvertion();
-                        mBuildFinalPackage |= refProjectDv.needMakeFinalPackage();
+                        mConvertToDex |= visitor.checkSet(bytecodeCFS);
+                        mBuildFinalPackage |= visitor.checkSet(javaResCFS);
                     }
                 }
             }
@@ -392,15 +328,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             // Top level check to make sure the build can move forward. Only do this after recording
             // delta changes.
             abortOnBadSetup(javaProject);
-
-            if (dv != null && dv.mXmlError) {
-                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
-                Messages.Xml_Error);
-
-                // if there was some XML errors, we just return w/o doing
-                // anything since we've put some markers in the files anyway
-                return allRefProjects;
-            }
 
             // remove older packaging markers.
             removeMarkersFromContainer(javaProject.getProject(), AdtConstants.MARKER_PACKAGING);
@@ -495,7 +422,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 tmp = androidOutputFolder.findMember(AdtConstants.FN_RESOURCES_AP_);
                 if (tmp == null || tmp.exists() == false) {
                     mPackageResources = true;
-                    mBuildFinalPackage = true;
                 }
             }
 
@@ -504,7 +430,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 tmp = androidOutputFolder.findMember(SdkConstants.FN_APK_CLASSES_DEX);
                 if (tmp == null || tmp.exists() == false) {
                     mConvertToDex = true;
-                    mBuildFinalPackage = true;
                 }
             }
 
