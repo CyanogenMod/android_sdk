@@ -134,6 +134,12 @@ public class DownloadCache {
 
     public enum Strategy {
         /**
+         * Exclusively serves data from the cache. If files are available in the
+         * cache, serve them as is (without trying to refresh them). If files are
+         * not available, they are <em>not</em> fetched at all.
+         */
+        ONLY_CACHE,
+        /**
          * If the files are available in the cache, serve them as-is, otherwise
          * download them and return the cached version. No expiration or refresh
          * is attempted if a file is in the cache.
@@ -237,6 +243,7 @@ public class DownloadCache {
      * @param monitor {@link ITaskMonitor} which is related to this URL
      *            fetching.
      * @return Returns an {@link InputStream} holding the URL content.
+     *   Returns null if the document is not cached and strategy is {@link Strategy#ONLY_CACHE}.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
      * @throws CanceledByUserException Exception thrown if the user cancels the
@@ -412,6 +419,14 @@ public class DownloadCache {
                     return is;
                 }
             } catch (IOException ignore) {}
+        }
+
+        if (!useCached && mStrategy == Strategy.ONLY_CACHE) {
+            // We don't have a document to serve from the cache.
+            if (DEBUG) {
+                System.out.println(String.format("%s : file not in cache", urlString)); //$NON-NLS-1$
+            }
+            return null;
         }
 
         // If we're not using the cache, try to remove the cache and download again.

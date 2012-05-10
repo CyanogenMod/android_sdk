@@ -76,7 +76,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     private Map<Package, File> mResultPaths = null;
     private SettingsController mSettingsController;
     private PackageFilter mPackageFilter;
-    private PackageLoader mPackageMananger;
+    private PackageLoader mPackageLoader;
 
     private ProgressBar mProgressBar;
     private Label mStatusText;
@@ -221,12 +221,12 @@ public class AdtUpdateDialog extends SwtBaseDialog {
 
         mUpdaterData.broadcastOnSdkLoaded();
 
-        mPackageMananger = new PackageLoader(mUpdaterData);
+        mPackageLoader = new PackageLoader(mUpdaterData);
     }
 
     @Override
     protected void eventLoop() {
-        mPackageMananger.loadPackagesWithInstallTask(
+        mPackageLoader.loadPackagesWithInstallTask(
                 mPackageFilter.installFlags(),
                 new IAutoInstallTask() {
             @Override

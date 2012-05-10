@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.internal.repository.AddonsListFetcher;
+import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -23,7 +25,12 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.Package.UpdateInfo;
+import com.android.sdklib.internal.repository.sources.SdkAddonSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
+import com.android.sdklib.internal.repository.sources.SdkSources;
+import com.android.sdklib.repository.SdkAddonsListConstants;
+import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 
 import org.eclipse.swt.widgets.Display;
@@ -39,13 +46,30 @@ import java.util.Map;
  * Loads packages fetched from the remote SDK Repository and keeps track
  * of their state compared with the current local SDK installation.
  */
-class PackageLoader {
+public class PackageLoader {
 
+    /** The update data context. Never null. */
     private final UpdaterData mUpdaterData;
 
     /**
+     * The {@link DownloadCache} override. Can be null, in which case the one from
+     * {@link UpdaterData} is used instead.
+     * @see #getDownloadCache()
+     */
+    private final DownloadCache mOverrideCache;
+
+    /**
+     * 0 = need to fetch remote addons list once..
+     * 1 = fetch succeeded, don't need to do it any more.
+     * -1= fetch failed, do it again only if the user requests a refresh
+     *     or changes the force-http setting.
+     */
+    private int mStateFetchRemoteAddonsList;
+
+
+    /**
      * Interface for the callback called by
-     * {@link PackageLoader#loadPackages(DownloadCache, ISourceLoadedCallback)}.
+     * {@link PackageLoader#loadPackages(ISourceLoadedCallback)}.
      * <p/>
      * After processing each source, the package loader calls {@link #onUpdateSource}
      * with the list of packages found in that source.
@@ -128,12 +152,27 @@ class PackageLoader {
     }
 
     /**
-     * Creates a new PackageManager associated with the given {@link UpdaterData}.
+     * Creates a new PackageManager associated with the given {@link UpdaterData}
+     * and using the {@link UpdaterData}'s default {@link DownloadCache}.
      *
      * @param updaterData The {@link UpdaterData}. Must not be null.
      */
     public PackageLoader(UpdaterData updaterData) {
         mUpdaterData = updaterData;
+        mOverrideCache = null;
+    }
+
+    /**
+     * Creates a new PackageManager associated with the given {@link UpdaterData}
+     * but using the specified {@link DownloadCache} instead of the one from
+     * {@link UpdaterData}.
+     *
+     * @param updaterData The {@link UpdaterData}. Must not be null.
+     * @param cache The {@link DownloadCache} to use instead of the one from {@link UpdaterData}.
+     */
+    public PackageLoader(UpdaterData updaterData, DownloadCache cache) {
+        mUpdaterData = updaterData;
+        mOverrideCache = cache;
     }
 
     /**
@@ -145,19 +184,11 @@ class PackageLoader {
      * after each source is finished loaded. In return the callback tells the loader
      * whether to continue loading sources.
      */
-    public void loadPackages(
-            DownloadCache downloadCache,
-            final ISourceLoadedCallback sourceLoadedCallback) {
+    public void loadPackages(final ISourceLoadedCallback sourceLoadedCallback) {
         try {
             if (mUpdaterData == null) {
                 return;
             }
-
-            if (downloadCache == null) {
-                downloadCache = mUpdaterData.getDownloadCache();
-            }
-
-            final DownloadCache downloadCache2 = downloadCache;
 
             mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
                 @Override
@@ -176,7 +207,7 @@ class PackageLoader {
 
                     // get remote packages
                     boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
-                    mUpdaterData.loadRemoteAddonsList(monitor.createSubMonitor(1));
+                    loadRemoteAddonsList(monitor.createSubMonitor(1));
 
                     SdkSource[] sources = mUpdaterData.getSources().getAllSources();
                     try {
@@ -186,7 +217,7 @@ class PackageLoader {
                             for (SdkSource source : sources) {
                                 Package[] pkgs = source.getPackages();
                                 if (pkgs == null) {
-                                    source.load(downloadCache2,
+                                    source.load(getDownloadCache(),
                                             subMonitor.createSubMonitor(1),
                                             forceHttp);
                                     pkgs = source.getPackages();
@@ -215,8 +246,7 @@ class PackageLoader {
     }
 
     /**
-     * Load packages, source by source using
-     * {@link #loadPackages(DownloadCache, ISourceLoadedCallback)},
+     * Load packages, source by source using {@link #loadPackages(ISourceLoadedCallback)},
      * and executes the given {@link IAutoInstallTask} on the current package list.
      * That is for each package known, the install task is queried to find if
      * the package is the one to be installed or updated.
@@ -248,8 +278,7 @@ class PackageLoader {
             final int installFlags,
             final IAutoInstallTask installTask) {
 
-        loadPackages(mUpdaterData.getDownloadCache(),
-                     new ISourceLoadedCallback() {
+        loadPackages(new ISourceLoadedCallback() {
             List<Archive> mArchivesToInstall = new ArrayList<Archive>();
             Map<Package, File> mInstallPaths = new HashMap<Package, File>();
 
@@ -366,5 +395,78 @@ class PackageLoader {
                 }
             }
         });
+    }
+
+
+    /**
+     * Loads the remote add-ons list.
+     */
+    public void loadRemoteAddonsList(ITaskMonitor monitor) {
+
+        if (mStateFetchRemoteAddonsList != 0) {
+            return;
+        }
+
+        mUpdaterData.getTaskFactory().start("Load Add-ons List", monitor, new ITask() {
+            @Override
+            public void run(ITaskMonitor subMonitor) {
+                loadRemoteAddonsListInTask(subMonitor);
+            }
+        });
+    }
+
+    private void loadRemoteAddonsListInTask(ITaskMonitor monitor) {
+        mStateFetchRemoteAddonsList = -1;
+
+        String url = SdkAddonsListConstants.URL_ADDON_LIST;
+
+        // We override SdkRepoConstants.URL_GOOGLE_SDK_SITE if this is defined
+        String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
+        if (baseUrl != null) {
+            if (baseUrl.length() > 0 && baseUrl.endsWith("/")) {        //$NON-NLS-1$
+                if (url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
+                    url = baseUrl + url.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
+                }
+            } else {
+                monitor.logError("Ignoring invalid SDK_TEST_BASE_URL: %1$s", baseUrl);  //$NON-NLS-1$
+            }
+        }
+
+        if (mUpdaterData.getSettingsController().getForceHttp()) {
+            url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        // Hook to bypass loading 3rd party addons lists.
+        boolean fetch3rdParties = System.getenv("SDK_SKIP_3RD_PARTIES") == null;
+
+        AddonsListFetcher fetcher = new AddonsListFetcher();
+        Site[] sites = fetcher.fetch(url, getDownloadCache(), monitor);
+        if (sites != null) {
+            SdkSources sources = mUpdaterData.getSources();
+            sources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
+
+            if (fetch3rdParties) {
+                for (Site s : sites) {
+                    sources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
+                                 new SdkAddonSource(s.getUrl(), s.getUiName()));
+                }
+            }
+
+            sources.notifyChangeListeners();
+
+            mStateFetchRemoteAddonsList = 1;
+        }
+
+        monitor.setDescription("Fetched Add-ons List successfully");
+    }
+
+    /**
+     * Returns the {@link DownloadCache} to use.
+     *
+     * @return Returns {@link #mOverrideCache} if not null; otherwise returns the
+     *  one from {@link UpdaterData} is used instead.
+     */
+    private DownloadCache getDownloadCache() {
+        return mOverrideCache != null ? mOverrideCache : mUpdaterData.getDownloadCache();
     }
 }

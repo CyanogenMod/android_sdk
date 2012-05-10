@@ -17,6 +17,8 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.DownloadCache.Strategy;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -129,6 +131,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
     private final SdkInvocationContext mContext;
     private final UpdaterData mUpdaterData;
     private final PackagesDiffLogic mDiffLogic;
+
     private boolean mDisplayArchives = false;
     private boolean mOperationPending;
 
@@ -168,8 +171,15 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
     }
 
     public void performFirstLoad() {
-        // Initialize the package list the first time the page is shown.
-        loadPackages(true /*isFirstLoad*/);
+        // First a package loader is created that only checks
+        // the local cache xml files. It populates the package
+        // list based on what the client got last, essentially.
+        loadPackages(true /*useLocalCache*/);
+
+        // Next a regular package loader is created that will
+        // respect the expiration and refresh parameters of the
+        // download cache.
+        loadPackages(false /*useLocalCache*/);
     }
 
     @SuppressWarnings("unused")
@@ -576,11 +586,24 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
         loadPackages();
     }
 
+    /**
+     * Performs a "normal" reload of the package information, use the default download
+     * cache and refreshing strategy as needed.
+     */
     private void loadPackages() {
-        loadPackages(false /*isFirstLoad*/);
+        loadPackages(false /*useLocalCache*/);
     }
 
-    private void loadPackages(final boolean isFirstLoad) {
+    /**
+     * Performs a reload of the package information.
+     *
+     * @param useLocalCache When true, the {@link PackageLoader} is switched to use
+     *  a specific {@link DownloadCache} using the {@link Strategy#ONLY_CACHE}, meaning
+     *  it will only use data from the local cache. It will not try to fetch or refresh
+     *  manifests. This is used once the very first time the sdk manager window opens
+     *  and is typically followed by a regular load with refresh.
+     */
+    private void loadPackages(final boolean useLocalCache) {
         if (mUpdaterData == null) {
             return;
         }
@@ -593,15 +616,26 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
 
         final boolean displaySortByApi = isSortByApi();
 
-        if (!mTreeColumnName.isDisposed()) {
-            mTreeColumnName.setImage(
-                    getImage(displaySortByApi ? ICON_SORT_BY_API : ICON_SORT_BY_SOURCE));
+        if (mTreeColumnName.isDisposed()) {
+            // If the UI got disposed, don't try to load anything since we won't be
+            // able to display it anyway.
+            return;
         }
 
+        mTreeColumnName.setImage(getImage(displaySortByApi ? ICON_SORT_BY_API
+                                                           : ICON_SORT_BY_SOURCE));
+
+        PackageLoader packageLoader = null;
+        if (useLocalCache) {
+            packageLoader =
+                new PackageLoader(mUpdaterData, new DownloadCache(Strategy.ONLY_CACHE));
+        } else {
+            packageLoader = mUpdaterData.getPackageLoader();
+        }
+        assert packageLoader != null;
+
         mDiffLogic.updateStart();
-        mDiffLogic.getPackageLoader().loadPackages(
-                mUpdaterData.getDownloadCache(), // TODO do a first pass with Cache=SERVE_CACHE
-                new ISourceLoadedCallback() {
+        packageLoader.loadPackages(new ISourceLoadedCallback() {
             @Override
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.
@@ -640,7 +674,9 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
                                 refreshViewerInput();
                             }
 
-                            if (mDiffLogic.isFirstLoadComplete() && !mGroupPackages.isDisposed()) {
+                            if (!useLocalCache &&
+                                    mDiffLogic.isFirstLoadComplete() &&
+                                    !mGroupPackages.isDisposed()) {
                                 // At the end of the first load, if nothing is selected then
                                 // automatically select all new and update packages.
                                 Object[] checked = mTreeViewer.getCheckedElements();

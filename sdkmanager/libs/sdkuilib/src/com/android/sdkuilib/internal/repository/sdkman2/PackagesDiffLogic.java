@@ -48,17 +48,11 @@ import java.util.Set;
  * so that we can test it using head-less unit tests.
  */
 class PackagesDiffLogic {
-    private final PackageLoader mPackageLoader;
     private final UpdaterData mUpdaterData;
     private boolean mFirstLoadComplete = true;
 
     public PackagesDiffLogic(UpdaterData updaterData) {
         mUpdaterData = updaterData;
-        mPackageLoader = new PackageLoader(updaterData);
-    }
-
-    public PackageLoader getPackageLoader() {
-        return mPackageLoader;
     }
 
     /**
