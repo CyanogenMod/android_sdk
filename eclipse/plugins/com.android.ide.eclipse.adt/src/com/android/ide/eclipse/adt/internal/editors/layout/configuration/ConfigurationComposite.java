@@ -1024,7 +1024,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     void selectTheme(String theme) {
-        assert theme.startsWith(PREFIX_STYLE) || theme.startsWith(PREFIX_ANDROID_STYLE);
+        assert theme.startsWith(PREFIX_STYLE) || theme.startsWith(PREFIX_ANDROID_STYLE) : theme;
         mThemeCombo.setData(theme);
         if (theme != null) {
             mThemeCombo.setText(getThemeLabel(theme, true));
@@ -2164,7 +2164,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         try {
             if (mEditedFile != null) {
-                if (mState.theme == null || mListener.getIncludedWithin() != null) {
+                if (mState.theme == null || mState.theme.isEmpty()
+                        || mListener.getIncludedWithin() != null) {
+                    mState.theme = null;
                     getPreferredTheme();
                 }
                 assert mState.theme != null;
