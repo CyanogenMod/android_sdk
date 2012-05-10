@@ -38,7 +38,7 @@ else
 endif
 
 ifeq ($(HOST_OS),linux)
-    host_common_LDLIBS += -lpthread -lrt
+    host_common_LDLIBS += -lpthread -lrt -lX11
 endif
 
 ### 32-bit host library ####
