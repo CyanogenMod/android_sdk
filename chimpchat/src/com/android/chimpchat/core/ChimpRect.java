@@ -32,9 +32,9 @@ public class ChimpRect {
 
     /**
      * Create a new ChimpRect with the given coordinates.
-     * @param left   The X coordinate of the left side of the rectagle
+     * @param left   The X coordinate of the left side of the rectangle
      * @param top    The Y coordinate of the top of the rectangle
-     * @param right  The X coordinate of the right side of the rectagle
+     * @param right  The X coordinate of the right side of the rectangle
      * @param bottom The Y coordinate of the bottom of the rectangle
      */
     public ChimpRect(int left, int top, int right, int bottom) {
