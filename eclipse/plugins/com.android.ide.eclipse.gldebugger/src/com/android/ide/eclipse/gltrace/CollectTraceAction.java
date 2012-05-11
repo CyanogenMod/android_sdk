@@ -18,6 +18,7 @@ package com.android.ide.eclipse.gltrace;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 import com.android.ddmlib.IShellOutputReceiver;
@@ -168,8 +169,10 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     private void startActivity(IDevice device, String appName)
             throws TimeoutException, AdbCommandRejectedException,
             ShellCommandUnresponsiveException, IOException, InterruptedException {
+        killApp(device, appName); // kill app if it is already running
+
         String startAppCmd = String.format(
-                "am start -S --opengl-trace %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
+                "am start --opengl-trace %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
                 appName);
 
         Semaphore launchCompletionSempahore = new Semaphore(0);
@@ -184,6 +187,13 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         String output = receiver.getOutput();
         if (output.contains("Error")) {             //$NON-NLS-1$
             throw new RuntimeException(output);
+        }
+    }
+
+    private void killApp(IDevice device, String appName) {
+        Client client = device.getClient(appName);
+        if (client != null) {
+            client.kill();
         }
     }
 
