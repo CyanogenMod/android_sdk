@@ -30,6 +30,10 @@ public class ProtoBufUtils {
         int width = glMsg.getFb().getWidth();
         int height = glMsg.getFb().getHeight();
 
+        if (width * height == 0) {
+            return null;
+        }
+
         byte[] compressed = glMsg.getFb().getContents(0).toByteArray();
         byte[] uncompressed = new byte[width * height * 4];
 
@@ -59,7 +63,12 @@ public class ProtoBufUtils {
             return null;
         }
 
-        return new Image(display, getImageData(glMsg));
+        ImageData imageData = getImageData(glMsg);
+        if (imageData == null) {
+            return null;
+        }
+
+        return new Image(display, imageData);
     }
 
     /**
@@ -72,6 +81,10 @@ public class ProtoBufUtils {
         }
 
         ImageData imageData = getImageData(glMsg);
+        if (imageData == null) {
+            return null;
+        }
+
         return new Image(display, imageData.scaledTo(width, height));
     }
 }
