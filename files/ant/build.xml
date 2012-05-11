@@ -45,6 +45,18 @@
     <property name="version.code" value="" />
     <property name="version.name" value="" />
     <property name="aapt.resource.filter" value="" />
+    <!-- 'aapt.ignore.assets' is the list of file patterns to ignore under /res and /assets.
+         Default is "!.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~"
+
+         Overall patterns syntax is:
+           [!][<dir>|<file>][*suffix-match|prefix-match*|full-match]:more:patterns...
+
+         - The first character flag ! avoids printing a warning.
+         - Pattern can have the flag "<dir>" to match only directories
+           or "<file>" to match only files. Default is to match both.
+         - Match is not case-sensitive.
+    -->
+    <property name="aapt.ignore.assets" value="" />
 
     <!-- compilation options -->
     <property name="java.encoding" value="UTF-8" />
@@ -635,7 +647,8 @@
                     rfolder="${gen.absolute.dir}"
                     nonConstantId="${android.library}"
                     libraryResFolderPathRefid="project.library.res.folder.path"
-                    libraryPackagesRefid="project.library.packages">
+                    libraryPackagesRefid="project.library.packages"
+                    ignoreAssets="${aapt.ignore.assets}">
                 <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
             </aapt>
@@ -878,7 +891,8 @@
                     libraryResFolderPathRefid="project.library.res.folder.path"
                     libraryPackagesRefid="project.library.packages"
                     previousBuildType="${build.last.target}"
-                    buildType="${build.target}">
+                    buildType="${build.target}"
+                    ignoreAssets="${aapt.ignore.assets}">
                 <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
                 <!-- <nocompress /> forces no compression on any files in assets or res/raw -->
