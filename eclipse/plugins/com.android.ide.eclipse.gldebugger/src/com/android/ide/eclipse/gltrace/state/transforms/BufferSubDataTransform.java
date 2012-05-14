@@ -44,12 +44,17 @@ public class BufferSubDataTransform implements IStateTransform {
         IGLProperty property = mAccessor.getProperty(state);
         mOldData = (byte[]) property.getValue();
 
-        if (mNewData != null) {
+        if (mOldData != null) {
             mNewData = new byte[mOldData.length];
             ByteBuffer bb = ByteBuffer.wrap(mNewData);
-            bb.put(mOldData); // copy all of the old buffer
+
+            // copy all of the old buffer
+            bb.put(mOldData);
             bb.rewind();
-            bb.put(mSubData, mOffset, mSubData.length); // update with the sub buffer data
+
+            // update with the sub buffer data at specified offset
+            bb.position(mOffset);
+            bb.put(mSubData);
         }
 
         property.setValue(mNewData);

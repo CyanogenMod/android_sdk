@@ -425,7 +425,7 @@ public class StateTransformFactory {
         IStateTransform transform = new BufferSubDataTransform(
                 new CurrentVboPropertyAccessor(msg.getContextId(),
                         target,
-                        GLStateType.BUFFER_SIZE),
+                        GLStateType.BUFFER_DATA),
                 offset, data);
 
         return Collections.singletonList(transform);
