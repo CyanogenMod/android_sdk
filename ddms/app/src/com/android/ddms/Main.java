@@ -87,7 +87,7 @@ public class Main {
         // the "ping" argument means to check in with the server and exit
         // the application name and version number must also be supplied
         if (args.length >= 3 && args[0].equals("ping")) {
-            stats.ping(args[1], args[2]);
+            stats.ping(args);
             return;
         } else if (args.length > 0) {
             Log.e("ddms", "Unknown argument: " + args[0]);
