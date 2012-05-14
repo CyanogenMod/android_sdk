@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.OLD_PROGUARD_FILE;
 import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_FILE;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
@@ -245,7 +246,7 @@ public class LintDriver {
                         String name = file.getName();
                         if (name.equals(ANDROID_MANIFEST_XML)) {
                             mScope.add(Scope.MANIFEST);
-                        } else if (name.endsWith(".xml")) {
+                        } else if (name.endsWith(DOT_XML)) {
                             mScope.add(Scope.RESOURCE_FILE);
                         } else if (name.equals(PROGUARD_FILE) || name.equals(OLD_PROGUARD_FILE)) {
                             mScope.add(Scope.PROGUARD_FILE);
@@ -766,8 +767,13 @@ public class LintDriver {
             List<Detector> checks = union(mScopeDetectors.get(Scope.JAVA_FILE),
                     mScopeDetectors.get(Scope.ALL_JAVA_FILES));
             if (checks != null && checks.size() > 0) {
-                List<File> sourceFolders = project.getJavaSourceFolders();
-                checkJava(project, main, sourceFolders, checks);
+                if (project.getSubset() != null) {
+                    checkIndividualJavaFiles(project, main, checks,
+                            project.getSubset());
+                } else {
+                    List<File> sourceFolders = project.getJavaSourceFolders();
+                    checkJava(project, main, sourceFolders, checks);
+                }
             }
         }
 
@@ -775,7 +781,9 @@ public class LintDriver {
             return;
         }
 
-        checkClasses(project, main);
+        if (mScope.contains(Scope.CLASS_FILE) || mScope.contains(Scope.JAVA_LIBRARIES)) {
+            checkClasses(project, main);
+        }
 
         if (mCanceled) {
             return;
@@ -785,7 +793,6 @@ public class LintDriver {
             checkProGuard(project, main);
         }
     }
-
     private void checkProGuard(Project project, Project main) {
         List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD_FILE);
         if (detectors != null) {
@@ -884,7 +891,8 @@ public class LintDriver {
 
     /** Check the classes in this project (and if applicable, in any library projects */
     private void checkClasses(Project project, Project main) {
-        if (!(mScope.contains(Scope.CLASS_FILE) || mScope.contains(Scope.JAVA_LIBRARIES))) {
+        if (project.getSubset() != null) {
+            checkIndividualClassFiles(project, main, project.getSubset());
             return;
         }
 
@@ -933,6 +941,47 @@ public class LintDriver {
         }
 
         runClassDetectors(Scope.CLASS_FILE, classEntries, project, main);
+    }
+
+    private void checkIndividualClassFiles(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull List<File> files) {
+        List<ClassEntry> entries = new ArrayList<ClassEntry>(files.size());
+
+        List<File> classFolders = project.getJavaClassFolders();
+        if (!classFolders.isEmpty()) {
+            for (File file : files) {
+                String path = file.getPath();
+                if (file.isFile() && path.endsWith(DOT_CLASS)) {
+                    try {
+                        byte[] bytes = Files.toByteArray(file);
+                        if (bytes != null) {
+                            for (File dir : classFolders) {
+                                if (path.startsWith(dir.getPath())) {
+                                    entries.add(new ClassEntry(file, null /* jarFile*/, dir,
+                                            bytes));
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        mClient.log(e, null);
+                        continue;
+                    }
+
+                    if (mCanceled) {
+                        return;
+                    }
+                }
+            }
+
+            if (entries.size() > 0) {
+                // No superclass info available on individual lint runs
+                mSuperClassMap = Collections.emptyMap();
+                runClassDetectors(Scope.CLASS_FILE, entries, project, main);
+            }
+        }
     }
 
     /**
@@ -1176,6 +1225,32 @@ public class LintDriver {
         if (sources.size() > 0) {
             JavaVisitor visitor = new JavaVisitor(javaParser, checks);
             for (File file : sources) {
+                JavaContext context = new JavaContext(this, project, main, file);
+                fireEvent(EventType.SCANNING_FILE, context);
+                visitor.visitFile(context, file);
+                if (mCanceled) {
+                    return;
+                }
+            }
+        }
+    }
+
+    private void checkIndividualJavaFiles(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull List<Detector> checks,
+            @NonNull List<File> files) {
+
+        IJavaParser javaParser = mClient.getJavaParser();
+        if (javaParser == null) {
+            mClient.log(null, "No java parser provided to lint: not running Java checks");
+            return;
+        }
+
+        JavaVisitor visitor = new JavaVisitor(javaParser, checks);
+
+        for (File file : files) {
+            if (file.isFile() && file.getPath().endsWith(DOT_JAVA)) {
                 JavaContext context = new JavaContext(this, project, main, file);
                 fireEvent(EventType.SCANNING_FILE, context);
                 visitor.visitFile(context, file);

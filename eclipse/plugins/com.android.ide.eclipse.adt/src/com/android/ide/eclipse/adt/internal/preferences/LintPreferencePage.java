@@ -378,7 +378,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                     }
                 }
 
-                EclipseLintRunner.startLint(androidProjects, null, false /*fatalOnly*/,
+                EclipseLintRunner.startLint(androidProjects, null,  null, false /*fatalOnly*/,
                         true /*show*/);
             }
         }

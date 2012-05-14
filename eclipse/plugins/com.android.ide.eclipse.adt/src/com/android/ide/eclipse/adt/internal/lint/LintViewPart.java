@@ -474,7 +474,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                         if (resources == null) {
                             return;
                         }
-                        Job job = EclipseLintRunner.startLint(resources, null,
+                        Job job = EclipseLintRunner.startLint(resources, null, null,
                                 false /*fatalOnly*/, false /*show*/);
                         if (job != null && workbench != null) {
                             job.addJobChangeListener(LintViewPart.this);

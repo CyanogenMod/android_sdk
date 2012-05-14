@@ -81,7 +81,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             6,
             Severity.ERROR,
             ApiDetector.class,
-            EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE));
+            EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE))
+            .addAnalysisScope(Scope.RESOURCE_FILE_SCOPE)
+            .addAnalysisScope(Scope.CLASS_FILE_SCOPE);
 
     private ApiLookup mApiDatabase;
     private int mMinApi = -1;

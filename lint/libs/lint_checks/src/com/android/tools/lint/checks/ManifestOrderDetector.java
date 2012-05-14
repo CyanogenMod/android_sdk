@@ -68,7 +68,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             5,
             Severity.WARNING,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue USES_SDK = Issue.create(
@@ -84,7 +84,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             2,
             Severity.WARNING,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            Scope.MANIFEST_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
 
     /** Missing a {@code <uses-sdk>} element */
@@ -101,7 +101,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             6,
             Severity.FATAL,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            Scope.MANIFEST_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
 
     /** Missing a {@code <uses-sdk>} element */

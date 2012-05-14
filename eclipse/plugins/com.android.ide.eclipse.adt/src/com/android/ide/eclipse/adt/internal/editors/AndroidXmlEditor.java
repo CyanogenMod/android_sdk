@@ -588,13 +588,15 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * Utility method that creates a Job to run Lint on the current document.
      * Does not wait for the job to finish - just returns immediately.
      *
-     * @see EclipseLintRunner#startLint(java.util.List, IDocument, boolean, boolean)
+     * @return a new job, or null
+     * @see EclipseLintRunner#startLint(java.util.List, IResource, IDocument,
+     *      boolean, boolean)
      */
     @Nullable
     public Job startLintJob() {
         IFile file = getInputFile();
         if (file != null) {
-            return EclipseLintRunner.startLint(Collections.singletonList(file),
+            return EclipseLintRunner.startLint(Collections.singletonList(file), file,
                     getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
         }
 

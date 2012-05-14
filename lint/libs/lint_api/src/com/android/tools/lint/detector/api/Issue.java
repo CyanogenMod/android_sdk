@@ -21,7 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
 import com.google.common.annotations.Beta;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 
 
 /**
@@ -47,6 +50,7 @@ public final class Issue implements Comparable<Issue> {
     private String mMoreInfoUrl;
     private boolean mEnabledByDefault = true;
     private final EnumSet<Scope> mScope;
+    private List<EnumSet<Scope>> mAnalysisScopes;
     private final Class<? extends Detector> mClass;
 
     // Use factory methods
@@ -240,6 +244,135 @@ public final class Issue implements Comparable<Issue> {
     @NonNull
     public Issue setEnabledByDefault(boolean enabledByDefault) {
         mEnabledByDefault = enabledByDefault;
+        return this;
+    }
+
+    /**
+     * Returns the sets of scopes required to analyze this issue, or null if all
+     * scopes named by {@link Issue#getScope()} are necessary. Note that only
+     * <b>one</b> match out of this collection is required, not all, and that
+     * the scope set returned by {@link #getScope()} does not have to be returned
+     * by this method, but is always implied to be included.
+     * <p>
+     * The scopes returned by {@link Issue#getScope()} list all the various
+     * scopes that are <b>affected</b> by this issue, meaning the detector
+     * should consider it. Frequently, the detector must analyze all these
+     * scopes in order to properly decide whether an issue is found. For
+     * example, the unused resource detector needs to consider both the XML
+     * resource files and the Java source files in order to decide if a resource
+     * is unused. If it analyzes just the Java files for example, it might
+     * incorrectly conclude that a resource is unused because it did not
+     * discover a resource reference in an XML file.
+     * <p>
+     * However, there are other issues where the issue can occur in a variety of
+     * files, but the detector can consider each in isolation. For example, the
+     * API checker is affected by both XML files and Java class files (detecting
+     * both layout constructor references in XML layout files as well as code
+     * references in .class files). It doesn't have to analyze both; it is
+     * capable of incrementally analyzing just an XML file, or just a class
+     * file, without considering the other.
+     * <p>
+     * The required scope list provides a list of scope sets that can be used to
+     * analyze this issue. For each scope set, all the scopes must be matched by
+     * the incremental analysis, but any one of the scope sets can be analyzed
+     * in isolation.
+     * <p>
+     * The required scope list is not required to include the full scope set
+     * returned by {@link #getScope()}; that set is always assumed to be
+     * included.
+     * <p>
+     * NOTE: You would normally call {@link #isAdequate(EnumSet)} rather
+     * than calling this method directly.
+     *
+     * @return a list of required scopes, or null.
+     */
+    @Nullable
+    public Collection<EnumSet<Scope>> getAnalysisScopes() {
+        return mAnalysisScopes;
+    }
+
+    /**
+     * Sets the collection of scopes that are allowed to be analyzed independently.
+     * See the {@link #getAnalysisScopes()} method for a full explanation.
+     * Note that you usually want to just call {@link #addAnalysisScope(EnumSet)}
+     * instead of constructing a list up front and passing it in here. This
+     * method exists primarily such that commonly used share sets of analysis
+     * scopes can be reused and set directly.
+     *
+     * @param required the collection of scopes
+     * @return this, for constructor chaining
+     */
+    public Issue setAnalysisScopes(@Nullable List<EnumSet<Scope>> required) {
+        mAnalysisScopes = required;
+
+        return this;
+    }
+
+    /**
+     * Returns true if the given scope is adequate for analyzing this issue.
+     * This looks through the analysis scopes (see
+     * {@link #addAnalysisScope(EnumSet)}) and if the scope passed in fully
+     * covers at least one of them, or if it covers the scope of the issue
+     * itself (see {@link #getScope()}, which should be a superset of all the
+     * analysis scopes) returns true.
+     * <p>
+     * The scope set returned by {@link Issue#getScope()} lists all the various
+     * scopes that are <b>affected</b> by this issue, meaning the detector
+     * should consider it. Frequently, the detector must analyze all these
+     * scopes in order to properly decide whether an issue is found. For
+     * example, the unused resource detector needs to consider both the XML
+     * resource files and the Java source files in order to decide if a resource
+     * is unused. If it analyzes just the Java files for example, it might
+     * incorrectly conclude that a resource is unused because it did not
+     * discover a resource reference in an XML file.
+     * <p>
+     * However, there are other issues where the issue can occur in a variety of
+     * files, but the detector can consider each in isolation. For example, the
+     * API checker is affected by both XML files and Java class files (detecting
+     * both layout constructor references in XML layout files as well as code
+     * references in .class files). It doesn't have to analyze both; it is
+     * capable of incrementally analyzing just an XML file, or just a class
+     * file, without considering the other.
+     * <p>
+     * An issue can register additional scope sets that can are adequate
+     * for analyzing the issue, by calling {@link #addAnalysisScope(EnumSet)}.
+     * This method returns true if the given scope matches one or more analysis
+     * scope, or the overall scope.
+     *
+     * @param scope the scope available for analysis
+     * @return true if this issue can be analyzed with the given available scope
+     */
+    public boolean isAdequate(@Nullable EnumSet<Scope> scope) {
+        if (scope.containsAll(mScope)) {
+            return true;
+        }
+
+        if (mAnalysisScopes != null) {
+            for (EnumSet<Scope> analysisScope : mAnalysisScopes) {
+                if (mScope.containsAll(analysisScope)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Adds a scope set that can be analyzed independently to uncover this issue.
+     * See the {@link #getAnalysisScopes()} method for a full explanation.
+     * Note that the {@link #getScope()} does not have to be added here; it is
+     * always considered an analysis scope.
+     *
+     * @param scope the additional scope which can analyze this issue independently
+     * @return this, for constructor chaining
+     */
+    public Issue addAnalysisScope(@Nullable EnumSet<Scope> scope) {
+        if (mAnalysisScopes == null) {
+            mAnalysisScopes = new ArrayList<EnumSet<Scope>>(2);
+        }
+        mAnalysisScopes.add(scope);
+
         return this;
     }
 

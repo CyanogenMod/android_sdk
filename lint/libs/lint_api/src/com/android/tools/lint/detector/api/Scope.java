@@ -90,12 +90,19 @@ public enum Scope {
      * @return true if the scope set references a single file
      */
     public static boolean checkSingleFile(@NonNull EnumSet<Scope> scopes) {
-        return scopes.size() == 1 &&
+        int size = scopes.size();
+        if (size == 2) {
+            // When single checking a Java source file, we check both its Java source
+            // and the associated class files
+            return scopes.contains(JAVA_FILE) && scopes.contains(CLASS_FILE);
+        } else {
+            return size == 1 &&
                 (scopes.contains(JAVA_FILE)
                         || scopes.contains(CLASS_FILE)
                         || scopes.contains(RESOURCE_FILE)
                         || scopes.contains(PROGUARD_FILE)
                         || scopes.contains(MANIFEST));
+        }
     }
 
     /**
@@ -123,4 +130,8 @@ public enum Scope {
     public static final EnumSet<Scope> ALL_RESOURCES_SCOPE = EnumSet.of(ALL_RESOURCE_FILES);
     /** Scope-set used for detectors which are affected by a single Java source file */
     public static final EnumSet<Scope> JAVA_FILE_SCOPE = EnumSet.of(JAVA_FILE);
+    /** Scope-set used for detectors which are affected by a single Java class file */
+    public static final EnumSet<Scope> CLASS_FILE_SCOPE = EnumSet.of(CLASS_FILE);
+    /** Scope-set used for detectors which are affected by the manifest only */
+    public static final EnumSet<Scope> MANIFEST_SCOPE = EnumSet.of(MANIFEST);
 }
