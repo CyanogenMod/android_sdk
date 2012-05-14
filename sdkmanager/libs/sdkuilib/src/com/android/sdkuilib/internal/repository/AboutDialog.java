@@ -65,6 +65,7 @@ public class AboutDialog extends UpdaterBaseDialog {
                 "Revision %1$s\n" +
                 "Add-on XML Schema #%2$d\n" +
                 "Repository XML Schema #%3$d\n" +
+                // TODO: update with new year date (search this to find other occurrences to update)
                 "Copyright (C) 2009-2012 The Android Open Source Project.",
                 getRevision(),
                 SdkAddonConstants.NS_LATEST_VERSION,

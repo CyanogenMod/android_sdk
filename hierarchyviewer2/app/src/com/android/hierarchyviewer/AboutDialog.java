@@ -61,8 +61,8 @@ public class AboutDialog extends Dialog {
         imageLabel.setImage(mAboutImage);
 
         CLabel textLabel = new CLabel(control, SWT.NONE);
-        textLabel
-                .setText("Hierarchy Viewer\nCopyright 2010, The Android Open Source Project\nAll Rights Reserved.");
+        // TODO: update with new year date (search this to find other occurrences to update)
+        textLabel.setText("Hierarchy Viewer\nCopyright 2012, The Android Open Source Project\nAll Rights Reserved.");
         textLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, true));
         getShell().setText("About...");
         getShell().setImage(mSmallImage);

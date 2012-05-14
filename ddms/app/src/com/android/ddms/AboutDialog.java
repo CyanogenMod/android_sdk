@@ -130,7 +130,8 @@ public class AboutDialog extends Dialog {
             label.setText("Dalvik Debug Monitor");
         }
         label = new Label(textArea, SWT.NONE);
-        label.setText("Copyright 2007-2011, The Android Open Source Project");
+        // TODO: update with new year date (search this to find other occurrences to update)
+        label.setText("Copyright 2007-2012, The Android Open Source Project");
         label = new Label(textArea, SWT.NONE);
         label.setText("All Rights Reserved.");
 
