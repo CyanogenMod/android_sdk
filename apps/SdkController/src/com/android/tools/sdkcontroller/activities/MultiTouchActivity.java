@@ -246,6 +246,7 @@ public class MultiTouchActivity extends BaseBindingActivity
             break;
         case MultiTouchChannel.EVENT_FRAME_BUFFER:
             onFrameBuffer(((ByteBuffer) msg.obj).array());
+            mHandler.postMessage(ProtocolConstants.MT_FB_HANDLED, (byte[]) null);
             break;
         }
         return true; // we consumed this message
