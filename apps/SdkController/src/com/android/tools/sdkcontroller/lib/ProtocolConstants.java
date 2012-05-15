@@ -120,6 +120,10 @@ public final class ProtocolConstants {
     public static final int MT_POINTER_UP = 5;
     /** Sends framebuffer update. */
     public static final int MT_FB_UPDATE = 6;
+    /** Frame buffer update has been received. */
+    public static final int MT_FB_ACK = 7;
+    /** Frame buffer update has been handled. */
+    public static final int MT_FB_HANDLED = 8;
     /** Size of an event entry in the touch event message to the emulator. */
     public static final int MT_EVENT_ENTRY_SIZE = 16;
 

@@ -109,6 +109,7 @@ public class MultiTouchChannel extends Channel {
                 Message msg = Message.obtain();
                 msg.what = EVENT_FRAME_BUFFER;
                 msg.obj = msg_data;
+                postMessage(ProtocolConstants.MT_FB_ACK, (byte[]) null);
                 notifyUiHandlers(msg);
                 break;
 
