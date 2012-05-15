@@ -252,7 +252,8 @@ public class LayoutActionBar extends Composite {
                     item.setSelection(selected);
                 }
             } else {
-                assert (style & SWT.SEPARATOR) != 0;
+                // Must be a separator, or a label (which we insert for nested widgets)
+                assert (style & SWT.SEPARATOR) != 0 || !item.getText().isEmpty() : item;
             }
         }
 
