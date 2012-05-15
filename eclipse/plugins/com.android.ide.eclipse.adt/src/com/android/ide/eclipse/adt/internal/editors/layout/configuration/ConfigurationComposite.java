@@ -1632,16 +1632,17 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         }
 
         String country = region;
-
-        // Special cases
-        if (language.equals("ar")) {        //$NON-NLS-1$
-            country = "AE";                 //$NON-NLS-1$
-        } else if (language.equals("zh")) { //$NON-NLS-1$
-            country = "CN";                 //$NON-NLS-1$
-        } else if (language.equals("en")) { //$NON-NLS-1$
-            country = "US";                 //$NON-NLS-1$
-        } else if (language.equals("fa")) { //$NON-NLS-1$
-            country = "IR";                 //$NON-NLS-1$
+        if (country.isEmpty()) {
+            // Special cases
+            if (language.equals("ar")) {        //$NON-NLS-1$
+                country = "AE";                 //$NON-NLS-1$
+            } else if (language.equals("zh")) { //$NON-NLS-1$
+                country = "CN";                 //$NON-NLS-1$
+            } else if (language.equals("en")) { //$NON-NLS-1$
+                country = "US";                 //$NON-NLS-1$
+            } else if (language.equals("fa")) { //$NON-NLS-1$
+                country = "IR";                 //$NON-NLS-1$
+            }
         }
 
         if (country.isEmpty()) {
