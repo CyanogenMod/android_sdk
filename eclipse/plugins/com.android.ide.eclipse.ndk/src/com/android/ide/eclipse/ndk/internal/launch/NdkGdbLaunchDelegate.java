@@ -294,7 +294,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         // setup port forwarding between local port & remote (device) unix domain socket
         monitor.setTaskName(Messages.NdkGdbLaunchDelegate_Action_SettingUpPortForward);
         String localport = config.getAttribute(IGDBLaunchConfigurationConstants.ATTR_PORT,
-                NdkDebuggerConfigTab.DEFAULT_GDB_PORT);
+                NdkLaunchConstants.DEFAULT_GDB_PORT);
         try {
             device.createForward(Integer.parseInt(localport),
                     String.format("%s/%s", appDir, DEBUG_SOCKET), //$NON-NLS-1$
@@ -340,22 +340,19 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         manager.addVariables(ndkVars);
 
         // fix path to gdb
-        String userGdbPath = wcopy.getAttribute(IGDBLaunchConfigurationConstants.ATTR_DEBUG_NAME,
-                NdkDebuggerConfigTab.DEFAULT_GDB);
+        String userGdbPath = wcopy.getAttribute(NdkLaunchConstants.ATTR_NDK_GDB,
+                NdkLaunchConstants.DEFAULT_GDB);
         wcopy.setAttribute(IGDBLaunchConfigurationConstants.ATTR_DEBUG_NAME,
                 elaborateExpression(manager, userGdbPath));
 
-        // fix program name
-        String userProgramPath = wcopy.getAttribute(
-                ICDTLaunchConfigurationConstants.ATTR_PROGRAM_NAME,
-                NdkDebuggerConfigTab.DEFAULT_PROGRAM);
+        // setup program name
         wcopy.setAttribute(ICDTLaunchConfigurationConstants.ATTR_PROGRAM_NAME,
-                elaborateExpression(manager, userProgramPath));
+                elaborateExpression(manager, NdkLaunchConstants.DEFAULT_PROGRAM));
 
         // fix solib paths
         List<String> solibPaths = wcopy.getAttribute(
-                IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_SOLIB_PATH,
-                Collections.singletonList(NdkDebuggerConfigTab.DEFAULT_SOLIB_PATH));
+                NdkLaunchConstants.ATTR_NDK_SOLIB,
+                Collections.singletonList(NdkLaunchConstants.DEFAULT_SOLIB_PATH));
         List<String> fixedSolibPaths = new ArrayList<String>(solibPaths.size());
         for (String u : solibPaths) {
             fixedSolibPaths.add(elaborateExpression(manager, u));
