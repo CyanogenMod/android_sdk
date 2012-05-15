@@ -76,6 +76,7 @@ import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
@@ -557,6 +558,13 @@ public class OutlinePage extends ContentOutlinePage
                     mIgnoreSelection = false;
                 }
             }
+        }
+    }
+
+    @Override
+    public void selectionChanged(SelectionChangedEvent event) {
+        if (!mIgnoreSelection) {
+            super.selectionChanged(event);
         }
     }
 
