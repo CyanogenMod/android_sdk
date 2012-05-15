@@ -12,6 +12,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_IS_HOST_MODULE := true
 include $(BUILD_SYSTEM)/base_rules.mk
 
+RCP_LOG_FILE := out/host/eclipse/rcp/build/monitor.log
 RCP_MONITOR_DIR := $(TOPDIR)out/host/eclipse/rcp/build/I.RcpBuild
 
 define mk-rcp-monitor-atree-file
@@ -30,22 +31,29 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 	@mkdir -p $(dir $@)
 	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/monitor && \
-		java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
+		rm -f ../../$(RCP_LOG_FILE) && mkdir -p ../../$(dir $(RCP_LOG_FILE)) && \
+		( java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
 			org.eclipse.equinox.launcher.Main \
 			-application org.eclipse.ant.core.antRunner \
 			-configuration ../../out/host/eclipse/rcp/build/configuration \
-			-DbuildFor=$(HOST_OS)
-	$(hide)$(ACP) -fpt $(V) $(TOPDIR)sdk/monitor/monitor $@
+			-DbuildFor=$(HOST_OS) 2>&1 && \
+		  mv -f ../../$(RCP_LOG_FILE) ../../$(RCP_LOG_FILE).1 ) \
+		| tee ../../$(RCP_LOG_FILE) \
+		| sed '/SUCCESSFUL/d ; /\[java\]/!b label; s/\s\+\[java\]//; /^\s*$$/d; /Compiling/!d; :label /^\s*$$/d; s/^/monitor: /'; \
+		if [[ -f ../../$(RCP_LOG_FILE) ]]; then \
+		  echo "Monitor failed. Full log:" ; \
+		  cat ../../$(RCP_LOG_FILE) ; \
+		  exit 1 ; \
+		fi
 	$(hide)if [[ $(HOST_OS) == "linux" ]]; then \
 		$(call mk-rcp-monitor-atree-file,linux.gtk,x86)    ; \
 		$(call mk-rcp-monitor-atree-file,linux.gtk,x86_64) ; \
-	fi
-	$(hide)if [[ $(HOST_OS) == "darwin" ]]; then \
+	elif [[ $(HOST_OS) == "darwin" ]]; then \
 		$(call mk-rcp-monitor-atree-file,macosx.cocoa,x86_64) ; \
-	fi
-	$(hide)if [[ $(HOST_OS) == "windows" ]]; then \
+	elif [[ $(HOST_OS) == "windows" ]]; then \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86)    ; \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86_64) ; \
 	fi
+	$(hide)$(ACP) -fpt $(V) $(TOPDIR)sdk/monitor/monitor $@
 
 endif
