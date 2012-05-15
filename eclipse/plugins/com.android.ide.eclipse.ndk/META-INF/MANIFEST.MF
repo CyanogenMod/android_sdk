@@ -22,6 +22,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.cdt.dsf.gdb.ui,
  org.eclipse.cdt.launch,
  com.android.ide.eclipse.adt,
+ com.android.ide.eclipse.base,
  com.android.ide.eclipse.ddms
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
