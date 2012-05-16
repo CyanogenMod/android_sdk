@@ -25,6 +25,8 @@ import java.io.IOException;
  * single integer. Any changes to this protocol have to be updated on the device as well.
  */
 public class TraceCommandWriter {
+    private static final int CMD_SIZE = 4;
+
     private static final int READ_FB_ON_EGLSWAP_BIT = 0;
     private static final int READ_FB_ON_GLDRAW_BIT = 1;
     private static final int READ_TEXTURE_DATA_ON_GLTEXIMAGE_BIT = 2;
@@ -43,6 +45,7 @@ public class TraceCommandWriter {
 
         int cmd = eglSwap | glDraw | tex;
 
+        mStream.writeInt(CMD_SIZE);
         mStream.writeInt(cmd);
         mStream.flush();
     }
