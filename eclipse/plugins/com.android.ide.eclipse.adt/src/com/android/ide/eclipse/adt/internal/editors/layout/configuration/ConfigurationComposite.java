@@ -2277,7 +2277,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         if (mListener == null) {
             return null;
         }
-        String includedIn = mListener.getIncludedWithin();
+
         IProject project = mEditedFile.getProject();
         ManifestInfo manifest = ManifestInfo.get(project);
 
@@ -2299,16 +2299,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         String defaultTheme = manifest.getDefaultTheme(mState.target, screenSize);
 
         String preferred = defaultTheme;
-        boolean isIncluded = includedIn != null;
-        if (mState.theme == null || isIncluded) {
+        if (mState.theme == null) {
             // If we are rendering a layout in included context, pick the theme
             // from the outer layout instead
-
-            // TODO: Pick a different activity when we're configuring an
-            // included layout??
-            //if (includedIn != null) {
-            //    layoutName = includedIn;
-            //}
 
             String activity = getSelectedActivity();
             if (activity != null) {
@@ -2318,12 +2311,6 @@ public class ConfigurationComposite extends Composite implements SelectionListen
             if (preferred == null) {
                 preferred = defaultTheme;
             }
-            if (includedIn == null) {
-                mState.theme = preferred;
-            }
-        }
-
-        if (mState.theme == null && includedIn == null) {
             mState.theme = preferred;
         }
 
