@@ -167,15 +167,13 @@ public class ResourceResolver extends RenderResources {
 
     @Override
     @Deprecated
-    public ResourceValue findItemInStyle(StyleResourceValue style, String itemName) {
-        ResourceValue item = style.findValue(itemName, style.isFramework());
-
-        // if we didn't find it, we look in the parent style (if applicable)
-        if (item == null && mStyleInheritanceMap != null) {
-            StyleResourceValue parentStyle = mStyleInheritanceMap.get(style);
-            if (parentStyle != null) {
-                return findItemInStyle(parentStyle, itemName);
-            }
+    public ResourceValue findItemInStyle(StyleResourceValue style, String attrName) {
+        // this method is deprecated because it doesn't know about the namespace of the
+        // attribute so we search for the project namespace first and then in the
+        // android namespace if needed.
+        ResourceValue item = findItemInStyle(style, attrName, false /*isFrameworkAttr*/);
+        if (item == null) {
+            item = findItemInStyle(style, attrName, true /*isFrameworkAttr*/);
         }
 
         return item;
