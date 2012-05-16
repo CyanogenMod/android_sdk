@@ -100,4 +100,13 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
 
                 lintProject("broken-manifest2.xml=>AndroidManifest.xml"));
     }
+
+    public void testDuplicateActivity() throws Exception {
+        assertEquals(
+                "AndroidManifest.xml:16: Error: Duplicate registration for activity com.example.helloworld.HelloWorld",
+
+                lintProject(
+                        "duplicate-manifest.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
 }
