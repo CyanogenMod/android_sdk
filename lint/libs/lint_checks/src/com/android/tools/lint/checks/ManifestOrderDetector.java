@@ -19,6 +19,8 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
@@ -39,6 +41,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -47,6 +50,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Checks for issues in AndroidManifest files such as declaring elements in the
@@ -122,6 +127,22 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             EnumSet.of(Scope.MANIFEST)).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/manifest-intro.html"); //$NON-NLS-1$
 
+    /** Missing a {@code <uses-sdk>} element */
+    public static final Issue DUPLICATE_ACTIVITY = Issue.create(
+            "DuplicateActivity", //$NON-NLS-1$
+            "Checks that an activity is registered only once in the manifest",
+
+            "An activity should only be registered once in the manifest. If it is " +
+            "accidentally registered more than once, then subtle errors can occur, " +
+            "since attribute declarations from the two elements are not merged, so " +
+            "you may accidentally remove previous declarations.",
+
+            Category.CORRECTNESS,
+            5,
+            Severity.ERROR,
+            ManifestOrderDetector.class,
+            EnumSet.of(Scope.MANIFEST));
+
     /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
     }
@@ -130,6 +151,12 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     /** Number of times we've seen the <uses-sdk> element */
     private int mSeenUsesSdk;
+
+    /** Activities we've encountered */
+    private Set<String> mActivities = new HashSet<String>();
+
+    /** Package declared in the manifest */
+    private String mPackage;
 
     @Override
     public Speed getSpeed() {
@@ -194,6 +221,28 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                         String.format(
                         "The <%1$s> element must be a direct child of the <application> element",
                         tag), null);
+            }
+
+            if (tag.equals(TAG_ACTIVITY)) {
+                Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                if (nameNode != null) {
+                    String name = nameNode.getValue();
+                    if (!name.isEmpty()) {
+                        if (name.charAt(0) == '.') {
+                            name = getPackage(element) + name;
+                        } else if (name.indexOf('.') == -1) {
+                            name = getPackage(element) + '.' + name;
+                        }
+                        if (mActivities.contains(name)) {
+                            String message = String.format(
+                                    "Duplicate registration for activity %1$s", name);
+                            context.report(DUPLICATE_ACTIVITY, context.getLocation(nameNode),
+                                    message, null);
+                        } else {
+                            mActivities.add(name);
+                        }
+                    }
+                }
             }
 
             return;
@@ -267,5 +316,13 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             // Don't complain for *every* element following the <application> tag
             mSeenApplication = false;
         }
+    }
+
+    private String getPackage(Element element) {
+        if (mPackage == null) {
+            return element.getOwnerDocument().getDocumentElement().getAttribute(ATTR_PACKAGE);
+        }
+
+        return mPackage;
     }
 }
