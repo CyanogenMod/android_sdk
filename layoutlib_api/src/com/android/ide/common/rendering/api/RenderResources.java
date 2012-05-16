@@ -127,14 +127,18 @@ public class RenderResources {
      * Returns the {@link ResourceValue} matching a given name in a given style. If the
      * item is not directly available in the style, the method looks in its parent style.
      *
+     * This version of doesn't support providing the namespace of the attribute so it'll search
+     * in both the project's namespace and then in the android namespace.
+     *
      * @param style the style to search in
-     * @param itemName the name of the item to search for.
+     * @param attrName the name of the attribute to search for.
      * @return the {@link ResourceValue} object or <code>null</code>
      *
-     * @Deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)}
+     * @Deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)} since this
+     * method doesn't know the item namespace.
      */
     @Deprecated
-    public ResourceValue findItemInStyle(StyleResourceValue style, String itemName) {
+    public ResourceValue findItemInStyle(StyleResourceValue style, String attrName) {
         return null;
     }
 
