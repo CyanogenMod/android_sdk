@@ -72,13 +72,13 @@ public class JUnitLaunchConfigDelegate extends JUnitLaunchConfigurationDelegate 
 
     /**
      * Removes the android.jar from the bootstrap path if present.
-     * 
+     *
      * @param bootpath Array of Arrays of bootstrap class paths
      * @return a new modified (if applicable) bootpath
      */
     public static String[][] fixBootpathExt(String[][] bootpath) {
         for (int i = 0; i < bootpath.length; i++) {
-            if (bootpath[i] != null) {
+            if (bootpath[i] != null && bootpath[i].length > 0) {
                 // we assume that the android.jar can only be present in the
                 // bootstrap path of android tests
                 if (bootpath[i][0].endsWith(SdkConstants.FN_FRAMEWORK_LIBRARY)) {
@@ -93,16 +93,16 @@ public class JUnitLaunchConfigDelegate extends JUnitLaunchConfigurationDelegate 
      * Add the junit.jar to the user classpath; since Eclipse was relying on
      * android.jar to provide the appropriate org.junit classes, it does not
      * know it actually needs the junit.jar.
-     * 
-     * @param classpath Array containing classpath 
-     * @param projectName The name of the project (for logging purposes) 
-     * 
+     *
+     * @param classpath Array containing classpath
+     * @param projectName The name of the project (for logging purposes)
+     *
      * @return a new modified (if applicable) classpath
      */
     public static String[] fixClasspath(String[] classpath, String projectName) {
         // search for junit.jar; if any are found return immediately
         for (int i = 0; i < classpath.length; i++) {
-            if (classpath[i].endsWith(JUNIT_JAR)) { 
+            if (classpath[i].endsWith(JUNIT_JAR)) {
                 return classpath;
             }
         }
@@ -138,9 +138,9 @@ public class JUnitLaunchConfigDelegate extends JUnitLaunchConfigurationDelegate 
 
     /**
      * Returns the path of the junit jar in the highest version bundle.
-     * 
+     *
      * (This is public only so that the test can call it)
-     * 
+     *
      * @return the path as a string
      * @throws IOException
      */
