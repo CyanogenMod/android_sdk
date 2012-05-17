@@ -23,7 +23,6 @@ import com.android.ide.eclipse.adt.internal.build.builders.ResourceManagerBuilde
 import com.android.sdklib.SdkConstants;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 /**
  * Constant definition class.<br>
@@ -140,10 +139,6 @@ public class AdtConstants {
     public final static String FN_MANIFEST_CLASS = "Manifest.java"; //$NON-NLS-1$
     /** Temporary packaged resources file name, i.e. "resources.ap_" */
     public final static String FN_RESOURCES_AP_ = "resources.ap_"; //$NON-NLS-1$
-    /** Temporary packaged resources file name for a specific set of configuration */
-    public final static String FN_RESOURCES_S_AP_ = "resources-%s.ap_"; //$NON-NLS-1$
-    public final static Pattern PATTERN_RESOURCES_S_AP_ =
-        Pattern.compile("resources-.*\\.ap_", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
     public final static String FN_TRACEVIEW =
         (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
