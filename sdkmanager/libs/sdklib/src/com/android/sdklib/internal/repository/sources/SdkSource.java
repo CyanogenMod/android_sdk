@@ -516,10 +516,12 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                 reason = "HTTPS SSL error. You might want to force download through HTTP in the settings.";
                 mFetchError += ": HTTPS SSL error";
             } else if (exception[0].getMessage() != null) {
-                reason = exception[0].getMessage();
+                reason =
+                    exception[0].getClass().getSimpleName().replace("Exception", "") //$NON-NLS-1$ //$NON-NLS-2$
+                    + ' '
+                    + exception[0].getMessage();
             } else {
-                // We don't know what's wrong. Let's give the exception class at least.
-                reason = String.format("Unknown (%1$s)", exception[0].getClass().getName());
+                reason = exception[0].toString();
             }
 
             monitor.logError("Failed to fetch URL %1$s, reason: %2$s", url, reason);
