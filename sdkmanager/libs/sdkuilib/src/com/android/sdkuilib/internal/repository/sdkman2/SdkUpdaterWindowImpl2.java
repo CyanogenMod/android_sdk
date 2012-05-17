@@ -320,13 +320,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         mPkgPage.registerMenuAction(
                 MenuAction.SHOW_ADDON_SITES, manageSources);
 
-        if (mContext == SdkInvocationContext.STANDALONE) {
-            // Note: when invoked from an IDE, the SwtMenuBar library isn't
-            // available. This means this source should not directly import
-            // any of SwtMenuBar classes, otherwise the whole window class
-            // would fail to load. The MenuBarWrapper below helps to make
-            // that indirection.
-
+        if (mContext == SdkInvocationContext.STANDALONE || mContext == SdkInvocationContext.IDE) {
             try {
                 new MenuBarWrapper(APP_NAME, menuTools) {
                     @Override
@@ -348,7 +342,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                         }
                     }
                 };
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
                 e.printStackTrace();
             }

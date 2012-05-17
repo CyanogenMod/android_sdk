@@ -178,6 +178,11 @@ public class AvdManagerWindowImpl1 {
     @SuppressWarnings("unused") // MenuBarWrapper works using side effects
     private void createMenuBar() {
 
+        // Only create the menu when running as standalone.
+        // We don't need the menu when invoked from the IDE, or the SDK Manager
+        // or from the AVD Chooser dialog. The only point of the menu is to
+        // get the about box, and invoke Tools > SDK Manager, which we don't
+        // need to do in these cases.
         if (mContext != AvdInvocationContext.STANDALONE) {
             return;
         }
@@ -200,38 +205,30 @@ public class AvdManagerWindowImpl1 {
             }
         });
 
-        if (mContext != AvdInvocationContext.IDE) {
-            // Note: when invoked from an IDE, the SwtMenuBar library isn't
-            // available. This means this source should not directly import
-            // any of SwtMenuBar classes, otherwise the whole window class
-            // would fail to load. The MenuBarWrapper below helps to make
-            // that indirection.
+        try {
+            new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
+                @Override
+                public void onPreferencesMenuSelected() {
+                    SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
+                    sd.open();
+                }
 
-            try {
-                new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
-                    @Override
-                    public void onPreferencesMenuSelected() {
-                        SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
-                        sd.open();
-                    }
+                @Override
+                public void onAboutMenuSelected() {
+                    AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
+                    ad.open();
+                }
 
-                    @Override
-                    public void onAboutMenuSelected() {
-                        AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
-                        ad.open();
+                @Override
+                public void printError(String format, Object... args) {
+                    if (mUpdaterData != null) {
+                        mUpdaterData.getSdkLog().error(null, format, args);
                     }
-
-                    @Override
-                    public void printError(String format, Object... args) {
-                        if (mUpdaterData != null) {
-                            mUpdaterData.getSdkLog().error(null, format, args);
-                        }
-                    }
-                };
-            } catch (Exception e) {
-                mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
-                e.printStackTrace();
-            }
+                }
+            };
+        } catch (Throwable e) {
+            mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
+            e.printStackTrace();
         }
     }
 

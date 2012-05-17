@@ -17,7 +17,8 @@ Bundle-ClassPath: .,
  libs/asm-4.0.jar,
  libs/asm-tree-4.0.jar,
  libs/propertysheet.jar,
- libs/ant-glob.jar
+ libs/ant-glob.jar,
+ libs/swtmenubar.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: com.android.ide.eclipse.base,
