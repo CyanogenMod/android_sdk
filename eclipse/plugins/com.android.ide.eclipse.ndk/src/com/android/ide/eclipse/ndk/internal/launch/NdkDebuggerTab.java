@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.ndk.internal.launch;
 
+import com.android.ide.eclipse.ndk.internal.NdkHelper;
 import com.android.ide.eclipse.ndk.internal.NdkManager;
 
-import org.eclipse.cdt.debug.core.ICDTLaunchConfigurationConstants;
 import org.eclipse.cdt.dsf.gdb.IGDBLaunchConfigurationConstants;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -44,7 +44,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -256,27 +255,7 @@ public class NdkDebuggerTab extends AbstractLaunchConfigurationTab {
 
     @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy config) {
-        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_REMOTE_TCP, true);
-        config.setAttribute(NdkLaunchConstants.ATTR_NDK_GDB, NdkLaunchConstants.DEFAULT_GDB);
-        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_GDB_INIT,
-                NdkLaunchConstants.DEFAULT_GDBINIT);
-        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_PORT,
-                NdkLaunchConstants.DEFAULT_GDB_PORT);
-        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_HOST, "localhost"); //$NON-NLS-1$
-        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_STOP_AT_MAIN, false);
-        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_START_MODE,
-                IGDBLaunchConfigurationConstants.DEBUGGER_MODE_REMOTE_ATTACH);
-        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_PROGRAM_NAME,
-                NdkLaunchConstants.DEFAULT_PROGRAM);
-
-        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_START_MODE,
-                IGDBLaunchConfigurationConstants.DEBUGGER_MODE_REMOTE);
-        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_ID,
-                "gdbserver"); //$NON-NLS-1$
-
-        List<String> solibPaths = new ArrayList<String>(2);
-        solibPaths.add(NdkLaunchConstants.DEFAULT_SOLIB_PATH);
-        config.setAttribute(NdkLaunchConstants.ATTR_NDK_SOLIB, solibPaths);
+        NdkHelper.setLaunchConfigDefaults(config);
     }
 
     @Override

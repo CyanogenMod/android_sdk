@@ -71,6 +71,9 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("restriction")
 public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
+    public static final String LAUNCH_TYPE_ID =
+            "com.android.ide.eclipse.ndk.debug.LaunchConfigType"; //$NON-NLS-1$
+
     private static final Joiner JOINER = Joiner.on(", ").skipNulls();
 
     private static final String DEBUG_SOCKET = "debugsock";         //$NON-NLS-1$
@@ -233,7 +236,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         }
 
         // pull app_process & libc from the device
-        IPath solibFolder = project.getLocation().append("obj/local").append(compatAbi.name());
+        IPath solibFolder = project.getLocation().append("obj/local").append(compatAbi.getAbi());
         try {
             pull(device, "/system/bin/app_process", solibFolder);   //$NON-NLS-1$
             pull(device, "/system/lib/libc.so", solibFolder);       //$NON-NLS-1$
@@ -344,7 +347,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         IValueVariable ndkProject = manager.newValueVariable(NdkVariables.NDK_PROJECT,
                 NdkVariables.NDK_PROJECT, true, project.getLocation().toOSString());
         IValueVariable ndkCompatAbi = manager.newValueVariable(NdkVariables.NDK_COMPAT_ABI,
-                NdkVariables.NDK_COMPAT_ABI, true, compatAbi.name());
+                NdkVariables.NDK_COMPAT_ABI, true, compatAbi.getAbi());
 
         IValueVariable[] ndkVars = new IValueVariable[] { ndkGdb, ndkProject, ndkCompatAbi };
         manager.addVariables(ndkVars);
@@ -427,7 +430,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
     private NativeAbi getCompatibleAbi(String deviceAbi1, String deviceAbi2,
                                 Collection<NativeAbi> appAbis) {
         for (NativeAbi abi: appAbis) {
-            if (abi.toString().equals(deviceAbi1) || abi.toString().equals(deviceAbi2)) {
+            if (abi.getAbi().equals(deviceAbi1) || abi.getAbi().equals(deviceAbi2)) {
                 return abi;
             }
         }

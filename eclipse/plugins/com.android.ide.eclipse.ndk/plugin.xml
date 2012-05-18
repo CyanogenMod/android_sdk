@@ -169,5 +169,40 @@
             type="com.android.ide.eclipse.ndk.debug.LaunchConfigType">
       </launchConfigurationTabGroup>
    </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchShortcuts">
+      <shortcut
+            class="com.android.ide.eclipse.ndk.internal.launch.NdkGdbLaunchShortcut"
+            id="com.android.ide.eclipse.ndk.debug.LaunchConfigShortcut"
+            label="Android Native Application"
+            modes="debug">
+            <contextualLaunch>
+                <enablement>
+                    <with variable="selection">
+                        <count value="1" />
+                        <iterate>
+                            <and>
+                                <test property="org.eclipse.jdt.launching.isContainer" />
+                                <test
+                                    property="org.eclipse.jdt.launching.hasProjectNature"
+                                    args="com.android.ide.eclipse.adt.AndroidNature" />
+                            </and>
+                        </iterate>
+                    </with>
+                </enablement>
+            </contextualLaunch>
+            <perspective id="org.eclipse.jdt.ui.JavaPerspective" />
+            <perspective id="org.eclipse.debug.ui.DebugPerspective" />
+            <perspective
+                  id="org.eclipse.cdt.ui.CPerspective">
+            </perspective>
+            <configurationType id="com.android.ide.eclipse.ndk.debug.LaunchConfigType">
+            </configurationType>
+            <description
+                description="Debug as Android Native Application"
+                mode="debug">
+            </description>
+      </shortcut>
+   </extension>
 
 </plugin>
