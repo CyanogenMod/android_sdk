@@ -343,7 +343,6 @@ public class SparseArray<E> {
             }
 
             @Override
-            @SuppressWarnings("unchecked")
             public E valueAt(int index) {
                 return mStorage.valueAt(index);
             }

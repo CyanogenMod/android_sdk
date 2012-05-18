@@ -44,6 +44,7 @@ import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
+import com.android.sdkuilib.internal.repository.SettingsController.OnChangedListener;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader;
 import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
@@ -113,9 +114,33 @@ public class UpdaterData implements IUpdaterData {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
 
-        mSettingsController = new SettingsController(this);
+        mSettingsController = new SettingsController(sdkLog);
 
         initSdk();
+
+        mSettingsController.registerOnChangedListener(new OnChangedListener() {
+            @Override
+            public void onSettingsChanged(
+                    SettingsController controller,
+                    SettingsController.Settings oldSettings) {
+
+                // Reset the download cache if it doesn't match the right strategy.
+                // The cache instance gets lazily recreated later in getDownloadCache().
+                if (mDownloadCache != null) {
+                    if (controller.getSettings().getUseDownloadCache() &&
+                            mDownloadCache.getStrategy() != DownloadCache.Strategy.FRESH_CACHE) {
+                        mDownloadCache = null;
+                    } else if (!controller.getSettings().getUseDownloadCache() &&
+                            mDownloadCache.getStrategy() != DownloadCache.Strategy.DIRECT) {
+                        mDownloadCache = null;
+                    }
+                }
+
+                if (oldSettings.getForceHttp() != controller.getSettings().getForceHttp()) {
+                    refreshSources(false /*forceFetching*/);
+                }
+            }
+        });
     }
 
     // ----- getters, setters ----
@@ -127,7 +152,10 @@ public class UpdaterData implements IUpdaterData {
     @Override
     public DownloadCache getDownloadCache() {
         if (mDownloadCache == null) {
-            mDownloadCache = new DownloadCache(DownloadCache.Strategy.FRESH_CACHE);
+            mDownloadCache = new DownloadCache(
+                    mSettingsController.getSettings().getUseDownloadCache() ?
+                            DownloadCache.Strategy.FRESH_CACHE :
+                            DownloadCache.Strategy.DIRECT);
         }
         return mDownloadCache;
     }
@@ -382,7 +410,7 @@ public class UpdaterData implements IUpdaterData {
         // this will accumulate all the packages installed.
         final List<Archive> newlyInstalledArchives = new ArrayList<Archive>();
 
-        final boolean forceHttp = getSettingsController().getForceHttp();
+        final boolean forceHttp = getSettingsController().getSettings().getForceHttp();
 
         // sort all archives based on their dependency level.
         Collections.sort(archives, new InstallOrderComparator());
@@ -609,7 +637,8 @@ public class UpdaterData implements IUpdaterData {
     private void askForAdbRestart(ITaskMonitor monitor) {
         final boolean[] canRestart = new boolean[] { true };
 
-        if (getWindowShell() != null && getSettingsController().getAskBeforeAdbRestart()) {
+        if (getWindowShell() != null &&
+                getSettingsController().getSettings().getAskBeforeAdbRestart()) {
             // need to ask for permission first
             final Shell shell = getWindowShell();
             if (shell != null && !shell.isDisposed()) {
@@ -1001,7 +1030,7 @@ public class UpdaterData implements IUpdaterData {
     public void refreshSources(final boolean forceFetching) {
         assert mTaskFactory != null;
 
-        final boolean forceHttp = getSettingsController().getForceHttp();
+        final boolean forceHttp = getSettingsController().getSettings().getForceHttp();
 
         mTaskFactory.start("Refresh Sources", new ITask() {
             @Override

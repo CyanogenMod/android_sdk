@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.DownloadCache;
+
 import java.net.URL;
 import java.util.Properties;
 
@@ -29,29 +31,41 @@ public interface ISettingsPage {
      * Type: String.
      */
     public static final String KEY_HTTP_PROXY_PORT = "http.proxyPort";           //$NON-NLS-1$
+
     /**
      * Java system setting picked up by {@link URL} for http proxy host.
      * Type: String.
      */
     public static final String KEY_HTTP_PROXY_HOST = "http.proxyHost";           //$NON-NLS-1$
+
     /**
      * Setting to force using http:// instead of https:// connections.
      * Type: Boolean.
      * Default: False.
      */
     public static final String KEY_FORCE_HTTP = "sdkman.force.http";             //$NON-NLS-1$
+
     /**
      * Setting to display only packages that are new or updates.
      * Type: Boolean.
      * Default: True.
      */
     public static final String KEY_SHOW_UPDATE_ONLY = "sdkman.show.update.only"; //$NON-NLS-1$
+
     /**
      * Setting to ask for permission before restarting ADB.
      * Type: Boolean.
      * Default: False.
      */
     public static final String KEY_ASK_ADB_RESTART = "sdkman.ask.adb.restart";   //$NON-NLS-1$
+
+    /**
+     * Setting to use the {@link DownloadCache}, for small manifest XML files.
+     * Type: Boolean.
+     * Default: True.
+     */
+    public static final String KEY_USE_DOWNLOAD_CACHE = "sdkman.use.dl.cache";   //$NON-NLS-1$
+
     /**
      * Setting to set the density of the monitor.
      * Type: Integer.
@@ -60,11 +74,11 @@ public interface ISettingsPage {
     public static final String KEY_MONITOR_DENSITY = "sdkman.monitor.density"; //$NON-NLS-1$
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
-    public abstract void loadSettings(Properties in_settings);
+    public abstract void loadSettings(Properties inSettings);
 
     /** Called by the application to retrieve settings from the UI and store them in
      * the given {@link Properties} container. */
-    public abstract void retrieveSettings(Properties out_settings);
+    public abstract void retrieveSettings(Properties outSettings);
 
     /**
      * Called by the application to give a callback that the page should invoke when

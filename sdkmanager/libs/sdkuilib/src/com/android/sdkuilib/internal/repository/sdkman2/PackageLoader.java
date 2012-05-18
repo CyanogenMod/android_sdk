@@ -206,7 +206,8 @@ public class PackageLoader {
                     }
 
                     // get remote packages
-                    boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+                    boolean forceHttp =
+                        mUpdaterData.getSettingsController().getSettings().getForceHttp();
                     loadRemoteAddonsList(monitor.createSubMonitor(1));
 
                     SdkSource[] sources = mUpdaterData.getSources().getAllSources();
@@ -432,7 +433,7 @@ public class PackageLoader {
             }
         }
 
-        if (mUpdaterData.getSettingsController().getForceHttp()) {
+        if (mUpdaterData.getSettingsController().getSettings().getForceHttp()) {
             url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
         }
 

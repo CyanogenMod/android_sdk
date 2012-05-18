@@ -20,13 +20,14 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.ISdkLog;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
@@ -40,48 +41,113 @@ public class SettingsController {
 
     private static final String SETTINGS_FILENAME = "androidtool.cfg"; //$NON-NLS-1$
 
-    private final Properties mProperties = new Properties();
+    private final ISdkLog mSdkLog;
+    private final Settings mSettings = new Settings();
+
+    public interface OnChangedListener {
+        public void onSettingsChanged(SettingsController controller, Settings oldSettings);
+    }
+    private final List<OnChangedListener> mChangedListeners = new ArrayList<OnChangedListener>(1);
 
     /** The currently associated {@link ISettingsPage}. Can be null. */
     private ISettingsPage mSettingsPage;
 
-    private final UpdaterData mUpdaterData;
 
-    public SettingsController(UpdaterData updaterData) {
-        mUpdaterData = updaterData;
+    public SettingsController(ISdkLog sdkLog) {
+        mSdkLog = sdkLog;
+    }
+
+    public Settings getSettings() {
+        return mSettings;
+    }
+
+    public void registerOnChangedListener(OnChangedListener listener) {
+        if (listener != null && !mChangedListeners.contains(listener)) {
+            mChangedListeners.add(listener);
+        }
+    }
+
+    public void unregisterOnChangedListener(OnChangedListener listener) {
+        if (listener != null) {
+            mChangedListeners.remove(listener);
+        }
     }
 
     //--- Access to settings ------------
 
-    /**
-     * Returns the value of the {@link ISettingsPage#KEY_FORCE_HTTP} setting.
-     *
-     * @see ISettingsPage#KEY_FORCE_HTTP
-     */
-    public boolean getForceHttp() {
-        return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP));
-    }
 
-    /**
-     * Returns the value of the {@link ISettingsPage#KEY_ASK_ADB_RESTART} setting.
-     *
-     * @see ISettingsPage#KEY_ASK_ADB_RESTART
-     */
-    public boolean getAskBeforeAdbRestart() {
-        return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_ASK_ADB_RESTART));
-    }
+    public static class Settings {
+        private final Properties mProperties = new Properties();
 
-    /**
-     * Returns the value of the {@link ISettingsPage#KEY_SHOW_UPDATE_ONLY} setting.
-     *
-     * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
-     */
-    public boolean getShowUpdateOnly() {
-        String value = mProperties.getProperty(ISettingsPage.KEY_SHOW_UPDATE_ONLY);
-        if (value == null) {
-            return true;
+        /** Initialize an empty set of settings. */
+        public Settings() {
         }
-        return Boolean.parseBoolean(value);
+
+        /** Duplicates a set of settings. */
+        public Settings(Settings settings) {
+            for (Entry<Object, Object> entry : settings.mProperties.entrySet()) {
+                mProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_FORCE_HTTP} setting.
+         *
+         * @see ISettingsPage#KEY_FORCE_HTTP
+         */
+        public boolean getForceHttp() {
+            return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP));
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_ASK_ADB_RESTART} setting.
+         *
+         * @see ISettingsPage#KEY_ASK_ADB_RESTART
+         */
+        public boolean getAskBeforeAdbRestart() {
+            return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_ASK_ADB_RESTART));
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_USE_DOWNLOAD_CACHE} setting.
+         *
+         * @see ISettingsPage#KEY_USE_DOWNLOAD_CACHE
+         */
+        public boolean getUseDownloadCache() {
+            return Boolean.parseBoolean(
+                    mProperties.getProperty(
+                            ISettingsPage.KEY_USE_DOWNLOAD_CACHE,
+                            Boolean.TRUE.toString()));
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_SHOW_UPDATE_ONLY} setting.
+         *
+         * @see ISettingsPage#KEY_SHOW_UPDATE_ONLY
+         */
+        public boolean getShowUpdateOnly() {
+            return Boolean.parseBoolean(
+                    mProperties.getProperty(
+                            ISettingsPage.KEY_SHOW_UPDATE_ONLY,
+                            Boolean.TRUE.toString()));
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_MONITOR_DENSITY} setting
+         * @see ISettingsPage#KEY_MONITOR_DENSITY
+         */
+        public int getMonitorDensity() {
+            String value = mProperties.getProperty(ISettingsPage.KEY_MONITOR_DENSITY, null);
+            if (value == null) {
+                return -1;
+            }
+
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        }
     }
 
     /**
@@ -95,37 +161,21 @@ public class SettingsController {
     }
 
     /**
-     * Returns the value of the {@link ISettingsPage#KEY_MONITOR_DENSITY} setting
-     * @see ISettingsPage#KEY_MONITOR_DENSITY
-     */
-    public int getMonitorDensity() {
-        String value = mProperties.getProperty(ISettingsPage.KEY_MONITOR_DENSITY, null);
-        if (value == null) {
-            return -1;
-        }
-
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    /**
      * Sets the value of the {@link ISettingsPage#KEY_MONITOR_DENSITY} setting.
      *
      * @param density the density of the monitor
      * @see ISettingsPage#KEY_MONITOR_DENSITY
      */
     public void setMonitorDensity(int density) {
-        mProperties.setProperty(ISettingsPage.KEY_MONITOR_DENSITY, Integer.toString(density));
+        mSettings.mProperties.setProperty(
+                ISettingsPage.KEY_MONITOR_DENSITY, Integer.toString(density));
     }
 
     /**
      * Internal helper to set a boolean setting.
      */
     void setSetting(String key, boolean value) {
-        mProperties.setProperty(key, Boolean.toString(value));
+        mSettings.mProperties.setProperty(key, Boolean.toString(value));
     }
 
     //--- Controller methods -------------
@@ -144,7 +194,7 @@ public class SettingsController {
         mSettingsPage = settingsPage;
 
         if (settingsPage != null) {
-            settingsPage.loadSettings(mProperties);
+            settingsPage.loadSettings(mSettings.mProperties);
 
             settingsPage.setOnSettingsChanged(new ISettingsPage.SettingsChangedCallback() {
                 @Override
@@ -168,17 +218,19 @@ public class SettingsController {
             if (f.exists()) {
                 fis = new FileInputStream(f);
 
-                mProperties.load(fis);
+                mSettings.mProperties.load(fis);
 
                 // Properly reformat some settings to enforce their default value when missing.
-                setShowUpdateOnly(getShowUpdateOnly());
-                setSetting(ISettingsPage.KEY_ASK_ADB_RESTART, getAskBeforeAdbRestart());
+                setShowUpdateOnly(mSettings.getShowUpdateOnly());
+                setSetting(ISettingsPage.KEY_ASK_ADB_RESTART, mSettings.getAskBeforeAdbRestart());
+                setSetting(ISettingsPage.KEY_USE_DOWNLOAD_CACHE, mSettings.getUseDownloadCache());
             }
 
         } catch (Exception e) {
-            ISdkLog log = mUpdaterData.getSdkLog();
-            if (log != null) {
-                log.error(e, "Failed to load settings from .android folder. Path is '%1$s'.", path);
+            if (mSdkLog != null) {
+                mSdkLog.error(e,
+                        "Failed to load settings from .android folder. Path is '%1$s'.",
+                        path);
             }
         } finally {
             if (fis != null) {
@@ -204,34 +256,27 @@ public class SettingsController {
 
             fos = new FileOutputStream(f);
 
-            mProperties.store( fos, "## Settings for Android Tool");  //$NON-NLS-1$
+            mSettings.mProperties.store(fos, "## Settings for Android Tool");  //$NON-NLS-1$
 
         } catch (Exception e) {
-            ISdkLog log = mUpdaterData.getSdkLog();
+            if (mSdkLog != null) {
+                // This is important enough that we want to really nag the user about it
+                String reason = null;
 
-            if (log != null) {
-                log.error(e, "Failed to save settings at '%1$s'", path);
+                if (e instanceof FileNotFoundException) {
+                    reason = "File not found";
+                } else if (e instanceof AndroidLocationException) {
+                    reason = ".android folder not found, please define ANDROID_SDK_HOME";
+                } else if (e.getMessage() != null) {
+                    reason = String.format("%1$s: %2$s",
+                            e.getClass().getSimpleName(),
+                            e.getMessage());
+                } else {
+                    reason = e.getClass().getName();
+                }
+
+                mSdkLog.error(e, "Failed to save settings file '%1$s': %2$s", path, reason);
             }
-
-            // This is important enough that we want to really nag the user about it
-            String reason = null;
-
-            if (e instanceof FileNotFoundException) {
-                reason = "File not found";
-            } else if (e instanceof AndroidLocationException) {
-                reason = ".android folder not found, please define ANDROID_SDK_HOME";
-            } else if (e.getMessage() != null) {
-                reason = String.format("%1$s: %2$s", e.getClass().getSimpleName(), e.getMessage());
-            } else {
-                reason = e.getClass().getName();
-            }
-
-            MessageDialog.openInformation(mUpdaterData.getWindowShell(),
-                    "SDK Manager Settings",
-                    String.format(
-                        "The Android SDK and AVD Manager failed to save its settings (%1$s) at %2$s",
-                        reason, path));
-
         } finally {
             if (fos != null) {
                 try {
@@ -243,28 +288,23 @@ public class SettingsController {
     }
 
     /**
-     * When settings have changed: retrieve the new settings, apply them and save them.
-     *
-     * This updates Java system properties for the HTTP proxy.
+     * When settings have changed: retrieve the new settings, apply them, save them
+     * and notify on-settings-changed listeners.
      */
     private void onSettingsChanged() {
         if (mSettingsPage == null) {
             return;
         }
 
-        String oldHttpsSetting = mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP,
-                Boolean.FALSE.toString());
-
-        mSettingsPage.retrieveSettings(mProperties);
+        Settings oldSettings = new Settings(mSettings);
+        mSettingsPage.retrieveSettings(mSettings.mProperties);
         applySettings();
         saveSettings();
 
-        String newHttpsSetting = mProperties.getProperty(ISettingsPage.KEY_FORCE_HTTP,
-                Boolean.FALSE.toString());
-        if (!newHttpsSetting.equals(oldHttpsSetting)) {
-            // In case the HTTP/HTTPS setting changes, force sources to be reloaded
-            // (this only refreshes sources that the user has already tried to open.)
-            mUpdaterData.refreshSources(false /*forceFetching*/);
+        for (OnChangedListener listener : mChangedListeners) {
+            try {
+                listener.onSettingsChanged(this, oldSettings);
+            } catch (Throwable ignore) {}
         }
     }
 
@@ -275,9 +315,9 @@ public class SettingsController {
         Properties props = System.getProperties();
 
         // Get the configured HTTP proxy settings
-        String proxyHost = mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_HOST,
+        String proxyHost = mSettings.mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_HOST,
                 ""); //$NON-NLS-1$
-        String proxyPort = mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_PORT,
+        String proxyPort = mSettings.mProperties.getProperty(ISettingsPage.KEY_HTTP_PROXY_PORT,
                 ""); //$NON-NLS-1$
 
         // Set both the HTTP and HTTPS proxy system properties.

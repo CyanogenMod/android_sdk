@@ -175,6 +175,56 @@ public class DownloadCache {
         return mStrategy;
     }
 
+    public File getCacheRoot() {
+        return mCacheRoot;
+    }
+
+    /**
+     * Computes the size of the cached files.
+     *
+     * @return The sum of the byte size of the cached files.
+     */
+    public long getCurrentSize() {
+        long size = 0;
+
+        if (mCacheRoot != null) {
+            File[] files = mCacheRoot.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isFile()) {
+                        String name = f.getName();
+                        if (name.startsWith(BIN_FILE_PREFIX) ||
+                                name.startsWith(INFO_FILE_PREFIX)) {
+                            size += f.length();
+                        }
+                    }
+                }
+            }
+        }
+
+        return size;
+    }
+
+    /**
+     * Removes all cached files from the cache directory.
+     */
+    public void clearCache() {
+        if (mCacheRoot != null) {
+            File[] files = mCacheRoot.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isFile()) {
+                        String name = f.getName();
+                        if (name.startsWith(BIN_FILE_PREFIX) ||
+                                name.startsWith(INFO_FILE_PREFIX)) {
+                            f.delete();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Returns the directory to be used as a cache.
      * Creates it if necessary.
@@ -438,6 +488,8 @@ public class DownloadCache {
         return downloadAndCache(urlString, monitor, cached, info,
                 null /*headers*/, null /*statusCode*/);
     }
+
+
 
     // --------------
 

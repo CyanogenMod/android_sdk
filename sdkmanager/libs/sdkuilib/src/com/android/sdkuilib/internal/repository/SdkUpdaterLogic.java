@@ -1276,7 +1276,7 @@ class SdkUpdaterLogic {
             return;
         }
 
-        final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+        final boolean forceHttp = mUpdaterData.getSettingsController().getSettings().getForceHttp();
 
         mUpdaterData.getTaskFactory().start("Refresh Sources", new ITask() {
             @Override
