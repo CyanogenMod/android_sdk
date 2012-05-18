@@ -522,7 +522,16 @@ class PackagesDiffLogic {
         boolean hasChanged = false;
         List<PkgCategory> cats = op.getCategories();
 
+        boolean enablePreviews =
+            mUpdaterData.getSettingsController().getSettings().getEnablePreviews();
+
         nextPkg: for (Package newPkg : packages) {
+
+            if (!enablePreviews && newPkg.getRevision().isPreview()) {
+                // This is a preview and previews are not enabled. Ignore the package.
+                continue nextPkg;
+            }
+
             for (PkgCategory cat : cats) {
                 for (PkgState state : PKG_STATES) {
                     for (Iterator<PkgItem> currItemIt = cat.getItems().iterator();

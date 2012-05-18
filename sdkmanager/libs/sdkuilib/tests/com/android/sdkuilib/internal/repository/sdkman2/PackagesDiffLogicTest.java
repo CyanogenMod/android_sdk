@@ -31,6 +31,7 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdkuilib.internal.repository.ISettingsPage;
 import com.android.sdkuilib.internal.repository.MockUpdaterData;
 
 import java.util.Properties;
@@ -1455,9 +1456,10 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, false /*displaySortByApi*/));
     }
 
-    public void testToolsPreviews() {
+    public void testToolsPreviewsDisabled() {
         // Test: No local tools installed. The remote server has both tools and platforms
-        // in release and RC versions.
+        // in release and RC versions. However the settings "enable previews" is disabled
+        // (which is the default) so the previews are not actually loaded from the server.
 
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
 
@@ -1474,7 +1476,38 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 2>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (1.example.com), #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 2>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 3>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testToolsPreviews() {
+        // Test: No local tools installed. The remote server has both tools and platforms
+        // in release and RC versions.
+
+        // Enable previews in the settings
+        u.overrideSetting(ISettingsPage.KEY_ENABLE_PREVIEWS, true);
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, new FullRevision(2, 0, 0), 3),          // Tools 2
+                new MockToolPackage(src1, new FullRevision(4, 0, 0, 1), 3),       // Tools 4 rc1
+                new MockPlatformToolPackage(src1, new FullRevision(3, 0, 0)),     // Plat-T 3
+                new MockPlatformToolPackage(src1, new FullRevision(5, 0, 0, 1)),  // Plat-T 5 rc1
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 2>\n" +
+                "-- <NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 5 rc1>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
@@ -1493,6 +1526,9 @@ public class PackagesDiffLogicTest extends TestCase {
         // and a Tools Preview 4.0.0 rc1 available.
         // => v3 is updated by 3.0.1
         // => v4.0.0rc1 does not update 3.0.0, instead it's a separate download.
+
+        // Enable previews in the settings
+        u.overrideSetting(ISettingsPage.KEY_ENABLE_PREVIEWS, true);
 
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
 
@@ -1515,7 +1551,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1543,7 +1579,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- < * INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 3.0.1>\n" +
                 "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 3.0.1>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 4 rc1>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 4 rc1>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1568,6 +1604,9 @@ public class PackagesDiffLogicTest extends TestCase {
         // => Installed 3.0.1rc1 can be updated by 3.0.1rc2
         // => There's a separate "new" download for 3.0.0, not installed and NOT updating 3.0.1rc1.
 
+        // Enable previews in the settings
+        u.overrideSetting(ISettingsPage.KEY_ENABLE_PREVIEWS, true);
+
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
 
         m.updateStart();
@@ -1588,7 +1627,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1614,7 +1653,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 3>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 4>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- < * INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1, updated by:Android SDK Tools, revision 3.0.1 rc2>\n" +
                 "-- < * INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1, updated by:Android SDK Platform-tools, revision 4.0.1 rc2>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1658,7 +1697,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
                 "-- <NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1683,7 +1722,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- < * NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
                 "-- < * NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +
@@ -1699,7 +1738,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- < * NEW, pkg:Android SDK Tools, revision 3.0.1>\n" +
                 "-- < * NEW, pkg:Android SDK Platform-tools, revision 4.0.1>\n" +
-                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Beta Channel), #items=2>\n" +
+                "PkgCategoryApi <API=TOOLS-PREVIEW, label=Tools (Preview Channel), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3.0.1 rc1>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 4.0.1 rc1>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=1>\n" +

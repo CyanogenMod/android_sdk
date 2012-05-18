@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.DownloadCache;
@@ -27,6 +28,7 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.archives.ArchiveReplacement;
 import com.android.sdklib.mock.MockLog;
+import com.android.sdkuilib.internal.repository.SettingsController.Settings;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.swt.graphics.Image;
@@ -34,6 +36,7 @@ import org.eclipse.swt.graphics.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /** A mock UpdaterData that simply records what would have been installed. */
 public class MockUpdaterData extends UpdaterData {
@@ -60,9 +63,16 @@ public class MockUpdaterData extends UpdaterData {
         return mInstalled.toArray(new ArchiveReplacement[mInstalled.size()]);
     }
 
+    /** Overrides the sdk manager with our mock instance. */
     @Override
     protected void initSdk() {
         setSdkManager(new MockEmptySdkManager(SDK_PATH));
+    }
+
+    /** Overrides the settings controller with our mock instance. */
+    @Override
+    protected SettingsController initSettingsController() {
+        return createSettingsController(getSdkLog());
     }
 
     @Override
@@ -105,6 +115,48 @@ public class MockUpdaterData extends UpdaterData {
             };
         }
         return mMockDownloadCache;
+    }
+
+    public void overrideSetting(String key, boolean boolValue) {
+        SettingsController sc = getSettingsController();
+        assert sc instanceof MockSettingsController;
+        ((MockSettingsController)sc).overrideSetting(key, boolValue);
+    }
+    //------------
+
+    public static SettingsController createSettingsController(ISdkLog sdkLog) {
+        Properties props = new Properties();
+        Settings settings = new Settings(props) {}; // this constructor is protected
+        MockSettingsController controller = new MockSettingsController(sdkLog, settings);
+        controller.setProperties(props);
+        return controller;
+    }
+
+    static class MockSettingsController extends SettingsController {
+
+        private Properties mProperties;
+
+        MockSettingsController(ISdkLog sdkLog, Settings settings) {
+            super(sdkLog, settings);
+        }
+
+        void setProperties(Properties properties) {
+            mProperties = properties;
+        }
+
+        public void overrideSetting(String key, boolean boolValue) {
+            mProperties.setProperty(key, Boolean.valueOf(boolValue).toString());
+        }
+
+        @Override
+        public void loadSettings() {
+            // This mock setting controller does not load live file settings.
+        }
+
+        @Override
+        public void saveSettings() {
+            // This mock setting controller does not save live file settings.
+        }
     }
 
     //------------

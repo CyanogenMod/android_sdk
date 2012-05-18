@@ -18,7 +18,7 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.DownloadCache.Strategy;
-import com.android.sdklib.util.FormatUtil;
+import com.android.sdklib.util.FormatUtils;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 
@@ -47,9 +47,11 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
     // UI widgets
     private Text mTextProxyServer;
     private Text mTextProxyPort;
+    private Text mTextCacheSize;
     private Button mCheckUseCache;
     private Button mCheckForceHttp;
     private Button mCheckAskAdbRestart;
+    private Button mCheckEnablePreviews;
 
     private SelectionAdapter mApplyOnSelected = new SelectionAdapter() {
         @Override
@@ -64,7 +66,6 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
             applyNewSettings(); //$hide$
         }
     };
-    private Text mTextCacheSize;
 
     public SettingsDialog(Shell parentShell, UpdaterData updaterData) {
         super(parentShell, updaterData, "Settings" /*title*/);
@@ -85,7 +86,7 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         Label label = new Label(group, SWT.NONE);
         GridDataBuilder.create(label).hRight().vCenter();
         label.setText("HTTP Proxy Server");
-        String tooltip = "The hostname or IP of the HTTP & HTTPS proxy server to use (e.g. proxy.example.com). " +
+        String tooltip = "The hostname or IP of the HTTP & HTTPS proxy server to use (e.g. proxy.example.com).\n" +
                          "When empty, the default Java proxy setting is used.";
         label.setToolTipText(tooltip);
 
@@ -97,7 +98,7 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         label = new Label(group, SWT.NONE);
         GridDataBuilder.create(label).hRight().vCenter();
         label.setText("HTTP Proxy Port");
-        tooltip = "The port of the HTTP & HTTPS proxy server to use (e.g. 3128). " +
+        tooltip = "The port of the HTTP & HTTPS proxy server to use (e.g. 3128).\n" +
                   "When empty, the default Java proxy setting is used.";
         label.setToolTipText(tooltip);
 
@@ -133,8 +134,8 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         mCheckUseCache = new Button(group, SWT.CHECK);
         GridDataBuilder.create(mCheckUseCache).vCenter().hSpan(1);
         mCheckUseCache.setText("Use download cache");
-        mCheckUseCache.setToolTipText("When checked, small manifest files are cached locally. " +
-                "Large binary files are never cached locally.");
+        mCheckUseCache.setToolTipText("When checked, small manifest files are cached locally.\n" +
+                                      "Large binary files are never cached locally.");
         mCheckUseCache.addSelectionListener(mApplyOnSelected);
 
         label = new Label(group, SWT.NONE);
@@ -154,7 +155,7 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
 
         // ----
         group = new Group(shell, SWT.NONE);
-        group.setText("Misc");
+        group.setText("Others");
         GridDataBuilder.create(group).fill().grab().hSpan(2);
         GridLayoutBuilder.create(group).columns(2);
 
@@ -162,17 +163,26 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         GridDataBuilder.create(mCheckForceHttp).hFill().hGrab().vCenter().hSpan(2);
         mCheckForceHttp.setText("Force https://... sources to be fetched using http://...");
         mCheckForceHttp.setToolTipText(
-                "If you are not able to connect to the official Android repository " +
-                "using HTTPS, enable this setting to force accessing it via HTTP.");
+            "If you are not able to connect to the official Android repository using HTTPS,\n" +
+            "enable this setting to force accessing it via HTTP.");
         mCheckForceHttp.addSelectionListener(mApplyOnSelected);
 
         mCheckAskAdbRestart = new Button(group, SWT.CHECK);
         GridDataBuilder.create(mCheckAskAdbRestart).hFill().hGrab().vCenter().hSpan(2);
         mCheckAskAdbRestart.setText("Ask before restarting ADB");
         mCheckAskAdbRestart.setToolTipText(
-                "When checked, the user will be asked for permission " +
-                "to restart ADB after updating an addon-on package or a tool package.");
+                "When checked, the user will be asked for permission to restart ADB\n" +
+                "after updating an addon-on package or a tool package.");
         mCheckAskAdbRestart.addSelectionListener(mApplyOnSelected);
+
+        mCheckEnablePreviews = new Button(group, SWT.CHECK);
+        GridDataBuilder.create(mCheckEnablePreviews).hFill().hGrab().vCenter().hSpan(2);
+        mCheckEnablePreviews.setText("Enable Preview Tools");
+        mCheckEnablePreviews.setToolTipText(
+            "When checked, the package list will also display preview versions of the tools.\n" +
+            "These are optional future release candidates that the Android tools team\n" +
+            "publishes from time to time for early feedback.");
+        mCheckEnablePreviews.addSelectionListener(mApplyOnSelected);
 
         Label filler = new Label(shell, SWT.NONE);
         GridDataBuilder.create(filler).hFill().hGrab();
@@ -210,6 +220,9 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
                 Boolean.parseBoolean(inSettings.getProperty(KEY_ASK_ADB_RESTART)));
         mCheckUseCache.setSelection(
                 Boolean.parseBoolean(inSettings.getProperty(KEY_USE_DOWNLOAD_CACHE)));
+        mCheckEnablePreviews.setSelection(
+                Boolean.parseBoolean(inSettings.getProperty(KEY_ENABLE_PREVIEWS)));
+
     }
 
     /** Called by the application to retrieve settings from the UI and store them in
@@ -224,6 +237,9 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
                 Boolean.toString(mCheckAskAdbRestart.getSelection()));
         outSettings.setProperty(KEY_USE_DOWNLOAD_CACHE,
                 Boolean.toString(mCheckUseCache.getSelection()));
+        outSettings.setProperty(KEY_ENABLE_PREVIEWS,
+                Boolean.toString(mCheckEnablePreviews.getSelection()));
+
     }
 
     /**
@@ -249,7 +265,7 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
 
     private void updateDownloadCacheSize() {
         long size = mDownloadCache.getCurrentSize();
-        String str = FormatUtil.byteSizeToString(size);
+        String str = FormatUtils.byteSizeToString(size);
         mTextCacheSize.setText(str);
     }
 
