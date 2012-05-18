@@ -96,6 +96,7 @@ public final class AaptExecTask extends SingleDependencyTask {
     private String mLibraryResFolderPathRefid;
     private String mLibraryPackagesRefid;
     private boolean mNonConstantId;
+    private String mIgnoreAssets;
 
     /**
      * Input path that ignores the same folders/files that aapt does.
@@ -180,6 +181,10 @@ public final class AaptExecTask extends SingleDependencyTask {
 
     public void setNonConstantId(boolean nonConstantId) {
         mNonConstantId = nonConstantId;
+    }
+
+    public void setIgnoreAssets(String ignoreAssets) {
+        mIgnoreAssets = ignoreAssets;
     }
 
     public void setVersioncode(String versionCode) {
@@ -619,6 +624,12 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (generateRClass) {
             task.createArg().setValue("-J");
             task.createArg().setValue(mRFolder);
+        }
+
+        // ignore assets flag
+        if (mIgnoreAssets != null && mIgnoreAssets.length() > 0) {
+            task.createArg().setValue("--ignore-assets");
+            task.createArg().setValue(mIgnoreAssets);
         }
 
         // Use dependency generation
