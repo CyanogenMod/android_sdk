@@ -39,6 +39,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
+import com.google.common.base.Joiner;
 
 import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.cdt.debug.core.CDebugUtils;
@@ -62,6 +63,7 @@ import org.eclipse.jface.dialogs.Dialog;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -69,6 +71,8 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("restriction")
 public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
+    private static final Joiner JOINER = Joiner.on(", ").skipNulls();
+
     private static final String DEBUG_SOCKET = "debugsock";         //$NON-NLS-1$
 
     @Override
@@ -120,7 +124,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
 
         // Get ABI's supported by the application
         monitor.setTaskName(Messages.NdkGdbLaunchDelegate_Action_ObtainAppAbis);
-        List<NativeAbi> appAbis = NdkHelper.getApplicationAbis(project, monitor);
+        Collection<NativeAbi> appAbis = NdkHelper.getApplicationAbis(project, monitor);
         if (appAbis.size() == 0) {
             AdtPlugin.printErrorToConsole(project,
                     Messages.NdkGdbLaunchDelegate_LaunchError_UnableToDetectAppAbi);
@@ -175,6 +179,12 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         if (compatAbi == null) {
             AdtPlugin.printErrorToConsole(project,
                     Messages.NdkGdbLaunchDelegate_LaunchError_NoCompatibleAbi);
+            AdtPlugin.printErrorToConsole(project,
+                    String.format("ABI's supported by the application: %s", JOINER.join(appAbis)));
+            AdtPlugin.printErrorToConsole(project,
+                    String.format("ABI's supported by the device: %s, %s",      //$NON-NLS-1$
+                            deviceAbi1,
+                            deviceAbi2));
             return false;
         }
 
@@ -415,7 +425,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
     }
 
     private NativeAbi getCompatibleAbi(String deviceAbi1, String deviceAbi2,
-                                List<NativeAbi> appAbis) {
+                                Collection<NativeAbi> appAbis) {
         for (NativeAbi abi: appAbis) {
             if (abi.toString().equals(deviceAbi1) || abi.toString().equals(deviceAbi2)) {
                 return abi;

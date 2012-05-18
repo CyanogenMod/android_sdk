@@ -16,9 +16,13 @@
 
 package com.android.ide.eclipse.ndk.internal;
 
+import com.android.sdklib.SdkConstants;
+
 public enum NativeAbi {
-    armeabi("armeabi"),
-    x86("x86");
+    armeabi(SdkConstants.ABI_ARMEABI),
+    armeabi_v7a(SdkConstants.ABI_ARMEABI_V7A),
+    mips(SdkConstants.ABI_MIPS),
+    x86(SdkConstants.ABI_INTEL_ATOM);
 
     private final String mAbi;
 

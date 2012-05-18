@@ -28,30 +28,32 @@ import org.eclipse.core.runtime.Path;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.EnumSet;
+import java.util.Set;
 
 @SuppressWarnings("restriction")
 public class NdkHelper {
-    private static final String MAKE = "make";
-    private static final String CORE_MAKEFILE_PATH = "/build/core/build-local.mk";
+    private static final String MAKE = "make";                                      //$NON-NLS-1$
+    private static final String CORE_MAKEFILE_PATH = "/build/core/build-local.mk";  //$NON-NLS-1$
 
     /**
      * Obtain the ABI's the application is compatible with.
      * The ABI's are obtained by reading the result of the following command:
      * make --no-print-dir -f ${NdkRoot}/build/core/build-local.mk -C <project-root> DUMP_APP_ABI
      */
-    public static List<NativeAbi> getApplicationAbis(IProject project, IProgressMonitor monitor) {
+    public static Collection<NativeAbi> getApplicationAbis(IProject project,
+                                                                IProgressMonitor monitor) {
         ICommandLauncher launcher = new CommandLauncher();
         launcher.setProject(project);
         String[] args = new String[] {
-            "--no-print-dir",
-            "-f",
+            "--no-print-dir",                                           //$NON-NLS-1$
+            "-f",                                                       //$NON-NLS-1$
             NdkManager.getNdkLocation() + CORE_MAKEFILE_PATH,
-            "-C",
+            "-C",                                                       //$NON-NLS-1$
             project.getLocation().toOSString(),
-            "DUMP_APP_ABI",
+            "DUMP_APP_ABI",                                             //$NON-NLS-1$
         };
         try {
             launcher.execute(getPathToMake(), args, null, project.getLocation(), monitor);
@@ -65,13 +67,16 @@ public class NdkHelper {
         launcher.waitAndRead(stdout, stderr, monitor);
 
         String abis = stdout.toString().trim();
-        List<NativeAbi> nativeAbis = new ArrayList<NativeAbi>(3);
+        Set<NativeAbi> nativeAbis = EnumSet.noneOf(NativeAbi.class);
+        for (String abi: abis.split(" ")) {                             //$NON-NLS-1$
+            if (abi.equals("all")) {                                    //$NON-NLS-1$
+                return EnumSet.allOf(NativeAbi.class);
+            }
 
-        for (String abi: abis.split(" ")) {
             try {
                 nativeAbis.add(NativeAbi.valueOf(abi));
             } catch (IllegalArgumentException e) {
-
+                AdtPlugin.printErrorToConsole(project, "Unknown Application ABI: ", abi);
             }
         }
 
@@ -90,12 +95,12 @@ public class NdkHelper {
         ICommandLauncher launcher = new CommandLauncher();
         launcher.setProject(project);
         String[] args = new String[] {
-            "--no-print-dir",
-            "-f",
+            "--no-print-dir",                                           //$NON-NLS-1$
+            "-f",                                                       //$NON-NLS-1$
             NdkManager.getNdkLocation() + CORE_MAKEFILE_PATH,
-            "-C",
+            "-C",                                                       //$NON-NLS-1$
             project.getLocation().toOSString(),
-            "DUMP_TOOLCHAIN_PREFIX",
+            "DUMP_TOOLCHAIN_PREFIX",                                    //$NON-NLS-1$
         };
         try {
             launcher.execute(getPathToMake(), args, null, project.getLocation(), monitor);
@@ -120,7 +125,7 @@ public class NdkHelper {
      */
     private static synchronized IPath getUtilitiesFolder() {
         IPath ndkRoot = new Path(NdkManager.getNdkLocation());
-        IPath prebuilt = ndkRoot.append("prebuilt"); //$NON-NLS-1$
+        IPath prebuilt = ndkRoot.append("prebuilt");                      //$NON-NLS-1$
         if (!prebuilt.toFile().exists() || !prebuilt.toFile().canRead()) {
             return ndkRoot;
         }
