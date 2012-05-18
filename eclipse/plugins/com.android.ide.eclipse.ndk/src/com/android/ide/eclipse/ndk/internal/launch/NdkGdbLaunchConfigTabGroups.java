@@ -30,7 +30,7 @@ public class NdkGdbLaunchConfigTabGroups extends AbstractLaunchConfigurationTabG
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
         ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
                 new NdkMainLaunchConfigTab(),
-                new NdkDebuggerConfigTab(),
+                new NdkDebuggerTab(),
                 new SourceLookupTab(),
                 new CommonTab()
             };
