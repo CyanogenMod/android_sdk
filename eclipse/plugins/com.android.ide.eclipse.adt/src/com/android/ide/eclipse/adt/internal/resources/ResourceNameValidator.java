@@ -82,6 +82,10 @@ public class ResourceNameValidator implements IInputValidator {
                 newText = newText.substring(0, newText.lastIndexOf('.'));
             }
 
+            if (!mIsFileType) {
+                newText = newText.replace('.', '_');
+            }
+
             if (newText.indexOf('.') != -1 && !newText.endsWith(DOT_XML)) {
                 if (mIsImageType) {
                     return "The filename must end with .xml or .png";
