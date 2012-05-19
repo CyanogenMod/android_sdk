@@ -20,6 +20,4 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_MODULE := chimpchattest
 LOCAL_JAVA_LIBRARIES :=  junit chimpchat ddmlib guavalib
 
-LOCAL_MODULE_TAGS := tests
-
 include $(BUILD_HOST_JAVA_LIBRARY)
