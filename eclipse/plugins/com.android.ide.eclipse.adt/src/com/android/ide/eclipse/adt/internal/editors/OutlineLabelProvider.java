@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;

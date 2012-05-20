@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;

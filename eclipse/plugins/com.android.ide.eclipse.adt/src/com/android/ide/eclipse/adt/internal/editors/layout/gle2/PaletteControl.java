@@ -16,11 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.util.XmlUtils.XMLNS_ANDROID;
+import static com.android.util.XmlUtils.XMLNS_URI;
 
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Rect;
@@ -35,7 +37,6 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
@@ -920,8 +921,7 @@ public class PaletteControl extends Composite {
             Element element = document.createElement(viewName);
 
             // Set up a proper name space
-            Attr attr = document.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
-                    "xmlns:android"); //$NON-NLS-1$
+            Attr attr = document.createAttributeNS(XMLNS_URI, XMLNS_ANDROID);
             attr.setValue(ANDROID_URI);
             element.getAttributes().setNamedItemNS(attr);
 

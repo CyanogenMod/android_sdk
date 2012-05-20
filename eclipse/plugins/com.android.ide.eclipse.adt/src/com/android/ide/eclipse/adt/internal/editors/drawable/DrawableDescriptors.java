@@ -15,7 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.drawable;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -84,7 +85,7 @@ public class DrawableDescriptors implements IDescriptorProvider {
 
     public synchronized void updateDescriptors(Map<String, DeclareStyleableInfo> styleMap) {
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
-                SdkConstants.NS_RESOURCES);
+                ANDROID_URI);
         List<ElementDescriptor> descriptors = new ArrayList<ElementDescriptor>();
 
         AnimatorDescriptors.addElement(descriptors, styleMap,

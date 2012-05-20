@@ -16,7 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -141,9 +142,8 @@ public final class OtherXmlDescriptors implements IDescriptorProvider {
             Map<String, DeclareStyleableInfo> appWidgetStyleMap,
             ViewClassInfo[] prefs, ViewClassInfo[] prefGroups) {
 
-        XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
-                ANDROID_NS_NAME,
-                SdkConstants.NS_RESOURCES);
+        XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
+                ANDROID_URI);
 
         ElementDescriptor searchable = createSearchable(searchableStyleMap, xmlns);
         ElementDescriptor appWidget = createAppWidgetProviderInfo(appWidgetStyleMap, xmlns);

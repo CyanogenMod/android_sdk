@@ -15,15 +15,16 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
-import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.COLOR_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.DIMEN_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STRING_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
+import static com.android.util.XmlUtils.XMLNS;
 
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.util.XmlUtils;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;
@@ -330,7 +331,7 @@ public class XmlPrettyPrinter {
             }
 
             if (escape) {
-                DomUtilities.appendXmlTextValue(mOut, text);
+                XmlUtils.appendXmlTextValue(mOut, text);
             } else {
                 // Text is already escaped
                 mOut.append(text);
@@ -683,7 +684,7 @@ public class XmlPrettyPrinter {
                 }
                 mOut.append(attribute.getName());
                 mOut.append('=').append('"');
-                DomUtilities.appendXmlAttributeValue(mOut, attribute.getValue());
+                XmlUtils.appendXmlAttributeValue(mOut, attribute.getValue());
                 mOut.append('"');
 
                 // Don't add a newline at the last attribute line; the > should

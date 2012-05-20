@@ -19,12 +19,10 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -37,6 +35,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.Density;
 import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -1368,8 +1367,8 @@ public class LayoutCanvas extends Canvas {
 
                 // A root node requires the Android XMLNS
                 uiNew.setAttributeValue(
-                        LayoutConstants.ANDROID_NS_NAME,
-                        XmlnsAttributeDescriptor.XMLNS_URI,
+                        XmlUtils.ANDROID_NS_NAME,
+                        XmlUtils.XMLNS_URI,
                         SdkConstants.NS_RESOURCES,
                         true /*override*/);
 

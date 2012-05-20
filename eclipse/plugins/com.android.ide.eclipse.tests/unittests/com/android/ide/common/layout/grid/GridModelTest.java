@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.layout.grid;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
 

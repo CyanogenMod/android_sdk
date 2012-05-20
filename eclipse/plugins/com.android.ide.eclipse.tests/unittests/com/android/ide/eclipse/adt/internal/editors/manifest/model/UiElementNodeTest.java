@@ -16,16 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.mock.MockXmlNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.util.XmlUtils;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -262,36 +260,6 @@ public class UiElementNodeTest extends TestCase {
         assertEquals(0, second_permission.getAllUiAttributes().size());
     }
 
-    public void testlookupNamespacePrefix() throws Exception {
-        // Setup
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setValidating(false);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.newDocument();
-        Element rootElement = document.createElement("root");
-        Attr attr = document.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
-                "xmlns:customPrefix");
-        attr.setValue(ANDROID_URI);
-        rootElement.getAttributes().setNamedItemNS(attr);
-        document.appendChild(rootElement);
-        Element root = document.getDocumentElement();
-        root.appendChild(document.createTextNode("    "));
-        Element foo = document.createElement("foo");
-        root.appendChild(foo);
-        root.appendChild(document.createTextNode("    "));
-        Element bar = document.createElement("bar");
-        root.appendChild(bar);
-        Element baz = document.createElement("baz");
-        root.appendChild(baz);
-
-        String prefix = UiElementNode.lookupNamespacePrefix(baz, ANDROID_URI);
-        assertEquals("customPrefix", prefix);
-
-        prefix = UiElementNode.lookupNamespacePrefix(baz, TOOLS_URI, "tools");
-        assertEquals("tools", prefix);
-    }
-
     public void testCreateNameSpace() throws Exception {
         // Setup
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -311,7 +279,7 @@ public class UiElementNodeTest extends TestCase {
         Element baz = document.createElement("baz");
         root.appendChild(baz);
 
-        String prefix = UiElementNode.lookupNamespacePrefix(baz, ANDROID_URI);
+        String prefix = XmlUtils.lookupNamespacePrefix(baz, ANDROID_URI);
         assertEquals("android", prefix);
     }
 }

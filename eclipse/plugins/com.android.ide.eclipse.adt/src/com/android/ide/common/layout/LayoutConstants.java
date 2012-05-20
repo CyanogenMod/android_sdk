@@ -18,8 +18,6 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
-import com.android.sdklib.SdkConstants;
-
 /**
  * A bunch of constants that map to either:
  * <ul>
@@ -156,17 +154,6 @@ public class LayoutConstants {
     public static final String GRAVITY_VALUE_CENTER_HORIZONTAL = "center_horizontal"; //$NON-NLS-1$
     public static final String GRAVITY_VALUE_CENTER_VERTICAL = "center_vertical";     //$NON-NLS-1$
     public static final String GRAVITY_VALUE_FILL = "fill";                           //$NON-NLS-1$
-
-    /** The default prefix used for the {@link #ANDROID_URI} name space */
-    public static final String ANDROID_NS_NAME = "android"; //$NON-NLS-1$
-    /** The default prefix used for the {@link #ANDROID_URI} name space including the colon  */
-    public static final String ANDROID_NS_NAME_PREFIX = "android:"; //$NON-NLS-1$
-
-    /**
-     * Namespace for the Android resource XML, i.e.
-     * "http://schemas.android.com/apk/res/android"
-     */
-    public static final String ANDROID_URI = SdkConstants.NS_RESOURCES;
 
     /**
      * The top level android package as a prefix, "android.".

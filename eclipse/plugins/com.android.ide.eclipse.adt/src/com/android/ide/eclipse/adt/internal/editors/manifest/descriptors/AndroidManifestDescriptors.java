@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.editors.manifest.descriptors;
 
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.AttrsXmlParser;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -34,6 +33,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttribu
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 
@@ -233,7 +233,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         insertAttribute(MANIFEST_ELEMENT, PACKAGE_ATTR_DESC);
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
-                LayoutConstants.ANDROID_NS_NAME, SdkConstants.NS_RESOURCES);
+                XmlUtils.ANDROID_NS_NAME, XmlUtils.ANDROID_URI);
         insertAttribute(MANIFEST_ELEMENT, xmlns);
 
         assert sanityCheck(manifestMap, MANIFEST_ELEMENT);

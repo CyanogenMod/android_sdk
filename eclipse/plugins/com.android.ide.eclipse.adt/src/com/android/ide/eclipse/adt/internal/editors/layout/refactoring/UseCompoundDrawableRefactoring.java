@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_BOTTOM;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_RIGHT;

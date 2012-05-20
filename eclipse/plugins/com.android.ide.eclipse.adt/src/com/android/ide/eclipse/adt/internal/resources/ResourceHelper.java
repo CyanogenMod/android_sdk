@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;

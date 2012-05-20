@@ -20,7 +20,6 @@ import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -29,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.custom.StyledText;
@@ -336,8 +336,8 @@ public class ClipboardSupport {
 
                 // A root node requires the Android XMLNS
                 uiNew.setAttributeValue(
-                        "android", //$NON-NLS-1$
-                        XmlnsAttributeDescriptor.XMLNS_URI,
+                        XmlUtils.ANDROID_NS_NAME,
+                        XmlUtils.XMLNS_URI,
                         SdkConstants.NS_RESOURCES,
                         true /*override*/);
 

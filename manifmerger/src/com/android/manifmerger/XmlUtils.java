@@ -215,9 +215,7 @@ class XmlUtils {
      * @return The namespace prefix if found or null.
      */
     static String lookupNsPrefix(Document doc, String nsUri) {
-        // Note: if this is not available, there's an alternate implementation at
-        // com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode.lookupNamespacePrefix(Node, String)
-        return doc.lookupPrefix(nsUri);
+        return com.android.util.XmlUtils.lookupNamespacePrefix(doc, nsUri);
     }
 
     /**

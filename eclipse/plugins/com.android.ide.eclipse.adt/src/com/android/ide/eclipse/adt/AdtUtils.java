@@ -25,6 +25,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IFile;
@@ -630,11 +631,10 @@ public class AdtUtils {
         editor.wrapUndoEditXmlModel(description, new Runnable() {
             @Override
             public void run() {
-                String prefix = UiElementNode.lookupNamespacePrefix(element,
-                        TOOLS_URI, null);
+                String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null);
                 if (prefix == null) {
                     // Add in new prefix...
-                    prefix = UiElementNode.lookupNamespacePrefix(element,
+                    prefix = XmlUtils.lookupNamespacePrefix(element,
                             TOOLS_URI, TOOLS_PREFIX);
                     // ...and ensure that the header is formatted such that
                     // the XML namespace declaration is placed in the right

@@ -16,6 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import static com.android.util.XmlUtils.XMLNS;
+import static com.android.util.XmlUtils.XMLNS_URI;
+
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
@@ -33,20 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
  */
 public final class XmlnsAttributeDescriptor extends AttributeDescriptor {
 
-    /**
-     * URI of the reserved "xmlns"  prefix, as described in
-     * http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/namespaces-algorithms.html#normalizeDocumentAlgo
-     */
-    public final static String XMLNS_URI = "http://www.w3.org/2000/xmlns/"; //$NON-NLS-1$
-
-    /** The "xmlns" attribute name */
-    public static final String XMLNS = "xmlns"; //$NON-NLS-1$
-
-    /** The "xmlns:" attribute prefix used for namespace declarations */
-    public static final String XMLNS_COLON = "xmlns:"; //$NON-NLS-1$
-
     private String mValue;
-
 
     public XmlnsAttributeDescriptor(String defaultPrefix, String value) {
         super(defaultPrefix, XMLNS_URI, null /* info */);
@@ -66,7 +56,7 @@ public final class XmlnsAttributeDescriptor extends AttributeDescriptor {
      * This is defined by the XML specification.
      */
     public String getXmlNsPrefix() {
-        return XmlnsAttributeDescriptor.XMLNS;
+        return XMLNS;
     }
 
     /**

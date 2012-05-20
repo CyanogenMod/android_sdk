@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
@@ -63,8 +63,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 @SuppressWarnings("restriction") // No replacement for restricted XML model yet
 public class DomUtilities {
-    private static final String AMPERSAND_ENTITY = "&amp;"; //$NON-NLS-1$
-
     /**
      * Finds the nearest common parent of the two given nodes (which could be one of the
      * two nodes as well)
@@ -464,76 +462,6 @@ public class DomUtilities {
         }
 
         return (Element) node; // may be null as well
-    }
-
-    /**
-     * Converts the given attribute value to an XML-attribute-safe value, meaning that
-     * single and double quotes are replaced with their corresponding XML entities.
-     *
-     * @param attrValue the value to be escaped
-     * @return the escaped value
-     */
-    @NonNull
-    public static String toXmlAttributeValue(@NonNull String attrValue) {
-        for (int i = 0, n = attrValue.length(); i < n; i++) {
-            char c = attrValue.charAt(i);
-            if (c == '"' || c == '\'' || c == '<' || c == '&') {
-                StringBuilder sb = new StringBuilder(2 * attrValue.length());
-                appendXmlAttributeValue(sb, attrValue);
-                return sb.toString();
-            }
-        }
-
-        return attrValue;
-    }
-
-    /**
-     * Appends text to the given {@link StringBuilder} and escapes it as required for a
-     * DOM attribute node.
-     *
-     * @param sb the string builder
-     * @param attrValue the attribute value to be appended and escaped
-     */
-    public static void appendXmlAttributeValue(@NonNull StringBuilder sb,
-            @NonNull String attrValue) {
-        int n = attrValue.length();
-        // &, ", ' and < are illegal in attributes; see http://www.w3.org/TR/REC-xml/#NT-AttValue
-        // (' legal in a " string and " is legal in a ' string but here we'll stay on the safe
-        // side)
-        for (int i = 0; i < n; i++) {
-            char c = attrValue.charAt(i);
-            if (c == '"') {
-                sb.append("&quot;"); //$NON-NLS-1$
-            } else if (c == '<') {
-                sb.append("&lt;"); //$NON-NLS-1$
-            } else if (c == '\'') {
-                sb.append("&apos;"); //$NON-NLS-1$
-            } else if (c == '&') {
-                sb.append(AMPERSAND_ENTITY);
-            } else {
-                sb.append(c);
-            }
-        }
-    }
-
-    /**
-     * Appends text to the given {@link StringBuilder} and escapes it as required for a
-     * DOM text node.
-     *
-     * @param sb the string builder
-     * @param textValue the text value to be appended and escaped
-     */
-    public static void appendXmlTextValue(@NonNull StringBuilder sb, @NonNull String textValue) {
-        for (int i = 0, n = textValue.length(); i < n; i++) {
-            char c = textValue.charAt(i);
-            if (c == '<') {
-                sb.append("&lt;");  //$NON-NLS-1$
-            } else if (c == '&') {
-                sb.append(AMPERSAND_ENTITY);
-            } else {
-                sb.append(c);
-            }
-        }
     }
 
     /** Utility used by {@link #getFreeWidgetId(Element)} */

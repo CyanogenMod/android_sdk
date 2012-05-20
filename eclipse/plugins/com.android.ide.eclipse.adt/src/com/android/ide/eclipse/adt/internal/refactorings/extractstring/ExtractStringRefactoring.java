@@ -17,6 +17,9 @@
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
+import static com.android.util.XmlUtils.AMP_ENTITY;
+import static com.android.util.XmlUtils.LT_ENTITY;
+import static com.android.util.XmlUtils.QUOT_ENTITY;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -1496,10 +1499,10 @@ public class ExtractStringRefactoring extends Refactoring {
                     sb.append(c);
                     break;
                 case '<':
-                    sb.append("&lt;"); //$NON-NLS-1$
+                    sb.append(LT_ENTITY);
                     break;
                 case '&':
-                    sb.append("&amp;"); //$NON-NLS-1$
+                    sb.append(AMP_ENTITY);
                     break;
                 case '\n':
                     sb.append("\\n"); //$NON-NLS-1$
@@ -1743,7 +1746,7 @@ public class ExtractStringRefactoring extends Refactoring {
         }
         // If we get here, there's a mix. Opt for double-quote around and replace
         // inner double-quotes.
-        attrValue = attrValue.replace("\"", "&quot;");  //$NON-NLS-1$ //$NON-NLS-2$
+        attrValue = attrValue.replace("\"", QUOT_ENTITY);  //$NON-NLS-1$
         return '"' + attrValue + '"';
     }
 

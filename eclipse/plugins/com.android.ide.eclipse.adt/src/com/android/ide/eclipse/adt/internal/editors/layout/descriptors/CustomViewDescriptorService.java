@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

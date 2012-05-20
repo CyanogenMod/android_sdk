@@ -16,18 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_SUPPORT_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
-import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_URI;
-import static com.android.sdklib.SdkConstants.NS_RESOURCES;
-import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
 
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -50,6 +44,7 @@ import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDes
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.viewers.StyledString;
@@ -1066,7 +1061,7 @@ public class UiElementNode implements IPropertySource {
         for (AttributeDescriptor attrDesc : getAttributeDescriptors()) {
             if (attrDesc instanceof XmlnsAttributeDescriptor) {
                 XmlnsAttributeDescriptor desc = (XmlnsAttributeDescriptor) attrDesc;
-                Attr attr = doc.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
+                Attr attr = doc.createAttributeNS(XmlUtils.XMLNS_URI,
                         desc.getXmlNsName());
                 attr.setValue(desc.getValue());
                 attr.setPrefix(desc.getXmlNsPrefix());
@@ -1583,7 +1578,7 @@ public class UiElementNode implements IPropertySource {
                         attr = (Attr) attrMap.getNamedItemNS(attrNsUri, attrLocalName);
                         if (attr == null) {
                             attr = doc.createAttributeNS(attrNsUri, attrLocalName);
-                            attr.setPrefix(lookupNamespacePrefix(element, attrNsUri));
+                            attr.setPrefix(XmlUtils.lookupNamespacePrefix(element, attrNsUri));
                             attrMap.setNamedItemNS(attr);
                         }
                     } else {
@@ -1662,8 +1657,9 @@ public class UiElementNode implements IPropertySource {
             AttributeDescriptor descriptor = dirtyAttributes.get(0).getDescriptor();
             String firstName = descriptor.getXmlLocalName();
             String firstNamePrefix = null;
-            if (descriptor.getNamespaceUri() != null) {
-                firstNamePrefix = lookupNamespacePrefix(element, descriptor.getNamespaceUri());
+            String namespaceUri = descriptor.getNamespaceUri();
+            if (namespaceUri != null) {
+                firstNamePrefix = XmlUtils.lookupNamespacePrefix(element, namespaceUri);
             }
             NamedNodeMap attributes = ((Element) element).getAttributes();
             List<Attr> move = new ArrayList<Attr>();
@@ -1740,126 +1736,6 @@ public class UiElementNode implements IPropertySource {
         }
 
         return result;
-    }
-
-    /**
-     * Returns the namespace prefix matching the requested namespace URI.
-     * If no such declaration is found, returns the default "android" prefix for
-     * the Android URI, and "app" for other URI's.
-     *
-     * @param node The current node. Must not be null.
-     * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. SdkConstants.NS_RESOURCES
-     * @return The first prefix declared or the default "android" prefix
-     *              (or "app" for non-Android URIs)
-     */
-    public static String lookupNamespacePrefix(Node node, String nsUri) {
-        String defaultPrefix = NS_RESOURCES.equals(nsUri) ? ANDROID_NS_NAME : "app"; //$NON-NLS-1$
-        return lookupNamespacePrefix(node, nsUri, defaultPrefix);
-    }
-
-    /**
-     * Returns the namespace prefix matching the requested namespace URI.
-     * If no such declaration is found, returns the default "android" prefix.
-     *
-     * @param node The current node. Must not be null.
-     * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. SdkConstants.NS_RESOURCES
-     * @param defaultPrefix The default prefix (root) to use if the namespace
-     *              is not found. If null, do not create a new namespace
-     *              if this URI is not defined for the document.
-     * @return The first prefix declared or the provided prefix (possibly with
-     *              a number appended to avoid conflicts with existing prefixes.
-     */
-    public static String lookupNamespacePrefix(
-            @Nullable Node node, @Nullable String nsUri, @Nullable String defaultPrefix) {
-        // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
-        // The following code emulates this simple call:
-        //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
-
-        // if the requested URI is null, it denotes an attribute with no namespace.
-        if (nsUri == null) {
-            return null;
-        }
-
-        // per XML specification, the "xmlns" URI is reserved
-        if (XMLNS_URI.equals(nsUri)) {
-            return XMLNS;
-        }
-
-        HashSet<String> visited = new HashSet<String>();
-        Document doc = node == null ? null : node.getOwnerDocument();
-
-        // Ask the document about it. This method may not be implemented by the Document.
-        String nsPrefix = null;
-        try {
-            nsPrefix = doc != null ? doc.lookupPrefix(nsUri) : null;
-            if (nsPrefix != null) {
-                return nsPrefix;
-            }
-        } catch (Throwable t) {
-            // ignore
-        }
-
-        // If that failed, try to look it up manually.
-        // This also gathers prefixed in use in the case we want to generate a new one below.
-        for (; node != null && node.getNodeType() == Node.ELEMENT_NODE;
-               node = node.getParentNode()) {
-            NamedNodeMap attrs = node.getAttributes();
-            for (int n = attrs.getLength() - 1; n >= 0; --n) {
-                Node attr = attrs.item(n);
-                if (XMLNS.equals(attr.getPrefix())) {
-                    String uri = attr.getNodeValue();
-                    nsPrefix = attr.getLocalName();
-                    // Is this the URI we are looking for? If yes, we found its prefix.
-                    if (nsUri.equals(uri)) {
-                        return nsPrefix;
-                    }
-                    visited.add(nsPrefix);
-                }
-            }
-        }
-
-        // Failed the find a prefix. Generate a new sensible default prefix, unless
-        // defaultPrefix was null in which case the caller does not want the document
-        // modified.
-        if (defaultPrefix == null) {
-            return null;
-        }
-
-        //
-        // We need to make sure the prefix is not one that was declared in the scope
-        // visited above. Pick a unique prefix from the provided default prefix.
-        String prefix = defaultPrefix;
-        String base = prefix;
-        for (int i = 1; visited.contains(prefix); i++) {
-            prefix = base + Integer.toString(i);
-        }
-        // Also create & define this prefix/URI in the XML document as an attribute in the
-        // first element of the document.
-        if (doc != null) {
-            node = doc.getFirstChild();
-            while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
-                node = node.getNextSibling();
-            }
-            if (node != null) {
-                // This doesn't work:
-                //Attr attr = doc.createAttributeNS(XMLNS_URI, prefix);
-                //attr.setPrefix(XMLNS);
-                //
-                // Xerces throws
-                //org.w3c.dom.DOMException: NAMESPACE_ERR: An attempt is made to create or
-                // change an object in a way which is incorrect with regard to namespaces.
-                //
-                // Instead pass in the concatenated prefix. (This is covered by
-                // the UiElementNodeTest#testCreateNameSpace() test.)
-                Attr attr = doc.createAttributeNS(XMLNS_URI, XMLNS_PREFIX + prefix);
-                attr.setValue(nsUri);
-                node.getAttributes().setNamedItemNS(attr);
-            }
-        }
-
-        return prefix;
     }
 
     /**
