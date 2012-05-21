@@ -112,6 +112,17 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
                 mManifestRegistrations = ArrayListMultimap.create(4, 8);
             }
             mManifestRegistrations.put(frameworkClass, signature);
+            if (signature.indexOf('$') != -1) {
+                // The internal name contains a $ which means it's an inner class.
+                // The conversion from fqcn to internal name is a bit ambiguous:
+                // "a.b.C.D" usually means "inner class D in class C in package a.b".
+                // However, it can (see issue 31592) also mean class D in package "a.b.C".
+                // Place *both* of these possibilities in the registered map, since this
+                // is only used to check that an activity is registered, not the other way
+                // (so it's okay to have entries there that do not correspond to real classes).
+                signature = signature.replace('$', '/');
+                mManifestRegistrations.put(frameworkClass, signature);
+            }
         }
     }
 

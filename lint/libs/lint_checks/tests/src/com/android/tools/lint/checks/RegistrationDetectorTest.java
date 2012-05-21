@@ -47,6 +47,18 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testNoDot() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/AndroidManifestReg.xml=>AndroidManifest.xml",
+                "bytecode/.classpath=>.classpath",
+                "bytecode/CommentsActivity.java.txt=>src/test/pkg/Foo/CommentsActivity.java",
+                "bytecode/CommentsActivity.class.data=>bin/classes/test/pkg/Foo/CommentsActivity.class"
+                ));
+    }
+
     public void testWrongRegistrations() throws Exception {
         assertEquals(
             "OnClickActivity.java: Warning: test.pkg.OnClickActivity is a <activity> but is registered in the manifest as a <receiver>\n" +
