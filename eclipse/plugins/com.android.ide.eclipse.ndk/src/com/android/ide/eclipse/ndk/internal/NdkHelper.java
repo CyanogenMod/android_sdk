@@ -17,20 +17,26 @@
 package com.android.ide.eclipse.ndk.internal;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.ndk.internal.launch.NdkLaunchConstants;
 
 import org.eclipse.cdt.core.CommandLauncher;
 import org.eclipse.cdt.core.ICommandLauncher;
+import org.eclipse.cdt.debug.core.ICDTLaunchConfigurationConstants;
+import org.eclipse.cdt.dsf.gdb.IGDBLaunchConfigurationConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("restriction")
@@ -74,7 +80,7 @@ public class NdkHelper {
             }
 
             try {
-                nativeAbis.add(NativeAbi.valueOf(abi));
+                nativeAbis.add(NativeAbi.getByString(abi));
             } catch (IllegalArgumentException e) {
                 AdtPlugin.printErrorToConsole(project, "Unknown Application ABI: ", abi);
             }
@@ -101,6 +107,7 @@ public class NdkHelper {
             "-C",                                                       //$NON-NLS-1$
             project.getLocation().toOSString(),
             "DUMP_TOOLCHAIN_PREFIX",                                    //$NON-NLS-1$
+            "APP_ABI=" + abi.getAbi(),                                  //$NON-NLS-1$
         };
         try {
             launcher.execute(getPathToMake(), args, null, project.getLocation(), monitor);
@@ -136,5 +143,29 @@ public class NdkHelper {
         }
 
         return ndkRoot;
+    }
+
+    public static void setLaunchConfigDefaults(ILaunchConfigurationWorkingCopy config) {
+        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_REMOTE_TCP, true);
+        config.setAttribute(NdkLaunchConstants.ATTR_NDK_GDB, NdkLaunchConstants.DEFAULT_GDB);
+        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_GDB_INIT,
+                NdkLaunchConstants.DEFAULT_GDBINIT);
+        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_PORT,
+                NdkLaunchConstants.DEFAULT_GDB_PORT);
+        config.setAttribute(IGDBLaunchConfigurationConstants.ATTR_HOST, "localhost"); //$NON-NLS-1$
+        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_STOP_AT_MAIN, false);
+        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_START_MODE,
+                IGDBLaunchConfigurationConstants.DEBUGGER_MODE_REMOTE_ATTACH);
+        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_PROGRAM_NAME,
+                NdkLaunchConstants.DEFAULT_PROGRAM);
+
+        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_START_MODE,
+                IGDBLaunchConfigurationConstants.DEBUGGER_MODE_REMOTE);
+        config.setAttribute(ICDTLaunchConfigurationConstants.ATTR_DEBUGGER_ID,
+                "gdbserver"); //$NON-NLS-1$
+
+        List<String> solibPaths = new ArrayList<String>(2);
+        solibPaths.add(NdkLaunchConstants.DEFAULT_SOLIB_PATH);
+        config.setAttribute(NdkLaunchConstants.ATTR_NDK_SOLIB, solibPaths);
     }
 }

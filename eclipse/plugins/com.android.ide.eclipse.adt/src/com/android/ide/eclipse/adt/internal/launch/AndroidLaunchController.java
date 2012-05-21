@@ -165,7 +165,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      */
     public static void debugRunningApp(IProject project, int debugPort) {
         // get an existing or new launch configuration
-        ILaunchConfiguration config = AndroidLaunchController.getLaunchConfig(project);
+        ILaunchConfiguration config = AndroidLaunchController.getLaunchConfig(project,
+                LaunchConfigDelegate.ANDROID_LAUNCH_TYPE_ID);
 
         if (config != null) {
             setPortLaunchConfigAssociation(config, debugPort);
@@ -178,16 +179,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /**
      * Returns an {@link ILaunchConfiguration} for the specified {@link IProject}.
      * @param project the project
+     * @param launchTypeId launch delegate type id
      * @return a new or already existing <code>ILaunchConfiguration</code> or null if there was
      * an error when creating a new one.
      */
-    public static ILaunchConfiguration getLaunchConfig(IProject project) {
+    public static ILaunchConfiguration getLaunchConfig(IProject project, String launchTypeId) {
         // get the launch manager
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 
         // now get the config type for our particular android type.
-        ILaunchConfigurationType configType = manager.getLaunchConfigurationType(
-                        LaunchConfigDelegate.ANDROID_LAUNCH_TYPE_ID);
+        ILaunchConfigurationType configType = manager.getLaunchConfigurationType(launchTypeId);
 
         String name = project.getName();
 
@@ -203,7 +204,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             try {
                 // make the working copy object
                 wc = configType.newInstance(null,
-                        manager.generateUniqueLaunchConfigurationNameFrom(name));
+                        manager.generateLaunchConfigurationName(name));
 
                 // set the project name
                 wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, name);
@@ -1308,7 +1309,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
         // didn't find anything that matches. Return null
         return null;
-
     }
 
 

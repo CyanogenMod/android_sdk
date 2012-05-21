@@ -93,7 +93,8 @@ public class LaunchShortcut implements ILaunchShortcut {
      */
     private void launch(IProject project, String mode) {
         // get an existing or new launch configuration
-        ILaunchConfiguration config = AndroidLaunchController.getLaunchConfig(project);
+        ILaunchConfiguration config = AndroidLaunchController.getLaunchConfig(project,
+                LaunchConfigDelegate.ANDROID_LAUNCH_TYPE_ID);
 
         if (config != null) {
             // and launch!

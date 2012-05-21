@@ -33,4 +33,14 @@ public enum NativeAbi {
     public String getAbi() {
         return mAbi;
     }
+
+    public static NativeAbi getByString(String abi) {
+        for (NativeAbi a: values()) {
+            if (a.getAbi().equals(abi)) {
+                return a;
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown abi: " + abi);
+    }
 }
