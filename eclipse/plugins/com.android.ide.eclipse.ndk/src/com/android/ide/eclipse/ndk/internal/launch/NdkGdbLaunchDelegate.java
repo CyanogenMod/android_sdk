@@ -288,6 +288,8 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
                         Messages.NdkGdbLaunchDelegate_LaunchError_gdbserverOutput,
                         gdbServer.getShellOutput());
             }
+            AdtPlugin.printErrorToConsole(project,
+                    Messages.NdkGdbLaunchDelegate_LaunchError_VerifyIfDebugBuild);
 
             // shut down the gdbserver thread
             gdbServer.setCancelled();
