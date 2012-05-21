@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 #include "HostConnection.h"
 #include "ThreadInfo.h"
 #include "eglDisplay.h"
@@ -1180,32 +1181,74 @@ EGLBoolean eglDestroyImageKHR(EGLDisplay dpy, EGLImageKHR img)
     return EGL_TRUE;
 }
 
-EGLSyncKHR eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
+#define FENCE_SYNC_HANDLE (EGLSyncKHR)0xFE4CE
+
+EGLSyncKHR eglCreateSyncKHR(EGLDisplay dpy, EGLenum type,
+        const EGLint *attrib_list)
 {
-    //TODO later
-    return 0;
+    // TODO: This implementation could be faster. We should require the host EGL
+    // to support KHR_fence_sync, or at least pipe the fence command to the host
+    // and wait for it (probably involving a glFinish on the host) in
+    // eglClientWaitSyncKHR.
+
+    VALIDATE_DISPLAY(dpy, EGL_NO_SYNC_KHR);
+
+    if (type != EGL_SYNC_FENCE_KHR ||
+            (attrib_list != NULL && attrib_list[0] != EGL_NONE)) {
+        setErrorReturn(EGL_BAD_ATTRIBUTE, EGL_NO_SYNC_KHR);
+    }
+
+    EGLThreadInfo *tInfo = getEGLThreadInfo();
+    if (!tInfo || !tInfo->currentContext) {
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SYNC_KHR);
+    }
+
+    if (tInfo->currentContext->version == 2) {
+        s_display.gles2_iface()->finish();
+    } else {
+        s_display.gles_iface()->finish();
+    }
+
+    return FENCE_SYNC_HANDLE;
 }
 
 EGLBoolean eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync)
 {
-    //TODO later
-    return 0;
+    if (sync != FENCE_SYNC_HANDLE) {
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
+    }
+
+    return EGL_TRUE;
 }
 
-EGLint eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout)
+EGLint eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
+        EGLTimeKHR timeout)
 {
-    //TODO
-    return 0;
+    if (sync != FENCE_SYNC_HANDLE) {
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
+    }
+
+    return EGL_CONDITION_SATISFIED_KHR;
 }
 
-EGLBoolean eglSignalSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
+EGLBoolean eglGetSyncAttribKHR(EGLDisplay dpy, EGLSyncKHR sync,
+        EGLint attribute, EGLint *value)
 {
-    //TODO later
-    return 0;
-}
+    if (sync != FENCE_SYNC_HANDLE) {
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
+    }
 
-EGLBoolean eglGetSyncAttribKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint attribute, EGLint *value)
-{
-    //TODO later
-    return 0;
+    switch (attribute) {
+    case EGL_SYNC_TYPE_KHR:
+        *value = EGL_SYNC_FENCE_KHR;
+        return EGL_TRUE;
+    case EGL_SYNC_STATUS_KHR:
+        *value = EGL_SIGNALED_KHR;
+        return EGL_TRUE;
+    case EGL_SYNC_CONDITION_KHR:
+        *value = EGL_SYNC_PRIOR_COMMANDS_COMPLETE_KHR;
+        return EGL_TRUE;
+    default:
+        setErrorReturn(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+    }
 }

@@ -24,7 +24,8 @@ static const char systemEGLVendor[] = "Google Android emulator";
 // list of extensions supported by this EGL implementation
 //  NOTE that each extension name should be suffixed with space
 static const char systemStaticEGLExtensions[] =
-            "EGL_ANDROID_image_native_buffer ";
+            "EGL_ANDROID_image_native_buffer "
+            "EGL_KHR_fence_sync ";
 
 // list of extensions supported by this EGL implementation only if supported
 // on the host implementation.
