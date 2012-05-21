@@ -51,6 +51,7 @@ public class Messages extends NLS {
     public static String NdkGdbLaunchDelegate_LaunchError_PullFileError;
     public static String NdkGdbLaunchDelegate_LaunchError_UnableToDetectAppAbi;
     public static String NdkGdbLaunchDelegate_LaunchError_UnknownAndroidDeviceVersion;
+    public static String NdkGdbLaunchDelegate_LaunchError_VerifyIfDebugBuild;
     static {
         // initialize resource bundle
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);
