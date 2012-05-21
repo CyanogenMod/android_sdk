@@ -168,14 +168,14 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
         String testSizeAnnotation = getStringLaunchAttribute(
                 AndroidJUnitLaunchConfigDelegate.ATTR_TEST_SIZE,
                 configuration);
-        if (testSizeAnnotation.equals(
-                AndroidJUnitLaunchConfigurationTab.SMALL_TEST_ANNOTATION)) {
+        if (AndroidJUnitLaunchConfigurationTab.SMALL_TEST_ANNOTATION.equals(
+                    testSizeAnnotation)){
             return TestSize.SMALL;
-        } else if (testSizeAnnotation.equals(
-                AndroidJUnitLaunchConfigurationTab.MEDIUM_TEST_ANNOTATION)) {
+        } else if (AndroidJUnitLaunchConfigurationTab.MEDIUM_TEST_ANNOTATION.equals(
+                    testSizeAnnotation)) {
             return TestSize.MEDIUM;
-        } else if (testSizeAnnotation.equals(
-                AndroidJUnitLaunchConfigurationTab.LARGE_TEST_ANNOTATION)) {
+        } else if (AndroidJUnitLaunchConfigurationTab.LARGE_TEST_ANNOTATION.equals(
+                    testSizeAnnotation)) {
             return TestSize.LARGE;
         } else {
             return null;
