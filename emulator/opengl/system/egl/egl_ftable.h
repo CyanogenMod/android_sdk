@@ -58,7 +58,6 @@ static const struct _egl_funcs_by_name {
     {"eglCreateSyncKHR", (void *)eglCreateSyncKHR},
     {"eglDestroySyncKHR", (void *)eglDestroySyncKHR},
     {"eglClientWaitSyncKHR", (void *)eglClientWaitSyncKHR},
-    {"eglSignalSyncKHR", (void *)eglSignalSyncKHR},
     {"eglGetSyncAttribKHR", (void *)eglGetSyncAttribKHR}
 };
 
