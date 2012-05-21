@@ -20,12 +20,14 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.launch.DeviceChoiceCache;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate;
@@ -134,30 +136,43 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
             return false;
         }
 
-        // Show device chooser dialog and get device to use.
+        // Obtain device to use:
+        //  - if there is only 1 device, just use that
+        //  - if we have previously launched this config, and the device used is present, use that
+        //  - otherwise show the DeviceChooserDialog
+        final String configName = config.getName();
         monitor.setTaskName(Messages.NdkGdbLaunchDelegate_Action_ObtainDevice);
-        final IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-        final DeviceChooserResponse response = new DeviceChooserResponse();
-        final boolean continueLaunch[] = new boolean[] { false };
-        AdtPlugin.getDisplay().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                DeviceChooserDialog dialog = new DeviceChooserDialog(
-                        AdtPlugin.getDisplay().getActiveShell(),
-                        response,
-                        manifestData.getPackage(),
-                        projectTarget);
-                if (dialog.open() == Dialog.OK) {
-                    continueLaunch[0] = true;
-                }
-            };
-        });
+        IDevice device = null;
+        IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
+        if (devices.length == 1) {
+            device = devices[0];
+        } else if (DeviceChoiceCache.get(configName) != null) {
+            device = DeviceChoiceCache.get(configName);
+        } else {
+            final IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
+            final DeviceChooserResponse response = new DeviceChooserResponse();
+            final boolean continueLaunch[] = new boolean[] { false };
+            AdtPlugin.getDisplay().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    DeviceChooserDialog dialog = new DeviceChooserDialog(
+                            AdtPlugin.getDisplay().getActiveShell(),
+                            response,
+                            manifestData.getPackage(),
+                            projectTarget);
+                    if (dialog.open() == Dialog.OK) {
+                        DeviceChoiceCache.put(configName, response);
+                        continueLaunch[0] = true;
+                    }
+                };
+            });
 
-        if (!continueLaunch[0]) {
-            return false;
+            if (!continueLaunch[0]) {
+                return false;
+            }
+
+            device = response.getDeviceToUse();
         }
-
-        IDevice device = response.getDeviceToUse();
 
         // ndk-gdb requires device > Froyo
         monitor.setTaskName(Messages.NdkGdbLaunchDelegate_Action_CheckAndroidDeviceVersion);

@@ -79,7 +79,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -136,9 +135,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * <b>ALL ACCESS MUST BE INSIDE A <code>synchronized (sListLock)</code> block!</b>
      */
     private final ArrayList<Client> mUnknownClientsWaitingForDebugger = new ArrayList<Client>();
-
-    /** A map of launch config name to device used for that launch config. */
-    private static final Map<String, String> sDeviceUsedForLaunch = new HashMap<String, String>();
 
     /** static instance for singleton */
     private static AndroidLaunchController sThis = new AndroidLaunchController();
@@ -351,7 +347,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *           If == 1, launch the application on this AVD/device.
          */
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
-        IDevice deviceUsedInLastLaunch = getDeviceUsedForLastLaunch(devices,
+        IDevice deviceUsedInLastLaunch = DeviceChoiceCache.get(
                 launch.getLaunchConfiguration().getName());
         if (deviceUsedInLastLaunch != null) {
             response.setDeviceToUse(deviceUsedInLastLaunch);
@@ -582,8 +578,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             AdtPlugin.getDisplay().getActiveShell(),
                             response, launchInfo.getPackageName(), desiredProjectTarget);
                     if (dialog.open() == Dialog.OK) {
-                        updateLaunchOnSameDeviceState(response,
-                                launch.getLaunchConfiguration().getName());
+                        DeviceChoiceCache.put(launch.getLaunchConfiguration().getName(), response);
                         continueLaunch.set(true);
                     } else {
                         AdtPlugin.printErrorToConsole(project, "Launch canceled!");
@@ -609,40 +604,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         if (continueLaunch.get()) {
             continueLaunch(response, project, launch, launchInfo, config);
         }
-    }
-
-    private IDevice getDeviceUsedForLastLaunch(IDevice[] devices,
-            String launchConfigName) {
-        String deviceName = sDeviceUsedForLaunch.get(launchConfigName);
-        if (deviceName == null) {
-            return null;
-        }
-
-        for (IDevice device : devices) {
-            if (deviceName.equals(device.getAvdName()) ||
-                    deviceName.equals(device.getSerialNumber())) {
-                return device;
-            }
-        }
-
-        return null;
-    }
-
-    private void updateLaunchOnSameDeviceState(DeviceChooserResponse response,
-            String launchConfigName) {
-        if (!response.useDeviceForFutureLaunches()) {
-            return;
-        }
-
-        AvdInfo avd = response.getAvdToLaunch();
-        String device = null;
-        if (avd != null) {
-            device = avd.getName();
-        } else {
-            device = response.getDeviceToUse().getSerialNumber();
-        }
-
-        sDeviceUsedForLaunch.put(launchConfigName, device);
     }
 
     /**
@@ -1451,7 +1412,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public void deviceDisconnected(IDevice device) {
         // any pending launch on this device must be canceled.
         String message = "%1$s disconnected! Cancelling '%2$s'!";
