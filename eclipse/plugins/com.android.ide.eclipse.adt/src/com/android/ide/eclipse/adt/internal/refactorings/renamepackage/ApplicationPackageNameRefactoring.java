@@ -16,9 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
+import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.util.XmlUtils.XMLNS_COLON;
+
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidManifest;
 
@@ -81,10 +83,6 @@ class ApplicationPackageNameRefactoring extends Refactoring {
     private final Name mNewPackageName;
 
     List<String> MAIN_COMPONENT_TYPES_LIST = Arrays.asList(MAIN_COMPONENT_TYPES);
-
-    private final static String ANDROID_NS_URI = SdkConstants.NS_RESOURCES;
-    private final static String NAMESPACE_DECLARATION_PREFIX =
-        XmlnsAttributeDescriptor.XMLNS_COLON;
 
     ApplicationPackageNameRefactoring(
             IProject project,
@@ -243,7 +241,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                     // Check this is the attribute and the original string
 
                     if (lastAttrName != null &&
-                            lastAttrName.startsWith(NAMESPACE_DECLARATION_PREFIX)) {
+                            lastAttrName.startsWith(XMLNS_COLON)) {
 
                         String lastAttrValue = region.getText(subRegion);
                         if (oldAppNamespaceString.equals(stripQuotes(lastAttrValue))) {
@@ -338,12 +336,12 @@ class ApplicationPackageNameRefactoring extends Refactoring {
 
                     String lastAttrValue = region.getText(subRegion);
                     if (lastAttrName != null &&
-                            lastAttrName.startsWith(NAMESPACE_DECLARATION_PREFIX)) {
+                            lastAttrName.startsWith(XMLNS_COLON)) {
 
                         // Resolves the android namespace prefix for this file
-                        if (ANDROID_NS_URI.equals(stripQuotes(lastAttrValue))) {
+                        if (ANDROID_URI.equals(stripQuotes(lastAttrValue))) {
                             String android_namespace_prefix = lastAttrName
-                                .substring(NAMESPACE_DECLARATION_PREFIX.length());
+                                .substring(XMLNS_COLON.length());
                             android_name_attribute = android_namespace_prefix + ':'
                                 + AndroidManifest.ATTRIBUTE_NAME;
                         }

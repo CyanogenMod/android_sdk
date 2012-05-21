@@ -17,11 +17,11 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
 import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.AndroidConstants;
 import com.android.annotations.NonNull;

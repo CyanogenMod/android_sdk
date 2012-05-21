@@ -24,7 +24,7 @@ import static com.android.ide.common.layout.GravityHelper.GRAVITY_LEFT;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_TOP;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;

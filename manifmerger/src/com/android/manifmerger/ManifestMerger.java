@@ -186,6 +186,35 @@ public class ManifestMerger {
         return success;
     }
 
+    /**
+     * Performs the merge operation in-place in the given DOM.
+     * <p/>
+     * This does NOT stop on errors, in an attempt to accumulate as much
+     * info as possible to return to the user.
+     *
+     * @param mainDoc The document to merge into. Will be modified in-place.
+     * @param libraryDocs The library manifest documents to merge in. Must not be null.
+     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     */
+    public boolean process(@NonNull Document mainDoc, @NonNull Document... libraryDocs) {
+
+        boolean success = true;
+        mMainDoc = mainDoc;
+
+        String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
+        mXPath = AndroidXPathFactory.newXPath(prefix);
+
+        for (Document libDoc : libraryDocs) {
+            if (!mergeLibDoc(libDoc)) {
+                success = false;
+            }
+        }
+
+        mXPath = null;
+        mMainDoc = null;
+        return success;
+    }
+
     // --------
 
     /**
@@ -884,8 +913,8 @@ public class ManifestMerger {
      */
     private Node insertAtEndOf(Element dest, Node start, Node end) {
         // Check whether we'll need to adjust URI prefixes
-        String destPrefix = mMainDoc.lookupPrefix(NS_URI);
-        String srcPrefix  = start.getOwnerDocument().lookupPrefix(NS_URI);
+        String destPrefix = XmlUtils.lookupNsPrefix(mMainDoc, NS_URI);
+        String srcPrefix  = XmlUtils.lookupNsPrefix(start.getOwnerDocument(), NS_URI);
         boolean needPrefixChange = destPrefix != null && !destPrefix.equals(srcPrefix);
 
         // First let's figure out the insertion point.

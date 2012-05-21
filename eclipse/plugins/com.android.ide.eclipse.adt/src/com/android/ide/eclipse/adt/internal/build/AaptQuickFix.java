@@ -16,13 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.util.XmlUtils.XMLNS_ANDROID;
+import static com.android.util.XmlUtils.XMLNS_URI;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
@@ -255,8 +256,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                 IDOMModel domModel = (IDOMModel) model;
                 Document document = domModel.getDocument();
                 Element element = document.getDocumentElement();
-                Attr attr = document.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
-                        "xmlns:android"); //$NON-NLS-1$
+                Attr attr = document.createAttributeNS(XMLNS_URI, XMLNS_ANDROID);
                 attr.setValue(ANDROID_URI);
                 element.getAttributes().setNamedItemNS(attr);
                 return (IndexedRegion) attr;

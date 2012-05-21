@@ -30,15 +30,14 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextValueDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiFlagAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.text.BadLocationException;
@@ -53,7 +52,6 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
@@ -61,7 +59,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -273,55 +270,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             lineEnd = nodeValue.length();
         }
         return lineEnd - relativeOffset;
-    }
-
-    /**
-     * Returns the namespace prefix matching the Android Resource URI.
-     * If no such declaration is found, returns the default "android" prefix.
-     *
-     * @param node The current node. Must not be null.
-     * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. {@link SdkConstants#NS_RESOURCES}
-     * @return The first prefix declared or the default "android" prefix.
-     */
-    private static String lookupNamespacePrefix(Node node, String nsUri) {
-        // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
-        // The following emulates this:
-        //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
-
-        if (XmlnsAttributeDescriptor.XMLNS_URI.equals(nsUri)) {
-            return XmlnsAttributeDescriptor.XMLNS;
-        }
-
-        HashSet<String> visited = new HashSet<String>();
-
-        String prefix = null;
-        for (; prefix == null &&
-                    node != null &&
-                    node.getNodeType() == Node.ELEMENT_NODE;
-               node = node.getParentNode()) {
-            NamedNodeMap attrs = node.getAttributes();
-            for (int n = attrs.getLength() - 1; n >= 0; --n) {
-                Node attr = attrs.item(n);
-                if (XmlnsAttributeDescriptor.XMLNS.equals(attr.getPrefix())) {
-                    String uri = attr.getNodeValue();
-                    if (nsUri.equals(uri)) {
-                        return attr.getLocalName();
-                    }
-                    visited.add(uri);
-                }
-            }
-        }
-
-        // Use a sensible default prefix if we can't find one.
-        // We need to make sure the prefix is not one that was declared in the scope
-        // visited above.
-        prefix = SdkConstants.NS_RESOURCES.equals(nsUri) ? "android" : "app"; //$NON-NLS-1$ //$NON-NLS-2$
-        String base = prefix;
-        for (int i = 1; visited.contains(prefix); i++) {
-            prefix = base + Integer.toString(i);
-        }
-        return prefix;
     }
 
     /**
@@ -625,7 +573,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (nsUri != null) {
                     nsPrefix = nsUriMap.get(nsUri);
                     if (nsPrefix == null) {
-                        nsPrefix = lookupNamespacePrefix(currentNode, nsUri);
+                        nsPrefix = XmlUtils.lookupNamespacePrefix(currentNode, nsUri);
                         nsUriMap.put(nsUri, nsPrefix);
                     }
                 }

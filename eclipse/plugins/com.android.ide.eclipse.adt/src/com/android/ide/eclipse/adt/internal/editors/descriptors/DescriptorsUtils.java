@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -39,6 +38,9 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
+import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.util.XmlUtils.GT_ENTITY;
+import static com.android.util.XmlUtils.LT_ENTITY;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -664,8 +666,8 @@ public final class DescriptorsUtils {
      */
     private static String cleanupJavadocHtml(String s) {
         if (s != null) {
-            s = s.replaceAll("&lt;", "\"");     //$NON-NLS-1$ $NON-NLS-2$
-            s = s.replaceAll("&gt;", "\"");     //$NON-NLS-1$ $NON-NLS-2$
+            s = s.replaceAll(LT_ENTITY, "\"");     //$NON-NLS-1$ $NON-NLS-2$
+            s = s.replaceAll(GT_ENTITY, "\"");     //$NON-NLS-1$ $NON-NLS-2$
             s = s.replaceAll("<[^>]+>", "");    //$NON-NLS-1$ $NON-NLS-2$
         }
         return s;
@@ -945,7 +947,7 @@ public final class DescriptorsUtils {
                         || viewName.equals(GALLERY) || viewName.equals(GRID_VIEW)) {
 
                     // We should really also enforce that
-                    // LayoutConstants.ANDROID_URI.equals(descriptor.getNameSpace())
+                    // XmlUtils.ANDROID_URI.equals(descriptor.getNameSpace())
                     // here and if not, return true, but it turns out the getNameSpace()
                     // for elements are often "".
 

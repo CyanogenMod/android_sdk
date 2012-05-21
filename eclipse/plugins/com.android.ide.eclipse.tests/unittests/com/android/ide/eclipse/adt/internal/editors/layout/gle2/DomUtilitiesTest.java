@@ -25,32 +25,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class DomUtilitiesTest extends TestCase {
-
-    public void testToXmlAttributeValue() throws Exception {
-        assertEquals("", DomUtilities.toXmlAttributeValue(""));
-        assertEquals("foo", DomUtilities.toXmlAttributeValue("foo"));
-        assertEquals("foo&lt;bar", DomUtilities.toXmlAttributeValue("foo<bar"));
-        assertEquals("foo>bar", DomUtilities.toXmlAttributeValue("foo>bar"));
-
-        assertEquals("&quot;", DomUtilities.toXmlAttributeValue("\""));
-        assertEquals("&apos;", DomUtilities.toXmlAttributeValue("'"));
-        assertEquals("foo&quot;b&apos;&apos;ar",
-                DomUtilities.toXmlAttributeValue("foo\"b''ar"));
-        assertEquals("&lt;&quot;&apos;>&amp;", DomUtilities.toXmlAttributeValue("<\"'>&"));
-    }
-
-    public void testAppendXmlAttributeValue() throws Exception {
-        StringBuilder sb = new StringBuilder();
-        DomUtilities.appendXmlAttributeValue(sb, "<\"'>&");
-        assertEquals("&lt;&quot;&apos;>&amp;", sb.toString());
-    }
-
-    public void testAppendXmlTextValue() throws Exception {
-        StringBuilder sb = new StringBuilder();
-        DomUtilities.appendXmlTextValue(sb, "<\"'>&");
-        assertEquals("&lt;\"'>&amp;", sb.toString());
-    }
 
     public void testIsEquivalent() throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

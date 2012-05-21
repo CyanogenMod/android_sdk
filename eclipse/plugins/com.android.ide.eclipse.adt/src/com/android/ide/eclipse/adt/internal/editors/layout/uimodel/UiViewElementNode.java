@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout.uimodel;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_FRAME_LAYOUT;
 
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -28,7 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.resources.IProject;
 
@@ -109,8 +108,8 @@ public class UiViewElementNode extends UiElementNode {
                 layout_attrs.length);
         if (need_xmlns) {
             AttributeDescriptor desc = new XmlnsAttributeDescriptor(
-                    LayoutConstants.ANDROID_NS_NAME,
-                    SdkConstants.NS_RESOURCES);
+                    XmlUtils.ANDROID_NS_NAME,
+                    XmlUtils.ANDROID_URI);
             mCachedAttributeDescriptors[direct_attrs.length + layout_attrs.length] = desc;
         }
 

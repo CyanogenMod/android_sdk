@@ -19,7 +19,7 @@ import static com.android.ide.common.layout.GravityHelper.GRAVITY_BOTTOM;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_HORIZ;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_VERT;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;

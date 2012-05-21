@@ -15,10 +15,10 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.text.BadLocationException;
@@ -48,7 +48,7 @@ final class AddPrefixFix extends DocumentFix {
     @Override
     protected void apply(IDocument document, IStructuredModel model, Node node, int start,
             int end) {
-        String prefix = UiElementNode.lookupNamespacePrefix(node, ANDROID_URI);
+        String prefix = XmlUtils.lookupNamespacePrefix(node, ANDROID_URI);
         try {
             document.replace(start, 0, prefix + ':');
         } catch (BadLocationException e) {

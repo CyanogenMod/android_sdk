@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.color;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
-import static com.android.sdklib.SdkConstants.NS_RESOURCES;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -45,8 +45,8 @@ public class ColorDescriptors implements IDescriptorProvider {
             SELECTOR_TAG, "Selector",
             "Required. This must be the root element. Contains one or more <item> elements.",
             SDK_URL,
-            new AttributeDescriptor[] { new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
-                    NS_RESOURCES) },
+            new AttributeDescriptor[] {
+                    new XmlnsAttributeDescriptor(ANDROID_NS_NAME, ANDROID_URI) },
             null /*children: added later*/, true /*mandatory*/);
 
     /** @return the root descriptor. */

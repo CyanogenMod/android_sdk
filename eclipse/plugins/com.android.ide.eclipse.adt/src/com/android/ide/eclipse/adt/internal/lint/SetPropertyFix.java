@@ -15,12 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -70,7 +70,7 @@ abstract class SetPropertyFix extends DocumentFix {
             Element element = (Element) node;
             String proposal = getProposal();
             String localAttribute = getAttribute();
-            String prefix = UiElementNode.lookupNamespacePrefix(node, ANDROID_URI);
+            String prefix = XmlUtils.lookupNamespacePrefix(node, ANDROID_URI);
             String attribute = prefix != null ? prefix + ':' + localAttribute : localAttribute;
 
             // This does not work even though it should: it does not include the prefix

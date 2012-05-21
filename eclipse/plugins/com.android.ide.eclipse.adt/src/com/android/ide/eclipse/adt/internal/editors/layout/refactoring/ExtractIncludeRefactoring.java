@@ -16,8 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
@@ -28,10 +27,11 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
-import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_COLON;
 import static com.android.resources.ResourceType.LAYOUT;
 import static com.android.sdklib.SdkConstants.FD_RES;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.XMLNS;
+import static com.android.util.XmlUtils.XMLNS_COLON;
 
 import com.android.AndroidConstants;
 import com.android.annotations.VisibleForTesting;
@@ -48,6 +48,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.sdklib.SdkConstants;
+import com.android.util.XmlUtils;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -496,7 +497,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                         androidNsPrefix = androidNsPrefix.substring(XMLNS_COLON.length());
                     }
                 }
-                sb.append(DomUtilities.toXmlAttributeValue(value));
+                sb.append(XmlUtils.toXmlAttributeValue(value));
                 sb.append('"');
             }
         }
@@ -585,7 +586,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             sb.append(':');
             sb.append(ATTR_LAYOUT_WIDTH);
             sb.append('=').append('"');
-            sb.append(DomUtilities.toXmlAttributeValue(width));
+            sb.append(XmlUtils.toXmlAttributeValue(width));
             sb.append('"');
         }
         if (height != null) {
@@ -594,7 +595,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             sb.append(':');
             sb.append(ATTR_LAYOUT_HEIGHT);
             sb.append('=').append('"');
-            sb.append(DomUtilities.toXmlAttributeValue(height));
+            sb.append(XmlUtils.toXmlAttributeValue(height));
             sb.append('"');
         }
 
@@ -616,7 +617,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                     sb.append(':');
                     sb.append(name);
                     sb.append('=').append('"');
-                    sb.append(DomUtilities.toXmlAttributeValue(attr.getNodeValue()));
+                    sb.append(XmlUtils.toXmlAttributeValue(attr.getNodeValue()));
                     sb.append('"');
                 }
             }

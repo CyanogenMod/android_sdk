@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
@@ -213,7 +213,7 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
     public final String getNamespace() {
         // For now we hard-code the prefix as being "android"
         if (mXmlName.startsWith(ANDROID_NS_NAME_PREFIX)) {
-            return SdkConstants.NS_RESOURCES;
+            return ANDROID_URI;
         }
 
         return ""; //$NON-NLs-1$
