@@ -32,16 +32,20 @@ public class ResourceNameValidatorTest extends TestCase {
         assertTrue(validator.isValid("foo") == null);
         assertTrue(validator.isValid("foo.xml") == null);
         assertTrue(validator.isValid("Foo123_$") == null);
+        assertTrue(validator.isValid("foo.xm") == null); // For non-file types, . => _
 
         // Invalid
         assertTrue(validator.isValid("") != null);
         assertTrue(validator.isValid(" ") != null);
-        assertTrue(validator.isValid("foo.xm") != null);
         assertTrue(validator.isValid("foo bar") != null);
         assertTrue(validator.isValid("1foo") != null);
         assertTrue(validator.isValid("foo%bar") != null);
         assertTrue(ResourceNameValidator.create(true, Collections.singleton("foo"),
                 ResourceType.STRING).isValid("foo") != null);
+        assertTrue(ResourceNameValidator.create(true,
+                ResourceFolderType.DRAWABLE).isValid("foo.xm") != null);
+        assertTrue(ResourceNameValidator.create(false,
+                ResourceFolderType.DRAWABLE).isValid("foo.xm") != null);
 
         // Only lowercase chars allowed in file-based resource names
         assertTrue(ResourceNameValidator.create(true, ResourceFolderType.LAYOUT)
