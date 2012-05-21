@@ -417,7 +417,7 @@ final class AvdStartDialog extends GridDialog {
      */
     private int getMonitorDpi() {
         if (mSettingsController != null) {
-            sMonitorDpi = mSettingsController.getMonitorDensity();
+            sMonitorDpi = mSettingsController.getSettings().getMonitorDensity();
         }
 
         if (sMonitorDpi == -1) { // first time? try to get a value

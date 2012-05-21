@@ -16,6 +16,9 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.DownloadCache.Strategy;
+import com.android.sdklib.util.FormatUtil;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 
@@ -35,19 +38,18 @@ import java.util.Properties;
 
 public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
 
+
     // data members
+    private final DownloadCache mDownloadCache = new DownloadCache(Strategy.SERVE_CACHE);
     private final SettingsController mSettingsController;
     private SettingsChangedCallback mSettingsChangedCallback;
 
     // UI widgets
-    private Group mProxySettingsGroup;
-    private Group mMiscGroup;
-    private Label mProxyServerLabel;
-    private Label mProxyPortLabel;
-    private Text mProxyServerText;
-    private Text mProxyPortText;
-    private Button mForceHttpCheck;
-    private Button mAskAdbRestartCheck;
+    private Text mTextProxyServer;
+    private Text mTextProxyPort;
+    private Button mCheckUseCache;
+    private Button mCheckForceHttp;
+    private Button mCheckAskAdbRestart;
 
     private SelectionAdapter mApplyOnSelected = new SelectionAdapter() {
         @Override
@@ -62,6 +64,7 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
             applyNewSettings(); //$hide$
         }
     };
+    private Text mTextCacheSize;
 
     public SettingsDialog(Shell parentShell, UpdaterData updaterData) {
         super(parentShell, updaterData, "Settings" /*title*/);
@@ -74,53 +77,102 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         super.createContents();
         Shell shell = getShell();
 
-        mProxySettingsGroup = new Group(shell, SWT.NONE);
-        mProxySettingsGroup.setText("Proxy Settings");
-        GridDataBuilder.create(mProxySettingsGroup).fill().grab().hSpan(2);
-        GridLayoutBuilder.create(mProxySettingsGroup).columns(2);
+        Group group = new Group(shell, SWT.NONE);
+        group.setText("Proxy Settings");
+        GridDataBuilder.create(group).fill().grab().hSpan(2);
+        GridLayoutBuilder.create(group).columns(2);
 
-        mProxyServerLabel = new Label(mProxySettingsGroup, SWT.NONE);
-        GridDataBuilder.create(mProxyServerLabel).hRight().vCenter();
-        mProxyServerLabel.setText("HTTP Proxy Server");
-        String tooltip = "The DNS name or IP of the HTTP proxy server to use. " +
-                         "When empty, no HTTP proxy is used.";
-        mProxyServerLabel.setToolTipText(tooltip);
+        Label label = new Label(group, SWT.NONE);
+        GridDataBuilder.create(label).hRight().vCenter();
+        label.setText("HTTP Proxy Server");
+        String tooltip = "The hostname or IP of the HTTP & HTTPS proxy server to use (e.g. proxy.example.com). " +
+                         "When empty, the default Java proxy setting is used.";
+        label.setToolTipText(tooltip);
 
-        mProxyServerText = new Text(mProxySettingsGroup, SWT.BORDER);
-        GridDataBuilder.create(mProxyServerText).hFill().hGrab().vCenter();
-        mProxyServerText.addModifyListener(mApplyOnModified);
-        mProxyServerText.setToolTipText(tooltip);
+        mTextProxyServer = new Text(group, SWT.BORDER);
+        GridDataBuilder.create(mTextProxyServer).hFill().hGrab().vCenter();
+        mTextProxyServer.addModifyListener(mApplyOnModified);
+        mTextProxyServer.setToolTipText(tooltip);
 
-        mProxyPortLabel = new Label(mProxySettingsGroup, SWT.NONE);
-        GridDataBuilder.create(mProxyPortLabel).hRight().vCenter();
-        mProxyPortLabel.setText("HTTP Proxy Port");
-        tooltip = "The port of the HTTP proxy server to use. " +
-                  "When empty, the default for HTTP or HTTPS is used.";
-        mProxyPortLabel.setToolTipText(tooltip);
+        label = new Label(group, SWT.NONE);
+        GridDataBuilder.create(label).hRight().vCenter();
+        label.setText("HTTP Proxy Port");
+        tooltip = "The port of the HTTP & HTTPS proxy server to use (e.g. 3128). " +
+                  "When empty, the default Java proxy setting is used.";
+        label.setToolTipText(tooltip);
 
-        mProxyPortText = new Text(mProxySettingsGroup, SWT.BORDER);
-        GridDataBuilder.create(mProxyPortText).hFill().hGrab().vCenter();
-        mProxyPortText.addModifyListener(mApplyOnModified);
-        mProxyPortText.setToolTipText(tooltip);
+        mTextProxyPort = new Text(group, SWT.BORDER);
+        GridDataBuilder.create(mTextProxyPort).hFill().hGrab().vCenter();
+        mTextProxyPort.addModifyListener(mApplyOnModified);
+        mTextProxyPort.setToolTipText(tooltip);
 
-        mMiscGroup = new Group(shell, SWT.NONE);
-        mMiscGroup.setText("Misc");
-        GridDataBuilder.create(mMiscGroup).fill().grab().hSpan(2);
-        GridLayoutBuilder.create(mMiscGroup).columns(2);
+        // ----
+        group = new Group(shell, SWT.NONE);
+        group.setText("Manifest Cache");
+        GridDataBuilder.create(group).fill().grab().hSpan(2);
+        GridLayoutBuilder.create(group).columns(3);
 
-        mForceHttpCheck = new Button(mMiscGroup, SWT.CHECK);
-        GridDataBuilder.create(mForceHttpCheck).hFill().hGrab().vCenter().hSpan(2);
-        mForceHttpCheck.setText("Force https://... sources to be fetched using http://...");
-        mForceHttpCheck.setToolTipText("If you are not able to connect to the official Android repository " +
+        label = new Label(group, SWT.NONE);
+        GridDataBuilder.create(label).hRight().vCenter();
+        label.setText("Directory:");
+
+        Text text = new Text(group, SWT.NONE);
+        GridDataBuilder.create(text).hFill().hGrab().vCenter().hSpan(2);
+        text.setEnabled(false);
+        text.setText(mDownloadCache.getCacheRoot().getAbsolutePath());
+
+        label = new Label(group, SWT.NONE);
+        GridDataBuilder.create(label).hRight().vCenter();
+        label.setText("Current Size:");
+
+        mTextCacheSize = new Text(group, SWT.NONE);
+        GridDataBuilder.create(mTextCacheSize).hFill().hGrab().vCenter().hSpan(2);
+        mTextCacheSize.setEnabled(false);
+        updateDownloadCacheSize();
+
+        mCheckUseCache = new Button(group, SWT.CHECK);
+        GridDataBuilder.create(mCheckUseCache).vCenter().hSpan(1);
+        mCheckUseCache.setText("Use download cache");
+        mCheckUseCache.setToolTipText("When checked, small manifest files are cached locally. " +
+                "Large binary files are never cached locally.");
+        mCheckUseCache.addSelectionListener(mApplyOnSelected);
+
+        label = new Label(group, SWT.NONE);
+        GridDataBuilder.create(label).hFill().hGrab().hSpan(1);
+
+        Button button = new Button(group, SWT.PUSH);
+        GridDataBuilder.create(button).vCenter().hSpan(1);
+        button.setText("Clear Cache");
+        button.setToolTipText("Deletes all cached files.");
+        button.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                mDownloadCache.clearCache();
+                updateDownloadCacheSize();
+            }
+        });
+
+        // ----
+        group = new Group(shell, SWT.NONE);
+        group.setText("Misc");
+        GridDataBuilder.create(group).fill().grab().hSpan(2);
+        GridLayoutBuilder.create(group).columns(2);
+
+        mCheckForceHttp = new Button(group, SWT.CHECK);
+        GridDataBuilder.create(mCheckForceHttp).hFill().hGrab().vCenter().hSpan(2);
+        mCheckForceHttp.setText("Force https://... sources to be fetched using http://...");
+        mCheckForceHttp.setToolTipText(
+                "If you are not able to connect to the official Android repository " +
                 "using HTTPS, enable this setting to force accessing it via HTTP.");
-        mForceHttpCheck.addSelectionListener(mApplyOnSelected);
+        mCheckForceHttp.addSelectionListener(mApplyOnSelected);
 
-        mAskAdbRestartCheck = new Button(mMiscGroup, SWT.CHECK);
-        GridDataBuilder.create(mAskAdbRestartCheck).hFill().hGrab().vCenter().hSpan(2);
-        mAskAdbRestartCheck.setText("Ask before restarting ADB");
-        mAskAdbRestartCheck.setToolTipText("When checked, the user will be asked for permission " +
+        mCheckAskAdbRestart = new Button(group, SWT.CHECK);
+        GridDataBuilder.create(mCheckAskAdbRestart).hFill().hGrab().vCenter().hSpan(2);
+        mCheckAskAdbRestart.setText("Ask before restarting ADB");
+        mCheckAskAdbRestart.setToolTipText(
+                "When checked, the user will be asked for permission " +
                 "to restart ADB after updating an addon-on package or a tool package.");
-        mAskAdbRestartCheck.addSelectionListener(mApplyOnSelected);
+        mCheckAskAdbRestart.addSelectionListener(mApplyOnSelected);
 
         Label filler = new Label(shell, SWT.NONE);
         GridDataBuilder.create(filler).hFill().hGrab();
@@ -149,23 +201,29 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
     @Override
-    public void loadSettings(Properties in_settings) {
-        mProxyServerText.setText(in_settings.getProperty(KEY_HTTP_PROXY_HOST, ""));  //$NON-NLS-1$
-        mProxyPortText.setText(  in_settings.getProperty(KEY_HTTP_PROXY_PORT, ""));  //$NON-NLS-1$
-        mForceHttpCheck.setSelection(Boolean.parseBoolean(in_settings.getProperty(KEY_FORCE_HTTP)));
-        mAskAdbRestartCheck.setSelection(Boolean.parseBoolean(in_settings.getProperty(KEY_ASK_ADB_RESTART)));
+    public void loadSettings(Properties inSettings) {
+        mTextProxyServer.setText(inSettings.getProperty(KEY_HTTP_PROXY_HOST, ""));  //$NON-NLS-1$
+        mTextProxyPort.setText(  inSettings.getProperty(KEY_HTTP_PROXY_PORT, ""));  //$NON-NLS-1$
+        mCheckForceHttp.setSelection(
+                Boolean.parseBoolean(inSettings.getProperty(KEY_FORCE_HTTP)));
+        mCheckAskAdbRestart.setSelection(
+                Boolean.parseBoolean(inSettings.getProperty(KEY_ASK_ADB_RESTART)));
+        mCheckUseCache.setSelection(
+                Boolean.parseBoolean(inSettings.getProperty(KEY_USE_DOWNLOAD_CACHE)));
     }
 
     /** Called by the application to retrieve settings from the UI and store them in
      * the given {@link Properties} container. */
     @Override
-    public void retrieveSettings(Properties out_settings) {
-        out_settings.setProperty(KEY_HTTP_PROXY_HOST, mProxyServerText.getText());
-        out_settings.setProperty(KEY_HTTP_PROXY_PORT, mProxyPortText.getText());
-        out_settings.setProperty(KEY_FORCE_HTTP,
-                Boolean.toString(mForceHttpCheck.getSelection()));
-        out_settings.setProperty(KEY_ASK_ADB_RESTART,
-                Boolean.toString(mAskAdbRestartCheck.getSelection()));
+    public void retrieveSettings(Properties outSettings) {
+        outSettings.setProperty(KEY_HTTP_PROXY_HOST, mTextProxyServer.getText());
+        outSettings.setProperty(KEY_HTTP_PROXY_PORT, mTextProxyPort.getText());
+        outSettings.setProperty(KEY_FORCE_HTTP,
+                Boolean.toString(mCheckForceHttp.getSelection()));
+        outSettings.setProperty(KEY_ASK_ADB_RESTART,
+                Boolean.toString(mCheckAskAdbRestart.getSelection()));
+        outSettings.setProperty(KEY_USE_DOWNLOAD_CACHE,
+                Boolean.toString(mCheckUseCache.getSelection()));
     }
 
     /**
@@ -188,6 +246,13 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
             mSettingsChangedCallback.onSettingsChanged(this);
         }
     }
+
+    private void updateDownloadCacheSize() {
+        long size = mDownloadCache.getCurrentSize();
+        String str = FormatUtil.byteSizeToString(size);
+        mTextCacheSize.setText(str);
+    }
+
 
     // End of hiding from SWT Designer
     //$hide<<$
