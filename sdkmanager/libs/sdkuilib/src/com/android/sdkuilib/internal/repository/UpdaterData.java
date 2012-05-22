@@ -114,33 +114,9 @@ public class UpdaterData implements IUpdaterData {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
 
-        mSettingsController = new SettingsController(sdkLog);
 
+        mSettingsController = initSettingsController();
         initSdk();
-
-        mSettingsController.registerOnChangedListener(new OnChangedListener() {
-            @Override
-            public void onSettingsChanged(
-                    SettingsController controller,
-                    SettingsController.Settings oldSettings) {
-
-                // Reset the download cache if it doesn't match the right strategy.
-                // The cache instance gets lazily recreated later in getDownloadCache().
-                if (mDownloadCache != null) {
-                    if (controller.getSettings().getUseDownloadCache() &&
-                            mDownloadCache.getStrategy() != DownloadCache.Strategy.FRESH_CACHE) {
-                        mDownloadCache = null;
-                    } else if (!controller.getSettings().getUseDownloadCache() &&
-                            mDownloadCache.getStrategy() != DownloadCache.Strategy.DIRECT) {
-                        mDownloadCache = null;
-                    }
-                }
-
-                if (oldSettings.getForceHttp() != controller.getSettings().getForceHttp()) {
-                    refreshSources(false /*forceFetching*/);
-                }
-            }
-        });
     }
 
     // ----- getters, setters ----
@@ -276,6 +252,7 @@ public class UpdaterData implements IUpdaterData {
 
     /**
      * Initializes the {@link SdkManager} and the {@link AvdManager}.
+     * Extracted so that we can override this in unit tests.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected void initSdk() {
@@ -297,6 +274,35 @@ public class UpdaterData implements IUpdaterData {
 
         // notify listeners.
         broadcastOnSdkReload();
+    }
+
+    /**
+     * Initializes the {@link SettingsController}
+     * Extracted so that we can override this in unit tests.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected SettingsController initSettingsController() {
+        SettingsController settingsController = new SettingsController(mSdkLog);
+        settingsController.registerOnChangedListener(new OnChangedListener() {
+            @Override
+            public void onSettingsChanged(
+                    SettingsController controller,
+                    SettingsController.Settings oldSettings) {
+
+                // Reset the download cache if it doesn't match the right strategy.
+                // The cache instance gets lazily recreated later in getDownloadCache().
+                if (mDownloadCache != null) {
+                    if (controller.getSettings().getUseDownloadCache() &&
+                            mDownloadCache.getStrategy() != DownloadCache.Strategy.FRESH_CACHE) {
+                        mDownloadCache = null;
+                    } else if (!controller.getSettings().getUseDownloadCache() &&
+                            mDownloadCache.getStrategy() != DownloadCache.Strategy.DIRECT) {
+                        mDownloadCache = null;
+                    }
+                }
+            }
+        });
+        return settingsController;
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)

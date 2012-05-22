@@ -780,15 +780,29 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
             return;
         }
         if (mTreeViewer != null && !mTreeViewer.getTree().isDisposed()) {
+
+            boolean enablePreviews =
+                mUpdaterData.getSettingsController().getSettings().getEnablePreviews();
+
             mTreeViewer.setExpandedState(elem, true);
-            for (Object pkg :
+            nextCategory: for (Object pkg :
                     ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
                 if (pkg instanceof PkgCategory) {
                     PkgCategory cat = (PkgCategory) pkg;
+
+                    // Always expand the Tools category (and the preview one, if enabled)
+                    if (cat.getKey().equals(PkgCategoryApi.KEY_TOOLS) ||
+                            (enablePreviews &&
+                                    cat.getKey().equals(PkgCategoryApi.KEY_TOOLS_PREVIEW))) {
+                        expandInitial(pkg);
+                        continue nextCategory;
+                    }
+
+
                     for (PkgItem item : cat.getItems()) {
                         if (item.getState() == PkgState.INSTALLED) {
                             expandInitial(pkg);
-                            break;
+                            continue nextCategory;
                         }
                     }
                 }

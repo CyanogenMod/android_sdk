@@ -75,7 +75,7 @@ class PkgCategoryApi extends PkgCategory {
             if (key.equals(KEY_TOOLS)) {
                 label = "Tools";
             } else if (key.equals(KEY_TOOLS_PREVIEW)) {
-                label = "Tools (Beta Channel)";
+                label = "Tools (Preview Channel)";
             } else if (key.equals(KEY_EXTRA)) {
                 label = "Extras";
             } else {

@@ -16,10 +16,12 @@
 
 package com.android.sdklib.util;
 
+import com.android.annotations.NonNull;
+
 /**
  * Helper methods to do some format conversions.
  */
-public abstract class FormatUtil {
+public abstract class FormatUtils {
 
     /**
      * Converts a byte size to a human readable string,
@@ -29,7 +31,7 @@ public abstract class FormatUtil {
      * @return A new non-null string, with the size expressed in either Bytes
      *   or KiB or MiB or GiB.
      */
-    public static String byteSizeToString(long size) {
+    public static @NonNull String byteSizeToString(long size) {
         String sizeStr;
 
         if (size < 1024) {

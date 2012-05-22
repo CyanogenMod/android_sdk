@@ -25,6 +25,7 @@ import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
 import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.SettingsController.Settings;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -188,7 +189,6 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
     }
 
     private void createContents() {
-
         mPkgPage = new PackagesPage(mShell, SWT.NONE, mUpdaterData, mContext);
         mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
@@ -325,8 +325,23 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 new MenuBarWrapper(APP_NAME, menuTools) {
                     @Override
                     public void onPreferencesMenuSelected() {
+
+                        // capture a copy of the initial settings
+                        Settings settings1 = new Settings(mSettingsController.getSettings());
+
+                        // open the dialog and wait for it to close
                         SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
                         sd.open();
+
+                        // get the new settings
+                        Settings settings2 = mSettingsController.getSettings();
+
+                        // We need to reload the package list if the http mode or the preview
+                        // modes have changed.
+                        if (settings1.getForceHttp() != settings2.getForceHttp() ||
+                                settings1.getEnablePreviews() != settings2.getEnablePreviews()) {
+                            mPkgPage.onSdkReload();
+                        }
                     }
 
                     @Override

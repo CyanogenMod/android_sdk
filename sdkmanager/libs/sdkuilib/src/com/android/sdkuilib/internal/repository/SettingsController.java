@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.annotations.NonNull;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.ISdkLog;
@@ -42,7 +43,7 @@ public class SettingsController {
     private static final String SETTINGS_FILENAME = "androidtool.cfg"; //$NON-NLS-1$
 
     private final ISdkLog mSdkLog;
-    private final Settings mSettings = new Settings();
+    private final Settings mSettings;
 
     public interface OnChangedListener {
         public void onSettingsChanged(SettingsController controller, Settings oldSettings);
@@ -52,9 +53,27 @@ public class SettingsController {
     /** The currently associated {@link ISettingsPage}. Can be null. */
     private ISettingsPage mSettingsPage;
 
-
-    public SettingsController(ISdkLog sdkLog) {
+    /**
+     * Constructs a new default {@link SettingsController}.
+     *
+     * @param sdkLog A non-null logger to use.
+     */
+    public SettingsController(@NonNull ISdkLog sdkLog) {
         mSdkLog = sdkLog;
+        mSettings = new Settings();
+    }
+
+    /**
+     * Specialized constructor that wraps an existing {@link Settings} instance.
+     * This is mostly used in unit-tests to override settings that are being used.
+     * Normal usage should NOT need to call this constructor.
+     *
+     * @param sdkLog   A non-null logger to use.
+     * @param settings A non-null {@link Settings} to use as-is. It is not duplicated.
+     */
+    protected SettingsController(@NonNull ISdkLog sdkLog, @NonNull Settings settings) {
+        mSdkLog = sdkLog;
+        mSettings = settings;
     }
 
     public Settings getSettings() {
@@ -77,17 +96,28 @@ public class SettingsController {
 
 
     public static class Settings {
-        private final Properties mProperties = new Properties();
+        private final Properties mProperties;
 
         /** Initialize an empty set of settings. */
         public Settings() {
+            mProperties = new Properties();
         }
 
         /** Duplicates a set of settings. */
         public Settings(Settings settings) {
+            this();
             for (Entry<Object, Object> entry : settings.mProperties.entrySet()) {
                 mProperties.put(entry.getKey(), entry.getValue());
             }
+        }
+
+        /**
+         * Specialized constructor for unit-tests that wraps an existing
+         * {@link Properties} instance. The properties instance is not duplicated,
+         * it's merely used as-is and changes will be reflected directly.
+         */
+        protected Settings(Properties properties) {
+            mProperties = properties;
         }
 
         /**
@@ -130,6 +160,15 @@ public class SettingsController {
                     mProperties.getProperty(
                             ISettingsPage.KEY_SHOW_UPDATE_ONLY,
                             Boolean.TRUE.toString()));
+        }
+
+        /**
+         * Returns the value of the {@link ISettingsPage#KEY_ENABLE_PREVIEWS} setting.
+         *
+         * @see ISettingsPage#KEY_ENABLE_PREVIEWS
+         */
+        public boolean getEnablePreviews() {
+            return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_ENABLE_PREVIEWS));
         }
 
         /**
