@@ -40,10 +40,13 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.StreamException;
+import com.android.manifmerger.ManifestMerger;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
+import com.android.sdklib.io.FileOp;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 
@@ -56,6 +59,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
@@ -90,19 +94,26 @@ public class PreCompilerBuilder extends BaseBuilder {
      */
     public final static String RELEASE_REQUESTED = "android.releaseBuild"; //$NON-NLS-1$
 
-
     private static final String PROPERTY_PACKAGE = "manifestPackage"; //$NON-NLS-1$
+    private static final String PROPERTY_MERGE_MANIFEST = "mergeManifest"; //$NON-NLS-1$
     private static final String PROPERTY_COMPILE_RESOURCES = "compileResources"; //$NON-NLS-1$
     private static final String PROPERTY_COMPILE_BUILDCONFIG = "createBuildConfig"; //$NON-NLS-1$
     private static final String PROPERTY_BUILDCONFIG_MODE = "buildConfigMode"; //$NON-NLS-1$
 
-    /**
-     * Resource Compile flag. This flag is reset to false after each successful compilation, and
-     * stored in the project persistent properties. This allows the builder to remember its state
-     * when the project is closed/opened.
-     */
+    private static final boolean MANIFEST_MERGER_ENABLED_DEFAULT = false;
+    private static final String MANIFEST_MERGER_PROPERTY = "manifestmerger.enabled"; //$NON-NLS-1$
+
+    /** Merge Manifest Flag. Computed from resource delta, reset after action is taken.
+     * Stored persistently in the project. */
+    private boolean mMustMergeManifest = false;
+    /** Resource compilation Flag. Computed from resource delta, reset after action is taken.
+     * Stored persistently in the project. */
     private boolean mMustCompileResources = false;
+    /** BuildConfig Flag. Computed from resource delta, reset after action is taken.
+     * Stored persistently in the project. */
     private boolean mMustCreateBuildConfig = false;
+    /** BuildConfig last more Flag. Computed from resource delta, reset after action is taken.
+     * Stored persistently in the project. */
     private boolean mLastBuildConfigMode;
 
     private final List<SourceProcessor> mProcessors = new ArrayList<SourceProcessor>(2);
@@ -219,8 +230,8 @@ public class PreCompilerBuilder extends BaseBuilder {
         // get a project object
         IProject project = getProject();
 
-        if (DEBUG) {
-            System.out.println("BUILD(PRE) " + project.getName());
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s BUILD(PRE)", project.getName());
         }
 
         // For the PreCompiler, only the library projects are considered Referenced projects,
@@ -254,6 +265,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             // now we need to get the classpath list
             List<IPath> sourceFolderPathList = BaseProjectHelper.getSourceClasspaths(javaProject);
 
+            IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
+
             PreCompilerDeltaVisitor dv = null;
             String javaPackage = null;
             String minSdkVersion = null;
@@ -262,13 +275,14 @@ public class PreCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Pre_Compiler);
 
-                if (DEBUG) {
-                    System.out.println("\tfull build!");
+                if (DEBUG_LOG) {
+                    AdtPlugin.log(IStatus.INFO, "%s full build!", project.getName());
                 }
 
                 // do some clean up.
                 doClean(project, monitor);
 
+                mMustMergeManifest = true;
                 mMustCompileResources = true;
                 mMustCreateBuildConfig = true;
 
@@ -301,13 +315,15 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                     // Check to see if Manifest.xml, Manifest.java, or R.java have changed:
                     mMustCompileResources |= dv.getCompileResources();
+                    mMustMergeManifest |= dv.hasManifestChanged();
 
                     // Notify the ResourceManager:
                     ResourceManager resManager = ResourceManager.getInstance();
                     ProjectResources projectResources = resManager.getProjectResources(project);
 
                     if (ResourceManager.isAutoBuilding()) {
-                        IdeScanningContext context = new IdeScanningContext(projectResources, project);
+                        IdeScanningContext context = new IdeScanningContext(projectResources,
+                                project);
 
                         resManager.processDelta(delta, context);
 
@@ -342,7 +358,31 @@ public class PreCompilerBuilder extends BaseBuilder {
             // one of the library projects this project depends on has changed
             mMustCompileResources |= ResourceManager.isAaptRequested(project);
 
+            // if the main manifest didn't change, then we check for the library
+            // ones (will trigger manifest merging too)
+            if (mMustMergeManifest == false && libProjects.size() > 0) {
+                for (IProject libProject : libProjects) {
+                    IResourceDelta delta = getDelta(libProject);
+                    if (delta != null) {
+                        PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
+                                project, libProject,
+                                "PRE:LibManifest"); //$NON-NLS-1$
+                        visitor.addSet(ChangedFileSetHelper.MANIFEST);
+
+                        delta.accept(visitor);
+
+                        mMustMergeManifest |= visitor.checkSet(ChangedFileSetHelper.MANIFEST);
+
+                        // no need to test others.
+                        if (mMustMergeManifest) {
+                            break;
+                        }
+                    }
+                }
+            }
+
             // store the build status in the persistent storage
+            saveProjectBooleanProperty(PROPERTY_MERGE_MANIFEST, mMustMergeManifest);
             saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
             saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
 
@@ -353,7 +393,6 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 return result;
             }
-
 
             // get the manifest file
             IFile manifestFile = ProjectHelper.getManifest(project);
@@ -549,12 +588,14 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                 // force a clean
                 doClean(project, monitor);
+                mMustMergeManifest = true;
                 mMustCompileResources = true;
                 mMustCreateBuildConfig = true;
                 for (SourceProcessor processor : mProcessors) {
                     processor.prepareFullBuild(project);
                 }
 
+                saveProjectBooleanProperty(PROPERTY_MERGE_MANIFEST, mMustMergeManifest);
                 saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
                 saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
             }
@@ -564,6 +605,19 @@ public class PreCompilerBuilder extends BaseBuilder {
             } catch (IOException e) {
                 handleException(e, "Failed to create BuildConfig class");
                 return result;
+            }
+
+            // merge the manifest
+            if (mMustMergeManifest) {
+                boolean enabled = MANIFEST_MERGER_ENABLED_DEFAULT;
+                String propValue = projectState.getProperty(MANIFEST_MERGER_PROPERTY);
+                if (propValue != null) {
+                    enabled = Boolean.valueOf(propValue);
+                }
+
+                if (mergeManifest(androidOutputFolder, libProjects, enabled) == false) {
+                    return result;
+                }
             }
 
             // run the source processors
@@ -591,8 +645,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             // generate resources.
             boolean compiledTheResources = mMustCompileResources;
             if (mMustCompileResources) {
-                if (DEBUG) {
-                    System.out.println("\tcompiling resources!");
+                if (DEBUG_LOG) {
+                    AdtPlugin.log(IStatus.INFO, "%s compiling resources!", project.getName());
                 }
                 handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
                         projectState.isLibrary());
@@ -618,8 +672,8 @@ public class PreCompilerBuilder extends BaseBuilder {
     protected void clean(IProgressMonitor monitor) throws CoreException {
         super.clean(monitor);
 
-        if (DEBUG) {
-            System.out.println("CLEAN(PRE) " + getProject().getName());
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s CLEAN(PRE)", getProject().getName());
         }
 
         doClean(getProject(), monitor);
@@ -646,6 +700,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         removeMarkersFromContainer(project, AdtConstants.MARKER_XML);
         removeMarkersFromContainer(project, AdtConstants.MARKER_AIDL);
         removeMarkersFromContainer(project, AdtConstants.MARKER_RENDERSCRIPT);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_MANIFMERGER);
         removeMarkersFromContainer(project, AdtConstants.MARKER_ANDROID);
 
         // Also clean up lint
@@ -667,6 +722,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             mDerivedProgressMonitor = new DerivedProgressMonitor(mGenFolder);
 
             // Load the current compile flags. We ask for true if not found to force a recompile.
+            mMustMergeManifest = loadProjectBooleanProperty(PROPERTY_MERGE_MANIFEST, true);
             mMustCompileResources = loadProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, true);
             mMustCreateBuildConfig = loadProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, true);
             Boolean v = ProjectHelper.loadBooleanProperty(project, PROPERTY_BUILDCONFIG_MODE);
@@ -715,6 +771,10 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
 
         if (mMustCreateBuildConfig) {
+            if (DEBUG_LOG) {
+                AdtPlugin.log(IStatus.INFO, "%s generating BuilderConfig!", getProject().getName());
+            }
+
             AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, getProject(),
                     String.format("Generating %1$s...", BuildConfigGenerator.BUILD_CONFIG_NAME));
             generator.generate();
@@ -725,6 +785,90 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
     }
 
+    private boolean mergeManifest(IFolder androidOutFolder, List<IProject> libProjects,
+            boolean enabled) throws CoreException {
+        if (DEBUG_LOG) {
+            AdtPlugin.log(IStatus.INFO, "%s merging manifests!", getProject().getName());
+        }
+
+        IFile outFile = androidOutFolder.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
+        IFile manifest = getProject().getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+        // remove existing markers from the manifest.
+        // FIXME: only remove from manifest once the markers are put there.
+        removeMarkersFromResource(getProject(), AdtConstants.MARKER_MANIFMERGER);
+
+        // If the merging is not enabled or if there's no library then we simply copy the
+        // manifest over.
+        if (enabled == false || libProjects.size() == 0) {
+            try {
+                new FileOp().copyFile(manifest.getLocation().toFile(),
+                        outFile.getLocation().toFile());
+
+                outFile.refreshLocal(IResource.DEPTH_INFINITE, mDerivedProgressMonitor);
+
+                saveProjectBooleanProperty(PROPERTY_MERGE_MANIFEST, mMustMergeManifest = false);
+            } catch (IOException e) {
+                handleException(e, "Failed to copy Manifest");
+                return false;
+            }
+        } else {
+            final ArrayList<String> errors = new ArrayList<String>();
+
+            ManifestMerger merger = new ManifestMerger(new ISdkLog() {
+
+                @Override
+                public void warning(String warningFormat, Object... args) {
+                    AdtPlugin.printToConsole(getProject(), String.format(warningFormat, args));
+                }
+
+                @Override
+                public void printf(String msgFormat, Object... args) {
+                    AdtPlugin.printToConsole(getProject(), String.format(msgFormat, args));
+                }
+
+                @Override
+                public void error(Throwable t, String errorFormat, Object... args) {
+                    errors.add(String.format(errorFormat, args));
+                }
+            });
+
+            File[] libManifests = new File[libProjects.size()];
+            int libIndex = 0;
+            for (IProject lib : libProjects) {
+                libManifests[libIndex++] = lib.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML)
+                        .getLocation().toFile();
+            }
+
+            if (merger.process(
+                    outFile.getLocation().toFile(),
+                    manifest.getLocation().toFile(),
+                    libManifests) == false) {
+                if (errors.size() > 1) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String s : errors) {
+                        sb.append(s).append('\n');
+                    }
+
+                    markProject(AdtConstants.MARKER_MANIFMERGER, sb.toString(),
+                            IMarker.SEVERITY_ERROR);
+
+                } else if (errors.size() == 1) {
+                    markProject(AdtConstants.MARKER_MANIFMERGER, errors.get(0),
+                            IMarker.SEVERITY_ERROR);
+                } else {
+                    markProject(AdtConstants.MARKER_MANIFMERGER, "Unknown error merging manifest",
+                            IMarker.SEVERITY_ERROR);
+                }
+                return false;
+            }
+
+            outFile.refreshLocal(IResource.DEPTH_INFINITE, mDerivedProgressMonitor);
+            saveProjectBooleanProperty(PROPERTY_MERGE_MANIFEST, mMustMergeManifest = false);
+        }
+
+        return true;
+    }
 
     /**
      * Handles resource changes and regenerate whatever files need regenerating.

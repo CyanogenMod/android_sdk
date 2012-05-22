@@ -94,6 +94,23 @@ class ChangedFileSetHelper {
     }
 
     /**
+     * Returns a {@link ChangedFileSet} for all the resources (included assets), and the output
+     * file (compiled resources
+     * @param project the project
+     * @return a ChangeFileSet
+     */
+    static ChangedFileSet getMergedManifestCfs(@NonNull IProject project) {
+        // input path is inside the project's android output folder
+        String path = getRelativeAndroidOut(project);
+
+        ChangedFileSet set = new ChangedFileSet(
+                "mergedManifest",                                                 //$NON-NLS-1$
+                path + '/' + SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+        return set;
+    }
+
+    /**
      * Returns a {@link ChangedFileSet} for a project's javac output.
      * @param project the project
      * @return a ChangedFileSet
@@ -102,7 +119,7 @@ class ChangedFileSetHelper {
         // input pattern is based on the project's Java compiler's output folder
         String path = getRelativeJavaCOut(project);
 
-        ChangedFileSet set = new ChangedFileSet("bytecode",                       //$NON-NLS-1$
+        ChangedFileSet set = new ChangedFileSet("compiledCode",                   //$NON-NLS-1$
                 path + "/**/*" + AdtConstants.DOT_CLASS);                         //$NON-NLS-1$
 
         return set;
@@ -136,9 +153,9 @@ class ChangedFileSetHelper {
         // input pattern is based on the project's Java compiler's output folder
         String path = getRelativeJavaCOut(project);
 
-        ChangedFileSet set = new ChangedFileSet("libResources",                    //$NON-NLS-1$
+        ChangedFileSet set = new ChangedFileSet("classAndJars",                    //$NON-NLS-1$
                 path + "/**/*" + AdtConstants.DOT_CLASS,                           //$NON-NLS-1$
-                SdkConstants.FD_NATIVE_LIBS + "*" + AdtConstants.DOT_JAR);         //$NON-NLS-1$
+                SdkConstants.FD_NATIVE_LIBS + "/*" + AdtConstants.DOT_JAR);        //$NON-NLS-1$
 
         // output file is based on the project's android output folder
         path = getRelativeAndroidOut(project);

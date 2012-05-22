@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -204,6 +206,14 @@ public final class ProjectState {
 
     public ProjectProperties getProperties() {
         return mProperties;
+    }
+
+    public @Nullable String getProperty(@NonNull String name) {
+        if (mProperties != null) {
+            return mProperties.getProperty(name);
+        }
+
+        return null;
     }
 
     public void setTarget(IAndroidTarget target) {

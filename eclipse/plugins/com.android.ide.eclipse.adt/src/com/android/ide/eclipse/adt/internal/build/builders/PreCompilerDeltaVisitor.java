@@ -24,6 +24,7 @@ import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder.BaseDeltaVisitor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
@@ -58,9 +59,11 @@ import java.util.List;
 class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDeltaVisitor {
 
     // Result fields.
+    private boolean mChangedManifest = false;
+
     /**
      * Compile flag. This is set to true if one of the changed/added/removed
-     * files is Manifest.xml, Manifest.java, or R.java. All other file changes
+     * files is Manifest.java, or R.java. All other file changes
      * will be taken care of by ResourceManager.
      */
     private boolean mCompileResources = false;
@@ -94,7 +97,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
         new ArrayList<SourceChangeHandler>();
     private final IWorkspaceRoot mRoot;
 
-
+    private IFolder mAndroidOutputFolder;
 
     public PreCompilerDeltaVisitor(BaseBuilder builder, List<IPath> sourceFolders,
             List<SourceProcessor> processors) {
@@ -106,6 +109,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
             SourceChangeHandler handler = processor.getChangeHandler();
             mSourceChangeHandlers.add(handler);
         }
+
+        mAndroidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(builder.getProject());
     }
 
     /**
@@ -113,7 +118,11 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
      * @return true if any of Manifest.xml, Manifest.java, or R.java have been modified
      */
     public boolean getCompileResources() {
-        return mCompileResources;
+        return mCompileResources || mChangedManifest;
+    }
+
+    public boolean hasManifestChanged() {
+        return mChangedManifest;
     }
 
     /**
@@ -220,7 +229,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
 
                     mCheckedManifestXml = true;
                 }
-                mCompileResources = true;
+                mChangedManifest = true;
 
                 // we don't want to go to the children, not like they are
                 // any for this resource anyway.
@@ -356,6 +365,12 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
             // Whether or not to generate R.java for a changed resource is taken care of by the
             // Resource Manager.
         } else if (resource instanceof IFolder) {
+            // first check if we are in the android output folder.
+            if (resource.equals(mAndroidOutputFolder)) {
+                // we want to visit the merged manifest.
+                return true;
+            }
+
             // in this case we may be inside a folder that contains a source
             // folder, go through the list of known source folders
 
