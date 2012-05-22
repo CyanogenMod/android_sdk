@@ -49,7 +49,7 @@ public class ValidateAddonXmlTest extends TestCase {
     /**
      * Helper method that returns a validator for our Addon XSD
      *
-     * @param version The versoion number, in range {@code 1..NS_LATEST_VERSION}
+     * @param version The version number, in range {@code 1..NS_LATEST_VERSION}
      * @param handler A {@link CaptureErrorHandler}. If null the default will be used,
      *   which will most likely print errors to stderr.
      */
@@ -80,7 +80,7 @@ public class ValidateAddonXmlTest extends TestCase {
 
     // --- Tests ------------
 
-    /** Validates that NS_LATEST_VERSION points to the max avaialble XSD schema. */
+    /** Validates that NS_LATEST_VERSION points to the max available XSD schema. */
     public void testAddonLatestVersionNumber() throws Exception {
         CaptureErrorHandler handler = new CaptureErrorHandler();
 

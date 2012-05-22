@@ -126,6 +126,13 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
     public abstract boolean isAddonSource();
 
     /**
+     * Returns true if this is a system-image source.
+     * We only load system-images from these sources.
+     */
+    public abstract boolean isSysImgSource();
+
+
+    /**
      * Returns the basename of the default URLs to try to download the
      * XML manifest.
      * E.g. this is typically SdkRepoConstants.URL_DEFAULT_XML_FILE
@@ -373,7 +380,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                 }
             }
 
-            for(String name : defaultNames) {
+            for (String name : defaultNames) {
                 String newUrl = baseUrl + name;
                 if (newUrl.equals(url)) {
                     continue;

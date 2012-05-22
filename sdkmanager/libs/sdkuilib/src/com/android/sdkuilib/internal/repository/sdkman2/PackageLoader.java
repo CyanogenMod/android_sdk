@@ -29,6 +29,7 @@ import com.android.sdklib.internal.repository.sources.SdkAddonSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
 import com.android.sdklib.internal.repository.sources.SdkSources;
+import com.android.sdklib.internal.repository.sources.SdkSysImgSource;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkuilib.internal.repository.UpdaterData;
@@ -448,8 +449,16 @@ public class PackageLoader {
 
             if (fetch3rdParties) {
                 for (Site s : sites) {
-                    sources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
-                                 new SdkAddonSource(s.getUrl(), s.getUiName()));
+                    switch (s.getType()) {
+                    case ADDON_SITE:
+                        sources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
+                                new SdkAddonSource(s.getUrl(), s.getUiName()));
+                        break;
+                    case SYS_IMG_SITE:
+                        sources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
+                                new SdkSysImgSource(s.getUrl(), s.getUiName()));
+                        break;
+                    }
                 }
             }
 

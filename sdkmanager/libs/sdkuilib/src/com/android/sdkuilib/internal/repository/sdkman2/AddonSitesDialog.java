@@ -382,9 +382,7 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
 
                 // create the source, store it and update the list
                 SdkAddonSource newSource = new SdkAddonSource(url, null/*uiName*/);
-                mSources.add(
-                        SdkSourceCategory.USER_ADDONS,
-                        newSource);
+                mSources.add(SdkSourceCategory.USER_ADDONS, newSource);
                 setReturnValue(true);
                 // notify sources change listeners. This will invoke our own loadUserUrlsList().
                 mSources.notifyChangeListeners();

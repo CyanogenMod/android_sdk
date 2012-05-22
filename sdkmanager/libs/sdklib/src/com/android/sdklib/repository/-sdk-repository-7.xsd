@@ -212,6 +212,7 @@
         </xsd:all>
     </xsd:complexType>
 
+
     <!-- The definition of the ABI supported by a platform's system image. -->
 
     <xsd:simpleType name="abiType">

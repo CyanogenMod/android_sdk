@@ -52,7 +52,7 @@ public class ValidateRepositoryXmlTest extends TestCase {
     /**
      * Helper method that returns a validator for our Repository XSD
      *
-     * @param version The versoion number, in range {@code 1..NS_LATEST_VERSION}
+     * @param version The version number, in range {@code 1..NS_LATEST_VERSION}
      * @param handler A {@link CaptureErrorHandler}. If null the default will be used,
      *   which will most likely print errors to stderr.
      */
@@ -84,7 +84,7 @@ public class ValidateRepositoryXmlTest extends TestCase {
 
     // --- Tests ------------
 
-    /** Validates that NS_LATEST_VERSION points to the max avaialble XSD schema. */
+    /** Validates that NS_LATEST_VERSION points to the max available XSD schema. */
     public void testRepoLatestVersionNumber() throws Exception {
         CaptureErrorHandler handler = new CaptureErrorHandler();
 

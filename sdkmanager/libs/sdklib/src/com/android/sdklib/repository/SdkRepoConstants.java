@@ -107,15 +107,8 @@ public class SdkRepoConstants extends RepoConstants {
     public static final String NODE_DOC             = "doc";                  //$NON-NLS-1$
     /** A sample package. */
     public static final String NODE_SAMPLE          = "sample";               //$NON-NLS-1$
-    /** A system-image package. */
-    public static final String NODE_SYSTEM_IMAGE    = "system-image";         //$NON-NLS-1$
     /** A source package. */
     public static final String NODE_SOURCE          = "source";               //$NON-NLS-1$
-
-    /* An included-ABI element for a system-image package. */
-    public static final String NODE_ABI_INCLUDED    = "included-abi";         //$NON-NLS-1$
-    /* An ABI element for a system-image package. */
-    public static final String NODE_ABI             = "abi";                  //$NON-NLS-1$
 
 
     /**

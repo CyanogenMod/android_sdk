@@ -65,6 +65,15 @@ public class SdkRepoSource extends SdkSource {
         return false;
     }
 
+    /**
+     * Returns true if this is a system-image source.
+     * We only load system-images from these sources.
+     */
+    @Override
+    public boolean isSysImgSource() {
+        return false;
+    }
+
     private static String[] sDefaults = null; // lazily allocated in getDefaultXmlFileUrls
 
     @Override

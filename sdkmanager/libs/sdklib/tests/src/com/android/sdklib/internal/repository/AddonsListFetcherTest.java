@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 
@@ -75,7 +76,7 @@ public class AddonsListFetcherTest extends TestCase {
     }
 
     /**
-     * Validate we can still load a valid addon schema version 1
+     * Validate we can load a valid addon schema version 1
      */
     public void testLoadSample_1() throws Exception {
         InputStream xmlStream =
@@ -109,20 +110,65 @@ public class AddonsListFetcherTest extends TestCase {
         assertEquals("", monitor.getCapturedVerboseLog());
 
         // check the sites we found...
-        assertEquals(3, result.length);
-
-        assertEquals("My Example Add-ons.", result[0].getUiName());
-        assertEquals("http://www.example.com/my_addons.xml", result[0].getUrl());
-
         // The XML file is UTF-8 so we support character sets (but the Java source file is
         // not, so we use the \\u notation to create the Unicode String)
-        assertEquals("\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002",
-                result[1].getUiName());
-        assertEquals("http://www.example.co.jp/addons.xml", result[1].getUrl());
-
-        assertEquals("Example of directory URL.", result[2].getUiName());
-        assertEquals("http://www.example.com/", result[2].getUrl());
+        assertEquals(
+                "[<ADDON_SITE URL='http://www.example.com/my_addons.xml' Name='My Example Add-ons.'>, " +
+                 "<ADDON_SITE URL='http://www.example.co.jp/addons.xml' Name='\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002'>, " +
+                 "<ADDON_SITE URL='http://www.example.com/' Name='Example of directory URL.'>]",
+                 Arrays.toString(result));
+        assertEquals(3, result.length);
     }
+
+    /**
+     * Validate we can load a valid addon schema version 2
+     */
+    public void testLoadSample_2() throws Exception {
+        InputStream xmlStream =
+            getTestResource("/com/android/sdklib/testdata/addons_list_sample_2.xml");
+
+        // guess the version from the XML document
+        int version = mFetcher._getXmlSchemaVersion(xmlStream);
+        assertEquals(2, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://addons_list.xml";
+
+        String uri = mFetcher._validateXml(
+                xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkAddonsListConstants.getSchemaUri(2), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mFetcher._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the sites
+        Site[] result = mFetcher._parseAddonsList(doc, uri, monitor);
+
+        assertEquals("", monitor.getCapturedDescriptions());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+        assertEquals("", monitor.getCapturedVerboseLog());
+
+        // check the sites we found...
+        // The XML file is UTF-8 so we support character sets (but the Java source file is
+        // not, so we use the \\u notation to create the Unicode String)
+        assertEquals(
+                "[<ADDON_SITE URL='http://www.example.com/my_addons.xml' Name='My Example Add-ons.'>, " +
+                 "<ADDON_SITE URL='http://www.example.co.jp/addons.xml' Name='\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002'>, " +
+                 "<ADDON_SITE URL='http://www.example.com/' Name='Example of directory URL.'>, " +
+                 "<SYS_IMG_SITE URL='http://www.example.com/' Name='Example of sys-img URL using the default xml filename.'>, " +
+                 "<SYS_IMG_SITE URL='http://www.example.com/specific_file.xml' Name='Example of sys-img URL using a specific xml filename.'>]",
+                 Arrays.toString(result));
+        assertEquals(5, result.length);
+    }
+
+    // IMPORTANT: Each time you add a test here for a new version, you should
+    // also add a test in ValidateAddonsListXmlTest.
 
     /**
      * Returns an SdkLib file resource as a {@link ByteArrayInputStream},
