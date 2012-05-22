@@ -20,6 +20,8 @@ import com.android.util.Pair;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,10 @@ public class ApiClass {
         mSince = since;
     }
 
+    public String getName() {
+        return mName;
+    }
+
     int getSince() {
         return mSince;
     }
@@ -67,18 +73,35 @@ public class ApiClass {
         }
     }
 
+    public Map<String, Integer> getMethods() {
+        return mMethods;
+    }
+
+    public void replaceMethods(Map<String, Integer> fixedMethods) {
+        mMethods.clear();
+        mMethods.putAll(fixedMethods);
+    }
+
     public void addSuperClass(String superClass, int since) {
         addToArray(mSuperClasses, superClass, since);
+    }
+
+    public List<Pair<String, Integer>> getSuperClasses() {
+        return mSuperClasses;
     }
 
     public void addInterface(String interfaceClass, int since) {
         addToArray(mInterfaces, interfaceClass, since);
     }
 
+    public List<Pair<String, Integer>> getInterfaces() {
+        return mInterfaces;
+    }
+
     void addToArray(List<Pair<String, Integer>> list, String name, int value) {
         // check if we already have that name (at a lower level)
         for (Pair<String, Integer> pair : list) {
-            if (name.equals(pair.getFirst())) {
+            if (name.equals(pair.getFirst()) && pair.getSecond() < value) {
                 return;
             }
         }
@@ -102,6 +125,13 @@ public class ApiClass {
     }
 
     private void print(List<Pair<String, Integer> > list, String name, PrintStream stream) {
+        Collections.sort(list, new Comparator<Pair<String, Integer> >() {
+
+            @Override
+            public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
+                return o1.getFirst().compareTo(o2.getFirst());
+            }
+        });
 
         for (Pair<String, Integer> pair : list) {
             if (mSince == pair.getSecond()) {
