@@ -338,6 +338,10 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             prefs.setLintOnSave(mCheckFileCheckbox.getSelection());
         }
 
+        if (mConfiguration == null) {
+            return;
+        }
+
         mConfiguration.startBulkEditing();
         try {
             // Severities

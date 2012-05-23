@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -45,22 +47,30 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("restriction") // WST DOM access
 class LintListDialog extends TitleAreaDialog implements SelectionListener {
     private static final String PROJECT_LOGO_LARGE = "icons/android-64.png"; //$NON-NLS-1$
-    private IFile mFile;
+    private final IFile mFile;
+    private final IEditorPart mEditor;
     private Button mFixButton;
     private Button mIgnoreButton;
+    private Button mIgnoreAllButton;
     private Button mShowButton;
     private Text mDetailsText;
     private Button mIgnoreTypeButton;
     private LintList mList;
 
-    LintListDialog(Shell parentShell, IFile file) {
+    LintListDialog(
+            @NonNull Shell parentShell,
+            @NonNull IFile file,
+            @Nullable IEditorPart editor) {
         super(parentShell);
-        this.mFile = file;
+        mFile = file;
+        mEditor = editor;
     }
 
     @Override
@@ -97,30 +107,41 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         if (page.getActivePart() != null) {
             site = page.getActivePart().getSite();
         }
+
         mList = new LintList(site, container, null /*memento*/, true /*singleFile*/);
-        mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 5));
+        mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 6));
 
         mShowButton = new Button(container, SWT.NONE);
         mShowButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
         mShowButton.setText("Show");
+        mShowButton.setToolTipText("Opens the editor to reveal the XML with the issue");
         mShowButton.addSelectionListener(this);
-
-        mIgnoreButton = new Button(container, SWT.NONE);
-        mIgnoreButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-        mIgnoreButton.setText("Ignore");
-        mIgnoreButton.setEnabled(false);
-        mIgnoreButton.addSelectionListener(this);
-
-        mIgnoreTypeButton = new Button(container, SWT.NONE);
-        mIgnoreTypeButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-        mIgnoreTypeButton.setText("Ignore Type");
-        mIgnoreTypeButton.addSelectionListener(this);
 
         mFixButton = new Button(container, SWT.NONE);
         mFixButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
         mFixButton.setText("Fix");
+        mFixButton.setToolTipText("Automatically corrects the problem, if possible");
         mFixButton.setEnabled(false);
         mFixButton.addSelectionListener(this);
+
+        mIgnoreButton = new Button(container, SWT.NONE);
+        mIgnoreButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        mIgnoreButton.setText("Suppress Issue");
+        mIgnoreButton.setToolTipText("Adds a special attribute in the layout to suppress this specific warning");
+        mIgnoreButton.addSelectionListener(this);
+
+        mIgnoreAllButton = new Button(container, SWT.NONE);
+        mIgnoreAllButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        mIgnoreAllButton.setText("Suppress in Layout");
+        mIgnoreAllButton.setEnabled(mEditor instanceof AndroidXmlEditor);
+        mIgnoreAllButton.setToolTipText("Adds an attribute on the root element to suppress all issues of this type in this layout");
+        mIgnoreAllButton.addSelectionListener(this);
+
+        mIgnoreTypeButton = new Button(container, SWT.NONE);
+        mIgnoreTypeButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+        mIgnoreTypeButton.setText("Disable Issue Type");
+        mIgnoreTypeButton.setToolTipText("Turns off checking for this type of error everywhere");
+        mIgnoreTypeButton.addSelectionListener(this);
 
         new Label(container, SWT.NONE);
 
@@ -138,6 +159,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         mList.addSelectionListener(this);
 
         mList.setResources(Collections.<IResource>singletonList(mFile));
+        mList.selectFirst();
         if (mList.getSelectedMarkers().size() > 0) {
             updateSelectionState();
         }
@@ -205,6 +227,28 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
                     LintFixGenerator.suppressDetector(id, true, mFile, true /*all*/);
                 }
             }
+        } else if (source == mIgnoreButton) {
+            for (IMarker marker : mList.getSelectedMarkers()) {
+                LintFixGenerator.addSuppressAnnotation(marker);
+            }
+        } else if (source == mIgnoreAllButton) {
+            Set<String> ids = new HashSet<String>();
+            for (IMarker marker : mList.getSelectedMarkers()) {
+                String id = EclipseLintClient.getId(marker);
+                if (id != null && !ids.contains(id)) {
+                    ids.add(id);
+                    if (mEditor instanceof AndroidXmlEditor) {
+                        AndroidXmlEditor editor = (AndroidXmlEditor) mEditor;
+                        AddSuppressAttribute fix = AddSuppressAttribute.createFixForAll(editor,
+                                marker, id);
+                        if (fix != null) {
+                            IStructuredDocument document = editor.getStructuredDocument();
+                            fix.apply(document);
+                        }
+                    }
+                }
+            }
+            mList.refresh();
         }
     }
 

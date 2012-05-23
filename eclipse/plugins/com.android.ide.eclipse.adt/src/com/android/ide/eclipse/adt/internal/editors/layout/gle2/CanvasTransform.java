@@ -179,4 +179,8 @@ public class CanvasTransform {
     public int inverseTranslate(int screenX) {
         return (int) ((screenX - mMargin + mTranslate) / mScale);
     }
+
+    public int inverseScale(int canwasW) {
+        return (int) (canwasW / mScale);
+    }
 }

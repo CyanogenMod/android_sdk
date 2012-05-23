@@ -163,7 +163,7 @@ public class CompatibilityLibraryHelper {
         for (IJavaProject javaProject : AdtUtils.getOpenAndroidProjects()) {
             IProject project = javaProject.getProject();
             ProjectState state = Sdk.getProjectState(project);
-            if (state.isLibrary()) {
+            if (state != null && state.isLibrary()) {
                 ManifestInfo manifestInfo = ManifestInfo.get(project);
                 if (manifestInfo.getPackage().equals("android.support.v7.gridlayout")) { //$NON-NLS-1$
                     return project;

@@ -39,13 +39,18 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.OutlinePage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertySheetPage;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
+import com.android.tools.lint.client.api.IssueRegistry;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -78,8 +83,11 @@ import org.eclipse.wst.sse.ui.StructuredTextEditor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -138,6 +146,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     private final HashMap<String, ElementDescriptor> mUnknownDescriptorMap =
         new HashMap<String, ElementDescriptor>();
 
+    private EclipseLintClient mClient;
 
     /**
      * Flag indicating if the replacement file is due to a config change.
@@ -405,27 +414,103 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         return true;
     }
 
+    /**
+     * Returns one of the issues for the given node (there could be more than one)
+     *
+     * @param node the node to look up lint issues for
+     * @return the marker for one of the issues found for the given node
+     */
+    @Nullable
+    public IMarker getIssueForNode(@Nullable UiViewElementNode node) {
+        if (node == null) {
+            return null;
+        }
+
+        if (mClient != null) {
+            return mClient.getIssueForNode(node);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns a collection of nodes that have one or more lint warnings
+     * associated with them (retrievable via
+     * {@link #getIssueForNode(UiViewElementNode)})
+     *
+     * @return a collection of nodes, which should <b>not</b> be modified by the
+     *         caller
+     */
+    @Nullable
+    public Collection<Node> getLintNodes() {
+        if (mClient != null) {
+            return mClient.getIssueNodes();
+        }
+
+        return null;
+    }
+
     @Override
     public Job delegateRunLint() {
-        Job job = super.delegateRunLint();
+        // We want to customize the {@link EclipseLintClient} created to run this
+        // single file lint, in particular such that we can set the mode which collects
+        // nodes on that lint job, such that we can quickly look up error nodes
+        //Job job = super.delegateRunLint();
+
+        Job job = null;
+        IFile file = getEditor().getInputFile();
+        if (file != null) {
+            IssueRegistry registry = EclipseLintClient.getRegistry();
+            List<IFile> resources = Collections.singletonList(file);
+            mClient = new EclipseLintClient(registry,
+                    resources, getEditor().getStructuredDocument(), false /*fatal*/);
+
+            mClient.setCollectNodes(true);
+
+            job = EclipseLintRunner.startLint(mClient, resources, file,
+                    false /*show*/);
+        }
 
         if (job != null) {
-            job.addJobChangeListener(new JobChangeAdapter() {
-                @Override
-                public void done(IJobChangeEvent event) {
-                    GraphicalEditorPart graphicalEditor = getGraphicalEditor();
-                    if (graphicalEditor != null) {
-                        LayoutActionBar bar = graphicalEditor.getLayoutActionBar();
-                        if (!bar.isDisposed()) {
-                            bar.updateErrorIndicator();
-                        }
-                    }
-                }
-            });
+            job.addJobChangeListener(new LintJobListener(getGraphicalEditor()));
         }
         return job;
     }
 
+    private class LintJobListener extends JobChangeAdapter implements Runnable {
+        private final GraphicalEditorPart mEditor;
+        private final LayoutCanvas mCanvas;
+
+        LintJobListener(GraphicalEditorPart editor) {
+            mEditor = editor;
+            mCanvas = editor.getCanvasControl();;
+        }
+
+        @Override
+        public void done(IJobChangeEvent event) {
+            LayoutActionBar bar = mEditor.getLayoutActionBar();
+            if (!bar.isDisposed()) {
+                bar.updateErrorIndicator();
+            }
+
+            // Redraw
+            if (!mCanvas.isDisposed()) {
+                mCanvas.getDisplay().asyncExec(this);
+            }
+        }
+
+        @Override
+        public void run() {
+            if (!mCanvas.isDisposed()) {
+                mCanvas.redraw();
+
+                OutlinePage outlinePage = mCanvas.getOutlinePage();
+                if (outlinePage != null) {
+                    outlinePage.refreshIcons();
+                }
+            }
+        }
+    }
 
     /**
      * Returns the custom IContentOutlinePage or IPropertySheetPage when asked for it.

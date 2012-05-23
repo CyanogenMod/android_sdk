@@ -197,6 +197,9 @@ public class LayoutCanvas extends Canvas {
     /** The overlay which paints the mouse hover. */
     private HoverOverlay mHoverOverlay;
 
+    /** The overlay which paints the lint warnings */
+    private LintOverlay mLintOverlay;
+
     /** The overlay which paints the selection. */
     private SelectionOverlay mSelectionOverlay;
 
@@ -267,6 +270,8 @@ public class LayoutCanvas extends Canvas {
         mImageOverlay = new ImageOverlay(this, mHScale, mVScale);
         mIncludeOverlay = new IncludeOverlay(this);
         mImageOverlay.create(display);
+        mLintOverlay = new LintOverlay(this);
+        mLintOverlay.create(display);
 
         // --- Set up listeners
         addPaintListener(new PaintListener() {
@@ -310,6 +315,8 @@ public class LayoutCanvas extends Canvas {
         if (editorDelegate != null) {
             mOutlinePage = editorDelegate.getGraphicalOutline();
         }
+
+        new LintTooltipManager(this).register();
     }
 
     private Runnable mZoomCheck = new Runnable() {
@@ -421,6 +428,11 @@ public class LayoutCanvas extends Canvas {
         if (mIncludeOverlay != null) {
             mIncludeOverlay.dispose();
             mIncludeOverlay = null;
+        }
+
+        if (mLintOverlay != null) {
+            mLintOverlay.dispose();
+            mLintOverlay = null;
         }
 
         mViewHierarchy.dispose();
@@ -774,6 +786,11 @@ public class LayoutCanvas extends Canvas {
             if (!mHoverOverlay.isHiding()) {
                 mHoverOverlay.paint(gc);
             }
+
+            if (!mLintOverlay.isHiding()) {
+                mLintOverlay.paint(gc);
+            }
+
             if (!mIncludeOverlay.isHiding()) {
                 mIncludeOverlay.paint(gc);
             }

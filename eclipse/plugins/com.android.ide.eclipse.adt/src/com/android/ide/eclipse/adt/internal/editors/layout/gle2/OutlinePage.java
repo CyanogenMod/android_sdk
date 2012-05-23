@@ -16,25 +16,20 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ROW_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_VIEWTAG;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
 import com.android.annotations.VisibleForTesting;
@@ -45,7 +40,6 @@ import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
@@ -53,12 +47,12 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertySheetPage;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -94,9 +88,18 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
@@ -254,6 +257,11 @@ public class OutlinePage extends ContentOutlinePage
                 }
             }
         }
+    }
+
+    /** Refresh all the icon state */
+    public void refreshIcons() {
+        getTreeViewer().refresh();
     }
 
     /**
@@ -442,6 +450,8 @@ public class OutlinePage extends ContentOutlinePage
             public void keyReleased(KeyEvent e) {
             }
         });
+
+        setupTooltip();
     }
 
     private void createPropertySheet() {
@@ -686,45 +696,9 @@ public class OutlinePage extends ContentOutlinePage
                 element = ((CanvasViewInfo) element).getUiViewNode();
             }
 
-            if (element instanceof UiElementNode) {
-                UiElementNode node = (UiElementNode) element;
-                ElementDescriptor desc = node.getDescriptor();
-                if (desc != null) {
-                    Image img = null;
-                    // Special case for the common case of vertical linear layouts:
-                    // show vertical linear icon (the default icon shows horizontal orientation)
-                    String uiName = desc.getUiName();
-                    if (uiName.equals(LINEAR_LAYOUT)) {
-                        Element e = (Element) node.getXmlNode();
-                        if (VALUE_VERTICAL.equals(e.getAttributeNS(ANDROID_URI,
-                                ATTR_ORIENTATION))) {
-                            IconFactory factory = IconFactory.getInstance();
-                            img = factory.getIcon("VerticalLinearLayout"); //$NON-NLS-1$
-                        }
-                    } else if (uiName.equals(VIEW_VIEWTAG)) {
-                        Node xmlNode = node.getXmlNode();
-                        if (xmlNode instanceof Element) {
-                            String className = ((Element) xmlNode).getAttribute(ATTR_CLASS);
-                            if (className != null && className.length() > 0) {
-                                int index = className.lastIndexOf('.');
-                                if (index != -1) {
-                                    className = className.substring(index + 1);
-                                }
-                                img = IconFactory.getInstance().getIcon(className);
-                            }
-                        }
-                    }
-                    if (img == null) {
-                        img = desc.getGenericIcon();
-                    }
-                    if (img != null) {
-                        if (node.hasError()) {
-                            return new ErrorImageComposite(img).createImage();
-                        } else {
-                            return img;
-                        }
-                    }
-                }
+            if (element instanceof UiViewElementNode) {
+                UiViewElementNode v = (UiViewElementNode) element;
+                return v.getIcon();
             }
 
             return AdtPlugin.getAndroidLogo();
@@ -1274,5 +1248,104 @@ public class OutlinePage extends ContentOutlinePage
     public void setToolBar(IToolBarManager toolBarManager) {
         makeContributions(null, toolBarManager, null);
         toolBarManager.update(false);
+    }
+
+    /**
+     * Sets up a custom tooltip when hovering over tree items. It currently displays the error
+     * message for the lint warning associated with each node, if any (and only if the hover
+     * is over the icon portion).
+     */
+    private void setupTooltip() {
+        final Tree tree = getTreeViewer().getTree();
+
+        // This is based on SWT Snippet 125
+        final Listener listener = new Listener() {
+            Shell mTip = null;
+            Label mLabel  = null;
+
+            @Override
+            public void handleEvent(Event event) {
+                switch(event.type) {
+                case SWT.Dispose:
+                case SWT.KeyDown:
+                case SWT.MouseExit:
+                case SWT.MouseDown:
+                case SWT.MouseMove:
+                    if (mTip != null) {
+                        mTip.dispose();
+                        mTip = null;
+                        mLabel = null;
+                    }
+                    break;
+                case SWT.MouseHover:
+                    if (mTip != null) {
+                        mTip.dispose();
+                        mTip = null;
+                        mLabel = null;
+                    }
+
+                    String tooltip = null;
+
+                    TreeItem item = tree.getItem(new Point(event.x, event.y));
+                    if (item != null) {
+                        Rectangle rect = item.getBounds(0);
+                        if (event.x - rect.x > 16) { // 16: Standard width of our outline icons
+                            return;
+                        }
+
+                        Object data = item.getData();
+                        if (data != null && data instanceof CanvasViewInfo) {
+                            LayoutEditorDelegate editor = mGraphicalEditorPart.getEditorDelegate();
+                            CanvasViewInfo vi = (CanvasViewInfo) data;
+                            IMarker marker = editor.getIssueForNode(vi.getUiViewNode());
+                            if (marker != null) {
+                                tooltip = marker.getAttribute(IMarker.MESSAGE, null);
+                            }
+                        }
+
+                        if (tooltip != null) {
+                            Shell shell = tree.getShell();
+                            Display display = tree.getDisplay();
+
+                            Color fg = display.getSystemColor(SWT.COLOR_INFO_FOREGROUND);
+                            Color bg = display.getSystemColor(SWT.COLOR_INFO_BACKGROUND);
+                            mTip = new Shell(shell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
+                            mTip.setBackground(bg);
+                            FillLayout layout = new FillLayout();
+                            layout.marginWidth = 1;
+                            layout.marginHeight = 1;
+                            mTip.setLayout(layout);
+                            mLabel = new Label(mTip, SWT.WRAP);
+                            mLabel.setForeground(fg);
+                            mLabel.setBackground(bg);
+                            mLabel.setText(tooltip);
+                            mLabel.addListener(SWT.MouseExit, this);
+                            mLabel.addListener(SWT.MouseDown, this);
+
+                            Point pt = tree.toDisplay(rect.x, rect.y + rect.height);
+                            Rectangle displayBounds = display.getBounds();
+                            // -10: Don't extend -all- the way to the edge of the screen
+                            // which would make it look like it has been cropped
+                            int availableWidth = displayBounds.x + displayBounds.width - pt.x - 10;
+                            if (availableWidth < 80) {
+                                availableWidth = 80;
+                            }
+                            Point size = mTip.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+                            if (size.x > availableWidth) {
+                                size = mTip.computeSize(availableWidth, SWT.DEFAULT);
+                            }
+                            mTip.setBounds(pt.x, pt.y, size.x, size.y);
+
+                            mTip.setVisible(true);
+                        }
+                    }
+                }
+            }
+        };
+
+        tree.addListener(SWT.Dispose, listener);
+        tree.addListener(SWT.KeyDown, listener);
+        tree.addListener(SWT.MouseMove, listener);
+        tree.addListener(SWT.MouseHover, listener);
     }
 }

@@ -20,7 +20,9 @@ package com.android.ide.eclipse.adt.internal.editors;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
 import com.android.sdklib.SdkConstants;
+import com.google.common.collect.Maps;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -36,7 +38,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import java.net.URL;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Factory to generate icons for Android Editors.
@@ -55,9 +58,11 @@ public class IconFactory {
 
     private static IconFactory sInstance;
 
-    private HashMap<String, Image> mIconMap = new HashMap<String, Image>();
-    private HashMap<URL, Image> mUrlMap = new HashMap<URL, Image>();
-    private HashMap<String, ImageDescriptor> mImageDescMap = new HashMap<String, ImageDescriptor>();
+    private Map<String, Image> mIconMap = Maps.newHashMap();
+    private Map<URL, Image> mUrlMap = Maps.newHashMap();
+    private Map<String, ImageDescriptor> mImageDescMap = Maps.newHashMap();
+    private Map<Image, Image> mErrorIcons;
+    private Map<Image, Image> mWarningIcons;
 
     private IconFactory() {
     }
@@ -85,6 +90,24 @@ public class IconFactory {
             }
         }
         mUrlMap.clear();
+        if (mErrorIcons != null) {
+            for (Image icon : mErrorIcons.values()) {
+                // The map can contain null values
+                if (icon != null) {
+                    icon.dispose();
+                }
+            }
+            mErrorIcons = null;
+        }
+        if (mWarningIcons != null) {
+            for (Image icon : mWarningIcons.values()) {
+                // The map can contain null values
+                if (icon != null) {
+                    icon.dispose();
+                }
+            }
+            mWarningIcons = null;
+        }
     }
 
     /**
@@ -250,6 +273,56 @@ public class IconFactory {
         }
 
         return image;
+    }
+
+    /**
+     * Returns an image with an error icon overlaid on it. The icons are cached,
+     * so the base image should be cached as well, or this method will keep
+     * storing new overlays into its cache.
+     *
+     * @param image the base image
+     * @return the combined image
+     */
+    @NonNull
+    public Image addErrorIcon(@NonNull Image image) {
+        if (mErrorIcons != null) {
+            Image combined = mErrorIcons.get(image);
+            if (combined != null) {
+                return combined;
+            }
+        } else {
+            mErrorIcons = new IdentityHashMap<Image, Image>();
+        }
+
+        Image combined = new ErrorImageComposite(image, false).createImage();
+        mErrorIcons.put(image, combined);
+
+        return combined;
+    }
+
+    /**
+     * Returns an image with a warning icon overlaid on it. The icons are
+     * cached, so the base image should be cached as well, or this method will
+     * keep storing new overlays into its cache.
+     *
+     * @param image the base image
+     * @return the combined image
+     */
+    @NonNull
+    public Image addWarningIcon(@NonNull Image image) {
+        if (mWarningIcons != null) {
+            Image combined = mWarningIcons.get(image);
+            if (combined != null) {
+                return combined;
+            }
+        } else {
+            mWarningIcons = new IdentityHashMap<Image, Image>();
+        }
+
+        Image combined = new ErrorImageComposite(image, true).createImage();
+        mWarningIcons.put(image, combined);
+
+        return combined;
     }
 
     /**

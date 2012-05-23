@@ -291,7 +291,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     }
 
     private void refreshStopIcon() {
-        Job[] currentJobs = EclipseLintRunner.getCurrentJobs();
+        Job[] currentJobs = LintJob.getCurrentJobs();
         if (currentJobs.length > 0) {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             mRefreshAction.setImageDescriptor(sharedImages.getImageDescriptor(
@@ -466,7 +466,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                         workbench.saveAllEditors(false /*confirm*/);
                     }
 
-                    Job[] jobs = EclipseLintRunner.getCurrentJobs();
+                    Job[] jobs = LintJob.getCurrentJobs();
                     if (jobs.length > 0) {
                         EclipseLintRunner.cancelCurrentJobs(false);
                     } else {

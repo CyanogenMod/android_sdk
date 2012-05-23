@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
@@ -26,6 +26,7 @@ import com.android.ide.common.api.RuleAction.Separator;
 import com.android.ide.common.api.RuleAction.Toggle;
 import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
@@ -35,6 +36,7 @@ import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 import com.google.common.base.Strings;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -553,9 +555,10 @@ public class LayoutActionBar extends Composite {
         mLintButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                IFile file = mEditor.getEditorDelegate().getEditor().getInputFile();
+                CommonXmlEditor editor = mEditor.getEditorDelegate().getEditor();
+                IFile file = editor.getInputFile();
                 if (file != null) {
-                    EclipseLintClient.showErrors(getShell(), file);
+                    EclipseLintClient.showErrors(getShell(), file, editor);
                 }
             }
         });
@@ -567,7 +570,17 @@ public class LayoutActionBar extends Composite {
      * Updates the lint indicator state in the given layout editor
      */
     public void updateErrorIndicator() {
-        updateErrorIndicator(EclipseLintClient.hasMarkers(mEditor.getEditedFile()));
+        updateErrorIndicator(mEditor.getEditedFile());
+    }
+
+    /**
+     * Updates the lint indicator state for the given file
+     *
+     * @param file the file to show the indicator status for
+     */
+    public void updateErrorIndicator(IFile file) {
+        IMarker[] markers = EclipseLintClient.getMarkers(file);
+        updateErrorIndicator(markers.length);
     }
 
     /**
@@ -575,14 +588,14 @@ public class LayoutActionBar extends Composite {
      *
      * @param hasLintWarnings whether there are lint errors to be shown
      */
-    void updateErrorIndicator(final boolean hasLintWarnings) {
+    private void updateErrorIndicator(final int markerCount) {
         Display display = getDisplay();
         if (display.getThread() != Thread.currentThread()) {
             display.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     if (!isDisposed()) {
-                        updateErrorIndicator(hasLintWarnings);
+                        updateErrorIndicator(markerCount);
                     }
                 }
             });
@@ -590,10 +603,37 @@ public class LayoutActionBar extends Composite {
         }
 
         GridData layoutData = (GridData) mLintToolBar.getLayoutData();
-        if (layoutData.exclude == hasLintWarnings) {
-            layoutData.exclude = !hasLintWarnings;
-            mLintToolBar.setVisible(hasLintWarnings);
-            layout();
+        Integer existing = (Integer) mLintToolBar.getData();
+        Integer current = Integer.valueOf(markerCount);
+        if (!current.equals(existing)) {
+            mLintToolBar.setData(current);
+            boolean layout = false;
+            boolean hasLintWarnings = markerCount > 0;
+            if (layoutData.exclude == hasLintWarnings) {
+                layoutData.exclude = !hasLintWarnings;
+                mLintToolBar.setVisible(hasLintWarnings);
+                layout = true;
+            }
+            if (markerCount > 0) {
+                String iconName = "";
+                switch (markerCount) {
+                    case 1: iconName = "lint1"; break;  //$NON-NLS-1$
+                    case 2: iconName = "lint2"; break;  //$NON-NLS-1$
+                    case 3: iconName = "lint3"; break;  //$NON-NLS-1$
+                    case 4: iconName = "lint4"; break;  //$NON-NLS-1$
+                    case 5: iconName = "lint5"; break;  //$NON-NLS-1$
+                    case 6: iconName = "lint6"; break;  //$NON-NLS-1$
+                    case 7: iconName = "lint7"; break;  //$NON-NLS-1$
+                    case 8: iconName = "lint8"; break;  //$NON-NLS-1$
+                    case 9: iconName = "lint9"; break;  //$NON-NLS-1$
+                    default: iconName = "lint9p"; break;//$NON-NLS-1$
+                }
+                mLintButton.setImage(IconFactory.getInstance().getIcon(iconName));
+            }
+            if (layout) {
+                layout();
+            }
+            redraw();
         }
     }
 

@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFIX;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
@@ -30,6 +29,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
@@ -74,7 +74,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertyFa
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -273,6 +272,7 @@ public class GraphicalEditorPart extends EditorPart
     private FlyoutControlComposite mStructureFlyout;
     private FlyoutControlComposite mPaletteComposite;
     private PropertyFactory mPropertyFactory;
+    private boolean mRenderedOnce;
 
     /**
      * Flags which tracks whether this editor is currently active which is set whenever
@@ -400,7 +400,7 @@ public class GraphicalEditorPart extends EditorPart
         GridData detailsData = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
         mActionBar.setLayoutData(detailsData);
         if (file != null) {
-            mActionBar.updateErrorIndicator(EclipseLintClient.hasMarkers(file));
+            mActionBar.updateErrorIndicator(file);
         }
 
         mSashError = new SashForm(layoutBarAndCanvas, SWT.VERTICAL | SWT.BORDER);
@@ -1611,6 +1611,21 @@ public class GraphicalEditorPart extends EditorPart
         } else {
             // Nope, no missing or broken classes. Clear success, congrats!
             hideError();
+
+            // First time this layout is opened, run lint on the file (after a delay)
+            if (!mRenderedOnce) {
+                mRenderedOnce = true;
+                Job job = new Job("Run Lint") {
+                    @Override
+                    protected IStatus run(IProgressMonitor monitor) {
+                        getEditorDelegate().delegateRunLint();
+                        return Status.OK_STATUS;
+                    }
+
+                };
+                job.setSystem(true);
+                job.schedule(3000); // 3 seconds
+            }
         }
 
         model.refreshUi();
