@@ -17,8 +17,8 @@
 package com.android.tools.lint.checks;
 
 import com.android.util.Pair;
+import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +38,8 @@ public class ApiClass {
     private final String mName;
     private final int mSince;
 
-    private final List<Pair<String, Integer>> mSuperClasses = new ArrayList<Pair<String, Integer>>();
-    private final List<Pair<String, Integer>> mInterfaces = new ArrayList<Pair<String, Integer>>();
+    private final List<Pair<String, Integer>> mSuperClasses = Lists.newArrayList();
+    private final List<Pair<String, Integer>> mInterfaces = Lists.newArrayList();
 
     private final Map<String, Integer> mFields = new HashMap<String, Integer>();
     private final Map<String, Integer> mMethods = new HashMap<String, Integer>();
@@ -161,6 +161,20 @@ public class ApiClass {
             }
         }
 
+        // now look at the interfaces classes
+        for (Pair<String, Integer> interfacePair : mInterfaces) {
+            ApiClass superClass = info.getClass(interfacePair.getFirst());
+            if (superClass != null) {
+                i = superClass.getMethod(methodSignature, info);
+                if (i != null) {
+                    int tmp = interfacePair.getSecond() > i ? interfacePair.getSecond() : i;
+                    if (tmp < min) {
+                        min = tmp;
+                    }
+                }
+            }
+        }
+
         return min;
     }
 
@@ -232,7 +246,17 @@ public class ApiClass {
         for (String method : mMethods.keySet()) {
             set.add(method);
         }
+
         for (Pair<String, Integer> superClass : mSuperClasses) {
+            ApiClass clz = info.getClass(superClass.getFirst());
+            assert clz != null : superClass.getSecond();
+            if (clz != null) {
+                clz.addAllMethods(info, set);
+            }
+        }
+
+        // Get methods from implemented interfaces as well;
+        for (Pair<String, Integer> superClass : mInterfaces) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
             if (clz != null) {
@@ -259,6 +283,7 @@ public class ApiClass {
         for (String field : mFields.keySet()) {
             set.add(field);
         }
+
         for (Pair<String, Integer> superClass : mSuperClasses) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
@@ -266,6 +291,14 @@ public class ApiClass {
                 clz.addAllFields(info, set);
             }
         }
-    }
 
+        // Get methods from implemented interfaces as well;
+        for (Pair<String, Integer> superClass : mInterfaces) {
+            ApiClass clz = info.getClass(superClass.getFirst());
+            assert clz != null : superClass.getSecond();
+            if (clz != null) {
+                clz.addAllFields(info, set);
+            }
+        }
+    }
 }

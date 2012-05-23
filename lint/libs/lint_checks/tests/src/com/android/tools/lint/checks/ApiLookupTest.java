@@ -62,6 +62,15 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(9, mDb.getCallVersion("java/nio/Buffer", "array", "()"));
     }
 
+    public void testInheritInterfaces() {
+        // The onPreferenceStartFragment is inherited via the
+        // android/preference/PreferenceFragment$OnPreferenceStartFragmentCallback
+        // interface
+        assertEquals(11, mDb.getCallVersion("android/preference/PreferenceActivity",
+                "onPreferenceStartFragment",
+                "(Landroid/preference/PreferenceFragment;Landroid/preference/Preference;)"));
+    }
+
     @Override
     protected Detector getDetector() {
         fail("This is not used in the ApiDatabase test");
