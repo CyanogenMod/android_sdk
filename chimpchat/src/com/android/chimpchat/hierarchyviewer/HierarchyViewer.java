@@ -170,7 +170,11 @@ public class HierarchyViewer {
         }
         ViewNode.Property textProperty = node.namedProperties.get("text:mText");
         if (textProperty == null) {
-            throw new RuntimeException("No text property on node");
+            // give it another chance, ICS ViewServer returns mText
+            textProperty = node.namedProperties.get("mText");
+            if (textProperty == null) {
+                throw new RuntimeException("No text property on node");
+            }
         }
         return textProperty.value;
     }
