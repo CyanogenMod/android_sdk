@@ -736,7 +736,8 @@ public class OutlinePage extends ContentOutlinePage
                     // Temporary diagnostics code when developing GridLayout
                     if (GridLayoutRule.sDebugGridLayout) {
                         String namespace;
-                        if (e.getParentNode().getNodeName().equals(GRID_LAYOUT)) {
+                        if (e.getParentNode() != null
+                                && e.getParentNode().getNodeName().equals(GRID_LAYOUT)) {
                             namespace = ANDROID_URI;
                         } else {
                             IProject project = mGraphicalEditorPart.getProject();

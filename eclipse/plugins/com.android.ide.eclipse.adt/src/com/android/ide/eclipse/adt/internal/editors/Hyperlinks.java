@@ -16,14 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VIEW;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
@@ -38,6 +39,10 @@ import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.sdklib.xml.AndroidManifest.NODE_SERVICE;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -210,14 +215,14 @@ public class Hyperlinks {
         }
 
         String value = attribute.getValue();
-        if (value.startsWith("@+")) { //$NON-NLS-1$
+        if (value.startsWith(NEW_ID_RESOURCE_PREFIX)) {
             // It's a value -declaration-, nowhere else to jump
             // (though we could consider jumping to the R-file; would that
             // be helpful?)
             return false;
         }
 
-        Pair<ResourceType,String> resource = ResourceHelper.parseResource(value);
+        Pair<ResourceType,String> resource = parseResource(value);
         if (resource != null) {
             ResourceType type = resource.getFirst();
             if (type != null) {
@@ -1026,23 +1031,28 @@ public class Hyperlinks {
         if (type == ResourceType.ID) {
             // Ids are recorded in <item> tags instead of <id> tags
             targetTag = "item"; //$NON-NLS-1$
-        } else if (type == ResourceType.ATTR) {
+        }
+
+        Pair<File, Integer> result = findTag(name, file, parser, document, targetTag);
+        if (result == null && type == ResourceType.ATTR) {
             // Attributes seem to be defined in <public> tags
             targetTag = "public"; //$NON-NLS-1$
+            result = findTag(name, file, parser, document, targetTag);
         }
-        Element root = document.getDocumentElement();
-        if (root.getTagName().equals(ROOT_ELEMENT)) {
-            NodeList children = root.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) child;
-                    if (element.getTagName().equals(targetTag)) {
-                        String elementName = element.getAttribute(NAME_ATTR);
-                        if (elementName.equals(name)) {
+        return result;
+    }
 
-                            return Pair.of(file, parser.getOffset(element));
-                        }
+    private static Pair<File, Integer> findTag(String name, File file, OffsetTrackingParser parser,
+            Document document, String targetTag) {
+        NodeList children = document.getElementsByTagName(targetTag);
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) child;
+                if (element.getTagName().equals(targetTag)) {
+                    String elementName = element.getAttribute(NAME_ATTR);
+                    if (elementName.equals(name)) {
+                        return Pair.of(file, parser.getOffset(element));
                     }
                 }
             }
@@ -1067,15 +1077,17 @@ public class Hyperlinks {
             }
         }
 
-        Pair<ResourceType,String> resource = ResourceHelper.parseResource(url);
+        Pair<ResourceType,String> resource = parseResource(url);
         if (resource == null) {
-            String androidStyle = "@android:style/"; //$NON-NLS-1$
+            String androidStyle = ANDROID_STYLE_RESOURCE_PREFIX;
             if (url.startsWith(PREFIX_ANDROID_RESOURCE_REF)) {
                 url = androidStyle + url.substring(PREFIX_ANDROID_RESOURCE_REF.length());
+            } else if (url.startsWith(PREFIX_ANDROID_THEME_REF)) {
+                url = androidStyle + url.substring(PREFIX_ANDROID_THEME_REF.length());
             } else if (url.startsWith(ANDROID_PKG + ':')) {
                 url = androidStyle + url.substring(ANDROID_PKG.length() + 1);
             } else {
-                url = "@style/" + url; //$NON-NLS-1$
+                url = STYLE_RESOURCE_PREFIX + url;
             }
         }
         return getResourceLinks(range, url);
@@ -1085,6 +1097,16 @@ public class Hyperlinks {
         IProject project = Hyperlinks.getProject();
         FolderConfiguration configuration = getConfiguration();
         return getResourceLinks(range, url, project, configuration);
+    }
+
+    /** Parse a resource reference or a theme reference and return the individual parts */
+    private static Pair<ResourceType,String> parseResource(String url) {
+        if (url.startsWith(PREFIX_THEME_REF)) {
+            url = PREFIX_RESOURCE_REF + url.substring(PREFIX_THEME_REF.length());
+            return ResourceHelper.parseResource(url);
+        }
+
+        return ResourceHelper.parseResource(url);
     }
 
     /**
@@ -1101,14 +1123,15 @@ public class Hyperlinks {
             @NonNull IProject project,  @Nullable FolderConfiguration configuration) {
         List<IHyperlink> links = new ArrayList<IHyperlink>();
 
-        Pair<ResourceType,String> resource = ResourceHelper.parseResource(url);
+        Pair<ResourceType,String> resource = parseResource(url);
         if (resource == null || resource.getFirst() == null) {
             return null;
         }
         ResourceType type = resource.getFirst();
         String name = resource.getSecond();
 
-        boolean isFramework = url.startsWith("@android"); //$NON-NLS-1$
+        boolean isFramework = url.startsWith(PREFIX_ANDROID_RESOURCE_REF)
+                || url.startsWith(PREFIX_ANDROID_THEME_REF);
         if (project == null) {
             // Local reference *within* a framework
             isFramework = true;
@@ -1217,10 +1240,10 @@ public class Hyperlinks {
                         return getStyleLinks(context, range, attribute.getValue());
                     }
                     if (attribute != null
-                            && attribute.getValue().startsWith(PREFIX_RESOURCE_REF)) {
+                            && (attribute.getValue().startsWith(PREFIX_RESOURCE_REF)
+                                    || attribute.getValue().startsWith(PREFIX_THEME_REF))) {
                         // Instantly create links for resources since we can use the existing
                         // resolved maps for this and offer multiple choices for the user
-
                         String url = attribute.getValue();
                         return getResourceLinks(range, url);
                     }
@@ -1253,7 +1276,7 @@ public class Hyperlinks {
                         int offset = caretOffset;
                         while (offset > lineStart) {
                             char c = document.getChar(offset);
-                            if (c == '@') {
+                            if (c == '@' || c == '?') {
                                 urlStart = offset;
                                 break;
                             } else if (!isValidResourceUrlChar(c)) {
