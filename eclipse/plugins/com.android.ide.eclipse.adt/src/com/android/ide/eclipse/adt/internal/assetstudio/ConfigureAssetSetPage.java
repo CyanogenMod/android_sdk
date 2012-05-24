@@ -28,6 +28,7 @@ import com.android.assetstudiolib.TabIconGenerator;
 import com.android.assetstudiolib.TextRenderUtil;
 import com.android.assetstudiolib.Util;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState.SourceType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
@@ -505,6 +506,9 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
             // Initial image - use the most recently used image, or the default launcher
             // icon created in our default projects, if there
+            if (mValues.imagePath != null) {
+                sImagePath = mValues.imagePath.getPath();;
+            }
             if (sImagePath == null) {
                 IProject project = mValues.project;
                 if (project != null) {
@@ -543,6 +547,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
                 setSourceType(mValues.sourceType);
                 setShape(mValues.shape);
+
+                if (mValues.sourceType == SourceType.CLIPART
+                        && mValues.clipartName != null) {
+                    updateClipartPreview();
+                }
 
                 // Initial color
                 Display display = mPreviewArea.getDisplay();
@@ -758,27 +767,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                                 mValues.clipartName = (String) image.getData();
                                 close();
 
-                                for (Control c : mClipartPreviewPanel.getChildren()) {
-                                    c.dispose();
-                                }
-                                if (mClipartPreviewPanel.getChildren().length == 0) {
-                                    try {
-                                        BufferedImage icon = GraphicGenerator.getClipartIcon(
-                                                mValues.clipartName);
-                                        if (icon != null) {
-                                            Display display = mClipartForm.getDisplay();
-                                            Image swtImage = SwtUtils.convertToSwt(display, icon,
-                                                    true, -1);
-                                            new ImageControl(mClipartPreviewPanel,
-                                                    SWT.NONE, swtImage);
-                                        }
-                                    } catch (IOException e1) {
-                                        AdtPlugin.log(e1, null);
-                                    }
-                                    mClipartPreviewPanel.pack();
-                                    mClipartPreviewPanel.layout();
-                                }
-
+                                updateClipartPreview();
                                 updatePreview();
                             }
                         }
@@ -864,6 +853,29 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         requestUpdatePreview(updateQuickly);
+    }
+
+    private void updateClipartPreview() {
+        for (Control c : mClipartPreviewPanel.getChildren()) {
+            c.dispose();
+        }
+        if (mClipartPreviewPanel.getChildren().length == 0) {
+            try {
+                BufferedImage icon = GraphicGenerator.getClipartIcon(
+                        mValues.clipartName);
+                if (icon != null) {
+                    Display display = mClipartForm.getDisplay();
+                    Image swtImage = SwtUtils.convertToSwt(display, icon,
+                            true, -1);
+                    new ImageControl(mClipartPreviewPanel,
+                            SWT.NONE, swtImage);
+                }
+            } catch (IOException e1) {
+                AdtPlugin.log(e1, null);
+            }
+            mClipartPreviewPanel.pack();
+            mClipartPreviewPanel.layout();
+        }
     }
 
     private void setShape(GraphicGenerator.Shape shape) {

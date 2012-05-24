@@ -360,7 +360,6 @@ public class NewProjectCreator  {
         String pkg =
                 mValues.mode == Mode.TEST ? mValues.packageName : mValues.testPackageName;
 
-        parameters.put(PARAM_PROJECT, projectName);
         parameters.put(PARAM_PACKAGE, pkg);
         parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
         parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
@@ -481,7 +480,8 @@ public class NewProjectCreator  {
                         mainData.getProject(),
                         mainData.getDescription(),
                         mainData.getParameters(),
-                        mainData.getDictionary());
+                        mainData.getDictionary(),
+                        null);
 
                 if (mainProject != null) {
                     final IJavaProject javaProject = JavaCore.create(mainProject);
@@ -512,7 +512,8 @@ public class NewProjectCreator  {
                         testData.getProject(),
                         testData.getDescription(),
                         parameters,
-                        testData.getDictionary());
+                        testData.getDictionary(),
+                        null);
                 if (testProject != null) {
                     final IJavaProject javaProject = JavaCore.create(testProject);
                     Display.getDefault().syncExec(new Runnable() {
@@ -556,7 +557,8 @@ public class NewProjectCreator  {
             IProject project,
             IProjectDescription description,
             Map<String, Object> parameters,
-            Map<String, String> dictionary)
+            Map<String, String> dictionary,
+            Runnable projectPopulator)
                 throws CoreException, IOException, StreamException {
 
         // get the project target
@@ -585,6 +587,10 @@ public class NewProjectCreator  {
             addDefaultDirectories(project, RES_DIRECTORY, RES_DIRECTORIES, monitor);
         } else {
             addDefaultDirectories(project, RES_DIRECTORY, RES_DENSITY_ENABLED_DIRECTORIES, monitor);
+        }
+
+        if (projectPopulator != null) {
+            projectPopulator.run();
         }
 
         // Setup class path: mark folders as source folders
@@ -660,6 +666,28 @@ public class NewProjectCreator  {
         ProjectHelper.fixProject(project);
 
         return project;
+    }
+
+    public static IProject create(
+            IProgressMonitor monitor,
+            IProject project,
+            IAndroidTarget target,
+            Runnable projectPopulator)
+                throws CoreException, IOException, StreamException {
+        NewProjectCreator creator = new NewProjectCreator(null, null);
+
+        Map<String, String> dictionary = null;
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(PARAM_SDK_TARGET, target);
+        parameters.put(PARAM_SRC_FOLDER, SdkConstants.FD_SOURCES);
+        parameters.put(PARAM_IS_NEW_PROJECT, false);
+        parameters.put(PARAM_SAMPLE_LOCATION, null);
+
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+        final IProjectDescription description = workspace.newProjectDescription(project.getName());
+
+        return creator.createEclipseProject(monitor, project, description, parameters,
+                dictionary, projectPopulator);
     }
 
     /**

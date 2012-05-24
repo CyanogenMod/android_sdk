@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -28,7 +29,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -218,10 +218,7 @@ public abstract class AccordionControl extends Composite {
             label.setText(header.toString().replace("&", "&&")); //$NON-NLS-1$ //$NON-NLS-2$
             updateBackground(label, false);
             if (labelFont == null) {
-                labelFont = label.getFont();
-                FontData normal = labelFont.getFontData()[0];
-                FontData bold = new FontData(normal.getName(), normal.getHeight(), SWT.BOLD);
-                labelFont = new Font(null, bold);
+                labelFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
             }
             label.setFont(labelFont);
             label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));

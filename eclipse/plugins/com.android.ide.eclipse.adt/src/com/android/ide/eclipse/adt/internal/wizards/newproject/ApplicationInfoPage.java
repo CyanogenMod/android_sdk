@@ -52,7 +52,7 @@ import java.io.FileFilter;
 import java.net.URI;
 
 /** Page where you choose the application name, activity name, and optional test project info */
-class ApplicationInfoPage extends WizardPage implements SelectionListener, ModifyListener,
+public class ApplicationInfoPage extends WizardPage implements SelectionListener, ModifyListener,
         ITargetChangeListener {
     private static final String JDK_15 = "1.5"; //$NON-NLS-1$
     private final static String DUMMY_PACKAGE = "your.package.namespace";
@@ -637,7 +637,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
         return null;
     }
 
-    private IStatus validatePackage(String packageFieldContents) {
+    public static IStatus validatePackage(String packageFieldContents) {
         // Validate package
         if (packageFieldContents == null || packageFieldContents.length() == 0) {
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
@@ -677,8 +677,17 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
             return null;
         }
 
+        return validateActivity(mValues.activityName);
+    }
+
+    /**
+     * Validates the given activity name
+     *
+     * @param activityFieldContents the activity name to validate
+     * @return a status for whether the activity name is valid
+     */
+    public static IStatus validateActivity(String activityFieldContents) {
         // Validate activity field
-        String activityFieldContents = mValues.activityName;
         if (activityFieldContents == null || activityFieldContents.length() == 0) {
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Activity name must be specified.");

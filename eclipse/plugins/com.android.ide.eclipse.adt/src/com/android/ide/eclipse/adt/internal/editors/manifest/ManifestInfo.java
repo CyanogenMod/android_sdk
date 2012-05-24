@@ -109,6 +109,8 @@ public class ManifestInfo {
     private Map<String, String> mActivityThemes;
     private IAbstractFile mManifestFile;
     private long mLastModified;
+    private long mLastChecked;
+    private String mMinSdkName;
     private int mMinSdk;
     private int mTargetSdk;
     private String mApplicationIcon;
@@ -163,8 +165,13 @@ public class ManifestInfo {
      * with respect to the manifest file
      */
     private void sync() {
-        // TODO: Add a last synced timestamp so that I can avoid doing all this with rapid
-        // burst calls on separate methods which all call sync() first!
+        // Since each of the accessors call sync(), allow a bunch of immediate
+        // accessors to all bypass the file stat() below
+        long now = System.currentTimeMillis();
+        if (now - mLastChecked < 50 && mManifestFile != null) {
+            return;
+        }
+        mLastChecked = now;
 
         if (mManifestFile == null) {
             IFolderWrapper projectFolder = new IFolderWrapper(mProject);
@@ -186,6 +193,7 @@ public class ManifestInfo {
         mManifestTheme = null;
         mTargetSdk = 1; // Default when not specified
         mMinSdk = 1; // Default when not specified
+        mMinSdkName = ""; // Default when not specified
         mPackage = ""; //$NON-NLS-1$
         mApplicationIcon = null;
         mApplicationLabel = null;
@@ -252,7 +260,7 @@ public class ManifestInfo {
         }
     }
 
-    private static int getApiVersion(Element usesSdk, String attribute, int defaultApiLevel) {
+    private int getApiVersion(Element usesSdk, String attribute, int defaultApiLevel) {
         String valueString = null;
         if (usesSdk.hasAttributeNS(NS_RESOURCES, attribute)) {
             valueString = usesSdk.getAttributeNS(NS_RESOURCES, attribute);
@@ -271,6 +279,10 @@ public class ManifestInfo {
                         // codename future API level is current api + 1
                         apiLevel = target.getVersion().getApiLevel() + 1;
                     }
+                }
+
+                if (usesSdk.getTagName().equals(ATTRIBUTE_MIN_SDK_VERSION)) {
+                    mMinSdkName = valueString;
                 }
             }
 
@@ -309,7 +321,7 @@ public class ManifestInfo {
      * @return a manifest theme, or null if none was registered
      */
     @Nullable
-    public String getmManifestTheme() {
+    public String getManifestTheme() {
         sync();
         return mManifestTheme;
     }
@@ -385,6 +397,17 @@ public class ManifestInfo {
     public int getMinSdkVersion() {
         sync();
         return mMinSdk;
+    }
+
+    /**
+     * Returns the minimum SDK version name (which may not be a numeric string, e.g.
+     * it could be a codename)
+     *
+     * @return the minimum SDK version
+     */
+    public String getMinSdkName() {
+        sync();
+        return mMinSdkName;
     }
 
     /**

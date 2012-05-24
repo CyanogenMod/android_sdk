@@ -66,7 +66,7 @@ import java.util.regex.Pattern;
  * Initial page shown when creating projects which asks for the project name,
  * the the location of the project, working sets, etc.
  */
-class ProjectNamePage extends WizardPage implements SelectionListener, ModifyListener {
+public class ProjectNamePage extends WizardPage implements SelectionListener, ModifyListener {
     private final NewProjectWizardState mValues;
     /** Flag used when setting button/text state manually to ignore listener updates */
     private boolean mIgnore;
@@ -601,7 +601,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         return null;
     }
 
-    static IStatus validateProjectName(String projectName) {
+    public static IStatus validateProjectName(String projectName) {
         if (projectName == null || projectName.length() == 0) {
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Project name must be specified");

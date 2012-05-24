@@ -127,6 +127,7 @@ ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
 ADT_LIBS="ant-glob assetstudio ide_common layoutlib_api lint_api lint_checks ninepatch propertysheet rule_api sdkuilib swtmenubar manifmerger"
 ADT_PREBUILTS="\
     prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
+    prebuilts/tools/common/freemarker/freemarker-2.3.19.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
     prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"

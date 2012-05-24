@@ -188,7 +188,7 @@ class ThemeMenuAction extends SubmenuAction {
                     }
                 }
 
-                String manifestTheme = manifest.getmManifestTheme();
+                String manifestTheme = manifest.getManifestTheme();
                 if (activityThemes.size() > 0 || manifestTheme != null) {
                     Set<String> allThemes = new HashSet<String>(activityThemes.values());
                     if (manifestTheme != null) {

@@ -149,6 +149,21 @@
         <category
             id="com.android.ide.eclipse.wizards.category"
             name="Android" />
+
+        <!-- New template-based project wizard -->
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_adt_project.png"
+            id="ccom.android.ide.eclipse.adt.project.NewProjectWizard"
+            name="Android Application"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="true" />
+
+        <!-- Old custom-coded project wizard -->
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -156,8 +171,8 @@
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/new_adt_project.png"
-            id="com.android.ide.eclipse.adt.project.NewProjectWizard"
-            name="Android Project"
+            id="com.android.ide.eclipse.adt.project.NewProjectWizard.Old"
+            name="Empty Android Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true" />
         <wizard
@@ -223,6 +238,39 @@
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$NewActivityWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_adt_project.png"
+            id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.Activity"
+            name="Blank Activity"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false" />
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$MasterDetailWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_adt_project.png"
+            id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.MasterDetail"
+            name="Master Detail Flow"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false" />
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$NewCustomViewWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/customView.png"
+            id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.CustomView"
+            name="Custom View"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false" />
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
             class="com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
@@ -231,6 +279,20 @@
             name="Android Icon Set"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
+
+        <!-- During development only: Support for testing templates -->
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.TemplateTestWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/androidjunit.png"
+            id="com.android.ide.eclipse.editors.wizards.TemplateTestWizard"
+            name="Template Development Wizard"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false" />
+
     </extension>
     <extension point="org.eclipse.debug.core.launchConfigurationTypes">
         <launchConfigurationType
