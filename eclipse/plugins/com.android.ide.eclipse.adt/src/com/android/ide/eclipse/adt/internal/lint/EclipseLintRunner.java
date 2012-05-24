@@ -15,40 +15,24 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_CLASS;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.LintDriver;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Scope;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Shell;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +59,7 @@ public class EclipseLintRunner {
             @Nullable IDocument doc,
             boolean fatalOnly) {
         resources = addLibraries(resources);
-        CheckFileJob job = (CheckFileJob) startLint(resources, source,  doc, fatalOnly,
+        LintJob job = (LintJob) startLint(resources, source,  doc, fatalOnly,
                 false /*show*/);
         try {
             job.join();
@@ -116,12 +100,38 @@ public class EclipseLintRunner {
             @Nullable IDocument doc,
             boolean fatalOnly,
             boolean show) {
+        IssueRegistry registry = EclipseLintClient.getRegistry();
+        EclipseLintClient client = new EclipseLintClient(registry, resources, doc, fatalOnly);
+        return startLint(client, resources, source, show);
+    }
+
+    /**
+     * Runs lint and updates the markers. Does not wait for the job to finish -
+     * just returns immediately.
+     *
+     * @param client the lint client receiving issue reports etc
+     * @param resources the resources (project, folder or file) to be analyzed
+     * @param source if checking a single source file, the source file. When
+     *            single checking an XML file, this is typically the same as the
+     *            file passed in the list in the first parameter, but when
+     *            checking the .class files of a Java file for example, the
+     *            .class file and all the inner classes of the Java file are
+     *            passed in the first parameter, and the corresponding .java
+     *            source file is passed here.
+     * @param show if true, show the results in a {@link LintViewPart}
+     * @return the job running lint in the background.
+     */
+    public static Job startLint(
+            @NonNull EclipseLintClient client,
+            @NonNull List<? extends IResource> resources,
+            @Nullable IResource source,
+            boolean show) {
         if (resources != null && !resources.isEmpty()) {
             resources = addLibraries(resources);
 
             cancelCurrentJobs(false);
 
-            CheckFileJob job = new CheckFileJob(resources, source, doc, fatalOnly);
+            LintJob job = new LintJob(client, resources, source);
             job.schedule();
 
             if (show) {
@@ -162,16 +172,10 @@ public class EclipseLintRunner {
         return true;
     }
 
-    /** Returns the current lint jobs, if any (never returns null but array may be empty) */
-    static Job[] getCurrentJobs() {
-        IJobManager jobManager = Job.getJobManager();
-        return jobManager.find(CheckFileJob.FAMILY_RUN_LINT);
-    }
-
     /** Cancels the current lint jobs, if any, and optionally waits for them to finish */
     static void cancelCurrentJobs(boolean wait) {
         // Cancel any current running jobs first
-        Job[] currentJobs = getCurrentJobs();
+        Job[] currentJobs = LintJob.getCurrentJobs();
         for (Job job : currentJobs) {
             job.cancel();
         }
@@ -228,133 +232,5 @@ public class EclipseLintRunner {
         }
 
         return resources;
-    }
-
-    private static final class CheckFileJob extends Job {
-        /** Job family */
-        private static final Object FAMILY_RUN_LINT = new Object();
-        private final List<? extends IResource> mResources;
-        private final IResource mSource;
-        private final IDocument mDocument;
-        private LintDriver mLint;
-        private boolean mFatal;
-        private boolean mFatalOnly;
-
-        private CheckFileJob(
-                @NonNull List<? extends IResource> resources,
-                @Nullable IResource source,
-                @Nullable IDocument doc,
-                boolean fatalOnly) {
-            super("Running Android Lint");
-            mResources = resources;
-            mSource = source;
-            mDocument = doc;
-            mFatalOnly = fatalOnly;
-        }
-
-        @Override
-        public boolean belongsTo(Object family) {
-            return family == FAMILY_RUN_LINT;
-        }
-
-        @Override
-        protected void canceling() {
-            super.canceling();
-            if (mLint != null) {
-                mLint.cancel();
-            }
-        }
-
-        @Override
-        protected IStatus run(IProgressMonitor monitor) {
-            try {
-                monitor.beginTask("Looking for errors", IProgressMonitor.UNKNOWN);
-                IssueRegistry registry = EclipseLintClient.getRegistry();
-                EnumSet<Scope> scope = null;
-                List<File> files = new ArrayList<File>(mResources.size());
-                for (IResource resource : mResources) {
-                    File file = AdtUtils.getAbsolutePath(resource).toFile();
-                    files.add(file);
-
-                    if (resource instanceof IProject && mSource == null) {
-                        scope = Scope.ALL;
-                    } else {
-                        String name = resource.getName();
-                        if (AdtUtils.endsWithIgnoreCase(name, DOT_XML)) {
-                            if (name.equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
-                                scope = EnumSet.of(Scope.MANIFEST);
-                            } else {
-                                scope = Scope.RESOURCE_FILE_SCOPE;
-                            }
-                        } else if (name.endsWith(DOT_JAVA) && resource instanceof IFile) {
-                            if (scope != null) {
-                                if (!scope.contains(Scope.JAVA_FILE)) {
-                                    scope = EnumSet.copyOf(scope);
-                                    scope.add(Scope.JAVA_FILE);
-                                }
-                            } else {
-                                scope = Scope.JAVA_FILE_SCOPE;
-                            }
-                        } else if (name.endsWith(DOT_CLASS) && resource instanceof IFile) {
-                            if (scope != null) {
-                                if (!scope.contains(Scope.CLASS_FILE)) {
-                                    scope = EnumSet.copyOf(scope);
-                                    scope.add(Scope.CLASS_FILE);
-                                }
-                            } else {
-                                scope = Scope.CLASS_FILE_SCOPE;
-                            }
-                        } else {
-                            return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
-                                    "Only XML files are supported for single file lint", null); //$NON-NLS-1$
-                        }
-                    }
-                }
-                if (scope == null) {
-                    scope = Scope.ALL;
-                }
-                if (mSource == null) {
-                    assert !Scope.checkSingleFile(scope) : scope + " with " + mResources;
-                }
-                // Check single file?
-                if (mSource != null) {
-                    // Delete specific markers
-                    IMarker[] markers = EclipseLintClient.getMarkers(mSource);
-                    for (IMarker marker : markers) {
-                        String id = marker.getAttribute(MARKER_CHECKID_PROPERTY, ""); //$NON-NLS-1$
-                        Issue issue = registry.getIssue(id);
-                        if (issue == null) {
-                            continue;
-                        }
-                        if (issue.isAdequate(scope)) {
-                            marker.delete();
-                        }
-                    }
-                } else {
-                    EclipseLintClient.clearMarkers(mResources);
-                }
-
-                EclipseLintClient client = new EclipseLintClient(registry, mResources,
-                            mDocument, mFatalOnly);
-                mLint = new LintDriver(registry, client);
-                mLint.analyze(files, scope);
-                mFatal = client.hasFatalErrors();
-                return Status.OK_STATUS;
-            } catch (Exception e) {
-                return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
-                                  "Failed", e); //$NON-NLS-1$
-            } finally {
-                if (monitor != null) {
-                    monitor.done();
-                }
-            }
-        }
-
-        /**
-         * Returns true if a fatal error was encountered
-         */
-        boolean isFatal() {
-            return mFatal;
-        }
     }
 }

@@ -41,7 +41,6 @@ import org.w3c.dom.Node;
 /**
  * Fix for adding {@code tools:ignore="id"} attributes in XML files.
  */
-@SuppressWarnings("restriction") // DOM model
 class AddSuppressAttribute implements ICompletionProposal {
     private final AndroidXmlEditor mEditor;
     private final String mId;
@@ -98,7 +97,8 @@ class AddSuppressAttribute implements ICompletionProposal {
     }
 
     /**
-     * Adds any applicable suppress lint fix resolutions into the given list
+     * Returns a quickfix to suppress a specific lint issue id on the node corresponding to
+     * the given marker.
      *
      * @param editor the associated editor containing the marker
      * @param marker the marker to create fixes for
@@ -143,5 +143,36 @@ class AddSuppressAttribute implements ICompletionProposal {
         String desc = String.format("Add ignore '%1$s\' to element", id);
         Element element = (Element) node;
         return new AddSuppressAttribute(editor, id, marker, element, desc);
+    }
+
+    /**
+     * Returns a quickfix to suppress a given issue type on the <b>root element</b>
+     * of the given editor.
+     *
+     * @param editor the associated editor containing the marker
+     * @param marker the marker to create fixes for
+     * @param id the issue id
+     * @return a fix for this marker, or null if unable
+     */
+    @Nullable
+    public static AddSuppressAttribute createFixForAll(
+            @NonNull AndroidXmlEditor editor,
+            @NonNull IMarker marker,
+            @NonNull String id) {
+        // This only applies to XML files:
+        String fileName = marker.getResource().getName();
+        if (!fileName.endsWith(DOT_XML)) {
+            return null;
+        }
+
+        Node node = DomUtilities.getNode(editor.getStructuredDocument(), 0);
+        if (node != null) {
+            node = node.getOwnerDocument().getDocumentElement();
+            String desc = String.format("Add ignore '%1$s\' to element", id);
+            Element element = (Element) node;
+            return new AddSuppressAttribute(editor, id, marker, element, desc);
+        }
+
+        return null;
     }
 }

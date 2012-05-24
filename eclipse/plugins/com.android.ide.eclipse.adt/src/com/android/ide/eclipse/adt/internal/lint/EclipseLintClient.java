@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -78,13 +79,17 @@ import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import lombok.ast.ecj.EcjTreeConverter;
 import lombok.ast.grammar.ParseProblem;
@@ -102,6 +107,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     private boolean mWasFatal;
     private boolean mFatalOnly;
     private EclipseJavaParser mJavaParser;
+    private boolean mCollectNodes;
+    private Map<Node, IMarker> mNodeMap;
 
     /**
      * Creates a new {@link EclipseLintClient}.
@@ -117,6 +124,58 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         mResources = resources;
         mDocument = document;
         mFatalOnly = fatalOnly;
+    }
+
+    /**
+     * Returns true if lint should only check fatal issues
+     *
+     * @return true if lint should only check fatal issues
+     */
+    public boolean isFatalOnly() {
+        return mFatalOnly;
+    }
+
+    /**
+     * Sets whether the lint client should store associated XML nodes for each
+     * reported issue
+     *
+     * @param collectNodes if true, collect node positions for errors in XML
+     *            files, retrievable via the {@link #getIssueForNode} method
+     */
+    public void setCollectNodes(boolean collectNodes) {
+        mCollectNodes = collectNodes;
+    }
+
+    /**
+     * Returns one of the issues for the given node (there could be more than one)
+     *
+     * @param node the node to look up lint issues for
+     * @return the marker for one of the issues found for the given node
+     */
+    @Nullable
+    public IMarker getIssueForNode(@NonNull UiViewElementNode node) {
+        if (mNodeMap != null) {
+            return mNodeMap.get(node.getXmlNode());
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns a collection of nodes that have one or more lint warnings
+     * associated with them (retrievable via
+     * {@link #getIssueForNode(UiViewElementNode)})
+     *
+     * @return a collection of nodes, which should <b>not</b> be modified by the
+     *         caller
+     */
+    @Nullable
+    public Collection<Node> getIssueNodes() {
+        if (mNodeMap != null) {
+            return mNodeMap.keySet();
+        }
+
+        return null;
     }
 
     // ----- Extends LintClient -----
@@ -190,6 +249,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
+    @NonNull
     @Override
     public Configuration getConfiguration(Project project) {
         if (project != null) {
@@ -248,6 +308,32 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
         if (s == Severity.FATAL) {
             mWasFatal = true;
+        }
+
+        if (mCollectNodes && location != null && marker != null) {
+            if (location instanceof LazyLocation) {
+                LazyLocation l = (LazyLocation) location;
+                IndexedRegion region = l.mRegion;
+                if (region instanceof Node) {
+                    Node node = (Node) region;
+                    if (node instanceof Attr) {
+                        node = ((Attr) node).getOwnerElement();
+                    }
+                    if (mNodeMap == null) {
+                        mNodeMap = new WeakHashMap<Node, IMarker>();
+                    }
+                    IMarker prev = mNodeMap.get(node);
+                    if (prev != null) {
+                        // Only replace the node if this node has higher priority
+                        int prevSeverity = prev.getAttribute(IMarker.SEVERITY, 0);
+                        if (prevSeverity < severity) {
+                            mNodeMap.put(node, marker);
+                        }
+                    } else {
+                        mNodeMap.put(node, marker);
+                    }
+                }
+            }
         }
     }
 
@@ -322,16 +408,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 }
             }
         }
-    }
-
-    /**
-     * Returns whether the given resource has one or more lint markers
-     *
-     * @param resource the resource to be checked, typically a source file
-     * @return true if the given resource has one or more lint markers
-     */
-    public static boolean hasMarkers(IResource resource) {
-        return getMarkers(resource).length > 0;
     }
 
     /**
@@ -532,9 +608,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      *
      * @param shell the parent shell to attach the dialog to
      * @param file the file to show the errors for
+     * @param editor the editor for the file, if known
      */
-    public static void showErrors(Shell shell, final IFile file) {
-        LintListDialog dialog = new LintListDialog(shell, file);
+    public static void showErrors(
+            @NonNull Shell shell,
+            @NonNull IFile file,
+            @Nullable IEditorPart editor) {
+        LintListDialog dialog = new LintListDialog(shell, file, editor);
         dialog.open();
     }
 

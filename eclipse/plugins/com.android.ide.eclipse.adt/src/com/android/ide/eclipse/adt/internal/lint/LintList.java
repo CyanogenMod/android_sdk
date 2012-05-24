@@ -261,6 +261,13 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         updateColumnWidths(); // in case mSingleFile changed
     }
 
+    /** Select the first item */
+    public void selectFirst() {
+        if (mTree.getItemCount() > 0) {
+            mTree.select(mTree.getItem(0));
+        }
+    }
+
     private List<IMarker> getMarkers() {
         mErrorCount = mWarningCount = 0;
         List<IMarker> markerList = new ArrayList<IMarker>();
@@ -585,11 +592,25 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
     /** Expands all nodes */
     public void expandAll() {
         mTreeViewer.expandAll();
+
+        if (mExpandedIds == null) {
+            mExpandedIds = new HashSet<String>();
+        }
+        IMarker[] topMarkers = mContentProvider.getTopMarkers();
+        if (topMarkers != null) {
+            for (IMarker marker : topMarkers) {
+                String id = EclipseLintClient.getId(marker);
+                if (id != null) {
+                    mExpandedIds.add(id);
+                }
+            }
+        }
     }
 
     /** Collapses all nodes */
     public void collapseAll() {
         mTreeViewer.collapseAll();
+        mExpandedIds = null;
     }
 
     // ---- Column Persistence ----

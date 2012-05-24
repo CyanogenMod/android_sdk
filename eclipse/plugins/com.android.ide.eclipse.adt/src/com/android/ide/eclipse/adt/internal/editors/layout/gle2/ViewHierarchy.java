@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.util.Pair;
 
 import org.eclipse.swt.graphics.Rectangle;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
 import java.awt.image.BufferedImage;
@@ -116,6 +117,9 @@ public class ViewHierarchy {
 
     /** Map from nodes to canvas view infos */
     private Map<UiViewElementNode, CanvasViewInfo> mNodeToView = Collections.emptyMap();
+
+    /** Map from DOM nodes to canvas view infos */
+    private Map<Node, CanvasViewInfo> mDomNodeToView = Collections.emptyMap();
 
     /**
      * Disposes the view hierarchy content.
@@ -220,11 +224,17 @@ public class ViewHierarchy {
             mInvisibleParents.clear();
             addInvisibleParents(mLastValidViewInfoRoot, explodedNodes);
 
+            mDomNodeToView = new HashMap<Node, CanvasViewInfo>(mNodeToView.size());
+            for (Map.Entry<UiViewElementNode, CanvasViewInfo> entry : mNodeToView.entrySet()) {
+                mDomNodeToView.put(entry.getKey().getXmlNode(), entry.getValue());
+            }
+
             // Update the selection
             mCanvas.getSelectionManager().sync();
         } else {
             mIncludedBounds = null;
             mInvisibleParents.clear();
+            mDomNodeToView = Collections.emptyMap();
         }
     }
 
@@ -424,36 +434,24 @@ public class ViewHierarchy {
      * @return The {@link CanvasViewInfo} corresponding to the given node, or
      *         null if no match was found.
      */
-    public CanvasViewInfo findViewInfoFor(Node node) {
-        if (mLastValidViewInfoRoot != null) {
-            return findViewInfoForNode(node, mLastValidViewInfoRoot);
-        }
-        return null;
-    }
+    @Nullable
+    public CanvasViewInfo findViewInfoFor(@Nullable Node node) {
+        CanvasViewInfo vi = mDomNodeToView.get(node);
 
-    /**
-     * Tries to find a child with the same view XML node in the view info sub-tree.
-     * Returns null if not found.
-     */
-    private CanvasViewInfo findViewInfoForNode(Node xmlNode, CanvasViewInfo canvasViewInfo) {
-        if (canvasViewInfo == null) {
-            return null;
-        }
-        if (canvasViewInfo.getXmlNode() == xmlNode) {
-            return canvasViewInfo;
-        }
-
-        // Try to find a matching child
-        for (CanvasViewInfo child : canvasViewInfo.getChildren()) {
-            CanvasViewInfo v = findViewInfoForNode(xmlNode, child);
-            if (v != null) {
-                return v;
+        if (vi == null) {
+            if (node == null) {
+                return null;
+            } else if (node.getNodeType() == Node.TEXT_NODE) {
+                return mDomNodeToView.get(node.getParentNode());
+            } else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
+                return mDomNodeToView.get(((Attr) node).getOwnerElement());
+            } else if (node.getNodeType() == Node.DOCUMENT_NODE) {
+                return mDomNodeToView.get(node.getOwnerDocument().getDocumentElement());
             }
         }
 
-        return null;
+        return vi;
     }
-
 
     /**
      * Tries to find the inner most child matching the given x,y coordinates in

@@ -16,7 +16,6 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
@@ -34,7 +33,10 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.AbstractViewRule;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -971,7 +973,8 @@ public class BaseViewRule extends AbstractViewRule {
      * @param id attribute to be stripped
      * @return the id name without the {@code @+id} or {@code @id} prefix
      */
-    public static String stripIdPrefix(String id) {
+    @NonNull
+    public static String stripIdPrefix(@Nullable String id) {
         if (id == null) {
             return ""; //$NON-NLS-1$
         } else if (id.startsWith(NEW_ID_PREFIX)) {

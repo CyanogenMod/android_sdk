@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.tools.lint.client.api.Configuration;
@@ -47,6 +48,7 @@ class GlobalLintConfiguration extends Configuration {
      *
      * @return the singleton configuration
      */
+    @NonNull
     public static GlobalLintConfiguration get() {
         return sInstance;
     }
