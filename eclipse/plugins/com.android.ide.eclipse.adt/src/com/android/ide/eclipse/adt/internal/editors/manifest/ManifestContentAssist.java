@@ -17,8 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
+import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
 
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -30,9 +32,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Content Assist Processor for AndroidManifest.xml
@@ -51,41 +51,31 @@ public final class ManifestContentAssist extends AndroidContentAssist {
     protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
-        if (attributeName.endsWith(':' + ATTRIBUTE_MIN_SDK_VERSION)) {
+        if (attributeName.endsWith(ATTRIBUTE_MIN_SDK_VERSION)
+                || attributeName.endsWith(ATTRIBUTE_TARGET_SDK_VERSION)) {
             // The user is completing the minSdkVersion attribute: it should be
             // an integer for the API version, but we'll add full Android version
             // names to make it more obvious what they're selecting
 
             List<Pair<String, String>> choices = new ArrayList<Pair<String, String>>();
-            // Max: Look up what versions I have
+            int max = AdtUtils.getHighestKnownApiLevel();
+            // Look for any more recent installed versions the user may have
             IAndroidTarget[] targets = Sdk.getCurrent().getTargets();
-            Map<String, IAndroidTarget> versionMap = new HashMap<String, IAndroidTarget>();
-            List<String> codeNames = new ArrayList<String>();
-            int maxVersion = 1;
             for (IAndroidTarget target : targets) {
                 AndroidVersion version = target.getVersion();
                 int apiLevel = version.getApiLevel();
-                String key;
-                if (version.isPreview()) {
-                    key = version.getCodename();
-                    codeNames.add(key);
-                    apiLevel--;
-                } else {
-                    key = Integer.toString(apiLevel);
+                if (apiLevel > max) {
+                    if (version.isPreview()) {
+                        // Use codename, not API level, as version string for preview versions
+                        choices.add(Pair.of(version.getCodename(), version.getCodename()));
+                    } else {
+                        choices.add(Pair.of(Integer.toString(apiLevel), target.getFullName()));
+                    }
                 }
-                if (apiLevel > maxVersion) {
-                    maxVersion = apiLevel;
-                }
-
-                versionMap.put(key, target);
             }
-            for (String codeName : codeNames) {
-                choices.add(Pair.<String, String>of(codeName, null));
-            }
-            for (int i = maxVersion; i >= 1; i--) {
-                IAndroidTarget target = versionMap.get(Integer.toString(i));
-                String version = target != null ? target.getFullName() : null;
-                choices.add(Pair.of(Integer.toString(i), version));
+            for (int api = max; api >= 1; api--) {
+                String name = AdtUtils.getAndroidName(api);
+                choices.add(Pair.of(Integer.toString(api), name));
             }
             char needTag = 0;
             addMatchingProposals(proposals, choices.toArray(), offset, node, wordPrefix,
