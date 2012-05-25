@@ -261,7 +261,13 @@ public class OutlinePage extends ContentOutlinePage
 
     /** Refresh all the icon state */
     public void refreshIcons() {
-        getTreeViewer().refresh();
+        TreeViewer treeViewer = getTreeViewer();
+        if (treeViewer != null) {
+            Tree tree = treeViewer.getTree();
+            if (tree != null && !tree.isDisposed()) {
+                treeViewer.refresh();
+            }
+        }
     }
 
     /**
