@@ -97,6 +97,7 @@ public final class AaptExecTask extends SingleDependencyTask {
     private String mLibraryPackagesRefid;
     private boolean mNonConstantId;
     private String mIgnoreAssets;
+    private String mProguardFile;
 
     /**
      * Input path that ignores the same folders/files that aapt does.
@@ -321,6 +322,10 @@ public final class AaptExecTask extends SingleDependencyTask {
         mLibraryPackagesRefid = libraryPackagesRefid;
     }
 
+    public void setProguardFile(Path proguardFile) {
+        mProguardFile = TaskHelper.checkSinglePath("proguardFile", proguardFile);
+    }
+
     /**
      * Returns an object representing a nested <var>nocompress</var> element.
      */
@@ -342,6 +347,11 @@ public final class AaptExecTask extends SingleDependencyTask {
         mResources.add(path);
 
         return path;
+    }
+
+    @Override
+    protected String getExecTaskName() {
+        return "aapt";
     }
 
     /*
@@ -375,24 +385,6 @@ public final class AaptExecTask extends SingleDependencyTask {
                 libPkgProp = libPkgProp.replace(';', ':');
             }
         }
-        // Call aapt. If there are libraries, we'll pass a non-null string of libs.
-        callAapt(libPkgProp);
-    }
-
-    @Override
-    protected String getExecTaskName() {
-        return "aapt";
-    }
-
-    /**
-     * Calls aapt with the given parameters.
-     * @param resourceFilter the resource configuration filter to pass to aapt (if configName is
-     * non null)
-     * @param extraPackages an optional list of colon-separated packages. Can be null
-     *        Ex: com.foo.one:com.foo.two:com.foo.lib
-     */
-    private void callAapt(String extraPackages) {
-        Project taskProject = getProject();
 
         final boolean generateRClass = mRFolder != null && new File(mRFolder).isDirectory();
 
@@ -538,9 +530,9 @@ public final class AaptExecTask extends SingleDependencyTask {
             }
         }
 
-        if (mNonConstantId == false && extraPackages != null && extraPackages.length() > 0) {
+        if (mNonConstantId == false && libPkgProp != null && libPkgProp.length() > 0) {
             task.createArg().setValue("--extra-packages");
-            task.createArg().setValue(extraPackages);
+            task.createArg().setValue(libPkgProp);
         }
 
         // if the project contains libraries, force auto-add-overlay
@@ -634,6 +626,12 @@ public final class AaptExecTask extends SingleDependencyTask {
 
         // Use dependency generation
         task.createArg().setValue("--generate-dependencies");
+
+        // use the proguard file
+        if (mProguardFile != null && mProguardFile.length() > 0) {
+            task.createArg().setValue("-G");
+            task.createArg().setValue(mProguardFile);
+        }
 
         // final setup of the task
         task.setProject(taskProject);
