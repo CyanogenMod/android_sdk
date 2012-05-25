@@ -10,5 +10,5 @@ android:startOffset : Delay in milliseconds before the animation runs, once star
 android:repeatCount : Defines how many times the animation should repeat.  [integer, enum]
 android:repeatMode : Defines the animation behavior when it reaches the end and the  repeat count is greater than 0 or infinite.  [enum]
 android:zAdjustment : Allows for an adjustment of the Z ordering of the content being  animated for the duration of the animation.  [enum]
-android:background : Special background behind animation.  [reference, color]
+android:background : Special background behind animation.  [color, reference]
 android:detachWallpaper : Special option for window animations: if this window is on top  of a wallpaper, don't animate the wallpaper with it.  [boolean]

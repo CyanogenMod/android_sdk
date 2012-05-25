@@ -201,7 +201,9 @@ public class ValuesContentAssist extends AndroidContentAssist {
                     }
                 }
             }
-        } else if (parentNode.getNodeName().equals(ITEM_TAG)) {
+        }
+
+        if (parentNode.getNodeName().equals(ITEM_TAG)) {
             // Completing text content inside an <item> tag: offer @resource completion.
             if (prefix.startsWith(PREFIX_RESOURCE_REF) || prefix.trim().length() == 0) {
                 String[] choices = UiResourceAttributeNode.computeResourceStringMatches(

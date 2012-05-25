@@ -411,7 +411,6 @@ public class AdtProjectTest extends SdkTestCase {
             }
         }
 
-
         boolean showBeforeWindow = firstDelta >= beforeLines.length - lastDelta;
         boolean showAfterWindow = firstDelta >= afterLines.length - lastDelta;
 
