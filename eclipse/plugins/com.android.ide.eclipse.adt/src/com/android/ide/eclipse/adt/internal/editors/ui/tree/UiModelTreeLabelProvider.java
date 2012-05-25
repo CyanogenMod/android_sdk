@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.ui.tree;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -56,8 +56,7 @@ public class UiModelTreeLabelProvider implements ILabelProvider {
             Image img = desc.getCustomizedIcon();
             if (img != null) {
                 if (node != null && node.hasError()) {
-                    //TODO: cache image
-                    return new ErrorImageComposite(img).createImage();
+                    return IconFactory.getInstance().addErrorIcon(img);
                 } else {
                     return img;
                 }

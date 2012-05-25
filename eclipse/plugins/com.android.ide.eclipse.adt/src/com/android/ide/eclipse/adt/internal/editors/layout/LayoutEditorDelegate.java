@@ -472,7 +472,10 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         }
 
         if (job != null) {
-            job.addJobChangeListener(new LintJobListener(getGraphicalEditor()));
+            GraphicalEditorPart graphicalEditor = getGraphicalEditor();
+            if (graphicalEditor != null) {
+                job.addJobChangeListener(new LintJobListener(graphicalEditor));
+            }
         }
         return job;
     }
@@ -483,7 +486,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
         LintJobListener(GraphicalEditorPart editor) {
             mEditor = editor;
-            mCanvas = editor.getCanvasControl();;
+            mCanvas = editor.getCanvasControl();
         }
 
         @Override
