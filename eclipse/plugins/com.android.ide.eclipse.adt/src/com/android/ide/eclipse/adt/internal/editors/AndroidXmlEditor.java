@@ -1018,23 +1018,21 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                         model.changedModel();
 
                         if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
-                            if (!mFormatNode.hasError()) {
-                                if (mFormatNode == getUiRootNode()) {
-                                    reformatDocument();
-                                } else {
-                                    Node node = mFormatNode.getXmlNode();
-                                    if (node instanceof IndexedRegion) {
-                                        IndexedRegion region = (IndexedRegion) node;
-                                        int begin = region.getStartOffset();
-                                        int end = region.getEndOffset();
+                            if (mFormatNode == getUiRootNode()) {
+                                reformatDocument();
+                            } else {
+                                Node node = mFormatNode.getXmlNode();
+                                if (node instanceof IndexedRegion) {
+                                    IndexedRegion region = (IndexedRegion) node;
+                                    int begin = region.getStartOffset();
+                                    int end = region.getEndOffset();
 
-                                        if (!mFormatChildren) {
-                                            // This will format just the attribute list
-                                            end = begin + 1;
-                                        }
-
-                                        reformatRegion(begin, end);
+                                    if (!mFormatChildren) {
+                                        // This will format just the attribute list
+                                        end = begin + 1;
                                     }
+
+                                    reformatRegion(begin, end);
                                 }
                             }
                             mFormatNode = null;
