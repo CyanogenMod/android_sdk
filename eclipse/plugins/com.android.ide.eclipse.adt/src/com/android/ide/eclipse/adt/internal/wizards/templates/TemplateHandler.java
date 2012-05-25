@@ -117,6 +117,8 @@ class TemplateHandler {
     static final String TAG_COPY = "copy";               //$NON-NLS-1$
     static final String TAG_INSTANTIATE = "instantiate"; //$NON-NLS-1$
     static final String TAG_OPEN = "open";               //$NON-NLS-1$
+    static final String TAG_THUMB = "thumb";             //$NON-NLS-1$
+    static final String TAG_THUMBS = "thumbs";           //$NON-NLS-1$
     static final String ATTR_VALUE = "value";            //$NON-NLS-1$
     static final String ATTR_DEFAULT = "default";        //$NON-NLS-1$
     static final String ATTR_SUGGEST = "suggest";        //$NON-NLS-1$
@@ -129,7 +131,6 @@ class TemplateHandler {
     static final String ATTR_TO = "to";                  //$NON-NLS-1$
     static final String ATTR_FROM = "from";              //$NON-NLS-1$
     static final String ATTR_CONSTRAINTS = "constraints";//$NON-NLS-1$
-    static final String ATTR_THUMB = "thumb";            //$NON-NLS-1$
 
     /** Default padding to apply in wizards around the thumbnail preview images */
     static final int PREVIEW_PADDING = 10;
@@ -160,6 +161,11 @@ class TemplateHandler {
      * create emacs-style tilde-file backups (filename.xml~)
      */
     private boolean mBackupMergedFiles = true;
+
+    /**
+     * Template metadata
+     */
+    private TemplateMetadata mTemplate;
 
     /** Creates a new {@link TemplateHandler} for the given root path */
     static TemplateHandler createFromPath(File rootPath) {
@@ -222,25 +228,38 @@ class TemplateHandler {
     }
 
     @Nullable
-    public Document getMetadataDocument() {
-        String xml = readTemplateTextResource(TEMPLATE_XML);
-        if (xml != null) {
-            return DomUtilities.parseDocument(xml, true);
-        } else {
-            return null;
+    public TemplateMetadata getTemplate() {
+        if (mTemplate == null) {
+            String xml = readTemplateTextResource(TEMPLATE_XML);
+            if (xml != null) {
+                Document doc = DomUtilities.parseDocument(xml, true);
+                if (doc != null && doc.getDocumentElement() != null) {
+                    mTemplate = new TemplateMetadata(doc);
+                }
+            }
         }
+
+        return mTemplate;
     }
 
-    public static Document getMetadataDocument(String templateName) {
+    @Nullable
+    public static TemplateMetadata getTemplate(String templateName) {
         String relative = getTemplatePath(templateName) + '/' +TEMPLATE_XML;
         String xml = AdtPlugin.readEmbeddedTextFile(relative);
-        return DomUtilities.parseDocument(xml, true);
+        Document doc = DomUtilities.parseDocument(xml, true);
+        if (doc != null && doc.getDocumentElement() != null) {
+            return new TemplateMetadata(doc);
+        }
+
+        return null;
     }
 
+    @NonNull
     public static String getTemplatePath(String templateName) {
         return TEMPLATE_PREFIX + templateName;
     }
 
+    @NonNull
     public String getResourcePath(String templateName) {
         return new File(mRootPath.getPath(), templateName).getPath();
     }

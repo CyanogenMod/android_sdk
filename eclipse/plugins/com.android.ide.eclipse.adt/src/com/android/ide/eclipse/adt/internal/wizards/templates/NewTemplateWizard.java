@@ -119,8 +119,8 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
             parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
 
             File outputPath = AdtUtils.getAbsolutePath(project).toFile();
-            TemplateHandler template = mValues.getTemplate();
-            template.render(outputPath, parameters);
+            TemplateHandler handler = mValues.getTemplateHandler();
+            handler.render(outputPath, parameters);
 
             try {
                 project.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
@@ -128,7 +128,7 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
                 AdtPlugin.log(e, null);
             }
 
-            List<String> filesToOpen = template.getFilesToOpen();
+            List<String> filesToOpen = handler.getFilesToOpen();
             NewTemplateWizard.openFiles(project, filesToOpen, mWorkbench);
 
             return true;

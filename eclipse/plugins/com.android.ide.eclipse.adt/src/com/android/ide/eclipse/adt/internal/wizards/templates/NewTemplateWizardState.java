@@ -37,7 +37,7 @@ public class NewTemplateWizardState {
     private String mTemplateName = BLANK_ACTIVITY;
 
     /** Template handler responsible for instantiating templates and reading resources */
-    private TemplateHandler mTemplate;
+    private TemplateHandler mTemplateHandler;
 
     /** Configured parameters, by id */
     public final Map<String, Object> parameters = new HashMap<String, Object>();
@@ -78,23 +78,23 @@ public class NewTemplateWizardState {
         if (!templateName.equals(mTemplateName)) {
             mTemplateName = templateName;
             mTemplateLocation = null;
-            mTemplate = null;
+            mTemplateHandler = null;
         }
     }
 
     @NonNull
-    TemplateHandler getTemplate() {
-        if (mTemplate == null) {
+    TemplateHandler getTemplateHandler() {
+        if (mTemplateHandler == null) {
             File inputPath;
             if (mTemplateLocation != null) {
                 inputPath = mTemplateLocation;
             } else {
                 inputPath = new File(TemplateHandler.getTemplatePath(mTemplateName));
             }
-            mTemplate = TemplateHandler.createFromPath(inputPath);
+            mTemplateHandler = TemplateHandler.createFromPath(inputPath);
         }
 
-        return mTemplate;
+        return mTemplateHandler;
     }
 
     // For template development/testing only
@@ -102,7 +102,7 @@ public class NewTemplateWizardState {
         if (!file.equals(mTemplateLocation)) {
             mTemplateLocation = file;
             mTemplateName = null;
-            mTemplate = null;
+            mTemplateHandler = null;
         }
     }
 }

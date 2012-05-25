@@ -317,7 +317,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         parameters.put(ATTR_TARGET_API, paramMap.get(ATTR_TARGET_API));
 
-        TemplateHandler activityTemplate = activityValues.getTemplate();
+        TemplateHandler activityTemplate = activityValues.getTemplateHandler();
         activityTemplate.setBackupMergedFiles(false);
         activityTemplate.render(outputPath, parameters);
         List<String> filesToOpen = activityTemplate.getFilesToOpen();

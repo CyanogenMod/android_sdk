@@ -16,10 +16,8 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_THUMB;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
@@ -57,7 +55,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -160,16 +157,15 @@ public class NewTemplatePage extends WizardPage
 
         // Add parameters
         mFirst = null;
-        Document doc = mValues.getTemplate().getMetadataDocument();
+        TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
         String thumb = null;
-        if (doc != null) {
-            Element root = doc.getDocumentElement();
-            thumb = root.getAttribute(ATTR_THUMB);
-            String title = root.getAttribute(ATTR_NAME);
+        if (template != null) {
+            thumb = template.getThumbnailPath();
+            String title = template.getTitle();
             if (!title.isEmpty()) {
                 setTitle(title);
             }
-            String description = root.getAttribute(ATTR_DESCRIPTION);
+            String description = template.getDescription();
             if (!description.isEmpty()) {
                 setDescription(description);
             }
@@ -180,8 +176,7 @@ public class NewTemplatePage extends WizardPage
                 seen = new HashSet<String>();
             }
 
-
-            List<Parameter> parameters = Parameter.getParameters(doc);
+            List<Parameter> parameters = template.getParameters();
             mParameters = new ArrayList<Parameter>(parameters.size());
             for (Parameter parameter : parameters) {
                 Parameter.Type type = parameter.type;
@@ -288,19 +283,14 @@ public class NewTemplatePage extends WizardPage
                     int selected = 0;
                     List<String> ids = Lists.newArrayList();
                     List<String> labels = Lists.newArrayList();
-                    List<String> thumbs = Lists.newArrayList();
                     for (int i = 0, n = options.size(); i < n; i++) {
                         Element option = options.get(i);
                         String optionId = option.getAttribute(ATTR_ID);
                         assert optionId != null && !optionId.isEmpty() : ATTR_ID;
-                        String optionThumb = option.getAttribute(ATTR_THUMB);
                         String isDefault = option.getAttribute(ATTR_DEFAULT);
                         if (isDefault != null && !isDefault.isEmpty() &&
                                 Boolean.valueOf(isDefault)) {
                             selected = i;
-                            if (optionThumb != null && !optionThumb.isEmpty()) {
-                                thumb = optionThumb;
-                            }
                         }
                         NodeList childNodes = option.getChildNodes();
                         assert childNodes.getLength() == 1 &&
@@ -308,11 +298,9 @@ public class NewTemplatePage extends WizardPage
                         String optionLabel = childNodes.item(0).getNodeValue().trim();
                         ids.add(optionId);
                         labels.add(optionLabel);
-                        thumbs.add(optionThumb);
                     }
                     combo.setData(parameter);
                     parameter.control = combo;
-                    combo.setData(ATTR_THUMB, thumbs.toArray(new String[thumbs.size()]));
                     combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
                     assert labels.size() > 0;
                     combo.setItems(labels.toArray(new String[labels.size()]));
@@ -371,10 +359,14 @@ public class NewTemplatePage extends WizardPage
     }
 
     private void setPreview(String thumb) {
+        if (thumb == null) {
+            return;
+        }
+
         Image oldImage = mPreviewImage;
         mPreviewImage = null;
 
-        byte[] data = mValues.getTemplate().readTemplateResource(thumb);
+        byte[] data = mValues.getTemplateHandler().readTemplateResource(thumb);
         if (data != null) {
             try {
                 mPreviewImage = new Image(getControl().getDisplay(),
@@ -546,15 +538,15 @@ public class NewTemplatePage extends WizardPage
             if (index != -1 && index < optionIds.length) {
                 String optionId = optionIds[index];
                 editParameter(combo, optionId);
-                String[] thumbs = (String[]) combo.getData(ATTR_THUMB);
-                String thumb = thumbs[index];
-                if (thumb != null && !thumb.isEmpty()) {
-                    setPreview(thumb);
-                }
+                TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
+                setPreview(template.getThumbnailPath());
             }
         } else if (source instanceof Button) {
             Button button = (Button) source;
             editParameter(button, button.getSelection());
+
+            TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
+            setPreview(template.getThumbnailPath());
         }
 
         validatePage();

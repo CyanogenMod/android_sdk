@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <template
     name="New Android Application"
-    description="Creates a new Android application with an activity."
-    thumb="template_new_project.png">>
+    description="Creates a new Android application with an activity.">
+
+    <thumbs>
+        <thumb>template_new_project.png</thumb>
+    </thumbs>
 
     <category value="Applications" />
 
