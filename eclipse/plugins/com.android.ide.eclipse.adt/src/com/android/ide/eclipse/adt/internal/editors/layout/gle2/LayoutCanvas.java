@@ -663,7 +663,11 @@ public class LayoutCanvas extends Canvas {
      *            rendered image, but it will never zoom in.
      */
     void setFitScale(boolean onlyZoomOut) {
-        Image image = getImageOverlay().getImage();
+        ImageOverlay imageOverlay = getImageOverlay();
+        if (imageOverlay == null) {
+            return;
+        }
+        Image image = imageOverlay.getImage();
         if (image != null) {
             Rectangle canvasSize = getClientArea();
             int canvasWidth = canvasSize.width;

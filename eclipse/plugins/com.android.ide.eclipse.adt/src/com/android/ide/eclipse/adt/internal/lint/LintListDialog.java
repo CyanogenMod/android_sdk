@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -53,7 +54,7 @@ import java.util.Set;
 
 @SuppressWarnings("restriction") // WST DOM access
 class LintListDialog extends TitleAreaDialog implements SelectionListener {
-    private static final String PROJECT_LOGO_LARGE = "icons/android-64.png"; //$NON-NLS-1$
+    private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
     private final IFile mFile;
     private final IEditorPart mEditor;
     private Button mFixButton;
@@ -90,7 +91,8 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
       Control contents = super.createContents(parent);
       setTitle("Lint Warnings in Layout");
       setMessage("Lint Errors found for the current layout:");
-      setTitleImage(AdtPlugin.getImageDescriptor(PROJECT_LOGO_LARGE).createImage());
+      setTitleImage(IconFactory.getInstance().getIcon(PROJECT_LOGO_LARGE));
+
       return contents;
     }
 

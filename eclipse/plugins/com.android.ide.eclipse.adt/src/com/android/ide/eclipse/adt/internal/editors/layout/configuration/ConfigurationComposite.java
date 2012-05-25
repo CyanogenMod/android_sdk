@@ -1020,7 +1020,11 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     private IAndroidTarget getSelectedTarget() {
-        return (IAndroidTarget) mTargetCombo.getData();
+        if (!mTargetCombo.isDisposed()) {
+            return (IAndroidTarget) mTargetCombo.getData();
+        }
+
+        return null;
     }
 
     void selectTheme(String theme) {
