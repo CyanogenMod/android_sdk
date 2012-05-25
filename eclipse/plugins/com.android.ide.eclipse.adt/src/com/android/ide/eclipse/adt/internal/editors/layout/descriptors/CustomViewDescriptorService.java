@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,12 +44,14 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
@@ -193,7 +195,8 @@ public final class CustomViewDescriptorService {
                         // we have a valid parent, lets create a new ViewElementDescriptor.
                         List<AttributeDescriptor> attrList = new ArrayList<AttributeDescriptor>();
                         List<AttributeDescriptor> paramList = new ArrayList<AttributeDescriptor>();
-                        findCustomDescriptors(project, type, attrList, paramList);
+                        Map<ResourceFile, Long> files = findCustomDescriptors(project, type,
+                                attrList, paramList);
 
                         AttributeDescriptor[] attributes =
                                 getAttributeDescriptor(type, parentDescriptor);
@@ -209,7 +212,8 @@ public final class CustomViewDescriptorService {
                         ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
                                 attributes,
                                 layoutAttributes,
-                                parentDescriptor.getChildren());
+                                parentDescriptor.getChildren(),
+                                project, files);
                         descriptor.setSuperClass(parentDescriptor);
 
                         synchronized (mCustomDescriptorMap) {
@@ -270,7 +274,7 @@ public final class CustomViewDescriptorService {
     }
 
     /** Compute/find the styleable resources for the given type, if possible */
-    private void findCustomDescriptors(
+    private Map<ResourceFile, Long> findCustomDescriptors(
             IProject project,
             IType type,
             List<AttributeDescriptor> customAttributes,
@@ -286,6 +290,8 @@ public final class CustomViewDescriptorService {
         Set<ResourceFile> resourceFiles = findAttrsFiles(library, className);
         if (resourceFiles != null && resourceFiles.size() > 0) {
             String appUri = getAppResUri(project);
+            Map<ResourceFile, Long> timestamps =
+                    Maps.newHashMapWithExpectedSize(resourceFiles.size());
             for (ResourceFile file : resourceFiles) {
                 AttrsXmlParser attrsXmlParser = getParser(file);
                 String fqcn = type.getFullyQualifiedName();
@@ -300,8 +306,14 @@ public final class CustomViewDescriptorService {
                         classInfo, "Layout", null /*superClassInfo*/); //$NON-NLS-1$
                 attrsXmlParser.loadLayoutParamsAttributes(layoutInfo);
                 appendAttributes(customLayoutAttributes, layoutInfo.getAttributes(), appUri);
+
+                timestamps.put(file, file.getFile().getModificationStamp());
             }
+
+            return timestamps;
         }
+
+        return null;
     }
 
     /**
@@ -309,7 +321,7 @@ public final class CustomViewDescriptorService {
      * attributes for the given class name
      */
     @Nullable
-    private Set<ResourceFile> findAttrsFiles(IProject library, String className) {
+    private static Set<ResourceFile> findAttrsFiles(IProject library, String className) {
         Set<ResourceFile> resourceFiles = null;
         ResourceManager manager = ResourceManager.getInstance();
         ProjectResources resources = manager.getProjectResources(library);
@@ -338,7 +350,7 @@ public final class CustomViewDescriptorService {
      * attrs.xml file in the same project.
      */
     @Nullable
-    private IProject getProjectDeclaringType(IType type) {
+    private static IProject getProjectDeclaringType(IType type) {
         IClassFile classFile = type.getClassFile();
         if (classFile != null) {
             IPath path = classFile.getPath();
@@ -358,7 +370,7 @@ public final class CustomViewDescriptorService {
     }
 
     /** Returns the name space to use for application attributes */
-    private String getAppResUri(IProject project) {
+    private static String getAppResUri(IProject project) {
         String appResource;
         ProjectState projectState = Sdk.getProjectState(project);
         if (projectState != null && projectState.isLibrary()) {
@@ -459,7 +471,7 @@ public final class CustomViewDescriptorService {
                 ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
                         getAttributeDescriptor(type, parentDescriptor),
                         getLayoutAttributeDescriptors(type, parentDescriptor),
-                        children);
+                        children, project, null);
                 descriptor.setSuperClass(parentDescriptor);
 
                 // add it to the map
@@ -504,10 +516,14 @@ public final class CustomViewDescriptorService {
         return parentDescriptor.getLayoutAttributes();
     }
 
-    private static class CustomViewDescriptor extends ViewElementDescriptor {
+    private class CustomViewDescriptor extends ViewElementDescriptor {
+        private Map<ResourceFile, Long> mTimeStamps;
+        private IProject mProject;
+
         public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes,
                 AttributeDescriptor[] layoutAttributes,
-                ElementDescriptor[] children) {
+                ElementDescriptor[] children, IProject project,
+                Map<ResourceFile, Long> timestamps) {
             super(
                     fqcn, // xml name
                     name, // ui name
@@ -519,6 +535,8 @@ public final class CustomViewDescriptorService {
                     children,
                     false // mandatory
             );
+            mTimeStamps = timestamps;
+            mProject = project;
         }
 
         @Override
@@ -533,5 +551,71 @@ public final class CustomViewDescriptorService {
 
             return iconFactory.getIcon("customView"); //$NON-NLS-1$
         }
+
+        @Override
+        public boolean syncAttributes() {
+            // Check if any of the descriptors
+            if (mTimeStamps != null) {
+                // Prevent checking actual file timestamps too frequently on rapid burst calls
+                long now = System.currentTimeMillis();
+                if (now - sLastCheck < 1000) {
+                    return true;
+                }
+                sLastCheck = now;
+
+                // Check whether the resource files (typically just one) which defined
+                // custom attributes for this custom view have changed, and if so,
+                // refresh the attribute descriptors.
+                // This doesn't work the cases where you add descriptors for a custom
+                // view after using it, or add attributes in a separate file, but those
+                // scenarios aren't quite as common (and would require a bit more expensive
+                // analysis.)
+                for (Map.Entry<ResourceFile, Long> entry : mTimeStamps.entrySet()) {
+                    ResourceFile file = entry.getKey();
+                    Long timestamp = entry.getValue();
+                    boolean recompute = false;
+                    if (file.getFile().getModificationStamp() > timestamp.longValue()) {
+                        // One or more attributes changed: recompute
+                        recompute = true;
+                        mParserCache.remove(file);
+                    }
+
+                    if (recompute) {
+                        IJavaProject javaProject = JavaCore.create(mProject);
+                        String fqcn = getFullClassName();
+                        IType type = null;
+                        try {
+                            type = javaProject.findType(fqcn);
+                        } catch (CoreException e) {
+                            AdtPlugin.log(e, null);
+                        }
+                        if (type == null || !type.exists()) {
+                            return true;
+                        }
+
+                        List<AttributeDescriptor> attrList = new ArrayList<AttributeDescriptor>();
+                        List<AttributeDescriptor> paramList = new ArrayList<AttributeDescriptor>();
+
+                        mTimeStamps = findCustomDescriptors(mProject, type, attrList, paramList);
+
+                        ViewElementDescriptor parentDescriptor = getSuperClassDesc();
+                        AttributeDescriptor[] attributes =
+                                getAttributeDescriptor(type, parentDescriptor);
+                        if (!attrList.isEmpty()) {
+                            attributes = join(attrList, attributes);
+                        }
+                        attributes = attrList.toArray(new AttributeDescriptor[attrList.size()]);
+                        setAttributes(attributes);
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
     }
+
+    /** Timestamp of the most recent {@link CustomViewDescriptor#syncAttributes} check */
+    private static long sLastCheck;
 }

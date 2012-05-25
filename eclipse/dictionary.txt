@@ -293,6 +293,7 @@ thematically
 themed
 thumbnail
 timestamp
+timestamps
 tmp
 toolbar
 tooltip

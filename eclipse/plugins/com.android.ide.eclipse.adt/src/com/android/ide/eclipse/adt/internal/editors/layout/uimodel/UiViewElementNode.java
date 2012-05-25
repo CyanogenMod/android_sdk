@@ -66,6 +66,9 @@ public class UiViewElementNode extends UiElementNode {
      */
     @Override
     public AttributeDescriptor[] getAttributeDescriptors() {
+        if (!getDescriptor().syncAttributes()) {
+            mCachedAttributeDescriptors = null;
+        }
         if (mCachedAttributeDescriptors != null) {
             return mCachedAttributeDescriptors;
         }
