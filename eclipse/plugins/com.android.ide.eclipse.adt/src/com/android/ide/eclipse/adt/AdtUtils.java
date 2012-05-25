@@ -799,6 +799,17 @@ public class AdtUtils {
     }
 
     /**
+     * Returns the highest known API level to this version of ADT. The
+     * {@link #getAndroidName(int)} method will return real names up to and
+     * including this number.
+     *
+     * @return the highest known API number
+     */
+    public static int getHighestKnownApiLevel() {
+        return 15;
+    }
+
+    /**
      * Returns a list of known API names
      *
      * @return a list of string API names, starting from 1 and up through the
