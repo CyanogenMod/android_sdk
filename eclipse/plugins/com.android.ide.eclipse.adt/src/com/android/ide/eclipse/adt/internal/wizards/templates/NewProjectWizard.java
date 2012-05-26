@@ -70,6 +70,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
 
     private IWorkbench mWorkbench;
+    private UpdateToolsPage mUpdatePage;
     private NewProjectPage mMainPage;
     private AppSkeletonPage mAppSkeletonPage;
     private NewTemplatePage mTemplatePage;
@@ -85,6 +86,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         setHelpAvailable(false);
         setImageDescriptor();
 
+        if (!UpdateToolsPage.isUpToDate()) {
+            mUpdatePage = new UpdateToolsPage();
+        }
+
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);
         mAppSkeletonPage = new AppSkeletonPage(mValues);
@@ -96,9 +101,21 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      */
     @Override
     public void addPages() {
+        if (mUpdatePage != null) {
+            addPage(mUpdatePage);
+        }
+
         addPage(mMainPage);
         addPage(mAppSkeletonPage);
         addPage(mActivityPage);
+    }
+
+    @Override
+    public IWizardPage getStartingPage() {
+        if (mUpdatePage != null && mUpdatePage.isPageComplete()) {
+            return mMainPage;
+        }
+        return super.getStartingPage();
     }
 
     @Override

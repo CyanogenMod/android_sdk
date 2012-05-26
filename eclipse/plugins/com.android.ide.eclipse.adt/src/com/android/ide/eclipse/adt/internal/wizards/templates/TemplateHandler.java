@@ -16,8 +16,9 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAR;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
+import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -27,11 +28,11 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferen
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.manifmerger.ManifestMerger;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.SdkConstants;
 import com.google.common.base.Charsets;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import freemarker.cache.TemplateLoader;
@@ -54,22 +55,16 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.URI;
 import java.net.URL;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -98,10 +93,7 @@ class TemplateHandler {
      * Shared resource directory containing common resources shared among
      * multiple templates
      */
-    private static final String RESOURCE_ROOT = "res";   //$NON-NLS-1$
-
-    /** Relative path within the ADT plugin where the templates are found */
-    static final String TEMPLATE_PREFIX = "/templates/"; //$NON-NLS-1$
+    private static final String RESOURCE_ROOT = "resources";   //$NON-NLS-1$
 
     /** Reserved filename which describes each template */
     static final String TEMPLATE_XML = "template.xml";   //$NON-NLS-1$
@@ -132,6 +124,11 @@ class TemplateHandler {
     static final String ATTR_FROM = "from";              //$NON-NLS-1$
     static final String ATTR_CONSTRAINTS = "constraints";//$NON-NLS-1$
 
+    static final String CATEGORY_ACTIVITIES = "activities";//$NON-NLS-1$
+    static final String CATEGORY_PROJECTS = "projects";    //$NON-NLS-1$
+    static final String CATEGORY_OTHER = "other";          //$NON-NLS-1$
+
+
     /** Default padding to apply in wizards around the thumbnail preview images */
     static final int PREVIEW_PADDING = 10;
 
@@ -145,6 +142,7 @@ class TemplateHandler {
     private final List<String> mOpen = Lists.newArrayList();
 
     /** Path to the directory containing the templates */
+    @NonNull
     private final File mRootPath;
 
     /** The template loader which is responsible for finding (and sharing) template files */
@@ -170,6 +168,12 @@ class TemplateHandler {
     /** Creates a new {@link TemplateHandler} for the given root path */
     static TemplateHandler createFromPath(File rootPath) {
         return new TemplateHandler(rootPath);
+    }
+
+    /** Creates a new {@link TemplateHandler} for the template name, which should
+     * be relative to the templates directory */
+    static TemplateHandler createFromName(String relative) {
+        return new TemplateHandler(new File(getTemplateRootFolder(), relative));
     }
 
     private TemplateHandler(File rootPath) {
@@ -244,24 +248,73 @@ class TemplateHandler {
 
     @Nullable
     public static TemplateMetadata getTemplate(String templateName) {
-        String relative = getTemplatePath(templateName) + '/' +TEMPLATE_XML;
-        String xml = AdtPlugin.readEmbeddedTextFile(relative);
-        Document doc = DomUtilities.parseDocument(xml, true);
-        if (doc != null && doc.getDocumentElement() != null) {
-            return new TemplateMetadata(doc);
+        String relative = templateName + '/' + TEMPLATE_XML;
+
+        File templateFile = getTemplateLocation(relative);
+        if (templateFile != null) {
+            try {
+                String xml = Files.toString(templateFile, Charsets.UTF_8);
+                Document doc = DomUtilities.parseDocument(xml, true);
+                if (doc != null && doc.getDocumentElement() != null) {
+                    return new TemplateMetadata(doc);
+                }
+            } catch (IOException e) {
+                AdtPlugin.log(e, null);
+                return null;
+            }
         }
 
         return null;
     }
 
     @NonNull
-    public static String getTemplatePath(String templateName) {
-        return TEMPLATE_PREFIX + templateName;
-    }
-
-    @NonNull
     public String getResourcePath(String templateName) {
         return new File(mRootPath.getPath(), templateName).getPath();
+    }
+
+    @Nullable
+    public static File getTemplateRootFolder() {
+        String location = AdtPrefs.getPrefs().getOsSdkFolder();
+        if (location != null) {
+            File folder = new File(location,  FD_TOOLS + File.separator + FD_TEMPLATES);
+            if (folder.isDirectory()) {
+                return folder;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static File getTemplateLocation(@NonNull File root, @NonNull String relativePath) {
+        File templateRoot = getTemplateRootFolder();
+        if (templateRoot != null) {
+            String rootPath = root.getPath();
+            File templateFile = new File(templateRoot,
+                    rootPath.replace('/', File.separatorChar) + File.separator
+                    + relativePath.replace('/', File.separatorChar));
+            if (templateFile.exists()) {
+                return templateFile;
+            }
+        }
+
+        return null;
+
+    }
+
+    @Nullable
+    public static File getTemplateLocation(@NonNull String relativePath) {
+        File templateRoot = getTemplateRootFolder();
+        if (templateRoot != null) {
+            File templateFile = new File(templateRoot,
+                    relativePath.replace('/', File.separatorChar));
+            if (templateFile.exists()) {
+                return templateFile;
+            }
+        }
+
+        return null;
+
     }
 
     /**
@@ -272,29 +325,23 @@ class TemplateHandler {
      */
     @Nullable
     public String readTemplateTextResource(@NonNull String relativePath) {
-        if (mRootPath.getPath().startsWith(TEMPLATE_PREFIX)) {
-            return AdtPlugin.readEmbeddedTextFile(getResourcePath(relativePath));
-        } else {
-            try {
-                return Files.toString(new File(mRootPath, relativePath), Charsets.UTF_8);
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-                return null;
-            }
+        try {
+            return Files.toString(new File(mRootPath,
+                    relativePath.replace('/', File.separatorChar)), Charsets.UTF_8);
+        } catch (IOException e) {
+            AdtPlugin.log(e, null);
+            return null;
         }
     }
 
     @Nullable
     public String readTemplateTextResource(@NonNull File file) {
-        if (mRootPath.getPath().startsWith(TEMPLATE_PREFIX)) {
-            return AdtPlugin.readEmbeddedTextFile(file.getPath());
-        } else {
-            try {
-                return Files.toString(file, Charsets.UTF_8);
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-                return null;
-            }
+        assert file.isAbsolute();
+        try {
+            return Files.toString(file, Charsets.UTF_8);
+        } catch (IOException e) {
+            AdtPlugin.log(e, null);
+            return null;
         }
     }
 
@@ -306,15 +353,11 @@ class TemplateHandler {
      */
     @Nullable
     public byte[] readTemplateResource(@NonNull String relativePath) {
-        if (mRootPath.getPath().startsWith(TEMPLATE_PREFIX)) {
-            return AdtPlugin.readEmbeddedFile(getResourcePath(relativePath));
-        } else {
-            try {
-                return Files.toByteArray(new File(mRootPath, relativePath));
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-                return null;
-            }
+        try {
+            return Files.toByteArray(new File(mRootPath, relativePath));
+        } catch (IOException e) {
+            AdtPlugin.log(e, null);
+            return null;
         }
     }
 
@@ -326,6 +369,9 @@ class TemplateHandler {
             if (file.endsWith(DOT_XML)) {
                 // Just read the file
                 xml = readTemplateTextResource(file);
+                if (xml == null) {
+                    return;
+                }
             } else {
                 mLoader.setTemplateFile(new File(mRootPath, file));
                 Template inputsTemplate = freemarker.getTemplate(file);
@@ -366,7 +412,8 @@ class TemplateHandler {
                             execute(freemarker, path, paramMap, outputPath);
                         }
                     } else if (!name.equals("template") && !name.equals("category")
-                            && !name.equals("option")) {
+                            && !name.equals("option") && !name.equals(TAG_THUMBS) &&
+                            !name.equals(TAG_THUMB)) {
                         System.err.println("WARNING: Unknown template directive " + name);
                     }
                 }
@@ -492,10 +539,12 @@ class TemplateHandler {
         }
     }
 
-    private File getFullPath(String fromPath) {
+    @NonNull
+    private File getFullPath(@NonNull String fromPath) {
         if (fromPath.startsWith(VALUE_TEMPLATE_DIR)) {
-            return new File(mRootPath.getParentFile(), RESOURCE_ROOT
-                    + fromPath.substring(VALUE_TEMPLATE_DIR.length()));
+            return new File(getTemplateRootFolder(), RESOURCE_ROOT + File.separator
+                    + fromPath.substring(VALUE_TEMPLATE_DIR.length() + 1).replace('/',
+                            File.separatorChar));
         }
         return new File(mRootPath, DATA_ROOT + File.separator + fromPath);
     }
@@ -613,37 +662,6 @@ class TemplateHandler {
                 }
             }
             Files.write(contents, destination, Charsets.UTF_8);
-        }
-    }
-
-    /**
-     * Writes the given contents into the given file (unless that file already
-     * contains the given contents), and if the file exists ask user whether
-     * the file should be overwritten (unless the user has already answered "Yes to All"
-     * or "Cancel" (no to all).
-     */
-    private void writeBytes(File destination, byte[] contents, boolean confirmOverwrite)
-            throws IOException {
-        // First make sure that the files aren't identical, in which case we can do
-        // nothing (and not involve user)
-        if (!(destination.exists() && isIdentical(contents, destination))) {
-            // And if the file does exist (and is now known to be different),
-            // ask user whether it should be replaced (canOverwrite will also
-            // return true if the file doesn't exist)
-            if (confirmOverwrite) {
-                if (!canOverwrite(destination)) {
-                    return;
-                }
-            } else {
-                if (destination.exists()) {
-                    if (mBackupMergedFiles) {
-                        makeBackup(destination);
-                    } else {
-                        destination.delete();
-                    }
-                }
-            }
-            Files.write(contents, destination);
         }
     }
 
@@ -810,60 +828,11 @@ class TemplateHandler {
     }
 
     /** Copy a bundled resource (part of the plugin .jar file) into the given file system path */
-    private final void copyBundledResource(String relativeFrom, File output) throws IOException {
+    private final void copyBundledResource(
+            @NonNull String relativeFrom,
+            @NonNull File output) throws IOException {
         File from = getFullPath(relativeFrom);
-
-        // Local file copy? (Only used for the template-development wizard)
-        if (!mRootPath.getPath().startsWith(TEMPLATE_PREFIX)) {
-            copy(from, output);
-            return;
-        }
-
-        String resourcePath = from.getPath();
-        CodeSource source = TemplateHandler.class.getProtectionDomain().getCodeSource();
-        if (source != null) {
-            URL location = source.getLocation();
-            try {
-                URI locationUri = location.toURI();
-                File locationFile = new File(locationUri);
-                if (!locationUri.getPath().endsWith(DOT_JAR)) {
-                    // Plain file; e.g. when running out of Eclipse plugin in
-                    // Eclipse; it uses the bin/ folder instead of running out of a jar
-                    File sourceFile = new File(locationFile, resourcePath);
-                    copy(sourceFile, output);
-                    return;
-                }
-
-                // Copy out of jar file
-                JarFile jarFile = new JarFile(locationFile);
-                int chopIndex = resourcePath.length() + 1;
-                for (final Enumeration<JarEntry> e = jarFile.entries(); e.hasMoreElements();) {
-                    final JarEntry entry = e.nextElement();
-                    if (entry.getName().startsWith(resourcePath)) {
-                        final String filename = entry.getName().substring(chopIndex);
-                        assert entry.getName().charAt(resourcePath.length()) == '/';
-                        final File file = new File(output, filename);
-                        if (!entry.isDirectory()) {
-                            // Copy stream
-                            InputStream in = jarFile.getInputStream(entry);
-                            try {
-                                byte[] data = ByteStreams.toByteArray(in);
-                                writeBytes(output, data, true);
-                            } finally {
-                                in.close();
-                            }
-                        } else {
-                            // Create directory
-                            if (!file.exists() && !file.mkdirs()) {
-                                throw new IOException("Could not create directory " + file);
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                 AdtPlugin.log(e, null);
-            }
-        }
+        copy(from, output);
     }
 
     /** Returns true if the given file contains the given bytes */
@@ -939,21 +908,36 @@ class TemplateHandler {
         @Override
         public Object findTemplateSource(String name) throws IOException {
             String path = mPrefix != null ? mPrefix + '/' + name : name;
-            URL resource = TemplateHandler.class.getResource(path);
-
-            // Support for local files during template development
-            if (resource == null && mPrefix != null && !mPrefix.startsWith(TEMPLATE_PREFIX)) {
-                File file = new File(path);
-                if (file.exists()) {
-                    return file.toURI().toURL();
-                }
+            File file = new File(path);
+            if (file.exists()) {
+                return file.toURI().toURL();
             }
-
-            return resource;
+            return null;
         }
 
         @Override
         public void closeTemplateSource(Object templateSource) throws IOException {
         }
+    }
+
+    /** Returns all the templates with the given prefix
+     *
+     * @param folder the folder prefix
+     * @return the available templates
+     */
+    @NonNull
+    static List<File> getTemplates(@NonNull String folder) {
+        List<File> templates = new ArrayList<File>();
+        File root = getTemplateRootFolder();
+        if (root != null) {
+            File[] files = new File(root, folder).listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    templates.add(file);
+                }
+            }
+        }
+
+        return templates;
     }
 }

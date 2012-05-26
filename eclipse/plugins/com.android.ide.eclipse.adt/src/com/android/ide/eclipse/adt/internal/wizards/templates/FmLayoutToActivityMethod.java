@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectPage.ACTIVITY_NAME_SUFFIX;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectPage.LAYOUT_NAME_PREFIX;
 
 import com.android.ide.eclipse.adt.AdtUtils;
 
@@ -39,6 +40,15 @@ public class FmLayoutToActivityMethod implements TemplateMethodModel {
         }
 
         String name = args.get(0).toString();
+
+        // Strip off the beginning portion of the layout name. The user might be typing
+        // the activity name such that only a portion has been entered so far (e.g.
+        // "MainActivi") and we want to chop off that portion too such that we don't
+        // offer a layout name partially containing the activity suffix (e.g. "main_activi").
+        if (name.startsWith(LAYOUT_NAME_PREFIX)) {
+            name = name.substring(LAYOUT_NAME_PREFIX.length());
+        }
+
         name = AdtUtils.underlinesToCamelCase(name);
         String className = extractClassName(name);
         if (className == null) {

@@ -19,19 +19,16 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.sdklib.IAndroidTarget;
 
-import java.io.File;
-
 /**
  * Value object which holds the current state of the wizard pages for the
  * {@link NewProjectWizard}
  */
 public class NewProjectWizardState {
-    private static final String TEMPLATE_NAME = "NewAndroidApplication"; //$NON-NLS-1$
+    private static final String TEMPLATE_NAME = "projects/NewAndroidApplication"; //$NON-NLS-1$
 
     /** Creates a new {@link NewProjectWizardState} */
     public NewProjectWizardState() {
-        File inputPath = new File(TemplateHandler.getTemplatePath(TEMPLATE_NAME));
-        template = TemplateHandler.createFromPath(inputPath);
+        template = TemplateHandler.createFromName(TEMPLATE_NAME);
     }
 
     /** The template handler instantiating the project */

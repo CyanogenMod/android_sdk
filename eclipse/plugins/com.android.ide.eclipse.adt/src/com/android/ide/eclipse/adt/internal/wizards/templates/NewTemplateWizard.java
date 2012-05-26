@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
@@ -50,18 +51,16 @@ import java.util.Set;
  */
 public class NewTemplateWizard extends Wizard implements INewWizard {
     /** Template name and location under /templates in the plugin */
-    static final String BLANK_ACTIVITY = "BlankActivity";           //$NON-NLS-1$
+    static final String BLANK_ACTIVITY = "activities/BlankActivity";           //$NON-NLS-1$
     /** Template name and location under /templates in the plugin */
-    static final String MASTER_DETAIL_FLOW = "MasterDetailFlow";    //$NON-NLS-1$
+    static final String MASTER_DETAIL_FLOW = "activities/MasterDetailFlow";    //$NON-NLS-1$
     /** Template name and location under /templates in the plugin */
-    static final String CUSTOM_VIEW = "CustomView";                 //$NON-NLS-1$
-    /** Available activity-templates (included in a list in the new project template) */
-    static final String[] ACTIVITY_TEMPLATES =
-            new String[] { BLANK_ACTIVITY, MASTER_DETAIL_FLOW };
-    private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
+    static final String CUSTOM_VIEW = "other/CustomView";                      //$NON-NLS-1$
+    private static final String PROJECT_LOGO_LARGE = "android-64";             //$NON-NLS-1$
 
     protected IWorkbench mWorkbench;
     protected NewTemplatePage mMainPage;
+    protected UpdateToolsPage mUpdatePage;
     protected NewTemplateWizardState mValues;
     private final String mTemplateName;
 
@@ -77,8 +76,14 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
         setImageDescriptor();
 
         mValues = new NewTemplateWizardState();
-        mValues.setTemplateName(mTemplateName);
+
+        File template = TemplateHandler.getTemplateLocation(mTemplateName);
+        mValues.setTemplateLocation(template);
         hideBuiltinParameters();
+
+        if (!UpdateToolsPage.isUpToDate()) {
+            mUpdatePage = new UpdateToolsPage();
+        }
 
         List<IProject> projects = AdtUtils.getSelectedProjects(selection);
         if (projects.size() == 1) {
@@ -103,7 +108,24 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
 
     @Override
     public void addPages() {
+        if (mUpdatePage != null) {
+            addPage(mUpdatePage);
+        }
+
         addPage(mMainPage);
+    }
+
+    @Override
+    public IWizardPage getNextPage(IWizardPage page) {
+        return super.getNextPage(page);
+    }
+
+    @Override
+    public IWizardPage getStartingPage() {
+        if (mUpdatePage != null && mUpdatePage.isPageComplete()) {
+            return mMainPage;
+        }
+        return super.getStartingPage();
     }
 
     @Override

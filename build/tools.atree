@@ -146,6 +146,13 @@ prebuilts/tools/common/proguard/proguard4.7/bin/proguardgui.sh tools/proguard/bi
 prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh     tools/proguard/bin/retrace.sh
 prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  tools/proguard/ant/task.properties
 
+# Templates
+sdk/templates/projects/NewAndroidApplication                   tools/templates/projects/NewAndroidApplication
+sdk/templates/activities/BlankActivity                         tools/templates/activities/BlankActivity
+sdk/templates/activities/MasterDetailFlow                      tools/templates/activities/MasterDetailFlow
+sdk/templates/other/CustomView                                 tools/templates/other/CustomView
+sdk/templates/resources                                        tools/templates/resources
+
 # SDK Controller
 sdk/apps/SdkController       tools/apps/SdkController
 
