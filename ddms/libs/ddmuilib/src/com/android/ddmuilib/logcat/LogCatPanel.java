@@ -41,6 +41,8 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -52,6 +54,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -91,6 +94,15 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /** Preference key to use for storing font settings. */
     public static final String LOGCAT_VIEW_FONT_PREFKEY = "logcat.view.font";
+
+    // Preference keys for message colors based on severity level
+    private static final String MSG_COLOR_PREFKEY_PREFIX = "logcat.msg.color.";
+    public static final String VERBOSE_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "verbose"; //$NON-NLS-1$
+    public static final String DEBUG_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "debug"; //$NON-NLS-1$
+    public static final String INFO_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "info"; //$NON-NLS-1$
+    public static final String WARN_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "warn"; //$NON-NLS-1$
+    public static final String ERROR_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "error"; //$NON-NLS-1$
+    public static final String ASSERT_COLOR_PREFKEY = MSG_COLOR_PREFKEY_PREFIX + "assert"; //$NON-NLS-1$
 
     // Use a monospace font family
     private static final String FONT_FAMILY =
@@ -163,6 +175,13 @@ public final class LogCatPanel extends SelectionDependentPanel
     private Font mFont;
     private int mWrapWidthInChars;
 
+    private Color mVerboseColor;
+    private Color mDebugColor;
+    private Color mInfoColor;
+    private Color mWarnColor;
+    private Color mErrorColor;
+    private Color mAssertColor;
+
     private SashForm mSash;
 
     // messages added since last refresh, synchronized on mLogBuffer
@@ -185,6 +204,20 @@ public final class LogCatPanel extends SelectionDependentPanel
         initializePreferenceUpdateListeners();
 
         mFont = getFontFromPrefStore();
+        loadMessageColorPreferences();
+    }
+
+    private void loadMessageColorPreferences() {
+        if (mVerboseColor != null) {
+            disposeMessageColors();
+        }
+
+        mVerboseColor = getColorFromPrefStore(VERBOSE_COLOR_PREFKEY);
+        mDebugColor = getColorFromPrefStore(DEBUG_COLOR_PREFKEY);
+        mInfoColor = getColorFromPrefStore(INFO_COLOR_PREFKEY);
+        mWarnColor = getColorFromPrefStore(WARN_COLOR_PREFKEY);
+        mErrorColor = getColorFromPrefStore(ERROR_COLOR_PREFKEY);
+        mAssertColor = getColorFromPrefStore(ASSERT_COLOR_PREFKEY);
     }
 
     private void initializeFilters() {
@@ -209,6 +242,20 @@ public final class LogCatPanel extends SelectionDependentPanel
         mPrefStore.setDefault(LogCatMessageList.MAX_MESSAGES_PREFKEY,
                 LogCatMessageList.MAX_MESSAGES_DEFAULT);
         mPrefStore.setDefault(DISPLAY_FILTERS_COLUMN_PREFKEY, true);
+
+        /* Default Colors for different log levels. */
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.VERBOSE_COLOR_PREFKEY,
+                new RGB(0, 0, 0));
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.DEBUG_COLOR_PREFKEY,
+                new RGB(0, 0, 127));
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.INFO_COLOR_PREFKEY,
+                new RGB(0, 127, 0));
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.WARN_COLOR_PREFKEY,
+                new RGB(255, 127, 0));
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.ERROR_COLOR_PREFKEY,
+                new RGB(255, 0, 0));
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.ASSERT_COLOR_PREFKEY,
+                new RGB(255, 0, 0));
     }
 
     private void initializePreferenceUpdateListeners() {
@@ -229,6 +276,21 @@ public final class LogCatPanel extends SelectionDependentPanel
                                 it.setFont(mFont);
                             }
                         }
+                    });
+                } else if (changedProperty.startsWith(MSG_COLOR_PREFKEY_PREFIX)) {
+                    loadMessageColorPreferences();
+                    Display.getDefault().syncExec(new Runnable() {
+                       @Override
+                       public void run() {
+                           Color c = mVerboseColor;
+                           for (TableItem it: mTable.getItems()) {
+                               Object data = it.getData();
+                               if (data instanceof LogCatMessage) {
+                                   c = getForegroundColor((LogCatMessage) data);
+                               }
+                               it.setForeground(c);
+                           }
+                       }
                     });
                 } else if (changedProperty.equals(LogCatMessageList.MAX_MESSAGES_PREFKEY)) {
                     mReceiver.resizeFifo(mPrefStore.getInt(
@@ -834,6 +896,13 @@ public final class LogCatPanel extends SelectionDependentPanel
         addRightClickMenu(mTable);
         initDoubleClickListener();
         recomputeWrapWidth();
+
+        mTable.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent arg0) {
+                dispose();
+            }
+        });
     }
 
     /** Setup menu to be displayed when right clicking a log message. */
@@ -912,6 +981,11 @@ public final class LogCatPanel extends SelectionDependentPanel
         FontData fd = PreferenceConverter.getFontData(mPrefStore,
                 LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY);
         return new Font(Display.getDefault(), fd);
+    }
+
+    private Color getColorFromPrefStore(String key) {
+        RGB rgb = PreferenceConverter.getColor(mPrefStore, key);
+        return new Color(Display.getDefault(), rgb);
     }
 
     private void setupDefaults() {
@@ -1239,29 +1313,24 @@ public final class LogCatPanel extends SelectionDependentPanel
         return wrappedMessages;
     }
 
-    /* Default Colors for different log levels. */
-    private static final Color INFO_MSG_COLOR = new Color(null, 0, 127, 0);
-    private static final Color DEBUG_MSG_COLOR = new Color(null, 0, 0, 127);
-    private static final Color ERROR_MSG_COLOR = new Color(null, 255, 0, 0);
-    private static final Color WARN_MSG_COLOR = new Color(null, 255, 127, 0);
-    private static final Color VERBOSE_MSG_COLOR = new Color(null, 0, 0, 0);
-
-    private static Color getForegroundColor(LogCatMessage m) {
+    private Color getForegroundColor(LogCatMessage m) {
         LogLevel l = m.getLogLevel();
 
         if (l.equals(LogLevel.VERBOSE)) {
-            return VERBOSE_MSG_COLOR;
+            return mVerboseColor;
         } else if (l.equals(LogLevel.INFO)) {
-            return INFO_MSG_COLOR;
+            return mInfoColor;
         } else if (l.equals(LogLevel.DEBUG)) {
-            return DEBUG_MSG_COLOR;
+            return mDebugColor;
         } else if (l.equals(LogLevel.ERROR)) {
-            return ERROR_MSG_COLOR;
+            return mErrorColor;
         } else if (l.equals(LogLevel.WARN)) {
-            return WARN_MSG_COLOR;
+            return mWarnColor;
+        } else if (l.equals(LogLevel.ASSERT)) {
+            return mAssertColor;
         }
 
-        return null;
+        return mVerboseColor;
     }
 
     private List<ILogCatMessageSelectionListener> mMessageSelectionListeners;
@@ -1343,5 +1412,24 @@ public final class LogCatPanel extends SelectionDependentPanel
     /** Select all items in the logcat table. */
     public void selectAll() {
         mTable.selectAll();
+    }
+
+    private void dispose() {
+        if (mFont != null && !mFont.isDisposed()) {
+            mFont.dispose();
+        }
+
+        if (mVerboseColor != null && !mVerboseColor.isDisposed()) {
+            disposeMessageColors();
+        }
+    }
+
+    private void disposeMessageColors() {
+        mVerboseColor.dispose();
+        mDebugColor.dispose();
+        mInfoColor.dispose();
+        mWarnColor.dispose();
+        mErrorColor.dispose();
+        mAssertColor.dispose();
     }
 }

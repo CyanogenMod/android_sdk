@@ -127,5 +127,11 @@
             class="com.android.ide.eclipse.ddms.preferences.LogCatPreferencePage"
             id="com.android.ide.eclipse.ddms.preferences.LogCatPreferencePage"
             name="%page.name.LogCat"/>
+      <page
+            category="com.android.ide.eclipse.ddms.preferences.LogCatPreferencePage"
+            class="com.android.ide.eclipse.ddms.preferences.LogCatColorsPage"
+            id="com.android.ide.eclipse.ddms.preferences.LogCatColorsPage"
+            name="Colors">
+      </page>
    </extension>
 </plugin>

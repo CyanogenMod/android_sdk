@@ -30,6 +30,9 @@ import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FontFieldEditor;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -62,9 +65,18 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
                 Messages.LogCatPreferencePage_MaxMessages, getFieldEditorParent());
         addField(mMaxMessages);
 
+        createHorizontalSeparator();
+
         if (InstallDetails.isAdtInstalled()) {
             createAdtSpecificFieldEditors();
         }
+    }
+
+    private void createHorizontalSeparator() {
+        Label l = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        gd.horizontalSpan = 3;
+        l.setLayoutData(gd);
     }
 
     private void createAdtSpecificFieldEditors() {
@@ -73,7 +85,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
         addField(mSwitchPerspective);
         IPerspectiveDescriptor[] perspectiveDescriptors =
                 PlatformUI.getWorkbench().getPerspectiveRegistry().getPerspectives();
-        String[][] perspectives;
+        String[][] perspectives = new String[0][0];
         if (perspectiveDescriptors.length > 0) {
             perspectives = new String[perspectiveDescriptors.length][2];
             for (int i = 0; i < perspectiveDescriptors.length; i++) {
@@ -81,14 +93,14 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
                 perspectives[i][0] = perspective.getLabel();
                 perspectives[i][1] = perspective.getId();
             }
-        } else {
-            perspectives = new String[0][0];
         }
         mWhichPerspective = new ComboFieldEditor(PreferenceInitializer.ATTR_PERSPECTIVE_ID,
                 Messages.LogCatPreferencePage_Switch_To, perspectives, getFieldEditorParent());
         mWhichPerspective.setEnabled(getPreferenceStore()
                 .getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE), getFieldEditorParent());
         addField(mWhichPerspective);
+
+        createHorizontalSeparator();
 
         mAutoMonitorLogcat = new BooleanFieldEditor(LogCatMonitor.AUTO_MONITOR_PREFKEY,
                 Messages.LogCatPreferencePage_AutoMonitorLogcat,
