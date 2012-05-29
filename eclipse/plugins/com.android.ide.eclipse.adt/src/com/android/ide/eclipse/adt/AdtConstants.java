@@ -142,6 +142,9 @@ public class AdtConstants {
     /** Temporary packaged resources file name, i.e. "resources.ap_" */
     public final static String FN_RESOURCES_AP_ = "resources.ap_"; //$NON-NLS-1$
 
+    /** aapt's proguard output */
+    public final static String FN_AAPT_PROGUARD = "proguard.txt"; //$NON-NLS-1$
+
     public final static String FN_TRACEVIEW =
         (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
             "traceview.bat" : "traceview"; //$NON-NLS-1$ //$NON-NLS-2$
