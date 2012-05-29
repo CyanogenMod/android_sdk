@@ -18,6 +18,8 @@ package com.android.tools.lint.detector.api;
 
 import com.google.common.annotations.Beta;
 
+import java.io.File;
+
 /**
  * Constants used by the various detectors, defined in one place
  * <p>
@@ -254,6 +256,12 @@ public class LintConstants {
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
     public static final String OLD_PROGUARD_FILE = "proguard.cfg";     //$NON-NLS-1$
     public static final String PROGUARD_FILE = "proguard-project.txt"; //$NON-NLS-1$
+    public static final String CLASS_FOLDER =
+            "bin" + File.separator + "classes";                        //$NON-NLS-1$ //$NON-NLS-2$
+    public static final String GEN_FOLDER = "gen";                     //$NON-NLS-1$
+    public static final String SRC_FOLDER = "src";                     //$NON-NLS-1$
+    public static final String LIBS_FOLDER = "libs";                   //$NON-NLS-1$
+    public static final String BIN_FOLDER = "bin";                     //$NON-NLS-1$
 
     public static final String RES_FOLDER = "res";                     //$NON-NLS-1$
     public static final String DOT_XML = ".xml";                       //$NON-NLS-1$
@@ -316,4 +324,7 @@ public class LintConstants {
     public static final String TARGET_API = "TargetApi";                 //$NON-NLS-1$
     public static final String FQCN_SUPPRESS_LINT = "android.annotation." + SUPPRESS_LINT; //$NON-NLS-1$
     public static final String FQCN_TARGET_API = "android.annotation." + TARGET_API; //$NON-NLS-1$
+
+    // Class Names
+    public static final String CONSTRUCTOR_NAME = "<init>";                          //$NON-NLS-1$
 }

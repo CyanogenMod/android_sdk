@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
@@ -29,6 +30,10 @@ import com.android.util.PositionXmlParser;
 import com.google.common.annotations.Beta;
 import com.google.common.io.Files;
 
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -488,5 +493,29 @@ public class LintUtils {
             text = new String(data, offset, length);
         }
         return text;
+    }
+
+    /**
+     * Returns true if the given class node represents a static inner class.
+     *
+     * @param classNode the inner class to be checked
+     * @return true if the class node represents an inner class that is static
+     */
+    public static boolean isStaticInnerClass(@NonNull ClassNode classNode) {
+        // Note: We can't just filter out static inner classes like this:
+        //     (classNode.access & Opcodes.ACC_STATIC) != 0
+        // because the static flag only appears on methods and fields in the class
+        // file. Instead, look for the synthetic this pointer.
+
+        @SuppressWarnings("rawtypes") // ASM API
+        List fieldList = classNode.fields;
+        for (Object f : fieldList) {
+            FieldNode field = (FieldNode) f;
+            if (field.name.startsWith("this$") && (field.access & Opcodes.ACC_SYNTHETIC) != 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

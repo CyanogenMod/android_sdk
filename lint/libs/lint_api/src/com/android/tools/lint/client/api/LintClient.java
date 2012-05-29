@@ -16,15 +16,23 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.CLASS_FOLDER;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
+import static com.android.tools.lint.detector.api.LintConstants.GEN_FOLDER;
+import static com.android.tools.lint.detector.api.LintConstants.LIBS_FOLDER;
+import static com.android.tools.lint.detector.api.LintConstants.SRC_FOLDER;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,7 +61,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 @Beta
 public abstract class LintClient {
-
     private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";  //$NON-NLS-1$
 
     /**
@@ -177,7 +184,7 @@ public abstract class LintClient {
      */
     @NonNull
     public List<File> getJavaSourceFolders(@NonNull Project project) {
-        return getEclipseClasspath(project, "src", "src", "gen"); //$NON-NLS-1$ //$NON-NLS-2$
+        return getClassPath(project).getSourceFolders();
     }
 
     /**
@@ -188,7 +195,8 @@ public abstract class LintClient {
      */
     @NonNull
     public List<File> getJavaClassFolders(@NonNull Project project) {
-        return getEclipseClasspath(project, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+        return getClassPath(project).getClassFolders();
+
     }
 
     /**
@@ -199,7 +207,7 @@ public abstract class LintClient {
      */
     @NonNull
     public List<File> getJavaLibraries(@NonNull Project project) {
-        return getEclipseClasspath(project, "lib"); //$NON-NLS-1$
+        return getClassPath(project).getLibraries();
     }
 
     /**
@@ -286,53 +294,141 @@ public abstract class LintClient {
         }
     }
 
+    private Map<Project, ClassPathInfo> mProjectInfo;
+
     /**
-     * Considers the given directory as an Eclipse project and returns either
-     * its source or its output folders depending on the {@code attribute} parameter.
+     * Information about class paths (sources, class files and libraries)
+     * usually associated with a project.
+     */
+    protected static class ClassPathInfo {
+        private final List<File> mClassFolders;
+        private final List<File> mSourceFolders;
+        private final List<File> mLibraries;
+
+        public ClassPathInfo(
+                @NonNull List<File> sourceFolders,
+                @NonNull List<File> classFolders,
+                @NonNull List<File> libraries) {
+            mSourceFolders = sourceFolders;
+            mClassFolders = classFolders;
+            mLibraries = libraries;
+        }
+
+        @NonNull
+        public List<File> getSourceFolders() {
+            return mSourceFolders;
+        }
+
+        @NonNull
+        public List<File> getClassFolders() {
+            return mClassFolders;
+        }
+
+        @NonNull
+        public List<File> getLibraries() {
+            return mLibraries;
+        }
+    }
+
+    /**
+     * Considers the given project as an Eclipse project and returns class path
+     * information for the project - the source folder(s), the output folder and
+     * any libraries.
+     * <p>
+     * Callers will not cache calls to this method, so if it's expensive to compute
+     * the classpath info, this method should perform its own caching.
+     *
+     * @param project the project to look up class path info for
+     * @return a class path info object, never null
      */
     @NonNull
-    private List<File> getEclipseClasspath(@NonNull Project project, @NonNull String attribute,
-            @NonNull String... fallbackPaths) {
-        List<File> folders = new ArrayList<File>();
-        File projectDir = project.getDir();
-        File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
-        if (classpathFile.exists()) {
-            String classpathXml = readFile(classpathFile);
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            InputSource is = new InputSource(new StringReader(classpathXml));
-            factory.setNamespaceAware(false);
-            factory.setValidating(false);
-            try {
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document document = builder.parse(is);
-                NodeList tags = document.getElementsByTagName("classpathentry"); //$NON-NLS-1$
-                for (int i = 0, n = tags.getLength(); i < n; i++) {
-                    Element element = (Element) tags.item(i);
-                    String kind = element.getAttribute("kind"); //$NON-NLS-1$
-                    if (kind.equals(attribute)) {
-                        String path = element.getAttribute("path"); //$NON-NLS-1$
-                        File sourceFolder = new File(projectDir, path);
-                        if (sourceFolder.exists()) {
-                            folders.add(sourceFolder);
+    protected ClassPathInfo getClassPath(@NonNull Project project) {
+        ClassPathInfo info;
+        if (mProjectInfo == null) {
+            mProjectInfo = Maps.newHashMap();
+            info = null;
+        } else {
+            info = mProjectInfo.get(project);
+        }
+
+        if (info == null) {
+            List<File> sources = new ArrayList<File>(2);
+            List<File> classes = new ArrayList<File>(1);
+            List<File> libraries = new ArrayList<File>();
+
+            File projectDir = project.getDir();
+            File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
+            if (classpathFile.exists()) {
+                String classpathXml = readFile(classpathFile);
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                InputSource is = new InputSource(new StringReader(classpathXml));
+                factory.setNamespaceAware(false);
+                factory.setValidating(false);
+                try {
+                    DocumentBuilder builder = factory.newDocumentBuilder();
+                    Document document = builder.parse(is);
+                    NodeList tags = document.getElementsByTagName("classpathentry"); //$NON-NLS-1$
+                    for (int i = 0, n = tags.getLength(); i < n; i++) {
+                        Element element = (Element) tags.item(i);
+                        String kind = element.getAttribute("kind"); //$NON-NLS-1$
+                        List<File> addTo = null;
+                        if (kind.equals("src")) {            //$NON-NLS-1$
+                            addTo = sources;
+                        } else if (kind.equals("output")) {  //$NON-NLS-1$
+                            addTo = classes;
+                        } else if (kind.equals("lib")) {     //$NON-NLS-1$
+                            addTo = libraries;
+                        }
+                        if (addTo != null) {
+                            String path = element.getAttribute("path"); //$NON-NLS-1$
+                            File folder = new File(projectDir, path);
+                            if (folder.exists()) {
+                                addTo.add(folder);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log(null, null);
+                }
+            }
+
+            // Add in libraries that aren't specified in the .classpath file
+            File libs = new File(project.getDir(), LIBS_FOLDER);
+            if (libs.isDirectory()) {
+                File[] jars = libs.listFiles();
+                if (jars != null) {
+                    for (File jar : jars) {
+                        if (LintUtils.endsWith(jar.getPath(), DOT_JAR)
+                                && !libraries.contains(jar)) {
+                            libraries.add(jar);
                         }
                     }
                 }
-            } catch (Exception e) {
-                log(null, null);
             }
-        }
 
-        // Fallback?
-        if (folders.size() == 0) {
-            for (String fallbackPath : fallbackPaths) {
-                File folder = new File(projectDir, fallbackPath);
-                if (folder.exists()) {
-                    folders.add(folder);
+            // Fallback, in case there is no Eclipse project metadata here
+            if (sources.size() == 0) {
+                File src = new File(projectDir, SRC_FOLDER);
+                if (src.exists()) {
+                    sources.add(src);
+                }
+                File gen = new File(projectDir, GEN_FOLDER);
+                if (gen.exists()) {
+                    sources.add(gen);
                 }
             }
+            if (classes.size() == 0) {
+                File folder = new File(projectDir, CLASS_FOLDER);
+                if (folder.exists()) {
+                    classes.add(folder);
+                }
+            }
+
+            info = new ClassPathInfo(sources, classes, libraries);
+            mProjectInfo.put(project, info);
         }
 
-        return folders;
+        return info;
     }
 
     /**

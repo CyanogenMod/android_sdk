@@ -15,8 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAR;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
+import static com.android.ide.eclipse.adt.AdtUtils.workspacePathToFile;
+import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -45,6 +48,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
+import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -52,7 +56,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -85,6 +91,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -233,19 +240,38 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
+    // Cache for {@link getProject}
+    private IProject mLastEclipseProject;
+    private Project mLastLintProject;
+
     private IProject getProject(Project project) {
+        if (project == mLastLintProject) {
+            return mLastEclipseProject;
+        }
+
+        mLastLintProject = project;
+        mLastEclipseProject = null;
+
         if (mResources != null) {
             if (mResources.size() == 1) {
-                return mResources.get(0).getProject();
+                IProject p = mResources.get(0).getProject();
+                mLastEclipseProject = p;
+                return p;
             }
 
+            IProject last = null;
             for (IResource resource : mResources) {
                 IProject p = resource.getProject();
-                if (project.getDir().equals(AdtUtils.getAbsolutePath(p).toFile())) {
-                    return p;
+                if (p != last) {
+                    if (project.getDir().equals(AdtUtils.getAbsolutePath(p).toFile())) {
+                        mLastEclipseProject = p;
+                        return p;
+                    }
+                    last = p;
                 }
             }
         }
+
         return null;
     }
 
@@ -667,6 +693,111 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     public Handle createLocationHandle(final XmlContext context, final Node node) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
         return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
+    }
+
+    private Map<Project, ClassPathInfo> mProjectInfo;
+
+    @Override
+    @NonNull
+    protected ClassPathInfo getClassPath(@NonNull Project project) {
+        ClassPathInfo info;
+        if (mProjectInfo == null) {
+            mProjectInfo = Maps.newHashMap();
+            info = null;
+        } else {
+            info = mProjectInfo.get(project);
+        }
+
+        if (info == null) {
+            List<File> sources = null;
+            List<File> classes = null;
+            List<File> libraries = null;
+
+            IProject p = getProject(project);
+            if (p != null) {
+                try {
+                    IJavaProject javaProject = BaseProjectHelper.getJavaProject(p);
+
+                    // Output path
+                    File file = workspacePathToFile(javaProject.getOutputLocation());
+                    classes = Collections.singletonList(file);
+
+                    // Source path
+                    IClasspathEntry[] entries = javaProject.getRawClasspath();
+                    sources = new ArrayList<File>(entries.length);
+                    libraries = new ArrayList<File>(entries.length);
+                    for (int i = 0; i < entries.length; i++) {
+                        IClasspathEntry entry = entries[i];
+                        int kind = entry.getEntryKind();
+
+                        if (kind == IClasspathEntry.CPE_VARIABLE) {
+                            entry = JavaCore.getResolvedClasspathEntry(entry);
+                            kind = entry.getEntryKind();
+                        }
+
+                        if (kind == IClasspathEntry.CPE_SOURCE) {
+                            sources.add(workspacePathToFile(entry.getPath()));
+                        } else if (kind == IClasspathEntry.CPE_LIBRARY) {
+                            libraries.add(entry.getPath().toFile());
+                        }
+                        // Note that we ignore IClasspathEntry.CPE_CONTAINER:
+                        // Normal Android Eclipse projects supply both
+                        //   AdtConstants.CONTAINER_FRAMEWORK
+                        // and
+                        //   AdtConstants.CONTAINER_LIBRARIES
+                        // here. We ignore the framework classes for obvious reasons,
+                        // but we also ignore the library container because lint will
+                        // process the libraries differently. When Eclipse builds a
+                        // project, it gets the .jar output of the library projects
+                        // from this container, which means it doesn't have to process
+                        // the library sources. Lint on the other hand wants to process
+                        // the source code, so instead it actually looks at the
+                        // project.properties file to find the libraries, and then it
+                        // iterates over all the library projects in turn and analyzes
+                        // those separately (but passing the main project for context,
+                        // such that the including project's manifest declarations
+                        // are used for data like minSdkVersion level).
+                        //
+                        // Note that this container will also contain *other*
+                        // libraries (Java libraries, not library projects) that we
+                        // *should* include. However, we can't distinguish these
+                        // class path entries from the library project jars,
+                        // so instead of looking at these, we simply listFiles() in
+                        // the libs/ folder after processing the classpath info
+                    }
+
+                    // Add in libraries
+                    File libs = new File(project.getDir(), FD_NATIVE_LIBS);
+                    if (libs.isDirectory()) {
+                        File[] jars = libs.listFiles();
+                        if (jars != null) {
+                            for (File jar : jars) {
+                                if (AdtUtils.endsWith(jar.getPath(), DOT_JAR)) {
+                                    libraries.add(jar);
+                                }
+                            }
+                        }
+                    }
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+
+            if (sources == null) {
+                sources = super.getClassPath(project).getSourceFolders();
+            }
+            if (classes == null) {
+                classes = super.getClassPath(project).getClassFolders();
+            }
+            if (libraries == null) {
+                libraries = super.getClassPath(project).getLibraries();
+            }
+
+            info = new ClassPathInfo(sources, classes, libraries);
+            mProjectInfo.put(project, info);
+        }
+
+        return info;
     }
 
     /**
