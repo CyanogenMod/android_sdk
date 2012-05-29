@@ -469,4 +469,17 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
     public int compareTo(ElementDescriptor o) {
         return mUiName.compareToIgnoreCase(o.mUiName);
     }
+
+    /**
+     * Ensures that this view descriptor's attribute list is up to date. This is
+     * always the case for all the builtin descriptors, but for example for a
+     * custom view, it could be changing dynamically so caches may have to be
+     * recomputed. This method will return true if nothing changed, and false if
+     * it recomputed its info.
+     *
+     * @return true if the attributes are already up to date and nothing changed
+     */
+    public boolean syncAttributes() {
+        return true;
+    }
 }
