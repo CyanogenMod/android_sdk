@@ -327,4 +327,6 @@ public class LintConstants {
 
     // Class Names
     public static final String CONSTRUCTOR_NAME = "<init>";                          //$NON-NLS-1$
+    public static final String FRAGMENT = "android/app/Fragment";                    //$NON-NLS-1$
+    public static final String FRAGMENT_V4 = "android/support/v4/app/Fragment";      //$NON-NLS-1$
 }
