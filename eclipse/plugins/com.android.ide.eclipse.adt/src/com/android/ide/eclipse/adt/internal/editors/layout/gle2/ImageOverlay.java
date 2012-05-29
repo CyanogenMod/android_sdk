@@ -32,6 +32,7 @@ import org.eclipse.swt.graphics.PaletteData;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.WritableRaster;
+import java.lang.ref.SoftReference;
 
 /**
  * The {@link ImageOverlay} class renders an image as an overlay.
@@ -56,7 +57,17 @@ public class ImageOverlay extends Overlay implements IImageFactory {
 
     /** Current background AWT image. This is created by {@link #getImage()}, which is called
      * by the LayoutLib. */
-    private BufferedImage mAwtImage;
+    private SoftReference<BufferedImage> mAwtImage = new SoftReference<BufferedImage>(null);
+
+    /**
+     * Strong reference to the image in the above soft reference, to prevent
+     * garbage collection when {@link PRESCALE} is set, until the scaled image
+     * is created (lazily as part of the next paint call, where this strong
+     * reference is nulled out and the above soft reference becomes eligible to
+     * be reclaimed when memory is low.)
+     */
+    @SuppressWarnings("unused") // Used by the garbage collector to keep mAwtImage non-soft
+    private BufferedImage mAwtImageStrongRef;
 
     /** The associated {@link LayoutCanvas}. */
     private LayoutCanvas mCanvas;
@@ -109,8 +120,10 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      * @return The corresponding SWT image, or null.
      */
     public synchronized Image setImage(BufferedImage awtImage, boolean isAlphaChannelImage) {
-        if (awtImage != mAwtImage || awtImage == null) {
-            mAwtImage = null;
+        BufferedImage oldAwtImage = mAwtImage.get();
+        if (awtImage != oldAwtImage || awtImage == null) {
+            mAwtImage.clear();
+            mAwtImageStrongRef = null;
 
             if (mImage != null) {
                 mImage.dispose();
@@ -165,7 +178,12 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      */
     @Nullable
     BufferedImage getAwtImage() {
-        return mAwtImage;
+        BufferedImage awtImage = mAwtImage.get();
+        if (awtImage == null && mImage != null) {
+            awtImage = SwtUtils.convertToAwt(mImage);
+        }
+
+        return awtImage;
     }
 
     @Override
@@ -184,11 +202,12 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             // This is done lazily in paint rather than when the image changes because
             // the image must be rescaled each time the zoom level changes, which varies
             // independently from when the image changes.
-            if (PRESCALE && mAwtImage != null) {
+            BufferedImage awtImage = mAwtImage.get();
+            if (PRESCALE && awtImage != null) {
                 if (mPreScaledImage == null ||
                         mPreScaledImage.getImageData().width != hi.getScalledImgSize()) {
-                    double xScale = hi.getScalledImgSize() / (double) mAwtImage.getWidth();
-                    double yScale = vi.getScalledImgSize() / (double) mAwtImage.getHeight();
+                    double xScale = hi.getScalledImgSize() / (double) awtImage.getWidth();
+                    double yScale = vi.getScalledImgSize() / (double) awtImage.getHeight();
                     BufferedImage scaledAwtImage;
 
                     // NOTE: == comparison on floating point numbers is okay
@@ -198,9 +217,9 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     // of rounding errors.
                     if (xScale == 1.0 && yScale == 1.0) {
                         // Scaling to 100% is easy!
-                        scaledAwtImage = mAwtImage;
+                        scaledAwtImage = awtImage;
                     } else {
-                        scaledAwtImage = ImageUtils.scale(mAwtImage, xScale, yScale);
+                        scaledAwtImage = ImageUtils.scale(awtImage, xScale, yScale);
                     }
                     assert scaledAwtImage.getWidth() == hi.getScalledImgSize();
                     if (mPreScaledImage != null && !mPreScaledImage.isDisposed()) {
@@ -208,6 +227,8 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     }
                     mPreScaledImage = SwtUtils.convertToSwt(mCanvas.getDisplay(), scaledAwtImage,
                             true /*transferAlpha*/, -1);
+                    // We can't just clear the mAwtImageStrongRef here, because if the
+                    // zooming factor changes, we may need to use it again
                 }
 
                 if (mPreScaledImage != null) {
@@ -349,14 +370,19 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      */
     @Override
     public BufferedImage getImage(int w, int h) {
-        if (mAwtImage == null ||
-                mAwtImage.getWidth() != w ||
-                mAwtImage.getHeight() != h) {
-
-            mAwtImage = SwtReadyBufferedImage.createImage(w, h, getDevice());
+        BufferedImage awtImage = mAwtImage.get();
+        if (awtImage == null ||
+                awtImage.getWidth() != w ||
+                awtImage.getHeight() != h) {
+            mAwtImage.clear();
+            awtImage = SwtReadyBufferedImage.createImage(w, h, getDevice());
+            mAwtImage = new SoftReference<BufferedImage>(awtImage);
+            if (PRESCALE) {
+                mAwtImageStrongRef = awtImage;
+            }
         }
 
-        return mAwtImage;
+        return awtImage;
     }
 
     /**
