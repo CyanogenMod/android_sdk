@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <template
     name="New Master/Detail Flow"
-    description="Creates a new master/detail flow, which is two columns on tablets, and one column on smaller screens. This creates a master fragment, detail fragment, and two activities."
-    thumb="template_master_detail.png">
+    description="Creates a new master/detail flow, which is two columns on tablets, and one column on smaller screens. This creates a master fragment, detail fragment, and two activities.">
+
+    <thumbs>
+        <thumb>template_master_detail.png</thumb>
+    </thumbs>
 
     <category value="Flows" />
 

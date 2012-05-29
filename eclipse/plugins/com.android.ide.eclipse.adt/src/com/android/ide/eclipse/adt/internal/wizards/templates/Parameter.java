@@ -21,7 +21,6 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_SUGGEST;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_PARAMETER;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,13 +36,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.swt.widgets.Control;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -142,24 +137,7 @@ class Parameter {
         }
     }
 
-    /** The type of parameter. Must be one of
-     * <ul>
-     *  <li> string
-     *  <li> id
-     *  <li> class
-     *  <li> boolean
-     *  <li> package
-     *  <li> apiLevel
-     *  <li> enum (must contain option children)
-     *  <li>  Resource types:
-     *  <ul>
-     *      <li> layout
-     *      <li> <i>more to come</i>
-     *  </ul>
-     * </ul>
-     * <p>
-     * TODO: Switch to an enum
-     */
+    /** The type of parameter */
     @NonNull
     public final Type type;
 
@@ -345,17 +323,5 @@ class Parameter {
         }
 
         return mValidator;
-    }
-
-    @NonNull
-    static List<Parameter> getParameters(@NonNull Document document) {
-        NodeList parameters = document.getElementsByTagName(TAG_PARAMETER);
-        List<Parameter> list = new ArrayList<Parameter>(parameters.getLength());
-        for (int index = 0, max = parameters.getLength(); index < max; index++) {
-            Element element = (Element) parameters.item(index);
-            list.add(new Parameter(element));
-        }
-
-        return list;
     }
 }

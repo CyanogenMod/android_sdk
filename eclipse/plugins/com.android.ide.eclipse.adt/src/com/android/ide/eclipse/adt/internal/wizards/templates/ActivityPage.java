@@ -16,9 +16,6 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard.ACTIVITY_TEMPLATES;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_THUMB;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
@@ -41,8 +38,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import java.io.InputStream;
 
@@ -121,18 +116,17 @@ class ActivityPage extends WizardPage implements SelectionListener {
         setPreview(mValues.activityValues.getTemplateName());
     }
 
-    private void setPreview(String template) {
+    private void setPreview(String templateName) {
         Image oldImage = mPreviewImage;
         mPreviewImage = null;
 
         String title = "";
         String description = "";
-        Document doc = TemplateHandler.getMetadataDocument(template);
-        if (doc != null) {
-            Element root = doc.getDocumentElement();
-            String thumb = root.getAttribute(ATTR_THUMB);
+        TemplateMetadata template = TemplateHandler.getTemplate(templateName);
+        if (template != null) {
+            String thumb = template.getThumbnailPath();
             if (thumb != null && !thumb.isEmpty()) {
-                String filePath = TemplateHandler.getTemplatePath(template) + '/' + thumb;
+                String filePath = TemplateHandler.getTemplatePath(templateName) + '/' + thumb;
                 InputStream input = AdtPlugin.readEmbeddedFileAsStream(filePath);
                 if (input != null) {
                     try {
@@ -143,8 +137,8 @@ class ActivityPage extends WizardPage implements SelectionListener {
                     }
                 }
             }
-            title = root.getAttribute(ATTR_NAME);
-            description = root.getAttribute(ATTR_DESCRIPTION);
+            title = template.getTitle();
+            description = template.getDescription();
         }
 
         mHeading.setText(title);

@@ -292,6 +292,7 @@ textfields
 thematically
 themed
 thumbnail
+thumbnails
 timestamp
 tmp
 toolbar
