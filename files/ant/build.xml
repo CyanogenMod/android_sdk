@@ -648,7 +648,8 @@
                     nonConstantId="${android.library}"
                     libraryResFolderPathRefid="project.library.res.folder.path"
                     libraryPackagesRefid="project.library.packages"
-                    ignoreAssets="${aapt.ignore.assets}">
+                    ignoreAssets="${aapt.ignore.assets}"
+                    proguardFile="${out.absolute.dir}/proguard.txt">
                 <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
             </aapt>
@@ -821,6 +822,7 @@
                     destfile="${preobfuscate.jar.file}" />
                 <proguard>
                     -include      "${proguard.configcmd}"
+                    -include      "${out.absolute.dir}/proguard.txt"
                     -injars       ${project.all.classes.value}
                     -outjars      "${obfuscated.jar.file}"
                     -libraryjars  ${project.target.classpath.value}
