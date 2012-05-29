@@ -19,8 +19,6 @@ import static com.android.sdklib.SdkConstants.FD_SOURCES;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.Hyperlinks.ResourceLink;
 import com.android.ide.eclipse.adt.internal.editors.Hyperlinks.XmlResolver;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
@@ -178,6 +176,12 @@ public class HyperlinksTest extends AdtProjectTest {
                 FD_SOURCES + "/" + TEST_PROJECT_PACKAGE.replace('.', '/') + "/TestFragment.java");
         checkXmlNavigation("fragmentlayout.xml", "res/layout/fragmentlayout.xml",
                 "class=\"com.and^roid.eclipse.tests.TestFragment\"");
+    }
+
+    public void testNavigate15() throws Exception {
+        // Check navigating to a theme resource
+        checkXmlNavigation("navigation1.xml", "res/layout/navigation1.xml",
+                "?android:attr/alert^DialogStyle");
     }
 
     // Left to test:

@@ -13,4 +13,5 @@
     <EditText
         android:text="@android:string/ok"
     </EditText>
+    <EditText android:text="?android:attr/alertDialogStyle" />
 </LinearLayout>
