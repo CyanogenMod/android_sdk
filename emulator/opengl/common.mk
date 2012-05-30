@@ -20,8 +20,6 @@
 #       LOCAL_C_INCLUDES += ....
 #   $(call emugl-end-module)
 #
-emugl-begin-static-library = $(call emugl-begin-module,$1,STATIC_LIBRARY)
-emugl-begin-shared-library = $(call emugl-begin-module,$1,SHARED_LIBRARY)
 emugl-begin-host-static-library = $(call emugl-begin-module,$1,HOST_STATIC_LIBRARY,HOST)
 emugl-begin-host-shared-library = $(call emugl-begin-module,$1,HOST_SHARED_LIBRARY,HOST)
 emugl-begin-host-executable = $(call emugl-begin-module,$1,HOST_EXECUTABLE,HOST)
@@ -198,34 +196,6 @@ emugl-gen-decoder = \
     $(call emugl-gen-decoder-generic,$(_emugl_out),$1,$2)\
     $(call emugl-export,C_INCLUDES,$(_emugl_out))
 
-# This function can be called to generate the encoder source files.
-# LOCAL_MODULE and LOCAL_MODULE_CLASS must be defined or the build will abort.
-# Source files will be stored in the local intermediates directory that will
-# be automatically added to your LOCAL_C_INCLUDES.
-# Usage:
-#    $(call emugl-gen-encoder,<input-dir>,<basename>)
-#
-emugl-gen-encoder = \
-    $(eval _emugl_out := $(call local-intermediates-dir)) \
-    $(call emugl-gen-encoder-generic,$(_emugl_out),$1,$2) \
-    $(call emugl-export,C_INCLUDES,$(_emugl_out))
-
-
-# This function can be called to generate the wrapper source files.
-# LOCAL_MODULE and LOCAL_MODULE_CLASS must be defined or the build will abort.
-# Source files will be stored in the local intermediates directory that will
-# be automatically added to your LOCAL_C_INCLUDES.
-# Usage:
-#    $(call emugl-gen-wrapper,<input-dir>,<basename>)
-#
-emugl-gen-wrapper = \
-    $(eval _emugl_out := $(call local-intermediates-dir)) \
-    $(call emugl-gen-wrapper-generic,$(_emugl_out),$1,$2) \
-    $(call emugl-export,C_INCLUDES,$(_emugl_out))
-
-# IMPORTANT: EMUGL_EMUGEN is defined under host/tools/emugen/Android.mk
-#
-
 # DO NOT CALL DIRECTLY, USE emugl-gen-decoder instead.
 #
 # The following function can be called to generate wire protocol decoder
@@ -256,77 +226,6 @@ $$(GEN): $$(EMUGL_EMUGEN) $$(_emugl_src).attrib $$(_emugl_src).in $$(_emugl_src)
 $$(call emugl-export,ADDITIONAL_DEPENDENCIES,$$(GEN))
 LOCAL_GENERATED_SOURCES += $$(GEN)
 LOCAL_C_INCLUDES += $$1
-endef
-
-# DO NOT CALL DIRECTLY, USE emugl-gen-encoder instead.
-#
-# The following function can be called to generate wire protocol encoder
-# source files, Usage is:
-#
-#  $(call emugl-gen-encoder-generic,<dst-dir>,<src-dir>,<basename>)
-#
-#  <dst-dir> is the destination directory where the generated sources are stored
-#  <src-dir> is the source directory where to find <basename>.attrib, etc..
-#  <basename> is the emugen basename (see host/tools/emugen/README)
-#
-emugl-gen-encoder-generic = $(eval $(emugl-gen-encoder-generic-ev))
-
-define emugl-gen-encoder-generic-ev
-_emugl_enc := $$1/$$3
-_emugl_src := $$2/$$3
-GEN := $$(_emugl_enc)_entry.cpp \
-       $$(_emugl_enc)_enc.cpp \
-       $$(_emugl_enc)_enc.h \
-       $$(_emugl_enc)_ftable.h \
-       $$(_emugl_enc)_opcodes.h \
-       $$(_emugl_enc)_client_context.h \
-       $$(_emugl_enc)_client_context.cpp
-
-$$(GEN): PRIVATE_PATH := $$(LOCAL_PATH)
-$$(GEN): PRIVATE_CUSTOM_TOOL := $$(EMUGL_EMUGEN) -E $$1 -i $$2 $$3
-$$(GEN): $$(EMUGL_EMUGEN) $$(_emugl_src).attrib $$(_emugl_src).in $$(_emugl_src).types
-	$$(transform-generated-source)
-
-$$(call emugl-export,ADDITIONAL_DEPENDENCIES,$$(GEN))
-LOCAL_GENERATED_SOURCES += $$(GEN)
-LOCAL_C_INCLUDES += $$1
-endef
-
-
-# DO NOT CALL DIRECTLY, USE emugl-gen-wrapper instead.
-#
-# The following function can be called to generate GL library wrapper
-# Usage is:
-#
-#  $(call emugl-gen-wrapper-generic,<dst-dir>,<src-dir>,<basename>)
-#
-#  <dst-dir> is the destination directory where the generated sources are stored
-#  <src-dir> is the source directory where to find <basename>.attrib, etc..
-#  <basename> is the emugen basename (see host/tools/emugen/README)
-#
-emugl-gen-wrapper-generic = $(eval $(emugl-gen-wrapper-generic-ev))
-
-define emugl-gen-wrapper-generic-ev
-_emugl_wrap := $$1/$$3
-_emugl_src  := $$2/$$3
-GEN := $$(_emugl_wrap)_wrapper_entry.cpp \
-       $$(_emugl_wrap)_wrapper_context.cpp \
-       $$(_emugl_wrap)_wrapper_context.h \
-       $$(_emugl_wrap)_wrapper_proc.h
-
-$$(GEN): PRIVATE_PATH := $$(LOCAL_PATH)
-$$(GEN): PRIVATE_CUSTOM_TOOL := $$(EMUGL_EMUGEN) -W $$1 -i $$2 $$3
-$$(GEN): $$(EMUGL_EMUGEN) $$(_emugl_src).attrib $$(_emugl_src).in $$(_emugl_src).types
-	$$(transform-generated-source)
-
-$$(call emugl-export,ADDITIONAL_DEPENDENCIES,$$(GEN))
-LOCAL_GENERATED_SOURCES += $$(GEN)
-LOCAL_C_INCLUDES += $$1
-
-#ifneq ($$(HOST_OS),windows)
-$$(call emugl-export,LDFLAGS,-ldl)
-#endif
-
 endef
 
 # Call this function when your shared library must be placed in a non-standard

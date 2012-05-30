@@ -210,8 +210,11 @@ in the Android source trees:
   - The emulator sources are under $ANDROID/external/qemu, which we'll
     call $QEMU in the rest of this document.
 
-  - The guest and system libraries are under
-    $ANDROID/development/tools/emulator/opengl, which we'll call $EMUGL
+  - The guest libraries are under
+    $ANDROID/development/tools/emulator/opengl, which we'll call $EMUGL_GUEST
+
+  - The host renderer and translator libraries are under
+    $ANDROID/sdk/emulator/opengl, which we'll call $EMUGL_HOST
 
   - The QEMU Pipe kernel driver is under $KERNEL/drivers/misc/qemupipe
 
@@ -228,10 +231,18 @@ The emulator sources related to this projects are:
 
 The other sources are:
 
-   $EMUGL/system   -> system libraries
-   $EMUGL/host     -> host libraries (translator + renderer)
-   $EMUGL/shared   -> shared libraries, used both in the guest and the host
-   $EMUGL/tests    -> various test programs
+   $EMUGL_GUEST/system   -> system libraries
+   $EMUGL_GUEST/shared   -> guest copy of shared libraries
+   $EMUGL_GUEST/tests    -> various test programs
+   $EMUGL_HOST/host      -> host libraries (translator + renderer)
+   $EMUGL_HOST/shared    -> host copy of shared libraries
+   $EMUGL_HOST/tests     -> various test programs
+
+The reason the shared libraries aren't actually shared is historical: at one
+point both guest and host code lived in the same place. That turned out to be
+impractical with the way the Android SDK is branched, and didn't support the
+requirement that a single emulator binary be able to run several generations
+of Android.
 
 
 Translator libraries:
@@ -254,13 +265,13 @@ For simplicity, only the library name suffix will change (i.e. the
 The source code for these libraries is located under the following
 path in the Android source tree:
 
-   $EMUGL/host/libs/Translator/EGL
-   $EMUGL/host/libs/Translator/GLES_CM
-   $EMUGL/host/libs/Translator/GLES_V2
+   $EMUGL_HOST/host/libs/Translator/EGL
+   $EMUGL_HOST/host/libs/Translator/GLES_CM
+   $EMUGL_HOST/host/libs/Translator/GLES_V2
 
 The translator libraries also use a common routines defined under:
 
-   $EMUGL/host/libs/Translator/GLcommon
+   $EMUGL_HOST/host/libs/Translator/GLcommon
 
 
 Wire Protocol Overiew:
@@ -321,14 +332,18 @@ host.
 The host IOStream implementations are under $EMUGL/shared/OpenglCodecCommon/,
 see in particular:
 
-   $EMUGL/shared/OpenglCodecCommon/TcpStream.cpp  -> using local TCP sockets
-   $EMUGL/shared/OpenglCodecCommon/UnixStream.cpp -> using Unix sockets
-   $EMUGL/shared/OpenglCodecCommon/Win32PipeStream.cpp -> using Win32 named pipes
+   $EMUGL_HOST/shared/OpenglCodecCommon/TcpStream.cpp
+      -> using local TCP sockets
+   $EMUGL_HOST/shared/OpenglCodecCommon/UnixStream.cpp
+      -> using Unix sockets
+   $EMUGL_HOST/shared/OpenglCodecCommon/Win32PipeStream.cpp
+      -> using Win32 named pipes
 
 The guest IOStream implementation uses the TcpStream.cpp above, as well as
 an alternative QEMU-specific source:
 
-   $EMUGL/system/OpenglSystemCommon/QemuPipeStream.cpp -> uses QEMU pipe from the guest
+   $EMUGL_GUEST/system/OpenglSystemCommon/QemuPipeStream.cpp
+      -> uses QEMU pipe from the guest
 
 The QEMU Pipe implementation is _significantly_ faster (about 20x) due to
 several reasons:
@@ -348,38 +363,35 @@ several reasons:
 
 However, would it be necessary, you could write a guest IOStream implementation
 that uses a different transport. If you do, please look at
-$EMUGL/system/OpenglCodecCommon/HostConnection.cpp which contains the code
-used to connect the guest to the host, on a per-thread basis.
+$EMUGL_GUEST/system/OpenglCodecCommon/HostConnection.cpp which contains the
+code used to connect the guest to the host, on a per-thread basis.
 
 
 Source code auto-generation:
 - - - - - - - - - - - - - -
 
-The 'emugen' tool is located under $EMUGL/host/tools/emugen. There is a README
-file that explains how it works.
+The 'emugen' tool is located under $EMUGL_HOST/host/tools/emugen. There is a
+README file that explains how it works.
 
 You can also look at the following specifications files:
 
 For GLES 1.1:
-    $EMUGL/system/GLESv1_enc/gl.types
-    $EMUGL/system/GLESv1_enc/gl.in
-    $EMUGL/system/GLESv1_enc/gl.attrib
-    $EMUGL/system/GLESv1_enc/gl.addon
+    $EMUGL_HOST/host/GLESv1_dec/gl.types
+    $EMUGL_HOST/host/GLESv1_dec/gl.in
+    $EMUGL_HOST/host/GLESv1_dec/gl.attrib
 
 For GLES 2.0:
-    $EMUGL/system/GLESv2_enc/gl2.types
-    $EMUGL/system/GLESv2_enc/gl2.in
-    $EMUGL/system/GLESv2_enc/gl2.attrib
-    $EMUGL/system/GLESv2_enc/gl2.addon
+    $EMUGL_HOST/host/GLESv2_dec/gl2.types
+    $EMUGL_HOST/host/GLESv2_dec/gl2.in
+    $EMUGL_HOST/host/GLESv2_dec/gl2.attrib
 
 For EGL:
-    $EMUGL/system/renderControl_enc/renderControl.types
-    $EMUGL/system/renderControl_enc/renderControl.in
-    $EMUGL/system/renderControl_enc/renderControl.attrib
-    $EMUGL/system/renderControl_enc/renderControl.addon
+    $EMUGL_HOST/host/renderControl_dec/renderControl.types
+    $EMUGL_HOST/host/renderControl_dec/renderControl.in
+    $EMUGL_HOST/host/renderControl_dec/renderControl.attrib
 
 Note that the EGL specification files are under a directory named
-"renderControl_enc" and have filenames that begin with "renderControl"
+"renderControl_dec" and have filenames that begin with "renderControl"
 
 This is mainly for historic reasons now, but is also related to the fact that
 this part of the wire protocol contains support functions/calls/specifications
@@ -389,13 +401,20 @@ the "gralloc" system library module used to manage graphics surfaces at a
 lower level than EGL.
 
 Generally speaking, guest encoder sources are located under directories
-named $EMUGL/system/<name>_enc/, while the corresponding host decoder
-sources will be under $EMUGL/host/libs/<name>_dec/
+named $EMUGL_GUEST/system/<name>_enc/, while the corresponding host decoder
+sources will be under $EMUGL_HOST/host/libs/<name>_dec/
 
 However, all these sources use the same spec files located under the
-encoding directories. The decoders may even need to include a few
-non-auto-generated header files from the encoder directories.
+decoding directories.
 
+The encoder files are built from emugen and spec files located in $EMUGL_HOST
+and copied to the encoder directories in $EMUGL_GUEST by the gen-encoder.sh
+script. They are checked in, so that a given version of Android supports a
+specific version of the protocol, even if newer versions of the renderer (and
+future Android versions) support a newer protocol version. This step needs to
+be done manually when the protocol changes; these changes also need to be
+accompanied by changes in the renderer to handle the old version of the
+protocol.
 
 
 System libraries:
@@ -449,11 +468,12 @@ the following lines:
    0 1 emulation
    0 0 android
 
-See $EMUGL/system/egl/egl.cfg and more generally the following build files:
+See $EMUGL_GUEST/system/egl/egl.cfg and more generally the following build
+files:
 
-   $EMUGL/system/egl/Android.mk
-   $EMUGL/system/GLESv1/Android.mk
-   $EMUGL/system/GLESv2/Android.mk
+   $EMUGL_GUEST/system/egl/Android.mk
+   $EMUGL_GUEST/system/GLESv1/Android.mk
+   $EMUGL_GUEST/system/GLESv2/Android.mk
 
 to see how the libraries are named and placed under /system/lib/egl/ by the
 build system.
@@ -464,9 +484,9 @@ Emulation libraries:
 
 The emulator-specific libraries are under the following:
 
-  $EMUGL/system/egl/
-  $EMUGL/system/GLESv1/
-  $EMUGL/system/GLESv2/
+  $EMUGL_GUEST/system/egl/
+  $EMUGL_GUEST/system/GLESv1/
+  $EMUGL_GUEST/system/GLESv2/
 
 The code for GLESv1 and GLESv2 is pretty small, since it mostly link against
 the static encoding libraries.
@@ -526,9 +546,10 @@ notice here:
 Host Renderer:
 --------------
 
-The host renderer library is located under $EMUGL/host/libs/libOpenglRender,
-and it provides an interface described by the headers under
-$EMUGL/host/include/libOpenglRender/render_api.h (e.g. for use by the emulator).
+The host renderer library is located under
+$EMUGL_HOST/host/libs/libOpenglRender, and it provides an interface described
+by the headers under $EMUGL_HOST/host/include/libOpenglRender/render_api.h
+(e.g. for use by the emulator).
 
 In a nutshell, the rendering library is responsible for the following:
 

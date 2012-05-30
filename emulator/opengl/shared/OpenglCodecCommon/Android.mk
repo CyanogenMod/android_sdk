@@ -20,18 +20,6 @@ else
 endif
 
 
-### CodecCommon  guest ##############################################
-$(call emugl-begin-static-library,libOpenglCodecCommon)
-
-LOCAL_SRC_FILES := $(commonSources)
-
-LOCAL_CFLAGS += -DLOG_TAG=\"eglCodecCommon\"
-
-$(call emugl-export,SHARED_LIBRARIES,libcutils libutils)
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
-$(call emugl-end-module)
-
-
 ### OpenglCodecCommon  host ##############################################
 $(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
