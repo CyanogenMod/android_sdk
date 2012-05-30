@@ -23,11 +23,14 @@ define mk-rcp-monitor-atree-file
     unzip -q $$srczip -d $$dstdir
 endef
 
+MONITOR_DEP_LIBRARIES := $(shell $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -d)
+MONITOR_DEPS := $(foreach m,$(MONITOR_DEP_LIBRARIES),$(HOST_OUT_JAVA_LIBRARIES)/$(m).jar)
+
 # The RCP monitor. It is referenced by build/target/products/sdk.mk
 $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 			$(TOPDIR)sdk/monitor/build.xml \
 			$(TOPDIR)sdk/monitor/build.properties \
-			$(shell $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -d)
+			$(MONITOR_DEPS)
 	@mkdir -p $(dir $@)
 	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/monitor && \
@@ -54,6 +57,6 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86)    ; \
 		$(call mk-rcp-monitor-atree-file,win32.win32,x86_64) ; \
 	fi
-	$(hide)$(ACP) -fpt $(V) $(TOPDIR)sdk/monitor/monitor $@
+	$(hide)$(ACP) -fp $(V) $(TOPDIR)sdk/monitor/monitor $@
 
 endif
