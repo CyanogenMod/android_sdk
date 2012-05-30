@@ -532,9 +532,13 @@ public final class EmulatorConsole {
 
         // need to make sure the string format uses dot and not comma
         Formatter formatter = new Formatter(Locale.US);
-        formatter.format(COMMAND_GPS, longitude, latitude, elevation);
+        try {
+            formatter.format(COMMAND_GPS, longitude, latitude, elevation);
 
-        return processCommand(formatter.toString());
+            return processCommand(formatter.toString());
+        } finally {
+            formatter.close();
+        }
     }
 
     /**

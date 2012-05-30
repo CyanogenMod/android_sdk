@@ -515,8 +515,9 @@ final class AvdStartDialog extends GridDialog {
      * @return true if both sizes where found.
      */
     private boolean parseLayoutFile(File layoutFile) {
+        BufferedReader input = null;
         try {
-            BufferedReader input = new BufferedReader(new FileReader(layoutFile));
+            input = new BufferedReader(new FileReader(layoutFile));
             String line;
 
             while ((line = input.readLine()) != null) {
@@ -563,6 +564,14 @@ final class AvdStartDialog extends GridDialog {
             // false is returned below.
         } catch (IOException e) {
             // ignore.
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
 
         return false;

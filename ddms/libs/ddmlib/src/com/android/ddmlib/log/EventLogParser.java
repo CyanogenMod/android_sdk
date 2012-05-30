@@ -124,8 +124,9 @@ public final class EventLogParser {
      * @return <code>true</code> if success, <code>false</code> if failure.
      */
     public boolean init(String filePath)  {
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            reader = new BufferedReader(new FileReader(filePath));
 
             String line = null;
             do {
@@ -138,6 +139,14 @@ public final class EventLogParser {
             return true;
         } catch (IOException e) {
             return false;
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                // ignore
+            }
         }
     }
 

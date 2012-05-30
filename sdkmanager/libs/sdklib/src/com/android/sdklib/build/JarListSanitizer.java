@@ -435,10 +435,11 @@ public class JarListSanitizer {
      */
     private static String getSha1(File f) throws Sha1Exception {
         synchronized (sBuffer) {
+            FileInputStream fis = null;
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA-1");
 
-                FileInputStream fis = new FileInputStream(f);
+                fis = new FileInputStream(f);
                 while (true) {
                     int length = fis.read(sBuffer);
                     if (length > 0) {
@@ -452,15 +453,27 @@ public class JarListSanitizer {
 
             } catch (Exception e) {
                 throw new Sha1Exception(f, e);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
             }
         }
     }
 
     private static String byteArray2Hex(final byte[] hash) {
         Formatter formatter = new Formatter();
-        for (byte b : hash) {
-            formatter.format("%02x", b);
+        try {
+            for (byte b : hash) {
+                formatter.format("%02x", b);
+            }
+            return formatter.toString();
+        } finally {
+            formatter.close();
         }
-        return formatter.toString();
     }
 }

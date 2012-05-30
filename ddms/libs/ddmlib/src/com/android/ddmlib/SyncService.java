@@ -523,51 +523,55 @@ public final class SyncService {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(f);
+
+            // the buffer to read the data
+            byte[] data = new byte[SYNC_DATA_MAX];
+
+            // loop to get data until we're done.
+            while (true) {
+                // check if we're cancelled
+                if (monitor.isCanceled() == true) {
+                    throw new SyncException(SyncError.CANCELED);
+                }
+
+                // if we're done, we stop the loop
+                if (checkResult(pullResult, ID_DONE)) {
+                    break;
+                }
+                if (checkResult(pullResult, ID_DATA) == false) {
+                    // hmm there's an error
+                    throw new SyncException(SyncError.TRANSFER_PROTOCOL_ERROR,
+                            readErrorMessage(pullResult, timeOut));
+                }
+                int length = ArrayHelper.swap32bitFromArray(pullResult, 4);
+                if (length > SYNC_DATA_MAX) {
+                    // buffer overrun!
+                    // error and exit
+                    throw new SyncException(SyncError.BUFFER_OVERRUN);
+                }
+
+                // now read the length we received
+                AdbHelper.read(mChannel, data, length, timeOut);
+
+                // get the header for the next packet.
+                AdbHelper.read(mChannel, pullResult, -1, timeOut);
+
+                // write the content in the file
+                fos.write(data, 0, length);
+
+                monitor.advance(length);
+            }
+
+            fos.flush();
         } catch (IOException e) {
             Log.e("ddms", String.format("Failed to open local file %s for writing, Reason: %s",
                     f.getAbsolutePath(), e.toString()));
             throw new SyncException(SyncError.FILE_WRITE_ERROR);
+        } finally {
+            if (fos != null) {
+                fos.close();
+            }
         }
-
-        // the buffer to read the data
-        byte[] data = new byte[SYNC_DATA_MAX];
-
-        // loop to get data until we're done.
-        while (true) {
-            // check if we're cancelled
-            if (monitor.isCanceled() == true) {
-                throw new SyncException(SyncError.CANCELED);
-            }
-
-            // if we're done, we stop the loop
-            if (checkResult(pullResult, ID_DONE)) {
-                break;
-            }
-            if (checkResult(pullResult, ID_DATA) == false) {
-                // hmm there's an error
-                throw new SyncException(SyncError.TRANSFER_PROTOCOL_ERROR,
-                        readErrorMessage(pullResult, timeOut));
-            }
-            int length = ArrayHelper.swap32bitFromArray(pullResult, 4);
-            if (length > SYNC_DATA_MAX) {
-                // buffer overrun!
-                // error and exit
-                throw new SyncException(SyncError.BUFFER_OVERRUN);
-            }
-
-            // now read the length we received
-            AdbHelper.read(mChannel, data, length, timeOut);
-
-            // get the header for the next packet.
-            AdbHelper.read(mChannel, pullResult, -1, timeOut);
-
-            // write the content in the file
-            fos.write(data, 0, length);
-
-            monitor.advance(length);
-        }
-
-        fos.flush();
     }
 
 
@@ -637,48 +641,51 @@ public final class SyncService {
 
             // create the header for the action
             msg = createSendFileReq(ID_SEND, remotePathContent, 0644);
+
+            // and send it. We use a custom try/catch block to make the difference between
+            // file and network IO exceptions.
+            AdbHelper.write(mChannel, msg, -1, timeOut);
+
+            // create the buffer used to read.
+            // we read max SYNC_DATA_MAX, but we need 2 4 bytes at the beginning.
+            if (mBuffer == null) {
+                mBuffer = new byte[SYNC_DATA_MAX + 8];
+            }
+            System.arraycopy(ID_DATA, 0, mBuffer, 0, ID_DATA.length);
+
+            // look while there is something to read
+            while (true) {
+                // check if we're canceled
+                if (monitor.isCanceled() == true) {
+                    throw new SyncException(SyncError.CANCELED);
+                }
+
+                // read up to SYNC_DATA_MAX
+                int readCount = fis.read(mBuffer, 8, SYNC_DATA_MAX);
+
+                if (readCount == -1) {
+                    // we reached the end of the file
+                    break;
+                }
+
+                // now send the data to the device
+                // first write the amount read
+                ArrayHelper.swap32bitsToArray(readCount, mBuffer, 4);
+
+                // now write it
+                AdbHelper.write(mChannel, mBuffer, readCount+8, timeOut);
+
+                // and advance the monitor
+                monitor.advance(readCount);
+            }
         } catch (UnsupportedEncodingException e) {
             throw new SyncException(SyncError.REMOTE_PATH_ENCODING, e);
-        }
-
-        // and send it. We use a custom try/catch block to make the difference between
-        // file and network IO exceptions.
-        AdbHelper.write(mChannel, msg, -1, timeOut);
-
-        // create the buffer used to read.
-        // we read max SYNC_DATA_MAX, but we need 2 4 bytes at the beginning.
-        if (mBuffer == null) {
-            mBuffer = new byte[SYNC_DATA_MAX + 8];
-        }
-        System.arraycopy(ID_DATA, 0, mBuffer, 0, ID_DATA.length);
-
-        // look while there is something to read
-        while (true) {
-            // check if we're canceled
-            if (monitor.isCanceled() == true) {
-                throw new SyncException(SyncError.CANCELED);
+        } finally {
+            // close the local file
+            if (fis != null) {
+                fis.close();
             }
-
-            // read up to SYNC_DATA_MAX
-            int readCount = fis.read(mBuffer, 8, SYNC_DATA_MAX);
-
-            if (readCount == -1) {
-                // we reached the end of the file
-                break;
-            }
-
-            // now send the data to the device
-            // first write the amount read
-            ArrayHelper.swap32bitsToArray(readCount, mBuffer, 4);
-
-            // now write it
-            AdbHelper.write(mChannel, mBuffer, readCount+8, timeOut);
-
-            // and advance the monitor
-            monitor.advance(readCount);
         }
-        // close the local file
-        fis.close();
 
         // create the DONE message
         long time = System.currentTimeMillis() / 1000;

@@ -103,12 +103,16 @@ public class DmTraceReader extends TraceReader {
     private MappedByteBuffer mapFile(String filename, long offset) throws IOException {
         MappedByteBuffer buffer = null;
         FileInputStream dataFile = new FileInputStream(filename);
-        File file = new File(filename);
-        FileChannel fc = dataFile.getChannel();
-        buffer = fc.map(FileChannel.MapMode.READ_ONLY, offset, file.length() - offset);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        try {
+            File file = new File(filename);
+            FileChannel fc = dataFile.getChannel();
+            buffer = fc.map(FileChannel.MapMode.READ_ONLY, offset, file.length() - offset);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        return buffer;
+            return buffer;
+        } finally {
+            dataFile.close(); // this *also* closes the associated channel, fc
+        }
     }
 
     private void readDataFileHeader(MappedByteBuffer buffer) {
@@ -402,63 +406,68 @@ public class DmTraceReader extends TraceReader {
     static final int PARSE_OPTIONS = 4;
 
     long parseKeys() throws IOException {
+        long offset = 0;
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(
                     new FileInputStream(mTraceFileName), "US-ASCII"));
-        } catch (FileNotFoundException ex) {
-            System.err.println(ex.getMessage());
-        }
 
-        long offset = 0;
-        int mode = PARSE_VERSION;
-        String line = null;
-        while (true) {
-            line = in.readLine();
-            if (line == null) {
-                throw new IOException("Key section does not have an *end marker");
-            }
+            int mode = PARSE_VERSION;
+            String line = null;
+            while (true) {
+                line = in.readLine();
+                if (line == null) {
+                    throw new IOException("Key section does not have an *end marker");
+                }
 
-            // Calculate how much we have read from the file so far.  The
-            // extra byte is for the line ending not included by readLine().
-            offset += line.length() + 1;
-            if (line.startsWith("*")) {
-                if (line.equals("*version")) {
-                    mode = PARSE_VERSION;
-                    continue;
+                // Calculate how much we have read from the file so far.  The
+                // extra byte is for the line ending not included by readLine().
+                offset += line.length() + 1;
+                if (line.startsWith("*")) {
+                    if (line.equals("*version")) {
+                        mode = PARSE_VERSION;
+                        continue;
+                    }
+                    if (line.equals("*threads")) {
+                        mode = PARSE_THREADS;
+                        continue;
+                    }
+                    if (line.equals("*methods")) {
+                        mode = PARSE_METHODS;
+                        continue;
+                    }
+                    if (line.equals("*end")) {
+                        break;
+                    }
                 }
-                if (line.equals("*threads")) {
-                    mode = PARSE_THREADS;
-                    continue;
-                }
-                if (line.equals("*methods")) {
-                    mode = PARSE_METHODS;
-                    continue;
-                }
-                if (line.equals("*end")) {
+                switch (mode) {
+                case PARSE_VERSION:
+                    mVersionNumber = Integer.decode(line);
+                    mode = PARSE_OPTIONS;
+                    break;
+                case PARSE_THREADS:
+                    parseThread(line);
+                    break;
+                case PARSE_METHODS:
+                    parseMethod(line);
+                    break;
+                case PARSE_OPTIONS:
+                    parseOption(line);
                     break;
                 }
             }
-            switch (mode) {
-            case PARSE_VERSION:
-                mVersionNumber = Integer.decode(line);
-                mode = PARSE_OPTIONS;
-                break;
-            case PARSE_THREADS:
-                parseThread(line);
-                break;
-            case PARSE_METHODS:
-                parseMethod(line);
-                break;
-            case PARSE_OPTIONS:
-                parseOption(line);
-                break;
+        } catch (FileNotFoundException ex) {
+            System.err.println(ex.getMessage());
+        } finally {
+            if (in != null) {
+                in.close();
             }
         }
 
         if (mClockSource == null) {
             mClockSource = ClockSource.THREAD_CPU;
         }
+
         return offset;
     }
 

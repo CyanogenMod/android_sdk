@@ -146,20 +146,36 @@ public class MainWindow extends ApplicationWindow {
         // write into it.
         File temp = File.createTempFile(base, ".trace");
         temp.deleteOnExit();
-        FileChannel dstChannel = new FileOutputStream(temp).getChannel();
 
-        // First copy the contents of the key file into our temp file.
-        FileChannel srcChannel = new FileInputStream(base + ".key").getChannel();
-        long size = dstChannel.transferFrom(srcChannel, 0, srcChannel.size());
-        srcChannel.close();
+        FileOutputStream dstStream = null;
+        FileInputStream keyStream = null;
+        FileInputStream dataStream = null;
 
-        // Then concatenate the data file.
-        srcChannel = new FileInputStream(base + ".data").getChannel();
-        dstChannel.transferFrom(srcChannel, size, srcChannel.size());
+        try {
+            dstStream = new FileOutputStream(temp);
+            FileChannel dstChannel = dstStream.getChannel();
 
-        // Clean up.
-        srcChannel.close();
-        dstChannel.close();
+            // First copy the contents of the key file into our temp file.
+            keyStream = new FileInputStream(base + ".key");
+            FileChannel srcChannel = keyStream.getChannel();
+            long size = dstChannel.transferFrom(srcChannel, 0, srcChannel.size());
+            srcChannel.close();
+
+            // Then concatenate the data file.
+            dataStream = new FileInputStream(base + ".data");
+            srcChannel = dataStream.getChannel();
+            dstChannel.transferFrom(srcChannel, size, srcChannel.size());
+        } finally {
+            if (dstStream != null) {
+                dstStream.close(); // also closes dstChannel
+            }
+            if (keyStream != null) {
+                keyStream.close(); // also closes srcChannel
+            }
+            if (dataStream != null) {
+                dataStream.close();
+            }
+        }
 
         // Return the path of the temp file.
         return temp.getPath();

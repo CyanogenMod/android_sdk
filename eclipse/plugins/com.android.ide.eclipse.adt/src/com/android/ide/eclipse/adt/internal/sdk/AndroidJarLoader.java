@@ -354,26 +354,29 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
        // create streams to read the intermediary archive
         FileInputStream fis = new FileInputStream(mOsFrameworkLocation);
         ZipInputStream zis = new ZipInputStream(fis);
+        try {
+            // loop on the entries of the intermediary package and put them in the final package.
+            ZipEntry entry;
 
-        // loop on the entries of the intermediary package and put them in the final package.
-        ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                // get the name of the entry.
+                String currEntryName = entry.getName();
 
-        while ((entry = zis.getNextEntry()) != null) {
-            // get the name of the entry.
-            String currEntryName = entry.getName();
+                if (currEntryName.equals(entryName)) {
+                    long entrySize = entry.getSize();
+                    if (entrySize > Integer.MAX_VALUE) {
+                        throw new InvalidAttributeValueException();
+                    }
 
-            if (currEntryName.equals(entryName)) {
-                long entrySize = entry.getSize();
-                if (entrySize > Integer.MAX_VALUE) {
-                    throw new InvalidAttributeValueException();
+                    data = readZipData(zis, (int)entrySize);
+                    return data;
                 }
-
-                data = readZipData(zis, (int)entrySize);
-                return data;
             }
-        }
 
-        return null;
+            return null;
+        } finally {
+            zis.close();
+        }
     }
 
     /**

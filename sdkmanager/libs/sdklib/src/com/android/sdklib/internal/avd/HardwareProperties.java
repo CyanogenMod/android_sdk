@@ -121,9 +121,10 @@ public class HardwareProperties {
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
     public static Map<String, HardwareProperty> parseHardwareDefinitions(File file, ISdkLog log) {
+        BufferedReader reader = null;
         try {
             FileInputStream fis = new FileInputStream(file);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+            reader = new BufferedReader(new InputStreamReader(fis));
 
             Map<String, HardwareProperty> map = new TreeMap<String, HardwareProperty>();
 
@@ -173,6 +174,14 @@ public class HardwareProperties {
         } catch (IOException e) {
             log.warning("Error parsing '%1$s': %2$s.", file.getAbsolutePath(),
                         e.getMessage());
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
 
         return null;

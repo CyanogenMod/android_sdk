@@ -165,40 +165,43 @@ public class DexDumpAction implements IObjectActionDelegate {
                 final Process process = Runtime.getRuntime().exec(command);
 
                 final BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
+                try {
+                    final String lineSep = AdtUtils.getLineSeparator();
 
-                final String lineSep = AdtUtils.getLineSeparator();
-
-                int err = GrabProcessOutput.grabProcessOutput(
-                        process,
-                        Wait.WAIT_FOR_READERS,
-                        new IProcessOutput() {
-                            @Override
-                            public void out(@Nullable String line) {
-                                if (line != null) {
-                                    try {
-                                        writer.write(line);
-                                        writer.write(lineSep);
-                                    } catch (IOException ignore) {}
+                    int err = GrabProcessOutput.grabProcessOutput(
+                            process,
+                            Wait.WAIT_FOR_READERS,
+                            new IProcessOutput() {
+                                @Override
+                                public void out(@Nullable String line) {
+                                    if (line != null) {
+                                        try {
+                                            writer.write(line);
+                                            writer.write(lineSep);
+                                        } catch (IOException ignore) {}
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void err(@Nullable String line) {
-                                if (line != null) {
-                                    AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
-                                            project, line);
+                                @Override
+                                public void err(@Nullable String line) {
+                                    if (line != null) {
+                                        AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
+                                                project, line);
+                                    }
                                 }
-                            }
-                        });
+                            });
 
-                if (err == 0) {
-                    // The command worked. In this case we don't remove the
-                    // temp file in the finally block.
-                    removeDstFile = false;
-                } else {
-                    AdtPlugin.printErrorToConsole(project,
-                        "DexDump failed with code " + Integer.toString(err));       //$NON-NLS-1$
-                    return Status.OK_STATUS;
+                    if (err == 0) {
+                        // The command worked. In this case we don't remove the
+                        // temp file in the finally block.
+                        removeDstFile = false;
+                    } else {
+                        AdtPlugin.printErrorToConsole(project,
+                            "DexDump failed with code " + Integer.toString(err));       //$NON-NLS-1$
+                        return Status.OK_STATUS;
+                    }
+                } finally {
+                    writer.close();
                 }
             } catch (InterruptedException e) {
                 // ?

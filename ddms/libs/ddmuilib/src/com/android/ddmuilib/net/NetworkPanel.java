@@ -439,7 +439,9 @@ public class NetworkPanel extends TablePanel {
         } else {
             final int size = mTrackedItems.size();
             item.color = nextSeriesColor(size);
-            item.label = "0x" + new Formatter().format("%08x", tag);
+            Formatter formatter = new Formatter();
+            item.label = "0x" + formatter.format("%08x", tag);
+            formatter.close();
         }
 
         // create color chip to display as legend in table
