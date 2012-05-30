@@ -16,26 +16,21 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
 
 import java.io.File;
-import java.util.EnumSet;
-import java.util.List;
 
 /**
  * Checks that Handler implementations are top level classes or static.
@@ -58,7 +53,7 @@ public class HandlerDetector extends Detector implements ClassScanner {
         4,
         Severity.WARNING,
         HandlerDetector.class,
-        EnumSet.of(Scope.CLASS_FILE));
+        Scope.CLASS_FILE_SCOPE);
 
     /** Constructs a new {@link HandlerDetector} */
     public HandlerDetector() {
@@ -82,40 +77,13 @@ public class HandlerDetector extends Detector implements ClassScanner {
             return;
         }
 
-        // Note: We can't just filter out static inner classes like this:
-        //     (classNode.access & Opcodes.ACC_STATIC) != 0
-        // because the static flag only appears on methods and fields in the class
-        // file. Instead, look for the synthetic this pointer.
-
-        LintDriver driver = context.getDriver();
-        String name = classNode.name;
-        while (name != null) {
-            if (name.equals("android/os/Handler")) { //$NON-NLS-1$
-                if (isStaticInnerClass(classNode)) {
-                    return;
-                }
-
-                Location location = context.getLocation(classNode);
-                context.report(ISSUE, location, String.format(
-                        "This Handler class should be static or leaks might occur (%1$s)",
-                            ClassContext.createSignature(classNode.name, null, null)),
-                        null);
-                return;
-            }
-            name = driver.getSuperClass(name);
+        if (context.getDriver().isSubclassOf(classNode, "android/os/Handler") //$NON-NLS-1$
+                && !LintUtils.isStaticInnerClass(classNode)) {
+            Location location = context.getLocation(classNode);
+            context.report(ISSUE, location, String.format(
+                    "This Handler class should be static or leaks might occur (%1$s)",
+                        ClassContext.createSignature(classNode.name, null, null)),
+                    null);
         }
-    }
-
-    private boolean isStaticInnerClass(@NonNull ClassNode classNode) {
-        @SuppressWarnings("rawtypes") // ASM API
-        List fieldList = classNode.fields;
-        for (Object f : fieldList) {
-            FieldNode field = (FieldNode) f;
-            if (field.name.startsWith("this$") && (field.access & Opcodes.ACC_SYNTHETIC) != 0) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

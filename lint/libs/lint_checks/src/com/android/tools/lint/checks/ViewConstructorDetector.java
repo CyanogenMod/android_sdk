@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
+
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -122,7 +124,7 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
         List methods = classNode.methods;
         for (Object methodObject : methods) {
             MethodNode method = (MethodNode) methodObject;
-            if (method.name.equals("<init>")) { //$NON-NLS-1$
+            if (method.name.equals(CONSTRUCTOR_NAME)) {
                 String desc = method.desc;
                 if (desc.equals(SIG1) || desc.equals(SIG2) || desc.equals(SIG3)) {
                     return;

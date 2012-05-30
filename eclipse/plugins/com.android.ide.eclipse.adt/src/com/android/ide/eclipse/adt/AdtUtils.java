@@ -444,6 +444,23 @@ public class AdtUtils {
     }
 
     /**
+     * Converts a workspace-relative path to an absolute file path
+     *
+     * @param path the workspace-relative path to convert
+     * @return the corresponding absolute file in the file system
+     */
+    @NonNull
+    public static File workspacePathToFile(@NonNull IPath path) {
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        IResource res = root.findMember(path);
+        if (res != null) {
+            return res.getLocation().toFile();
+        }
+
+        return path.toFile();
+    }
+
+    /**
      * Converts a {@link File} to an {@link IFile}, if possible.
      *
      * @param file a file to be converted

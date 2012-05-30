@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 
 import com.android.annotations.NonNull;
@@ -205,7 +206,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             }
             // TODO: Consider other widgets outside of android.widget.*
             int api = mApiDatabase.getCallVersion("android/widget/" + tag,  //$NON-NLS-1$
-                    "<init>", //$NON-NLS-1$
+                    CONSTRUCTOR_NAME,
                     // Not all views provided this constructor right away, for example,
                     // LinearLayout added it in API 11 yet LinearLayout is much older:
                     // "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"); //$NON-NLS-1$
@@ -463,7 +464,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
         // If looking for a constructor, the string we'll see in the source is not the
         // method name (<init>) but the class name
-        if (patternStart != null && patternStart.equals("<init>") //$NON-NLS-1$
+        if (patternStart != null && patternStart.equals(CONSTRUCTOR_NAME)
                 && node instanceof MethodInsnNode) {
             String owner = ((MethodInsnNode) node).owner;
             patternStart = owner.substring(owner.lastIndexOf('/') + 1);

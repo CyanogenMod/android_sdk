@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
@@ -442,6 +443,35 @@ public class ClassContext extends Context {
         }
 
         return null;
+    }
+
+    /**
+     * Returns a location for the given {@link MethodNode}.
+     *
+     * @param methodNode the class in the current context
+     * @param classNode the class containing the method
+     * @return a location pointing to the class declaration, or as close to it
+     *         as possible
+     */
+    @NonNull
+    public Location getLocation(@NonNull MethodNode methodNode,
+            @NonNull ClassNode classNode) {
+        // Attempt to find a proper location for this class. This is tricky
+        // since classes do not have line number entries in the class file; we need
+        // to find a method, look up the corresponding line number then search
+        // around it for a suitable tag, such as the class name.
+        String pattern;
+        if (methodNode.name.equals(CONSTRUCTOR_NAME)) {
+            if (isAnonymousClass(classNode.name)) {
+                pattern = classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1);
+            } else {
+                pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1);
+            }
+        } else {
+            pattern = methodNode.name;
+        }
+
+        return getLocationForLine(findLineNumber(methodNode), pattern, null);
     }
 
     private static boolean isAnonymousClass(@NonNull String fqcn) {

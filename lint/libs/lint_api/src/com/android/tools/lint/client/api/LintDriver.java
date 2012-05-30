@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
+import static com.android.tools.lint.detector.api.LintConstants.BIN_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
@@ -638,7 +639,22 @@ public class LintDriver {
     }
 
     private boolean isProjectDir(@NonNull File dir) {
-        return new File(dir, ANDROID_MANIFEST_XML).exists();
+        boolean hasManifest = new File(dir, ANDROID_MANIFEST_XML).exists();
+        if (hasManifest) {
+            // Special case: the bin/ folder can also contain a copy of the
+            // manifest file, but this is *not* a project directory
+            if (dir.getName().equals(BIN_FOLDER)) {
+                // ...unless of course it just *happens* to be a project named bin, in
+                // which case we peek at its parent to see if this is the case
+                dir = dir.getParentFile();
+                if (dir != null && isProjectDir(dir)) {
+                    // Yes, it's a bin/ directory inside a real project: ignore this dir
+                    return false;
+                }
+            }
+        }
+
+        return hasManifest;
     }
 
     private void checkProject(@NonNull Project project) {
@@ -865,6 +881,30 @@ public class LintDriver {
         return mSuperClassMap.get(name);
     }
 
+    /**
+     * Returns true if the given class is a subclass of the given super class.
+     *
+     * @param classNode the class to check whether it is a subclass of the given
+     *            super class name
+     * @param superClassName the fully qualified super class name (in VM format,
+     *            e.g. java/lang/Integer, not java.lang.Integer.
+     * @return true if the given class is a subclass of the given super class
+     */
+    public boolean isSubclassOf(@NonNull ClassNode classNode, @NonNull String superClassName) {
+        if (superClassName.equals(classNode.superName)) {
+            return true;
+        }
+
+        String className = classNode.name;
+        while (className != null) {
+            if (className.equals(superClassName)) {
+                return true;
+            }
+            className = getSuperClass(className);
+        }
+
+        return false;
+    }
     @Nullable
     private static List<Detector> union(
             @Nullable List<Detector> list1,
@@ -977,6 +1017,7 @@ public class LintDriver {
             }
 
             if (entries.size() > 0) {
+                Collections.sort(entries);
                 // No superclass info available on individual lint runs
                 mSuperClassMap = Collections.emptyMap();
                 runClassDetectors(Scope.CLASS_FILE, entries, project, main);
