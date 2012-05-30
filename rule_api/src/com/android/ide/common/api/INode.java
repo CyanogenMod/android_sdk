@@ -180,7 +180,7 @@ public interface INode {
      * @param value It's value. Cannot be null. An empty value <em>removes</em> the attribute.
      * @return Whether the attribute was actually set or not.
      */
-    boolean setAttribute(@Nullable String uri, @NonNull String localName, @NonNull String value);
+    boolean setAttribute(@Nullable String uri, @NonNull String localName, @Nullable String value);
 
     /**
      * Returns a given XML attribute.

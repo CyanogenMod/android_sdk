@@ -16,6 +16,7 @@
 
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.IColor;
 import com.android.ide.common.api.IGraphics;
@@ -51,7 +52,7 @@ public class TestGraphics implements IGraphics {
     // ==== IGraphics ====
 
     @Override
-    public void drawBoxedStrings(int x, int y, List<?> strings) {
+    public void drawBoxedStrings(int x, int y, @NonNull List<?> strings) {
         mDrawn.add("drawBoxedStrings(" + x + "," + y + "," + strings + ")");
     }
 
@@ -61,7 +62,7 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public void drawLine(Point p1, Point p2) {
+    public void drawLine(@NonNull Point p1, @NonNull Point p2) {
         mDrawn.add("drawLine(" + p1 + "," + p2 + ")");
     }
 
@@ -71,22 +72,22 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public void drawRect(Point p1, Point p2) {
+    public void drawRect(@NonNull Point p1, @NonNull Point p2) {
         mDrawn.add("drawRect(" + p1 + "," + p2 + ")");
     }
 
     @Override
-    public void drawRect(Rect r) {
+    public void drawRect(@NonNull Rect r) {
         mDrawn.add("drawRect(" + rectToString(r) + ")");
     }
 
     @Override
-    public void drawString(String string, int x, int y) {
+    public void drawString(@NonNull String string, int x, int y) {
         mDrawn.add("drawString(" + x + "," + y + "," + string + ")");
     }
 
     @Override
-    public void drawString(String string, Point topLeft) {
+    public void drawString(@NonNull String string, @NonNull Point topLeft) {
         mDrawn.add("drawString(" + string + "," + topLeft + ")");
     }
 
@@ -96,12 +97,12 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public void fillRect(Point p1, Point p2) {
+    public void fillRect(@NonNull Point p1, @NonNull Point p2) {
         mDrawn.add("fillRect(" + p1 + "," + p2 + ")");
     }
 
     @Override
-    public void fillRect(Rect r) {
+    public void fillRect(@NonNull Rect r) {
         mDrawn.add("fillRect(" + rectToString(r) + ")");
     }
 
@@ -111,7 +112,7 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public IColor getBackground() {
+    public @NonNull IColor getBackground() {
         return mBackground;
     }
 
@@ -121,12 +122,12 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public IColor getForeground() {
+    public @NonNull IColor getForeground() {
         return mForeground;
     }
 
     @Override
-    public IColor registerColor(int rgb) {
+    public @NonNull IColor registerColor(int rgb) {
         mDrawn.add("registerColor(" + Integer.toHexString(rgb) + ")");
         return new TestColor(rgb);
     }
@@ -138,19 +139,19 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public void setBackground(IColor color) {
+    public void setBackground(@NonNull IColor color) {
         mDrawn.add("setBackground(" + color + ")");
         mBackground = color;
     }
 
     @Override
-    public void setForeground(IColor color) {
+    public void setForeground(@NonNull IColor color) {
         mDrawn.add("setForeground(" + color + ")");
         mForeground = color;
     }
 
     @Override
-    public void setLineStyle(LineStyle style) {
+    public void setLineStyle(@NonNull LineStyle style) {
         mDrawn.add("setLineStyle(" + style + ")");
     }
 
@@ -160,7 +161,7 @@ public class TestGraphics implements IGraphics {
     }
 
     @Override
-    public void useStyle(DrawingStyle style) {
+    public void useStyle(@NonNull DrawingStyle style) {
         mDrawn.add("useStyle(" + style + ")");
     }
 

@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_COLU
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ROW_COUNT;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -60,7 +61,7 @@ public class GridLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -85,7 +86,7 @@ public class GridLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         int declaredRowCount = getInt(element, ATTR_ROW_COUNT, -1);
         int declaredColumnCount = getInt(element, ATTR_COLUMN_COUNT, -1);
 

@@ -35,6 +35,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TRANSPARENT_COLO
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_DISABLED;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -148,7 +149,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         // Look in layouts for drawable resources
         return super.appliesTo(folderType)
                 // and in resource files for theme definitions
@@ -158,12 +159,12 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -194,7 +195,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mRootAttributes != null) {
             for (Pair<Location, String> pair : mRootAttributes) {
                 Location location = pair.getFirst();
@@ -260,7 +261,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     // ---- Implements XmlScanner ----
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         // Only consider the root element's background
         if (attribute.getOwnerDocument().getDocumentElement() == attribute.getOwnerElement()) {
             // If the drawable is a non-repeated pattern then the overdraw might be
@@ -321,7 +322,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         if (endsWith(context.file.getName(), DOT_XML)) {
             // Drawable XML files should not be considered for overdraw, except for <bitmap>'s.
             // The bitmap elements are handled in the scanBitmap() method; it will clear
@@ -339,7 +340,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_STYLE)) {
             scanTheme(element);
@@ -470,7 +471,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return new OverdrawVisitor();
     }
 

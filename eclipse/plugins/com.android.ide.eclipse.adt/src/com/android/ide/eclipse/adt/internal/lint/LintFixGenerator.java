@@ -226,7 +226,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                 File dir = AdtUtils.getAbsolutePath(eclipseProject).toFile();
                 project = mClient.getProject(dir, dir);
             }
-            Configuration configuration = mClient.getConfiguration(project);
+            Configuration configuration = mClient.getConfigurationFor(project);
             if (thisFileOnly && configuration instanceof DefaultConfiguration) {
                 File file = AdtUtils.getAbsolutePath(resource).toFile();
                 ((DefaultConfiguration) configuration).ignore(issue, file);

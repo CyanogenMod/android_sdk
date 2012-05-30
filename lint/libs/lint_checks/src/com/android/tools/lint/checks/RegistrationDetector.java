@@ -24,6 +24,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_RECEIVER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -85,12 +86,12 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
@@ -102,7 +103,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String fqcn = getFqcn(element);
         String tag = element.getTagName();
         String frameworkClass = tagToClass(tag);
@@ -148,7 +149,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     // ---- Implements ClassScanner ----
 
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         // Abstract classes do not need to be registered
         if ((classNode.access & Opcodes.ACC_ABSTRACT) != 0) {
             return;

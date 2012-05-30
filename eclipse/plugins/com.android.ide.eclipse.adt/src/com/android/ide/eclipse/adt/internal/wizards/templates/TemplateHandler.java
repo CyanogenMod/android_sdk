@@ -532,6 +532,9 @@ class TemplateHandler {
             xml = out.toString();
         } else {
             xml = readTemplateTextResource(from);
+            if (xml == null) {
+                return;
+            }
         }
 
         String currentXml = Files.toString(to, Charsets.UTF_8);

@@ -16,7 +16,6 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
@@ -30,7 +29,10 @@ import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_V
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -148,8 +150,10 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
-            final List<? extends INode> children) {
+    public void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            final @NonNull INode parentNode,
+            final @NonNull List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
         String namespace = getNamespace(parentNode);
@@ -174,11 +178,14 @@ public class GridLayoutRule extends BaseLayoutRule {
 
         IMenuCallback actionCallback = new IMenuCallback() {
             @Override
-            public void action(final RuleAction action, List<? extends INode> selectedNodes,
-                    final String valueId, final Boolean newValue) {
+            public void action(
+                    final @NonNull RuleAction action,
+                    @NonNull List<? extends INode> selectedNodes,
+                    final @Nullable String valueId,
+                    final @Nullable Boolean newValue) {
                 parentNode.editXml("Add/Remove Row/Column", new INodeHandler() {
                     @Override
-                    public void handle(INode n) {
+                    public void handle(@NonNull INode n) {
                         String id = action.getId();
                         if (id.equals(ACTION_SHOW_STRUCTURE)) {
                             sShowStructure = !sShowStructure;
@@ -268,15 +275,16 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements) {
         GridDropHandler userData = new GridDropHandler(this, targetNode, targetView);
         IFeedbackPainter painter = GridLayoutPainter.createDropFeedbackPainter(this, elements);
         return new DropFeedback(userData, painter);
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         feedback.requestPaint = true;
 
         GridDropHandler handler = (GridDropHandler) feedback.userData;
@@ -286,8 +294,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onDropped(final INode targetNode, final IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         Rect b = targetNode.getBounds();
         if (!b.isValid()) {
             return;
@@ -319,7 +327,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onChildInserted(INode node, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         if (insertType == InsertType.MOVE_WITHIN) {
             // Don't adjust widths/heights/weights when just moving within a single layout
             return;
@@ -386,7 +395,7 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onRemovingChildren(List<INode> deleted, INode parent) {
+    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent) {
         super.onRemovingChildren(deleted, parent);
 
         // Attempt to clean up spacer objects for any newly-empty rows or columns
@@ -521,8 +530,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes, Object view) {
+    public void paintSelectionFeedback(@NonNull IGraphics graphics, @NonNull INode parentNode,
+            @NonNull List<? extends INode> childNodes, @Nullable Object view) {
         super.paintSelectionFeedback(graphics, parentNode, childNodes, view);
 
         if (sShowStructure) {
@@ -569,7 +578,10 @@ public class GridLayoutRule extends BaseLayoutRule {
      * approach #3 above.
      */
     @Override
-    public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
+    public void onPaste(
+            @NonNull INode targetNode,
+            @Nullable Object targetView,
+            @NonNull IDragElement[] elements) {
         DropFeedback feedback = onDropEnter(targetNode, targetView, elements);
         if (feedback != null) {
             Rect b = targetNode.getBounds();

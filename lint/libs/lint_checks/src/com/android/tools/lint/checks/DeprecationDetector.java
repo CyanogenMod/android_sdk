@@ -28,6 +28,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_PASSWORD;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PHONE_NUMBER;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_SINGLE_LINE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -64,7 +65,7 @@ public class DeprecationDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -119,13 +120,13 @@ public class DeprecationDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         context.report(ISSUE, element, context.getLocation(element),
                 String.format("%1$s is deprecated", element.getTagName()), null);
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         if (!ANDROID_URI.equals(attribute.getNamespaceURI())) {
             return;
         }

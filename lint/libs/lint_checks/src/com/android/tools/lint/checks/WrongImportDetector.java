@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -67,7 +68,7 @@ public class WrongImportDetector extends Detector implements Detector.JavaScanne
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -80,7 +81,7 @@ public class WrongImportDetector extends Detector implements Detector.JavaScanne
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return new ImportVisitor(context);
     }
 

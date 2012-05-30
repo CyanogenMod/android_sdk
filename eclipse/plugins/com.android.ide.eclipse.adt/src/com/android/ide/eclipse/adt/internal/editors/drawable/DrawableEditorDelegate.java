@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.drawable;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -40,8 +42,8 @@ public class DrawableEditorDelegate extends CommonXmlDelegate {
         @Override
         @SuppressWarnings("unchecked")
         public DrawableEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.DRAWABLE == type) {
                 return new DrawableEditorDelegate(delegator);
             }

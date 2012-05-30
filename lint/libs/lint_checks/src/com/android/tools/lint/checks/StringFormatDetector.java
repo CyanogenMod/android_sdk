@@ -20,6 +20,8 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.IJavaParser;
@@ -35,7 +37,6 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
@@ -162,12 +163,12 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         if (LintUtils.endsWith(file.getName(), DOT_JAVA)) {
             return mFormatStrings != null;
         }
@@ -176,17 +177,12 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
-    }
-
-    @Override
     public Collection<String> getApplicableElements() {
         return Collections.singletonList(TAG_STRING);
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         NodeList childNodes = element.getChildNodes();
         if (childNodes.getLength() > 0) {
             if (childNodes.getLength() == 1) {
@@ -309,7 +305,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mFormatStrings != null) {
             Formatter formatter = new Formatter();
 
@@ -773,7 +769,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     @Override
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
         if (mFormatStrings == null) {
             return;
         }

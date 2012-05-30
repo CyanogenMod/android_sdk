@@ -16,7 +16,6 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
@@ -40,7 +39,10 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IGraphics;
@@ -93,7 +95,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Selection ====
 
     @Override
-    public List<String> getSelectionHint(INode parentNode, INode childNode) {
+    public List<String> getSelectionHint(@NonNull INode parentNode, @NonNull INode childNode) {
         List<String> infos = new ArrayList<String>(18);
         addAttr(ATTR_LAYOUT_ABOVE, childNode, infos);
         addAttr(ATTR_LAYOUT_BELOW, childNode, infos);
@@ -131,8 +133,8 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes, Object view) {
+    public void paintSelectionFeedback(@NonNull IGraphics graphics, @NonNull INode parentNode,
+            @NonNull List<? extends INode> childNodes, @Nullable Object view) {
         super.paintSelectionFeedback(graphics, parentNode, childNodes, view);
 
         boolean showDependents = true;
@@ -150,14 +152,15 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Drag'n'drop support ====
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements) {
         return new DropFeedback(new MoveHandler(targetNode, elements, mRulesEngine),
                 new GuidelinePainter());
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         if (elements == null || elements.length == 0) {
             return null;
         }
@@ -174,12 +177,13 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onDropLeave(INode targetNode, IDragElement[] elements, DropFeedback feedback) {
+    public void onDropLeave(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback) {
     }
 
     @Override
-    public void onDropped(final INode targetNode, final IDragElement[] elements,
-            final DropFeedback feedback, final Point p) {
+    public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
+            final @Nullable DropFeedback feedback, final @NonNull Point p) {
         final MoveHandler state = (MoveHandler) feedback.userData;
 
         final Map<String, Pair<String, String>> idMap = getDropIdMap(targetNode, elements,
@@ -187,7 +191,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
 
         targetNode.editXml("Dropped", new INodeHandler() {
             @Override
-            public void handle(INode n) {
+            public void handle(@NonNull INode n) {
                 int index = -1;
 
                 // Remove cycles
@@ -235,7 +239,8 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onChildInserted(INode node, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // TODO: Handle more generically some way to ensure that widgets with no
         // intrinsic size get some minimum size until they are attached on multiple
         // opposing sides.
@@ -246,7 +251,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onRemovingChildren(List<INode> deleted, INode parent) {
+    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent) {
         super.onRemovingChildren(deleted, parent);
 
         // Remove any attachments pointing to the deleted nodes.
@@ -286,29 +291,30 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Resize Support ====
 
     @Override
-    public DropFeedback onResizeBegin(INode child, INode parent,
-            SegmentType horizontalEdgeType, SegmentType verticalEdgeType,
-            Object childView, Object parentView) {
+    public DropFeedback onResizeBegin(@NonNull INode child, @NonNull INode parent,
+            @Nullable SegmentType horizontalEdgeType, @Nullable SegmentType verticalEdgeType,
+            @Nullable Object childView, @Nullable Object parentView) {
         ResizeHandler state = new ResizeHandler(parent, child, mRulesEngine,
                 horizontalEdgeType, verticalEdgeType);
         return new DropFeedback(state, new GuidelinePainter());
     }
 
     @Override
-    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
+    public void onResizeUpdate(@Nullable DropFeedback feedback, @NonNull INode child,
+            @NonNull INode parent, @NonNull Rect newBounds,
             int modifierMask) {
         ResizeHandler state = (ResizeHandler) feedback.userData;
         state.updateResize(feedback, child, newBounds, modifierMask);
     }
 
     @Override
-    public void onResizeEnd(DropFeedback feedback, INode child, INode parent,
-            final Rect newBounds) {
+    public void onResizeEnd(@Nullable DropFeedback feedback, @NonNull INode child,
+            @NonNull INode parent, final @NonNull Rect newBounds) {
         final ResizeHandler state = (ResizeHandler) feedback.userData;
 
         child.editXml("Resize", new INodeHandler() {
             @Override
-            public void handle(INode n) {
+            public void handle(@NonNull INode n) {
                 state.removeCycles();
                 state.applyConstraints(n);
             }
@@ -318,8 +324,10 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Layout Actions Bar ====
 
     @Override
-    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
-            final List<? extends INode> children) {
+    public void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            final @NonNull INode parentNode,
+            final @NonNull List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
         actions.add(createGravityAction(Collections.<INode>singletonList(parentNode),
@@ -329,13 +337,15 @@ public class RelativeLayoutRule extends BaseLayoutRule {
 
         IMenuCallback callback = new IMenuCallback() {
             @Override
-            public void action(RuleAction action, List<? extends INode> selectedNodes,
-                    final String valueId, final Boolean newValue) {
+            public void action(@NonNull RuleAction action,
+                    @NonNull List<? extends INode> selectedNodes,
+                    final @Nullable String valueId,
+                    final @Nullable Boolean newValue) {
                 final String id = action.getId();
                 if (id.equals(ACTION_CENTER_VERTICAL)|| id.equals(ACTION_CENTER_HORIZONTAL)) {
                     parentNode.editXml("Center", new INodeHandler() {
                         @Override
-                        public void handle(INode n) {
+                        public void handle(@NonNull INode n) {
                             if (id.equals(ACTION_CENTER_VERTICAL)) {
                                 for (INode child : children) {
                                     centerVertically(child);

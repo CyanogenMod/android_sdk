@@ -26,6 +26,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
@@ -175,7 +176,7 @@ public class WrapInRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         // (1) Insert the new container in front of the beginning of the
         //      first wrapped view
         // (2) If the container is the new root, transfer namespace declarations

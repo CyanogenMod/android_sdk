@@ -16,7 +16,6 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
@@ -26,7 +25,9 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TAB_WIDGET;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -40,7 +41,8 @@ public class TabHostRule extends IgnoredLayoutRule {
     // the child elements yourself, e.g. via addTab() etc.
 
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
         if (insertType.isCreate()) {

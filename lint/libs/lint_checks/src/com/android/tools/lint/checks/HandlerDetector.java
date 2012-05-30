@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -60,19 +61,19 @@ public class HandlerDetector extends Detector implements ClassScanner {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     // ---- Implements ClassScanner ----
 
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         if (classNode.name.indexOf('$') == -1) {
             return;
         }

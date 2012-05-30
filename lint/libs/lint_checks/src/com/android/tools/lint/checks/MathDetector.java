@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -68,12 +69,12 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -81,7 +82,7 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;

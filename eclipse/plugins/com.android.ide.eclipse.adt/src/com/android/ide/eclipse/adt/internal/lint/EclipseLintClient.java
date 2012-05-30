@@ -188,7 +188,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     // ----- Extends LintClient -----
 
     @Override
-    public void log(Severity severity, Throwable exception, String format, Object... args) {
+    public void log(@NonNull Severity severity, @Nullable Throwable exception,
+            @Nullable String format, @Nullable Object... args) {
         if (exception == null) {
             AdtPlugin.log(IStatus.WARNING, format, args);
         } else {
@@ -213,7 +214,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     // ----- Implements IDomParser -----
 
     @Override
-    public Document parseXml(XmlContext context) {
+    public Document parseXml(@NonNull XmlContext context) {
         // Map File to IFile
         IFile file = AdtUtils.fileToIFile(context.file);
         if (file == null || !file.exists()) {
@@ -277,7 +278,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     @NonNull
     @Override
-    public Configuration getConfiguration(Project project) {
+    public Configuration getConfiguration(@NonNull Project project) {
+        return getConfigurationFor(project);
+    }
+
+    /**
+     * Same as {@link #getConfiguration(Project)}, but {@code project} can be
+     * null in which case the global configuration is returned.
+     *
+     * @param project the project to look up
+     * @return a corresponding configuration
+     */
+    @NonNull
+    public Configuration getConfigurationFor(@Nullable Project project) {
         if (project != null) {
             IProject eclipseProject = getProject(project);
             if (eclipseProject != null) {
@@ -287,10 +300,10 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
         return GlobalLintConfiguration.get();
     }
-
     @Override
-    public void report(Context context, Issue issue, Severity s, Location location,
-            String message, Object data) {
+    public void report(@NonNull Context context, @NonNull Issue issue, @NonNull Severity s,
+            @Nullable Location location,
+            @NonNull String message, @Nullable Object data) {
         int severity = getMarkerSeverity(s);
         IMarker marker = null;
         if (location != null) {
@@ -399,7 +412,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             }
         }
 
-        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+        IEditorPart activeEditor = AdtUtils.getActiveEditor();
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(activeEditor);
         if (delegate != null) {
             delegate.getGraphicalEditor().getLayoutActionBar().updateErrorIndicator();
         }
@@ -645,7 +659,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public String readFile(File f) {
+    public @NonNull String readFile(@NonNull File f) {
         // Map File to IFile
         IFile file = AdtUtils.fileToIFile(f);
         if (file == null || !file.exists()) {
@@ -684,13 +698,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public Location getLocation(XmlContext context, Node node) {
+    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
         return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
     }
 
     @Override
-    public Handle createLocationHandle(final XmlContext context, final Node node) {
+    public @NonNull Handle createLocationHandle(final @NonNull XmlContext context,
+            final @NonNull Node node) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
         return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
     }
@@ -810,12 +825,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+    public @NonNull Class<? extends Detector> replaceDetector(
+            @NonNull Class<? extends Detector> detectorClass) {
         return detectorClass;
     }
 
     @Override
-    public void dispose(XmlContext context, Document document) {
+    public void dispose(@NonNull XmlContext context, @NonNull Document document) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
         assert model != null : context.file;
         if (model != null) {
@@ -885,7 +901,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         @Override
-        public Location resolve() {
+        public @NonNull Location resolve() {
             return this;
         }
     }
@@ -915,7 +931,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         @Override
-        public lombok.ast.Node parseJava(JavaContext context) {
+        public lombok.ast.Node parseJava(@NonNull JavaContext context) {
             if (USE_ECLIPSE_PARSER) {
                 // Use Eclipse's compiler
                 EcjTreeConverter converter = new EcjTreeConverter();
@@ -1010,19 +1026,22 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         @Override
-        public Location getLocation(JavaContext context, lombok.ast.Node node) {
+        public @NonNull Location getLocation(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node node) {
             lombok.ast.Position position = node.getPosition();
             return Location.create(context.file, context.getContents(),
                     position.getStart(), position.getEnd());
         }
 
         @Override
-        public Handle createLocationHandle(JavaContext context, lombok.ast.Node node) {
+        public @NonNull Handle createLocationHandle(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node node) {
             return new LocationHandle(context.file, node);
         }
 
         @Override
-        public void dispose(JavaContext context, lombok.ast.Node compilationUnit) {
+        public void dispose(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node compilationUnit) {
         }
 
         /* Handle for creating positions cheaply and returning full fledged locations later */
@@ -1037,7 +1056,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             }
 
             @Override
-            public Location resolve() {
+            public @NonNull Location resolve() {
                 lombok.ast.Position pos = mNode.getPosition();
                 return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
             }

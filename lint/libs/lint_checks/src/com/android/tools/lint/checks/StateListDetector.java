@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
@@ -57,17 +58,17 @@ public class StateListDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.DRAWABLE;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public void visitDocument(XmlContext context, Document document) {
+    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         // TODO: Look for views that don't specify
         // Display the error token somewhere so it can be suppressed
         // Emit warning at the end "run with --help to learn how to suppress types of errors/checks";

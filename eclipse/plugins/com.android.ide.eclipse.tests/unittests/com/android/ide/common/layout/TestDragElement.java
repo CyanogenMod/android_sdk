@@ -18,6 +18,8 @@ package com.android.ide.common.layout;
 import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.Rect;
 
@@ -100,7 +102,7 @@ public class TestDragElement implements IDragElement {
     // ==== IDragElement ====
 
     @Override
-    public IDragAttribute getAttribute(String uri, String localName) {
+    public IDragAttribute getAttribute(@Nullable String uri, @NonNull String localName) {
         if (mAttributes == null) {
             return new TestAttribute(uri, localName, "");
         }
@@ -109,22 +111,22 @@ public class TestDragElement implements IDragElement {
     }
 
     @Override
-    public IDragAttribute[] getAttributes() {
+    public @NonNull IDragAttribute[] getAttributes() {
         return mAttributes.values().toArray(new IDragAttribute[mAttributes.size()]);
     }
 
     @Override
-    public Rect getBounds() {
+    public @NonNull Rect getBounds() {
         return mRect;
     }
 
     @Override
-    public String getFqcn() {
+    public @NonNull String getFqcn() {
         return mFqcn;
     }
 
     @Override
-    public IDragElement[] getInnerElements() {
+    public @NonNull IDragElement[] getInnerElements() {
         if (mChildren == null) {
             return new IDragElement[0];
         }
@@ -133,7 +135,7 @@ public class TestDragElement implements IDragElement {
     }
 
     @Override
-    public Rect getParentBounds() {
+    public @NonNull Rect getParentBounds() {
         return mParent != null ? mParent.getBounds() : null;
     }
 

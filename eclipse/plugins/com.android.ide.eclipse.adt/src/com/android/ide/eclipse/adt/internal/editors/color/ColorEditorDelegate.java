@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.color;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -39,8 +41,8 @@ public class ColorEditorDelegate extends CommonXmlDelegate {
         @Override
         @SuppressWarnings("unchecked")
         public ColorEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.COLOR == type) {
                 return new ColorEditorDelegate(delegator);
             }

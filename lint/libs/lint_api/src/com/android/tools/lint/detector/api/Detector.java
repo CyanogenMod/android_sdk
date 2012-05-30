@@ -372,7 +372,9 @@ public abstract class Detector {
      * @return the expected speed of this detector
      */
     @NonNull
-    public abstract Speed getSpeed();
+    public Speed getSpeed() {
+        return Speed.NORMAL;
+    }
 
     // ---- Dummy implementations to make implementing XmlScanner easier: ----
 

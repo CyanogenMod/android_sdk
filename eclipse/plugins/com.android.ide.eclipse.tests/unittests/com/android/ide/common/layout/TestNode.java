@@ -18,6 +18,8 @@ package com.android.ide.common.layout;
 import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
@@ -94,12 +96,12 @@ public class TestNode implements INode {
     // ==== INODE ====
 
     @Override
-    public INode appendChild(String viewFqcn) {
+    public @NonNull INode appendChild(@NonNull String viewFqcn) {
         return insertChildAt(viewFqcn, mChildren.size());
     }
 
     @Override
-    public void editXml(String undoName, INodeHandler callback) {
+    public void editXml(@NonNull String undoName, @NonNull INodeHandler callback) {
         callback.handle(this);
     }
 
@@ -108,32 +110,32 @@ public class TestNode implements INode {
     }
 
     @Override
-    public IAttributeInfo getAttributeInfo(String uri, String attrName) {
+    public IAttributeInfo getAttributeInfo(@Nullable String uri, @NonNull String attrName) {
         return mAttributeInfos.get(uri + attrName);
     }
 
     @Override
-    public Rect getBounds() {
+    public @NonNull Rect getBounds() {
         return mBounds;
     }
 
     @Override
-    public INode[] getChildren() {
+    public @NonNull INode[] getChildren() {
         return mChildren.toArray(new INode[mChildren.size()]);
     }
 
     @Override
-    public IAttributeInfo[] getDeclaredAttributes() {
+    public @NonNull IAttributeInfo[] getDeclaredAttributes() {
         return mAttributeInfos.values().toArray(new IAttributeInfo[mAttributeInfos.size()]);
     }
 
     @Override
-    public String getFqcn() {
+    public @NonNull String getFqcn() {
         return mFqcn;
     }
 
     @Override
-    public IAttribute[] getLiveAttributes() {
+    public @NonNull IAttribute[] getLiveAttributes() {
         return mAttributes.values().toArray(new IAttribute[mAttributes.size()]);
     }
 
@@ -153,7 +155,7 @@ public class TestNode implements INode {
     }
 
     @Override
-    public String getStringAttr(String uri, String attrName) {
+    public String getStringAttr(@Nullable String uri, @NonNull String attrName) {
         IAttribute attr = mAttributes.get(uri + attrName);
         if (attr == null) {
             return null;
@@ -163,7 +165,7 @@ public class TestNode implements INode {
     }
 
     @Override
-    public INode insertChildAt(String viewFqcn, int index) {
+    public @NonNull INode insertChildAt(@NonNull String viewFqcn, int index) {
         TestNode child = new TestNode(viewFqcn);
         if (index == -1) {
             mChildren.add(child);
@@ -175,7 +177,7 @@ public class TestNode implements INode {
     }
 
     @Override
-    public void removeChild(INode node) {
+    public void removeChild(@NonNull INode node) {
         int index = mChildren.indexOf(node);
         if (index != -1) {
             removeChild(index);
@@ -183,7 +185,8 @@ public class TestNode implements INode {
     }
 
     @Override
-    public boolean setAttribute(String uri, String localName, String value) {
+    public boolean setAttribute(@Nullable String uri, @NonNull String localName,
+            @Nullable String value) {
         mAttributes.put(uri + localName, new TestAttribute(uri, localName, value));
         return true;
     }
@@ -200,12 +203,12 @@ public class TestNode implements INode {
     }
 
     @Override
-    public Margins getMargins() {
+    public @NonNull Margins getMargins() {
         return null;
     }
 
     @Override
-    public List<String> getAttributeSources() {
+    public @NonNull List<String> getAttributeSources() {
         return mAttributeSources != null ? mAttributeSources : Collections.<String>emptyList();
     }
 

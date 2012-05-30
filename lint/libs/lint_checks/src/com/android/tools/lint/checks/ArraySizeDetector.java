@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_INTEGER_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
@@ -32,7 +33,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
@@ -91,13 +91,8 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
     }
 
     @Override
@@ -110,14 +105,14 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mFileToArrayCount = new HashMap<File, Pair<String,Integer>>(30);
         }
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Check that all arrays for the same name have the same number of translations
 
@@ -222,7 +217,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         int phase = context.getPhase();
 
         Attr attribute = element.getAttributeNode(ATTR_NAME);

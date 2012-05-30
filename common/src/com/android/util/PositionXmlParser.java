@@ -677,7 +677,7 @@ public class PositionXmlParser {
         }
 
         @Override
-        public void setEnd(Position end) {
+        public void setEnd(@NonNull Position end) {
             mEnd = end;
         }
     }

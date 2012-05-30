@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CONFIG;
 import static com.android.tools.lint.detector.api.LintConstants.PROJECT_PROPERTIES;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -91,7 +92,7 @@ public class ProguardDetector extends Detector {
             EnumSet.of(Scope.PROGUARD_FILE));
 
     @Override
-    public void run(Context context) {
+    public void run(@NonNull Context context) {
         String contents = context.getContents();
         if (contents != null) {
             if (context.isEnabled(WRONGKEEP)) {
@@ -151,12 +152,12 @@ public class ProguardDetector extends Detector {
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 }

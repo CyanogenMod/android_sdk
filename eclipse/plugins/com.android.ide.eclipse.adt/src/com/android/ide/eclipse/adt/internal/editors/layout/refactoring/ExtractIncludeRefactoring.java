@@ -34,6 +34,7 @@ import static com.android.util.XmlUtils.XMLNS;
 import static com.android.util.XmlUtils.XMLNS_COLON;
 
 import com.android.AndroidConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -221,7 +222,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     // ---- Actual implementation of Extract as Include modification computation ----
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         String extractedText = getExtractedText();
 
         String namespaceDeclarations = computeNamespaceDeclarations();

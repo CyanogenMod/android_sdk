@@ -24,6 +24,7 @@ import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PARENT;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -64,7 +65,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -77,13 +78,16 @@ public class ScrollViewChildDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         List<Element> children = LintUtils.getChildren(element);
         boolean isHorizontal = HORIZONTAL_SCROLL_VIEW.equals(element.getTagName());
         String attributeName = isHorizontal ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
         for (Element child : children) {
             Attr sizeNode = child.getAttributeNodeNS(ANDROID_URI, attributeName);
-            String value = sizeNode != null ? sizeNode.getValue() : null;
+            if (sizeNode == null) {
+                return;
+            }
+            String value = sizeNode.getValue();
             if (VALUE_FILL_PARENT.equals(value) || VALUE_MATCH_PARENT.equals(value)) {
                 String msg = String.format("This %1$s should use android:%2$s=\"wrap_content\"",
                         child.getTagName(), attributeName);

@@ -21,6 +21,8 @@ import static com.android.sdklib.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IValidator;
@@ -110,12 +112,12 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String getFqcn() {
+    public @NonNull String getFqcn() {
         return mFqcn;
     }
 
     @Override
-    public void debugPrintf(String msg, Object... params) {
+    public void debugPrintf(@NonNull String msg, Object... params) {
         AdtPlugin.printToConsole(
                 mFqcn == null ? "<unknown>" : mFqcn,
                 String.format(msg, params)
@@ -123,12 +125,12 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public IViewRule loadRule(String fqcn) {
+    public IViewRule loadRule(@NonNull String fqcn) {
         return mRulesEngine.loadRule(fqcn, fqcn);
     }
 
     @Override
-    public void displayAlert(String message) {
+    public void displayAlert(@NonNull String message) {
         MessageDialog.openInformation(
                 AdtPlugin.getDisplay().getActiveShell(),
                 mFqcn,  // title
@@ -136,7 +138,8 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String displayInput(String message, String value, final IValidator filter) {
+    public String displayInput(@NonNull String message, @Nullable String value,
+            final @Nullable IValidator filter) {
         IInputValidator validator = null;
         if (filter != null) {
             validator = new IInputValidator() {
@@ -166,26 +169,26 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public IViewMetadata getMetadata(final String fqcn) {
+    public @NonNull IViewMetadata getMetadata(final @NonNull String fqcn) {
         return new IViewMetadata() {
             @Override
-            public String getDisplayName() {
+            public @NonNull String getDisplayName() {
                 // This also works when there is no "."
                 return fqcn.substring(fqcn.lastIndexOf('.') + 1);
             }
 
             @Override
-            public FillPreference getFillPreference() {
+            public @NonNull FillPreference getFillPreference() {
                 return ViewMetadataRepository.get().getFillPreference(fqcn);
             }
 
             @Override
-            public Margins getInsets() {
+            public @NonNull Margins getInsets() {
                 return mRulesEngine.getEditor().getCanvasControl().getInsets(fqcn);
             }
 
             @Override
-            public List<String> getTopAttributes() {
+            public @NonNull List<String> getTopAttributes() {
                 return ViewMetadataRepository.get().getTopAttributes(fqcn);
             }
         };
@@ -205,10 +208,9 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public IValidator getResourceValidator() {
-        // When https://review.source.android.com/#change,20168 is integrated,
-        // change this to
-        //return ResourceNameValidator.create(false, mDelegate.getProject(), ResourceType.ID);
+    public @Nullable IValidator getResourceValidator() {
+        //return ResourceNameValidator.create(false, mRulesEngine.getEditor().getProject(),
+        //        ResourceType.ID);
         return null;
     }
 
@@ -242,7 +244,8 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String displayResourceInput(String resourceTypeName, String currentValue) {
+    public String displayResourceInput(@NonNull String resourceTypeName,
+            @Nullable String currentValue) {
         return displayResourceInput(resourceTypeName, currentValue, null);
     }
 
@@ -254,8 +257,8 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String[] displayMarginInput(String all, String left, String right, String top,
-            String bottom) {
+    public String[] displayMarginInput(@Nullable String all, @Nullable String left,
+            @Nullable String right, @Nullable String top, @Nullable String bottom) {
         GraphicalEditorPart editor = mRulesEngine.getEditor();
         IProject project = editor.getProject();
         if (project != null) {
@@ -282,7 +285,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public void select(final Collection<INode> nodes) {
+    public void select(final @NonNull Collection<INode> nodes) {
         LayoutCanvas layoutCanvas = mRulesEngine.getEditor().getCanvasControl();
         final SelectionManager selectionManager = layoutCanvas.getSelectionManager();
         selectionManager.select(nodes);
@@ -440,8 +443,8 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public Map<INode, Rect> measureChildren(INode parent,
-            IClientRulesEngine.AttributeFilter filter) {
+    public Map<INode, Rect> measureChildren(@NonNull INode parent,
+            @Nullable IClientRulesEngine.AttributeFilter filter) {
         RenderService renderService = RenderService.create(mRulesEngine.getEditor());
         Map<INode, Rect> map = renderService.measureChildren(parent, filter);
         if (map == null) {
@@ -502,7 +505,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String getUniqueId(String fqcn) {
+    public @NonNull String getUniqueId(@NonNull String fqcn) {
         UiDocumentNode root = mRulesEngine.getEditor().getModel();
         String prefix = fqcn.substring(fqcn.lastIndexOf('.') + 1);
         prefix = Character.toLowerCase(prefix.charAt(0)) + prefix.substring(1);
@@ -510,7 +513,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String getAppNameSpace() {
+    public @NonNull String getAppNameSpace() {
         IProject project = mRulesEngine.getEditor().getProject();
 
         ProjectState projectState = Sdk.getProjectState(project);

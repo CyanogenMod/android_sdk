@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
@@ -86,16 +88,19 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public Rect getBounds() {
+    public @NonNull Rect getBounds() {
         return mBounds;
     }
 
     @Override
-    public Margins getMargins() {
+    public @NonNull Margins getMargins() {
         ViewHierarchy viewHierarchy = mFactory.getCanvas().getViewHierarchy();
         CanvasViewInfo view = viewHierarchy.findViewInfoFor(this);
         if (view != null) {
-            return view.getMargins();
+            Margins margins = view.getMargins();
+            if (margins != null) {
+                return margins;
+            }
         }
 
         return NO_MARGINS;
@@ -133,14 +138,15 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public String getFqcn() {
+    public @NonNull String getFqcn() {
         if (mNode != null) {
             ElementDescriptor desc = mNode.getDescriptor();
             if (desc instanceof ViewElementDescriptor) {
                 return ((ViewElementDescriptor) desc).getFullClassName();
             }
         }
-        return null;
+
+        return "";
     }
 
 
@@ -189,7 +195,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public INode[] getChildren() {
+    public @NonNull INode[] getChildren() {
         if (mNode != null) {
             List<UiElementNode> uiChildren = mNode.getUiChildren();
             List<INode> nodes = new ArrayList<INode>(uiChildren.size());
@@ -209,7 +215,7 @@ public class NodeProxy implements INode {
     // ---- XML Editing ---
 
     @Override
-    public void editXml(String undoName, final INodeHandler c) {
+    public void editXml(@NonNull String undoName, final @NonNull INodeHandler c) {
         final AndroidXmlEditor editor = mNode.getEditor();
 
         if (editor != null) {
@@ -238,17 +244,17 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public INode appendChild(String viewFqcn) {
+    public @NonNull INode appendChild(@NonNull String viewFqcn) {
         return insertOrAppend(viewFqcn, -1);
     }
 
     @Override
-    public INode insertChildAt(String viewFqcn, int index) {
+    public @NonNull INode insertChildAt(@NonNull String viewFqcn, int index) {
         return insertOrAppend(viewFqcn, index);
     }
 
     @Override
-    public void removeChild(INode node) {
+    public void removeChild(@NonNull INode node) {
         checkEditOK();
 
         ((NodeProxy) node).mNode.deleteXmlNode();
@@ -320,7 +326,10 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public boolean setAttribute(String uri, String name, String value) {
+    public boolean setAttribute(
+            @Nullable String uri,
+            @NonNull String name,
+            @Nullable String value) {
         checkEditOK();
         UiAttributeNode attr = mNode.setAttributeValue(name, uri, value, true /* override */);
 
@@ -345,7 +354,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public String getStringAttr(String uri, String attrName) {
+    public String getStringAttr(@Nullable String uri, @NonNull String attrName) {
         UiElementNode uiNode = mNode;
 
         if (attrName == null) {
@@ -378,7 +387,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public IAttributeInfo getAttributeInfo(String uri, String attrName) {
+    public IAttributeInfo getAttributeInfo(@Nullable String uri, @NonNull String attrName) {
         UiElementNode uiNode = mNode;
 
         if (attrName == null) {
@@ -399,7 +408,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public IAttributeInfo[] getDeclaredAttributes() {
+    public @NonNull IAttributeInfo[] getDeclaredAttributes() {
 
         AttributeDescriptor[] descs = mNode.getAttributeDescriptors();
         int n = descs.length;
@@ -413,7 +422,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public List<String> getAttributeSources() {
+    public @NonNull List<String> getAttributeSources() {
         ElementDescriptor descriptor = mNode.getDescriptor();
         if (descriptor instanceof ViewElementDescriptor) {
             return ((ViewElementDescriptor) descriptor).getAttributeSources();
@@ -423,7 +432,7 @@ public class NodeProxy implements INode {
     }
 
     @Override
-    public IAttribute[] getLiveAttributes() {
+    public @NonNull IAttribute[] getLiveAttributes() {
         UiElementNode uiNode = mNode;
 
         if (uiNode.getXmlNode() != null) {
@@ -446,7 +455,8 @@ public class NodeProxy implements INode {
                 }
             }
         }
-        return null;
+
+        return new IAttribute[0];
 
     }
 

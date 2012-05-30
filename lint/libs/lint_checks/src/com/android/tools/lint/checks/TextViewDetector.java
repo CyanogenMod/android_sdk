@@ -44,6 +44,7 @@ import static com.android.tools.lint.detector.api.LintConstants.VALUE_EDITABLE;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_NONE;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_TRUE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -91,7 +92,7 @@ public class TextViewDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -109,7 +110,7 @@ public class TextViewDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Attr attribute = (Attr) attributes.item(i);

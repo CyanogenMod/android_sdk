@@ -17,6 +17,7 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -26,7 +27,8 @@ import com.android.ide.common.api.InsertType;
  */
 public class IncludeRule extends BaseViewRule {
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // When dropping an include tag, ask the user which layout to include.
         if (insertType == InsertType.CREATE) { // NOT InsertType.CREATE_PREVIEW
             String include = mRulesEngine.displayIncludeSourceInput();

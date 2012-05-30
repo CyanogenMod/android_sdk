@@ -16,7 +16,6 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -29,7 +28,10 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
@@ -123,8 +125,10 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
-            final List<? extends INode> children) {
+    public void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            final @NonNull INode parentNode,
+            final @NonNull List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
         if (supportsOrientation()) {
             Choices action = RuleAction.createChoices(
@@ -146,7 +150,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         if (!isVertical(parentNode)) {
             String current = parentNode.getStringAttr(ANDROID_URI, ATTR_BASELINE_ALIGNED);
             boolean isAligned =  current == null || Boolean.valueOf(current);
-            actions.add(RuleAction.createToggle(null, "Toggle Baseline Alignment",
+            actions.add(RuleAction.createToggle(ACTION_BASELINE, "Toggle Baseline Alignment",
                     isAligned,
                     new PropertyCallback(Collections.singletonList(parentNode),
                             "Change Baseline Alignment",
@@ -167,11 +171,14 @@ public class LinearLayoutRule extends BaseLayoutRule {
             // Weights
             IMenuCallback actionCallback = new IMenuCallback() {
                 @Override
-                public void action(final RuleAction action, List<? extends INode> selectedNodes,
-                        final String valueId, final Boolean newValue) {
+                public void action(
+                        final @NonNull RuleAction action,
+                        @NonNull List<? extends INode> selectedNodes,
+                        final @Nullable String valueId,
+                        final @Nullable Boolean newValue) {
                     parentNode.editXml("Change Weight", new INodeHandler() {
                         @Override
-                        public void handle(INode n) {
+                        public void handle(@NonNull INode n) {
                             String id = action.getId();
                             if (id.equals(ACTION_WEIGHT)) {
                                 String weight =
@@ -266,8 +273,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
     // ==== Drag'n'drop support ====
 
     @Override
-    public DropFeedback onDropEnter(final INode targetNode, Object targetView,
-            final IDragElement[] elements) {
+    public DropFeedback onDropEnter(final @NonNull INode targetNode, @Nullable Object targetView,
+            final @Nullable IDragElement[] elements) {
 
         if (elements.length == 0) {
             return null;
@@ -345,7 +352,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 new IFeedbackPainter() {
 
                     @Override
-                    public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+                    public void paint(@NonNull IGraphics gc, @NonNull INode node,
+                            @NonNull DropFeedback feedback) {
                         // Paint callback for the LinearLayout. This is called
                         // by the canvas when a draw is needed.
                         drawFeedback(gc, node, elements, feedback);
@@ -466,8 +474,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         Rect b = targetNode.getBounds();
         if (!b.isValid()) {
             return feedback;
@@ -532,13 +540,14 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onDropLeave(INode targetNode, IDragElement[] elements, DropFeedback feedback) {
+    public void onDropLeave(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback) {
         // ignore
     }
 
     @Override
-    public void onDropped(final INode targetNode, final IDragElement[] elements,
-            final DropFeedback feedback, final Point p) {
+    public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
+            final @Nullable DropFeedback feedback, final @NonNull Point p) {
 
         LinearDropData data = (LinearDropData) feedback.userData;
         final int initialInsertPos = data.getInsertPos();
@@ -546,7 +555,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onChildInserted(INode node, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         if (insertType == InsertType.MOVE_WITHIN) {
             // Don't adjust widths/heights/weights when just moving within a single
             // LinearLayout
@@ -775,7 +785,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
             unweightedSizes = mRulesEngine.measureChildren(layout,
                     new IClientRulesEngine.AttributeFilter() {
                         @Override
-                        public String getAttribute(INode n, String namespace, String localName) {
+                        public String getAttribute(@NonNull INode n, @Nullable String namespace,
+                                @NonNull String localName) {
                             // Clear out layout weights; we need to measure the unweighted sizes
                             // of the children
                             if (ATTR_LAYOUT_WEIGHT.equals(localName)

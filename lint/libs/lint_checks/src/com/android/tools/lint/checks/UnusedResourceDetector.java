@@ -38,6 +38,8 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -121,17 +123,17 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void run(Context context) {
+    public void run(@NonNull Context context) {
         assert false;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mDeclarations = new HashSet<String>(300);
             mReferences = new HashSet<String>(300);
@@ -141,7 +143,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     // ---- Implements JavaScanner ----
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         File file = context.file;
 
         String fileName = file.getName();
@@ -188,7 +190,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mDeclarations.removeAll(mReferences);
             Set<String> unused = mDeclarations;
@@ -330,7 +332,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (TAG_RESOURCES.equals(element.getTagName())) {
             for (Element item : LintUtils.getChildren(element)) {
                 String name = item.getAttribute(ATTR_NAME);
@@ -401,7 +403,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
 
         if (value.startsWith("@+") && !value.startsWith("@+android")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -437,7 +439,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.SLOW;
     }
 
@@ -452,8 +454,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            lombok.ast.Node node, String type, String name, boolean isFramework) {
+    public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull lombok.ast.Node node, @NonNull String type, @NonNull String name,
+            boolean isFramework) {
         if (mReferences != null && !isFramework) {
             String reference = R_PREFIX + type + '.' + name;
             mReferences.add(reference);
@@ -461,7 +464,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         if (mReferences != null) {
             return new UnusedResourceVisitor();
         } else {

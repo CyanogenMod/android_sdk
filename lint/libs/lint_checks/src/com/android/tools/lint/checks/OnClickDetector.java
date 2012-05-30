@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ON_CLICK;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -81,17 +82,17 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mNames != null && mNames.size() > 0 && mHaveBytecode) {
             List<String> names = new ArrayList<String>(mNames.keySet());
             Collections.sort(names);
@@ -129,7 +130,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
         if (value.isEmpty() || value.trim().isEmpty()) {
             context.report(ISSUE, attribute, context.getLocation(attribute),
@@ -170,7 +171,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         if (mNames == null) {
             // No onClick attributes in the XML files
             return;

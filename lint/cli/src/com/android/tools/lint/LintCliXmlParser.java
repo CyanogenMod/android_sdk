@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -40,7 +41,7 @@ import java.io.UnsupportedEncodingException;
  */
 public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
     @Override
-    public Document parseXml(XmlContext context) {
+    public Document parseXml(@NonNull XmlContext context) {
         try {
             // Do we need to provide an input stream for encoding?
             String xml = context.getContents();
@@ -70,22 +71,22 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
     }
 
     @Override
-    public Location getLocation(XmlContext context, Node node) {
+    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
         OffsetPosition pos = (OffsetPosition) getPosition(node);
         if (pos != null) {
             return Location.create(context.file, pos, (OffsetPosition) pos.getEnd());
         }
 
-        return null;
+        return Location.create(context.file);
     }
 
     @Override
-    public Handle createLocationHandle(XmlContext context, Node node) {
+    public @NonNull Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node) {
         return new LocationHandle(context.file, node);
     }
 
     @Override
-    protected OffsetPosition createPosition(int line, int column, int offset) {
+    protected @NonNull OffsetPosition createPosition(int line, int column, int offset) {
         return new OffsetPosition(line, column, offset);
     }
 
@@ -143,7 +144,7 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         }
 
         @Override
-        public void setEnd(com.android.util.PositionXmlParser.Position end) {
+        public void setEnd(@NonNull com.android.util.PositionXmlParser.Position end) {
             mEnd = end;
         }
 
@@ -155,7 +156,7 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
     }
 
     @Override
-    public void dispose(XmlContext context, Document document) {
+    public void dispose(@NonNull XmlContext context, @NonNull Document document) {
     }
 
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
@@ -170,13 +171,13 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         }
 
         @Override
-        public Location resolve() {
+        public @NonNull Location resolve() {
             OffsetPosition pos = (OffsetPosition) getPosition(mNode);
             if (pos != null) {
                 return Location.create(mFile, pos, (OffsetPosition) pos.getEnd());
             }
 
-            return null;
+            return Location.create(mFile);
         }
 
         @Override

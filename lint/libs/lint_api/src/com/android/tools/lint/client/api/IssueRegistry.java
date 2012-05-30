@@ -57,7 +57,7 @@ public abstract class IssueRegistry {
             Category.CORRECTNESS,
             10,
             Severity.ERROR,
-            null,
+            Detector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
     /**
@@ -78,7 +78,7 @@ public abstract class IssueRegistry {
             Category.LINT,
             10,
             Severity.ERROR,
-            null,
+            Detector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
     /**

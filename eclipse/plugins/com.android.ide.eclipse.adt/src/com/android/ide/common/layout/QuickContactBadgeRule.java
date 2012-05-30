@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -24,7 +25,8 @@ import com.android.ide.common.api.InsertType;
  */
 public class QuickContactBadgeRule extends ImageViewRule {
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // Deliberately override onCreate such that we don't populate a default
         // image; at design time layoutlib will supply the system default contacts
         // image.

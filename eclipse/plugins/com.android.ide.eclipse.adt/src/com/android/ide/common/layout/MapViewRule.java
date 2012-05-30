@@ -18,6 +18,7 @@ package com.android.ide.common.layout;
 
 import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -31,7 +32,8 @@ import com.android.ide.common.api.InsertType;
 public class MapViewRule extends BaseViewRule {
 
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
         if (insertType.isCreate()) {

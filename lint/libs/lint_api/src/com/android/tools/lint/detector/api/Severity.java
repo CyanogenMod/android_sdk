@@ -31,30 +31,36 @@ public enum Severity {
      * Fatal: Use sparingly because a warning marked as fatal will be
      * considered critical and will abort Export APK etc in ADT
      */
+    @NonNull
     FATAL("Fatal"),
 
     /**
      * Errors: The issue is known to be a real error that must be addressed.
      */
+    @NonNull
     ERROR("Error"),
 
     /**
      * Warning: Probably a problem.
      */
+    @NonNull
     WARNING("Warning"),
 
     /**
      * Information only: Might not be a problem, but the check has found
      * something interesting to say about the code.
      */
+    @NonNull
     INFORMATIONAL("Information"),
 
     /**
      * Ignore: The user doesn't want to see this issue
      */
+    @NonNull
     IGNORE("Ignore");
 
-    private String mDisplay;
+    @NonNull
+    private final String mDisplay;
 
     private Severity(@NonNull String display) {
         mDisplay = display;
@@ -65,8 +71,7 @@ public enum Severity {
      *
      * @return a description of the severity
      */
-    @NonNull
-    public String getDescription() {
+    public @NonNull String getDescription() {
         return mDisplay;
     }
 }

@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.LIST_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.REQUEST_FOCUS;
 import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -74,7 +75,7 @@ public class ChildCountDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -90,7 +91,7 @@ public class ChildCountDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         int childCount = LintUtils.getChildCount(element);
         String tagName = element.getTagName();
         if (tagName.equals(SCROLL_VIEW) || tagName.equals(HORIZONTAL_SCROLL_VIEW)) {

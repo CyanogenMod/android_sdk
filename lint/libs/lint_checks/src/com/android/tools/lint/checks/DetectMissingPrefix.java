@@ -23,6 +23,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_STYLE;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -70,7 +71,7 @@ public class DetectMissingPrefix extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -80,7 +81,7 @@ public class DetectMissingPrefix extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String uri = attribute.getNamespaceURI();
         if (uri == null || uri.length() == 0) {
             String name = attribute.getName();

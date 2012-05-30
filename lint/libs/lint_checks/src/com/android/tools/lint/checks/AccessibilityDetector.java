@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DES
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_BUTTON;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -62,7 +63,7 @@ public class AccessibilityDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -75,7 +76,7 @@ public class AccessibilityDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
             context.report(ISSUE, element, context.getLocation(element),
                     "[Accessibility] Missing contentDescription attribute on image", null);

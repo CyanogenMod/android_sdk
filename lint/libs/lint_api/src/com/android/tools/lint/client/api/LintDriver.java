@@ -538,7 +538,7 @@ public class LintDriver {
                             continue;
                         } else {
                             parent = parent.getParentFile();
-                            if (isProjectDir(parent)) {
+                            if (parent != null && isProjectDir(parent)) {
                                 registerProjectFile(fileToProject, file, parent, parent);
                                 continue;
                             }
@@ -718,7 +718,7 @@ public class LintDriver {
                 // Must provide an issue since API guarantees that the issue parameter
                 // is valid
                 Issue.create("Lint", "", "", Category.PERFORMANCE, 0, Severity.INFORMATIONAL, //$NON-NLS-1$
-                        null, EnumSet.noneOf(Scope.class)),
+                        Detector.class, EnumSet.noneOf(Scope.class)),
                 Severity.INFORMATIONAL,
                 null /*range*/,
                 "Lint canceled by user", null);
@@ -762,9 +762,9 @@ public class LintDriver {
                     }
                 }
                 if (xmlDetectors.size() > 0) {
-                    if (project.getSubset() != null) {
-                        checkIndividualResources(project, main, xmlDetectors,
-                                project.getSubset());
+                    List<File> files = project.getSubset();
+                    if (files != null) {
+                        checkIndividualResources(project, main, xmlDetectors, files);
                     } else {
                         File res = new File(project.getDir(), RES_FOLDER);
                         if (res.exists() && xmlDetectors.size() > 0) {
@@ -783,9 +783,9 @@ public class LintDriver {
             List<Detector> checks = union(mScopeDetectors.get(Scope.JAVA_FILE),
                     mScopeDetectors.get(Scope.ALL_JAVA_FILES));
             if (checks != null && checks.size() > 0) {
-                if (project.getSubset() != null) {
-                    checkIndividualJavaFiles(project, main, checks,
-                            project.getSubset());
+                List<File> files = project.getSubset();
+                if (files != null) {
+                    checkIndividualJavaFiles(project, main, checks, files);
                 } else {
                     List<File> sourceFolders = project.getJavaSourceFolders();
                     checkJava(project, main, sourceFolders, checks);
@@ -931,8 +931,9 @@ public class LintDriver {
 
     /** Check the classes in this project (and if applicable, in any library projects */
     private void checkClasses(Project project, Project main) {
-        if (project.getSubset() != null) {
-            checkIndividualClassFiles(project, main, project.getSubset());
+        List<File> files = project.getSubset();
+        if (files != null) {
+            checkIndividualClassFiles(project, main, files);
             return;
         }
 
@@ -1119,7 +1120,8 @@ public class LintDriver {
         for (ClassEntry entry : entries) {
             try {
                 ClassReader reader = new ClassReader(entry.bytes);
-                int flags = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
+                int flags = ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG
+                        | ClassReader.SKIP_FRAMES;
                 reader.accept(visitor, flags);
             } catch (Throwable t) {
                 mClient.log(null, "Error processing %1$s: broken class file?", entry.path());
@@ -1345,7 +1347,10 @@ public class LintDriver {
                 return null;
             }
 
-            mCurrentVisitor = new XmlVisitor(mClient.getDomParser(), applicableChecks);
+            IDomParser parser = mClient.getDomParser();
+            if (parser != null) {
+                mCurrentVisitor = new XmlVisitor(parser, applicableChecks);
+            }
         }
 
         return mCurrentVisitor;
@@ -1466,7 +1471,7 @@ public class LintDriver {
     }
 
     /** Notifies listeners, if any, that the given event has occurred */
-    private void fireEvent(@NonNull LintListener.EventType type, @NonNull Context context) {
+    private void fireEvent(@NonNull LintListener.EventType type, @Nullable Context context) {
         if (mListeners != null) {
             for (int i = 0, n = mListeners.size(); i < n; i++) {
                 LintListener listener = mListeners.get(i);
@@ -1553,7 +1558,7 @@ public class LintDriver {
         }
 
         @Override
-        public List<File> getJavaLibraries(Project project) {
+        public @NonNull List<File> getJavaLibraries(@NonNull Project project) {
             return mDelegate.getJavaLibraries(project);
         }
 
@@ -1565,13 +1570,14 @@ public class LintDriver {
 
         @Override
         @NonNull
-        public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+        public Class<? extends Detector> replaceDetector(
+                @NonNull Class<? extends Detector> detectorClass) {
             return mDelegate.replaceDetector(detectorClass);
         }
 
         @Override
         @NonNull
-        public SdkInfo getSdkInfo(Project project) {
+        public SdkInfo getSdkInfo(@NonNull Project project) {
             return mDelegate.getSdkInfo(project);
         }
 
@@ -1588,7 +1594,7 @@ public class LintDriver {
         }
 
         @Override
-        public File findResource(String relativePath) {
+        public File findResource(@NonNull String relativePath) {
             return mDelegate.findResource(relativePath);
         }
     }

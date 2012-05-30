@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
  * This is a marker annotation and it has no specific attributes.
  */
 @Documented
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Target({PACKAGE, TYPE})
 public @interface NonNullByDefault {
 }

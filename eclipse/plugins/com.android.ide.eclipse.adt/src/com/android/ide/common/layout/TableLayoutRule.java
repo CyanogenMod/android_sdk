@@ -17,6 +17,8 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_ROW;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IMenuCallback;
@@ -60,7 +62,8 @@ public class TableLayoutRule extends LinearLayoutRule {
     }
 
     @Override
-    public void onChildInserted(INode child, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode child, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // Overridden to inhibit the setting of layout_width/layout_height since
         // it should always be match_parent
     }
@@ -69,13 +72,17 @@ public class TableLayoutRule extends LinearLayoutRule {
      * Add an explicit "Add Row" action to the context menu
      */
     @Override
-    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
+    public void addContextMenuActions(@NonNull List<RuleAction> actions,
+            final @NonNull INode selectedNode) {
         super.addContextMenuActions(actions, selectedNode);
 
         IMenuCallback addTab = new IMenuCallback() {
             @Override
-            public void action(RuleAction action, List<? extends INode> selectedNodes,
-                    final String valueId, Boolean newValue) {
+            public void action(
+                    @NonNull RuleAction action,
+                    @NonNull List<? extends INode> selectedNodes,
+                    final @Nullable String valueId,
+                    @Nullable Boolean newValue) {
                 final INode node = selectedNode;
                 INode newRow = node.appendChild(FQCN_TABLE_ROW);
                 mRulesEngine.select(Collections.singletonList(newRow));
@@ -85,8 +92,10 @@ public class TableLayoutRule extends LinearLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
-            final List<? extends INode> children) {
+    public void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            final @NonNull INode parentNode,
+            final @NonNull List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
         addTableLayoutActions(mRulesEngine, actions, parentNode, children);
     }
@@ -99,11 +108,14 @@ public class TableLayoutRule extends LinearLayoutRule {
             final List<? extends INode> children) {
         IMenuCallback actionCallback = new IMenuCallback() {
             @Override
-            public void action(final RuleAction action, List<? extends INode> selectedNodes,
-                    final String valueId, final Boolean newValue) {
+            public void action(
+                    final @NonNull RuleAction action,
+                    @NonNull List<? extends INode> selectedNodes,
+                    final @Nullable String valueId,
+                    final @Nullable Boolean newValue) {
                 parentNode.editXml("Add/Remove Table Row", new INodeHandler() {
                     @Override
-                    public void handle(INode n) {
+                    public void handle(@NonNull INode n) {
                         if (action.getId().equals(ACTION_ADD_ROW)) {
                             // Determine the index of the selection, if any; if there is
                             // a selection, insert the row before the current row, otherwise
@@ -171,7 +183,8 @@ public class TableLayoutRule extends LinearLayoutRule {
     }
 
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
         if (insertType.isCreate()) {
@@ -183,8 +196,9 @@ public class TableLayoutRule extends LinearLayoutRule {
     }
 
     @Override
-    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge, Object childView, Object parentView) {
+    public DropFeedback onResizeBegin(@NonNull INode child, @NonNull INode parent,
+            @Nullable SegmentType horizontalEdge, @Nullable SegmentType verticalEdge,
+            @Nullable Object childView, @Nullable Object parentView) {
         // Children of a table layout cannot set their widths (it is controlled by column
         // settings on the table). They can set their heights (though for TableRow, the
         // height is always wrap_content).

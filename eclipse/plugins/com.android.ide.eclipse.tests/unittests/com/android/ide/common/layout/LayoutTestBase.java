@@ -19,6 +19,8 @@ package com.android.ide.common.layout;
 import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
@@ -198,47 +200,48 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public void debugPrintf(String msg, Object... params) {
+        public void debugPrintf(@NonNull String msg, Object... params) {
             fail("Not supported in tests yet");
         }
 
         @Override
-        public void displayAlert(String message) {
+        public void displayAlert(@NonNull String message) {
             fail("Not supported in tests yet");
         }
 
         @Override
-        public String displayInput(String message, String value, IValidator filter) {
+        public String displayInput(@NonNull String message, @Nullable String value,
+                @Nullable IValidator filter) {
             fail("Not supported in tests yet");
             return null;
         }
 
         @Override
-        public String getFqcn() {
+        public @NonNull String getFqcn() {
             return mFqn;
         }
 
         @Override
-        public IViewMetadata getMetadata(final String fqcn) {
+        public @NonNull IViewMetadata getMetadata(final @NonNull String fqcn) {
             return new IViewMetadata() {
                 @Override
-                public String getDisplayName() {
+                public @NonNull String getDisplayName() {
                     // This also works when there is no "."
                     return fqcn.substring(fqcn.lastIndexOf('.') + 1);
                 }
 
                 @Override
-                public FillPreference getFillPreference() {
+                public @NonNull FillPreference getFillPreference() {
                     return ViewMetadataRepository.get().getFillPreference(fqcn);
                 }
 
                 @Override
-                public Margins getInsets() {
+                public @NonNull Margins getInsets() {
                     return null;
                 }
 
                 @Override
-                public List<String> getTopAttributes() {
+                public @NonNull List<String> getTopAttributes() {
                     return ViewMetadataRepository.get().getTopAttributes(fqcn);
                 }
             };
@@ -250,7 +253,7 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public IViewRule loadRule(String fqcn) {
+        public IViewRule loadRule(@NonNull String fqcn) {
             fail("Not supported in tests yet");
             return null;
         }
@@ -262,20 +265,21 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public IValidator getResourceValidator() {
+        public @NonNull IValidator getResourceValidator() {
             fail("Not supported in tests yet");
             return null;
         }
 
         @Override
-        public String displayResourceInput(String resourceTypeName, String currentValue) {
+        public String displayResourceInput(@NonNull String resourceTypeName,
+                @Nullable String currentValue) {
             fail("Not supported in tests yet");
             return null;
         }
 
         @Override
-        public String[] displayMarginInput(String all, String left, String right, String top,
-                String bottom) {
+        public String[] displayMarginInput(@Nullable String all, @Nullable String left,
+                @Nullable String right, @Nullable String top, @Nullable String bottom) {
             fail("Not supported in tests yet");
             return null;
         }
@@ -287,7 +291,7 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public void select(Collection<INode> nodes) {
+        public void select(@NonNull Collection<INode> nodes) {
             fail("Not supported in tests yet");
         }
 
@@ -308,7 +312,8 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public Map<INode, Rect> measureChildren(INode parent, AttributeFilter filter) {
+        public Map<INode, Rect> measureChildren(@NonNull INode parent,
+                @Nullable AttributeFilter filter) {
             return null;
         }
 
@@ -319,7 +324,7 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public String getUniqueId(String prefix) {
+        public @NonNull String getUniqueId(@NonNull String prefix) {
             fail("Not supported in tests yet");
             return null;
         }
@@ -337,7 +342,7 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public String getAppNameSpace() {
+        public @NonNull String getAppNameSpace() {
             fail("Not supported in tests yet");
             return null;
         }

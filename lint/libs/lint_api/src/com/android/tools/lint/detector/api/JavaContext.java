@@ -74,7 +74,8 @@ public class JavaContext extends Context {
     }
 
     @Override
-    public void report(Issue issue, Location location, String message, Object data) {
+    public void report(@NonNull Issue issue, @Nullable Location location,
+            @NonNull String message, @Nullable Object data) {
         if (mDriver.isSuppressed(issue, compilationUnit)) {
             return;
         }

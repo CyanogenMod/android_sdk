@@ -739,7 +739,7 @@ public class ApiLookup {
         return -1;
     }
 
-    private int findMember(int classNumber, @NonNull String name, @NonNull String desc) {
+    private int findMember(int classNumber, @NonNull String name, @Nullable String desc) {
         // The index array contains class indexes from 0 to classCount and
         // member indices from classCount to mIndices.length.
         int low = mClassCount;

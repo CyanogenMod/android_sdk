@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.Rect;
 
@@ -69,7 +71,7 @@ public class SimpleElement implements IDragElement {
      * a View to inflate.
      */
     @Override
-    public String getFqcn() {
+    public @NonNull String getFqcn() {
         return mFqcn;
     }
 
@@ -79,7 +81,7 @@ public class SimpleElement implements IDragElement {
      * from the object palette (unless it successfully rendered a preview)
      */
     @Override
-    public Rect getBounds() {
+    public @NonNull Rect getBounds() {
         return mBounds;
     }
 
@@ -98,12 +100,12 @@ public class SimpleElement implements IDragElement {
      * is no suitable parent. This is null when {@link #getParentFqcn()} is null.
      */
     @Override
-    public Rect getParentBounds() {
+    public @NonNull Rect getParentBounds() {
         return mParentBounds;
     }
 
     @Override
-    public IDragAttribute[] getAttributes() {
+    public @NonNull IDragAttribute[] getAttributes() {
         if (mCachedAttributes == null) {
             mCachedAttributes = mAttributes.toArray(new IDragAttribute[mAttributes.size()]);
         }
@@ -111,7 +113,7 @@ public class SimpleElement implements IDragElement {
     }
 
     @Override
-    public IDragAttribute getAttribute(String uri, String localName) {
+    public IDragAttribute getAttribute(@Nullable String uri, @NonNull String localName) {
         for (IDragAttribute attr : mAttributes) {
             if (attr.getUri().equals(uri) && attr.getName().equals(localName)) {
                 return attr;
@@ -122,7 +124,7 @@ public class SimpleElement implements IDragElement {
     }
 
     @Override
-    public IDragElement[] getInnerElements() {
+    public @NonNull IDragElement[] getInnerElements() {
         if (mCachedElements == null) {
             mCachedElements = mElements.toArray(new IDragElement[mElements.size()]);
         }

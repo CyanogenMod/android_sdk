@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
@@ -1065,7 +1066,7 @@ public class BuildHelper {
 
                     @SuppressWarnings("unused")
                     @Override
-                    public void out(String line) {
+                    public void out(@Nullable String line) {
                         if (line != null) {
                             // If benchmarking always print the lines that
                             // correspond to benchmarking info returned by ADT
@@ -1080,7 +1081,7 @@ public class BuildHelper {
                     }
 
                     @Override
-                    public void err(String line) {
+                    public void err(@Nullable String line) {
                         if (line != null) {
                             results.add(line);
                             if (BuildVerbosity.VERBOSE == AdtPrefs.getPrefs().getBuildVerbosity()) {

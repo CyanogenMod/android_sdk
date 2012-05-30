@@ -106,10 +106,10 @@ public interface IClientRulesEngine {
     /**
      * Returns a resource name validator for the current project
      *
-     * @return an {@link IValidator} for validating new resource name in the current
+     * @return an {@link IValidator} for validating a new resource name in the current
      *         project
      */
-    @NonNull
+    @Nullable
     IValidator getResourceValidator();
 
     /**

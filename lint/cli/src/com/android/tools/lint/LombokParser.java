@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -39,7 +40,7 @@ import lombok.ast.grammar.Source;
 public class LombokParser implements IJavaParser {
 
     @Override
-    public Node parseJava(JavaContext context) {
+    public Node parseJava(@NonNull JavaContext context) {
         try {
             Source source = new Source(context.getContents(), context.file.getName());
             List<Node> nodes = source.getNodes();
@@ -95,19 +96,21 @@ public class LombokParser implements IJavaParser {
     }
 
     @Override
-    public Location getLocation(JavaContext context, lombok.ast.Node node) {
+    public @NonNull Location getLocation(
+            @NonNull JavaContext context,
+            @NonNull lombok.ast.Node node) {
         lombok.ast.Position position = node.getPosition();
         return Location.create(context.file, context.getContents(),
                 position.getStart(), position.getEnd());
     }
 
     @Override
-    public Handle createLocationHandle(JavaContext context, Node node) {
+    public @NonNull Handle createLocationHandle(@NonNull JavaContext context, @NonNull Node node) {
         return new LocationHandle(context.file, node);
     }
 
     @Override
-    public void dispose(JavaContext context, Node compilationUnit) {
+    public void dispose(@NonNull JavaContext context, @NonNull Node compilationUnit) {
     }
 
     /* Handle for creating positions cheaply and returning full fledged locations later */
@@ -122,7 +125,7 @@ public class LombokParser implements IJavaParser {
         }
 
         @Override
-        public Location resolve() {
+        public @NonNull Location resolve() {
             Position pos = mNode.getPosition();
             return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
         }

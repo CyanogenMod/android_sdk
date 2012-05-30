@@ -78,6 +78,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -488,7 +489,7 @@ public class ManifestInfo {
         try {
             IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
             if (javaProject == null) {
-                return null;
+                return Collections.emptyList();
             }
             // TODO - look around a bit more and see if we can figure out whether the
             // call if from within a setContentView call!

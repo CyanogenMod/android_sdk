@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_PARENT;
 import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
@@ -58,12 +59,12 @@ public class StyleCycleDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -73,7 +74,7 @@ public class StyleCycleDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         Attr parentNode = element.getAttributeNode(ATTR_PARENT);
         if (parentNode != null) {
             String parent = parentNode.getValue();

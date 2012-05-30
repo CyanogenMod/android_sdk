@@ -18,6 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_COLOR;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -60,12 +62,12 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -77,8 +79,8 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
     }
 
     @Override
-    public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            Node select, String type, String name, boolean isFramework) {
+    public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull Node select, @NonNull String type, @NonNull String name, boolean isFramework) {
         if (type.equals(RESOURCE_CLZ_COLOR)) {
             while (select.getParent() instanceof Select) {
                 select = select.getParent();

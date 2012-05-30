@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -102,12 +103,12 @@ public class TooManyViewsDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         mViewCount = mDepth = 0;
         mWarnedAboutDepth = false;
     }
@@ -118,7 +119,7 @@ public class TooManyViewsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         mViewCount++;
         mDepth++;
 
@@ -140,7 +141,7 @@ public class TooManyViewsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElementAfter(XmlContext context, Element element) {
+    public void visitElementAfter(@NonNull XmlContext context, @NonNull Element element) {
         mDepth--;
     }
 }

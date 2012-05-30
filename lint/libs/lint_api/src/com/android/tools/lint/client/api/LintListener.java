@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.google.common.annotations.Beta;
 
@@ -65,5 +66,5 @@ public interface LintListener {
      * @param context the context providing additional information
      */
     public void update(@NonNull LintDriver driver, @NonNull EventType type,
-            @NonNull Context context);
+            @Nullable Context context);
 }

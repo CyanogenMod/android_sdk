@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.avd;
 
+import com.android.annotations.Nullable;
 import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -1404,14 +1405,14 @@ public class AvdManager {
                     Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
-                        public void out(String line) {
+                        public void out(@Nullable String line) {
                             if (line != null) {
                                 stdOutput.add(line);
                             }
                         }
 
                         @Override
-                        public void err(String line) {
+                        public void err(@Nullable String line) {
                             if (line != null) {
                                 errorOutput.add(line);
                             }
