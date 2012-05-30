@@ -17,23 +17,12 @@
 package com.android.apigenerator;
 
 
-import com.android.apigenerator.enumfix.AndroidJarReader;
-
-import org.xml.sax.SAXException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 /**
  * Main class for command line command to convert the existing API XML/TXT files into diff-based
@@ -46,96 +35,20 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length < 2 || args.length > 3) {
+        if (args.length != 2) {
             printUsage();
         }
 
-        if (args.length == 3) {
-            if (args[0].equals("enum")) {
-                AndroidJarReader reader = new AndroidJarReader(args[1]);
-                Map<String, ApiClass> classes = reader.getEnumClasses();
-                createApiFile(new File(args[2]), classes);
-            } else {
-                printUsage();
-            }
-        } else {
-            Map<String, ApiClass> classes = parsePlatformApiFiles(new File(args[0]));
-            createApiFile(new File(args[1]), classes);
-        }
-
+        AndroidJarReader reader = new AndroidJarReader(args[0]);
+        Map<String, ApiClass> classes = reader.getClasses();
+        createApiFile(new File(args[1]), classes);
     }
 
     private static void printUsage() {
-        System.err.println("Convert API files into a more manageable file\n");
+        System.err.println("Generates a single API file from the content of an SDK.\n");
         System.err.println("Usage\n");
-        System.err.println("\tApiCheck [enum] FOLDER OUTFILE\n");
+        System.err.println("\tApiCheck SDKFOLDER OUTFILE\n");
         System.exit(1);
-    }
-
-
-    /**
-     * Parses platform API files.
-     * @param apiFolder the folder containing the files.
-     * @return a top level {@link ApiInfo} object for the highest available API level.
-     */
-    private static Map<String, ApiClass> parsePlatformApiFiles(File apiFolder) {
-        int apiLevel = 1;
-
-        Map<String, ApiClass> map = new HashMap<String, ApiClass>();
-
-        InputStream stream = Main.class.getResourceAsStream(
-                "enums.xml");
-        if (stream != null) {
-            map = EnumParser.parseApi(stream);
-        }
-
-        if (map == null) {
-            map = new HashMap<String, ApiClass>();
-        }
-
-        while (true) {
-            File file = new File(apiFolder, Integer.toString(apiLevel) + ".xml");
-            if (file.exists()) {
-                parseXmlApiFile(file, apiLevel, map);
-                apiLevel++;
-            } else {
-                file = new File(apiFolder, Integer.toString(apiLevel) + ".txt");
-                if (file.exists()) {
-                    parseTxtApiFile(file, apiLevel, map);
-                    apiLevel++;
-
-                } else {
-                    break;
-                }
-            }
-        }
-
-        return map;
-    }
-
-    private static void parseTxtApiFile(File apiFile, int api, Map<String, ApiClass> map) {
-        try {
-            NewApiParser.parseApi(apiFile.getName(), new FileInputStream(apiFile), map, api);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (ApiParseException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void parseXmlApiFile(File apiFile, int apiLevel,
-            Map<String, ApiClass> map) {
-        try {
-            SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-            SAXParser parser = parserFactory.newSAXParser();
-            parser.parse(new FileInputStream(apiFile), new XmlApiParser(map, apiLevel));
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
