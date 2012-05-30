@@ -205,9 +205,9 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             BufferedImage awtImage = mAwtImage.get();
             if (PRESCALE && awtImage != null) {
                 if (mPreScaledImage == null ||
-                        mPreScaledImage.getImageData().width != hi.getScalledImgSize()) {
-                    double xScale = hi.getScalledImgSize() / (double) awtImage.getWidth();
-                    double yScale = vi.getScalledImgSize() / (double) awtImage.getHeight();
+                        mPreScaledImage.getImageData().width != hi.getScaledImgSize()) {
+                    double xScale = hi.getScaledImgSize() / (double) awtImage.getWidth();
+                    double yScale = vi.getScaledImgSize() / (double) awtImage.getHeight();
                     BufferedImage scaledAwtImage;
 
                     // NOTE: == comparison on floating point numbers is okay
@@ -221,7 +221,7 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     } else {
                         scaledAwtImage = ImageUtils.scale(awtImage, xScale, yScale);
                     }
-                    assert scaledAwtImage.getWidth() == hi.getScalledImgSize();
+                    assert scaledAwtImage.getWidth() == hi.getScaledImgSize();
                     if (mPreScaledImage != null && !mPreScaledImage.isDisposed()) {
                         mPreScaledImage.dispose();
                     }
@@ -251,8 +251,8 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     vi.getImgSize(),        // srcHeight
                     hi.translate(0),        // destX
                     vi.translate(0),        // destY
-                    hi.getScalledImgSize(), // destWidth
-                    vi.getScalledImgSize());  // destHeight
+                    hi.getScaledImgSize(), // destWidth
+                    vi.getScaledImgSize());  // destHeight
 
             if (oldAlias != -2) {
                 gc_setAntialias(gc, oldAlias);

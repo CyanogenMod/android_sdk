@@ -104,7 +104,7 @@ public class CanvasTransform {
      *
      * @return The scaled image size in pixels.
      */
-    public int getScalledImgSize() {
+    public int getScaledImgSize() {
         return (int) (mImgSize * mScale);
     }
 
