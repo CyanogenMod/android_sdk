@@ -42,7 +42,8 @@ public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
 
             // get the IFile object and check it's in one of the layout folders.
             IFile iFile = fileInput.getFile();
-            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+            ResourceManager manager = ResourceManager.getInstance();
+            ResourceFolder resFolder = manager.getResourceFolder(iFile);
 
             // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
             // is expensive so try exclude files that definitely don't match, such
@@ -60,6 +61,12 @@ public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
                     if (editorInput instanceof FileEditorInput) {
                         FileEditorInput editorFileInput = (FileEditorInput)editorInput;
                         IFile editorIFile = editorFileInput.getFile();
+
+                        ResourceFolder editorFolder = manager.getResourceFolder(editorIFile);
+                        if (editorFolder == null
+                                || editorFolder.getType() != ResourceFolderType.LAYOUT) {
+                            return false;
+                        }
 
                         return editorIFile.getProject().equals(iFile.getProject())
                             && editorIFile.getName().equals(iFile.getName());
