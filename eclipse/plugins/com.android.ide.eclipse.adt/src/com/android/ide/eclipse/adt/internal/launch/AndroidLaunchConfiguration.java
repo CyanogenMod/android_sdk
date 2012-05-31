@@ -21,47 +21,48 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 
 /**
  * Launch configuration data. This stores the result of querying the
- * {@link ILaunchConfiguration} so that it's only done once. 
+ * {@link ILaunchConfiguration} so that it's only done once.
  */
 public class AndroidLaunchConfiguration {
-    
+
     /**
      * Launch action. See {@link LaunchConfigDelegate#ACTION_DEFAULT},
      * {@link LaunchConfigDelegate#ACTION_ACTIVITY},
      * {@link LaunchConfigDelegate#ACTION_DO_NOTHING}
      */
     public int mLaunchAction = LaunchConfigDelegate.DEFAULT_LAUNCH_ACTION;
-    
-    /**
-     * Target selection mode for the configuration: either {@link #AUTO} or {@link #MANUAL}.
-     */
+
+    /** Target selection mode for the configuration. */
     public enum TargetMode {
         /** Automatic target selection mode. */
-        AUTO(true),
+        AUTO,
         /** Manual target selection mode. */
-        MANUAL(false);
-        
-        private boolean mValue;
+        MANUAL,
+        /** All active devices */
+        ALL_DEVICES,
+        /** All active emulators */
+        ALL_EMULATORS,
+        /** All active devices and emulators */
+        ALL_DEVICES_AND_EMULATORS;
 
-        TargetMode(boolean value) {
-            mValue = value;
-        }
-        
-        public boolean getValue() {
-            return mValue;
-        }
-        
-        public static TargetMode getMode(boolean value) {
-            for (TargetMode mode : values()) {
-                if (mode.mValue == value) {
-                    return mode;
+        public static TargetMode getMode(String s) {
+            for (TargetMode m: values()) {
+                if (m.toString().equals(s)) {
+                    return m;
                 }
             }
-            
-            return null;
+
+            throw new IllegalArgumentException(String.format(
+                    "Invalid representation (%s) for TargetMode", s));
+        }
+
+        public boolean isMultiDevice() {
+            return this == ALL_DEVICES
+                    || this == ALL_EMULATORS
+                    || this == ALL_DEVICES_AND_EMULATORS;
         }
     }
-    
+
     /**
      * Target selection mode.
      * @see TargetMode
@@ -77,12 +78,12 @@ public class AndroidLaunchConfiguration {
      * Indicates whether the emulator should be called with -no-boot-anim
      */
     public boolean mNoBootAnim = LaunchConfigDelegate.DEFAULT_NO_BOOT_ANIM;
-    
+
     /**
      * AVD Name.
      */
     public String mAvdName = null;
-    
+
     public String mNetworkSpeed = EmulatorConfigTab.getSpeed(
             LaunchConfigDelegate.DEFAULT_SPEED);
     public String mNetworkDelay = EmulatorConfigTab.getDelay(
@@ -105,13 +106,7 @@ public class AndroidLaunchConfiguration {
             // nothing to be done here, we'll use the default value
         }
 
-        try {
-            boolean value = config.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                    mTargetMode.getValue());
-            mTargetMode = TargetMode.getMode(value);
-        } catch (CoreException e) {
-            // nothing to be done here, we'll use the default value
-        }
+        mTargetMode = parseTargetMode(config, mTargetMode);
 
         try {
             mAvdName = config.getAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, mAvdName);
@@ -153,6 +148,29 @@ public class AndroidLaunchConfiguration {
                                               mNoBootAnim);
         } catch (CoreException e) {
             // nothing to be done here, we'll use the default value
+        }
+    }
+
+    /**
+     * Retrieve the {@link TargetMode} saved in the provided launch configuration.
+     * Returns defaultMode if there are any errors while retrieving or parsing the saved setting.
+     */
+    public static TargetMode parseTargetMode(ILaunchConfiguration config, TargetMode defaultMode) {
+        try {
+            String value = config.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
+                    defaultMode.toString());
+            return TargetMode.getMode(value);
+        } catch (CoreException e) {
+            // ADT R20 changes the attribute type of ATTR_TARGET_MODE to be a string from a bool.
+            // So if parsing as a string fails, attempt parsing as a boolean.
+            try {
+                boolean value = config.getAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE, true);
+                return value ? TargetMode.AUTO : TargetMode.MANUAL;
+            } catch (CoreException e1) {
+                return defaultMode;
+            }
+        } catch (IllegalArgumentException e) {
+            return defaultMode;
         }
     }
 }
