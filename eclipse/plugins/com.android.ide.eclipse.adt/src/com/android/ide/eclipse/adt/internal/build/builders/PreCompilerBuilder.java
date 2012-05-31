@@ -46,6 +46,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
@@ -648,8 +649,14 @@ public class PreCompilerBuilder extends BaseBuilder {
                 if (DEBUG_LOG) {
                     AdtPlugin.log(IStatus.INFO, "%s compiling resources!", project.getName());
                 }
+
+                IFile proguardFile = null;
+                if (projectState.getProperty(ProjectProperties.PROPERTY_PROGUARD_CONFIG) != null) {
+                    proguardFile = androidOutputFolder.getFile(AdtConstants.FN_AAPT_PROGUARD);
+                }
+
                 handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
-                        projectState.isLibrary());
+                        projectState.isLibrary(), proguardFile);
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
@@ -882,7 +889,7 @@ public class PreCompilerBuilder extends BaseBuilder {
      * @throws AbortBuildException
      */
     private void handleResources(IProject project, String javaPackage, IAndroidTarget projectTarget,
-            IFile manifest, List<IProject> libProjects, boolean isLibrary)
+            IFile manifest, List<IProject> libProjects, boolean isLibrary, IFile proguardFile)
             throws CoreException, AbortBuildException {
         // get the resource folder
         IFolder resFolder = project.getFolder(AdtConstants.WS_RESOURCES);
@@ -941,8 +948,11 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             }
 
+            String proguardFilePath = proguardFile != null ?
+                    proguardFile.getLocation().toOSString(): null;
+
             execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                    mainPackageFolder, libResFolders, libPackages, isLibrary);
+                    mainPackageFolder, libResFolders, libPackages, isLibrary, proguardFilePath);
         }
     }
 
@@ -959,14 +969,16 @@ public class PreCompilerBuilder extends BaseBuilder {
      * If <var>customJavaPackage</var> is not null, this must match the new destination triggered
      * by its value.
      * @param libResFolders the list of res folders for the library.
-     * @param libraryPackages an optional list of javapackages to replace the main project java package.
-     * can be null.
+     * @param libraryPackages an optional list of javapackages to replace the main project java
+     * package. can be null.
      * @param isLibrary if the project is a library project
+     * @param proguardFile an optional path to store proguard information
      * @throws AbortBuildException
      */
     private void execAapt(IProject project, IAndroidTarget projectTarget, String osOutputPath,
             String osResPath, String osManifestPath, IFolder packageFolder,
-            ArrayList<IFolder> libResFolders, String libraryPackages, boolean isLibrary)
+            ArrayList<IFolder> libResFolders, String libraryPackages, boolean isLibrary,
+            String proguardFile)
             throws AbortBuildException {
 
         // We actually need to delete the manifest.java as it may become empty and
@@ -1015,6 +1027,12 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         array.add("-I"); //$NON-NLS-1$
         array.add(projectTarget.getPath(IAndroidTarget.ANDROID_JAR));
+
+        // use the proguard file
+        if (proguardFile != null && proguardFile.length() > 0) {
+            array.add("-G");
+            array.add(proguardFile);
+        }
 
         if (AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE) {
             StringBuilder sb = new StringBuilder();

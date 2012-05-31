@@ -37,6 +37,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -199,6 +200,13 @@ public final class ExportHelper {
                                 "Invalid proguard configuration file path " + proguardConfigFile
                                 + " does not exist or is not a regular file", null));
                     }
+                }
+
+                // get the proguard file output by aapt
+                if (proguardConfigFiles != null) {
+                    IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
+                    IFile proguardFile = androidOutputFolder.getFile(AdtConstants.FN_AAPT_PROGUARD);
+                    proguardConfigFiles.add(proguardFile.getLocation().toFile());
                 }
             }
 
