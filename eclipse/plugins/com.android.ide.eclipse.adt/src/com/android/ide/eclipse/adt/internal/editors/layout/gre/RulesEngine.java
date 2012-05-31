@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IGraphics;
@@ -154,6 +156,7 @@ public class RulesEngine {
      * @return Null if the rule failed, there's no rule or the rule does not provide
      *   any custom menu actions. Otherwise, a list of {@link RuleAction}.
      */
+    @Nullable
     public List<RuleAction> callGetContextMenu(NodeProxy selectedNode) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(selectedNode.getNode());
@@ -168,6 +171,30 @@ public class RulesEngine {
                 return actions;
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.getContextMenu() failed: %s",
+                        rule.getClass().getSimpleName(),
+                        e.toString());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Calls the selected node to return its default action
+     *
+     * @param selectedNode the node to apply the action to
+     * @return the default action id
+     */
+    public String callGetDefaultActionId(@NonNull NodeProxy selectedNode) {
+        // try to find a rule for this element's FQCN
+        IViewRule rule = loadRule(selectedNode.getNode());
+
+        if (rule != null) {
+            try {
+                mInsertType = InsertType.CREATE;
+                return rule.getDefaultActionId(selectedNode);
+            } catch (Exception e) {
+                AdtPlugin.log(e, "%s.getDefaultAction() failed: %s",
                         rule.getClass().getSimpleName(),
                         e.toString());
             }

@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
@@ -219,14 +221,18 @@ public class ResourceNameValidator implements IInputValidator {
      * @param type the resource type of the resource name being validated
      * @return a new {@link ResourceNameValidator}
      */
-    public static ResourceNameValidator create(boolean allowXmlExtension, IProject project,
-            ResourceType type) {
-        Set<String> existing = new HashSet<String>();
-        ResourceManager manager = ResourceManager.getInstance();
-        ProjectResources projectResources = manager.getProjectResources(project);
-        Collection<ResourceItem> items = projectResources.getResourceItemsOfType(type);
-        for (ResourceItem item : items) {
-            existing.add(item.getName());
+    public static ResourceNameValidator create(boolean allowXmlExtension,
+            @Nullable IProject project,
+            @NonNull ResourceType type) {
+        Set<String> existing = null;
+        if (project != null) {
+            existing = new HashSet<String>();
+            ResourceManager manager = ResourceManager.getInstance();
+            ProjectResources projectResources = manager.getProjectResources(project);
+            Collection<ResourceItem> items = projectResources.getResourceItemsOfType(type);
+            for (ResourceItem item : items) {
+                existing.add(item.getName());
+            }
         }
 
         boolean isFileType = ResourceHelper.isFileBasedResourceType(type);

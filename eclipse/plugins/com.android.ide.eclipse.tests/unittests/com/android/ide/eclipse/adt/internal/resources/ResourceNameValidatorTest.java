@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.internal.resources;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
+import org.eclipse.core.resources.IProject;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,6 +64,15 @@ public class ResourceNameValidatorTest extends TestCase {
                 .isValid("_foo") != null);
         assertTrue(ResourceNameValidator.create(true, ResourceFolderType.DRAWABLE)
                 .isValid("_foo") != null);
+    }
+
+    public void testIds() throws Exception {
+        ResourceNameValidator validator = ResourceNameValidator.create(false, (IProject) null,
+                ResourceType.ID);
+        assertTrue(validator.isValid("foo") == null);
+        assertTrue(validator.isValid(" foo") != null);
+        assertTrue(validator.isValid("foo ") != null);
+        assertTrue(validator.isValid("foo@") != null);
     }
 
     public void testUniqueOrExists() throws Exception {

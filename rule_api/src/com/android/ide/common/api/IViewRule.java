@@ -102,6 +102,17 @@ public interface IViewRule {
     void addContextMenuActions(@NonNull List<RuleAction> actions, @NonNull INode node);
 
     /**
+     * Returns the id of the default action to invoke for this view, typically when the
+     * user presses F2. The id should correspond to the {@link RuleAction#getId()} returned
+     * by one of the actions added by {@link #addContextMenuActions(List, INode)}.
+     *
+     * @param node the primary selected node
+     * @return the id of default action, or null if none is default
+     */
+    @Nullable
+    String getDefaultActionId(@NonNull INode node);
+
+    /**
      * Invoked by the Rules Engine to ask the parent layout for the set of layout actions
      * to display in the layout bar. The layout rule should add these into the provided
      * list. The order the items are added in does not matter; the
