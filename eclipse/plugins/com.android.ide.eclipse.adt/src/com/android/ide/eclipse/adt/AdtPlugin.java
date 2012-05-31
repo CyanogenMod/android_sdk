@@ -211,8 +211,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     public void start(BundleContext context) throws Exception {
         super.start(context);
 
-        Display display = getDisplay();
-
         // set the default android console.
         mAndroidConsole = new MessageConsole("Android", null); //$NON-NLS-1$
         ConsolePlugin.getDefault().getConsoleManager().addConsoles(
@@ -221,17 +219,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
         // get the stream to write in the android console.
         mAndroidConsoleStream = mAndroidConsole.newMessageStream();
         mAndroidConsoleErrorStream = mAndroidConsole.newMessageStream();
-        mRed = new Color(display, 0xFF, 0x00, 0x00);
-
-        // because this can be run, in some cases, by a non ui thread, and because
-        // changing the console properties update the ui, we need to make this change
-        // in the ui thread.
-        display.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                mAndroidConsoleErrorStream.setColor(mRed);
-            }
-        });
 
         // get the eclipse store
         IPreferenceStore eclipseStore = getPreferenceStore();
@@ -303,10 +290,30 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
 
         DesignerPlugin.dispose();
 
-        mRed.dispose();
+        if (mRed != null) {
+            mRed.dispose();
+            mRed = null;
+        }
+
         synchronized (AdtPlugin.class) {
             sPlugin = null;
         }
+    }
+
+    /** Called when the workbench has been started */
+    public void workbenchStarted() {
+        Display display = getDisplay();
+        mRed = new Color(display, 0xFF, 0x00, 0x00);
+
+        // because this can be run, in some cases, by a non ui thread, and because
+        // changing the console properties update the ui, we need to make this change
+        // in the ui thread.
+        display.asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                mAndroidConsoleErrorStream.setColor(mRed);
+            }
+        });
     }
 
     /**

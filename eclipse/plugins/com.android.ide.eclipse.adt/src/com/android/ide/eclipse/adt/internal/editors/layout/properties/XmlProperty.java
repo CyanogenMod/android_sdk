@@ -167,6 +167,9 @@ class XmlProperty extends Property {
         Object s = null;
         try {
             Element element = (Element) mNode.getXmlNode();
+            if (element == null) {
+                return false;
+            }
             String name = mDescriptor.getXmlLocalName();
             String uri = mDescriptor.getNamespaceUri();
             if (uri != null) {
@@ -182,6 +185,9 @@ class XmlProperty extends Property {
 
     public String getStringValue() {
         Element element = (Element) mNode.getXmlNode();
+        if (element == null) {
+            return null;
+        }
         String name = mDescriptor.getXmlLocalName();
         String uri = mDescriptor.getNamespaceUri();
         Attr attr;

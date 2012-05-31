@@ -68,6 +68,8 @@ public class AdtStartup implements IStartup {
         }
 
         initializeWindowCoordinator();
+
+        AdtPlugin.getDefault().workbenchStarted();
     }
 
     private boolean isFirstTime() {
