@@ -24,6 +24,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -33,7 +34,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Sets;
 
@@ -116,13 +116,8 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
     }
 
     @Override
@@ -134,14 +129,14 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         if (context.getDriver().getPhase() == 1) {
             mFileToNames = new HashMap<File, Set<String>>();
         }
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mNames = new HashSet<String>();
         }
@@ -151,7 +146,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Store this layout's set of ids for full project analysis in afterCheckProject
             mFileToNames.put(context.file, mNames);
@@ -161,7 +156,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // NOTE - this will look for the presence of translation strings.
             // If you create a resource folder but don't actually place a file in it
@@ -406,7 +401,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (mIgnoreFile) {
             return;
         }

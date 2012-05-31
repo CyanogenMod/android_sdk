@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.values;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
@@ -43,8 +45,8 @@ public class ValuesEditorDelegate extends CommonXmlDelegate {
         @Override
         @SuppressWarnings("unchecked")
         public ValuesEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.VALUES == type) {
                 return new ValuesEditorDelegate(delegator);
             }

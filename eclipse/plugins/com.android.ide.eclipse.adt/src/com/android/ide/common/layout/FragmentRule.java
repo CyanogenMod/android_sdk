@@ -15,9 +15,10 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -27,7 +28,8 @@ import com.android.ide.common.api.InsertType;
  */
 public class FragmentRule extends BaseViewRule {
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // When dropping a fragment tag, ask the user which layout to include.
         if (insertType == InsertType.CREATE) { // NOT InsertType.CREATE_PREVIEW
             String fqcn = mRulesEngine.displayFragmentSourceInput();

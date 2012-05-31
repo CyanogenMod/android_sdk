@@ -34,6 +34,7 @@ import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -258,22 +259,22 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.SLOW;
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         mApplicationIcon = null;
     }
 
     @Override
-    public void afterCheckLibraryProject(Context context) {
+    public void afterCheckLibraryProject(@NonNull Context context) {
         checkResourceFolder(context, context.getProject().getDir());
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         checkResourceFolder(context, context.getProject().getDir());
     }
 
@@ -1203,7 +1204,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     // XML detector: Skim manifest
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return file.getName().equals(ANDROID_MANIFEST_XML);
     }
 
@@ -1213,7 +1214,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         assert element.getTagName().equals(TAG_APPLICATION);
         mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
         if (mApplicationIcon.startsWith(DRAWABLE_RESOURCE_PREFIX)) {

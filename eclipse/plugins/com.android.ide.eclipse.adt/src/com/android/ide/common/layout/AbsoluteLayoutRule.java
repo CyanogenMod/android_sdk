@@ -16,11 +16,13 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -45,7 +47,7 @@ import java.util.Map;
 public class AbsoluteLayoutRule extends BaseLayoutRule {
 
     @Override
-    public List<String> getSelectionHint(INode parentNode, INode childNode) {
+    public List<String> getSelectionHint(@NonNull INode parentNode, @NonNull INode childNode) {
         List<String> infos = new ArrayList<String>(2);
         infos.add("AbsoluteLayout is deprecated.");
         infos.add("Use other layouts instead.");
@@ -56,8 +58,8 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
     // The AbsoluteLayout accepts any drag'n'drop anywhere on its surface.
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, Object targetView,
-            final IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            final @Nullable IDragElement[] elements) {
 
         if (elements.length == 0) {
             return null;
@@ -65,7 +67,8 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
 
         DropFeedback df = new DropFeedback(null, new IFeedbackPainter() {
             @Override
-            public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+            public void paint(@NonNull IGraphics gc, @NonNull INode node,
+                    @NonNull DropFeedback feedback) {
                 // Paint callback for the AbsoluteLayout.
                 // This is called by the canvas when a draw is needed.
                 drawFeedback(gc, node, elements, feedback);
@@ -128,8 +131,8 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         // Update the data used by the DropFeedback.paintCallback above.
         feedback.userData = p;
         feedback.requestPaint = true;
@@ -138,13 +141,14 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onDropLeave(INode targetNode, IDragElement[] elements, DropFeedback feedback) {
+    public void onDropLeave(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback) {
         // Nothing to do.
     }
 
     @Override
-    public void onDropped(final INode targetNode, final IDragElement[] elements,
-            final DropFeedback feedback, final Point p) {
+    public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
+            final @Nullable DropFeedback feedback, final @NonNull Point p) {
 
         final Rect b = targetNode.getBounds();
         if (!b.isValid()) {
@@ -158,7 +162,7 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
 
         targetNode.editXml("Add elements to AbsoluteLayout", new INodeHandler() {
             @Override
-            public void handle(INode node) {
+            public void handle(@NonNull INode node) {
                 boolean first = true;
                 Point offset = null;
 

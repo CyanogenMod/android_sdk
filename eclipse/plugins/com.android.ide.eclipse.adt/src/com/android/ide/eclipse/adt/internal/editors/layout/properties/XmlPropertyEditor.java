@@ -309,21 +309,26 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
             ResourceType type = null;
             List<ResourceType> types = null;
             if (formats.contains(Format.FLAG)) {
-                FlagXmlPropertyDialog dialog =
+                String[] flagValues = attributeInfo.getFlagValues();
+                if (flagValues != null) {
+                    FlagXmlPropertyDialog dialog =
                         new FlagXmlPropertyDialog(propertyTable.getShell(),
                                 "Select Flag Values", false /* radio */,
-                                attributeInfo.getFlagValues(), xmlProperty);
+                                flagValues, xmlProperty);
 
-                dialog.open();
-                return;
-
+                    dialog.open();
+                    return;
+                }
             } else if (formats.contains(Format.ENUM)) {
-                FlagXmlPropertyDialog dialog =
+                String[] enumValues = attributeInfo.getEnumValues();
+                if (enumValues != null) {
+                    FlagXmlPropertyDialog dialog =
                         new FlagXmlPropertyDialog(propertyTable.getShell(),
                                 "Select Enum Value", true /* radio */,
-                                attributeInfo.getEnumValues(), xmlProperty);
-                dialog.open();
-                return;
+                                enumValues, xmlProperty);
+                    dialog.open();
+                    return;
+                }
             } else {
                 for (Format format : formats) {
                     ResourceType t = format.getResourceType();
@@ -379,16 +384,18 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
             } else if (type != null) {
                 // Single resource type: use a resource chooser
                 GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
-                String currentValue = (String) property.getValue();
-                // TODO: Add validator factory?
-                String resource = ResourceChooser.chooseResource(graphicalEditor,
-                        type, currentValue, null /* validator */);
-                // Returns null for cancel, "" for clear and otherwise a new value
-                if (resource != null) {
-                    if (resource.length() > 0) {
-                        property.setValue(resource);
-                    } else {
-                        property.setValue(null);
+                if (graphicalEditor != null) {
+                    String currentValue = (String) property.getValue();
+                    // TODO: Add validator factory?
+                    String resource = ResourceChooser.chooseResource(graphicalEditor,
+                            type, currentValue, null /* validator */);
+                    // Returns null for cancel, "" for clear and otherwise a new value
+                    if (resource != null) {
+                        if (resource.length() > 0) {
+                            property.setValue(resource);
+                        } else {
+                            property.setValue(null);
+                        }
                     }
                 }
 

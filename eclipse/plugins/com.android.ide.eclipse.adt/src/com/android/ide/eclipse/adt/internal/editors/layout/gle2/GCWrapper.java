@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.IColor;
 import com.android.ide.common.api.IGraphics;
@@ -135,7 +136,7 @@ public class GCWrapper implements IGraphics {
     //-------------
 
     @Override
-    public IColor registerColor(int rgb) {
+    public @NonNull IColor registerColor(int rgb) {
         checkGC();
 
         Integer key = Integer.valueOf(rgb);
@@ -163,13 +164,13 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public IColor getForeground() {
+    public @NonNull IColor getForeground() {
         Color c = getGc().getForeground();
         return new ColorWrapper(c);
     }
 
     @Override
-    public IColor getBackground() {
+    public @NonNull IColor getBackground() {
         Color c = getGc().getBackground();
         return new ColorWrapper(c);
     }
@@ -180,13 +181,13 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void setForeground(IColor color) {
+    public void setForeground(@NonNull IColor color) {
         checkGC();
         getGc().setForeground(((ColorWrapper) color).getColor());
     }
 
     @Override
-    public void setBackground(IColor color) {
+    public void setBackground(@NonNull IColor color) {
         checkGC();
         getGc().setBackground(((ColorWrapper) color).getColor());
     }
@@ -203,7 +204,7 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void setLineStyle(LineStyle style) {
+    public void setLineStyle(@NonNull LineStyle style) {
         int swtStyle = 0;
         switch (style) {
         case LINE_SOLID:
@@ -254,7 +255,7 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void drawLine(Point p1, Point p2) {
+    public void drawLine(@NonNull Point p1, @NonNull Point p2) {
         drawLine(p1.x, p1.y, p2.x, p2.y);
     }
 
@@ -272,12 +273,12 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void drawRect(Point p1, Point p2) {
+    public void drawRect(@NonNull Point p1, @NonNull Point p2) {
         drawRect(p1.x, p1.y, p2.x, p2.y);
     }
 
     @Override
-    public void drawRect(Rect r) {
+    public void drawRect(@NonNull Rect r) {
         checkGC();
         useStrokeAlpha();
         int x = mHScale.translate(r.x);
@@ -299,12 +300,12 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void fillRect(Point p1, Point p2) {
+    public void fillRect(@NonNull Point p1, @NonNull Point p2) {
         fillRect(p1.x, p1.y, p2.x, p2.y);
     }
 
     @Override
-    public void fillRect(Rect r) {
+    public void fillRect(@NonNull Rect r) {
         checkGC();
         useFillAlpha();
         int x = mHScale.translate(r.x);
@@ -368,7 +369,7 @@ public class GCWrapper implements IGraphics {
     // strings
 
     @Override
-    public void drawString(String string, int x, int y) {
+    public void drawString(@NonNull String string, int x, int y) {
         checkGC();
         useStrokeAlpha();
         x = mHScale.translate(x);
@@ -382,7 +383,7 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void drawBoxedStrings(int x, int y, List<?> strings) {
+    public void drawBoxedStrings(int x, int y, @NonNull List<?> strings) {
         checkGC();
 
         x = mHScale.translate(x);
@@ -414,14 +415,14 @@ public class GCWrapper implements IGraphics {
     }
 
     @Override
-    public void drawString(String string, Point topLeft) {
+    public void drawString(@NonNull String string, @NonNull Point topLeft) {
         drawString(string, topLeft.x, topLeft.y);
     }
 
     // Styles
 
     @Override
-    public void useStyle(DrawingStyle style) {
+    public void useStyle(@NonNull DrawingStyle style) {
         checkGC();
 
         // Look up the specific SWT style which defines the actual

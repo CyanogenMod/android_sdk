@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -22,7 +24,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 
 import java.io.File;
 import java.util.Collections;
@@ -60,15 +61,10 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
-
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
-    }
 
     // ---- Implements JavaScanner ----
 
@@ -93,7 +89,8 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
     }
 
     @Override
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
         assert node.astName().astValue().equals("makeText");
         if (node.astOperand() == null) {
             // "makeText()" in the code with no operand

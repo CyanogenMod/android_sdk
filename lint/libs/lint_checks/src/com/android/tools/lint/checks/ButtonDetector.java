@@ -178,7 +178,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -193,7 +193,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         int phase = context.getPhase();
         if (phase == 1 && mApplicableResources != null) {
             // We found resources for the string "Cancel"; perform a second pass
@@ -214,7 +214,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         // This detector works in two passes.
         // In pass 1, it looks in layout files for hardcoded strings of "Cancel", or
         // references to @string/cancel or @android:string/cancel.

@@ -23,6 +23,8 @@ import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREF
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -69,17 +71,17 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
     private Map<String, String> mIdToViewTag = new HashMap<String, String>(50);
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.SLOW;
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         if (LintUtils.endsWith(file.getName(), DOT_JAVA)) {
             return true;
         }
@@ -100,7 +102,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
     private static final String IGNORE = "#ignore#";
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String view = attribute.getOwnerElement().getTagName();
         String value = attribute.getValue();
         String id = null;
@@ -131,7 +133,8 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
     }
 
     @Override
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
         assert node.astName().getDescription().equals("findViewById");
         if (node.getParent() instanceof Cast) {
             Cast cast = (Cast) node.getParent();

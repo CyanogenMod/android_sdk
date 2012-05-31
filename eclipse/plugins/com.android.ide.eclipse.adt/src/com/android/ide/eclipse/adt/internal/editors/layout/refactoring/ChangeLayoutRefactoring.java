@@ -39,6 +39,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -218,7 +219,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         String name = getViewClass(mTypeFqcn);
 
         IFile file = mDelegate.getEditor().getInputFile();

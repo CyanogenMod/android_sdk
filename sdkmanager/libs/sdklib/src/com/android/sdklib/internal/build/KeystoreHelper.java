@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.build;
 
+import com.android.annotations.Nullable;
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.util.GrabProcessOutput;
@@ -111,7 +112,7 @@ public final class KeystoreHelper {
                     Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
-                        public void out(String line) {
+                        public void out(@Nullable String line) {
                             if (line != null) {
                                 if (output != null) {
                                     output.out(line);
@@ -122,7 +123,7 @@ public final class KeystoreHelper {
                         }
 
                         @Override
-                        public void err(String line) {
+                        public void err(@Nullable String line) {
                             if (line != null) {
                                 if (output != null) {
                                     output.err(line);

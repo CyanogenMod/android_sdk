@@ -98,7 +98,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -108,12 +108,12 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         mFileAttributes = null;
     }
 
     @Override
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
         if (mFileAttributes != null) {
             assert context instanceof XmlContext; // mAFilettributes is only set in XML files
 
@@ -161,7 +161,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mAlwaysFields != null && !mHasIfRoomRefs) {
             for (Location location : mAlwaysFields) {
                 context.report(ISSUE, location,
@@ -174,7 +174,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     // ---- Implements XmlScanner ----
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         if (mFileAttributes == null) {
             mFileAttributes = new ArrayList<Attr>();
         }
@@ -190,7 +190,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return new FieldAccessChecker(context);
     }
 

@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.tools.lint.checks.DuplicateIdDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
@@ -208,12 +210,14 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
 
     private static class TestClient extends LintClient {
         @Override
-        public void report(Context context, Issue issue, Severity severity, Location location,
-                String message, Object data) {
+        public void report(@NonNull Context context, @NonNull Issue issue,
+                @NonNull Severity severity, @Nullable Location location,
+                @NonNull String message, @Nullable Object data) {
         }
 
         @Override
-        public void log(Severity severity, Throwable exception, String format, Object... args) {
+        public void log(@NonNull Severity severity, @Nullable Throwable exception,
+                @Nullable String format, @Nullable Object... args) {
         }
 
         @Override
@@ -222,7 +226,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         }
 
         @Override
-        public String readFile(File file) {
+        public @NonNull String readFile(@NonNull File file) {
             return null;
         }
 

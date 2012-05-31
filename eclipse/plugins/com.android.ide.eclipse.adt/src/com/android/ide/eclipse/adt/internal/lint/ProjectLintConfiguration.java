@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -79,7 +80,7 @@ class ProjectLintConfiguration extends DefaultConfiguration {
     }
 
     @Override
-    public Severity getSeverity(Issue issue) {
+    public @NonNull Severity getSeverity(@NonNull Issue issue) {
         Severity severity = super.getSeverity(issue);
         if (mFatalOnly && severity != Severity.FATAL) {
             return Severity.IGNORE;

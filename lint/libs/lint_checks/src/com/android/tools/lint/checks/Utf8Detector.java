@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -57,12 +58,12 @@ public class Utf8Detector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public void visitDocument(XmlContext context, Document document) {
+    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         String xml = context.getContents();
 
         // AAPT: The prologue must be in the first line

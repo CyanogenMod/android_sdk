@@ -63,6 +63,7 @@ import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.detector.api.Category;
@@ -218,7 +219,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -233,7 +234,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String name = attribute.getLocalName();
         if (name != null && name.startsWith(ATTR_LAYOUT_PREFIX)
                 && ANDROID_URI.equals(attribute.getNamespaceURI())) {
@@ -296,7 +297,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String layout = element.getAttribute(ATTR_LAYOUT);
         if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
             layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
@@ -320,7 +321,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mIncludes == null) {
             return;
         }

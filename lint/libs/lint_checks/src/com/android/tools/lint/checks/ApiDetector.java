@@ -94,17 +94,17 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.SLOW;
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         mApiDatabase = ApiLookup.get(context.getClient());
         // We can't look up the minimum API required by the project here:
         // The manifest file hasn't been processed yet in the -before- project hook.
@@ -130,7 +130,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         if (mApiDatabase == null) {
             return;
         }
@@ -158,7 +158,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (mApiDatabase == null) {
             return;
         }
@@ -234,7 +234,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void checkClass(final ClassContext context, ClassNode classNode) {
+    public void checkClass(final @NonNull ClassContext context, @NonNull ClassNode classNode) {
         if (mApiDatabase == null) {
             return;
         }
@@ -319,7 +319,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         owner = classNode.superName;
                     }
 
-                    do {
+                    while (owner != null) {
                         int api = mApiDatabase.getCallVersion(owner, name, desc);
                         if (api > minSdk) {
                             String fqcn = owner.replace('/', '.') + '#' + name;
@@ -339,7 +339,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         } else {
                             owner = null;
                         }
-                    } while (owner != null);
+                    }
                 } else if (type == AbstractInsnNode.FIELD_INSN) {
                     FieldInsnNode node = (FieldInsnNode) instruction;
                     String name = node.name;

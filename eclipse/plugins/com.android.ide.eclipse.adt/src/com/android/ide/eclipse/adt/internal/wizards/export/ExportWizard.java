@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.export;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ExportHelper;
@@ -547,7 +548,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                     Wait.WAIT_FOR_READERS,
                     new IProcessOutput() {
                         @Override
-                        public void out(String line) {
+                        public void out(@Nullable String line) {
                             if (line != null) {
                                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
                                         project, line);
@@ -555,7 +556,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                         }
 
                         @Override
-                        public void err(String line) {
+                        public void err(@Nullable String line) {
                             if (line != null) {
                                 output.add(line);
                             }

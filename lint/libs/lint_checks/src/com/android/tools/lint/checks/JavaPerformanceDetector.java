@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -139,12 +140,12 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -160,7 +161,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return new PerformanceVisitor(context);
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.actions;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -172,7 +173,7 @@ public class DexDumpAction implements IObjectActionDelegate {
                         Wait.WAIT_FOR_READERS,
                         new IProcessOutput() {
                             @Override
-                            public void out(String line) {
+                            public void out(@Nullable String line) {
                                 if (line != null) {
                                     try {
                                         writer.write(line);
@@ -182,7 +183,7 @@ public class DexDumpAction implements IObjectActionDelegate {
                             }
 
                             @Override
-                            public void err(String line) {
+                            public void err(@Nullable String line) {
                                 if (line != null) {
                                     AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
                                             project, line);

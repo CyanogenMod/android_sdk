@@ -110,7 +110,7 @@ public class Location {
      *
      * @param secondary a secondary location associated with this location
      */
-    public void setSecondary(@NonNull Location secondary) {
+    public void setSecondary(@Nullable Location secondary) {
         this.mSecondary = secondary;
     }
 
@@ -197,7 +197,7 @@ public class Location {
     public static Location create(
             @NonNull File file,
             @NonNull Position start,
-            @NonNull Position end) {
+            @Nullable Position end) {
         return new Location(file, start, end);
     }
 

@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -27,12 +29,14 @@ import com.android.ide.common.api.Rect;
 /** Rule for AdapterView subclasses that don't have more specific rules */
 public class AdapterViewRule extends BaseLayoutRule {
     @Override
-    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements) {
         // You are not allowed to insert children into AdapterViews; you must
         // use the dedicated addView methods etc dynamically
         DropFeedback dropFeedback = new DropFeedback(null,  new IFeedbackPainter() {
             @Override
-            public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+            public void paint(@NonNull IGraphics gc, @NonNull INode node,
+                    @NonNull DropFeedback feedback) {
                 Rect b = node.getBounds();
                 if (b.isValid()) {
                     gc.useStyle(DrawingStyle.DROP_RECIPIENT);
@@ -50,8 +54,8 @@ public class AdapterViewRule extends BaseLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         feedback.invalidTarget = true;
         return feedback;
     }

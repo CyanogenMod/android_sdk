@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -52,7 +53,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -62,7 +63,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getNodeValue();
         if (value.startsWith("@*android:")) { //$NON-NLS-1$
             context.report(ISSUE, attribute, context.getLocation(attribute),

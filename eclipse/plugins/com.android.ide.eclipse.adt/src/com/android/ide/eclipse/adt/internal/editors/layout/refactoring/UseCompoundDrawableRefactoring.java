@@ -33,6 +33,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
@@ -189,7 +190,7 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         String androidNsPrefix = getAndroidNamespacePrefix();
         IFile file = mDelegate.getEditor().getInputFile();
         List<Change> changes = new ArrayList<Change>();

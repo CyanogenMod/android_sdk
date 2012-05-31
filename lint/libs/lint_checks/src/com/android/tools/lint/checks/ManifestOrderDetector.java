@@ -31,6 +31,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_LIBRARY
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -159,23 +160,23 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     private String mPackage;
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return file.getName().equals(ANDROID_MANIFEST_XML);
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         mSeenApplication = false;
         mSeenUsesSdk = 0;
     }
 
     @Override
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
         if (mSeenUsesSdk == 0 && context.isEnabled(USES_SDK)) {
             context.report(USES_SDK, Location.create(context.file),
                     "Manifest should specify a minimum API level with " +
@@ -209,7 +210,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         Node parentNode = element.getParentNode();
 

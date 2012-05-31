@@ -42,11 +42,12 @@ public abstract class SdkInfo {
             if (parentViewFqcn.equals(childViewFqcn)) {
                 return true;
             }
-            childViewFqcn = getParentViewClass(childViewFqcn);
-            if (childViewFqcn == null) {
+            String parent = getParentViewClass(childViewFqcn);
+            if (parent == null) {
                 // Unknown view - err on the side of caution
                 return true;
             }
+            childViewFqcn = parent;
         }
 
         return false;

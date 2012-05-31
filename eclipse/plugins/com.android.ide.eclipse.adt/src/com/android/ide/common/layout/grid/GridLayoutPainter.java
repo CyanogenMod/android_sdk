@@ -19,6 +19,7 @@ import static com.android.ide.common.layout.GridLayoutRule.GRID_SIZE;
 import static com.android.ide.common.layout.GridLayoutRule.MARGIN_SIZE;
 import static com.android.ide.common.layout.grid.GridModel.UNDEFINED;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -127,7 +128,8 @@ public class GridLayoutPainter {
 
         // Implements IFeedbackPainter
         @Override
-        public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+        public void paint(@NonNull IGraphics gc, @NonNull INode node,
+                @NonNull DropFeedback feedback) {
             Rect b = node.getBounds();
             if (!b.isValid()) {
                 return;

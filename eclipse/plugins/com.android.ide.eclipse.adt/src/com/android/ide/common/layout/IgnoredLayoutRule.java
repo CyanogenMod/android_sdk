@@ -16,6 +16,8 @@
 
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.INode;
@@ -32,7 +34,8 @@ import com.android.ide.common.api.INode;
  */
 public abstract class IgnoredLayoutRule extends BaseLayoutRule {
     @Override
-    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements) {
         // Do nothing; this layout rule corresponds to a layout that
         // should not be handled as a layout by the visual editor - usually
         // because some widget is extending a layout for implementation purposes

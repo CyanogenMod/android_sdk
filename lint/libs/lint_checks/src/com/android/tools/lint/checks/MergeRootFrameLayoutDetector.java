@@ -103,17 +103,18 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
     }
 
     @Override
+    @NonNull
     public Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mPending != null && mWhitelistedLayouts != null) {
             // Process all the root FrameLayouts that are eligible, and generate
             // suggestions for <merge> replacements for any layouts that are included
@@ -146,7 +147,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (tag.equals(INCLUDE)) {
             String layout = element.getAttribute(ATTR_LAYOUT); // NOTE: Not in android: namespace

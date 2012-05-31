@@ -28,6 +28,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_ID;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.detector.api.Category;
@@ -127,12 +128,12 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.VALUES;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -147,13 +148,13 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         mFileIds = new HashSet<String>();
         mRelativeLayouts = null;
     }
 
     @Override
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
         if (mRelativeLayouts != null) {
             for (Element layout : mRelativeLayouts) {
                 NodeList children = layout.getChildNodes();
@@ -196,7 +197,7 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (mHandles != null) {
             boolean checkSameLayout = context.isEnabled(UNKNOWN_ID_LAYOUT);
             boolean checkExists = context.isEnabled(UNKNOWN_ID);
@@ -257,7 +258,7 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (element.getTagName().equals(RELATIVE_LAYOUT)) {
             if (mRelativeLayouts == null) {
                 mRelativeLayouts = new ArrayList<Element>();
@@ -279,7 +280,7 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         assert attribute.getName().equals(ATTR_ID) || attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         mFileIds.add(id);

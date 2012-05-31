@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -72,12 +73,12 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -85,7 +86,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         List<Entry> pendingCalls = null;
         int currentLine = 0;
         List methodList = classNode.methods;

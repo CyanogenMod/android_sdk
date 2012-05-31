@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -150,7 +151,7 @@ public class ChangeViewRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         String name = getViewClass(mTypeFqcn);
 
         IFile file = mDelegate.getEditor().getInputFile();

@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -166,7 +167,7 @@ public class UnwrapRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges(IProgressMonitor monitor) {
+    protected @NonNull List<Change> computeChanges(IProgressMonitor monitor) {
         // (1) If the removed parent is the root container, transfer its
         //   namespace declarations
         // (2) Remove the root element completely

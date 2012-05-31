@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.NonNull;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -173,7 +174,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     }
 
     @Override
-    public List<Issue> getIssues() {
+    public @NonNull List<Issue> getIssues() {
         return sIssues;
     }
 

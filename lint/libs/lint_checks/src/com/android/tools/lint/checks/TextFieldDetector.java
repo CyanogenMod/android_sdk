@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_METHO
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_TYPE;
 import static com.android.tools.lint.detector.api.LintConstants.EDIT_TEXT;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -63,7 +64,7 @@ public class TextFieldDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -73,7 +74,7 @@ public class TextFieldDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_INPUT_TYPE) &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
             // Also make sure the EditText does not set an inputMethod in which case

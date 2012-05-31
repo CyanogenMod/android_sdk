@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.otherxml;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
@@ -36,8 +38,8 @@ public class OtherXmlEditorDelegate extends CommonXmlDelegate {
         @Override
         @SuppressWarnings("unchecked")
         public OtherXmlEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.XML == type) {
                 return new OtherXmlEditorDelegate(delegator);
             }

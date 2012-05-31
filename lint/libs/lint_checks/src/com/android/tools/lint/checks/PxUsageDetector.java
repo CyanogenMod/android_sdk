@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -59,7 +60,7 @@ public class PxUsageDetector extends LayoutDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -69,7 +70,7 @@ public class PxUsageDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
         if (value.endsWith("px") && value.matches("\\d+px")) { //$NON-NLS-1$
             if (value.charAt(0) == '0') {

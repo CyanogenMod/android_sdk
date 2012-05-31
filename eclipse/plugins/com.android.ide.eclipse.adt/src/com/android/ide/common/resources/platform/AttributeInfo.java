@@ -86,13 +86,13 @@ public class AttributeInfo implements IAttributeInfo {
 
     /** Returns the XML Name of the attribute */
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return mName;
     }
     /** Returns the formats of the attribute. Cannot be null.
      *  Should have at least one format. */
     @Override
-    public EnumSet<Format> getFormats() {
+    public @NonNull EnumSet<Format> getFormats() {
         return mFormats;
     }
     /** Returns the values for enums. null for other types. */
@@ -107,7 +107,7 @@ public class AttributeInfo implements IAttributeInfo {
     }
     /** Returns a short javadoc, .i.e. the first sentence. */
     @Override
-    public String getJavaDoc() {
+    public @NonNull String getJavaDoc() {
         return mJavaDoc;
     }
     /** Returns the documentation for deprecated attributes. Null if not deprecated. */
@@ -157,7 +157,7 @@ public class AttributeInfo implements IAttributeInfo {
      *         this attribute
      */
     @Override
-    public String getDefinedBy() {
+    public @NonNull String getDefinedBy() {
         return mDefinedBy;
     }
 }

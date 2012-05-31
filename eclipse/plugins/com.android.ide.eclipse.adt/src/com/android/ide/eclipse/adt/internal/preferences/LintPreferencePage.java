@@ -165,7 +165,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             File dir = AdtUtils.getAbsolutePath(mProject).toFile();
             project = mClient.getProject(dir, dir);
         }
-        mConfiguration = mClient.getConfiguration(project);
+        mConfiguration = mClient.getConfigurationFor(project);
 
         mSearch = new Text(container, SWT.SEARCH | SWT.ICON_CANCEL | SWT.ICON_SEARCH);
         mSearch.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));

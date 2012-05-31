@@ -100,8 +100,8 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         @Override
         @SuppressWarnings("unchecked")
         public LayoutEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.LAYOUT == type) {
                 return new LayoutEditorDelegate(delegator);
             }

@@ -49,4 +49,17 @@ public interface IMenuCallback {
             @NonNull List<? extends INode> selectedNodes,
             @Nullable String valueId,
             @Nullable Boolean newValue);
+
+    /** Callback which does nothing */
+    @NonNull
+    public static final IMenuCallback NONE = new IMenuCallback() {
+        @Override
+        public void action(
+                @NonNull RuleAction action,
+                @NonNull
+                List<? extends INode> selectedNodes,
+                @Nullable String valueId,
+                @Nullable Boolean newValue) {
+        }
+    };
 }

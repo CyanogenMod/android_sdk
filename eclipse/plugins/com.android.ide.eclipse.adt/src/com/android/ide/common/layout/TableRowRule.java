@@ -17,6 +17,8 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_LAYOUT;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
@@ -41,15 +43,18 @@ public class TableRowRule extends LinearLayoutRule {
     }
 
     @Override
-    public void onChildInserted(INode child, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode child, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         // Overridden to inhibit the setting of layout_width/layout_height since
         // the table row will enforce match_parent and wrap_content for width and height
         // respectively.
     }
 
     @Override
-    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
-            final List<? extends INode> children) {
+    public void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            final @NonNull INode parentNode,
+            final @NonNull List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
         // Also apply table-specific actions on the table row such that you can
@@ -65,8 +70,9 @@ public class TableRowRule extends LinearLayoutRule {
     }
 
     @Override
-    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge, Object childView, Object parentView) {
+    public DropFeedback onResizeBegin(@NonNull INode child, @NonNull INode parent,
+            @Nullable SegmentType horizontalEdge, @Nullable SegmentType verticalEdge,
+            @Nullable Object childView, @Nullable Object parentView) {
         // No resizing in TableRows; the width is *always* match_parent and the height is
         // *always* wrap_content.
         return null;

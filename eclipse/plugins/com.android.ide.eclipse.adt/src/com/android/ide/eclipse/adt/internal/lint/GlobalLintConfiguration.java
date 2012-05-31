@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.tools.lint.client.api.Configuration;
@@ -54,7 +55,7 @@ class GlobalLintConfiguration extends Configuration {
     }
 
     @Override
-    public Severity getSeverity(Issue issue) {
+    public Severity getSeverity(@NonNull Issue issue) {
         if (mSeverities == null) {
             IssueRegistry registry = EclipseLintClient.getRegistry();
             mSeverities = new HashMap<Issue, Severity>();
@@ -94,14 +95,15 @@ class GlobalLintConfiguration extends Configuration {
     }
 
     @Override
-    public void ignore(Context context, Issue issue, Location location, String message,
-            Object data) {
+    public void ignore(@NonNull Context context, @NonNull Issue issue,
+            @Nullable Location location, @NonNull String message,
+            @Nullable Object data) {
         throw new UnsupportedOperationException(
                 "Can't ignore() in global configurations"); //$NON-NLS-1$
     }
 
     @Override
-    public void setSeverity(Issue issue, Severity severity) {
+    public void setSeverity(@NonNull Issue issue, @Nullable Severity severity) {
         if (mSeverities == null) {
             // Force initialization
             getSeverity(issue);

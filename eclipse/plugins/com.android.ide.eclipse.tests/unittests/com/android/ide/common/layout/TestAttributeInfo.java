@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo;
 
 import java.util.EnumSet;
@@ -59,22 +60,22 @@ public class TestAttributeInfo implements IAttributeInfo {
     }
 
     @Override
-    public EnumSet<Format> getFormats() {
+    public @NonNull EnumSet<Format> getFormats() {
         return mFormats;
     }
 
     @Override
-    public String getJavaDoc() {
+    public @NonNull String getJavaDoc() {
         return mJavadoc;
     }
 
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return mName;
     }
 
     @Override
-    public String getDefinedBy() {
+    public @NonNull String getDefinedBy() {
         return mDefinedBy;
     }
 }

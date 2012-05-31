@@ -16,13 +16,15 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -39,7 +41,8 @@ import com.android.ide.common.api.Rect;
 public class HorizontalScrollViewRule extends FrameLayoutRule {
 
     @Override
-    public void onChildInserted(INode child, INode parent, InsertType insertType) {
+    public void onChildInserted(@NonNull INode child, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         super.onChildInserted(child, parent, insertType);
 
         // The child of the ScrollView should fill in both directions
@@ -49,7 +52,8 @@ public class HorizontalScrollViewRule extends FrameLayoutRule {
     }
 
     @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
         if (insertType.isCreate()) {
@@ -62,8 +66,8 @@ public class HorizontalScrollViewRule extends FrameLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
+    public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback, @NonNull Point p) {
         DropFeedback f = super.onDropMove(targetNode, elements, feedback, p);
 
         // HorizontalScrollViews only allow a single child

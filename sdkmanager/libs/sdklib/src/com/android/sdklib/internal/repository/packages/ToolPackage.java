@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.SdkConstants;
@@ -315,14 +316,14 @@ public class ToolPackage extends FullRevisionPackage implements IMinPlatformTool
                     Wait.WAIT_FOR_PROCESS,
                     new IProcessOutput() {
                         @Override
-                        public void out(String line) {
+                        public void out(@Nullable String line) {
                             if (line != null) {
                                 monitor.log("[%1$s] %2$s", tag, line);
                             }
                         }
 
                         @Override
-                        public void err(String line) {
+                        public void err(@Nullable String line) {
                             if (line != null) {
                                 monitor.logError("[%1$s] Error: %2$s", tag, line);
                             }

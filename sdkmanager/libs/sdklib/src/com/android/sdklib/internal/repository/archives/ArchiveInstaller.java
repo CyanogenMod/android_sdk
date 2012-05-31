@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository.archives;
 
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.SdkConstants;
@@ -609,14 +610,14 @@ public class ArchiveInstaller {
                         Wait.WAIT_FOR_READERS,
                         new IProcessOutput() {
                             @Override
-                            public void out(String line) {
+                            public void out(@Nullable String line) {
                                 if (line != null) {
                                     result.append(line).append("\n");
                                 }
                             }
 
                             @Override
-                            public void err(String line) {
+                            public void err(@Nullable String line) {
                                 if (line != null) {
                                     monitor.logError("[find_lock] Error: %1$s", line);
                                 }

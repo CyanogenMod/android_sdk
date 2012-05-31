@@ -219,7 +219,7 @@ public final class Issue implements Comparable<Issue> {
      * @param other the {@link Issue} to compare this issue to
      */
     @Override
-    public int compareTo(@NonNull Issue other) {
+    public int compareTo(Issue other) {
         return getId().compareTo(other.getId());
     }
 

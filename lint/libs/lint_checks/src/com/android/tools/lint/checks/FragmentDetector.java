@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME
 import static com.android.tools.lint.detector.api.LintConstants.FRAGMENT;
 import static com.android.tools.lint.detector.api.LintConstants.FRAGMENT_V4;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -77,19 +78,19 @@ public class FragmentDetector extends Detector implements ClassScanner {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return true;
     }
 
     // ---- Implements ClassScanner ----
 
     @Override
-    public void checkClass(ClassContext context, ClassNode classNode) {
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         if ((classNode.access & Opcodes.ACC_ABSTRACT) != 0) {
             // Ignore abstract classes since they are clearly (and by definition) not intended to
             // be instantiated. We're looking for accidental non-static or missing constructor

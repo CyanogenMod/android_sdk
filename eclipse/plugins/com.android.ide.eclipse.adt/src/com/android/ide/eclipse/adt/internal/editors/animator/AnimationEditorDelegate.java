@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.animator;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
@@ -41,8 +43,8 @@ public class AnimationEditorDelegate extends CommonXmlDelegate {
         @Override
         @SuppressWarnings("unchecked")
         public AnimationEditorDelegate createForFile(
-                CommonXmlEditor delegator,
-                ResourceFolderType type) {
+                @NonNull CommonXmlEditor delegator,
+                @Nullable ResourceFolderType type) {
             if (ResourceFolderType.ANIM == type || ResourceFolderType.ANIMATOR == type) {
                 return new AnimationEditorDelegate(delegator);
             }

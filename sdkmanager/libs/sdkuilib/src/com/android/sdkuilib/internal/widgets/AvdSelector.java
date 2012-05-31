@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
@@ -1112,14 +1113,14 @@ public final class AvdSelector {
                                 Wait.ASYNC,
                                 new IProcessOutput() {
                                     @Override
-                                    public void out(String line) {
+                                    public void out(@Nullable String line) {
                                         if (line != null) {
                                             filterStdOut(line);
                                         }
                                     }
 
                                     @Override
-                                    public void err(String line) {
+                                    public void err(@Nullable String line) {
                                         if (line != null) {
                                             filterStdErr(line);
                                         }

@@ -146,7 +146,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Description";
         }
 
@@ -156,12 +156,12 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             return getStyledValue(marker).toString();
         }
 
         @Override
-        public StyledString getStyledValue(IMarker marker) {
+        public StyledString getStyledValue(@NonNull IMarker marker) {
             StyledString styledString = new StyledString();
 
             String message = marker.getAttribute(IMarker.MESSAGE, "");
@@ -177,7 +177,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public Image getImage(IMarker marker) {
+        public Image getImage(@NonNull IMarker marker) {
             int severity = marker.getAttribute(IMarker.SEVERITY, 0);
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             switch (severity) {
@@ -199,7 +199,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public Font getFont(IMarker marker) {
+        public Font getFont(@NonNull IMarker marker) {
             int severity = marker.getAttribute(IMarker.SEVERITY, 0);
             if (severity == IMarker.SEVERITY_ERROR) {
                 return JFaceResources.getFontRegistry().getBold(
@@ -277,7 +277,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Category";
         }
 
@@ -287,7 +287,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             Issue issue = mList.getIssue(marker);
             if (issue != null) {
                 return issue.getCategory().getFullName();
@@ -303,7 +303,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Location";
         }
 
@@ -313,12 +313,12 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             return getStyledValue(marker).toString();
         }
 
         @Override
-        public StyledString getStyledValue(IMarker marker) {
+        public StyledString getStyledValue(@NonNull IMarker marker) {
             StyledString styledString = new StyledString();
 
             // Combined location
@@ -378,7 +378,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "File";
         }
 
@@ -393,7 +393,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             if (marker.getResource() instanceof IFile) {
                 return marker.getResource().getName();
             } else {
@@ -408,7 +408,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Path";
         }
 
@@ -423,7 +423,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             return marker.getResource().getFullPath().toOSString();
         }
     }
@@ -434,7 +434,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Line";
         }
 
@@ -454,7 +454,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             int line = getLine(marker);
             if (line >= 1) {
                 return Integer.toString(line);
@@ -483,7 +483,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getColumnHeaderText() {
+        public @NonNull String getColumnHeaderText() {
             return "Priority";
         }
 
@@ -503,7 +503,7 @@ abstract class LintColumn implements Comparator<IMarker> {
         }
 
         @Override
-        public String getValue(IMarker marker) {
+        public String getValue(@NonNull IMarker marker) {
             int priority = getPriority(marker);
             if (priority > 0) {
                 return Integer.toString(priority);

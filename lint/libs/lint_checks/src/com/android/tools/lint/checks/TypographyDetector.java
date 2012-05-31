@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -192,12 +193,12 @@ public class TypographyDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -210,7 +211,7 @@ public class TypographyDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         mCheckDashes = context.isEnabled(DASHES);
         mCheckQuotes = context.isEnabled(QUOTES);
         mCheckFractions = context.isEnabled(FRACTIONS);
@@ -219,7 +220,7 @@ public class TypographyDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         NodeList childNodes = element.getChildNodes();
         for (int i = 0, n = childNodes.getLength(); i < n; i++) {
             Node child = childNodes.item(i);

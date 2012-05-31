@@ -24,6 +24,7 @@ import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
 import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -103,12 +104,12 @@ public class DuplicateIdDetector extends LayoutDetector {
 
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.MENU;
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -123,14 +124,14 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mIds = new HashSet<String>();
         }
     }
 
     @Override
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Store this layout's set of ids for full project analysis in afterCheckProject
             mFileToIds.put(context.file, mIds);
@@ -140,7 +141,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mFileToIds = new HashMap<File, Set<String>>();
             mIncludes = new HashMap<File, List<String>>();
@@ -148,7 +149,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Look for duplicates
             if (mIncludes.size() > 0) {
@@ -201,7 +202,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         // Record include graph such that we can look for inter-layout duplicates after the
         // project has been fully checked
 
@@ -241,7 +242,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         assert attribute.getName().equals(ATTR_ID) || attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         if (context.getPhase() == 1) {

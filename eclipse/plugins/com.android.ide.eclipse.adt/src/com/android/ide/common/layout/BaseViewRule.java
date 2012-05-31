@@ -94,7 +94,7 @@ public class BaseViewRule extends AbstractViewRule {
         new HashMap<String, Map<String, Prop>>();
 
     @Override
-    public boolean onInitialize(String fqcn, IClientRulesEngine engine) {
+    public boolean onInitialize(@NonNull String fqcn, @NonNull IClientRulesEngine engine) {
         this.mRulesEngine = engine;
 
         // This base rule can handle any class so we don't need to filter on
@@ -124,7 +124,8 @@ public class BaseViewRule extends AbstractViewRule {
      * - List of all other simple toggle attributes.
      */
     @Override
-    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
+    public void addContextMenuActions(@NonNull List<RuleAction> actions,
+            final @NonNull INode selectedNode) {
         String width = null;
         String currentWidth = selectedNode.getStringAttr(ANDROID_URI, ATTR_LAYOUT_WIDTH);
 
@@ -155,9 +156,9 @@ public class BaseViewRule extends AbstractViewRule {
         final IMenuCallback onChange = new IMenuCallback() {
             @Override
             public void action(
-                    final RuleAction action,
-                    final List<? extends INode> selectedNodes,
-                    final String valueId, final Boolean newValue) {
+                    final @NonNull RuleAction action,
+                    final @NonNull List<? extends INode> selectedNodes,
+                    final @Nullable String valueId, final @Nullable Boolean newValue) {
                 String fullActionId = action.getId();
                 boolean isProp = fullActionId.startsWith(PROP_PREFIX);
                 final String actionId = isProp ?
@@ -425,14 +426,14 @@ public class BaseViewRule extends AbstractViewRule {
                 onChange /*callback*/, null /*icon*/, 50,
                 true /*supportsMultipleNodes*/, new ActionProvider() {
             @Override
-            public List<RuleAction> getNestedActions(INode node) {
+            public @NonNull List<RuleAction> getNestedActions(@NonNull INode node) {
                 List<RuleAction> propertyActionTypes = new ArrayList<RuleAction>();
                 propertyActionTypes.add(RuleAction.createChoices(
                         "recent", "Recent", //$NON-NLS-1$
                         onChange /*callback*/, null /*icon*/, 10,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
                             @Override
-                            public List<RuleAction> getNestedActions(INode n) {
+                            public @NonNull List<RuleAction> getNestedActions(@NonNull INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addRecentPropertyActions(propertyActions, n, onChange);
                                 return propertyActions;
@@ -449,7 +450,7 @@ public class BaseViewRule extends AbstractViewRule {
                         onChange /*callback*/, null /*icon*/, 60,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
                             @Override
-                            public List<RuleAction> getNestedActions(INode n) {
+                            public @NonNull List<RuleAction> getNestedActions(@NonNull INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addPropertyActions(propertyActions, n, onChange, null, true);
                                 return propertyActions;
@@ -463,7 +464,7 @@ public class BaseViewRule extends AbstractViewRule {
                         onChange /*callback*/, null /*icon*/, 80,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
                             @Override
-                            public List<RuleAction> getNestedActions(INode n) {
+                            public @NonNull List<RuleAction> getNestedActions(@NonNull INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addPropertyActions(propertyActions, n, onChange, null, false);
                                 return propertyActions;
@@ -527,7 +528,7 @@ public class BaseViewRule extends AbstractViewRule {
                     onChange /*callback*/, null /*icon*/, sortPriority++,
                     true /*supportsMultipleNodes*/, new ActionProvider() {
                         @Override
-                        public List<RuleAction> getNestedActions(INode n) {
+                        public @NonNull List<RuleAction> getNestedActions(@NonNull INode n) {
                             List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                             addPropertyActions(propertyActions, n, onChange, definedBy, false);
                             return propertyActions;
@@ -744,7 +745,8 @@ public class BaseViewRule extends AbstractViewRule {
      */
     private static ChoiceProvider BOOLEAN_CHOICE_PROVIDER = new ChoiceProvider() {
         @Override
-        public void addChoices(List<String> titles, List<URL> iconUrls, List<String> ids) {
+        public void addChoices(@NonNull List<String> titles, @NonNull List<URL> iconUrls,
+                @NonNull List<String> ids) {
             titles.add("True");
             ids.add(TRUE_ID);
 
@@ -772,7 +774,8 @@ public class BaseViewRule extends AbstractViewRule {
         }
 
         @Override
-        public void addChoices(List<String> titles, List<URL> iconUrls, List<String> ids) {
+        public void addChoices(@NonNull List<String> titles, @NonNull List<URL> iconUrls,
+                @NonNull List<String> ids) {
             for (Entry<String, String> entry : mProperty.getChoices().entrySet()) {
                 ids.add(entry.getKey());
                 titles.add(entry.getValue());
@@ -888,7 +891,8 @@ public class BaseViewRule extends AbstractViewRule {
      * an indication of where to paste.
      */
     @Override
-    public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
+    public void onPaste(@NonNull INode targetNode, @Nullable Object targetView,
+            @NonNull IDragElement[] elements) {
         //
         INode parent = targetNode.getParent();
         if (parent != null) {

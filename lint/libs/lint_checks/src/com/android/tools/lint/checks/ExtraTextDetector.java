@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.DefaultPosition;
@@ -59,7 +60,7 @@ public class ExtraTextDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public boolean appliesTo(ResourceFolderType folderType) {
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT
                 || folderType == ResourceFolderType.MENU
                 || folderType == ResourceFolderType.ANIMATOR
@@ -69,12 +70,12 @@ public class ExtraTextDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public void visitDocument(XmlContext context, Document document) {
+    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         mFoundText = false;
         visitNode(context, document);
     }

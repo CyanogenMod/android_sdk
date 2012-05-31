@@ -27,7 +27,22 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 public enum SegmentType {
-    LEFT, TOP, RIGHT, BOTTOM, BASELINE, CENTER_VERTICAL, CENTER_HORIZONTAL, UNKNOWN;
+    /** Segment is on the left edge */
+    @NonNull LEFT,
+    /** Segment is on the top edge */
+    @NonNull TOP,
+    /** Segment is on the right edge */
+    @NonNull RIGHT,
+    /** Segment is on the bottom edge */
+    @NonNull BOTTOM,
+    /** Segment is along the baseline */
+    @NonNull BASELINE,
+    /** Segment is along the center vertically */
+    @NonNull CENTER_VERTICAL,
+    /** Segment is along the center horizontally */
+    @NonNull CENTER_HORIZONTAL,
+    /** Segment is on an unknown edge */
+    @NonNull UNKNOWN;
 
     public boolean isHorizontal() {
         return this == TOP || this == BOTTOM || this == BASELINE || this == CENTER_HORIZONTAL;

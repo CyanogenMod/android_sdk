@@ -254,7 +254,11 @@ public class ClassContext extends Context {
      * @param data any associated data, or null
      */
     @Override
-    public void report(Issue issue, Location location, String message, Object data) {
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
         if (mDriver.isSuppressed(issue, mClassNode)) {
             return;
         }

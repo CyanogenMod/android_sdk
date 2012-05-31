@@ -448,9 +448,9 @@ public class RuleAction implements Comparable<RuleAction> {
         return mCallback;
     }
 
-    // Implements Comparable<MenuAciton>
+    // Implements Comparable<MenuAction>
     @Override
-    public int compareTo(@NonNull RuleAction other) {
+    public int compareTo(RuleAction other) {
         if (mSortPriority != other.mSortPriority) {
             return mSortPriority - other.mSortPriority;
         }
@@ -468,7 +468,7 @@ public class RuleAction implements Comparable<RuleAction> {
     public static class Separator extends RuleAction {
         /** Construct using the factory {@link #createSeparator(int)} */
         private Separator(int sortPriority, boolean supportsMultipleNodes) {
-            super("_separator", "", null, sortPriority,  //$NON-NLS-1$ //$NON-NLS-2$
+            super("_separator", "", IMenuCallback.NONE, sortPriority,  //$NON-NLS-1$ //$NON-NLS-2$
                     supportsMultipleNodes);
         }
     }
@@ -689,13 +689,13 @@ public class RuleAction implements Comparable<RuleAction> {
         }
 
         @Override
-        public List<String> getIds() {
+        public @NonNull List<String> getIds() {
             ensureInitialized();
             return mIds;
         }
 
         @Override
-        public List<String> getTitles() {
+        public @NonNull List<String> getTitles() {
             ensureInitialized();
             return mTitles;
         }

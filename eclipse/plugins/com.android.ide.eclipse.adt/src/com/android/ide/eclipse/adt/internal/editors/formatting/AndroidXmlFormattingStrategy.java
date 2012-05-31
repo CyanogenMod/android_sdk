@@ -270,7 +270,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             replaceEnd = document.getLength();
         } else {
             root = DomUtilities.getCommonAncestor(startNode, endNode);
-            initialDepth = DomUtilities.getDepth(root) - 1;
+            initialDepth = root != null ? DomUtilities.getDepth(root) - 1 : 0;
 
             // Regions must be non-null since the DOM nodes are non null, but Eclipse null
             // analysis doesn't realize it:

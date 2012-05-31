@@ -16,20 +16,20 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
-
-import lombok.ast.MethodInvocation;
 
 import java.util.Collections;
 import java.util.List;
 
 import lombok.ast.AstVisitor;
+import lombok.ast.MethodInvocation;
 
 /**
  * Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled.
@@ -52,15 +52,11 @@ public class SetJavaScriptEnabledDetector extends Detector implements Detector.J
     public SetJavaScriptEnabledDetector() {
     }
 
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
-    }
-
     // ---- Implements JavaScanner ----
 
     @Override
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
         if (node.astArguments().size() == 1
                 && !node.astArguments().first().toString().equals("false")) { //$NON-NLS-1$
             context.report(ISSUE, node, context.getLocation(node),

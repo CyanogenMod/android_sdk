@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_DEBUGGABLE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -65,12 +66,12 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return file.getName().equals(ANDROID_MANIFEST_XML);
     }
 
@@ -82,7 +83,7 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
     }
 
     @Override
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         if (attribute.getNamespaceURI().equals(ANDROID_URI)) {
         //if (attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
             context.report(ISSUE, attribute, context.getLocation(attribute),

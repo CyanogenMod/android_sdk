@@ -232,7 +232,7 @@ public abstract class LintClient {
      *         the create flag was false, or if for some reason the directory
      *         could not be created
      */
-    @NonNull
+    @Nullable
     public File getCacheDir(boolean create) {
         String home = System.getProperty("user.home");
         String relative = ".android" + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$

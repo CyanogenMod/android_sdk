@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.actions;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
@@ -98,12 +99,12 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                     Wait.ASYNC,
                     new IProcessOutput() {
                         @Override
-                        public void out(String line) {
+                        public void out(@Nullable String line) {
                             // Ignore stdout
                         }
 
                         @Override
-                        public void err(String line) {
+                        public void err(@Nullable String line) {
                             if (line != null) {
                                 logger.printf("[SDK Manager] %s", line);
                             }

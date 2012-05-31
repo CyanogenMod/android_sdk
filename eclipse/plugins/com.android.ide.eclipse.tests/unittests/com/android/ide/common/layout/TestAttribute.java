@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.layout;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
@@ -35,17 +36,17 @@ public class TestAttribute implements IAttribute, IDragAttribute {
     }
 
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return mName;
     }
 
     @Override
-    public String getUri() {
+    public @NonNull String getUri() {
         return mUri;
     }
 
     @Override
-    public String getValue() {
+    public @NonNull String getValue() {
         return mValue;
     }
 

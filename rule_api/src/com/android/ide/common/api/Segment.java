@@ -51,7 +51,7 @@ public class Segment {
     public final MarginType marginType;
 
     /** The node that contains this edge */
-    @NonNull
+    @Nullable
     public final INode node;
 
     /**
@@ -61,7 +61,7 @@ public class Segment {
     @Nullable
     public final String id;
 
-    public Segment(int at, int from, int to, @NonNull INode node, @Nullable String id,
+    public Segment(int at, int from, int to, @Nullable INode node, @Nullable String id,
             @NonNull SegmentType edgeType, @NonNull MarginType marginType) {
         this.at = at;
         this.from = from;

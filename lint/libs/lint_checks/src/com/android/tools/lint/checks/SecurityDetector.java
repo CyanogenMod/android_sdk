@@ -32,6 +32,8 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_PATH_PERMISS
 import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -147,11 +149,11 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     }
 
     @Override
-    public Speed getSpeed() {
+    public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
     @Override
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return file.getName().equals(ANDROID_MANIFEST_XML);
     }
 
@@ -167,7 +169,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     }
 
     @Override
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_SERVICE)) {
             checkService(context, element);
@@ -264,7 +266,8 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
                         }
 
                         if (!hasPermission) {
-                            context.report(EXPORTED_PROVIDER, element, context.getLocation(element),
+                            context.report(EXPORTED_PROVIDER, element,
+                                    context.getLocation(element),
                                     "Exported content providers can provide access to " +
                                             "potentially sensitive data",
                                     null);
@@ -288,7 +291,8 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     }
 
     @Override
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
         StrictListAccessor<Expression,MethodInvocation> args = node.astArguments();
         Iterator<Expression> iterator = args.iterator();
         while (iterator.hasNext()) {
@@ -297,7 +301,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     }
 
     @Override
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return new IdentifierVisitor(context);
     }
 

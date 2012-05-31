@@ -21,6 +21,7 @@ import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
@@ -886,7 +887,11 @@ public class Main extends LintClient {
     }
 
     @Override
-    public void log(Severity severity, Throwable exception, String format, Object... args) {
+    public void log(
+            @NonNull Severity severity,
+            @Nullable Throwable exception,
+            @Nullable String format,
+            @Nullable Object... args) {
         System.out.flush();
         if (!mQuiet) {
             // Place the error message on a line of its own since we're printing '.' etc
@@ -907,7 +912,7 @@ public class Main extends LintClient {
     }
 
     @Override
-    public Configuration getConfiguration(Project project) {
+    public Configuration getConfiguration(@NonNull Project project) {
         return new CliConfiguration(mDefaultConfiguration, project);
     }
 
@@ -934,8 +939,13 @@ public class Main extends LintClient {
     }
 
     @Override
-    public void report(Context context, Issue issue, Severity severity, Location location,
-            String message, Object data) {
+    public void report(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @NonNull Severity severity,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
         assert context.isEnabled(issue);
 
         if (severity == Severity.IGNORE) {
@@ -1041,7 +1051,7 @@ public class Main extends LintClient {
     }
 
     @Override
-    public String readFile(File file) {
+    public @NonNull String readFile(@NonNull File file) {
         try {
             return LintUtils.getEncodedString(file);
         } catch (IOException e) {
@@ -1067,7 +1077,7 @@ public class Main extends LintClient {
         }
 
         @Override
-        public Severity getSeverity(Issue issue) {
+        public @NonNull Severity getSeverity(@NonNull Issue issue) {
             Severity severity = computeSeverity(issue);
 
             if (mAllErrors && severity != Severity.IGNORE) {
@@ -1082,7 +1092,7 @@ public class Main extends LintClient {
         }
 
         @Override
-        protected Severity getDefaultSeverity(Issue issue) {
+        protected @NonNull Severity getDefaultSeverity(@NonNull Issue issue) {
             if (mWarnAll) {
                 return issue.getDefaultSeverity();
             }
@@ -1090,7 +1100,7 @@ public class Main extends LintClient {
             return super.getDefaultSeverity(issue);
         }
 
-        private Severity computeSeverity(Issue issue) {
+        private Severity computeSeverity(@NonNull Issue issue) {
             Severity severity = super.getSeverity(issue);
 
             String id = issue.getId();
@@ -1123,25 +1133,32 @@ public class Main extends LintClient {
 
     private class ProgressPrinter implements LintListener {
         @Override
-        public void update(LintDriver lint, EventType type, Context context) {
+        public void update(
+                @NonNull LintDriver lint,
+                @NonNull EventType type,
+                @Nullable Context context) {
             switch (type) {
-                case SCANNING_PROJECT:
+                case SCANNING_PROJECT: {
+                    String name = context != null ? context.getProject().getName() : "?";
                     if (lint.getPhase() > 1) {
                         System.out.print(String.format(
                                 "\nScanning %1$s (Phase %2$d): ",
-                                context.getProject().getName(),
+                                name,
                                 lint.getPhase()));
                     } else {
                         System.out.print(String.format(
                                 "\nScanning %1$s: ",
-                                context.getProject().getName()));
+                                name));
                     }
                     break;
-                case SCANNING_LIBRARY_PROJECT:
+                }
+                case SCANNING_LIBRARY_PROJECT: {
+                    String name = context != null ? context.getProject().getName() : "?";
                     System.out.print(String.format(
                             "\n         - %1$s: ",
-                            context.getProject().getName()));
+                            name));
                     break;
+                }
                 case SCANNING_FILE:
                     System.out.print('.');
                     break;
