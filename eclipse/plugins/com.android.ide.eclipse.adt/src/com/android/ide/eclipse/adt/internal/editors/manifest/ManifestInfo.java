@@ -226,7 +226,6 @@ public class ManifestInfo {
             }
 
             NodeList applications = root.getElementsByTagName(AndroidManifest.NODE_APPLICATION);
-            String defaultTheme = null;
             if (applications.getLength() > 0) {
                 assert applications.getLength() == 1;
                 Element application = (Element) applications.item(0);
@@ -237,23 +236,22 @@ public class ManifestInfo {
                     mApplicationLabel = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL);
                 }
 
-                defaultTheme = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
+                String defaultTheme = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
+                if (defaultTheme != null && !defaultTheme.isEmpty()) {
+                    // From manifest theme documentation:
+                    // "If that attribute is also not set, the default system theme is used."
+                    mManifestTheme = defaultTheme;
+                }
             }
 
             // Look up target SDK
-            if (defaultTheme == null || defaultTheme.length() == 0) {
-                // From manifest theme documentation:
-                // "If that attribute is also not set, the default system theme is used."
-
-                NodeList usesSdks = root.getElementsByTagName(NODE_USES_SDK);
-                if (usesSdks.getLength() > 0) {
-                    Element usesSdk = (Element) usesSdks.item(0);
-                    mMinSdk = getApiVersion(usesSdk, ATTRIBUTE_MIN_SDK_VERSION, 1);
-                    mTargetSdk = getApiVersion(usesSdk, ATTRIBUTE_TARGET_SDK_VERSION, mMinSdk);
-                }
-            } else {
-                mManifestTheme = defaultTheme;
+            NodeList usesSdks = root.getElementsByTagName(NODE_USES_SDK);
+            if (usesSdks.getLength() > 0) {
+                Element usesSdk = (Element) usesSdks.item(0);
+                mMinSdk = getApiVersion(usesSdk, ATTRIBUTE_MIN_SDK_VERSION, 1);
+                mTargetSdk = getApiVersion(usesSdk, ATTRIBUTE_TARGET_SDK_VERSION, mMinSdk);
             }
+
         } catch (SAXException e) {
             AdtPlugin.log(e, "Malformed manifest");
         } catch (Exception e) {
