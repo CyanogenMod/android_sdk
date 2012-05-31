@@ -150,7 +150,19 @@
             id="com.android.ide.eclipse.wizards.category"
             name="Android" />
 
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_adt_project.png"
+            id="ccom.android.ide.eclipse.adt.project.NewProjectWizard"
+            name="Android Project"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="true" />
         <!-- New template-based project wizard -->
+<!-- Temporarily disabled
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -162,8 +174,9 @@
             name="Android Application"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true" />
-
+-->
         <!-- Old custom-coded project wizard -->
+<!-- Temporarily disabled
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -175,6 +188,7 @@
             name="Empty Android Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true" />
+-->
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -235,6 +249,7 @@
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false">
         </wizard>
+<!-- Temporarily disabled
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -268,6 +283,7 @@
             name="Custom View"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
+-->
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -281,6 +297,7 @@
             project="false" />
 
         <!-- During development only: Support for testing templates -->
+<!-- Temporarily disabled
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -292,7 +309,7 @@
             name="Template Development Wizard"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
-
+-->
     </extension>
     <extension point="org.eclipse.debug.core.launchConfigurationTypes">
         <launchConfigurationType
