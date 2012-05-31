@@ -18,12 +18,10 @@ LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
 
 ifeq ($(HOST_OS),darwin)
 DARWIN_VERSION := $(strip $(shell sw_vers -productVersion))
-ifneq ($(filter 10.7 10.7.%,$(DARWIN_VERSION)),)
-  # Lion needs to be forced to link dylib to avoid problems
+  # OS X 10.6+ needs to be forced to link dylib to avoid problems
   # with the dynamic function lookups in SDL 1.2
   LOCAL_LDLIBS += /usr/lib/dylib1.o
-endif
-$(call emugl-import,libMac_view)
+  $(call emugl-import,libMac_view)
 endif
 
 $(call emugl-end-module)
