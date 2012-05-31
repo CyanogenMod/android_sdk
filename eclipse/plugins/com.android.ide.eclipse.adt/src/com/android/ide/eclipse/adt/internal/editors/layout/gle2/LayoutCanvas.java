@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
@@ -1213,16 +1214,30 @@ public class LayoutCanvas extends Canvas {
      *
      * @param bars the action bar for this canvas
      */
-    public void updateGlobalActions(IActionBars bars) {
+    public void updateGlobalActions(@NonNull IActionBars bars) {
         updateMenuActionState();
-        assert bars != null;
-        bars.setGlobalActionHandler(ActionFactory.CUT.getId(), mCutAction);
-        bars.setGlobalActionHandler(ActionFactory.COPY.getId(), mCopyAction);
-        bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), mPasteAction);
-        bars.setGlobalActionHandler(ActionFactory.DELETE.getId(), mDeleteAction);
-        bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), mSelectAllAction);
 
         ITextEditor editor = mEditorDelegate.getEditor().getStructuredTextEditor();
+        boolean graphical = getEditorDelegate().getEditor().getActivePage() == 0;
+        if (graphical) {
+            bars.setGlobalActionHandler(ActionFactory.CUT.getId(), mCutAction);
+            bars.setGlobalActionHandler(ActionFactory.COPY.getId(), mCopyAction);
+            bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), mPasteAction);
+            bars.setGlobalActionHandler(ActionFactory.DELETE.getId(), mDeleteAction);
+            bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), mSelectAllAction);
+        } else {
+            bars.setGlobalActionHandler(ActionFactory.CUT.getId(),
+                    editor.getAction(ActionFactory.CUT.getId()));
+            bars.setGlobalActionHandler(ActionFactory.COPY.getId(),
+                    editor.getAction(ActionFactory.COPY.getId()));
+            bars.setGlobalActionHandler(ActionFactory.PASTE.getId(),
+                    editor.getAction(ActionFactory.PASTE.getId()));
+            bars.setGlobalActionHandler(ActionFactory.DELETE.getId(),
+                    editor.getAction(ActionFactory.DELETE.getId()));
+            bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+                    editor.getAction(ActionFactory.SELECT_ALL.getId()));
+        }
+
         IAction undoAction = editor.getAction(ActionFactory.UNDO.getId());
         bars.setGlobalActionHandler(ActionFactory.UNDO.getId(), undoAction);
         IAction redoAction = editor.getAction(ActionFactory.REDO.getId());

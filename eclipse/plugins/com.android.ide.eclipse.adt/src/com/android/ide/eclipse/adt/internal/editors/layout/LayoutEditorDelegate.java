@@ -687,6 +687,16 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     public void delegatePostPageChange(int newPageIndex) {
         super.delegatePostPageChange(newPageIndex);
 
+        if (mGraphicalEditor != null) {
+            LayoutCanvas canvas = mGraphicalEditor.getCanvasControl();
+            if (canvas != null) {
+                IActionBars bars = getEditor().getEditorSite().getActionBars();
+                if (bars != null) {
+                    canvas.updateGlobalActions(bars);
+                }
+            }
+        }
+
         IFormPage page = getEditor().getActivePageInstance();
         updateOutline(page);
     }
