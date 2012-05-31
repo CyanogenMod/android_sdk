@@ -929,8 +929,9 @@ public class ProjectCreator {
     private Matcher checkFileContainsRegexp(File file, String regexp) {
         Pattern p = Pattern.compile(regexp);
 
+        BufferedReader in = null;
         try {
-            BufferedReader in = new BufferedReader(new FileReader(file));
+            in = new BufferedReader(new FileReader(file));
             String line;
 
             while ((line = in.readLine()) != null) {
@@ -943,6 +944,14 @@ public class ProjectCreator {
             in.close();
         } catch (Exception e) {
             // ignore
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
 
         return null;

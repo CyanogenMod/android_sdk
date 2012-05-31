@@ -914,10 +914,13 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         byte[] buffer = new byte[256];
 
         FileInputStream fis = new FileInputStream(fileName);
-
-        int count;
-        while ((count = fis.read(buffer)) != -1) {
-            logReceiver.parseNewData(buffer, 0, count);
+        try {
+            int count;
+            while ((count = fis.read(buffer)) != -1) {
+                logReceiver.parseNewData(buffer, 0, count);
+            }
+        } finally {
+            fis.close();
         }
     }
 

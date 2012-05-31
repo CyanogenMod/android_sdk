@@ -730,8 +730,9 @@ public class LogPanel extends SelectionDependentPanel {
                 Arrays.sort(selection);
 
                 // loop on the selection and output the file.
+                FileWriter writer = null;
                 try {
-                    FileWriter writer = new FileWriter(fileName);
+                    writer = new FileWriter(fileName);
 
                     for (int i : selection) {
                         TableItem item = currentTable.getItem(i);
@@ -744,6 +745,14 @@ public class LogPanel extends SelectionDependentPanel {
 
                 } catch (IOException e) {
                     return false;
+                } finally {
+                    if (writer != null) {
+                        try {
+                            writer.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
                 }
             }
         }

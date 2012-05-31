@@ -32,7 +32,9 @@ public class MockLog implements ISdkLog {
     private ArrayList<String> mMessages = new ArrayList<String>();
 
     private void add(String code, String format, Object... args) {
-        mMessages.add(new Formatter().format(code + format, args).toString());
+        Formatter formatter = new Formatter();
+        mMessages.add(formatter.format(code + format, args).toString());
+        formatter.close();
     }
 
     @Override

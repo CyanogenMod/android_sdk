@@ -74,12 +74,11 @@ public final class VersionCheck {
         int minMajorVersion = -1;
         int minMinorVersion = -1;
         int minMicroVersion = -1;
-        FileReader reader = null;
+        BufferedReader reader = null;
         try {
-            reader = new FileReader(osLibs + SdkConstants.FN_PLUGIN_PROP);
-            BufferedReader bReader = new BufferedReader(reader);
+            reader = new BufferedReader(new FileReader(osLibs + SdkConstants.FN_PLUGIN_PROP));
             String line;
-            while ((line = bReader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 Matcher m = sPluginVersionPattern.matcher(line);
                 if (m.matches()) {
                     minMajorVersion = Integer.parseInt(m.group(1));
@@ -139,10 +138,9 @@ public final class VersionCheck {
         String osTools = osSdkPath + SdkConstants.OS_SDK_TOOLS_FOLDER;
         FullRevision toolsRevision = new FullRevision(Integer.MAX_VALUE);
         try {
-            reader = new FileReader(osTools + SdkConstants.FN_SOURCE_PROP);
-            BufferedReader bReader = new BufferedReader(reader);
+            reader = new BufferedReader(new FileReader(osTools + SdkConstants.FN_SOURCE_PROP));
             String line;
-            while ((line = bReader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 Matcher m = sSourcePropPattern.matcher(line);
                 if (m.matches()) {
                     try {

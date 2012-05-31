@@ -1081,6 +1081,7 @@ public final class AvdSelector {
                 Formatter formatter = new Formatter(Locale.US);
                 formatter.format("%.2f", scale);   //$NON-NLS-1$
                 list.add(formatter.toString());
+                formatter.close();
             }
 
             // convert the list into an array for the call to exec.
