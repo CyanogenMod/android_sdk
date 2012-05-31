@@ -29,6 +29,7 @@
    <plugins>
       <plugin id="com.android.ide.eclipse.base"/>
       <plugin id="com.android.ide.eclipse.ddms"/>
+      <plugin id="com.android.ide.eclipse.gldebugger"/>
       <plugin id="com.android.ide.eclipse.hierarchyviewer"/>
       <plugin id="com.android.ide.eclipse.monitor"/>
       <plugin id="com.android.ide.eclipse.traceview"/>
