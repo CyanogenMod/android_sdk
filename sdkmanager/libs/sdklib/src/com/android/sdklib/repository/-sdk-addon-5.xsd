@@ -70,11 +70,12 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="add-on"  type="sdk:addonType"        />
-            <xsd:element name="extra"   type="sdk:extraType"        />
-            <xsd:element name="license" type="sdk:licenseType"      />
+            <xsd:element name="add-on"          type="sdk:addonType"        />
+            <xsd:element name="extra"           type="sdk:extraType"        />
+            <xsd:element name="license"         type="sdk:licenseType"      />
         </xsd:choice>
     </xsd:complexType>
+
 
     <!-- The definition of an SDK Add-on package. -->
 

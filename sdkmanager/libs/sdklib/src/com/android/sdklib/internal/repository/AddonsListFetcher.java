@@ -57,14 +57,21 @@ import javax.xml.validation.Validator;
  */
 public class AddonsListFetcher {
 
+    public enum SiteType {
+        ADDON_SITE,
+        SYS_IMG_SITE
+    }
+
     /**
      * An immutable structure representing an add-on site.
      */
     public static class Site {
         private final String mUrl;
         private final String mUiName;
+        private final SiteType mType;
 
-        private Site(String url, String uiName) {
+        private Site(String url, String uiName, SiteType type) {
+            mType = type;
             mUrl = url.trim();
             mUiName = uiName;
         }
@@ -75,6 +82,17 @@ public class AddonsListFetcher {
 
         public String getUiName() {
             return mUiName;
+        }
+
+        public SiteType getType() {
+            return mType;
+        }
+
+        /** Returns a debug string representation of this object. Not for user display. */
+        @Override
+        public String toString() {
+            return String.format("<%1$s URL='%2$s' Name='%3$s'>",   //$NON-NLS-1$
+                                 mType, mUrl, mUiName);
         }
     }
 
@@ -92,7 +110,7 @@ public class AddonsListFetcher {
 
         url = url == null ? "" : url.trim();
 
-        monitor.setProgressMax(5);
+        monitor.setProgressMax(6);
         monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
@@ -102,7 +120,55 @@ public class AddonsListFetcher {
         Document validatedDoc = null;
         String validatedUri = null;
 
+        String[] defaultNames = new String[SdkAddonsListConstants.NS_LATEST_VERSION];
+        for (int version = SdkAddonsListConstants.NS_LATEST_VERSION, i = 0;
+                version >= 1;
+                version--, i++) {
+            defaultNames[i] = SdkAddonsListConstants.getDefaultName(version);
+        }
+
         InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
+        if (xml != null) {
+            int version = getXmlSchemaVersion(xml);
+            if (version == 0) {
+                xml = null;
+            }
+        }
+
+        // If we can't find the latest version, try earlier schema versions.
+        if (xml == null && defaultNames.length > 0) {
+            ITaskMonitor subMonitor = monitor.createSubMonitor(1);
+            subMonitor.setProgressMax(defaultNames.length);
+
+            String baseUrl = url;
+            if (!baseUrl.endsWith("/")) {                       //$NON-NLS-1$
+                int pos = baseUrl.lastIndexOf('/');
+                if (pos > 0) {
+                    baseUrl = baseUrl.substring(0, pos + 1);
+                }
+            }
+
+            for (String name : defaultNames) {
+                String newUrl = baseUrl + name;
+                if (newUrl.equals(url)) {
+                    continue;
+                }
+                xml = fetchUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
+                if (xml != null) {
+                    int version = getXmlSchemaVersion(xml);
+                    if (version == 0) {
+                        xml = null;
+                    } else {
+                        url = newUrl;
+                        subMonitor.incProgress(
+                                subMonitor.getProgressMax() - subMonitor.getProgress());
+                        break;
+                    }
+                }
+            }
+        } else {
+            monitor.incProgress(1);
+        }
 
         if (xml != null) {
             monitor.setDescription("Validate XML");
@@ -434,8 +500,22 @@ public class AddonsListFetcher {
                  child != null;
                  child = child.getNextSibling()) {
                 if (child.getNodeType() == Node.ELEMENT_NODE &&
-                        nsUri.equals(child.getNamespaceURI()) &&
-                        child.getLocalName().equals(SdkAddonsListConstants.NODE_ADDON_SITE)) {
+                        nsUri.equals(child.getNamespaceURI())) {
+
+                    String elementName = child.getLocalName();
+                    SiteType type = null;
+
+                    if (SdkAddonsListConstants.NODE_SYS_IMG_SITE.equals(elementName)) {
+                        type = SiteType.SYS_IMG_SITE;
+
+                    } else if (SdkAddonsListConstants.NODE_ADDON_SITE.equals(elementName)) {
+                        type = SiteType.ADDON_SITE;
+                    }
+
+                    // Not an addon-site nor a sys-img-site, don't process this.
+                    if (type == null) {
+                        continue;
+                    }
 
                     Node url = getFirstChild(child, nsUri, SdkAddonsListConstants.NODE_URL);
                     Node name = getFirstChild(child, nsUri, SdkAddonsListConstants.NODE_NAME);
@@ -451,7 +531,7 @@ public class AddonsListFetcher {
                         }
 
                         if (strUrl.length() > 0 && strName.length() > 0) {
-                            sites.add(new Site(strUrl, strName));
+                            sites.add(new Site(strUrl, strName, type));
                         }
                     }
                 }

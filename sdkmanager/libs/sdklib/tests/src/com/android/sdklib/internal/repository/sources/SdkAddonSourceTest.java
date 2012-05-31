@@ -41,7 +41,7 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 
 /**
- * Tests for {@link SdkAddonSource}
+ * Tests for {@link SdkAddonSource}.
  */
 public class SdkAddonSourceTest extends TestCase {
 

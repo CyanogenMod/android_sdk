@@ -44,6 +44,14 @@ public class RepoConstants {
     /** The optional project-files provided by extra packages. */
     public static final String NODE_PROJECT_FILES = "project-files";            //$NON-NLS-1$
 
+    /** A system-image package. */
+    public static final String NODE_SYSTEM_IMAGE    = "system-image";           //$NON-NLS-1$
+
+    /* An included-ABI element for a system-image package. */
+    public static final String NODE_ABI_INCLUDED    = "included-abi";           //$NON-NLS-1$
+    /* An ABI element for a system-image package. */
+    public static final String NODE_ABI             = "abi";                    //$NON-NLS-1$
+
     /** The optional minimal tools revision required by platform & extra packages. */
     public static final String NODE_MIN_TOOLS_REV = "min-tools-rev";            //$NON-NLS-1$
     /** The optional minimal platform-tools revision required by tool packages. */

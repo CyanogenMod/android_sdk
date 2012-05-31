@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository.sources;
 
 import com.android.annotations.Nullable;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.repository.SdkAddonConstants;
+import com.android.sdklib.repository.SdkSysImgConstants;
 
 import org.w3c.dom.Document;
 
@@ -26,18 +26,18 @@ import java.io.InputStream;
 
 
 /**
- * An sdk-addon source, i.e. a download site for addons and extra packages.
+ * An sdk-sys-img source, i.e. a download site for system-image packages.
  * A repository describes one or more {@link Package}s available for download.
  */
-public class SdkAddonSource extends SdkSource {
+public class SdkSysImgSource extends SdkSource {
 
     /**
      * Constructs a new source for the given repository URL.
      * @param url The source URL. Cannot be null. If the URL ends with a /, the default
-     *            addon.xml filename will be appended automatically.
+     *            sys-img.xml filename will be appended automatically.
      * @param uiName The UI-visible name of the source. Can be null.
      */
-    public SdkAddonSource(String url, String uiName) {
+    public SdkSysImgSource(String url, String uiName) {
         super(url, uiName);
     }
 
@@ -47,7 +47,7 @@ public class SdkAddonSource extends SdkSource {
      */
     @Override
     public boolean isAddonSource() {
-        return true;
+        return false;
     }
 
     /**
@@ -56,43 +56,43 @@ public class SdkAddonSource extends SdkSource {
      */
     @Override
     public boolean isSysImgSource() {
-        return false;
+        return true;
     }
 
 
     @Override
     protected String[] getDefaultXmlFileUrls() {
-        return new String[] { SdkAddonConstants.URL_DEFAULT_FILENAME };
+        return new String[] { SdkSysImgConstants.URL_DEFAULT_FILENAME };
     }
 
     @Override
     protected int getNsLatestVersion() {
-        return SdkAddonConstants.NS_LATEST_VERSION;
+        return SdkSysImgConstants.NS_LATEST_VERSION;
     }
 
     @Override
     protected String getNsUri() {
-        return SdkAddonConstants.NS_URI;
+        return SdkSysImgConstants.NS_URI;
     }
 
     @Override
     protected String getNsPattern() {
-        return SdkAddonConstants.NS_PATTERN;
+        return SdkSysImgConstants.NS_PATTERN;
     }
 
     @Override
     protected String getSchemaUri(int version) {
-        return SdkAddonConstants.getSchemaUri(version);
+        return SdkSysImgConstants.getSchemaUri(version);
     }
 
     @Override
     protected String getRootElementName() {
-        return SdkAddonConstants.NODE_SDK_ADDON;
+        return SdkSysImgConstants.NODE_SDK_SYS_IMG;
     }
 
     @Override
     protected InputStream getXsdStream(int version) {
-        return SdkAddonConstants.getXsdStream(version);
+        return SdkSysImgConstants.getXsdStream(version);
     }
 
     /**
