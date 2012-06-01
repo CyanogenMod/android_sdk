@@ -44,10 +44,13 @@ import java.util.concurrent.Semaphore;
 
 public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     /** Abstract Unix Domain Socket Name used by the gltrace device code. */
-    private static final String GLTRACE_UDS = "gltrace";
+    private static final String GLTRACE_UDS = "gltrace";        //$NON-NLS-1$
 
     /** Local port that is forwarded to the device's {@link #GLTRACE_UDS} socket. */
     private static final int LOCAL_FORWARDED_PORT = 6039;
+
+    /** Activity name to use for a system activity that has already been launched. */
+    private static final String SYSTEM_APP = "system";          //$NON-NLS-1$
 
     @Override
     public void run(IAction action) {
@@ -84,7 +87,9 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
 
         try {
-            startActivity(device, traceOptions.activityToTrace);
+            if (!SYSTEM_APP.equals(traceOptions.activityToTrace)) {
+                startActivity(device, traceOptions.activityToTrace);
+            }
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
                     "Error while launching application: " + e.getMessage());
