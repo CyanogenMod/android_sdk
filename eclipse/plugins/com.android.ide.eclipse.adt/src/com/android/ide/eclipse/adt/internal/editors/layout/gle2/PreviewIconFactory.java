@@ -363,6 +363,8 @@ public class PreviewIconFactory {
             }
         }
 
+        mPalette.getEditor().recomputeLayout();
+
         return true;
     }
 
