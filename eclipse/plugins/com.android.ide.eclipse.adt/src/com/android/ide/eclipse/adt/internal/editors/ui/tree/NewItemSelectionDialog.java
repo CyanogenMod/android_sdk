@@ -29,9 +29,11 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.dialogs.AbstractElementListSelectionDialog;
@@ -277,6 +279,15 @@ public class NewItemSelectionDialog extends AbstractElementListSelectionDialog {
         createRadioControl(contents);
         createFilterText(contents);
         createFilteredList(contents);
+
+        // We don't want the builtin message area label (we use a radio control
+        // instead), but if we don't create it, Bad Stuff happens on
+        // Eclipse 3.8 and later (see issue 32527).
+        Label label = createMessageArea(contents);
+        if (label != null) {
+            GridData data = (GridData) label.getLayoutData();
+            data.exclude = true;
+        }
 
         // Initialize the list state.
         // This must be done after the filtered list as been created.
