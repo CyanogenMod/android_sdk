@@ -135,7 +135,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final String IMAGE_SAVE_LOG_TO_FILE = "save.png"; //$NON-NLS-1$
     private static final String IMAGE_CLEAR_LOG = "clear.png"; //$NON-NLS-1$
     private static final String IMAGE_DISPLAY_FILTERS = "displayfilters.png"; //$NON-NLS-1$
-    private static final String IMAGE_SCROLL_LOCK = "pause_logcat.png"; //$NON-NLS-1$
+    private static final String IMAGE_SCROLL_LOCK = "scroll_lock.png"; //$NON-NLS-1$
 
     private static final int[] WEIGHTS_SHOW_FILTERS = new int[] {15, 85};
     private static final int[] WEIGHTS_LOGCAT_ONLY = new int[] {0, 100};
