@@ -44,6 +44,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -98,6 +99,14 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
     private IAndroidTarget mProjectTarget;
 
+    private boolean mSupportMultiDeviceLaunch;
+    private Button mAllDevicesTargetButton;
+    private Combo mDeviceTypeCombo;
+
+    private static final String DEVICES_AND_EMULATORS = "Active devices and AVD's";
+    private static final String EMULATORS_ONLY = "Active AVD's";
+    private static final String DEVICES_ONLY = "Active devices";
+
     /**
      * Returns the emulator ready speed option value.
      * @param value The index of the combo selection.
@@ -125,11 +134,12 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /**
      *
      */
-    public EmulatorConfigTab() {
+    public EmulatorConfigTab(boolean supportMultiDeviceLaunch) {
+        mSupportMultiDeviceLaunch = supportMultiDeviceLaunch;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
+    /**
+     * @wbp.parser.entryPoint
      */
     @Override
     public void createControl(Composite parent) {
@@ -165,16 +175,36 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         targetModeGroup.setFont(font);
 
         mManualTargetButton = new Button(targetModeGroup, SWT.RADIO);
-        mManualTargetButton.setText("Manual");
-        // Since there are only 2 radio buttons, we can put a listener on only one (they
-        // are both called on select and unselect event.
+        mManualTargetButton.setText("Always prompt to pick device");
+
+        mAllDevicesTargetButton = new Button(targetModeGroup, SWT.RADIO);
+        mAllDevicesTargetButton.setText("Launch on all compatible devices/AVD's");
+        mAllDevicesTargetButton.setEnabled(mSupportMultiDeviceLaunch);
+
+        Composite deviceTypeOffsetComp = new Composite(targetModeGroup, SWT.NONE);
+        deviceTypeOffsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        layout = new GridLayout(1, false);
+        layout.marginRight = layout.marginHeight = 0;
+        layout.marginLeft = 30;
+        deviceTypeOffsetComp.setLayout(layout);
+
+        mDeviceTypeCombo = new Combo(deviceTypeOffsetComp, SWT.READ_ONLY);
+        mDeviceTypeCombo.setItems(new String[] {
+                DEVICES_AND_EMULATORS,
+                EMULATORS_ONLY,
+                DEVICES_ONLY,
+        });
+        mDeviceTypeCombo.select(0);
+        mDeviceTypeCombo.setEnabled(false);
 
         // add the radio button
         mAutoTargetButton = new Button(targetModeGroup, SWT.RADIO);
-        mAutoTargetButton.setText("Automatic");
+        mAutoTargetButton.setText("Automatically pick compatible device: "
+                + "Always uses preferred AVD if set below, "
+                + "launches on compatible device/AVD otherwise.");
         mAutoTargetButton.setSelection(true);
-        mAutoTargetButton.addSelectionListener(new SelectionAdapter() {
-            // called when selection changes
+
+        SelectionListener targetModeChangeListener = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
@@ -182,34 +212,43 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
                 boolean auto = mAutoTargetButton.getSelection();
                 mPreferredAvdSelector.setEnabled(auto);
                 mPreferredAvdLabel.setEnabled(auto);
-            }
-        });
 
-        Composite offsetComp = new Composite(targetModeGroup, SWT.NONE);
-        offsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+                boolean all = mAllDevicesTargetButton.getSelection();
+                mDeviceTypeCombo.setEnabled(all);
+            }
+        };
+
+        mAutoTargetButton.addSelectionListener(targetModeChangeListener);
+        mAllDevicesTargetButton.addSelectionListener(targetModeChangeListener);
+        mManualTargetButton.addSelectionListener(targetModeChangeListener);
+
+        Composite avdOffsetComp = new Composite(targetModeGroup, SWT.NONE);
+        avdOffsetComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         layout = new GridLayout(1, false);
         layout.marginRight = layout.marginHeight = 0;
         layout.marginLeft = 30;
-        offsetComp.setLayout(layout);
+        avdOffsetComp.setLayout(layout);
 
-        mPreferredAvdLabel = new Label(offsetComp, SWT.NONE);
+        mPreferredAvdLabel = new Label(avdOffsetComp, SWT.NONE);
         mPreferredAvdLabel.setText("Select a preferred Android Virtual Device for deployment:");
 
         // create the selector with no manager, we'll reset the manager every time this is
         // displayed to ensure we have the latest one (dialog is reused but SDK could have
         // been changed in between.
-        mPreferredAvdSelector = new AvdSelector(offsetComp,
+        mPreferredAvdSelector = new AvdSelector(avdOffsetComp,
                 Sdk.getCurrent().getSdkLocation(),
                 null /* avd manager */,
                 DisplayMode.SIMPLE_CHECK,
                 new AdtConsoleSdkLog());
         mPreferredAvdSelector.setTableHeightHint(100);
-        mPreferredAvdSelector.setSelectionListener(new SelectionAdapter() {
+        SelectionListener listener = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
             }
-        });
+        };
+        mPreferredAvdSelector.setSelectionListener(listener);
+        mDeviceTypeCombo.addSelectionListener(listener);
 
         // emulator size
         mEmulatorOptionsGroup = new Group(topComp, SWT.NONE);
@@ -219,6 +258,14 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         layout.numColumns = 2;
         mEmulatorOptionsGroup.setLayout(layout);
         mEmulatorOptionsGroup.setFont(font);
+
+        // Explanation
+        Label l = new Label(mEmulatorOptionsGroup, SWT.NONE);
+        l.setText("If no compatible and active devices or AVD's are found, then an AVD "
+                 + "might be launched. Provide options for the AVD launch below.");
+        gd = new GridData();
+        gd.horizontalSpan = 2;
+        l.setLayoutData(gd);
 
         // network options
         new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Network Speed:");
@@ -281,7 +328,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         });
 
         // custom command line option for emulator
-        Label l = new Label(mEmulatorOptionsGroup, SWT.NONE);
+        l = new Label(mEmulatorOptionsGroup, SWT.NONE);
         l.setText("Additional Emulator Command Line Options");
         gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 2;
@@ -329,15 +376,32 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void initializeFrom(ILaunchConfiguration configuration) {
         AvdManager avdManager = Sdk.getCurrent().getAvdManager();
 
-        TargetMode mode = LaunchConfigDelegate.DEFAULT_TARGET_MODE; // true == automatic
-        try {
-            mode = TargetMode.getMode(configuration.getAttribute(
-                    LaunchConfigDelegate.ATTR_TARGET_MODE, mode.getValue()));
-        } catch (CoreException e) {
-            // let's not do anything here, we'll use the default value
+        TargetMode mode = AndroidLaunchConfiguration.parseTargetMode(configuration,
+                LaunchConfigDelegate.DEFAULT_TARGET_MODE);
+
+        boolean multipleDevices = mode.isMultiDevice();
+        if (multipleDevices && !mSupportMultiDeviceLaunch) {
+            // The launch config says to run on multiple devices, but this launch type does not
+            // suppport multiple devices. In such a case, switch back to default mode.
+            // This could happen if a launch config used for Run is then used for Debug.
+            multipleDevices = false;
+            mode = LaunchConfigDelegate.DEFAULT_TARGET_MODE;
         }
-        mAutoTargetButton.setSelection(mode.getValue());
-        mManualTargetButton.setSelection(!mode.getValue());
+
+        mAutoTargetButton.setSelection(mode == TargetMode.AUTO);
+        mManualTargetButton.setSelection(mode == TargetMode.MANUAL);
+        mAllDevicesTargetButton.setSelection(multipleDevices);
+
+        mDeviceTypeCombo.setEnabled(multipleDevices);
+        if (multipleDevices) {
+            int index = 0;
+            if (mode == TargetMode.ALL_EMULATORS) {
+                index = 1;
+            } else if (mode == TargetMode.ALL_DEVICES) {
+                index = 2;
+            }
+            mDeviceTypeCombo.select(index);
+        }
 
         // look for the project name to get its target.
         String stringValue = "";
@@ -447,7 +511,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                mAutoTargetButton.getSelection());
+                getCurrentTargetMode().toString());
         AvdInfo avd = mPreferredAvdSelector.getSelected();
         if (avd != null) {
             configuration.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, avd.getName());
@@ -466,13 +530,32 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
                 mNoBootAnimButton.getSelection());
    }
 
+    private TargetMode getCurrentTargetMode() {
+        if (mAutoTargetButton.getSelection()) {
+            return TargetMode.AUTO;
+        } else if (mManualTargetButton.getSelection()) {
+            return TargetMode.MANUAL;
+        } else {
+            String selection = mDeviceTypeCombo.getText();
+            if (DEVICES_AND_EMULATORS.equals(selection)) {
+                return TargetMode.ALL_DEVICES_AND_EMULATORS;
+            } else if (DEVICES_ONLY.equals(selection)) {
+                return TargetMode.ALL_DEVICES;
+            } else if (EMULATORS_ONLY.equals(selection)) {
+                return TargetMode.ALL_EMULATORS;
+            }
+        }
+
+        return TargetMode.AUTO;
+    }
+
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
     @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());
+                LaunchConfigDelegate.DEFAULT_TARGET_MODE.toString());
         configuration.setAttribute(LaunchConfigDelegate.ATTR_SPEED,
                 LaunchConfigDelegate.DEFAULT_SPEED);
         configuration.setAttribute(LaunchConfigDelegate.ATTR_DELAY,

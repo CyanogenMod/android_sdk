@@ -77,9 +77,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -211,7 +214,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
                 // set default target mode
                 wc.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
-                        LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());
+                        LaunchConfigDelegate.DEFAULT_TARGET_MODE.toString());
 
                 // default AVD: None
                 wc.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, (String) null);
@@ -333,7 +336,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          * - Use Last Launched Device/AVD set.
          *       If user requested to use same device for future launches, and the last launched
          *       device/avd is still present, then simply launch on the same device/avd.
-         * - Manually Mode
+         * - Manual Mode
          *       Always display a UI that lets a user see the current running emulators/devices.
          *       The UI must show which devices are compatibles, and allow launching new emulators
          *       with compatible (and not yet running) AVD.
@@ -345,6 +348,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *           Count the number of compatible emulators/devices.
          *           If != 1, display a UI similar to manual mode.
          *           If == 1, launch the application on this AVD/device.
+         * - Launch on multiple devices:
+         *     From the currently active devices & emulators, filter out those that cannot run
+         *     the app (by api level), and launch on all the others.
          */
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
         IDevice deviceUsedInLastLaunch = DeviceChoiceCache.get(
@@ -563,6 +569,24 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             }
 
             AdtPlugin.printToConsole(project, message);
+        } else if ((config.mTargetMode == TargetMode.ALL_DEVICES_AND_EMULATORS
+                || config.mTargetMode == TargetMode.ALL_DEVICES
+                || config.mTargetMode == TargetMode.ALL_EMULATORS)
+                && ILaunchManager.RUN_MODE.equals(mode)) {
+            // if running on multiple devices, identify all compatible devices
+            boolean includeDevices = config.mTargetMode != TargetMode.ALL_EMULATORS;
+            boolean includeAvds = config.mTargetMode != TargetMode.ALL_DEVICES;
+            Collection<IDevice> compatibleDevices = findCompatibleDevices(devices,
+                    requiredApiVersionNumber, includeDevices, includeAvds);
+            if (compatibleDevices.size() == 0) {
+                AdtPlugin.printErrorToConsole(project,
+                      "No active compatible AVD's or devices found. "
+                    + "Relaunch this configuration after connecting a device or starting an AVD.");
+                stopLaunch(launchInfo);
+            } else {
+                multiLaunch(launchInfo, compatibleDevices);
+            }
+            return;
         }
 
         // bring up the device chooser.
@@ -604,6 +628,58 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         if (continueLaunch.get()) {
             continueLaunch(response, project, launch, launchInfo, config);
         }
+    }
+
+    /**
+     * Returns devices that can run a app of provided API level.
+     * @param devices list of devices to filter from
+     * @param requiredApiVersionNumber minimum required API level that should be supported
+     * @param includeDevices include physical devices in the filtered list
+     * @param includeAvds include emulators in the filtered list
+     * @return set of compatible devices, may be an empty set
+     */
+    private Collection<IDevice> findCompatibleDevices(IDevice[] devices,
+            String requiredApiVersionNumber, boolean includeDevices, boolean includeAvds) {
+        Set<IDevice> compatibleDevices = new HashSet<IDevice>(devices.length);
+        int minApi;
+        try {
+            minApi = Integer.parseInt(requiredApiVersionNumber);
+        } catch (NumberFormatException e) {
+            minApi = 1;
+        }
+        AndroidVersion requiredVersion = new AndroidVersion(minApi, null);
+
+        AvdManager avdManager = Sdk.getCurrent().getAvdManager();
+        for (IDevice d: devices) {
+            boolean isEmulator = d.isEmulator();
+            boolean canRun = false;
+
+            if (isEmulator) {
+                if (!includeAvds) {
+                    continue;
+                }
+
+                AvdInfo avdInfo = avdManager.getAvd(d.getAvdName(), true);
+                if (avdInfo != null && avdInfo.getTarget() != null) {
+                    canRun = avdInfo.getTarget().getVersion().canRun(requiredVersion);
+                }
+            } else {
+                if (!includeDevices) {
+                    continue;
+                }
+
+                AndroidVersion deviceVersion = Sdk.getDeviceVersion(d);
+                if (deviceVersion != null) {
+                    canRun = deviceVersion.canRun(requiredVersion);
+                }
+            }
+
+            if (canRun) {
+                compatibleDevices.add(d);
+            }
+        }
+
+        return compatibleDevices;
     }
 
     /**
@@ -815,15 +891,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @return true if succeed
      */
     private boolean simpleLaunch(DelayedLaunchInfo launchInfo, IDevice device) {
-        // API level check
-        if (checkBuildInfo(launchInfo, device) == false) {
-            AdtPlugin.printErrorToConsole(launchInfo.getProject(), "Launch canceled!");
-            stopLaunch(launchInfo);
-            return false;
-        }
-
-        // sync the app
-        if (syncApp(launchInfo, device) == false) {
+        if (!doPreLaunchActions(launchInfo, device)) {
             AdtPlugin.printErrorToConsole(launchInfo.getProject(), "Launch canceled!");
             stopLaunch(launchInfo);
             return false;
@@ -835,6 +903,37 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         return true;
     }
 
+    private boolean doPreLaunchActions(DelayedLaunchInfo launchInfo, IDevice device) {
+        // API level check
+        if (!checkBuildInfo(launchInfo, device)) {
+            return false;
+        }
+
+        // sync app
+        if (!syncApp(launchInfo, device)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void multiLaunch(DelayedLaunchInfo launchInfo, Collection<IDevice> devices) {
+        for (IDevice d: devices) {
+            boolean success = doPreLaunchActions(launchInfo, d);
+            if (!success) {
+                String deviceName = d.isEmulator() ? d.getAvdName() : d.getSerialNumber();
+                AdtPlugin.printErrorToConsole(launchInfo.getProject(),
+                        "Launch failed on device: " + deviceName);
+                continue;
+            }
+
+            doLaunchAction(launchInfo, d);
+        }
+
+        // multiple launches are only supported for run configuration, so we can terminate
+        // the launch itself
+        stopLaunch(launchInfo);
+    }
 
     /**
      * If needed, syncs the application and all its dependencies on the device/emulator.
@@ -1154,7 +1253,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         }
-        if (info.getLaunchAction().doLaunchAction(info, device)) {
+        if (doLaunchAction(info, device)) {
             // if the app is not a debug app, we need to do some clean up, as
             // the process is done!
             if (info.isDebugMode() == false) {
@@ -1167,10 +1266,16 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // lets stop the Launch
             stopLaunch(info);
         }
+    }
+
+    private boolean doLaunchAction(final DelayedLaunchInfo info, IDevice device) {
+        boolean result = info.getLaunchAction().doLaunchAction(info, device);
 
         // Monitor the logcat output on the launched device to notify
         // the user if any significant error occurs that is visible from logcat
         DdmsPlugin.getDefault().startLogCatMonitor(device);
+
+        return result;
     }
 
     private boolean launchEmulator(AndroidLaunchConfiguration config, AvdInfo avdToLaunch) {
