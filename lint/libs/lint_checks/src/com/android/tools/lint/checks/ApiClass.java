@@ -30,8 +30,8 @@ import java.util.Set;
  *
  * {@link #getSince()} gives the API level it was introduced.
  *
- * {@link #getMethod(String)} returns when the method was introduced.
- * {@link #getField(String)} returns when the field was introduced.
+ * {@link #getMethod} returns when the method was introduced.
+ * {@link #getField} returns when the field was introduced.
  */
 public class ApiClass {
 
@@ -44,7 +44,7 @@ public class ApiClass {
     private final Map<String, Integer> mFields = new HashMap<String, Integer>();
     private final Map<String, Integer> mMethods = new HashMap<String, Integer>();
 
-    public ApiClass(String name, int since) {
+    ApiClass(String name, int since) {
         mName = name;
         mSince = since;
     }
@@ -53,7 +53,7 @@ public class ApiClass {
      * Returns the name of the class.
      * @return the name of the class
      */
-    public String getName() {
+    String getName() {
         return mName;
     }
 
@@ -61,16 +61,16 @@ public class ApiClass {
      * Returns when the class was introduced.
      * @return the api level the class was introduced.
      */
-    public int getSince() {
+    int getSince() {
         return mSince;
     }
 
     /**
      * Returns when a field was added, or null if it doesn't exist.
      * @param name the name of the field.
-     * @return
+     * @param info the corresponding info
      */
-    public Integer getField(String name, Api info) {
+    Integer getField(String name, Api info) {
         // The field can come from this class or from a super class or an interface
         // The value can never be lower than this introduction of this class.
         // When looking at super classes and interfaces, it can never be lower than when the
@@ -125,9 +125,8 @@ public class ApiClass {
      * Returns when a method was added, or null if it doesn't exist. This goes through the super
      * class to find method only present there.
      * @param methodSignature the method signature
-     * @return
      */
-    public int getMethod(String methodSignature, Api info) {
+    int getMethod(String methodSignature, Api info) {
         // The method can come from this class or from a super class.
         // The value can never be lower than this introduction of this class.
         // When looking at super classes, it can never be lower than when the super class became
@@ -178,14 +177,14 @@ public class ApiClass {
         return min;
     }
 
-    public void addField(String name, int since) {
+    void addField(String name, int since) {
         Integer i = mFields.get(name);
         if (i == null || i.intValue() > since) {
             mFields.put(name, Integer.valueOf(since));
         }
     }
 
-    public void addMethod(String name, int since) {
+    void addMethod(String name, int since) {
         // Strip off the method type at the end to ensure that the code which
         // produces inherited methods doesn't get confused and end up multiple entries.
         // For example, java/nio/Buffer has the method "array()Ljava/lang/Object;",
@@ -203,11 +202,11 @@ public class ApiClass {
         }
     }
 
-    public void addSuperClass(String superClass, int since) {
+    void addSuperClass(String superClass, int since) {
         addToArray(mSuperClasses, superClass, since);
     }
 
-    public void addInterface(String interfaceClass, int since) {
+    void addInterface(String interfaceClass, int since) {
         addToArray(mInterfaces, interfaceClass, since);
     }
 
@@ -235,7 +234,7 @@ public class ApiClass {
      * @param info the api to look up super classes from
      * @return a set containing all the members fields
      */
-    public Set<String> getAllMethods(Api info) {
+    Set<String> getAllMethods(Api info) {
         Set<String> members = new HashSet<String>(100);
         addAllMethods(info, members);
 
@@ -272,7 +271,7 @@ public class ApiClass {
      * @param info the api to look up super classes from
      * @return a set containing all the fields
      */
-    public Set<String> getAllFields(Api info) {
+    Set<String> getAllFields(Api info) {
         Set<String> members = new HashSet<String>(100);
         addAllFields(info, members);
 

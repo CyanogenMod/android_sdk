@@ -70,6 +70,7 @@ import lombok.ast.ExpressionStatement;
 import lombok.ast.FloatingPointLiteral;
 import lombok.ast.For;
 import lombok.ast.ForEach;
+import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.Identifier;
 import lombok.ast.If;
 import lombok.ast.ImportDeclaration;
@@ -210,8 +211,6 @@ public class JavaVisitor {
                 AstVisitor visitor = v.getVisitor();
                 if (visitor != null) {
                     compilationUnit.accept(visitor);
-                } else {
-                    assert false : v.getDetector().getClass().getName();
                 }
             }
 
@@ -266,6 +265,10 @@ public class JavaVisitor {
         AstVisitor getVisitor() {
             if (mVisitor == null) {
                 mVisitor = mDetector.createJavaVisitor(mContext);
+                if (mVisitor == null) {
+                    mVisitor = new ForwardingAstVisitor() {
+                    };
+                }
             }
             return mVisitor;
         }

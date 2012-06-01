@@ -35,6 +35,7 @@ import lombok.ast.MethodInvocation;
  * Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled.
  */
 public class SetJavaScriptEnabledDetector extends Detector implements Detector.JavaScanner {
+    /** Invocations of setJavaScriptEnabled */
     public static final Issue ISSUE = Issue.create("SetJavaScriptEnabled", //$NON-NLS-1$
             "Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled",
 

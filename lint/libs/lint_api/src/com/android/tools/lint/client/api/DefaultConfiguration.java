@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
+import com.google.common.io.Closeables;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -102,7 +103,7 @@ public class DefaultConfiguration extends Configuration {
 
     protected DefaultConfiguration(
             @NonNull LintClient client,
-            @Nullable Project project,
+            @NonNull Project project,
             @Nullable Configuration parent) {
         this(client, project, parent, new File(project.getDir(), CONFIG_FILE_NAME));
     }
@@ -221,9 +222,11 @@ public class DefaultConfiguration extends Configuration {
             return;
         }
 
+        @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
+        BufferedInputStream input = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            BufferedInputStream input = new BufferedInputStream(new FileInputStream(mConfigFile));
+            input = new BufferedInputStream(new FileInputStream(mConfigFile));
             InputSource source = new InputSource(input);
             factory.setNamespaceAware(false);
             factory.setValidating(false);
@@ -285,6 +288,8 @@ public class DefaultConfiguration extends Configuration {
             formatError(e.getMessage());
         } catch (Exception e) {
             mClient.log(e, null);
+        } finally {
+            Closeables.closeQuietly(input);
         }
     }
 

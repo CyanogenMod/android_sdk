@@ -227,7 +227,8 @@ public class HtmlReporter extends Reporter {
                         Location l = warning.location.getSecondary();
                         int otherLocations = 0;
                         while (l != null) {
-                            if (l.getMessage() != null && l.getMessage().length() > 0) {
+                            String message = l.getMessage();
+                            if (message != null && message.length() > 0) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
@@ -235,7 +236,7 @@ public class HtmlReporter extends Reporter {
                                 mWriter.write(':');
                                 mWriter.write(' ');
                                 mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
-                                appendEscapedText(l.getMessage());
+                                appendEscapedText(message);
                                 mWriter.write("</span>");                            //$NON-NLS-1$
                                 mWriter.write("<br />");                         //$NON-NLS-1$
 
@@ -484,6 +485,7 @@ public class HtmlReporter extends Reporter {
         if (mSimpleFormat) {
             // Inline the CSS
             mWriter.write("<style>\n");                                   //$NON-NLS-1$
+            @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
             InputStream input = cssUrl.openStream();
             byte[] bytes = ByteStreams.toByteArray(input);
             Closeables.closeQuietly(input);

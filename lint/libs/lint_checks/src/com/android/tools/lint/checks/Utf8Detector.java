@@ -65,6 +65,9 @@ public class Utf8Detector extends LayoutDetector {
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         String xml = context.getContents();
+        if (xml == null) {
+            return;
+        }
 
         // AAPT: The prologue must be in the first line
         int lineEnd = 0;

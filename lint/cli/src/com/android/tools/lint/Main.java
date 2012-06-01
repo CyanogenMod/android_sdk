@@ -638,10 +638,11 @@ public class Main extends LintClient {
             "\"lint --ignore UnusedResources,UselessLeaf /my/project/path\"\n";
     }
 
+    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
     private void printVersion() {
         File file = findResource("tools" + File.separator +     //$NON-NLS-1$
                                  "source.properties");          //$NON-NLS-1$
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             FileInputStream input = null;
             try {
                 input = new FileInputStream(file);
@@ -924,9 +925,6 @@ public class Main extends LintClient {
         String s = mFileContents.get(file);
         if (s == null) {
             s = readFile(file);
-            if (s == null) {
-                s = "";
-            }
             mFileContents.put(file, s);
         }
 
@@ -1068,7 +1066,7 @@ public class Main extends LintClient {
      * flags supplied on the command line
      */
     class CliConfiguration extends DefaultConfiguration {
-        CliConfiguration(Configuration parent, Project project) {
+        CliConfiguration(@NonNull Configuration parent, @NonNull Project project) {
             super(Main.this, project, parent);
         }
 

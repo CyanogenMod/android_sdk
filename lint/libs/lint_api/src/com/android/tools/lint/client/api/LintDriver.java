@@ -55,6 +55,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
@@ -242,8 +243,9 @@ public class LintDriver {
             // Infer the scope
             mScope = EnumSet.noneOf(Scope.class);
             for (Project project : projects) {
-                if (project.getSubset() != null) {
-                    for (File file : project.getSubset()) {
+                List<File> subset = project.getSubset();
+                if (subset != null) {
+                    for (File file : subset) {
                         String name = file.getName();
                         if (name.equals(ANDROID_MANIFEST_XML)) {
                             mScope.add(Scope.MANIFEST);
@@ -733,16 +735,18 @@ public class LintDriver {
         if (manifestFile != null) {
             XmlContext context = new XmlContext(this, project, main, manifestFile, null);
             IDomParser parser = mClient.getDomParser();
-            context.document = parser.parseXml(context);
-            if (context.document != null) {
-                project.readManifest(context.document);
+            if (parser != null) {
+                context.document = parser.parseXml(context);
+                if (context.document != null) {
+                    project.readManifest(context.document);
 
-                if (!project.isLibrary() && mScope.contains(Scope.MANIFEST)) {
-                    List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
-                    if (detectors != null) {
-                        XmlVisitor v = new XmlVisitor(parser, detectors);
-                        fireEvent(EventType.SCANNING_FILE, context);
-                        v.visitFile(context, manifestFile);
+                    if (!project.isLibrary() && mScope.contains(Scope.MANIFEST)) {
+                        List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
+                        if (detectors != null) {
+                            XmlVisitor v = new XmlVisitor(parser, detectors);
+                            fireEvent(EventType.SCANNING_FILE, context);
+                            v.visitFile(context, manifestFile);
+                        }
                     }
                 }
             }
@@ -1153,9 +1157,10 @@ public class LintDriver {
         for (File classPathEntry : classPath) {
             if (classPathEntry.getName().endsWith(DOT_JAR)) {
                 File jarFile = classPathEntry;
+                ZipInputStream zis = null;
                 try {
                     FileInputStream fis = new FileInputStream(jarFile);
-                    ZipInputStream zis = new ZipInputStream(fis);
+                    zis = new ZipInputStream(fis);
                     ZipEntry entry = zis.getNextEntry();
                     while (entry != null) {
                         String name = entry.getName();
@@ -1180,6 +1185,8 @@ public class LintDriver {
                     }
                 } catch (IOException e) {
                     mClient.log(e, "Could not read jar file contents from %1$s", jarFile);
+                } finally {
+                    Closeables.closeQuietly(zis);
                 }
 
                 continue;
@@ -1783,7 +1790,7 @@ public class LintDriver {
      * @return true if the issue or all issues should be suppressed for this
      *         modifier
      */
-    private static boolean isSuppressed(@Nullable Issue issue, @NonNull Modifiers modifiers) {
+    private static boolean isSuppressed(@Nullable Issue issue, @Nullable Modifiers modifiers) {
         if (modifiers == null) {
             return false;
         }

@@ -40,17 +40,17 @@ public class Api {
 
     /**
      * Parses simplified API file.
-     *
-     * @param apiFolder the folder containing the file.
+     * @param apiFile the file to read
      * @return a new ApiInfo
      */
     public static Api parseApi(File apiFile) {
+        FileInputStream fileInputStream = null;
         try {
+            fileInputStream = new FileInputStream(apiFile);
             SAXParserFactory parserFactory = SAXParserFactory.newInstance();
             SAXParser parser = parserFactory.newSAXParser();
             ApiParser apiParser = new ApiParser();
-            parser.parse(new FileInputStream(apiFile), apiParser);
-
+            parser.parse(fileInputStream, apiParser);
             return new Api(apiParser.getClasses());
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -58,6 +58,14 @@ public class Api {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
 
         return null;
@@ -69,11 +77,11 @@ public class Api {
         mClasses = new HashMap<String, ApiClass>(classes);
     }
 
-    public ApiClass getClass(String fqcn) {
+    ApiClass getClass(String fqcn) {
         return mClasses.get(fqcn);
     }
 
-    public Map<String, ApiClass> getClasses() {
+    Map<String, ApiClass> getClasses() {
         return Collections.unmodifiableMap(mClasses);
     }
 }

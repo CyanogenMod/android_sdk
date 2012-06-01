@@ -330,6 +330,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     checkTypes(context, formatter, checkValid, checkTypes, name, list);
                 }
             }
+
+            formatter.close();
         }
     }
 

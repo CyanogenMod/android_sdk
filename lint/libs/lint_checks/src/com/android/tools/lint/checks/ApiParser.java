@@ -43,10 +43,10 @@ public class ApiParser extends DefaultHandler {
 
     private ApiClass mCurrentClass;
 
-    public ApiParser() {
+    ApiParser() {
     }
 
-    public Map<String, ApiClass> getClasses() {
+    Map<String, ApiClass> getClasses() {
         return mClasses;
     }
 
