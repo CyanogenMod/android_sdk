@@ -118,6 +118,7 @@ public class Project {
             Properties properties = new Properties();
             File propFile = new File(dir, PROJECT_PROPERTIES);
             if (propFile.exists()) {
+                @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
                 BufferedInputStream is = new BufferedInputStream(new FileInputStream(propFile));
                 try {
                     properties.load(is);

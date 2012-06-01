@@ -342,7 +342,7 @@ public final class Issue implements Comparable<Issue> {
      * @param scope the scope available for analysis
      * @return true if this issue can be analyzed with the given available scope
      */
-    public boolean isAdequate(@Nullable EnumSet<Scope> scope) {
+    public boolean isAdequate(@NonNull EnumSet<Scope> scope) {
         if (scope.containsAll(mScope)) {
             return true;
         }

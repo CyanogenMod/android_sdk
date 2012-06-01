@@ -195,7 +195,6 @@ class XmlUtils {
      * @param xmlNode Any node from a document returned by {@link #parseDocument(File, ISdkLog)}.
      * @return The line number if found or 0.
      */
-    @Nullable
     static int extractLineNumber(@Nullable Node xmlNode) {
         if (xmlNode != null) {
             Object data = xmlNode.getUserData(DATA_LINE_NUMBER);

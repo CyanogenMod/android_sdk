@@ -353,8 +353,8 @@ public class ApiLookup {
             List<String> members = new ArrayList<String>(allMethods.size() + allFields.size());
             for (String member : allMethods) {
                 Integer since = apiClass.getMethod(member, info);
-                assert since != null : className + ':' + member;
                 if (since == null) {
+                    assert false : className + ':' + member;
                     since = 1;
                 }
                 if (since != 1) {
@@ -371,8 +371,8 @@ public class ApiLookup {
             // or not, then we'd need to put this data back in.
             for (String member : allFields) {
                 Integer since = apiClass.getField(member, info);
-                assert since != null : className + ':' + member;
                 if (since == null) {
+                    assert false : className + ':' + member;
                     since = 1;
                 }
                 if (since != 1) {
@@ -476,8 +476,8 @@ public class ApiLookup {
                 } else {
                     since = apiClass.getField(member, info);
                 }
-                assert since != null : clz + ':' + member;
                 if (since == null) {
+                    assert false : clz + ':' + member;
                     since = 1;
                 }
 

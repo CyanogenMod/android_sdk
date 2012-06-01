@@ -19,6 +19,8 @@ package com.android.manifmerger;
 import com.android.annotations.NonNull;
 import com.android.sdklib.mock.MockLog;
 
+import org.w3c.dom.Document;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -312,6 +314,9 @@ abstract class ManifestMergerTestCase extends TestCase {
             assertNotNull("Missing @" + DELIM_MAIN + " in " + filename, mainFile);
             assertNotNull("Missing @" + DELIM_RESULT + " in " + filename, actualResultFile);
 
+            assert mainFile != null;
+            assert actualResultFile != null;
+
             return new TestFiles(
                     shouldFail,
                     mainFile,
@@ -395,13 +400,19 @@ abstract class ManifestMergerTestCase extends TestCase {
         // Test result XML. There should always be one created
         // since the process action does not stop on errors.
         log.clear();
+        Document document = XmlUtils.parseDocument(testFiles.getActualResult(), log);
+        assertNotNull(document);
+        assert document != null; // for Eclipse null analysis
         String actual = XmlUtils.printXmlString(
-                            XmlUtils.parseDocument(testFiles.getActualResult(), log),
+                            document,
                             log);
         assertEquals("Error parsing actual result XML", "[]", log.toString());
         log.clear();
+        document = XmlUtils.parseDocument(testFiles.getExpectedResult(), log);
+        assertNotNull(document);
+        assert document != null;
         String expected = XmlUtils.printXmlString(
-                            XmlUtils.parseDocument(testFiles.getExpectedResult(), log),
+                            document,
                             log);
         assertEquals("Error parsing expected result XML", "[]", log.toString());
         assertEquals("Error comparing expected to actual result", expected, actual);

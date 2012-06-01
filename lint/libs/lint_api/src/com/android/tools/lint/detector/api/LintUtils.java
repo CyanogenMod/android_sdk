@@ -395,7 +395,8 @@ public class LintUtils {
      * @return the string
      * @throws IOException if the file cannot be read properly
      */
-    public static String getEncodedString(File file) throws IOException {
+    @NonNull
+    public static String getEncodedString(@NonNull File file) throws IOException {
         byte[] bytes = Files.toByteArray(file);
         if (endsWith(file.getName(), DOT_XML)) {
             return PositionXmlParser.getXmlString(bytes);
@@ -416,7 +417,8 @@ public class LintUtils {
      * @param data the byte array to construct the string from
      * @return the string
      */
-    public static String getEncodedString(byte[] data) {
+    @NonNull
+    public static String getEncodedString(@Nullable byte[] data) {
         if (data == null) {
             return "";
         }

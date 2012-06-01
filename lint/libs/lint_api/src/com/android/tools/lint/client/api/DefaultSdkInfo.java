@@ -103,9 +103,9 @@ class DefaultSdkInfo extends SdkInfo {
     }
 
     @Override
-    public boolean isSubViewOf(@NonNull String parent, @NonNull String child) {
-        parent = getRawType(parent);
-        child = getRawType(child);
+    public boolean isSubViewOf(@NonNull String parentType, @NonNull String childType) {
+        String parent = getRawType(parentType);
+        String child = getRawType(childType);
 
         // Do analysis just on non-fqcn paths
         if (parent.indexOf('.') != -1) {

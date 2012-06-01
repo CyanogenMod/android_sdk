@@ -44,8 +44,8 @@ public abstract class Configuration {
      * @param location the location of the issue
      * @param message the associated user message
      * @param data additional information about an issue (see
-     *            {@link LintClient#report(Context, Issue, Location, String, Object)} for
-     *            more information
+     *            {@link LintClient#report(Context, Issue, Severity, Location, String, Object)}
+     *            for more information
      * @return true if this issue should be suppressed
      */
     public boolean isIgnored(
