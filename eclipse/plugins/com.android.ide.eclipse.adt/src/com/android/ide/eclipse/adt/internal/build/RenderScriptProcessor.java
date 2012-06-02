@@ -245,32 +245,43 @@ public class RenderScriptProcessor extends SourceProcessor {
             Process p = Runtime.getRuntime().exec(command);
 
             // list to store each line of stderr
-            ArrayList<String> results = new ArrayList<String>();
+            ArrayList<String> stdErr = new ArrayList<String>();
 
             // get the output and return code from the process
-            int result = BuildHelper.grabProcessOutput(project, p, results);
+            int returnCode = BuildHelper.grabProcessOutput(project, p, stdErr);
 
-            // attempt to parse the error output
-            boolean error = parseLlvmOutput(results);
+            if (stdErr.size() > 0) {
+                // attempt to parse the error output
+                boolean parsingError = parseLlvmOutput(stdErr);
 
-            // If the process failed and we couldn't parse the output
-            // we print a message, mark the project and exit
-            if (result != 0) {
+                // If the process failed and we couldn't parse the output
+                // we print a message, mark the project and exit
+                if (returnCode != 0) {
 
-                if (error || verbose) {
-                    // display the message in the console.
-                    if (error) {
-                        AdtPlugin.printErrorToConsole(project, results.toArray());
+                    if (parsingError || verbose) {
+                        // display the message in the console.
+                        if (parsingError) {
+                            AdtPlugin.printErrorToConsole(project, stdErr.toArray());
 
-                        // mark the project
-                        BaseProjectHelper.markResource(project,
-                                AdtConstants.MARKER_RENDERSCRIPT,
-                                "Unparsed Renderscript error! Check the console for output.",
-                                IMarker.SEVERITY_ERROR);
-                    } else {
-                        AdtPlugin.printToConsole(project, results.toArray());
+                            // mark the project
+                            BaseProjectHelper.markResource(project,
+                                    AdtConstants.MARKER_RENDERSCRIPT,
+                                    "Unparsed Renderscript error! Check the console for output.",
+                                    IMarker.SEVERITY_ERROR);
+                        } else {
+                            AdtPlugin.printToConsole(project, stdErr.toArray());
+                        }
                     }
+                    return false;
                 }
+            } else if (returnCode != 0) {
+                // no stderr output but exec failed.
+                String msg = String.format("Error executing Renderscript: Return code %1$d",
+                        returnCode);
+
+                BaseProjectHelper.markResource(project, AdtConstants.MARKER_AIDL,
+                       msg, IMarker.SEVERITY_ERROR);
+
                 return false;
             }
         } catch (IOException e) {

@@ -827,31 +827,30 @@ public class BuildHelper {
         }
 
         // launch
-        int execError = 1;
         try {
             // launch the command line process
             Process process = Runtime.getRuntime().exec(command);
 
             // list to store each line of stderr
-            ArrayList<String> results = new ArrayList<String>();
+            ArrayList<String> stdErr = new ArrayList<String>();
 
             // get the output and return code from the process
-            execError = grabProcessOutput(mProject, process, results);
+            int returnCode = grabProcessOutput(mProject, process, stdErr);
 
             if (mVerbose) {
-                for (String resultString : results) {
-                    mOutStream.println(resultString);
+                for (String stdErrString : stdErr) {
+                    mOutStream.println(stdErrString);
                 }
             }
-            if (execError != 0) {
-                throw new AaptResultException(execError,
-                        results.toArray(new String[results.size()]));
+            if (returnCode != 0) {
+                throw new AaptResultException(returnCode,
+                        stdErr.toArray(new String[stdErr.size()]));
             }
         } catch (IOException e) {
-            String msg = String.format(Messages.AAPT_Exec_Error, command[0]);
+            String msg = String.format(Messages.AAPT_Exec_Error_s, command[0]);
             throw new AaptExecException(msg, e);
         } catch (InterruptedException e) {
-            String msg = String.format(Messages.AAPT_Exec_Error, command[0]);
+            String msg = String.format(Messages.AAPT_Exec_Error_s, command[0]);
             throw new AaptExecException(msg, e);
         }
 
@@ -1048,20 +1047,20 @@ public class BuildHelper {
 
     /**
      * Get the stderr output of a process and return when the process is done.
-     * @param process The process to get the ouput from
-     * @param results The array to store the stderr output
+     * @param process The process to get the output from
+     * @param stderr The array to store the stderr output
      * @return the process return code.
      * @throws InterruptedException
      */
     public final static int grabProcessOutput(
             final IProject project,
             final Process process,
-            final ArrayList<String> results)
+            final ArrayList<String> stderr)
             throws InterruptedException {
 
         return GrabProcessOutput.grabProcessOutput(
                 process,
-                Wait.WAIT_FOR_PROCESS,
+                Wait.WAIT_FOR_READERS, // we really want to make sure we get all the output!
                 new IProcessOutput() {
 
                     @SuppressWarnings("unused")
@@ -1083,7 +1082,7 @@ public class BuildHelper {
                     @Override
                     public void err(@Nullable String line) {
                         if (line != null) {
-                            results.add(line);
+                            stderr.add(line);
                             if (BuildVerbosity.VERBOSE == AdtPrefs.getPrefs().getBuildVerbosity()) {
                                 AdtPlugin.printErrorToConsole(project, line);
                             }
