@@ -539,7 +539,7 @@
                 libraryPackagesOut="project.library.packages"
                 libraryManifestFilePathOut="project.library.manifest.file.path"
                 libraryResFolderPathOut="project.library.res.folder.path"
-                libraryBinFolderPathOut="project.library.bin.folder.path"
+                libraryBinAidlFolderPathOut="project.library.bin.aidl.folder.path"
                 libraryNativeFolderPathOut="project.library.native.folder.path"
                 jarLibraryPathOut="project.all.jars.path"
                 targetApi="${project.target.apilevel}"
@@ -622,7 +622,7 @@
             <echo level="info">Handling aidl files...</echo>
             <aidl executable="${aidl}"
                     framework="${project.target.framework.aidl}"
-                    libraryBinFolderPathRefid="project.library.bin.folder.path"
+                    libraryBinAidlFolderPathRefid="project.library.bin.aidl.folder.path"
                     genFolder="${gen.absolute.dir}"
                     aidlOutFolder="${out.aidl.absolute.dir}">
                 <source path="${source.absolute.dir}"/>
