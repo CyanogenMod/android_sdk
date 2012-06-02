@@ -1,4 +1,7 @@
-19.0.0
+20.0.0
+* Aidl files from library projects are now in the import list.
+
+19.0.0 (does not exist)
 
 18.0.0
 * Fix bug 27940 where exporting release package doesn't recompile libraries

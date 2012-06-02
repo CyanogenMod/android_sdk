@@ -131,11 +131,12 @@ public class RenderScriptProcessor extends SourceProcessor {
         return PROPERTY_COMPILE_RS;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget, int targetApi,
-            List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
-            throws CoreException {
+            List<IPath> sourceFolders, List<IFile> notCompiledOut,  List<File> libraryProjectsOut,
+            IProgressMonitor monitor) throws CoreException {
 
         String sdkOsPath = Sdk.getCurrent().getSdkLocation();
 

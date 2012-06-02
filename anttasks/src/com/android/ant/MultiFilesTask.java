@@ -61,7 +61,7 @@ class MultiFilesTask extends BuildTypedTask {
         }
 
         // gather all the source files from all the source folders.
-        Map<String, String> sourceFiles = getFileListByExtension(taskProject, sourceFolders,
+        Map<String, String> sourceFiles = getFilesByNameEntryFilter(sourceFolders,
                 "**/*." + extension);
         if (sourceFiles.size() > 0) {
             processor.displayMessage(DisplayType.FOUND, sourceFiles.size());
@@ -69,14 +69,15 @@ class MultiFilesTask extends BuildTypedTask {
 
         // go look for all dependency files in the gen folder. This will have all dependency
         // files but we can filter them based on the first pre-req file.
-        Map<String, String> depFiles = getFileListByExtension(taskProject, genFolder, "**/*.d");
+        Iterator<?> depFiles = getFilesByNameEntryFilter(genFolder, "**/*.d");
 
         // parse all the dep files and keep the ones that are of the proper type and check if
         // they require compilation again.
         Map<String, String> toCompile = new HashMap<String, String>();
         ArrayList<File> toRemove = new ArrayList<File>();
         ArrayList<String> depsToRemove = new ArrayList<String>();
-        for (String depFile : depFiles.keySet()) {
+        while (depFiles.hasNext()) {
+            String depFile = depFiles.next().toString();
             DependencyGraph graph = new DependencyGraph(depFile, null /*watchPaths*/);
 
             // get the source file. it's the first item in the pre-reqs
@@ -145,34 +146,44 @@ class MultiFilesTask extends BuildTypedTask {
         }
     }
 
-    private Map<String, String> getFileListByExtension(Project taskProject,
-            List<String> sourceFolders, String filter) {
-        HashMap<String, String> sourceFiles = new HashMap<String, String>();
-        for (String sourceFolder : sourceFolders) {
-            sourceFiles.putAll(getFileListByExtension(taskProject, sourceFolder, filter));
+    /**
+     * Returns a list of files found in given folders, all matching a given filter.
+     * The result is a map of (file, folder).
+     * @param folders the folders to search
+     * @param filter the filter for the files. Typically a glob.
+     * @return a map of (file, folder)
+     */
+    private Map<String, String> getFilesByNameEntryFilter(List<String> folders, String filter) {
+        Map<String, String> sourceFiles = new HashMap<String, String>();
+
+        for (String folder : folders) {
+            Iterator<?> iterator = getFilesByNameEntryFilter(folder, filter);
+
+            while (iterator.hasNext()) {
+                sourceFiles.put(iterator.next().toString(), folder);
+            }
         }
 
         return sourceFiles;
     }
 
-    private Map<String, String> getFileListByExtension(Project taskProject,
-            String sourceFolder, String filter) {
-        HashMap<String, String> sourceFiles = new HashMap<String, String>();
+    /**
+     * Returns a list of files found in a given folder, matching a given filter.
+     * @param folder the folder to search
+     * @param filter the filter for the files. Typically a glob.
+     * @return an iterator.
+     */
+    private Iterator<?> getFilesByNameEntryFilter(String folder, String filter) {
+        Project taskProject = getProject();
 
         // create a fileset to find all the files in the folder
         FileSet fs = new FileSet();
         fs.setProject(taskProject);
-        fs.setDir(new File(sourceFolder));
+        fs.setDir(new File(folder));
         NameEntry include = fs.createInclude();
         include.setName(filter);
 
         // loop through the results of the file set
-        Iterator<?> iter = fs.iterator();
-        while (iter.hasNext()) {
-            sourceFiles.put(iter.next().toString(), sourceFolder);
-        }
-
-        return sourceFiles;
+        return fs.iterator();
     }
-
 }

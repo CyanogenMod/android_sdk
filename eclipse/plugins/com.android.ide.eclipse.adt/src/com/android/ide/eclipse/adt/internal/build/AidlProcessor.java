@@ -23,6 +23,8 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.io.FileOp;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -39,6 +41,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,13 +96,13 @@ public class AidlProcessor extends SourceProcessor {
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget, int targetApi,
-            List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
-            throws CoreException {
+            List<IPath> sourceFolders, List<IFile> notCompiledOut, List<File> libraryProjectsOut,
+            IProgressMonitor monitor) throws CoreException {
         // create the command line
-        String[] command = new String[4 + sourceFolders.size()];
-        int index = 0;
-        command[index++] = projectTarget.getPath(IAndroidTarget.AIDL);
-        command[index++] = quote("-p" + projectTarget.getPath(IAndroidTarget.ANDROID_AIDL)); //$NON-NLS-1$
+        List<String> commandList = new ArrayList<String>(
+                4 + sourceFolders.size() + libraryProjectsOut.size());
+        commandList.add(projectTarget.getPath(IAndroidTarget.AIDL));
+        commandList.add(quote("-p" + projectTarget.getPath(IAndroidTarget.ANDROID_AIDL))); //$NON-NLS-1$
 
         // since the path are relative to the workspace and not the project itself, we need
         // the workspace root.
@@ -107,14 +110,37 @@ public class AidlProcessor extends SourceProcessor {
         for (IPath p : sourceFolders) {
             IFolder f = wsRoot.getFolder(p);
             if (f.exists()) { // if the resource doesn't exist, getLocation will return null.
-                command[index++] = quote("-I" + f.getLocation().toOSString()); //$NON-NLS-1$
+                commandList.add(quote("-I" + f.getLocation().toOSString())); //$NON-NLS-1$
             }
         }
+
+        for (File libOut : libraryProjectsOut) {
+            // FIXME: make folder configurable
+            File aidlFile = new File(libOut, SdkConstants.FD_AIDL);
+            if (aidlFile.isDirectory()) {
+                commandList.add(quote("-I" + aidlFile.getAbsolutePath())); //$NON-NLS-1$
+            }
+        }
+
+        // convert to array with 2 extra strings for the in/out file paths.
+        int index = commandList.size();
+        String[] commands = commandList.toArray(new String[index + 2]);
 
         boolean verbose = AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE;
 
         // remove the generic marker from the project
         builder.removeMarkersFromResource(project, AdtConstants.MARKER_AIDL);
+
+        // prepare the two output folders.
+        IFolder genFolder = getGenFolder();
+        IFolder projectOut = BaseProjectHelper.getAndroidOutputFolder(project);
+        IFolder aidlOutFolder = projectOut.getFolder(SdkConstants.FD_AIDL);
+        if (aidlOutFolder.exists() == false) {
+            aidlOutFolder.create(true /*force*/, true /*local*/,
+                    new SubProgressMonitor(monitor, 10));
+        }
+
+        boolean success = false;
 
         // loop until we've compile them all
         for (IFile sourceFile : sources) {
@@ -145,34 +171,53 @@ public class AidlProcessor extends SourceProcessor {
 
             // if there's no output file yet, compute it.
             if (data.getOutput() == null) {
-                IFile javaFile = getAidlOutputFile(sourceFile, true /*createFolders*/, monitor);
+                IFile javaFile = getAidlOutputFile(sourceFile, genFolder,
+                        true /*replaceExt*/, true /*createFolders*/, monitor);
                 data.setOutputFile(javaFile);
             }
 
             // finish to set the command line.
-            command[index] = quote(osSourcePath);
-            command[index + 1] = quote(data.getOutput().getLocation().toOSString());
+            commands[index] = quote(osSourcePath);
+            commands[index + 1] = quote(data.getOutput().getLocation().toOSString());
 
             // launch the process
-            if (execAidl(builder, project, command, sourceFile, verbose) == false) {
+            if (execAidl(builder, project, commands, sourceFile, verbose) == false) {
                 // aidl failed. File should be marked. We add the file to the list
                 // of file that will need compilation again.
                 notCompiledOut.add(sourceFile);
             } else {
                 // Success. we'll return that we generated code
                 setCompilationStatus(COMPILE_STATUS_CODE);
+                success = true;
+
+                // Also copy the file to the bin folder.
+                IFile aidlOutFile = getAidlOutputFile(sourceFile, aidlOutFolder,
+                        false /*replaceExt*/, true /*createFolders*/, monitor);
+
+                FileOp op = new FileOp();
+                try {
+                    op.copyFile(sourceFile.getLocation().toFile(),
+                            aidlOutFile.getLocation().toFile());
+                } catch (IOException e) {
+                }
             }
+        }
+
+        if (success) {
+            aidlOutFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
         }
     }
 
     @Override
     protected void loadOutputAndDependencies() {
         IProgressMonitor monitor = new NullProgressMonitor();
+        IFolder genFolder = getGenFolder();
+
         Collection<SourceFileData> dataList = getAllFileData();
         for (SourceFileData data : dataList) {
             try {
-                IFile javaFile = getAidlOutputFile(data.getSourceFile(),
-                        false /*createFolders*/, monitor);
+                IFile javaFile = getAidlOutputFile(data.getSourceFile(), genFolder,
+                        true /*replaceExt*/, false /*createFolders*/, monitor);
                 data.setOutputFile(javaFile);
             } catch (CoreException e) {
                 // ignore, we're not asking to create the folder so this won't happen anyway.
@@ -312,15 +357,16 @@ public class AidlProcessor extends SourceProcessor {
     /**
      * Returns the {@link IFile} handle to the destination file for a given aidl source file
      * ({@link AidlData}).
-     * @param aidlData the data for the aidl source file.
+     * @param sourceFile The source file
+     * @param outputFolder the top level output folder (not including the package folders)
      * @param createFolders whether or not the parent folder of the destination should be created
      * if it does not exist.
      * @param monitor the progress monitor
      * @return the handle to the destination file.
      * @throws CoreException
      */
-    private IFile getAidlOutputFile(IFile sourceFile, boolean createFolders,
-            IProgressMonitor monitor) throws CoreException {
+    private IFile getAidlOutputFile(IFile sourceFile, IFolder outputFolder, boolean replaceExt,
+            boolean createFolders, IProgressMonitor monitor) throws CoreException {
 
         IPath sourceFolderPath = getSourceFolderFor(sourceFile);
 
@@ -333,7 +379,7 @@ public class AidlProcessor extends SourceProcessor {
             relative = relative.removeLastSegments(1);
 
             // get an IFolder for this path.
-            IFolder destinationFolder = getGenFolder().getFolder(relative);
+            IFolder destinationFolder = outputFolder.getFolder(relative);
 
             // create it if needed.
             if (destinationFolder.exists() == false && createFolders) {
@@ -341,8 +387,13 @@ public class AidlProcessor extends SourceProcessor {
             }
 
             // Build the Java file name from the aidl name.
-            String javaName = sourceFile.getName().replaceAll(
-                    AdtConstants.RE_AIDL_EXT, AdtConstants.DOT_JAVA);
+            String javaName;
+            if (replaceExt) {
+                javaName = sourceFile.getName().replaceAll(
+                        AdtConstants.RE_AIDL_EXT, AdtConstants.DOT_JAVA);
+            } else {
+                javaName = sourceFile.getName();
+            }
 
             // get the resource for the java file.
             IFile javaFile = destinationFolder.getFile(javaName);

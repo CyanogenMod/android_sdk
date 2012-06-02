@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -219,7 +220,8 @@ public abstract class SourceProcessor {
      */
     public final int compileFiles(BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget, int minSdkVersion,
-            List<IPath> sourceFolders, IProgressMonitor monitor) throws CoreException {
+            List<IPath> sourceFolders, List<File> libraryProjectsOut, IProgressMonitor monitor)
+            throws CoreException {
 
         mLastCompilationStatus = COMPILE_STATUS_NONE;
 
@@ -240,7 +242,7 @@ public abstract class SourceProcessor {
         List<IFile> stillNeedCompilation = new ArrayList<IFile>();
 
         doCompileFiles(mToCompile, builder, project, projectTarget, minSdkVersion, sourceFolders,
-                stillNeedCompilation, monitor);
+                stillNeedCompilation, libraryProjectsOut, monitor);
 
         mToCompile.clear();
         mToCompile.addAll(stillNeedCompilation);
@@ -272,8 +274,8 @@ public abstract class SourceProcessor {
     protected abstract void doCompileFiles(
             List<IFile> filesToCompile, BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget, int targetApi,
-            List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
-            throws CoreException;
+            List<IPath> sourceFolders, List<IFile> notCompiledOut,
+            List<File> libraryProjectsOut, IProgressMonitor monitor) throws CoreException;
 
     /**
      * Adds a compilation status. It can be any of (in combination too):

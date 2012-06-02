@@ -16,11 +16,15 @@
 
 package com.android.ant;
 
+import com.android.sdklib.io.FileOp;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.Path;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,8 +44,10 @@ public class AidlExecTask extends MultiFilesTask {
 
     private String mExecutable;
     private String mFramework;
+    private Path mLibraryBinFolderPath;
     private String mGenFolder;
     private final ArrayList<Path> mPaths = new ArrayList<Path>();
+    private String mAidlOutFolder;
 
     private class AidlProcessor implements SourceProcessor {
 
@@ -68,6 +74,13 @@ public class AidlExecTask extends MultiFilesTask {
                 task.createArg().setValue("-I" + importFolder);
             }
 
+            // add all the library aidl folders to access parcelables that are in libraries
+            if (mLibraryBinFolderPath != null) {
+                for (String importFolder : mLibraryBinFolderPath.list()) {
+                    task.createArg().setValue("-I" + importFolder);
+                }
+            }
+
             // set auto dependency file creation
             task.createArg().setValue("-a");
 
@@ -75,6 +88,24 @@ public class AidlExecTask extends MultiFilesTask {
 
             // execute it.
             task.execute();
+
+            // if we reach here, it was successful (execute throws an exception otherwise).
+            // Copy the file into the bin/aidl directory.
+            String relative = filePath.substring(sourceFolder.length());
+            if (relative.charAt(0) == '/' || relative.charAt(0) == File.separatorChar) {
+                relative = relative.substring(1);
+            }
+
+            try {
+                File dest = new File(mAidlOutFolder, relative);
+                File parent = dest.getParentFile();
+                parent.mkdirs();
+
+                FileOp op = new FileOp();
+                op.copyFile(new File(filePath), dest);
+            } catch (IOException e) {
+                throw new BuildException(e);
+            }
         }
 
         @Override
@@ -102,7 +133,6 @@ public class AidlExecTask extends MultiFilesTask {
                     break;
             }
         }
-
     }
 
     /**
@@ -117,8 +147,19 @@ public class AidlExecTask extends MultiFilesTask {
         mFramework = TaskHelper.checkSinglePath("framework", value);
     }
 
+    public void setLibraryBinFolderPathRefid(String libraryBinFolderPathRefid) {
+        Object libBinRef = getProject().getReference(libraryBinFolderPathRefid);
+        if (libBinRef instanceof Path) {
+            mLibraryBinFolderPath = (Path) libBinRef;
+        }
+    }
+
     public void setGenFolder(Path value) {
         mGenFolder = TaskHelper.checkSinglePath("genFolder", value);
+    }
+
+    public void setaidlOutFolder(Path value) {
+        mAidlOutFolder = TaskHelper.checkSinglePath("aidlOutFolder", value);
     }
 
     public Path createSource() {
@@ -138,8 +179,10 @@ public class AidlExecTask extends MultiFilesTask {
         if (mGenFolder == null) {
             throw new BuildException("AidlExecTask's 'genFolder' is required.");
         }
+        if (mAidlOutFolder == null) {
+            throw new BuildException("AidlExecTask's 'aidlOutFolder' is required.");
+        }
 
         processFiles(new AidlProcessor(), mPaths, mGenFolder);
     }
-
 }

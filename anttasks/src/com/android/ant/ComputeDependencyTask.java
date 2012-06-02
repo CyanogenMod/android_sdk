@@ -58,6 +58,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
     private String mLibraryPackagesOut;
     private String mJarLibraryPathOut;
     private String mLibraryNativeFolderPathOut;
+    private String mLibraryBinFolderPathOut;
     private int mTargetApi = -1;
     private boolean mVerbose = false;
 
@@ -75,6 +76,10 @@ public class ComputeDependencyTask extends GetLibraryListTask {
 
     public void setJarLibraryPathOut(String jarLibraryPathOut) {
         mJarLibraryPathOut = jarLibraryPathOut;
+    }
+
+    public void setLibraryBinFolderPathOut(String libraryBinFolderPathOut) {
+        mLibraryBinFolderPathOut = libraryBinFolderPathOut;
     }
 
     public void setLibraryNativeFolderPathOut(String libraryNativeFolderPathOut) {
@@ -110,6 +115,9 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         if (mLibraryNativeFolderPathOut == null) {
             throw new BuildException("Missing attribute libraryNativeFolderPathOut");
         }
+        if (mLibraryBinFolderPathOut == null) {
+            throw new BuildException("Missing attribute libraryBinFolderPathOut");
+        }
         if (mTargetApi == -1) {
             throw new BuildException("Missing attribute targetApi");
         }
@@ -123,6 +131,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         final Path manifestFilePath = new Path(antProject);
         final Path resFolderPath = new Path(antProject);
         final Path nativeFolderPath = new Path(antProject);
+        final Path binFolderPath = new Path(antProject);
         final StringBuilder packageStrBuilder = new StringBuilder();
 
         LibraryProcessorFor3rdPartyJars processor = new LibraryProcessorFor3rdPartyJars() {
@@ -144,11 +153,16 @@ public class ComputeDependencyTask extends GetLibraryListTask {
                 element = resFolderPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_RESOURCES);
 
-
                 // get the folder for the native libraries. Always $PROJECT/libs
-                // FIXME: support renamed folder.
+                // FIXME: support renamed folder and/or move libs to bin/libs/
                 element = nativeFolderPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_NATIVE_LIBS);
+
+                // get the bin folder. $PROJECT/bin for now
+                // FIXME: support renamed folder.
+                element = binFolderPath.createPathElement();
+                element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+                        "/" + SdkConstants.FD_AIDL);
 
                 // get the package from the manifest.
                 FileWrapper manifest = new FileWrapper(libRootPath,
@@ -206,6 +220,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         // (the task themselves can handle a ref to an empty Path)
         antProject.addReference(mLibraryNativeFolderPathOut, nativeFolderPath);
         antProject.addReference(mLibraryManifestFilePathOut, manifestFilePath);
+        antProject.addReference(mLibraryBinFolderPathOut, binFolderPath);
 
         // the rest is done only if there's a library.
         if (hasLibraries) {
@@ -249,6 +264,5 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         if (mVerbose) {
             System.out.println();
         }
-
     }
 }
