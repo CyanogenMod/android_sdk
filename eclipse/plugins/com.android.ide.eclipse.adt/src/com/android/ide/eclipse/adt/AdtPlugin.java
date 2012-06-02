@@ -1499,7 +1499,10 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         GlobalProjectMonitor.stopMonitoring(ws);
 
-        mRed.dispose();
+        if (mRed != null) {
+            mRed.dispose();
+            mRed = null;
+        }
     }
 
     /**
