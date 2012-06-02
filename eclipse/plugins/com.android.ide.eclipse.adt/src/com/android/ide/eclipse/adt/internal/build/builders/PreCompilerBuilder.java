@@ -1045,38 +1045,43 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
 
         // launch
-        int execError = 1;
         try {
             // launch the command line process
             Process process = Runtime.getRuntime().exec(
                     array.toArray(new String[array.size()]));
 
             // list to store each line of stderr
-            ArrayList<String> results = new ArrayList<String>();
+            ArrayList<String> stdErr = new ArrayList<String>();
 
             // get the output and return code from the process
-            execError = grabProcessOutput(process, results);
+            int returnCode = grabProcessOutput(process, stdErr);
 
             // attempt to parse the error output
-            boolean parsingError = AaptParser.parseOutput(results, project);
+            boolean parsingError = AaptParser.parseOutput(stdErr, project);
 
             // if we couldn't parse the output we display it in the console.
             if (parsingError) {
-                if (execError != 0) {
-                    AdtPlugin.printErrorToConsole(project, results.toArray());
+                if (returnCode != 0) {
+                    AdtPlugin.printErrorToConsole(project, stdErr.toArray());
                 } else {
                     AdtPlugin.printBuildToConsole(BuildVerbosity.NORMAL,
-                            project, results.toArray());
+                            project, stdErr.toArray());
                 }
             }
 
-            if (execError != 0) {
+            if (returnCode != 0) {
                 // if the exec failed, and we couldn't parse the error output
                 // (and therefore not all files that should have been marked,
                 // were marked), we put a generic marker on the project and abort.
                 if (parsingError) {
                     markProject(AdtConstants.MARKER_ADT,
                             Messages.Unparsed_AAPT_Errors, IMarker.SEVERITY_ERROR);
+                } else if (stdErr.size() == 0) {
+                    // no parsing error because sdterr was empty. We still need to put
+                    // a marker otherwise there's no user visible feedback.
+                    markProject(AdtConstants.MARKER_ADT,
+                            String.format(Messages.AAPT_Exec_Error_d, returnCode),
+                            IMarker.SEVERITY_ERROR);
                 }
 
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
@@ -1088,7 +1093,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         } catch (IOException e1) {
             // something happen while executing the process,
             // mark the project and exit
-            String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
+            String msg = String.format(Messages.AAPT_Exec_Error_s, array.get(0));
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // Add workaround for the Linux problem described here:
@@ -1114,7 +1119,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         } catch (InterruptedException e) {
             // we got interrupted waiting for the process to end...
             // mark the project and exit
-            String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
+            String msg = String.format(Messages.AAPT_Exec_Error_s, array.get(0));
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // This interrupts the build.

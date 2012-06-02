@@ -8,11 +8,15 @@ public class Messages extends NLS {
 
     public static String AAPT_Error;
 
-    public static String AAPT_Exec_Error;
+    public static String AAPT_Exec_Error_s;
+
+    public static String AAPT_Exec_Error_d;
 
     public static String Added_s_s_Needs_Updating;
 
-    public static String AIDL_Exec_Error;
+    public static String AIDL_Exec_Error_s;
+
+    public static String AIDL_Exec_Error_d;
 
     public static String AIDL_Java_Conflict;
 

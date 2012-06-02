@@ -233,13 +233,13 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
     /**
      * Get the stderr output of a process and return when the process is done.
      * @param process The process to get the ouput from
-     * @param results The array to store the stderr output
+     * @param stdErr The array to store the stderr output
      * @return the process return code.
      * @throws InterruptedException
      */
     protected final int grabProcessOutput(final Process process,
-            final ArrayList<String> results) throws InterruptedException {
-        return BuildHelper.grabProcessOutput(getProject(), process, results);
+            final ArrayList<String> stdErr) throws InterruptedException {
+        return BuildHelper.grabProcessOutput(getProject(), process, stdErr);
     }
 
 
