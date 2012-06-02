@@ -26,7 +26,7 @@ $(call emugl-end-module)
 # Other builds are device-specific and will provide their own
 # version of this file to point to the appropriate HW EGL libraries.
 #
-ifneq (,$(filter full full_x86 sdk sdk_x86 google_sdk google_sdk_x86,$(TARGET_PRODUCT)))
+ifneq (,$(filter full full_x86 full_mips sdk sdk_x86 sdk_mips google_sdk google_sdk_x86 google_sdk_mips,$(TARGET_PRODUCT)))
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := egl.cfg
