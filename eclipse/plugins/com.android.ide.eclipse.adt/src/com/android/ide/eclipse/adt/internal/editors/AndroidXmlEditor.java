@@ -27,14 +27,12 @@ import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -71,11 +69,9 @@ import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.events.IHyperlinkListener;
-import org.eclipse.ui.forms.widgets.FormText;
+import org.eclipse.ui.ide.IDEActionFactory;
 import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
-import org.eclipse.ui.part.MultiPageEditorPart;
-import org.eclipse.ui.part.WorkbenchPart;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
@@ -364,6 +360,21 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
 
             action = mTextEditor.getAction(ActionFactory.REDO.getId());
             bars.setGlobalActionHandler(ActionFactory.REDO.getId(), action);
+
+            bars.setGlobalActionHandler(ActionFactory.DELETE.getId(),
+                    mTextEditor.getAction(ActionFactory.DELETE.getId()));
+            bars.setGlobalActionHandler(ActionFactory.CUT.getId(),
+                    mTextEditor.getAction(ActionFactory.CUT.getId()));
+            bars.setGlobalActionHandler(ActionFactory.COPY.getId(),
+                    mTextEditor.getAction(ActionFactory.COPY.getId()));
+            bars.setGlobalActionHandler(ActionFactory.PASTE.getId(),
+                    mTextEditor.getAction(ActionFactory.PASTE.getId()));
+            bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+                    mTextEditor.getAction(ActionFactory.SELECT_ALL.getId()));
+            bars.setGlobalActionHandler(ActionFactory.FIND.getId(),
+                    mTextEditor.getAction(ActionFactory.FIND.getId()));
+            bars.setGlobalActionHandler(IDEActionFactory.BOOKMARK.getId(),
+                    mTextEditor.getAction(IDEActionFactory.BOOKMARK.getId()));
 
             bars.updateActionBars();
         }
