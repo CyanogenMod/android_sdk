@@ -1091,7 +1091,7 @@ public final class AvdSelector {
             final ProgressTask progress = new ProgressTask(mTable.getShell(),
                                                     "Starting Android Emulator");
             progress.start(new ITask() {
-                ITaskMonitor mMonitor = null;
+                volatile ITaskMonitor mMonitor = null;
 
                 @Override
                 public void run(final ITaskMonitor monitor) {
@@ -1115,16 +1115,12 @@ public final class AvdSelector {
                                 new IProcessOutput() {
                                     @Override
                                     public void out(@Nullable String line) {
-                                        if (line != null) {
-                                            filterStdOut(line);
-                                        }
+                                        filterStdOut(line);
                                     }
 
                                     @Override
                                     public void err(@Nullable String line) {
-                                        if (line != null) {
-                                            filterStdErr(line);
-                                        }
+                                        filterStdErr(line);
                                     }
                                 });
 
@@ -1150,6 +1146,11 @@ public final class AvdSelector {
                 }
 
                 private void filterStdOut(String line) {
+                    ITaskMonitor m = mMonitor;
+                    if (line == null || m == null) {
+                        return;
+                    }
+
                     // Skip some non-useful messages.
                     if (line.indexOf("NSQuickDrawView") != -1) { //$NON-NLS-1$
                         // Discard the MacOS warning:
@@ -1162,22 +1163,27 @@ public final class AvdSelector {
                     if (line.toLowerCase().indexOf("error") != -1 ||                //$NON-NLS-1$
                             line.indexOf("qemu: fatal") != -1) {                    //$NON-NLS-1$
                         // Sometimes the emulator seems to output errors on stdout. Catch these.
-                        mMonitor.logError("%1$s", line);                            //$NON-NLS-1$
+                        m.logError("%1$s", line);                                   //$NON-NLS-1$
                         return;
                     }
 
-                    mMonitor.log("%1$s", line);                                     //$NON-NLS-1$
+                    m.log("%1$s", line);                                            //$NON-NLS-1$
                 }
 
                 private void filterStdErr(String line) {
-                    if (line.indexOf("emulator: device") != -1 ||                   //$NON-NLS-1$
-                            line.indexOf("HAX is working") != -1) {                 //$NON-NLS-1$
-                        // These are not errors. Output them as regular stdout messages.
-                        mMonitor.log("%1$s", line);                                 //$NON-NLS-1$
+                    ITaskMonitor m = mMonitor;
+                    if (line == null || m == null) {
                         return;
                     }
 
-                    mMonitor.logError("%1$s", line);                                //$NON-NLS-1$
+                    if (line.indexOf("emulator: device") != -1 ||                   //$NON-NLS-1$
+                            line.indexOf("HAX is working") != -1) {                 //$NON-NLS-1$
+                        // These are not errors. Output them as regular stdout messages.
+                        m.log("%1$s", line);                                        //$NON-NLS-1$
+                        return;
+                    }
+
+                    m.logError("%1$s", line);                                       //$NON-NLS-1$
                 }
             });
         }
