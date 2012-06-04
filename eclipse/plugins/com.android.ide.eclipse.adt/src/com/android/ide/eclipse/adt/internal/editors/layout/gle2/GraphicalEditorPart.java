@@ -115,6 +115,7 @@ import org.eclipse.jdt.internal.ui.preferences.BuildPathsPropertyPage;
 import org.eclipse.jdt.ui.actions.OpenNewClassWizardAction;
 import org.eclipse.jdt.ui.wizards.NewClassWizardPage;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.ISourceViewer;
@@ -144,7 +145,6 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.INullSelectionListener;
-import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
@@ -211,6 +211,12 @@ public class GraphicalEditorPart extends EditorPart
      * - The editor part, the outline and the property sheet are listeners
      *   which all listen to each others indirectly.
      */
+
+    /** Property key for the window preferences for the structure flyout */
+    private static final String PREF_STRUCTURE = "design.structure";     //$NON-NLS-1$
+
+    /** Property key for the window preferences for the palette flyout */
+    private static final String PREF_PALETTE = "design.palette";         //$NON-NLS-1$
 
     /**
      * Session-property on files which specifies the initial config state to be used on
@@ -354,9 +360,9 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        PluginFlyoutPreferences preferences =
-                new PluginFlyoutPreferences(AdtPlugin.getDefault().getPreferenceStore(),
-                        "design.palette"); //$NON-NLS-1$
+        IPreferenceStore preferenceStore = AdtPlugin.getDefault().getPreferenceStore();
+        PluginFlyoutPreferences preferences;
+        preferences = new PluginFlyoutPreferences(preferenceStore, PREF_PALETTE);
         preferences.initializeDefaults(DOCK_WEST, STATE_OPEN, 200);
         mPaletteComposite = new FlyoutControlComposite(parent, SWT.NONE, preferences);
         mPaletteComposite.setTitleText("Palette");
@@ -376,8 +382,7 @@ public class GraphicalEditorPart extends EditorPart
         decor.createToolbarItems(paletteComposite.getToolBar());
 
         // Create the shared structure+editor area
-        preferences = new PluginFlyoutPreferences(AdtPlugin.getDefault().getPreferenceStore(),
-                "design.structure"); //$NON-NLS-1$
+        preferences = new PluginFlyoutPreferences(preferenceStore, PREF_STRUCTURE);
         preferences.initializeDefaults(DOCK_EAST, STATE_OPEN, 300);
         mStructureFlyout = new FlyoutControlComposite(editorParent, SWT.NONE, preferences);
         mStructureFlyout.setTitleText("Structure");
@@ -1146,6 +1151,7 @@ public class GraphicalEditorPart extends EditorPart
         if (!mActive) {
             mActive = true;
 
+            syncDockingState();
             mActionBar.updateErrorIndicator();
 
             boolean changed = mConfigComposite.syncRenderState();
@@ -1158,6 +1164,53 @@ public class GraphicalEditorPart extends EditorPart
                 recomputeLayout();
             }
         }
+    }
+
+    /**
+     * The global docking state version. This number is incremented each time
+     * the user customizes the window layout in any layout.
+     */
+    private static int sDockingStateVersion;
+
+    /**
+     * The window docking state version that this window is currently showing;
+     * when a different window is reconfigured, the global version number is
+     * incremented, and when this window is shown, and the current version is
+     * less than the global version, the window layout will be synced.
+     */
+    private int mDockingStateVersion;
+
+    /**
+     * Syncs the window docking state.
+     * <p>
+     * The layout editor lets you change the docking state -- e.g. you can minimize the
+     * palette, and drag the structure view to the bottom, and so on. When you restart
+     * the IDE, the window comes back up with your customized state.
+     * <p>
+     * <b>However</b>, when you have multiple editor files open, if you minimize the palette
+     * in one editor and then switch to another, the other editor will have the old window
+     * state. That's because each editor has its own set of windows.
+     * <p>
+     * This method fixes this. Whenever a window is shown, this method is called, and the
+     * docking state is synced such that the editor will match the current persistent docking
+     * state.
+     */
+    private void syncDockingState() {
+        if (mDockingStateVersion == sDockingStateVersion) {
+            // No changes to apply
+            return;
+        }
+        mDockingStateVersion = sDockingStateVersion;
+
+        IPreferenceStore preferenceStore = AdtPlugin.getDefault().getPreferenceStore();
+        PluginFlyoutPreferences preferences;
+        preferences = new PluginFlyoutPreferences(preferenceStore, PREF_PALETTE);
+        mPaletteComposite.apply(preferences);
+        preferences = new PluginFlyoutPreferences(preferenceStore, PREF_STRUCTURE);
+        mStructureFlyout.apply(preferences);
+        mPaletteComposite.layout();
+        mStructureFlyout.layout();
+        mPaletteComposite.redraw(); // the structure view is nested within the palette
     }
 
     /**
@@ -2754,6 +2807,8 @@ public class GraphicalEditorPart extends EditorPart
         mPaletteComposite.dismissHover();
     }
 
+    // ---- Implements IFlyoutListener ----
+
     @Override
     public void stateChanged(int oldState, int newState) {
         // Auto zoom the surface if you open or close flyout windows such as the palette
@@ -2761,5 +2816,8 @@ public class GraphicalEditorPart extends EditorPart
         if (newState == STATE_OPEN || newState == STATE_COLLAPSED && oldState == STATE_OPEN) {
             getCanvasControl().setFitScale(true /*onlyZoomOut*/);
         }
+
+        sDockingStateVersion++;
+        mDockingStateVersion = sDockingStateVersion;
     }
 }
