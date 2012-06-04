@@ -20,7 +20,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 
 import org.eclipse.swt.dnd.ByteArrayTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 
 import java.io.UnsupportedEncodingException;
