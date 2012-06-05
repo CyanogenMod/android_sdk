@@ -236,7 +236,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "]>\n" +
                 "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    android:orientation=\"vertical\" >\n" +
-                " <![CDATA[\n" +
+                "<![CDATA[\n" +
                 "This is character data!\n" +
                 "<!-- This is not a comment! -->\n" +
                 "and <this is not an element>\n" +
@@ -850,8 +850,9 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "<resources>\n" +
                 "\n" +
                 "    <string name=\"welcome\">Welcome to <b>Android</b>!</string>\n" +
-                "    <string name=\"glob_settings_top_text\"><b>To install a 24 Clock Widget, please <i>long press</i>\n" +
-                " in Home Screen.</b> Configure the Global Settings here.</string>\n" +
+                "    <string name=\"glob_settings_top_text\"><b>To install a 24 Clock Widget, " +
+                "please <i>long press</i> in Home Screen.</b> Configure the Global Settings " +
+                "here.</string>\n" +
                 "\n" +
                 "</resources>");
     }
@@ -915,4 +916,25 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
+
+    public void testComplexString() throws Exception {
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "<string name=\"progress_completed_export_all\">The database has " +
+                "<b>successfully</b> been exported into: <br /><br /><font size=\"14\">" +
+                "\\\"<i>%s</i>\\\"</font></string>" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"progress_completed_export_all\">The database has " +
+                "<b>successfully</b> been exported into: <br /><br /><font size=\"14\">" +
+                "\\\"<i>%s</i>\\\"</font></string>\n" +
+                "\n" +
+                "</resources>");
+    }
+
 }
