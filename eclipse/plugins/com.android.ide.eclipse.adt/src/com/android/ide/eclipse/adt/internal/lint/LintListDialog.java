@@ -72,6 +72,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         super(parentShell);
         mFile = file;
         mEditor = editor;
+        setHelpAvailable(false);
     }
 
     @Override

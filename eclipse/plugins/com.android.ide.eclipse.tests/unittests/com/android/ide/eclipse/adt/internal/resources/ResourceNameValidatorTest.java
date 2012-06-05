@@ -20,6 +20,8 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -60,5 +62,29 @@ public class ResourceNameValidatorTest extends TestCase {
                 .isValid("_foo") != null);
         assertTrue(ResourceNameValidator.create(true, ResourceFolderType.DRAWABLE)
                 .isValid("_foo") != null);
+    }
+
+    public void testUniqueOrExists() throws Exception {
+        Set<String> existing = new HashSet<String>();
+        existing.add("foo1");
+        existing.add("foo2");
+        existing.add("foo3");
+
+        ResourceNameValidator validator = ResourceNameValidator.create(true, existing,
+                ResourceType.ID);
+        validator.unique();
+
+        assertNull(validator.isValid("foo")); // null: ok (no error message)
+        assertNull(validator.isValid("foo4"));
+        assertNotNull(validator.isValid("foo1"));
+        assertNotNull(validator.isValid("foo2"));
+        assertNotNull(validator.isValid("foo3"));
+
+        validator.exist();
+        assertNotNull(validator.isValid("foo"));
+        assertNotNull(validator.isValid("foo4"));
+        assertNull(validator.isValid("foo1"));
+        assertNull(validator.isValid("foo2"));
+        assertNull(validator.isValid("foo3"));
     }
 }

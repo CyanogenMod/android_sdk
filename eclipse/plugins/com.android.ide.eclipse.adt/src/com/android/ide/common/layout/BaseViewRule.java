@@ -194,7 +194,11 @@ public class BaseViewRule extends AbstractViewRule {
                         // Strip off the @id prefix stuff
                         String oldId = node.getStringAttr(ANDROID_URI, ATTR_ID);
                         oldId = stripIdPrefix(ensureValidString(oldId));
-                        IValidator validator = mRulesEngine.getResourceValidator();
+                        IValidator validator = mRulesEngine.getResourceValidator("id",//$NON-NLS-1$
+                                false /*uniqueInProject*/,
+                                true /*uniqueInLayout*/,
+                                false /*exists*/,
+                                oldId);
                         String newId = mRulesEngine.displayInput("New Id:", oldId, validator);
                         if (newId != null && newId.trim().length() > 0) {
                             if (!newId.startsWith(NEW_ID_PREFIX)) {

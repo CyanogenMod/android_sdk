@@ -16,10 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.sdklib.SdkConstants.CLASS_FRAGMENT;
 import static com.android.sdklib.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,6 +33,7 @@ import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
@@ -45,6 +49,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
+import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
@@ -91,11 +96,17 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.SelectionDialog;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -208,10 +219,61 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public @Nullable IValidator getResourceValidator() {
-        //return ResourceNameValidator.create(false, mRulesEngine.getEditor().getProject(),
-        //        ResourceType.ID);
-        return null;
+    public IValidator getResourceValidator(
+            @NonNull final String resourceTypeName, final boolean uniqueInProject,
+            final boolean uniqueInLayout, final boolean exists, final String... allowed) {
+        return new IValidator() {
+            private ResourceNameValidator mValidator;
+
+            @Override
+            public String validate(String text) {
+                if (mValidator == null) {
+                    ResourceType type = ResourceType.getEnum(resourceTypeName);
+                    if (uniqueInLayout) {
+                        assert !uniqueInProject;
+                        assert !exists;
+                        Set<String> existing = new HashSet<String>();
+                        Document doc = mRulesEngine.getEditor().getModel().getXmlDocument();
+                        if (doc != null) {
+                            addIds(doc, existing);
+                        }
+                        for (String s : allowed) {
+                            existing.remove(s);
+                        }
+                        mValidator = ResourceNameValidator.create(false, existing, type);
+                    } else {
+                        assert allowed.length == 0;
+                        IProject project = mRulesEngine.getEditor().getProject();
+                        mValidator = ResourceNameValidator.create(false, project, type);
+                        if (uniqueInProject) {
+                            mValidator.unique();
+                        }
+                    }
+                    if (exists) {
+                        mValidator.exist();
+                    }
+                }
+
+                return mValidator.isValid(text);
+            }
+        };
+    }
+
+    /** Find declared ids under the given DOM node */
+    private static void addIds(Node node, Set<String> ids) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
+            if (id != null && id.startsWith(NEW_ID_PREFIX)) {
+                ids.add(BaseViewRule.stripIdPrefix(id));
+            }
+        }
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            addIds(child, ids);
+        }
     }
 
     @Override

@@ -106,11 +106,25 @@ public interface IClientRulesEngine {
     /**
      * Returns a resource name validator for the current project
      *
-     * @return an {@link IValidator} for validating a new resource name in the current
-     *         project
+     * @param resourceTypeName resource type, such as "id", "string", and so on
+     * @param uniqueInProject if true, the resource name must be unique in the
+     *            project (not already be defined anywhere else)
+     * @param uniqueInLayout if true, the resource name must be unique at least
+     *            within the current layout. This only applies to {@code @id}
+     *            resources since only those resources can be defined in-place
+     *            within a layout
+     * @param exists if true, the resource name must already exist
+     * @param allowed allowed names (optional). This can for example be used to
+     *            request a unique-in-layout validator, but to remove the
+     *            current value of the node being edited from consideration such
+     *            that it allows you to leave the value the same
+     * @return an {@link IValidator} for validating a new resource name in the
+     *         current project
      */
     @Nullable
-    IValidator getResourceValidator();
+    IValidator getResourceValidator(@NonNull String resourceTypeName,
+            boolean uniqueInProject, boolean uniqueInLayout, boolean exists,
+            String... allowed);
 
     /**
      * Displays an input dialog where the user can enter an Android reference value
@@ -119,7 +133,7 @@ public interface IClientRulesEngine {
      * @return the reference selected by the user, or null
      */
     @Nullable
-    String displayReferenceInput(String currentValue);
+    String displayReferenceInput(@Nullable String currentValue);
 
     /**
      * Displays an input dialog where the user can enter an Android resource name of the

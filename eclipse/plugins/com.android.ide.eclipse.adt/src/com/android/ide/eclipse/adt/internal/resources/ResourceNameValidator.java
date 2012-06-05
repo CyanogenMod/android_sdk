@@ -42,6 +42,12 @@ public class ResourceNameValidator implements IInputValidator {
     /** Set of existing names to check for conflicts with */
     private Set<String> mExisting;
 
+    /** If true, the validated name must be unique */
+    private boolean mUnique = true;
+
+    /** If true, the validated name must exist */
+    private boolean mExist;
+
     /**
      * True if the resource name being considered is a "file" based resource (where the
      * resource name is the actual file name, rather than just a value attribute inside an
@@ -63,6 +69,30 @@ public class ResourceNameValidator implements IInputValidator {
         mExisting = existing;
         mIsFileType = isFileType;
         mIsImageType = isImageType;
+    }
+
+    /**
+     * Makes the resource name validator require that names are unique.
+     *
+     * @return this, for construction chaining
+     */
+    public ResourceNameValidator unique() {
+        mUnique = true;
+        mExist = false;
+
+        return this;
+    }
+
+    /**
+     * Makes the resource name validator require that names already exist
+     *
+     * @return this, for construction chaining
+     */
+    public ResourceNameValidator exist() {
+        mExist = true;
+        mUnique = false;
+
+        return this;
     }
 
     @Override
@@ -130,8 +160,14 @@ public class ResourceNameValidator implements IInputValidator {
                 return String.format("%1$s is not a valid name (reserved Java keyword)", newText);
             }
 
-            if (mExisting != null && mExisting.contains(newText)) {
-                return String.format("%1$s already exists", newText);
+
+            if (mExisting != null && (mUnique || mExist)) {
+                boolean exists = mExisting.contains(newText);
+                if (mUnique && exists) {
+                    return String.format("%1$s already exists", newText);
+                } else if (mExist && !exists) {
+                    return String.format("%1$s does not exist", newText);
+                }
             }
 
             return null;
@@ -170,11 +206,12 @@ public class ResourceNameValidator implements IInputValidator {
             ResourceType type) {
         boolean isFileType = ResourceHelper.isFileBasedResourceType(type);
         return new ResourceNameValidator(allowXmlExtension, existing, isFileType,
-                type == ResourceType.DRAWABLE);
+                type == ResourceType.DRAWABLE).unique();
     }
 
     /**
-     * Creates a new {@link ResourceNameValidator}
+     * Creates a new {@link ResourceNameValidator}. By default, the name will need to be
+     * unique in the project.
      *
      * @param allowXmlExtension if true, allow .xml to be entered as a suffix for the
      *            resource name
