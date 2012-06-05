@@ -21,9 +21,11 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
+import com.android.ddmuilib.FindDialog;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
+import com.android.ddmuilib.AbstractBufferFindTarget;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
@@ -1443,7 +1445,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mAssertColor.dispose();
     }
 
-    private class LogcatFindTarget extends RollingBufferFindTarget {
+    private class LogcatFindTarget extends AbstractBufferFindTarget {
         @Override
         public void selectAndReveal(int index) {
             mTable.deselectAll();

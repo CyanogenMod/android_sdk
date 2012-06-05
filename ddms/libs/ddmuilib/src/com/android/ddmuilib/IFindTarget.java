@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ddmuilib.logcat;
+package com.android.ddmuilib;
 
 public interface IFindTarget {
     boolean findAndSelect(String text, boolean isNewSearch, boolean searchForward);
