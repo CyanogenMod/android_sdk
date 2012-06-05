@@ -908,7 +908,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     /** Setup menu to be displayed when right clicking a log message. */
     private void addRightClickMenu(final Table table) {
         // This action will pop up a create filter dialog pre-populated with current selection
-        final Action filterAction = new Action("Filter similar messages..") {
+        final Action filterAction = new Action("Filter similar messages...") {
             @Override
             public void run() {
                 List<LogCatMessage> selectedMessages = getSelectedLogCatMessages();
@@ -922,8 +922,16 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         };
 
+        final Action findAction = new Action("Find...") {
+            @Override
+            public void run() {
+                showFindDialog();
+            };
+        };
+
         final MenuManager mgr = new MenuManager();
         mgr.add(filterAction);
+        mgr.add(findAction);
         final Menu menu = mgr.createContextMenu(table);
 
         table.addListener(SWT.MenuDetect, new Listener() {
@@ -1172,6 +1180,8 @@ public final class LogCatPanel extends SelectionDependentPanel
 
                 deletedMessageCount = mDeletedLogCount;
                 mDeletedLogCount = 0;
+
+                mFindTarget.scrollBy(deletedMessageCount);
             }
 
             int originalItemCount = mTable.getItemCount();
@@ -1431,5 +1441,54 @@ public final class LogCatPanel extends SelectionDependentPanel
         mWarnColor.dispose();
         mErrorColor.dispose();
         mAssertColor.dispose();
+    }
+
+    private class LogcatFindTarget extends RollingBufferFindTarget {
+        @Override
+        public void selectAndReveal(int index) {
+            mTable.deselectAll();
+            mTable.select(index);
+            mTable.showSelection();
+        }
+
+        @Override
+        public int getItemCount() {
+            return mTable.getItemCount();
+        }
+
+        @Override
+        public String getItem(int index) {
+            Object data = mTable.getItem(index).getData();
+            if (data != null) {
+                return data.toString();
+            }
+
+            return null;
+        }
+
+        @Override
+        public int getStartingIndex() {
+            // start searches from current selection if present, otherwise from the tail end
+            // of the buffer
+            int s = mTable.getSelectionIndex();
+            if (s != -1) {
+                return s;
+            } else {
+                return getItemCount() - 1;
+            }
+        };
+    };
+
+    private FindDialog mFindDialog;
+    private LogcatFindTarget mFindTarget = new LogcatFindTarget();
+    public void showFindDialog() {
+        if (mFindDialog != null) {
+            // if the dialog is already displayed
+            return;
+        }
+
+        mFindDialog = new FindDialog(Display.getDefault().getActiveShell(), mFindTarget);
+        mFindDialog.open(); // blocks until find dialog is closed
+        mFindDialog = null;
     }
 }

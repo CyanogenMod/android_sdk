@@ -81,6 +81,14 @@ public class LogCatView extends SelectionDependentViewPart {
                 mLogCatPanel.selectAll();
             }
         });
+
+        actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(),
+                new Action("Find") {
+            @Override
+            public void run() {
+                mLogCatPanel.showFindDialog();
+            }
+        });
     }
 
     @Override

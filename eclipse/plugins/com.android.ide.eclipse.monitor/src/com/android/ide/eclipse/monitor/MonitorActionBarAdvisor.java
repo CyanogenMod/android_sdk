@@ -25,11 +25,14 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.internal.IWorkbenchGraphicConstants;
+import org.eclipse.ui.internal.WorkbenchImages;
 
 public class MonitorActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction mQuitAction;
     private IWorkbenchAction mCopyAction;
     private IWorkbenchAction mSelectAllAction;
+    private IWorkbenchAction mFindAction;
     private IWorkbenchAction mOpenPerspectiveAction;
     private IWorkbenchAction mResetPerspectiveAction;
     private IWorkbenchAction mPreferencesAction;
@@ -49,6 +52,10 @@ public class MonitorActionBarAdvisor extends ActionBarAdvisor {
 
         mSelectAllAction = ActionFactory.SELECT_ALL.create(window);
         register(mSelectAllAction);
+
+        mFindAction = ActionFactory.FIND.create(window);
+        mFindAction.setText("Find...");     // replace the default "Find and Replace..."
+        register(mFindAction);
 
         mOpenPerspectiveAction = ActionFactory.OPEN_PERSPECTIVE_DIALOG.create(window);
         register(mOpenPerspectiveAction);
@@ -83,6 +90,7 @@ public class MonitorActionBarAdvisor extends ActionBarAdvisor {
         // contents of Edit menu
         editMenu.add(mCopyAction);
         editMenu.add(mSelectAllAction);
+        editMenu.add(mFindAction);
 
         // contents of Window menu
         windowMenu.add(mOpenPerspectiveAction);
