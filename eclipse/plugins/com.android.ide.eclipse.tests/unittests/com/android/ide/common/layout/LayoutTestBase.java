@@ -16,8 +16,8 @@
 
 
 package com.android.ide.common.layout;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -265,7 +265,8 @@ public class LayoutTestBase extends TestCase {
         }
 
         @Override
-        public @NonNull IValidator getResourceValidator() {
+        public IValidator getResourceValidator(String resourceTypeName, boolean uniqueInProject,
+                boolean uniqueInLayout, boolean exists, String... allowed) {
             fail("Not supported in tests yet");
             return null;
         }

@@ -21,6 +21,7 @@ import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_R
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
@@ -367,15 +368,19 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
                 } else {
                     if (ResourceHelper.isValueBasedResourceType(mResourceType)) {
                         String newName = createNewValue(mResourceType);
-                        selectAddedItem(newName);
+                        if (newName != null) {
+                            selectAddedItem(newName);
+                        }
                     } else {
                         String newName = createNewFile(mResourceType);
-                        selectAddedItem(newName);
+                        if (newName != null) {
+                            selectAddedItem(newName);
+                        }
                     }
                 }
             }
 
-            private void selectAddedItem(String newName) {
+            private void selectAddedItem(@NonNull String newName) {
                 // Recompute the "current resource" to select the new id
                 ResourceItem[] items = setupResourceList();
 
@@ -506,6 +511,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
         }
     }
 
+    @Nullable
     private String createNewFile(ResourceType type) {
         // Show a name/value dialog entering the key name and the value
         Shell shell = AdtPlugin.getDisplay().getActiveShell();
@@ -538,6 +544,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
     }
 
 
+    @Nullable
     private String createNewValue(ResourceType type) {
         // Show a name/value dialog entering the key name and the value
         Shell shell = AdtPlugin.getDisplay().getActiveShell();

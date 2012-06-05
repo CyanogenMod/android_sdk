@@ -16,7 +16,6 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
@@ -30,6 +29,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.resources.ResourceType.LAYOUT;
 import static com.android.sdklib.SdkConstants.FD_RES;
 import static com.android.util.XmlUtils.ANDROID_NS_NAME;
+import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.util.XmlUtils.XMLNS;
 import static com.android.util.XmlUtils.XMLNS_COLON;
 
