@@ -68,7 +68,9 @@ public class NewProjectPage extends WizardPage
         implements ModifyListener, SelectionListener, FocusListener {
     private static final String SAMPLE_PACKAGE_PREFIX = "com.example."; //$NON-NLS-1$
     /** Suffix added by default to activity names */
-    static final String ACTIVITY_NAME_SUFFIX = "Activity"; //$NON-NLS-1$
+    static final String ACTIVITY_NAME_SUFFIX = "Activity";              //$NON-NLS-1$
+    /** Prefix added to default layout names */
+    static final String LAYOUT_NAME_PREFIX = "activity_";               //$NON-NLS-1$
     private static final int INITIAL_MIN_SDK = 8;
 
     private final NewProjectWizardState mValues;

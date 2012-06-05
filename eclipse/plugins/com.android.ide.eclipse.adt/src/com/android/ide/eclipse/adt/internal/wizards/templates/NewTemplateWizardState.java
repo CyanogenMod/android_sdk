@@ -33,9 +33,6 @@ import java.util.Set;
  * {@link NewTemplateWizard}
  */
 public class NewTemplateWizardState {
-    /** Name of the template being created */
-    private String mTemplateName = BLANK_ACTIVITY;
-
     /** Template handler responsible for instantiating templates and reading resources */
     private TemplateHandler mTemplateHandler;
 
@@ -55,7 +52,7 @@ public class NewTemplateWizardState {
      */
     public IProject project;
 
-    /** Name of the template being created */
+    /** Location of the template being created */
     private File mTemplateLocation;
 
     /**
@@ -65,31 +62,14 @@ public class NewTemplateWizardState {
     }
 
     @NonNull
-    String getTemplateName() {
-        return mTemplateName;
-    }
-
-    /**
-     * Sets the new template name to use
-     *
-     * @param templateName the name of the template to use
-     */
-    void setTemplateName(@NonNull String templateName) {
-        if (!templateName.equals(mTemplateName)) {
-            mTemplateName = templateName;
-            mTemplateLocation = null;
-            mTemplateHandler = null;
-        }
-    }
-
-    @NonNull
     TemplateHandler getTemplateHandler() {
         if (mTemplateHandler == null) {
             File inputPath;
             if (mTemplateLocation != null) {
                 inputPath = mTemplateLocation;
             } else {
-                inputPath = new File(TemplateHandler.getTemplatePath(mTemplateName));
+                // Default
+                inputPath = TemplateHandler.getTemplateLocation(BLANK_ACTIVITY);
             }
             mTemplateHandler = TemplateHandler.createFromPath(inputPath);
         }
@@ -97,12 +77,18 @@ public class NewTemplateWizardState {
         return mTemplateHandler;
     }
 
-    // For template development/testing only
+    /** Sets the current template */
     void setTemplateLocation(File file) {
         if (!file.equals(mTemplateLocation)) {
             mTemplateLocation = file;
-            mTemplateName = null;
             mTemplateHandler = null;
         }
     }
+
+    /** Returns the current template */
+    File getTemplateLocation() {
+        return mTemplateLocation;
+    }
+
+
 }

@@ -1563,6 +1563,9 @@ public class GraphicalEditorPart extends EditorPart
             return null;
         }
 
+        if (mConfigComposite.isDisposed()) {
+            return null;
+        }
         assert mConfigComposite.getDisplay().getThread() == Thread.currentThread();
 
         // attempt to get a target from the configuration selector.

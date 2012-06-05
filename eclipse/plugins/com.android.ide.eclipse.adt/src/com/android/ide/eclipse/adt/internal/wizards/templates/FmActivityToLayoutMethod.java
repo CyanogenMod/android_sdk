@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectPage.ACTIVITY_NAME_SUFFIX;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectPage.LAYOUT_NAME_PREFIX;
 
 import com.android.ide.eclipse.adt.AdtUtils;
 
@@ -39,6 +40,10 @@ public class FmActivityToLayoutMethod implements TemplateMethodModel {
 
         String activityName = args.get(0).toString();
 
+        if (activityName.isEmpty()) {
+            return new SimpleScalar("");
+        }
+
         // Strip off the end portion of the activity name. The user might be typing
         // the activity name such that only a portion has been entered so far (e.g.
         // "MainActivi") and we want to chop off that portion too such that we don't
@@ -52,7 +57,7 @@ public class FmActivityToLayoutMethod implements TemplateMethodModel {
 
         // Convert CamelCase convention used in activity class names to underlined convention
         // used in layout name:
-        String name = AdtUtils.camelCaseToUnderlines(activityName);
+        String name = LAYOUT_NAME_PREFIX + AdtUtils.camelCaseToUnderlines(activityName);
 
         return new SimpleScalar(name);
     }

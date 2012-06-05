@@ -20,7 +20,7 @@
         type="string"
         constraints="layout|unique"
         suggest="${activityToLayout(activityClass)}"
-        default="main"
+        default="activity_main"
         help="The name of the layout to create for the activity" />
 
     <parameter

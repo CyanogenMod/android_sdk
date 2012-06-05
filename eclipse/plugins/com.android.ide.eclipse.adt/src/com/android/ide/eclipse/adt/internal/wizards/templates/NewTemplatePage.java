@@ -162,11 +162,11 @@ public class NewTemplatePage extends WizardPage
         if (template != null) {
             thumb = template.getThumbnailPath();
             String title = template.getTitle();
-            if (!title.isEmpty()) {
+            if (title != null && !title.isEmpty()) {
                 setTitle(title);
             }
             String description = template.getDescription();
-            if (!description.isEmpty()) {
+            if (description != null && !description.isEmpty()) {
                 setDescription(description);
             }
 
@@ -539,14 +539,18 @@ public class NewTemplatePage extends WizardPage
                 String optionId = optionIds[index];
                 editParameter(combo, optionId);
                 TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
-                setPreview(template.getThumbnailPath());
+                if (template != null) {
+                    setPreview(template.getThumbnailPath());
+                }
             }
         } else if (source instanceof Button) {
             Button button = (Button) source;
             editParameter(button, button.getSelection());
 
             TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
-            setPreview(template.getThumbnailPath());
+            if (template != null) {
+                setPreview(template.getThumbnailPath());
+            }
         }
 
         validatePage();

@@ -15,12 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
-import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard.ACTIVITY_TEMPLATES;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
+import com.google.common.io.Files;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -39,12 +39,16 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 class ActivityPage extends WizardPage implements SelectionListener {
     private final NewProjectWizardState mValues;
     private List mList;
     private Button mCreateToggle;
+    private java.util.List<File> mTemplates;
 
     private boolean mIgnore;
     private boolean mShown;
@@ -64,11 +68,15 @@ class ActivityPage extends WizardPage implements SelectionListener {
         setDescription("Select whether to create an activity, and if so, what kind of activity.");
     }
 
-    @SuppressWarnings("unused") // SWT constructors have side effects and aren't unused
     @Override
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
         setControl(container);
+    }
+
+    @SuppressWarnings("unused") // SWT constructors have side effects and aren't unused
+    private void onEnter() {
+        Composite container = (Composite) getControl();
         container.setLayout(new GridLayout(3, false));
 
         mCreateToggle = new Button(container, SWT.CHECK);
@@ -79,20 +87,29 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
         mList = new List(container, SWT.BORDER | SWT.V_SCROLL);
         mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-        mList.setItems(ACTIVITY_TEMPLATES);
+
+
+        mTemplates = TemplateHandler.getTemplates("activities");
+        java.util.List<String> names = new ArrayList<String>(mTemplates.size());
+        File current = mValues.activityValues.getTemplateLocation();
         int index = -1;
-        for (int i = 0; i < ACTIVITY_TEMPLATES.length; i++) {
-            if (ACTIVITY_TEMPLATES[i].equals(mValues.activityValues.getTemplateName())) {
+        for (int i = 0, n = mTemplates.size(); i < n; i++) {
+            File template = mTemplates.get(i);
+            names.add(template.getName());
+            if (template.equals(current)) {
                 index = i;
-                break;
             }
         }
-        if (index == -1) {
-            mValues.activityValues.setTemplateName(ACTIVITY_TEMPLATES[0]);
+        String[] items = names.toArray(new String[names.size()]);
+        mList.setItems(items);
+        if (index == -1 && !mTemplates.isEmpty()) {
+            mValues.activityValues.setTemplateLocation(mTemplates.get(0));
             index = 0;
         }
-        mList.setSelection(index);
-        mList.addSelectionListener(this);
+        if (index >= 0) {
+            mList.setSelection(index);
+            mList.addSelectionListener(this);
+        }
 
         // Preview
         mPreview = new ImageControl(container, SWT.NONE, null);
@@ -113,26 +130,29 @@ class ActivityPage extends WizardPage implements SelectionListener {
             mHeading.setFont(font);
         }
 
-        setPreview(mValues.activityValues.getTemplateName());
+        updatePreview();
     }
 
-    private void setPreview(String templateName) {
+    private void updatePreview() {
         Image oldImage = mPreviewImage;
         mPreviewImage = null;
 
         String title = "";
         String description = "";
-        TemplateMetadata template = TemplateHandler.getTemplate(templateName);
+        TemplateHandler handler = mValues.activityValues.getTemplateHandler();
+        TemplateMetadata template = handler.getTemplate();
         if (template != null) {
             String thumb = template.getThumbnailPath();
             if (thumb != null && !thumb.isEmpty()) {
-                String filePath = TemplateHandler.getTemplatePath(templateName) + '/' + thumb;
-                InputStream input = AdtPlugin.readEmbeddedFileAsStream(filePath);
-                if (input != null) {
+                File file = new File(mValues.activityValues.getTemplateLocation(),
+                        thumb.replace('/', File.separatorChar));
+                if (file != null) {
                     try {
+                        byte[] bytes = Files.toByteArray(file);
+                        ByteArrayInputStream input = new ByteArrayInputStream(bytes);
                         mPreviewImage = new Image(getControl().getDisplay(), input);
                         input.close();
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         AdtPlugin.log(e, null);
                     }
                 }
@@ -167,6 +187,10 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
     @Override
     public void setVisible(boolean visible) {
+        if (visible && !mShown) {
+            onEnter();
+        }
+
         super.setVisible(visible);
 
         if (visible) {
@@ -233,11 +257,10 @@ class ActivityPage extends WizardPage implements SelectionListener {
             mList.setEnabled(mValues.createActivity);
         } else if (source == mList) {
             int index = mList.getSelectionIndex();
-            String[] items = mList.getItems();
-            if (index >= 0 && index < items.length) {
-                String templateName = items[index];
-                mValues.activityValues.setTemplateName(templateName);
-                setPreview(templateName);
+            if (index >= 0 && index < mTemplates.size()) {
+                File template = mTemplates.get(index);
+                mValues.activityValues.setTemplateLocation(template);
+                updatePreview();
             }
         }
 
