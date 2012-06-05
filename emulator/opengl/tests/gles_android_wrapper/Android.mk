@@ -48,7 +48,7 @@ $(call emugl-end-module)
 # Other builds are device-specific and will provide their own
 # version of this file to point to the appropriate HW EGL libraries.
 #
-ifneq (,$(filter full full_x86 sdk sdk_x86,$(TARGET_PRODUCT)))
+ifneq (,$(filter full full_x86 full_mips sdk sdk_x86 sdk_mips,$(TARGET_PRODUCT)))
 ifeq (,$(BUILD_EMULATOR_OPENGL_DRIVER))
 include $(CLEAR_VARS)
 
@@ -61,7 +61,7 @@ LOCAL_MODULE_CLASS := ETC
 
 include $(BUILD_PREBUILT)
 endif # building 'real' driver BUILD_EMULATOR_OPENGL_DRIVER
-endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86'
+endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86 full_mips sdk_mips'
 
 #### gles_emul.cfg ####
 include $(CLEAR_VARS)

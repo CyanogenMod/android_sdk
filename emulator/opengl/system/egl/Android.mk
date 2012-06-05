@@ -37,6 +37,6 @@ LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE_CLASS := ETC
 
 include $(BUILD_PREBUILT)
-endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86 google_sdk google_sdk_x86)
+endif # TARGET_PRODUCT in 'full sdk full_x86 full_mips sdk_x86 sdk_mips google_sdk google_sdk_x86 google_sdk_mips)
 
 endif # BUILD_EMULATOR_OPENGL_DRIVER != false
