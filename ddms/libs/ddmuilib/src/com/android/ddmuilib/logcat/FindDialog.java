@@ -71,7 +71,7 @@ public class FindDialog extends Dialog {
         mSearchText.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
-                boolean hasText = !mSearchText.getText().isEmpty();
+                boolean hasText = !mSearchText.getText().trim().isEmpty();
                 mFindNext.setEnabled(hasText);
                 mFindPrevious.setEnabled(hasText);
             }
