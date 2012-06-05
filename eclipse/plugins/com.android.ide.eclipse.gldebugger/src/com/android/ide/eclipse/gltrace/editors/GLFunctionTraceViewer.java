@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
+import com.android.ddmuilib.FindDialog;
+import com.android.ddmuilib.AbstractBufferFindTarget;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
@@ -28,6 +30,7 @@ import com.android.ide.eclipse.gltrace.views.FrameSummaryViewPage;
 import com.android.ide.eclipse.gltrace.views.detail.DetailsPage;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -42,6 +45,9 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
@@ -62,10 +68,12 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.part.EditorPart;
 
 import java.io.File;
@@ -80,6 +88,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     public static final String ID = "com.android.ide.eclipse.gltrace.GLFunctionTrace"; //$NON-NLS-1$
 
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
+    private static final String NEWLINE = System.getProperty("line.separator"); //$NON-NLS-1$
 
     /** Width of thumbnail images of the framebuffer. */
     private static final int THUMBNAIL_WIDTH = 50;
@@ -194,6 +203,31 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             @Override
             public void run() {
                 refreshUI();
+            }
+        });
+
+        IActionBars actionBars = getEditorSite().getActionBars();
+        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(),
+                new Action("Copy") {
+            @Override
+            public void run() {
+                copySelectionToClipboard();
+            }
+        });
+
+        actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+                new Action("Select All") {
+            @Override
+            public void run() {
+                selectAll();
+            }
+        });
+
+        actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(),
+                new Action("Find") {
+            @Override
+            public void run() {
+                showFindDialog();
             }
         });
     }
@@ -362,7 +396,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         GridData gd = new GridData(GridData.FILL_BOTH);
         c.setLayoutData(gd);
 
-        final Tree tree = new Tree(c, SWT.BORDER | SWT.FULL_SELECTION);
+        final Tree tree = new Tree(c, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
         gd = new GridData(GridData.FILL_BOTH);
         tree.setLayoutData(gd);
         tree.setLinesVisible(true);
@@ -672,5 +706,80 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     public DetailsPage getDetailsPage() {
         return new DetailsPage(mTrace);
+    }
+
+    private void copySelectionToClipboard() {
+        if (mFrameTreeViewer == null || mFrameTreeViewer.getTree().isDisposed()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (TreeItem it: mFrameTreeViewer.getTree().getSelection()) {
+            Object data = it.getData();
+            if (data instanceof GLCallNode) {
+                sb.append(((GLCallNode) data).getCall());
+                sb.append(NEWLINE);
+            }
+        }
+
+        if (sb.length() > 0) {
+            Clipboard cb = new Clipboard(Display.getDefault());
+            cb.setContents(
+                    new Object[] { sb.toString() },
+                    new Transfer[] { TextTransfer.getInstance() });
+            cb.dispose();
+        }
+    }
+
+    private void selectAll() {
+        if (mFrameTreeViewer == null || mFrameTreeViewer.getTree().isDisposed()) {
+            return;
+        }
+
+        mFrameTreeViewer.getTree().selectAll();
+    }
+
+    private class TraceViewerFindTarget extends AbstractBufferFindTarget {
+        @Override
+        public int getItemCount() {
+            return mFrameTreeViewer.getTree().getItemCount();
+        }
+
+        @Override
+        public String getItem(int index) {
+            Object data = mFrameTreeViewer.getTree().getItem(index).getData();
+            if (data instanceof GLCallNode) {
+                return ((GLCallNode) data).getCall().toString();
+            }
+            return null;
+        }
+
+        @Override
+        public void selectAndReveal(int index) {
+            Tree t = mFrameTreeViewer.getTree();
+            t.deselectAll();
+            t.select(t.getItem(index));
+            t.showSelection();
+        }
+
+        @Override
+        public int getStartingIndex() {
+            return 0;
+        }
+    };
+
+    private FindDialog mFindDialog;
+    private TraceViewerFindTarget mFindTarget = new TraceViewerFindTarget();
+
+    private void showFindDialog() {
+        if (mFindDialog != null) {
+            // the dialog is already displayed
+            return;
+        }
+
+        mFindDialog = new FindDialog(Display.getDefault().getActiveShell(), mFindTarget);
+        mFindDialog.open(); // blocks until find dialog is closed
+        mFindDialog = null;
     }
 }
