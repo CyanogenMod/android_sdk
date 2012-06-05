@@ -752,6 +752,10 @@ public class XmlPrettyPrinter {
             return false;
         }
 
+        if (isMarkupElement(element)) {
+            return false;
+        }
+
         // See if this element should be separated from the previous element.
         // This is the case if we are not compressing whitespace (checked above),
         // or if we are not immediately following a comment (in which case the
@@ -876,14 +880,36 @@ public class XmlPrettyPrinter {
             return false;
         }
 
+        if (isMarkupElement(element)) {
+            return false;
+        }
+
         return element.getParentNode().getNodeType() == Node.ELEMENT_NODE
                 && !keepElementAsSingleLine(depth - 1, (Element) element.getParentNode());
     }
 
     private boolean isMarkupElement(Element element) {
-        // <u>, <b>, <i>, ...
-        // http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
-        return mStyle == XmlFormatStyle.RESOURCE && element.getTagName().length() == 1;
+        // The documentation suggests that the allowed tags are <u>, <b> and <i>:
+        //   developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
+        // However, the full set of tags accepted by Html.fromHtml is much larger. Therefore,
+        // instead consider *any* element nested inside a <string> definition to be a markup
+        // element. See frameworks/base/core/java/android/text/Html.java and look for
+        // HtmlToSpannedConverter#handleStartTag.
+
+        if (mStyle != XmlFormatStyle.RESOURCE) {
+            return false;
+        }
+
+        Node curr = element.getParentNode();
+        while (curr != null) {
+            if (STRING_ELEMENT.equals(curr.getNodeName())) {
+                return true;
+            }
+
+            curr = curr.getParentNode();
+        }
+
+        return false;
     }
 
     /**
