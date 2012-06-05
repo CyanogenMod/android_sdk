@@ -150,9 +150,20 @@ public final class AaptParser {
     /**
      * Error message emitted when aapt skips a file because for example it's name is
      * invalid, such as a layout file name which starts with _.
+     * <p>
+     * This error message is used by AAPT in Tools 19 and earlier.
      */
     private static final Pattern sSkippingPattern =
         Pattern.compile("    \\(skipping (.+) .+ '(.*)'\\)"); //$NON-NLS-1$
+
+    /**
+     * Error message emitted when aapt skips a file because for example it's name is
+     * invalid, such as a layout file name which starts with _.
+     * <p>
+     * This error message is used by AAPT in Tools 20 and later.
+     */
+    private static final Pattern sNewSkippingPattern =
+        Pattern.compile("    \\(skipping .+ '(.+)' due to ANDROID_AAPT_IGNORE pattern '.+'\\)"); //$NON-NLS-1$
 
     /**
      * Suffix of error message which points to the first occurrence of a repeated resource
@@ -409,6 +420,25 @@ public final class AaptParser {
                 continue;
             }
 
+            m = sNewSkippingPattern.matcher(p);
+            if (m.matches()) {
+                String location = m.group(1);
+
+                if (location.startsWith(".")         //$NON-NLS-1$
+                        || location.endsWith("~")) { //$NON-NLS-1$
+                    continue;
+                }
+
+                // check the values and attempt to mark the file.
+                if (checkAndMark(location, null, p.trim(), osRoot, project,
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
+                    return true;
+                }
+
+                // success, go to the next line
+                continue;
+            }
+
             m = sSkippingPattern.matcher(p);
             if (m.matches()) {
                 String location = m.group(2);
@@ -424,7 +454,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, null, p.trim(), osRoot, project,
-                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
                     return true;
                 }
 
