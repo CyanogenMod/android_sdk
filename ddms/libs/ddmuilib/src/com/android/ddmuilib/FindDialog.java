@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.ddmuilib.logcat;
+package com.android.ddmuilib;
+
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -32,7 +33,7 @@ import org.eclipse.swt.widgets.Text;
 
 /**
  * {@link FindDialog} provides a text box where users can enter text that should be
- * searched for in the list of logcat messages. The buttons "Find Previous" and "Find Next"
+ * searched for in the target editor/view. The buttons "Find Previous" and "Find Next"
  * allow users to search forwards/backwards. This dialog simply provides a front end for the user
  * and the actual task of searching is delegated to the {@link IFindTarget}.
  */

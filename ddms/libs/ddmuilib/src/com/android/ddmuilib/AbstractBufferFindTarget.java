@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.ddmuilib.logcat;
+package com.android.ddmuilib;
 
 import java.util.regex.Pattern;
 
 /**
- * {@link RollingBufferFindTarget} implements methods to find items inside a circular buffer.
+ * {@link AbstractBufferFindTarget} implements methods to find items inside a buffer. It takes
+ * care of the logic to search backwards/forwards in the buffer, wrapping around when necessary.
+ * The actual contents of the buffer should be provided by the classes that extend this.
  */
-public abstract class RollingBufferFindTarget implements IFindTarget {
+public abstract class AbstractBufferFindTarget implements IFindTarget {
     private int mCurrentSearchIndex;
 
     // Single element cache of the last search regex

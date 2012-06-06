@@ -16,13 +16,15 @@
 
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmuilib.AbstractBufferFindTarget;
+
 import junit.framework.TestCase;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class RollingBufferFindTest extends TestCase {
-    public class FindTarget extends RollingBufferFindTarget {
+    public class FindTarget extends AbstractBufferFindTarget {
         private int mSelectedItem = -1;
         private int mItemReadCount = 0;
         private List<String> mItems = Arrays.asList(
