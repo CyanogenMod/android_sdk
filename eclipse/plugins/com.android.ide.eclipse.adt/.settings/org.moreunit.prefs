@@ -1,5 +1,4 @@
-#Sat Nov 05 13:00:35 PDT 2011
 eclipse.preferences.version=1
 org.moreunit.prefixes=
-org.moreunit.unitsourcefolder=adt\:src\:adt-tests\:unittests\#adt\:src\:adt-tests\:src
+org.moreunit.unitsourcefolder=plugin-adt\:src\:plugin-tests\:unittests\#plugin-adt\:src\:plugin-tests\:src
 org.moreunit.useprojectsettings=true

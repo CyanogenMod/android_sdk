@@ -558,7 +558,7 @@ public class OutlinePage extends ContentOutlinePage
         mRootWrapper.setRoot(rootViewInfo);
 
         TreeViewer tv = getTreeViewer();
-        if (tv != null) {
+        if (tv != null && !tv.getTree().isDisposed()) {
             Object[] expanded = tv.getExpandedElements();
             tv.refresh();
             tv.setExpandedElements(expanded);
