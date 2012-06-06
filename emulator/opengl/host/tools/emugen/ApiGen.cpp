@@ -418,8 +418,9 @@ static void writeVarEncodingExpression(Var& var, FILE* fp)
     } else {
         // encode a non pointer variable
         if (!var.isVoid()) {
-            fprintf(fp, "\t*(%s *) (ptr) = %s; ptr += %u;\n",
-                    var.type()->name().c_str(), varname,
+            fprintf(fp, "\t\tmemcpy(ptr, &%s, %u); ptr += %u;\n",
+                    varname,
+                    (uint) var.type()->bytes(),
                     (uint) var.type()->bytes());
         }
     }
@@ -570,8 +571,8 @@ int ApiGen::genEncoderImpl(const std::string &filename)
 
                 // encode packet header if needed.
                 if (nvars == 0) {
-                    fprintf(fp, "\t*(unsigned int *)(ptr) = OP_%s; ptr += 4;\n", e->name().c_str());
-                    fprintf(fp, "\t*(unsigned int *)(ptr) = (unsigned int) packetSize; ptr += 4;\n");
+                    fprintf(fp, "\tint tmp = OP_%s;memcpy(ptr, &tmp, 4); ptr += 4;\n",  e->name().c_str());
+                    fprintf(fp, "\tmemcpy(ptr, &packetSize, 4);  ptr += 4;\n\n");
                 }
 
                 if (maxvars == 0)
@@ -611,8 +612,8 @@ int ApiGen::genEncoderImpl(const std::string &filename)
         fprintf(fp, "\t unsigned char *ptr = stream->alloc(packetSize);\n\n");
 
         // encode into the stream;
-        fprintf(fp, "\t*(unsigned int *)(ptr) = OP_%s; ptr += 4;\n",  e->name().c_str());
-        fprintf(fp, "\t*(unsigned int *)(ptr) = (unsigned int) packetSize;  ptr += 4;\n\n");
+        fprintf(fp, "\tint tmp = OP_%s; memcpy(ptr, &tmp, 4); ptr += 4;\n",  e->name().c_str());
+        fprintf(fp, "\tmemcpy(ptr, &packetSize, 4);  ptr += 4;\n\n");
 
         // out variables
         for (size_t j = 0; j < nvars; j++) {
