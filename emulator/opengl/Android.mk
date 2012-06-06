@@ -56,19 +56,6 @@ include $(EMUGL_PATH)/host/tools/emugen/Android.mk
 include $(EMUGL_PATH)/shared/OpenglOsUtils/Android.mk
 include $(EMUGL_PATH)/shared/OpenglCodecCommon/Android.mk
 
-# System static libraries
-include $(EMUGL_PATH)/system/GLESv1_enc/Android.mk
-include $(EMUGL_PATH)/system/GLESv2_enc/Android.mk
-include $(EMUGL_PATH)/system/renderControl_enc/Android.mk
-include $(EMUGL_PATH)/system/OpenglSystemCommon/Android.mk
-
-# System shared libraries
-include $(EMUGL_PATH)/system/GLESv1/Android.mk
-include $(EMUGL_PATH)/system/GLESv2/Android.mk
-
-include $(EMUGL_PATH)/system/gralloc/Android.mk
-include $(EMUGL_PATH)/system/egl/Android.mk
-
 # Host static libraries
 include $(EMUGL_PATH)/host/libs/GLESv1_dec/Android.mk
 include $(EMUGL_PATH)/host/libs/GLESv2_dec/Android.mk

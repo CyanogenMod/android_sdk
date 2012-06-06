@@ -13,12 +13,9 @@ $(call emugl-begin-host-static-library,libGLESv1_dec)
 $(call emugl-import, libOpenglCodecCommon libOpenglOsUtils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-$(call emugl-gen-decoder,$(EMUGL_PATH)/system/GLESv1_enc,gl)
+$(call emugl-gen-decoder,$(LOCAL_PATH),gl)
 
 LOCAL_SRC_FILES := GLDecoder.cpp
-
-# for gl_types.h !
-$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/system/GLESv1_enc)
 
 $(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS))
 
@@ -31,12 +28,9 @@ $(call emugl-begin-host-static-library,lib64GLESv1_dec)
 $(call emugl-import, lib64OpenglCodecCommon lib64OpenglOsUtils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-$(call emugl-gen-decoder,$(EMUGL_PATH)/system/GLESv1_enc,gl)
+$(call emugl-gen-decoder,$(LOCAL_PATH),gl)
 
 LOCAL_SRC_FILES := GLDecoder.cpp
-
-# for gl_types.h !
-$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/system/GLESv1_enc)
 
 $(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS) -m64)
 

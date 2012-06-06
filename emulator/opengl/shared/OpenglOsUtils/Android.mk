@@ -6,20 +6,6 @@
 #
 LOCAL_PATH := $(call my-dir)
 
-### Guest library ##############################################
-$(call emugl-begin-static-library,libOpenglOsUtils)
-
-    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
-    $(call emugl-export,LDLIBS,-ldl)
-
-    LOCAL_SRC_FILES := \
-        osProcessUnix.cpp \
-        osThreadUnix.cpp \
-        osDynLibrary.cpp
-
-$(call emugl-end-module)
-
-
 ### Host library ##############################################
 
 host_common_SRC_FILES := osDynLibrary.cpp
