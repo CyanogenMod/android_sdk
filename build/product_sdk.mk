@@ -41,6 +41,7 @@ PRODUCT_PACKAGES += \
 	ddmuilib \
 	draw9patch \
 	dvlib \
+	dvlib-tests \
 	emulator \
 	hierarchyviewer \
 	ide_common \
