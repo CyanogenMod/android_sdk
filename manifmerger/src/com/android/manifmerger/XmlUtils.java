@@ -18,6 +18,8 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.manifmerger.IMergerLog.FileAndLine;
+import com.android.manifmerger.IMergerLog.Severity;
 import com.android.sdklib.ISdkLog;
 
 import org.w3c.dom.Attr;
@@ -52,8 +54,9 @@ import javax.xml.transform.stream.StreamResult;
  */
 class XmlUtils {
 
-    private static final String DATA_ORIGIN_FILE = "origin_file";         //$NON-NLS-1$
-    private static final String DATA_LINE_NUMBER = "line#";               //$NON-NLS-1$
+    private static final String DATA_ORIGIN_FILE = "manif.merger.file";         //$NON-NLS-1$
+    private static final String DATA_FILE_NAME   = "manif.merger.filename";     //$NON-NLS-1$
+    private static final String DATA_LINE_NUMBER = "manif.merger.line#";        //$NON-NLS-1$
 
     /**
      * Parses the given XML file as a DOM document.
@@ -68,7 +71,7 @@ class XmlUtils {
      * @return A new DOM {@link Document}, or null.
      */
     @Nullable
-    static Document parseDocument(@NonNull final File xmlFile, @NonNull final ISdkLog log) {
+    static Document parseDocument(@NonNull final File xmlFile, @NonNull final IMergerLog log) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             InputSource is = new InputSource(new FileReader(xmlFile));
@@ -80,15 +83,24 @@ class XmlUtils {
             builder.setErrorHandler(new ErrorHandler() {
                 @Override
                 public void warning(SAXParseException e) {
-                    log.printf("Warning when parsing %s: %s", xmlFile.getName(), e.toString());
+                    log.error(Severity.WARNING,
+                            new FileAndLine(xmlFile.getName(), 0),
+                            "Warning when parsing: %1$s",
+                            e.toString());
                 }
                 @Override
                 public void fatalError(SAXParseException e) {
-                    log.printf("Fatal error when parsing %s: %s", xmlFile.getName(), e.toString());
+                    log.error(Severity.ERROR,
+                            new FileAndLine(xmlFile.getName(), 0),
+                            "Fatal error when parsing: %1$s",
+                            xmlFile.getName(), e.toString());
                 }
                 @Override
                 public void error(SAXParseException e) {
-                    log.printf("Error when parsing %s: %s", xmlFile.getName(), e.toString());
+                    log.error(Severity.ERROR,
+                            new FileAndLine(xmlFile.getName(), 0),
+                            "Error when parsing: %1$s",
+                            e.toString());
                 }
             });
 
@@ -99,10 +111,15 @@ class XmlUtils {
             return doc;
 
         } catch (FileNotFoundException e) {
-            log.error(null, "XML file not found: %s", xmlFile.getName());
+            log.error(Severity.ERROR,
+                    new FileAndLine(xmlFile.getName(), 0),
+                    "XML file not found");
 
         } catch (Exception e) {
-            log.error(e, "Failed to parse XML file: %s", xmlFile.getName());
+            log.error(Severity.ERROR,
+                    new FileAndLine(xmlFile.getName(), 0),
+                    "Failed to parse XML file: %1$s",
+                    e.toString());
         }
 
         return null;
@@ -118,7 +135,9 @@ class XmlUtils {
      * @return A new DOM {@link Document}, or null.
      */
     @Nullable
-    static Document parseDocument(@NonNull String xml, @NonNull ISdkLog log) {
+    static Document parseDocument(@NonNull String xml,
+            @NonNull IMergerLog log,
+            @NonNull FileAndLine errorContext) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             InputSource is = new InputSource(new StringReader(xml));
@@ -129,28 +148,50 @@ class XmlUtils {
             findLineNumbers(doc, 1);
             return doc;
         } catch (Exception e) {
-            log.error(e, "Failed to parse XML string");
+            log.error(Severity.ERROR, errorContext, "Failed to parse XML string");
         }
 
         return null;
     }
 
     /**
-     * Extracts the origin {@link File} that {@link #parseDocument(File, ISdkLog)}
-     * added to the XML document.
+     * Decorates the document with the specified file name, which can be
+     * retrieved later by calling {@link #extractLineNumber(Node)}.
+     * <p/>
+     * It also tries to add line number information, with the caveat that the
+     * current implementation is a gross approximation.
+     * <p/>
+     * There is no need to call this after calling one of the {@code parseDocument()}
+     * methods since they already decorated their own document.
      *
-     * @param xmlNode Any node from a document returned by {@link #parseDocument(File, ISdkLog)}.
+     * @param doc The document to decorate.
+     * @param fileName The name to retrieve later for that document.
+     */
+    static void decorateDocument(@NonNull Document doc, @NonNull String fileName) {
+        doc.setUserData(DATA_FILE_NAME, fileName, null /*handler*/);
+        findLineNumbers(doc, 1);
+    }
+
+    /**
+     * Extracts the origin {@link File} that {@link #parseDocument(File, IMergerLog)}
+     * added to the XML document or the string added by
+     *
+     * @param xmlNode Any node from a document returned by {@link #parseDocument(File, IMergerLog)}.
      * @return The {@link File} object used to create the document or null.
      */
     @Nullable
-    static File extractXmlFilename(@Nullable Node xmlNode) {
+    static String extractXmlFilename(@Nullable Node xmlNode) {
         if (xmlNode != null && xmlNode.getNodeType() != Node.DOCUMENT_NODE) {
             xmlNode = xmlNode.getOwnerDocument();
         }
         if (xmlNode != null) {
             Object data = xmlNode.getUserData(DATA_ORIGIN_FILE);
             if (data instanceof File) {
-                return (File) data;
+                return ((File) data).getName();
+            }
+            data = xmlNode.getUserData(DATA_FILE_NAME);
+            if (data instanceof String) {
+                return (String) data;
             }
         }
 
@@ -163,7 +204,7 @@ class XmlUtils {
      * already have lost all the information about whitespace between attributes.
      * <p/>
      * Also we don't even try to deal with \n vs \r vs \r\n insanity. This only counts
-     * the \n occuring in text nodes to determine line advances, which is clearly flawed.
+     * the \n occurring in text nodes to determine line advances, which is clearly flawed.
      * <p/>
      * However it's good enough for testing, and we'll replace it by a PositionXmlParser
      * once it's moved into com.android.util.
@@ -192,7 +233,7 @@ class XmlUtils {
     /**
      * Extracts the line number that {@link #findLineNumbers} added to the XML nodes.
      *
-     * @param xmlNode Any node from a document returned by {@link #parseDocument(File, ISdkLog)}.
+     * @param xmlNode Any node from a document returned by {@link #parseDocument(File, IMergerLog)}.
      * @return The line number if found or 0.
      */
     static int extractLineNumber(@Nullable Node xmlNode) {
@@ -230,7 +271,7 @@ class XmlUtils {
     static boolean printXmlFile(
             @NonNull Document doc,
             @NonNull File outFile,
-            @NonNull ISdkLog log) {
+            @NonNull IMergerLog log) {
         // Quick thing based on comments from http://stackoverflow.com/questions/139076
         try {
             Transformer tf = TransformerFactory.newInstance().newTransformer();
@@ -242,7 +283,10 @@ class XmlUtils {
             tf.transform(new DOMSource(doc), new StreamResult(outFile));
             return true;
         } catch (TransformerException e) {
-            log.error(e, "Failed to write XML file: %s", outFile);
+            log.error(Severity.ERROR,
+                    new FileAndLine(outFile.getName(), 0),
+                    "Failed to write XML file: %1$s",
+                    e.toString());
             return false;
         }
     }
@@ -258,7 +302,7 @@ class XmlUtils {
      */
     static String printXmlString(
             @NonNull Document doc,
-            @NonNull ISdkLog log) {
+            @NonNull IMergerLog log) {
         try {
             Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");        //$NON-NLS-1$
@@ -270,7 +314,10 @@ class XmlUtils {
             tf.transform(new DOMSource(doc), new StreamResult(sw));
             return sw.toString();
         } catch (TransformerException e) {
-            log.error(e, "Failed to write XML file");
+            log.error(Severity.ERROR,
+                    new FileAndLine(extractXmlFilename(doc), 0),
+                    "Failed to write XML file: %1$s",
+                    e.toString());
             return null;
         }
     }

@@ -151,10 +151,10 @@
 
 @errors
 
-W [ManifestMergerTest1_lib1.xml:4, ManifestMergerTest0_main.xml:1] Main manifest has <uses-feature android:glEsVersion='0x00010000'> but library uses glEsVersion='0x00020001'
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-feature android:glEsVersion='0x00010000'> but library uses glEsVersion='0x00020001'
 Note: main manifest lacks a <uses-feature android:glEsVersion> declaration, and thus defaults to glEsVersion=0x00010000.
 W [ManifestMergerTest2_lib2.xml:12] Ignoring <uses-feature android:glEsVersion='0'> because it's smaller than 1.0.
 W [ManifestMergerTest2_lib2.xml:15] Ignoring <uses-feature android:glEsVersion='0x0000FFFF'> because it's smaller than 1.0.
 E [ManifestMergerTest2_lib2.xml:21] Failed to parse <uses-feature android:glEsVersion='0xFFFFFFFFFFFFFFFF'>: must be an integer in the form 0x00020001.
-W [ManifestMergerTest2_lib2.xml:18, ManifestMergerTest0_main.xml:1] Main manifest has <uses-feature android:glEsVersion='0x00010000'> but library uses glEsVersion='0xffffffff'
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:18] Main manifest has <uses-feature android:glEsVersion='0x00010000'> but library uses glEsVersion='0xffffffff'
 Note: main manifest lacks a <uses-feature android:glEsVersion> declaration, and thus defaults to glEsVersion=0x00010000.

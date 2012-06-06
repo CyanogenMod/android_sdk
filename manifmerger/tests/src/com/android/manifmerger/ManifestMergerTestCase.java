@@ -17,6 +17,7 @@
 package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
+import com.android.manifmerger.IMergerLog.FileAndLine;
 import com.android.sdklib.mock.MockLog;
 
 import org.w3c.dom.Document;
@@ -375,7 +376,8 @@ abstract class ManifestMergerTestCase extends TestCase {
      */
     void processTestFiles(TestFiles testFiles) throws Exception {
         MockLog log = new MockLog();
-        ManifestMerger merger = new ManifestMerger(log);
+        IMergerLog mergerLog = MergerLog.wrapSdkLog(log);
+        ManifestMerger merger = new ManifestMerger(mergerLog);
         boolean processOK = merger.process(testFiles.getActualResult(),
                                   testFiles.getMain(),
                                   testFiles.getLibs());
@@ -400,20 +402,19 @@ abstract class ManifestMergerTestCase extends TestCase {
         // Test result XML. There should always be one created
         // since the process action does not stop on errors.
         log.clear();
-        Document document = XmlUtils.parseDocument(testFiles.getActualResult(), log);
+        Document document = XmlUtils.parseDocument(testFiles.getActualResult(), mergerLog);
         assertNotNull(document);
         assert document != null; // for Eclipse null analysis
-        String actual = XmlUtils.printXmlString(
-                            document,
-                            log);
+        String actual = XmlUtils.printXmlString(document, mergerLog);
         assertEquals("Error parsing actual result XML", "[]", log.toString());
         log.clear();
-        document = XmlUtils.parseDocument(testFiles.getExpectedResult(), log);
+        document = XmlUtils.parseDocument(
+                testFiles.getExpectedResult(),
+                mergerLog,
+                new FileAndLine("<expected-result>", 0));
         assertNotNull(document);
         assert document != null;
-        String expected = XmlUtils.printXmlString(
-                            document,
-                            log);
+        String expected = XmlUtils.printXmlString(document, mergerLog);
         assertEquals("Error parsing expected result XML", "[]", log.toString());
         assertEquals("Error comparing expected to actual result", expected, actual);
 
