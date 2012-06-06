@@ -31,7 +31,7 @@ public class DeviceValidator {
         }
         int ret = 0;
         for (String a : args) {
-            File f = new File(a);
+            File f = (new File(a)).getAbsoluteFile();
             try {
                 if (!DeviceSchema.validate(new FileInputStream(f), System.err, f.getParentFile())) {
                     System.err.println("Error validating " + f.getAbsolutePath());
