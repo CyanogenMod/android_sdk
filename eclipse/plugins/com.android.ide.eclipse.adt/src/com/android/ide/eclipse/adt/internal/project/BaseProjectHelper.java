@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
@@ -393,7 +395,7 @@ public final class BaseProjectHelper {
      * @param filter an optional filter to control which android project are returned. Can be null.
      * @return an array of IJavaProject, which can be empty if no projects match.
      */
-    public static IJavaProject[] getAndroidProjects(IProjectFilter filter) {
+    public static @NonNull IJavaProject[] getAndroidProjects(@Nullable IProjectFilter filter) {
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
         IJavaModel javaModel = JavaCore.create(workspaceRoot);
 
@@ -408,7 +410,9 @@ public final class BaseProjectHelper {
      * @param filter an optional filter to control which android project are returned. Can be null.
      * @return an array of IJavaProject, which can be empty if no projects match.
      */
-    public static IJavaProject[] getAndroidProjects(IJavaModel javaModel, IProjectFilter filter) {
+    @NonNull
+    public static IJavaProject[] getAndroidProjects(@NonNull IJavaModel javaModel,
+            @Nullable IProjectFilter filter) {
         // get the java projects
         IJavaProject[] javaProjectList = null;
         try {

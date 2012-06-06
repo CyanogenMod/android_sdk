@@ -97,6 +97,9 @@ class Parameter {
         /** The associated value must not be empty */
         NONEMPTY,
 
+        /** The associated value should represent a fully qualified activity class name */
+        ACTIVITY,
+
         /** The associated value should represent an API level */
         APILEVEL,
 
@@ -275,10 +278,19 @@ class Parameter {
                     mValidator = ResourceNameValidator.create(false, ResourceFolderType.DRAWABLE);
                 }
                 return mValidator;
-            } else if (constraints.contains(Constraint.CLASS)) {
+            } else if (constraints.contains(Constraint.CLASS)
+                    || constraints.contains(Constraint.ACTIVITY)) {
                 mValidator = new IInputValidator() {
                     @Override
                     public String isValid(String newText) {
+                        // Deliberately allow empty strings for parameters that aren't required
+                        if (newText.trim().isEmpty()
+                                && !constraints.contains(Constraint.NONEMPTY)) {
+                            return null;
+                        }
+
+                        // TODO: Don't use *activity* validator if it doesn't have to be one
+                        // (e.g. is CLASS, not ACTIVITY)
                         IStatus status = ApplicationInfoPage.validateActivity(newText.trim());
                         if (status != null && !status.isOK()) {
                             return status.getMessage();
