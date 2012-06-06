@@ -16,6 +16,7 @@
 
 package com.android.sdkstats;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ public class SdkStatsServiceTest extends TestCase {
         private final String mOsArch;
         private final String mJavaVersion;
         private final Map<String, String> mEnvVars = new HashMap<String, String>();
+        private URL mPingUrlResult;
 
         public MockSdkStatsService(String osName,
                 String osVersion,
@@ -39,6 +41,10 @@ public class SdkStatsServiceTest extends TestCase {
                     mOsVersion = osVersion;
                     mOsArch = osArch;
                     mJavaVersion = javaVersion;
+        }
+
+        public URL getPingUrlResult() {
+            return mPingUrlResult;
         }
 
         public void setSystemEnv(String varName, String value) {
@@ -71,6 +77,29 @@ public class SdkStatsServiceTest extends TestCase {
             return null;
         }
 
+        @Override
+        protected void doPing(String app, String version,
+                Map<String, String> extras) {
+            // The super.doPing() does:
+            // 1- normalize input,
+            // 2- check the ping time,
+            // 3- check/create the pind id,
+            // 4- create the ping URL
+            // 5- and send the network ping in a thread.
+            // In this mock version we just do steps 1 and 4 and record the URL;
+            // obvious we don't check the ping time in the prefs nor send the actual ping.
+
+            // Validate the application and version input.
+            final String nApp = normalizeAppName(app);
+            final String nVersion = normalizeVersion(version);
+
+            long id = 0x42;
+            try {
+                mPingUrlResult = createPingUrl(nApp, nVersion, id, extras);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -275,5 +304,108 @@ public class SdkStatsServiceTest extends TestCase {
         m = new MockSdkStatsService("one3456789ten3456789twenty6789thirty6789",
                 "42", "x86_64", "1.7.8_09");
         assertEquals("one3456789ten3456789twenty6789th", m.getOsName());
+    }
+
+    public void testSdkStatsService_glPing() {
+        MockSdkStatsService m;
+        m = new MockSdkStatsService("Windows", "6.2", "x86_64", "1.7.8_09");
+
+        // Send emulator ping with just emulator version, no GL stuff
+        m.ping("emulator", "12");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // Send emulator ping with just emulator version, no GL stuff.
+        // This is the same request but using the variable string list API, arg 0 is the "ping" app.
+        m.ping(new String[] { "ping", "emulator", "12" });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // Send a ping for a non-emulator app with extra parameters, no GL stuff
+        m.ping(new String[] { "ping", "not-emulator", "12", "arg1", "arg2", "arg3" });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_notemulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // Send a ping for the emulator app with extra parameters, GL stuff is added, 3 parameters
+        m.ping(new String[] { "ping", "emulator", "12", "Vendor Inc.", "Some cool_GPU!!! (fast one!)", "1.2.3.4_preview" });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64&" +
+                "glm=Vendor+Inc.&" +
+                "glr=Some+cool_GPU+%28fast+one+%29&" +
+                "glv=1.2.3.4_preview",
+                m.getPingUrlResult().toString());
+
+        // Send a ping for the emulator app with extra parameters, GL stuff is added, 2 parameters
+        m.ping(new String[] { "ping", "emulator", "12", "Vendor Inc.", "Some cool_GPU!!! (fast one!)" });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64&" +
+                "glm=Vendor+Inc.&" +
+                "glr=Some+cool_GPU+%28fast+one+%29",
+                m.getPingUrlResult().toString());
+
+        // Send a ping for the emulator app with extra parameters, GL stuff is added, 1 parameter
+        m.ping(new String[] { "ping", "emulator", "12", "Vendor Inc." });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64&" +
+                "glm=Vendor+Inc.",
+                m.getPingUrlResult().toString());
+
+        // Parameters that are more than 128 chars are cut short.
+        m.ping(new String[] { "ping", "emulator", "12",
+                // 130 chars each
+                "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+                "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+                "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789" });
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_emulator&" +
+                "id=42&" +
+                "version=12.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64&" +
+                "glm=01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567&" +
+                "glr=01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567&" +
+                "glv=01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567",
+                m.getPingUrlResult().toString());
     }
 }
