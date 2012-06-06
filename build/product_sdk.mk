@@ -40,6 +40,7 @@ PRODUCT_PACKAGES += \
 	ddms \
 	ddmuilib \
 	draw9patch \
+	dvlib \
 	emulator \
 	hierarchyviewer \
 	ide_common \
