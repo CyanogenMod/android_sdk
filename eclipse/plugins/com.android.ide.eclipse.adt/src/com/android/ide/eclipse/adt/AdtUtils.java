@@ -42,6 +42,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -925,5 +926,21 @@ public class AdtUtils {
             }
             return androidProjects;
         }
+    }
+
+    private static Boolean sEclipse4;
+
+    /**
+     * Returns true if the running Eclipse is version 4.x or later
+     *
+     * @return true if the current Eclipse version is 4.x or later, false
+     *         otherwise
+     */
+    public static boolean isEclipse4() {
+        if (sEclipse4 == null) {
+            sEclipse4 = Platform.getBundle("org.eclipse.e4.ui.model.workbench") != null; //$NON-NLS-1$
+        }
+
+        return sEclipse4;
     }
 }

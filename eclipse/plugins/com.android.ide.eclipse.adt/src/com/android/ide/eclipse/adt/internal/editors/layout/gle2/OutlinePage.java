@@ -38,6 +38,7 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -88,6 +89,8 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -100,6 +103,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
@@ -348,6 +352,35 @@ public class OutlinePage extends ContentOutlinePage
     }
 
     private void createOutline(Composite parent) {
+        if (AdtUtils.isEclipse4()) {
+            // This is a workaround for the focus behavior in Eclipse 4 where
+            // the framework ends up calling setFocus() on the first widget in the outline
+            // AFTER a mouse click has been received. Specifically, if the user clicks in
+            // the embedded property sheet to for example give a Text property editor focus,
+            // then after the mouse click, the Outline window activation event is processed,
+            // and this event causes setFocus() to be called first on the PageBookView (which
+            // ends up calling setFocus on the first control, normally the TreeViewer), and
+            // then on the Page itself. We're dealing with the page setFocus() in the override
+            // of that method in the class, such that it does nothing.
+            // However, we have to also disable the setFocus on the first control in the
+            // outline page. To deal with that, we create our *own* first control in the
+            // outline, and make its setFocus() a no-op. We also make it invisible, since we
+            // don't actually want anything but the tree viewer showing in the outline.
+            Text text = new Text(parent, SWT.NONE) {
+                @Override
+                public boolean setFocus() {
+                    // Focus no-op
+                    return true;
+                }
+
+                @Override
+                protected void checkSubclass() {
+                    // Disable the check that prevents subclassing of SWT components
+                }
+            };
+            text.setVisible(false);
+        }
+
         super.createControl(parent);
 
         TreeViewer tv = getTreeViewer();
@@ -460,12 +493,44 @@ public class OutlinePage extends ContentOutlinePage
         setupTooltip();
     }
 
+    /**
+     * This flag is true when the mouse button is being pressed somewhere inside
+     * the property sheet
+     */
+    private boolean mPressInPropSheet;
+
     private void createPropertySheet() {
         mPropertySheetComposite = new PageSiteComposite(mControl, SWT.BORDER);
         mPropertySheetComposite.setTitleText("Properties");
         mPropertySheetComposite.setTitleImage(IconFactory.getInstance().getIcon("properties_view"));
         mPropertySheet = new PropertySheetPage(mGraphicalEditorPart);
         mPropertySheetComposite.setPage(mPropertySheet);
+        if (AdtUtils.isEclipse4()) {
+            mPropertySheet.getControl().addMouseListener(new MouseListener() {
+                @Override
+                public void mouseDown(MouseEvent e) {
+                    mPressInPropSheet = true;
+                }
+
+                @Override
+                public void mouseUp(MouseEvent e) {
+                    mPressInPropSheet = false;
+                }
+
+                @Override
+                public void mouseDoubleClick(MouseEvent e) {
+                }
+            });
+        }
+    }
+
+    @Override
+    public void setFocus() {
+        // Only call setFocus on the tree viewer if the mouse click isn't in the property
+        // sheet area
+        if (!mPressInPropSheet) {
+            super.setFocus();
+        }
     }
 
     @Override
