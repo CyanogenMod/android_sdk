@@ -621,12 +621,20 @@ public class PreCompilerBuilder extends BaseBuilder {
                 }
             }
 
+            List<File> libProjectsOut = new ArrayList<File>(libProjects.size());
+            for (IProject libProject : libProjects) {
+                libProjectsOut.add(
+                        BaseProjectHelper.getAndroidOutputFolder(libProject)
+                            .getLocation().toFile());
+            }
+
             // run the source processors
             int processorStatus = SourceProcessor.COMPILE_STATUS_NONE;
             for (SourceProcessor processor : mProcessors) {
                 try {
                     processorStatus |= processor.compileFiles(this,
-                            project, projectTarget, minSdkValue, sourceFolderPathList, monitor);
+                            project, projectTarget, minSdkValue, sourceFolderPathList,
+                            libProjectsOut, monitor);
                 } catch (Throwable t) {
                     handleException(t, String.format(
                             "Failed to run %s. Check workspace log for detail.",

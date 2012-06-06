@@ -6,6 +6,7 @@ Revision 20:
      environment variable (requires updating the project's build.xml file)
    * Fixed issues with compilation, deployment of test projects and running tests.
      Both separate test projects and self-contained app+test projects now work.
+   * Aidl files from library projects are now in the import list.
 
 Revision 19:
 - Fix GPU rendering

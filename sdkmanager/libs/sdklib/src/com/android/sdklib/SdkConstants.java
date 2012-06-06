@@ -197,6 +197,8 @@ public final class SdkConstants {
     public final static String FD_CLASSES_OUTPUT = "classes";           //$NON-NLS-1$
     /** proguard output folder for mapping, etc.. files */
     public final static String FD_PROGUARD = "proguard";                //$NON-NLS-1$
+    /** aidl output folder for copied aidl files */
+    public final static String FD_AIDL = "aidl";                        //$NON-NLS-1$
 
     /* Folder Names for the Android SDK */
 
