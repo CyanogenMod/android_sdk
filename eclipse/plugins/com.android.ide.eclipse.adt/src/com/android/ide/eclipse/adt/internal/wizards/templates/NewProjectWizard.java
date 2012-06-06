@@ -41,6 +41,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -214,6 +215,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     @Override
     public boolean performFinish() {
         try {
+            Shell shell = getShell();
+            if (shell != null) {
+                shell.setVisible(false);
+            }
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
             String name = mValues.projectName;
             final IProject newProject = root.getProject(name);

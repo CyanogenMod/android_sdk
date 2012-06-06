@@ -226,7 +226,7 @@ class ClientRulesEngine implements IClientRulesEngine {
             private ResourceNameValidator mValidator;
 
             @Override
-            public String validate(String text) {
+            public String validate(@NonNull String text) {
                 if (mValidator == null) {
                     ResourceType type = ResourceType.getEnum(resourceTypeName);
                     if (uniqueInLayout) {
@@ -277,7 +277,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     @Override
-    public String displayReferenceInput(String currentValue) {
+    public String displayReferenceInput(@Nullable String currentValue) {
         GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
         LayoutEditorDelegate delegate = graphicalEditor.getEditorDelegate();
         IProject project = delegate.getEditor().getProject();
