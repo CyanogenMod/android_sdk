@@ -25,6 +25,7 @@ import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 
 import org.eclipse.core.resources.IFile;
@@ -228,9 +229,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             // of the merged files (such as the manifest file) in that case.
             template.setBackupMergedFiles(false);
 
-            Runnable projectPopulator = new Runnable() {
+            ProjectPopulator projectPopulator = new ProjectPopulator() {
                 @Override
-                public void run() {
+                public void populate(IProject project) {
                     // Generate basic output skeleton
                     Map<String, Object> paramMap = new HashMap<String, Object>();
                     paramMap.put(ATTR_PACKAGE_NAME, mValues.packageName);

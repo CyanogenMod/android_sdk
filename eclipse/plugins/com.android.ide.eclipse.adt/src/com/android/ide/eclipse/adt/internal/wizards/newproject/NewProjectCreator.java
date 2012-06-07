@@ -34,6 +34,7 @@ import com.android.io.StreamException;
 import com.android.resources.Density;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
@@ -78,7 +79,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -102,6 +105,7 @@ public class NewProjectCreator  {
     private static final String PARAM_STRING_CONTENT = "STRING_CONTENT";            //$NON-NLS-1$
     private static final String PARAM_IS_NEW_PROJECT = "IS_NEW_PROJECT";            //$NON-NLS-1$
     private static final String PARAM_SAMPLE_LOCATION = "SAMPLE_LOCATION";          //$NON-NLS-1$
+    private static final String PARAM_SOURCE = "SOURCE";                            //$NON-NLS-1$
     private static final String PARAM_SRC_FOLDER = "SRC_FOLDER";                    //$NON-NLS-1$
     private static final String PARAM_SDK_TARGET = "SDK_TARGET";                    //$NON-NLS-1$
     private static final String PARAM_MIN_SDK_VERSION = "MIN_SDK_VERSION";          //$NON-NLS-1$
@@ -197,7 +201,6 @@ public class NewProjectCreator  {
 
     private final NewProjectWizardState mValues;
     private final IRunnableContext mRunnableContext;
-    private Object mPackageName;
 
     public NewProjectCreator(NewProjectWizardState values, IRunnableContext runnableContext) {
         mValues = values;
@@ -268,6 +271,10 @@ public class NewProjectCreator  {
      * @return True if the project could be created.
      */
     public boolean createAndroidProjects() {
+        if (mValues.importProjects != null && !mValues.importProjects.isEmpty()) {
+            return importProjects();
+        }
+
         final ProjectInfo mainData = collectMainPageInfo();
         final ProjectInfo testData = collectTestPageInfo();
 
@@ -275,7 +282,77 @@ public class NewProjectCreator  {
         WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
-                createProjectAsync(monitor, mainData, testData);
+                createProjectAsync(monitor, mainData, testData, null);
+            }
+        };
+
+        // Run the operation in a different thread
+        runAsyncOperation(op);
+        return true;
+    }
+
+    /**
+     * Imports a list of projects
+     */
+    private boolean importProjects() {
+        assert mValues.importProjects != null && !mValues.importProjects.isEmpty();
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+
+        final List<ProjectInfo> projectData = new ArrayList<ProjectInfo>();
+        for (ImportedProject p : mValues.importProjects) {
+
+            // Compute the project name and the package name from the manifest
+            ManifestData manifest = p.getManifest();
+            if (manifest == null) {
+                continue;
+            }
+            String packageName = manifest.getPackage();
+            String projectName = p.getProjectName();
+            String minSdk = manifest.getMinSdkVersionString();
+
+            final IProject project = workspace.getRoot().getProject(projectName);
+            final IProjectDescription description =
+                    workspace.newProjectDescription(project.getName());
+
+            final Map<String, Object> parameters = new HashMap<String, Object>();
+            parameters.put(PARAM_PROJECT, projectName);
+            parameters.put(PARAM_PACKAGE, packageName);
+            parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
+            parameters.put(PARAM_IS_NEW_PROJECT, Boolean.FALSE);
+            parameters.put(PARAM_SRC_FOLDER, SdkConstants.FD_SOURCES);
+
+            parameters.put(PARAM_SDK_TARGET, p.getTarget());
+
+            // TODO: Find out if these end up getting used in the import-path through the code!
+            parameters.put(PARAM_MIN_SDK_VERSION, minSdk);
+            parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
+            final HashMap<String, String> dictionary = new HashMap<String, String>();
+            dictionary.put(STRING_APP_NAME, mValues.applicationName);
+
+            if (mValues.copyIntoWorkspace) {
+                parameters.put(PARAM_SOURCE, p.getLocation());
+
+                // TODO: Make sure it isn't *already* in the workspace!
+                //IPath defaultLocation = Platform.getLocation();
+                //if ((!mValues.useDefaultLocation || mValues.useExisting)
+                //        && !defaultLocation.isPrefixOf(path)) {
+                //IPath workspaceLocation = Platform.getLocation().append(projectName);
+                //description.setLocation(workspaceLocation);
+                // DON'T SET THE LOCATION: It's IMPLIED and in fact it will generate
+                // an error if you set it!
+            } else {
+                // Create in place
+                description.setLocation(new Path(p.getLocation().getPath()));
+            }
+
+            projectData.add(new ProjectInfo(project, description, parameters, dictionary));
+        }
+
+        // Create a monitored operation to create the actual project
+        WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
+                createProjectAsync(monitor, null, null, projectData);
             }
         };
 
@@ -299,12 +376,9 @@ public class NewProjectCreator  {
         final IProject project = workspace.getRoot().getProject(mValues.projectName);
         final IProjectDescription description = workspace.newProjectDescription(project.getName());
 
-        // keep some variables to make them available once the wizard closes
-        mPackageName = mValues.packageName;
-
         final Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put(PARAM_PROJECT, mValues.projectName);
-        parameters.put(PARAM_PACKAGE, mPackageName);
+        parameters.put(PARAM_PACKAGE, mValues.packageName);
         parameters.put(PARAM_APPLICATION, STRING_RSRC_PREFIX + STRING_APP_NAME);
         parameters.put(PARAM_SDK_TOOLS_DIR, AdtPlugin.getOsSdkToolsFolder());
         parameters.put(PARAM_IS_NEW_PROJECT, mValues.mode == Mode.ANY && !mValues.useExisting);
@@ -468,7 +542,8 @@ public class NewProjectCreator  {
      */
     private void createProjectAsync(IProgressMonitor monitor,
             ProjectInfo mainData,
-            ProjectInfo testData)
+            ProjectInfo testData,
+            List<ProjectInfo> importData)
                 throws InvocationTargetException {
         monitor.beginTask("Create Android Project", 100);
         try {
@@ -485,23 +560,12 @@ public class NewProjectCreator  {
 
                 if (mainProject != null) {
                     final IJavaProject javaProject = JavaCore.create(mainProject);
-                    Display.getDefault().syncExec(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            IWorkingSet[] workingSets = mValues.workingSets;
-                            if (workingSets.length > 0 && javaProject != null
-                                    && javaProject.exists()) {
-                                PlatformUI.getWorkbench().getWorkingSetManager()
-                                        .addToWorkingSets(javaProject, workingSets);
-                            }
-                        }
-                    });
+                    Display.getDefault().syncExec(new WorksetAdder(javaProject,
+                            mValues.workingSets));
                 }
             }
 
             if (testData != null) {
-
                 Map<String, Object> parameters = testData.getParameters();
                 if (parameters.containsKey(PARAM_TARGET_MAIN) && mainProject != null) {
                     parameters.put(PARAM_REFERENCE_PROJECT, mainProject);
@@ -516,18 +580,45 @@ public class NewProjectCreator  {
                         null);
                 if (testProject != null) {
                     final IJavaProject javaProject = JavaCore.create(testProject);
-                    Display.getDefault().syncExec(new Runnable() {
+                    Display.getDefault().syncExec(new WorksetAdder(javaProject,
+                            mValues.workingSets));
+                }
+            }
 
-                        @Override
-                        public void run() {
-                            IWorkingSet[] workingSets = mValues.workingSets;
-                            if (workingSets.length > 0 && javaProject != null
-                                    && javaProject.exists()) {
-                                PlatformUI.getWorkbench().getWorkingSetManager()
-                                        .addToWorkingSets(javaProject, workingSets);
+            if (importData != null) {
+                for (final ProjectInfo data : importData) {
+                    ProjectPopulator projectPopulator = null;
+                    if (mValues.copyIntoWorkspace) {
+                        projectPopulator = new ProjectPopulator() {
+                            @Override
+                            public void populate(IProject project) {
+                                // Copy
+                                IFileSystem fileSystem = EFS.getLocalFileSystem();
+                                File source = (File) data.getParameters().get(PARAM_SOURCE);
+                                IFileStore sourceDir = new ReadWriteFileStore(
+                                        fileSystem.getStore(source.toURI()));
+                                IFileStore destDir = new ReadWriteFileStore(
+                                        fileSystem.getStore(AdtUtils.getAbsolutePath(project)));
+                                try {
+                                    sourceDir.copy(destDir, EFS.OVERWRITE, null);
+                                } catch (CoreException e) {
+                                    AdtPlugin.log(e, null);
+                                }
                             }
-                        }
-                    });
+                        };
+                    }
+                    IProject project = createEclipseProject(
+                            new SubProgressMonitor(monitor, 50),
+                            data.getProject(),
+                            data.getDescription(),
+                            data.getParameters(),
+                            data.getDictionary(),
+                            projectPopulator);
+                    if (project != null) {
+                        final IJavaProject javaProject = JavaCore.create(project);
+                        Display.getDefault().syncExec(new WorksetAdder(javaProject,
+                                mValues.workingSets));
+                    }
                 }
             }
         } catch (CoreException e) {
@@ -539,6 +630,10 @@ public class NewProjectCreator  {
         } finally {
             monitor.done();
         }
+    }
+
+    public interface ProjectPopulator {
+        public void populate(IProject project);
     }
 
     /**
@@ -558,7 +653,7 @@ public class NewProjectCreator  {
             IProjectDescription description,
             Map<String, Object> parameters,
             Map<String, String> dictionary,
-            Runnable projectPopulator)
+            ProjectPopulator projectPopulator)
                 throws CoreException, IOException, StreamException {
 
         // get the project target
@@ -590,7 +685,7 @@ public class NewProjectCreator  {
         }
 
         if (projectPopulator != null) {
-            projectPopulator.run();
+            projectPopulator.populate(project);
         }
 
         // Setup class path: mark folders as source folders
@@ -672,7 +767,7 @@ public class NewProjectCreator  {
             IProgressMonitor monitor,
             IProject project,
             IAndroidTarget target,
-            Runnable projectPopulator)
+            ProjectPopulator projectPopulator)
                 throws CoreException, IOException, StreamException {
         NewProjectCreator creator = new NewProjectCreator(null, null);
 
@@ -1256,5 +1351,24 @@ public class NewProjectCreator  {
         }
 
         return str;
+    }
+
+    private static class WorksetAdder implements Runnable {
+        private final IJavaProject mProject;
+        private final IWorkingSet[] mWorkingSets;
+
+        private WorksetAdder(IJavaProject project, IWorkingSet[] workingSets) {
+            mProject = project;
+            mWorkingSets = workingSets;
+        }
+
+        @Override
+        public void run() {
+            if (mWorkingSets.length > 0 && mProject != null
+                    && mProject.exists()) {
+                PlatformUI.getWorkbench().getWorkingSetManager()
+                        .addToWorkingSets(mProject, mWorkingSets);
+            }
+        }
     }
 }

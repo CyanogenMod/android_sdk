@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.detector.api.LintConstants.BIN_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
@@ -517,5 +519,33 @@ public class LintUtils {
         }
 
         return true;
+    }
+
+    /**
+     * Returns true if the given directory represents an Android project
+     * directory. Note: This doesn't necessarily mean it's an Eclipse directory,
+     * only that it looks like it contains a logical Android project -- one
+     * including a manifest file, a resource folder, etc.
+     *
+     * @param dir the directory to check
+     * @return true if the directory looks like an Android project
+     */
+    public static boolean isProjectDir(@NonNull File dir) {
+        boolean hasManifest = new File(dir, ANDROID_MANIFEST_XML).exists();
+        if (hasManifest) {
+            // Special case: the bin/ folder can also contain a copy of the
+            // manifest file, but this is *not* a project directory
+            if (dir.getName().equals(BIN_FOLDER)) {
+                // ...unless of course it just *happens* to be a project named bin, in
+                // which case we peek at its parent to see if this is the case
+                dir = dir.getParentFile();
+                if (dir != null && isProjectDir(dir)) {
+                    // Yes, it's a bin/ directory inside a real project: ignore this dir
+                    return false;
+                }
+            }
+        }
+
+        return hasManifest;
     }
 }

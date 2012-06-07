@@ -244,5 +244,4 @@ public class LintUtilsTest extends TestCase {
         checkEncoding("UTF_32", true /*bom*/, "\r\n");
         checkEncoding("UTF_32LE", true /*bom*/, "\r\n");
     }
-
 }

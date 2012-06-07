@@ -18,7 +18,6 @@ package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
-import static com.android.tools.lint.detector.api.LintConstants.BIN_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
@@ -529,18 +528,18 @@ public class LintDriver {
                 // right thing, which is to see if you're pointing right at a project or
                 // right within it (say at the src/ or res/) folder, and if not, you're
                 // hopefully pointing at a project tree that you want to scan recursively.
-                if (isProjectDir(file)) {
+                if (LintUtils.isProjectDir(file)) {
                     registerProjectFile(fileToProject, file, file, rootDir);
                     continue;
                 } else {
                     File parent = file.getParentFile();
                     if (parent != null) {
-                        if (isProjectDir(parent)) {
+                        if (LintUtils.isProjectDir(parent)) {
                             registerProjectFile(fileToProject, file, parent, parent);
                             continue;
                         } else {
                             parent = parent.getParentFile();
-                            if (parent != null && isProjectDir(parent)) {
+                            if (parent != null && LintUtils.isProjectDir(parent)) {
                                 registerProjectFile(fileToProject, file, parent, parent);
                                 continue;
                             }
@@ -554,7 +553,7 @@ public class LintDriver {
                 // Pointed at a file: Search upwards for the containing project
                 File parent = file.getParentFile();
                 while (parent != null) {
-                    if (isProjectDir(parent)) {
+                    if (LintUtils.isProjectDir(parent)) {
                         registerProjectFile(fileToProject, file, parent, parent);
                         break;
                     }
@@ -626,7 +625,7 @@ public class LintDriver {
             return;
         }
 
-        if (isProjectDir(dir)) {
+        if (LintUtils.isProjectDir(dir)) {
             registerProjectFile(fileToProject, dir, dir, rootDir);
         } else {
             File[] files = dir.listFiles();
@@ -638,25 +637,6 @@ public class LintDriver {
                 }
             }
         }
-    }
-
-    private boolean isProjectDir(@NonNull File dir) {
-        boolean hasManifest = new File(dir, ANDROID_MANIFEST_XML).exists();
-        if (hasManifest) {
-            // Special case: the bin/ folder can also contain a copy of the
-            // manifest file, but this is *not* a project directory
-            if (dir.getName().equals(BIN_FOLDER)) {
-                // ...unless of course it just *happens* to be a project named bin, in
-                // which case we peek at its parent to see if this is the case
-                dir = dir.getParentFile();
-                if (dir != null && isProjectDir(dir)) {
-                    // Yes, it's a bin/ directory inside a real project: ignore this dir
-                    return false;
-                }
-            }
-        }
-
-        return hasManifest;
     }
 
     private void checkProject(@NonNull Project project) {
