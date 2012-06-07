@@ -41,6 +41,7 @@ import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.StreamException;
 import com.android.manifmerger.ManifestMerger;
+import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
@@ -830,7 +831,9 @@ public class PreCompilerBuilder extends BaseBuilder {
         } else {
             final ArrayList<String> errors = new ArrayList<String>();
 
-            ManifestMerger merger = new ManifestMerger(new ISdkLog() {
+            // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
+            // and maintain error markers.
+            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new ISdkLog() {
 
                 @Override
                 public void warning(String warningFormat, Object... args) {
@@ -846,7 +849,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 public void error(Throwable t, String errorFormat, Object... args) {
                     errors.add(String.format(errorFormat, args));
                 }
-            });
+            }));
 
             File[] libManifests = new File[libProjects.size()];
             int libIndex = 0;
