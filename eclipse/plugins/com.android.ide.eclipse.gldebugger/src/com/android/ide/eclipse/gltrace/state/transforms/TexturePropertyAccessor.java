@@ -29,17 +29,23 @@ import com.android.ide.eclipse.gltrace.state.IGLProperty;
 public class TexturePropertyAccessor implements IGLPropertyAccessor {
     private final int mContextId;
     private final GLStateType mTargetUnitType;
+    private final int mMipmapLevel;
     private final GLStateType mTextureType;
     private TextureUnitPropertyAccessor mTextureUnitPropertyAccessor;
 
-    public TexturePropertyAccessor(int contextId, GLStateType textureUnitTarget,
+    public TexturePropertyAccessor(int contextId, GLStateType textureUnitTarget, int level,
             GLStateType textureTargetName) {
         mContextId = contextId;
         mTargetUnitType = textureUnitTarget;
+        mMipmapLevel = level;
         mTextureType = textureTargetName;
-
         mTextureUnitPropertyAccessor = new TextureUnitPropertyAccessor(mContextId,
                 mTargetUnitType);
+    }
+
+    public TexturePropertyAccessor(int contextId, GLStateType textureUnitTarget,
+            GLStateType textureTargetName) {
+        this(contextId, textureUnitTarget, -1, textureTargetName);
     }
 
     @Override
@@ -52,11 +58,22 @@ public class TexturePropertyAccessor implements IGLPropertyAccessor {
         Integer textureId = (Integer) targetTexture.getValue();
 
         // now extract the required property from the selected texture
-        IGLPropertyAccessor textureAccessor = GLPropertyAccessor.makeAccessor(mContextId,
-                GLStateType.TEXTURE_STATE,
-                GLStateType.TEXTURES,
-                textureId,
-                mTextureType);
+        IGLPropertyAccessor textureAccessor;
+        if (mMipmapLevel >= 0) {
+            textureAccessor = GLPropertyAccessor.makeAccessor(mContextId,
+                    GLStateType.TEXTURE_STATE,
+                    GLStateType.TEXTURES,
+                    textureId,
+                    GLStateType.TEXTURE_MIPMAPS,
+                    Integer.valueOf(mMipmapLevel),
+                    mTextureType);
+        } else {
+            textureAccessor = GLPropertyAccessor.makeAccessor(mContextId,
+                    GLStateType.TEXTURE_STATE,
+                    GLStateType.TEXTURES,
+                    textureId,
+                    mTextureType);
+        }
 
         return textureAccessor.getProperty(state);
     }

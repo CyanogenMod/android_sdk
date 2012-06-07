@@ -23,20 +23,34 @@ import java.util.List;
 
 public class GLSparseArrayProperty implements IGLProperty {
     private final GLStateType mType;
-    private IGLProperty mDefaultValue;
-    private IGLProperty mParent;
+    private final IGLProperty mDefaultValue;
+    private final boolean mCreateOnAccess;
     private final SparseArray<IGLProperty> mSparseArray;
+    private IGLProperty mParent;
 
     public GLSparseArrayProperty(GLStateType type, IGLProperty defaultValue) {
+        this(type, defaultValue, false);
+    }
+
+    /**
+     * Constructs a sparse array property.
+     * @param type GL state corresponding to this property
+     * @param defaultValue default value of each item
+     * @param createOnAccess create an item on access if it is not present
+     */
+    public GLSparseArrayProperty(GLStateType type, IGLProperty defaultValue,
+            boolean createOnAccess) {
         mType = type;
         mDefaultValue = defaultValue;
+        mCreateOnAccess = createOnAccess;
         mSparseArray = new SparseArray<IGLProperty>(20);
     }
 
     private GLSparseArrayProperty(GLStateType type, IGLProperty defaultValue,
-            SparseArray<IGLProperty> contents) {
+            boolean createOnAccess, SparseArray<IGLProperty> contents) {
         mType = type;
         mDefaultValue = defaultValue;
+        mCreateOnAccess = createOnAccess;
         mSparseArray = contents;
     }
 
@@ -51,7 +65,12 @@ public class GLSparseArrayProperty implements IGLProperty {
     }
 
     public IGLProperty getProperty(int key) {
-        return mSparseArray.get(key);
+        IGLProperty p = mSparseArray.get(key);
+        if (p == null && mCreateOnAccess) {
+            add(key);
+            p = mSparseArray.get(key);
+        }
+        return p;
     }
 
     public int keyFor(IGLProperty element) {
@@ -108,7 +127,7 @@ public class GLSparseArrayProperty implements IGLProperty {
             copy.put(key, value);
         }
 
-        return new GLSparseArrayProperty(mType, mDefaultValue, copy);
+        return new GLSparseArrayProperty(mType, mDefaultValue, mCreateOnAccess, copy);
     }
 
     @Override

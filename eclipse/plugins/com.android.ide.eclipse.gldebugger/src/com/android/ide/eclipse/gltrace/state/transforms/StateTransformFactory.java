@@ -989,6 +989,7 @@ public class StateTransformFactory {
     private static List<IStateTransform> transformsForGlTexImage(GLMessage msg, int widthArgIndex,
             int heightArgIndex, int xOffsetIndex, int yOffsetIndex) {
         GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        int level = msg.getArgs(1).getIntValue(0);
         Integer width = Integer.valueOf(msg.getArgs(widthArgIndex).getIntValue(0));
         Integer height = Integer.valueOf(msg.getArgs(heightArgIndex).getIntValue(0));
         GLEnum format = GLEnum.valueOf(msg.getArgs(6).getIntValue(0));
@@ -998,21 +999,25 @@ public class StateTransformFactory {
         transforms.add(new PropertyChangeTransform(
                 new TexturePropertyAccessor(msg.getContextId(),
                                             getTextureUnitTargetName(target),
+                                            level,
                                             GLStateType.TEXTURE_WIDTH),
                 width));
         transforms.add(new PropertyChangeTransform(
                 new TexturePropertyAccessor(msg.getContextId(),
                                             getTextureUnitTargetName(target),
+                                            level,
                                             GLStateType.TEXTURE_HEIGHT),
                 height));
         transforms.add(new PropertyChangeTransform(
                 new TexturePropertyAccessor(msg.getContextId(),
                                             getTextureUnitTargetName(target),
+                                            level,
                                             GLStateType.TEXTURE_FORMAT),
                 format));
         transforms.add(new PropertyChangeTransform(
                 new TexturePropertyAccessor(msg.getContextId(),
                                             getTextureUnitTargetName(target),
+                                            level,
                                             GLStateType.TEXTURE_IMAGE_TYPE),
                 type));
 
@@ -1042,6 +1047,7 @@ public class StateTransformFactory {
         transforms.add(new TexImageTransform(
                 new TexturePropertyAccessor(msg.getContextId(),
                         getTextureUnitTargetName(target),
+                        level,
                         GLStateType.TEXTURE_IMAGE),
                 f, format, xOffset, yOffset, width, height));
 
@@ -1065,6 +1071,14 @@ public class StateTransformFactory {
         GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
         GLEnum pname = GLEnum.valueOf(msg.getArgs(1).getIntValue(0));
         GLEnum pvalue = GLEnum.valueOf(msg.getArgs(2).getIntValue(0));
+
+        if (pname != GLEnum.GL_TEXTURE_MIN_FILTER
+                && pname != GLEnum.GL_TEXTURE_MAG_FILTER
+                && pname != GLEnum.GL_TEXTURE_WRAP_S
+                && pname != GLEnum.GL_TEXTURE_WRAP_T) {
+            throw new IllegalArgumentException(
+                    String.format("Unsupported parameter (%s) for glTexParameter()", pname));
+        }
 
         IStateTransform transform = new PropertyChangeTransform(
                 new TexturePropertyAccessor(msg.getContextId(),

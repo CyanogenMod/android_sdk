@@ -264,6 +264,7 @@ public class GLState {
                 GLEnum.GL_NEAREST);
         IGLProperty wrapS = new GLEnumProperty(GLStateType.TEXTURE_WRAP_S, GLEnum.GL_REPEAT);
         IGLProperty wrapT = new GLEnumProperty(GLStateType.TEXTURE_WRAP_T, GLEnum.GL_REPEAT);
+
         IGLProperty width = new GLIntegerProperty(GLStateType.TEXTURE_WIDTH, Integer.valueOf(-1));
         IGLProperty height = new GLIntegerProperty(GLStateType.TEXTURE_HEIGHT,
                 Integer.valueOf(-1));
@@ -272,8 +273,15 @@ public class GLState {
         IGLProperty imageType = new GLEnumProperty(GLStateType.TEXTURE_IMAGE_TYPE,
                 GLEnum.GL_UNSIGNED_BYTE);
         IGLProperty image = new GLStringProperty(GLStateType.TEXTURE_IMAGE, null);
+
+        IGLProperty perTextureLevelState = new GLCompositeProperty(
+                GLStateType.PER_TEXTURE_LEVEL_STATE,
+                width, height, format, imageType, image);
+        IGLProperty mipmapState = new GLSparseArrayProperty(GLStateType.TEXTURE_MIPMAPS,
+                perTextureLevelState, true);
+
         IGLProperty textureDefaultState = new GLCompositeProperty(GLStateType.PER_TEXTURE_STATE,
-                minFilter, magFilter, wrapS, wrapT, format, width, height, imageType, image);
+                minFilter, magFilter, wrapS, wrapT, mipmapState);
         GLSparseArrayProperty textures = new GLSparseArrayProperty(GLStateType.TEXTURES,
                 textureDefaultState);
         textures.add(0);
