@@ -36,9 +36,9 @@ public abstract class MergerLog {
         return new IMergerLog() {
             @Override
             public void error(
-                    Severity severity,
-                    FileAndLine location,
-                    String message,
+                    @NonNull Severity severity,
+                    @NonNull FileAndLine location,
+                    @NonNull String message,
                     Object...msgParams) {
 
                 switch(severity) {
@@ -64,10 +64,10 @@ public abstract class MergerLog {
             }
 
             @Override
-            public void conflict(Severity severity,
-                    FileAndLine location1,
-                    FileAndLine location2,
-                    String message,
+            public void conflict(@NonNull Severity severity,
+                    @NonNull FileAndLine location1,
+                    @NonNull FileAndLine location2,
+                    @NonNull String message,
                     Object...msgParams) {
 
                 switch(severity) {
@@ -116,9 +116,9 @@ public abstract class MergerLog {
         return new IMergerLog() {
             @Override
             public void error(
-                    Severity severity,
-                    FileAndLine location,
-                    String message,
+                    @NonNull Severity severity,
+                    @NonNull FileAndLine location,
+                    @NonNull String message,
                     Object...msgParams) {
 
                 if (filePath1 != null) {
@@ -129,10 +129,10 @@ public abstract class MergerLog {
             }
 
             @Override
-            public void conflict(Severity severity,
-                    FileAndLine location1,
-                    FileAndLine location2,
-                    String message,
+            public void conflict(@NonNull Severity severity,
+                    @NonNull FileAndLine location1,
+                    @NonNull FileAndLine location2,
+                    @NonNull String message,
                     Object...msgParams) {
 
                 if (filePath1 != null) {
