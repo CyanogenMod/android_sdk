@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.manifmerger.ManifestMerger;
+import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.SdkConstants;
 import com.google.common.base.Charsets;
@@ -748,7 +749,9 @@ class TemplateHandler {
 
     /** Merges the given manifest fragment into the given manifest file */
     private boolean mergeManifest(Document currentManifest, Document fragment) {
-        ManifestMerger merger = new ManifestMerger(AdtPlugin.getDefault());
+        // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
+        // and maintain error markers.
+        ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(AdtPlugin.getDefault()));
         return currentManifest != null && fragment != null
                 && merger.process(currentManifest, fragment);
     }
