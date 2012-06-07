@@ -751,7 +751,7 @@ public class NetworkPanel extends TablePanel {
                 // entries together.
                 final NetworkSnapshot.Entry entry = new NetworkSnapshot.Entry();
                 entry.iface = null; //cols[1];
-                entry.uid = Integer.parseInt(cols[3]);
+                entry.uid = kernelToTag(cols[3]);
                 entry.set = -1; //Integer.parseInt(cols[4]);
                 entry.tag = (int) (Long.decode(cols[2]) >> 32);
                 entry.rxBytes = Long.parseLong(cols[5]);
@@ -760,6 +760,20 @@ public class NetworkPanel extends TablePanel {
                 entry.txPackets = Long.parseLong(cols[8]);
 
                 mSnapshot.combine(entry);
+            }
+        }
+
+        /**
+         * Convert {@code /proc/} tag format to {@link Integer}. Assumes incoming
+         * format like {@code 0x7fffffff00000000}.
+         * Matches code in android.server.NetworkManagementSocketTagger
+         */
+        public static int kernelToTag(String string) {
+            int length = string.length();
+            if (length > 10) {
+                return Long.decode(string.substring(0, length - 8)).intValue();
+            } else {
+                return 0;
             }
         }
     }
