@@ -518,7 +518,12 @@ public class NewProjectPage extends WizardPage
         } else if (source == mPackageText) {
             tip = mPackageDec.getDescriptionText();
             if (mPackageText.getText().startsWith(SAMPLE_PACKAGE_PREFIX)) {
-                mPackageText.setSelection(0, SAMPLE_PACKAGE_PREFIX.length());
+                int length = SAMPLE_PACKAGE_PREFIX.length();
+                if (mPackageText.getText().length() > length
+                        && SAMPLE_PACKAGE_PREFIX.endsWith(".")) { //$NON-NLS-1$
+                    length--;
+                }
+                mPackageText.setSelection(0, length);
             }
         }
         mTipLabel.setText(tip);
@@ -539,12 +544,14 @@ public class NewProjectPage extends WizardPage
         IStatus status = appStatus;
 
         IStatus projectStatus = validateProjectName();
-        if (projectStatus != null && (status == null || status.getSeverity() != IStatus.ERROR)) {
+        if (projectStatus != null && (status == null
+                || projectStatus.getSeverity() > status.getSeverity())) {
             status = projectStatus;
         }
 
         IStatus packageStatus = validatePackageName();
-        if (packageStatus != null && (status == null || status.getSeverity() != IStatus.ERROR)) {
+        if (packageStatus != null && (status == null
+                || packageStatus.getSeverity() > status.getSeverity())) {
             status = packageStatus;
         }
 
@@ -600,8 +607,18 @@ public class NewProjectPage extends WizardPage
 
         IStatus status;
         if (mValues.packageName == null || mValues.packageName.startsWith(SAMPLE_PACKAGE_PREFIX)) {
-            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    "Package name must be specified.");
+            if (mValues.packageName != null
+                    && !mValues.packageName.equals(SAMPLE_PACKAGE_PREFIX)) {
+                status = ApplicationInfoPage.validatePackage(mValues.packageName);
+                if (status == null || status.isOK()) {
+                    status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                        String.format("The prefix '%1$s' is meant as a placeholder and should " +
+                                      "not be used", SAMPLE_PACKAGE_PREFIX));
+                }
+            } else {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        "Package name must be specified.");
+            }
         } else {
             status = ApplicationInfoPage.validatePackage(mValues.packageName);
         }
