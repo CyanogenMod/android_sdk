@@ -196,7 +196,7 @@ E [ManifestMergerTest1_lib1.xml:7] Undefined 'name' attribute in /manifest/appli
 E [ManifestMergerTest1_lib1.xml:8] Undefined 'name' attribute in /manifest/application/uses-library.
 W [ManifestMergerTest0_main.xml:12] Invalid attribute 'required' in /manifest/application/uses-library[@name=com.example.SomeLibrary2_RequiredTrue] element:
 Expected 'true' or 'false' but found 'booh!'.
-W [ManifestMergerTest0_main.xml:15] has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.
+W [ManifestMergerTest0_main.xml:15] Manifest has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.
 W [ManifestMergerTest1_lib1.xml:17] Invalid attribute 'required' in /manifest/application/uses-library[@name=com.example.SomeLibrary4_RequiredFalse] element:
 Expected 'true' or 'false' but found 'foo'.
-W [ManifestMergerTest0_main.xml:15] has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.
+W [ManifestMergerTest0_main.xml:15] Manifest has more than one /manifest/application/uses-library[@name=com.example.SomeLibrary3_RequiredFalse] element.

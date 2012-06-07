@@ -199,7 +199,7 @@ E [ManifestMergerTest1_lib1.xml:5] Undefined 'name' attribute in /manifest/uses-
 E [ManifestMergerTest1_lib1.xml:6] Undefined 'name' attribute in /manifest/uses-feature.
 W [ManifestMergerTest0_main.xml:10] Invalid attribute 'required' in /manifest/uses-feature[@name=com.example.SomeFeature2_RequiredTrue] element:
 Expected 'true' or 'false' but found 'booh!'.
-W [ManifestMergerTest0_main.xml:13] has more than one /manifest/uses-feature[@name=com.example.SomeFeature3_RequiredFalse] element.
+W [ManifestMergerTest0_main.xml:13] Manifest has more than one /manifest/uses-feature[@name=com.example.SomeFeature3_RequiredFalse] element.
 W [ManifestMergerTest1_lib1.xml:15] Invalid attribute 'required' in /manifest/uses-feature[@name=com.example.SomeFeature4_RequiredFalse] element:
 Expected 'true' or 'false' but found 'foo'.
-W [ManifestMergerTest0_main.xml:13] has more than one /manifest/uses-feature[@name=com.example.SomeFeature3_RequiredFalse] element.
+W [ManifestMergerTest0_main.xml:13] Manifest has more than one /manifest/uses-feature[@name=com.example.SomeFeature3_RequiredFalse] element.

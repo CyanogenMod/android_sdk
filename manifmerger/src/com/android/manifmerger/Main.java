@@ -56,7 +56,7 @@ public class Main {
 
         // Create a new ManifestMerger and call its process method.
         // It will take care of validating its own arguments.
-        ManifestMerger mm = new ManifestMerger(mSdkLog);
+        ManifestMerger mm = new ManifestMerger(MergerLog.wrapSdkLog(mSdkLog));
 
         String[] libPaths = mArgvParser.getParamLibs();
         File[] libFiles = new File[libPaths.length];

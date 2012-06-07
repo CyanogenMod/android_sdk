@@ -171,7 +171,7 @@
 
 @errors
 
-W [ManifestMergerTest2_lib2.xml:4] /manifest/compatible-screens missing from ManifestMergerTest0_main.xml:
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:4] /manifest/compatible-screens defined in library, missing from main manifest:
 <compatible-screens>
   <screen>
       @android:screenDensity = ldpi
@@ -179,12 +179,12 @@ W [ManifestMergerTest2_lib2.xml:4] /manifest/compatible-screens missing from Man
   <screen>
       @android:screenDensity = mdpi
       @android:screenSize = normal
-W [ManifestMergerTest2_lib2.xml:9] /manifest/compatible-screens missing from ManifestMergerTest0_main.xml:
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:9] /manifest/compatible-screens defined in library, missing from main manifest:
 <compatible-screens>
   <screen>
       @android:screenDensity = ldpi
       @android:screenSize = small
-W [ManifestMergerTest2_lib2.xml:13] /manifest/compatible-screens missing from ManifestMergerTest0_main.xml:
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:13] /manifest/compatible-screens defined in library, missing from main manifest:
 <compatible-screens>
   <screen>
       @android:screenDensity = ldpi

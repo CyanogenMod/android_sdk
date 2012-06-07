@@ -143,6 +143,6 @@
 
 @errors
 
-W [ManifestMergerTest2_lib2.xml:4] /manifest/supports-gl-texture missing from ManifestMergerTest0_main.xml:
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:4] /manifest/supports-gl-texture defined in library, missing from main manifest:
 <supports-gl-texture>
     @android:name = some.gl.texture3

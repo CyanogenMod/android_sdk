@@ -18,7 +18,8 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.ISdkLog;
+import com.android.manifmerger.IMergerLog.FileAndLine;
+import com.android.manifmerger.IMergerLog.Severity;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
@@ -44,7 +45,7 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Merges a library manifest into a main application manifest.
  * <p/>
- * To use, create with {@link ManifestMerger#ManifestMerger(ISdkLog)} then
+ * To use, create with {@link ManifestMerger#ManifestMerger(IMergerLog)} then
  * call {@link ManifestMerger#process(File, File, File[])}.
  * <p/>
  * <pre> Merge operations:
@@ -116,7 +117,7 @@ import javax.xml.xpath.XPathExpressionException;
 public class ManifestMerger {
 
     /** Logger object. Never null. */
-    private ISdkLog mSdkLog;
+    private IMergerLog mLog;
     private XPath mXPath;
     private Document mMainDoc;
 
@@ -124,8 +125,8 @@ public class ManifestMerger {
     private String NS_PREFIX = AndroidXPathFactory.DEFAULT_NS_PREFIX;
     private int destMinSdk;
 
-    public ManifestMerger(ISdkLog log) {
-        mSdkLog = log;
+    public ManifestMerger(IMergerLog log) {
+        mLog = log;
     }
 
     /**
@@ -143,14 +144,14 @@ public class ManifestMerger {
      * @return True if the merge was completed, false otherwise.
      */
     public boolean process(File outputFile, File mainFile, File[] libraryFiles) {
-        Document mainDoc = XmlUtils.parseDocument(mainFile, mSdkLog);
+        Document mainDoc = XmlUtils.parseDocument(mainFile, mLog);
         if (mainDoc == null) {
             return false;
         }
 
         boolean success = process(mainDoc, libraryFiles);
 
-        if (!XmlUtils.printXmlFile(mainDoc, outputFile, mSdkLog)) {
+        if (!XmlUtils.printXmlFile(mainDoc, outputFile, mLog)) {
             success = false;
         }
         return success;
@@ -164,18 +165,19 @@ public class ManifestMerger {
      *
      * @param mainDoc The document to merge into. Will be modified in-place.
      * @param libraryFiles The library manifest paths to read. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     public boolean process(Document mainDoc, File[] libraryFiles) {
 
         boolean success = true;
         mMainDoc = mainDoc;
+        XmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
 
         String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
         for (File libFile : libraryFiles) {
-            Document libDoc = XmlUtils.parseDocument(libFile, mSdkLog);
+            Document libDoc = XmlUtils.parseDocument(libFile, mLog);
             if (libDoc == null || !mergeLibDoc(libDoc)) {
                 success = false;
             }
@@ -194,17 +196,19 @@ public class ManifestMerger {
      *
      * @param mainDoc The document to merge into. Will be modified in-place.
      * @param libraryDocs The library manifest documents to merge in. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     public boolean process(@NonNull Document mainDoc, @NonNull Document... libraryDocs) {
 
         boolean success = true;
         mMainDoc = mainDoc;
+        XmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
 
         String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
         for (Document libDoc : libraryDocs) {
+            XmlUtils.decorateDocument(libDoc, IMergerLog.LIBRARY);
             if (!mergeLibDoc(libDoc)) {
                 success = false;
             }
@@ -222,7 +226,7 @@ public class ManifestMerger {
      * See {@link ManifestMerger} for merge details.
      *
      * @param libDoc The library document to merge from. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean mergeLibDoc(Document libDoc) {
 
@@ -320,7 +324,7 @@ public class ManifestMerger {
      *
      * @param path The XPath of the elements to merge from the library. Must not be null.
      * @param libDoc The library document to merge from. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean doNotMergeCheckEqual(String path, Document libDoc) {
 
@@ -336,10 +340,11 @@ public class ManifestMerger {
             }
 
             if (!found) {
-                mSdkLog.warning("[%1$s] %2$s missing from %3$s:\n%4$s",
-                        fileLineInfo(src, "library"),
+                mLog.conflict(Severity.WARNING,
+                        xmlFileAndLine(mMainDoc),
+                        xmlFileAndLine(src),
+                        "%1$s defined in library, missing from main manifest:\n%2$s",
                         path,
-                        xmlFileName(mMainDoc, "main manifest"),
                         XmlUtils.dump(src, false /*nextSiblings*/));
             }
         }
@@ -361,7 +366,7 @@ public class ManifestMerger {
      * @param libDoc The library document to merge from. Must not be null.
      * @param warnDups When true, will print a warning when a library definition is already
      *   present in the destination and is equal.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean mergeNewOrEqual(
             String path,
@@ -376,8 +381,9 @@ public class ManifestMerger {
         Element parent = findFirstElement(mMainDoc, parentPath);
         assert parent != null;
         if (parent == null) {
-            mSdkLog.error(null, "[%1$s] Could not find element %2$s.",
-                    xmlFileName(mMainDoc, "main manifest"),
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(mMainDoc),
+                    "Could not find element %1$s.",
                     parentPath);
             return false;
         }
@@ -388,8 +394,9 @@ public class ManifestMerger {
             Attr attr = src.getAttributeNodeNS(NS_URI, keyAttr);
             String name = attr == null ? "" : attr.getNodeValue();  //$NON-NLS-1$
             if (name.length() == 0) {
-                mSdkLog.error(null, "[%1$s] Undefined '%2$s' attribute in %3$s.",
-                        fileLineInfo(src, "library"),
+                mLog.error(Severity.ERROR,
+                        xmlFileAndLine(src),
+                        "Undefined '%1$s' attribute in %2$s.",
                         keyAttr, path);
                 success = false;
                 continue;
@@ -399,8 +406,9 @@ public class ManifestMerger {
             List<Element> dests = findElements(mMainDoc, path, keyAttr, name);
             if (dests.size() > 1) {
                 // This should not be happening. We'll just use the first one found in this case.
-                mSdkLog.warning("[%1$s] has more than one %2$s[@%3$s=%4$s] element.",
-                        fileLineInfo(dests.get(0), "main manifest"),
+                mLog.error(Severity.WARNING,
+                        xmlFileAndLine(dests.get(0)),
+                        "Manifest has more than one %1$s[@%2$s=%3$s] element.",
                         path, keyAttr, name);
             }
             for (Element dest : dests) {
@@ -409,18 +417,19 @@ public class ManifestMerger {
                 if (compareElements(src, dest, false, diff, keyAttr)) {
                     // Same element. Skip.
                     if (warnDups) {
-                        mSdkLog.printf("[%1$s, %2$s] Skipping identical %3$s[@%4$s=%5$s] element.",
-                                fileLineInfo(src, "library"),
-                                fileLineInfo(dest, "main manifest"),
+                        mLog.conflict(Severity.INFO,
+                                xmlFileAndLine(dest),
+                                xmlFileAndLine(src),
+                                "Skipping identical %1$s[@%2$s=%3$s] element.",
                                 path, keyAttr, name);
                     }
                     continue nextSource;
                 } else {
                     // Print the diff we got from the comparison.
-                    mSdkLog.error(null,
-                            "[%1$s, %2$s] Trying to merge incompatible %3$s[@%4$s=%5$s] element:\n%6$s",
-                            fileLineInfo(src, "library"),
-                            fileLineInfo(dest, "main manifest"),
+                    mLog.conflict(Severity.ERROR,
+                            xmlFileAndLine(dest),
+                            xmlFileAndLine(src),
+                            "Trying to merge incompatible %1$s[@%2$s=%3$s] element:\n%4$s",
                             path, keyAttr, name, diff.toString());
                     success = false;
                     continue nextSource;
@@ -454,7 +463,7 @@ public class ManifestMerger {
      * @param alternateKeyAttr When non-null, this is an alternate valid key attribute. If the
      *   default key attribute is missing, we won't output a warning if the alternate one is
      *   present.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean mergeAdjustRequired(
             String path,
@@ -470,8 +479,9 @@ public class ManifestMerger {
         Element parent = findFirstElement(mMainDoc, parentPath);
         assert parent != null;
         if (parent == null) {
-            mSdkLog.error(null, "[%1$s] Could not find element %2$s.",
-                    xmlFileName(mMainDoc, "main manifest"),
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(mMainDoc),
+                    "Could not find element %1$s.",
                     parentPath);
             return false;
         }
@@ -491,8 +501,9 @@ public class ManifestMerger {
                     }
                 }
 
-                mSdkLog.error(null, "[%1$s] Undefined '%2$s' attribute in %3$s.",
-                        fileLineInfo(src, "library"),
+                mLog.error(Severity.ERROR,
+                        xmlFileAndLine(src),
+                        "Undefined '%1$s' attribute in %2$s.",
                         keyAttr, path);
                 success = false;
                 continue;
@@ -502,16 +513,18 @@ public class ManifestMerger {
             List<Element> dests = findElements(mMainDoc, path, keyAttr, name);
             if (dests.size() > 1) {
                 // This should not be happening. We'll just use the first one found in this case.
-                mSdkLog.warning("[%1$s] has more than one %2$s[@%3$s=%4$s] element.",
-                        fileLineInfo(dests.get(0), "main manifest"),
+                mLog.error(Severity.WARNING,
+                        xmlFileAndLine(dests.get(0)),
+                        "Manifest has more than one %1$s[@%2$s=%3$s] element.",
                         path, keyAttr, name);
             }
             if (dests.size() > 0) {
                 attr = src.getAttributeNodeNS(NS_URI, requiredAttr);
                 String value = attr == null ? "true" : attr.getNodeValue();    //$NON-NLS-1$
                 if (value == null || !(value.equals("true") || value.equals("false"))) {
-                    mSdkLog.warning("[%1$s] Invalid attribute '%2$s' in %3$s[@%4$s=%5$s] element:\nExpected 'true' or 'false' but found '%6$s'.",
-                            fileLineInfo(src, "library"),
+                    mLog.error(Severity.WARNING,
+                            xmlFileAndLine(src),
+                            "Invalid attribute '%1$s' in %2$s[@%3$s=%4$s] element:\nExpected 'true' or 'false' but found '%5$s'.",
                             requiredAttr, path, keyAttr, name, value);
                     continue;
                 }
@@ -523,8 +536,9 @@ public class ManifestMerger {
                     attr = dest.getAttributeNodeNS(NS_URI, requiredAttr);
                     value = attr == null ? "true" : attr.getNodeValue();    //$NON-NLS-1$
                     if (value == null || !(value.equals("true") || value.equals("false"))) {
-                        mSdkLog.warning("[%1$s] Invalid attribute '%2$s' in %3$s[@%4$s=%5$s] element:\nExpected 'true' or 'false' but found '%6$s'.",
-                                fileLineInfo(dest, "main manifest"),
+                        mLog.error(Severity.WARNING,
+                                xmlFileAndLine(dest),
+                                "Invalid attribute '%1$s' in %2$s[@%3$s=%4$s] element:\nExpected 'true' or 'false' but found '%5$s'.",
                                 requiredAttr, path, keyAttr, name, value);
                         continue;
                     }
@@ -548,7 +562,7 @@ public class ManifestMerger {
                             // but experience shows that it would create a new prefix out of the
                             // blue instead of looking it up.
                             //
-                            // Attr a = d.getOwnerDocument().createAttributeNS(NS_URI, requiredAttr);
+                            // Attr a=d.getOwnerDocument().createAttributeNS(NS_URI, requiredAttr);
                             // String prefix = d.lookupPrefix(NS_URI);
                             // if (prefix != null) {
                             //     a.setPrefix(prefix);
@@ -603,7 +617,7 @@ public class ManifestMerger {
      * </pre>
      *
      * @param libDoc The library document to merge from. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean checkGlEsVersion(Document libDoc) {
 
@@ -611,8 +625,9 @@ public class ManifestMerger {
         Element parent = findFirstElement(mMainDoc, parentPath);
         assert parent != null;
         if (parent == null) {
-            mSdkLog.error(null, "[%1$s] Could not find element %2$s.",
-                    xmlFileName(mMainDoc, "main manifest"),
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(mMainDoc),
+                    "Could not find element %1$s.",
                     parentPath);
             return false;
         }
@@ -639,16 +654,17 @@ public class ManifestMerger {
                         destGlEsVersion = version;
                         destNode = dest;
                     } else if (version < 0x00010000) {
-                        mSdkLog.warning("[%1$s] Ignoring <uses-feature android:glEsVersion='%2$s'> because it's smaller than 1.0.",
-                                fileLineInfo(dest, "main manifest"),
+                        mLog.error(Severity.WARNING,
+                                xmlFileAndLine(dest),
+                                "Ignoring <uses-feature android:glEsVersion='%1$s'> because it's smaller than 1.0.",
                                 value);
                     }
                 } catch (NumberFormatException e) {
                     // Note: NumberFormatException.toString() has no interesting information
                     // so we don't output it.
-                    mSdkLog.error(null,
-                            "[%1$s] Failed to parse <uses-feature android:glEsVersion='%2$s'>: must be an integer in the form 0x00020001.",
-                            fileLineInfo(dest, "main manifest"),
+                    mLog.error(Severity.ERROR,
+                            xmlFileAndLine(dest),
+                            "Failed to parse <uses-feature android:glEsVersion='%1$s'>: must be an integer in the form 0x00020001.",
                             value);
                     result = false;
                 }
@@ -676,16 +692,17 @@ public class ManifestMerger {
                         srcGlEsVersion = version;
                         srcNode = src;
                     } else if (version < 0x00010000) {
-                        mSdkLog.warning("[%1$s] Ignoring <uses-feature android:glEsVersion='%2$s'> because it's smaller than 1.0.",
-                                fileLineInfo(src, "library"),
+                        mLog.error(Severity.WARNING,
+                                xmlFileAndLine(src),
+                                "Ignoring <uses-feature android:glEsVersion='%1$s'> because it's smaller than 1.0.",
                                 value);
                     }
                 } catch (NumberFormatException e) {
                     // Note: NumberFormatException.toString() has no interesting information
                     // so we don't output it.
-                    mSdkLog.error(null,
-                            "[%1$s] Failed to parse <uses-feature android:glEsVersion='%2$s'>: must be an integer in the form 0x00020001.",
-                            fileLineInfo(src, "library"),
+                    mLog.error(Severity.ERROR,
+                            xmlFileAndLine(src),
+                            "Failed to parse <uses-feature android:glEsVersion='%1$s'>: must be an integer in the form 0x00020001.",
                             value);
                     result = false;
                 }
@@ -693,10 +710,10 @@ public class ManifestMerger {
         }
 
         if (srcNode != null && destGlEsVersion < srcGlEsVersion) {
-            mSdkLog.warning(
-                    "[%1$s, %2$s] Main manifest has <uses-feature android:glEsVersion='0x%3$08x'> but library uses glEsVersion='0x%4$08x'%5$s",
-                    fileLineInfo(srcNode, "library"),
-                    fileLineInfo(destNode == null ? mMainDoc : destNode, "main manifest"),
+            mLog.conflict(Severity.WARNING,
+                    xmlFileAndLine(destNode == null ? mMainDoc : destNode),
+                    xmlFileAndLine(srcNode),
+                    "Main manifest has <uses-feature android:glEsVersion='0x%1$08x'> but library uses glEsVersion='0x%2$08x'%3$s",
                     destGlEsVersion,
                     srcGlEsVersion,
                     destNode != null ? "" :   //$NON-NLS-1$
@@ -716,7 +733,7 @@ public class ManifestMerger {
      * - {@code @maxSdkVersion}: obsolete, ignored. Not used in comparisons and not merged.
      * </pre>
      * @param libDoc The library document to merge from. Must not be null.
-     * @return True on success, false if any error occurred (printed to the {@link ISdkLog}).
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     private boolean checkSdkVersion(Document libDoc) {
 
@@ -749,10 +766,10 @@ public class ManifestMerger {
             destMinSdk = destValue.get();
 
             if (destMinSdk < srcValue.get()) {
-                mSdkLog.error(null,
-                        "[%1$s, %2$s] Main manifest has <uses-sdk android:minSdkVersion='%3$d'> but library uses minSdkVersion='%4$d'%5$s",
-                        fileLineInfo(srcUsesSdk == null ? libDoc : srcUsesSdk, "library"),
-                        fileLineInfo(destUsesSdk == null ? mMainDoc : destUsesSdk, "main manifest"),
+                mLog.conflict(Severity.ERROR,
+                        xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
+                        xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
+                        "Main manifest has <uses-sdk android:minSdkVersion='%1$d'> but library uses minSdkVersion='%2$d'%3$s",
                         destMinSdk,
                         srcValue.get(),
                         !destImplied.get() ? "" :   //$NON-NLS-1$
@@ -784,10 +801,10 @@ public class ManifestMerger {
             int destTargetSdk = destImplied.get() ? destMinSdk : destValue.get();
 
             if (destTargetSdk < srcValue.get()) {
-                mSdkLog.warning(
-                        "[%1$s, %2$s] Main manifest has <uses-sdk android:targetSdkVersion='%3$d'> but library uses targetSdkVersion='%4$d'%5$s",
-                        fileLineInfo(srcUsesSdk == null ? libDoc : srcUsesSdk, "library"),
-                        fileLineInfo(destUsesSdk == null ? mMainDoc : destUsesSdk, "main manifest"),
+                mLog.conflict(Severity.WARNING,
+                        xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
+                        xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
+                        "Main manifest has <uses-sdk android:targetSdkVersion='%1$d'> but library uses targetSdkVersion='%2$d'%3$s",
                         destTargetSdk,
                         srcValue.get(),
                         !destImplied.get() ? "" :   //$NON-NLS-1$
@@ -831,9 +848,9 @@ public class ManifestMerger {
         } catch (NumberFormatException e) {
             // Note: NumberFormatException.toString() has no interesting information
             // so we don't output it.
-            mSdkLog.error(null,
-                    "[%1$s] Failed to parse <uses-sdk %2$sSdkVersion='%3$s'>: must be an integer number.",
-                    fileLineInfo(destUsesSdk == null ? mMainDoc : destUsesSdk, "main manifest"),
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
+                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
                     attr,
                     s);
             return false;
@@ -849,9 +866,9 @@ public class ManifestMerger {
                 srcImplied.set(false);
             }
         } catch (NumberFormatException e) {
-            mSdkLog.error(null,
-                    "[%1$s] Failed to parse <uses-sdk %2$sSdkVersion='%3$s'>: must be an integer number.",
-                    fileLineInfo(srcUsesSdk == null ? libDoc : srcUsesSdk, "library"),
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
+                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
                     attr,
                     s);
             return false;
@@ -1206,12 +1223,16 @@ public class ManifestMerger {
             }
 
             if (result != null) {
-                mSdkLog.error(null,
+                mLog.error(Severity.ERROR,
+                        xmlFileAndLine(doc),
                         "Unexpected Node type %s when evaluating %s",   //$NON-NLS-1$
                         result.getClass().getName(), path);
             }
         } catch (XPathExpressionException e) {
-            mSdkLog.error(e, "XPath error on expr %s", path);           //$NON-NLS-1$
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(doc),
+                    "XPath error on expr %s: %s",                       //$NON-NLS-1$
+                    path, e.toString());
         }
         return null;
     }
@@ -1243,7 +1264,7 @@ public class ManifestMerger {
      * @param doc The document where to find the expression.
      * @param path The XPath expression. Only {@link Element}s nodes will be returned.
      * @param attrName The name of the optional attribute to match. Can be null.
-     * @param attrValue The value of the optiona attribute to match.
+     * @param attrValue The value of the optional attribute to match.
      *   Can be null if {@code attrName} is null, otherwise must be non-null.
      * @return A list of {@link Element} found, possibly empty but never null.
      *
@@ -1272,7 +1293,8 @@ public class ManifestMerger {
                     if (n instanceof Element) {
                         elements.add((Element) n);
                     } else {
-                        mSdkLog.error(null,
+                        mLog.error(Severity.ERROR,
+                                xmlFileAndLine(doc),
                                 "Unexpected Node type %s when evaluating %s",   //$NON-NLS-1$
                                 n.getClass().getName(), path);
                     }
@@ -1280,43 +1302,29 @@ public class ManifestMerger {
             }
 
         } catch (XPathExpressionException e) {
-            mSdkLog.error(e, "XPath error on expr %s", path);                   //$NON-NLS-1$
+            mLog.error(Severity.ERROR,
+                    xmlFileAndLine(doc),
+                    "XPath error on expr %s: %s",                       //$NON-NLS-1$
+                    path, e.toString());
         }
 
         return elements;
     }
 
     /**
-     * Tries to returns the base filename used from which the XML was parsed.
-     * @param node Any node from a document parsed by {@link XmlUtils#parseDocument(File, ISdkLog)}.
-     * @param defaultName The string to return if the XML filename cannot be determined.
-     * @return The base filename used from which the XML was parsed or the default name.
-     */
-    private String xmlFileName(Node node, String defaultName) {
-        File f = XmlUtils.extractXmlFilename(node);
-        if (f != null) {
-            return f.getName();
-        } else {
-            return defaultName;
-        }
-    }
-
-    /**
-     * Tries to returns the base filename & line number from which the XML node was parsed.
+     * Returns a new {@link FileAndLine} structure that identifies
+     * the base filename & line number from which the XML node was parsed.
+     * <p/>
+     * When the line number is unknown (e.g. if a {@link Document} instance is given)
+     * then line number 0 will be used.
      *
-     * @param node Any node from a document parsed by {@link XmlUtils#parseDocument(File, ISdkLog)}.
-     * @param defaultName The string to return if the XML filename cannot be determined.
-     * @return The base filename used from which the XML was parsed with the line number
-     *   (if available) or the default name.
+     * @param node The node or document where the error occurs. Must not be null.
+     * @return A new non-null {@link FileAndLine} combining the file name and line number.
      */
-    private String fileLineInfo(Node node, String defaultName) {
-        String name = xmlFileName(node, defaultName);
-        int line = XmlUtils.extractLineNumber(node);
-        if (line <= 0) {
-            return name;
-        } else {
-            return name + ':' + line;
-        }
+    private @NonNull FileAndLine xmlFileAndLine(@NonNull Node node) {
+        String name = XmlUtils.extractXmlFilename(node);
+        int line = XmlUtils.extractLineNumber(node); // 0 in case of error or unknown
+        return new FileAndLine(name, line);
     }
 
 }

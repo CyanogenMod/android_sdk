@@ -151,7 +151,7 @@
 
 @errors
 
-W [ManifestMergerTest2_lib2.xml:4] /manifest/uses-configuration missing from ManifestMergerTest0_main.xml:
+W [ManifestMergerTest0_main.xml:1, ManifestMergerTest2_lib2.xml:4] /manifest/uses-configuration defined in library, missing from main manifest:
 <uses-configuration>
     @android:reqFiveWayNav = false
     @android:reqNavigation = trackball

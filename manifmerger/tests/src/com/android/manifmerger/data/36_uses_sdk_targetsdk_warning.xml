@@ -70,4 +70,4 @@
 
 @errors
 
-W [ManifestMergerTest1_lib1.xml:4, ManifestMergerTest0_main.xml:4] Main manifest has <uses-sdk android:targetSdkVersion='4'> but library uses targetSdkVersion='11'
+W [ManifestMergerTest0_main.xml:4, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-sdk android:targetSdkVersion='4'> but library uses targetSdkVersion='11'

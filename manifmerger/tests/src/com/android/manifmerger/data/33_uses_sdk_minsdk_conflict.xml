@@ -99,11 +99,11 @@
 
 @errors
 
-E [ManifestMergerTest1_lib1.xml:4, ManifestMergerTest0_main.xml:4] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='4'
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='4'
 Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
-E [ManifestMergerTest2_lib2.xml:3, ManifestMergerTest0_main.xml:4] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='10'
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest2_lib2.xml:3] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='10'
 Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
-E [ManifestMergerTest3_lib3.xml:3, ManifestMergerTest0_main.xml:4] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='11'
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest3_lib3.xml:3] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='11'
 Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
 E [ManifestMergerTest4_lib4_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='abcd'>: must be an integer number.
 E [ManifestMergerTest5_lib5_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='123456789123456789'>: must be an integer number.
