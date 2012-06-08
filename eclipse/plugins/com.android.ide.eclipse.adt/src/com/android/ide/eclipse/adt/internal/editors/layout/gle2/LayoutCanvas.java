@@ -34,6 +34,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepos
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.lint.LintEditAction;
 import com.android.resources.Density;
 import com.android.sdklib.SdkConstants;
 import com.android.util.XmlUtils;
@@ -179,6 +180,12 @@ public class LayoutCanvas extends Canvas {
 
     /** Copy action for the Edit or context menu. */
     private Action mCopyAction;
+
+    /** Undo action: delegates to the text editor */
+    private IAction mUndoAction;
+
+    /** Redo action: delegates to the text editor */
+    private IAction mRedoAction;
 
     /** Root of the context menu. */
     private MenuManager mMenuManager;
@@ -1240,6 +1247,21 @@ public class LayoutCanvas extends Canvas {
             bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), mPasteAction);
             bars.setGlobalActionHandler(ActionFactory.DELETE.getId(), mDeleteAction);
             bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), mSelectAllAction);
+
+            // Delegate the Undo and Redo actions to the text editor ones, but wrap them
+            // such that we run lint to update the results on the current page (this is
+            // normally done on each editor operation that goes through
+            // {@link AndroidXmlEditor#wrapUndoEditXmlModel}, but not undo/redo)
+            if (mUndoAction == null) {
+                IAction undoAction = editor.getAction(ActionFactory.UNDO.getId());
+                mUndoAction = new LintEditAction(undoAction, getEditorDelegate().getEditor());
+            }
+            bars.setGlobalActionHandler(ActionFactory.UNDO.getId(), mUndoAction);
+            if (mRedoAction == null) {
+                IAction redoAction = editor.getAction(ActionFactory.REDO.getId());
+                mRedoAction = new LintEditAction(redoAction, getEditorDelegate().getEditor());
+            }
+            bars.setGlobalActionHandler(ActionFactory.REDO.getId(), mRedoAction);
         } else {
             bars.setGlobalActionHandler(ActionFactory.CUT.getId(),
                     editor.getAction(ActionFactory.CUT.getId()));
@@ -1251,12 +1273,11 @@ public class LayoutCanvas extends Canvas {
                     editor.getAction(ActionFactory.DELETE.getId()));
             bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
                     editor.getAction(ActionFactory.SELECT_ALL.getId()));
+            bars.setGlobalActionHandler(ActionFactory.UNDO.getId(),
+                    editor.getAction(ActionFactory.UNDO.getId()));
+            bars.setGlobalActionHandler(ActionFactory.REDO.getId(),
+                    editor.getAction(ActionFactory.REDO.getId()));
         }
-
-        IAction undoAction = editor.getAction(ActionFactory.UNDO.getId());
-        bars.setGlobalActionHandler(ActionFactory.UNDO.getId(), undoAction);
-        IAction redoAction = editor.getAction(ActionFactory.REDO.getId());
-        bars.setGlobalActionHandler(ActionFactory.REDO.getId(), redoAction);
 
         bars.updateActionBars();
     }
