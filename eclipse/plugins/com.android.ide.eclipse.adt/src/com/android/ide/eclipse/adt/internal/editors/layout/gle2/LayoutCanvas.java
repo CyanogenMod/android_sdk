@@ -355,7 +355,11 @@ public class LayoutCanvas extends Canvas {
                 Boolean zoomed = coordinator.isEditorMaximized();
                 if (mWasZoomed != zoomed) {
                     if (mWasZoomed != null) {
-                        setFitScale(true /*onlyZoomOut*/);
+                        LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
+                                .getLayoutActionBar();
+                        if (actionBar.isZoomingAllowed()) {
+                            setFitScale(true /*onlyZoomOut*/);
+                        }
                     }
                     mWasZoomed = zoomed;
                 }
@@ -627,16 +631,16 @@ public class LayoutCanvas extends Canvas {
             mEditorDelegate.getGraphicalEditor().setModel(mViewHierarchy.getRoot());
 
             if (image != null) {
-                mHScale.setSize(image.getImageData().width, getClientArea().width);
-                mVScale.setSize(image.getImageData().height, getClientArea().height);
+                Rectangle clientArea = getClientArea();
+                mHScale.setSize(image.getImageData().width, clientArea.width);
+                mVScale.setSize(image.getImageData().height, clientArea.height);
                 if (mZoomFitNextImage) {
-                    mZoomFitNextImage = false;
                     // Must be run asynchronously because getClientArea() returns 0 bounds
                     // when the editor is being initialized
                     getDisplay().asyncExec(new Runnable() {
                         @Override
                         public void run() {
-                            setFitScale(true);
+                            ensureZoomed();
                         }
                     });
                 }
@@ -646,7 +650,18 @@ public class LayoutCanvas extends Canvas {
         redraw();
     }
 
-    /* package */ void setShowOutline(boolean newState) {
+    void ensureZoomed() {
+        if (mZoomFitNextImage && getClientArea().height > 0) {
+            mZoomFitNextImage = false;
+            LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
+                    .getLayoutActionBar();
+            if (actionBar.isZoomingAllowed()) {
+                setFitScale(true);
+            }
+        }
+    }
+
+    void setShowOutline(boolean newState) {
         mShowOutline = newState;
         redraw();
     }

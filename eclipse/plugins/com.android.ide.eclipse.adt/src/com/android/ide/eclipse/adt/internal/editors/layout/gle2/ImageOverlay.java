@@ -190,6 +190,7 @@ public class ImageOverlay extends Overlay implements IImageFactory {
     public synchronized void paint(GC gc) {
         if (mImage != null) {
             boolean valid = mCanvas.getViewHierarchy().isValid();
+            mCanvas.ensureZoomed();
             if (!valid) {
                 gc_setAlpha(gc, 128); // half-transparent
             }
