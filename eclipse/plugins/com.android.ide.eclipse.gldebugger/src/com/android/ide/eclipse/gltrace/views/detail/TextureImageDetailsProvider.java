@@ -94,13 +94,13 @@ public class TextureImageDetailsProvider implements IStateDetailProvider {
             return state;
         }
 
-        if (state.getType() != GLStateType.PER_TEXTURE_STATE) {
+        if (state.getType() != GLStateType.PER_TEXTURE_LEVEL_STATE) {
             // if it is not the parent, then it could be a sibling, in which case
             // we go up a level to its parent
             state = state.getParent();
         }
 
-        if (state != null && state.getType() == GLStateType.PER_TEXTURE_STATE) {
+        if (state != null && state.getType() == GLStateType.PER_TEXTURE_LEVEL_STATE) {
             // if it is the parent, we can access the required property
             return ((GLCompositeProperty) state).getProperty(GLStateType.TEXTURE_IMAGE);
         }
