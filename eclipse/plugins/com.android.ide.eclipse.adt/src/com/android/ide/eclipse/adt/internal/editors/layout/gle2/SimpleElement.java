@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ public class SimpleElement implements IDragElement {
 
     private IDragAttribute[] mCachedAttributes = null;
     private IDragElement[] mCachedElements = null;
+    private SelectionItem mSelectionItem;
 
     /**
      * Creates a new {@link SimpleElement} with the specified element name.
@@ -139,6 +141,43 @@ public class SimpleElement implements IDragElement {
     public void addInnerElement(SimpleElement e) {
         mCachedElements = null;
         mElements.add(e);
+    }
+
+    @Override
+    public boolean isSame(@NonNull INode node) {
+        if (mSelectionItem != null) {
+            return node == mSelectionItem.getNode();
+        } else {
+            return node.getBounds().equals(mBounds);
+        }
+    }
+
+    void setSelectionItem(@Nullable SelectionItem selectionItem) {
+        mSelectionItem = selectionItem;
+    }
+
+    @Nullable
+    SelectionItem getSelectionItem() {
+        return mSelectionItem;
+    }
+
+    @Nullable
+    static SimpleElement findPrimary(SimpleElement[] elements, SelectionItem primary) {
+        if (elements == null || elements.length == 0) {
+            return null;
+        }
+
+        if (elements.length == 1 || primary == null) {
+            return elements[0];
+        }
+
+        for (SimpleElement element : elements) {
+            if (element.getSelectionItem() == primary) {
+                return element;
+            }
+        }
+
+        return elements[0];
     }
 
     // reader and writer methods
