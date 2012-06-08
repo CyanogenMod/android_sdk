@@ -44,14 +44,29 @@ public class FindDialog extends Dialog {
     private final IFindTarget mTarget;
     private Text mSearchText;
     private String mPreviousSearchText;
+    private final int mDefaultButtonId;
 
-    private final static int FIND_NEXT_ID = IDialogConstants.CLIENT_ID;
-    private final static int FIND_PREVIOUS_ID = IDialogConstants.CLIENT_ID + 1;
+    /** Id of the "Find Next" button */
+    public static final int FIND_NEXT_ID = IDialogConstants.CLIENT_ID;
+
+    /** Id of the "Find Previous button */
+    public static final int FIND_PREVIOUS_ID = IDialogConstants.CLIENT_ID + 1;
 
     public FindDialog(Shell shell, IFindTarget target) {
+        this(shell, target, FIND_PREVIOUS_ID);
+    }
+
+    /**
+     * Construct a find dialog.
+     * @param shell shell to use
+     * @param target delegate to be invoked on user action
+     * @param defaultButtonId one of {@code #FIND_NEXT_ID} or {@code #FIND_PREVIOUS_ID}.
+     */
+    public FindDialog(Shell shell, IFindTarget target, int defaultButtonId) {
         super(shell);
 
         mTarget = target;
+        mDefaultButtonId = defaultButtonId;
 
         setShellStyle((getShellStyle() & ~SWT.APPLICATION_MODAL) | SWT.MODELESS);
         setBlockOnOpen(true);
@@ -91,8 +106,11 @@ public class FindDialog extends Dialog {
     @Override
     protected void createButtonsForButtonBar(Composite parent) {
         createButton(parent, IDialogConstants.CLOSE_ID, IDialogConstants.CLOSE_LABEL, false);
-        mFindNext = createButton(parent, FIND_NEXT_ID, "Find Next", false);
-        mFindPrevious = createButton(parent, FIND_PREVIOUS_ID, "Find Previous", /* default */ true);
+
+        mFindNext = createButton(parent, FIND_NEXT_ID, "Find Next",
+                mDefaultButtonId == FIND_NEXT_ID);
+        mFindPrevious = createButton(parent, FIND_PREVIOUS_ID, "Find Previous",
+                mDefaultButtonId != FIND_NEXT_ID);
         mFindNext.setEnabled(false);
         mFindPrevious.setEnabled(false);
     }
