@@ -16,10 +16,12 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IViewReference;
@@ -73,13 +75,19 @@ public class LayoutWindowCoordinator implements IPartListener2 {
      */
     private boolean mInitialized;
 
+    /** Singleton reference */
+    private static LayoutWindowCoordinator sSingleton;
+
     /**
      * Start the coordinator
      *
      * @param window the associated window
      */
     public static void start(@NonNull IWorkbenchWindow window) {
+        assert sSingleton == null;
+
         LayoutWindowCoordinator coordinator = new LayoutWindowCoordinator(window);
+        sSingleton = coordinator;
 
         IPartService service = window.getPartService();
         if (service != null) {
@@ -88,7 +96,27 @@ public class LayoutWindowCoordinator implements IPartListener2 {
         }
     }
 
-    private LayoutWindowCoordinator(IWorkbenchWindow window) {
+    /**
+     * Returns the coordinator. This method will return null if it is called before
+     * {@link #start} has been called, and non null after.
+     *
+     * @return the coordinator
+     */
+    @Nullable
+    public static LayoutWindowCoordinator get() {
+        return sSingleton;
+    }
+
+    /**
+     * Returns true if the main editor window is maximized
+     *
+     * @return true if the main editor window is maximized
+     */
+    public boolean isEditorMaximized() {
+        return mEditorMaximized;
+    }
+
+    private LayoutWindowCoordinator(@NonNull IWorkbenchWindow window) {
         mWindow = window;
 
         initialize();
@@ -122,8 +150,9 @@ public class LayoutWindowCoordinator implements IPartListener2 {
                 mOutlineOpen = true;
             }
         }
-        mEditorMaximized = activePage.isPageZoomed();
-        syncActive();
+        if (!syncMaximizedState(activePage)) {
+            syncActive();
+        }
     }
 
     static IViewReference findPropertySheetView(IWorkbenchPage activePage) {
@@ -132,6 +161,43 @@ public class LayoutWindowCoordinator implements IPartListener2 {
 
     static IViewReference findOutlineView(IWorkbenchPage activePage) {
         return activePage.findViewReference(OUTLINE_PART_ID);
+    }
+
+    /**
+     * Checks the maximized state of the page and updates internal state if
+     * necessary.
+     * <p>
+     * This is used in Eclipse 4.x, where the {@link IPartListener2} does not
+     * fire {@link IPartListener2#partHidden(IWorkbenchPartReference)} when the
+     * editor is maximized anymore (see issue
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=382120 for details).
+     * Instead, the layout editor listens for resize events, and upon resize it
+     * looks up the part state and calls this method to ensure that the right
+     * maximized state is known to the layout coordinator.
+     *
+     * @param page the active workbench page
+     * @return true if the state changed, false otherwise
+     */
+    public boolean syncMaximizedState(IWorkbenchPage page) {
+        boolean maximized = isPageZoomed(page);
+        if (mEditorMaximized != maximized) {
+            mEditorMaximized = maximized;
+            syncActive();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isPageZoomed(IWorkbenchPage page) {
+        IWorkbenchPartReference reference = page.getActivePartReference();
+        if (reference != null && reference instanceof IEditorReference) {
+            int state = page.getPartState(reference);
+            boolean maximized = (state & IWorkbenchPage.STATE_MAXIMIZED) != 0;
+            return maximized;
+        }
+
+        // If the active reference isn't the editor, then the editor can't be maximized
+        return false;
     }
 
     /**
@@ -258,8 +324,9 @@ public class LayoutWindowCoordinator implements IPartListener2 {
             }
         }
 
+        boolean wasMaximized = mEditorMaximized;
         mEditorMaximized = visibleCount <= 1;
-        if (mEditorMaximized) {
+        if (mEditorMaximized && !wasMaximized) {
             // Only consider -maximizing- the window to be occasion for handling
             // a "property sheet closed" event as a "show outline.
             // And in fact we may want to remove it once you re-expose things

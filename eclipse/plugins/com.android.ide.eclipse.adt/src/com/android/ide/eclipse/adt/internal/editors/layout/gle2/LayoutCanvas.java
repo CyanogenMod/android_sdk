@@ -287,11 +287,25 @@ public class LayoutCanvas extends Canvas {
             public void controlResized(ControlEvent e) {
                 super.controlResized(e);
 
-                mHScale.setClientSize(getClientArea().width);
-                mVScale.setClientSize(getClientArea().height);
+                // Check editor state:
+                LayoutWindowCoordinator coordinator = LayoutWindowCoordinator.get();
+                if (coordinator != null) {
+                    IEditorSite editorSite = getEditorDelegate().getEditor().getEditorSite();
+                    coordinator.syncMaximizedState(editorSite.getPage());
+                }
+
+                Rectangle clientArea = getClientArea();
+                mHScale.setClientSize(clientArea.width);
+                mVScale.setClientSize(clientArea.height);
 
                 // Update the zoom level in the canvas when you toggle the zoom
-                getDisplay().asyncExec(mZoomCheck);
+                if (coordinator != null) {
+                    mZoomCheck.run();
+                } else {
+                    // During startup, delay updates which can trigger further layout
+                    getDisplay().asyncExec(mZoomCheck);
+
+                }
             }
         });
 
@@ -329,14 +343,15 @@ public class LayoutCanvas extends Canvas {
                 return;
             }
 
-            IEditorPart editor = getEditorDelegate().getEditor();
-            IWorkbenchPage page = editor.getSite().getPage();
-            Boolean zoomed = page.isPageZoomed();
-            if (mWasZoomed != zoomed) {
-                if (mWasZoomed != null) {
-                    setFitScale(true /*onlyZoomOut*/);
+            LayoutWindowCoordinator coordinator = LayoutWindowCoordinator.get();
+            if (coordinator != null) {
+                Boolean zoomed = coordinator.isEditorMaximized();
+                if (mWasZoomed != zoomed) {
+                    if (mWasZoomed != null) {
+                        setFitScale(true /*onlyZoomOut*/);
+                    }
+                    mWasZoomed = zoomed;
                 }
-                mWasZoomed = zoomed;
             }
         }
     };
