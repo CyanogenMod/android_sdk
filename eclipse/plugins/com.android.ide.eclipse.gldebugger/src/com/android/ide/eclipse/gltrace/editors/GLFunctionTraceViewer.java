@@ -778,7 +778,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             return;
         }
 
-        mFindDialog = new FindDialog(Display.getDefault().getActiveShell(), mFindTarget);
+        mFindDialog = new FindDialog(Display.getDefault().getActiveShell(),
+                mFindTarget,
+                FindDialog.FIND_NEXT_ID);
         mFindDialog.open(); // blocks until find dialog is closed
         mFindDialog = null;
     }
