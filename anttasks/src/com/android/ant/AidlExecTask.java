@@ -31,11 +31,15 @@ import java.util.List;
 /**
  * Task to execute aidl.
  * <p>
- * It expects 3 attributes:<br>
+ * It expects 5 attributes:<br>
  * 'executable' ({@link Path} with a single path) for the location of the aidl executable<br>
  * 'framework' ({@link Path} with a single path) for the "preprocessed" file containing all the
  *     parcelables exported by the framework<br>
  * 'genFolder' ({@link Path} with a single path) for the location of the gen folder.
+ * 'aidlOutFolder'  ({@link Path} with a single path) for the location of the bin/aidl folder to
+ * copy the aidl files.
+ * 'libraryBinAidlFolderPathRefid' the name of the reference to a path object that contains
+ * libraries aidl output folder.
  *
  * It also expects one or more inner elements called "source" which are identical to {@link Path}
  * elements.
@@ -44,7 +48,7 @@ public class AidlExecTask extends MultiFilesTask {
 
     private String mExecutable;
     private String mFramework;
-    private Path mLibraryBinFolderPath;
+    private Path mLibraryBinAidlFolderPath;
     private String mGenFolder;
     private final ArrayList<Path> mPaths = new ArrayList<Path>();
     private String mAidlOutFolder;
@@ -75,8 +79,8 @@ public class AidlExecTask extends MultiFilesTask {
             }
 
             // add all the library aidl folders to access parcelables that are in libraries
-            if (mLibraryBinFolderPath != null) {
-                for (String importFolder : mLibraryBinFolderPath.list()) {
+            if (mLibraryBinAidlFolderPath != null) {
+                for (String importFolder : mLibraryBinAidlFolderPath.list()) {
                     task.createArg().setValue("-I" + importFolder);
                 }
             }
@@ -147,10 +151,10 @@ public class AidlExecTask extends MultiFilesTask {
         mFramework = TaskHelper.checkSinglePath("framework", value);
     }
 
-    public void setLibraryBinFolderPathRefid(String libraryBinFolderPathRefid) {
-        Object libBinRef = getProject().getReference(libraryBinFolderPathRefid);
-        if (libBinRef instanceof Path) {
-            mLibraryBinFolderPath = (Path) libBinRef;
+    public void setLibraryBinAidlFolderPathRefid(String libraryBinAidlFolderPathRefid) {
+        Object libBinAidlRef = getProject().getReference(libraryBinAidlFolderPathRefid);
+        if (libBinAidlRef instanceof Path) {
+            mLibraryBinAidlFolderPath = (Path) libBinAidlRef;
         }
     }
 
@@ -158,7 +162,7 @@ public class AidlExecTask extends MultiFilesTask {
         mGenFolder = TaskHelper.checkSinglePath("genFolder", value);
     }
 
-    public void setaidlOutFolder(Path value) {
+    public void setAidlOutFolder(Path value) {
         mAidlOutFolder = TaskHelper.checkSinglePath("aidlOutFolder", value);
     }
 

@@ -58,7 +58,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
     private String mLibraryPackagesOut;
     private String mJarLibraryPathOut;
     private String mLibraryNativeFolderPathOut;
-    private String mLibraryBinFolderPathOut;
+    private String mLibraryBinAidlFolderPathOut;
     private int mTargetApi = -1;
     private boolean mVerbose = false;
 
@@ -78,8 +78,8 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         mJarLibraryPathOut = jarLibraryPathOut;
     }
 
-    public void setLibraryBinFolderPathOut(String libraryBinFolderPathOut) {
-        mLibraryBinFolderPathOut = libraryBinFolderPathOut;
+    public void setLibraryBinAidlFolderPathOut(String libraryBinAidlFolderPathOut) {
+        mLibraryBinAidlFolderPathOut = libraryBinAidlFolderPathOut;
     }
 
     public void setLibraryNativeFolderPathOut(String libraryNativeFolderPathOut) {
@@ -115,7 +115,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         if (mLibraryNativeFolderPathOut == null) {
             throw new BuildException("Missing attribute libraryNativeFolderPathOut");
         }
-        if (mLibraryBinFolderPathOut == null) {
+        if (mLibraryBinAidlFolderPathOut == null) {
             throw new BuildException("Missing attribute libraryBinFolderPathOut");
         }
         if (mTargetApi == -1) {
@@ -131,7 +131,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         final Path manifestFilePath = new Path(antProject);
         final Path resFolderPath = new Path(antProject);
         final Path nativeFolderPath = new Path(antProject);
-        final Path binFolderPath = new Path(antProject);
+        final Path binAidlFolderPath = new Path(antProject);
         final StringBuilder packageStrBuilder = new StringBuilder();
 
         LibraryProcessorFor3rdPartyJars processor = new LibraryProcessorFor3rdPartyJars() {
@@ -143,24 +143,30 @@ public class ComputeDependencyTask extends GetLibraryListTask {
                 // get the AndroidManifest.xml path.
                 // FIXME: support renamed location.
                 PathElement element = manifestFilePath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FN_ANDROID_MANIFEST_XML);
+                element.setPath(libRootPath + '/' + SdkConstants.FN_ANDROID_MANIFEST_XML);
 
                 // get the res path. $PROJECT/res as well as the crunch cache.
                 // FIXME: support renamed folders.
                 element = resFolderPath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
-                        "/" + SdkConstants.FD_RES);
+                element.setPath(libRootPath + '/' + SdkConstants.FD_OUTPUT +
+                        '/' + SdkConstants.FD_RES);
                 element = resFolderPath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FD_RESOURCES);
+                element.setPath(libRootPath + '/' + SdkConstants.FD_RESOURCES);
 
                 // get the folder for the native libraries. Always $PROJECT/libs
                 // FIXME: support renamed folder and/or move libs to bin/libs/
                 element = nativeFolderPath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FD_NATIVE_LIBS);
+                element.setPath(libRootPath + '/' + SdkConstants.FD_NATIVE_LIBS);
+
+                // get the bin/aidl folder. $PROJECT/bin/aidl for now
+                // FIXME: support renamed folder.
+                element = binAidlFolderPath.createPathElement();
+                element.setPath(libRootPath + '/' + SdkConstants.FD_OUTPUT +
+                        '/' + SdkConstants.FD_AIDL);
 
                 // get the bin folder. $PROJECT/bin for now
                 // FIXME: support renamed folder.
-                element = binFolderPath.createPathElement();
+                element = binAidlFolderPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
                         "/" + SdkConstants.FD_AIDL);
 
@@ -211,8 +217,8 @@ public class ComputeDependencyTask extends GetLibraryListTask {
             System.out.println("API<=15: Adding annotations.jar to the classpath.");
 
             jars.add(new File(sdkDir, SdkConstants.FD_TOOLS +
-                    "/" + SdkConstants.FD_SUPPORT +
-                    "/" + SdkConstants.FN_ANNOTATIONS_JAR));
+                    '/' + SdkConstants.FD_SUPPORT +
+                    '/' + SdkConstants.FN_ANNOTATIONS_JAR));
 
         }
 
@@ -220,7 +226,7 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         // (the task themselves can handle a ref to an empty Path)
         antProject.addReference(mLibraryNativeFolderPathOut, nativeFolderPath);
         antProject.addReference(mLibraryManifestFilePathOut, manifestFilePath);
-        antProject.addReference(mLibraryBinFolderPathOut, binFolderPath);
+        antProject.addReference(mLibraryBinAidlFolderPathOut, binAidlFolderPath);
 
         // the rest is done only if there's a library.
         if (hasLibraries) {
