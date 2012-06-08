@@ -23,6 +23,6 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_MODULE := sdklib-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := sdklib junit
+LOCAL_JAVA_LIBRARIES := sdklib junit dvlib-tests
 
 include $(BUILD_HOST_JAVA_LIBRARY)

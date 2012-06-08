@@ -65,10 +65,8 @@
                 armeabi-v7a
             </d:abi>
             <!--dock (car, desk, tv, none)-->
-            <d:dock>
-            </d:dock>
-            <!-- plugged in (never, charge, always) -->
-            <d:plugged-in>charge</d:plugged-in>
+            <d:dock></d:dock>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
             <d:api-level>15</d:api-level>

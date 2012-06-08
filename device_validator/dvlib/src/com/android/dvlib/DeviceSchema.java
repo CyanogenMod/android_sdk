@@ -102,7 +102,7 @@ public class DeviceSchema {
 
     public static final String NODE_YDPI = "ydpi";
 
-    public static final String NODE_PLUGGED_IN = "plugged-in";
+    public static final String NODE_POWER_TYPE= "power-type";
 
     public static final String NODE_Y_DIMENSION = "y-dimension";
 
@@ -110,7 +110,7 @@ public class DeviceSchema {
 
     public static final String NODE_NAV_STATE = "nav-state";
 
-    public static final String NODE_HAS_MIC = "has-mic";
+    public static final String NODE_MIC = "mic";
 
     public static final String NODE_RAM = "ram";
 
@@ -183,6 +183,8 @@ public class DeviceSchema {
     public static final String ATTR_DEFAULT = "default";
 
     public static final String ATTR_UNIT = "unit";
+
+    public static final String ATTR_NAME = "name";
 
     /**
      * Validates the input stream.

@@ -68,7 +68,7 @@
             <d:dock>
             </d:dock>
             <!-- plugged in (never, charge, always) -->
-            <d:plugged-in>charge</d:plugged-in>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
             <d:api-level>14-</d:api-level>
@@ -193,7 +193,7 @@
                 car
                 desk
             </d:dock>
-            <d:plugged-in>charge</d:plugged-in>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
             <d:api-level>5-8</d:api-level>
