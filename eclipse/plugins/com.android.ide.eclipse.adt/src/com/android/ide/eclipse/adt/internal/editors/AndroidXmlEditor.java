@@ -27,12 +27,14 @@ import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -69,9 +71,12 @@ import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.events.IHyperlinkListener;
+import org.eclipse.ui.forms.widgets.FormText;
 import org.eclipse.ui.ide.IDEActionFactory;
 import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
+import org.eclipse.ui.part.MultiPageEditorPart;
+import org.eclipse.ui.part.WorkbenchPart;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
@@ -953,7 +958,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * the hooks should not perform edits on the model without acquiring
      * a lock first.
      */
-    protected void runEditHooks() {
+    public void runEditHooks() {
         if (!mIgnoreXmlUpdate) {
             // Check for errors, if enabled
             if (AdtPrefs.getPrefs().isLintOnSave()) {
