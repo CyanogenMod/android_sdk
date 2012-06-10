@@ -28,7 +28,9 @@ import com.android.resources.ResourceType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Resource Folder class. Contains list of {@link ResourceFile}s,
@@ -38,9 +40,9 @@ public final class ResourceFolder implements Configurable {
     final ResourceFolderType mType;
     final FolderConfiguration mConfiguration;
     IAbstractFolder mFolder;
-    ArrayList<ResourceFile> mFiles = null;
+    List<ResourceFile> mFiles = null;
+    Map<String, ResourceFile> mNames = null;
     private final ResourceRepository mRepository;
-
 
     /**
      * Creates a new {@link ResourceFolder}
@@ -69,32 +71,13 @@ public final class ResourceFolder implements Configurable {
     public ResourceFile processFile(IAbstractFile file, ResourceDeltaKind kind,
             ScanningContext context) {
         // look for this file if it's already been created
-        ResourceFile resFile = getFile(file);
+        ResourceFile resFile = getFile(file, context);
 
         if (resFile == null) {
             if (kind != ResourceDeltaKind.REMOVED) {
                 // create a ResourceFile for it.
 
-                // check if that's a single or multi resource type folder. For now we define this by
-                // the number of possible resource type output by files in the folder.
-                // We have a special case for layout/menu folders which can also generate IDs.
-                // This does
-                // not make the difference between several resource types from a single file or
-                // the ability to have 2 files in the same folder generating 2 different types of
-                // resource. The former is handled by MultiResourceFile properly while we don't
-                // handle the latter. If we were to add this behavior we'd have to change this call.
-                List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(mType);
-
-                if (types.size() == 1) {
-                    resFile = new SingleResourceFile(file, this);
-                } else if (types.contains(ResourceType.LAYOUT)) {
-                    resFile = new IdGeneratingResourceFile(file, this, ResourceType.LAYOUT);
-                } else if (types.contains(ResourceType.MENU)) {
-                    resFile = new IdGeneratingResourceFile(file, this, ResourceType.MENU);
-                } else {
-                    resFile = new MultiResourceFile(file, this);
-                }
-
+                resFile = createResourceFile(file);
                 resFile.load(context);
 
                 // add it to the folder
@@ -111,6 +94,29 @@ public final class ResourceFolder implements Configurable {
         return resFile;
     }
 
+    private ResourceFile createResourceFile(IAbstractFile file) {
+        // check if that's a single or multi resource type folder. For now we define this by
+        // the number of possible resource type output by files in the folder.
+        // We have a special case for layout/menu folders which can also generate IDs.
+        // This does
+        // not make the difference between several resource types from a single file or
+        // the ability to have 2 files in the same folder generating 2 different types of
+        // resource. The former is handled by MultiResourceFile properly while we don't
+        // handle the latter. If we were to add this behavior we'd have to change this call.
+        List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(mType);
+
+        ResourceFile resFile = null;
+        if (types.size() == 1) {
+            resFile = new SingleResourceFile(file, this);
+        } else if (types.contains(ResourceType.LAYOUT)) {
+            resFile = new IdGeneratingResourceFile(file, this, ResourceType.LAYOUT);
+        } else if (types.contains(ResourceType.MENU)) {
+            resFile = new IdGeneratingResourceFile(file, this, ResourceType.MENU);
+        } else {
+            resFile = new MultiResourceFile(file, this);
+        }
+        return resFile;
+    }
 
     /**
      * Adds a {@link ResourceFile} to the folder.
@@ -119,15 +125,68 @@ public final class ResourceFolder implements Configurable {
     @VisibleForTesting(visibility=Visibility.PROTECTED)
     public void addFile(ResourceFile file) {
         if (mFiles == null) {
-            mFiles = new ArrayList<ResourceFile>();
+            int initialSize = 16;
+            if (mRepository.isFrameworkRepository()) {
+                String name = mFolder.getName();
+                // Pick some reasonable initial sizes for framework data structures
+                // since they are typically (a) large and (b) their sizes are roughly known
+                // in advance
+                switch (mType) {
+                    case DRAWABLE: {
+                        // See if it's one of the -mdpi, -hdpi etc folders which
+                        // are large (~1250 items)
+                        int index = name.indexOf('-');
+                        if (index == -1) {
+                            initialSize = 230; // "drawable" folder
+                        } else {
+                            index = name.indexOf('-', index + 1);
+                            if (index == -1) {
+                                // One of the "drawable-<density>" folders
+                                initialSize = 1260;
+                            } else {
+                                // "drawable-sw600dp-hdpi" etc
+                                initialSize = 30;
+                            }
+                        }
+                        break;
+                    }
+                    case LAYOUT: {
+                        // The main layout folder has about ~185 layouts in it;
+                        // the others are small
+                        if (name.indexOf('-') == -1) {
+                            initialSize = 200;
+                        }
+                        break;
+                    }
+                    case VALUES: {
+                        if (name.indexOf('-') == -1) {
+                            initialSize = 32;
+                        } else {
+                            initialSize = 4;
+                        }
+                        break;
+                    }
+                    case ANIM: initialSize = 85; break;
+                    case COLOR: initialSize = 32; break;
+                    case RAW: initialSize = 4; break;
+                    default:
+                        // Stick with the 16 default
+                        break;
+                }
+            }
+
+            mFiles = new ArrayList<ResourceFile>(initialSize);
+            mNames = new HashMap<String, ResourceFile>(initialSize, 2.0f);
         }
 
         mFiles.add(file);
+        mNames.put(file.getFile().getName(), file);
     }
 
     protected void removeFile(ResourceFile file, ScanningContext context) {
         file.dispose(context);
         mFiles.remove(file);
+        mNames.remove(file.getFile().getName());
     }
 
     protected void dispose(ScanningContext context) {
@@ -137,6 +196,7 @@ public final class ResourceFolder implements Configurable {
             }
 
             mFiles.clear();
+            mNames.clear();
         }
     }
 
@@ -191,22 +251,43 @@ public final class ResourceFolder implements Configurable {
      * @param name the name of the file.
      */
     public boolean hasFile(String name) {
+        if (mNames.containsKey(name)) {
+            return true;
+        }
+
+        // Note: mNames.containsKey(name) is faster, but doesn't give the same result; this
+        // method seems to be called on this ResourceFolder before it has been processed,
+        // so we need to use the file system check instead:
         return mFolder.hasFile(name);
     }
 
     /**
      * Returns the {@link ResourceFile} matching a {@link IAbstractFile} object.
+     *
      * @param file The {@link IAbstractFile} object.
+     * @param context a context object with state for the current update, such
+     *            as a place to stash errors encountered
      * @return the {@link ResourceFile} or null if no match was found.
      */
-    private ResourceFile getFile(IAbstractFile file) {
-        if (mFiles != null) {
-            for (ResourceFile f : mFiles) {
-                if (f.getFile().equals(file)) {
-                    return f;
-                }
+    private ResourceFile getFile(IAbstractFile file, ScanningContext context) {
+        assert mFolder.equals(file.getParentFolder());
+
+        if (mNames != null) {
+            ResourceFile resFile = mNames.get(file.getName());
+            if (resFile != null) {
+                return resFile;
             }
         }
+
+        // If the file actually exists, the resource folder  may not have been
+        // scanned yet; add it lazily
+        if (file.exists()) {
+            ResourceFile resFile = createResourceFile(file);
+            resFile.load(context);
+            addFile(resFile);
+            return resFile;
+        }
+
         return null;
     }
 
@@ -216,13 +297,23 @@ public final class ResourceFolder implements Configurable {
      * @return the {@link ResourceFile} or <code>null</code> if no match was found.
      */
     public ResourceFile getFile(String filename) {
-        if (mFiles != null) {
-            for (ResourceFile f : mFiles) {
-                if (f.getFile().getName().equals(filename)) {
-                    return f;
-                }
+        if (mNames != null) {
+            ResourceFile resFile = mNames.get(filename);
+            if (resFile != null) {
+                return resFile;
             }
         }
+
+        // If the file actually exists, the resource folder  may not have been
+        // scanned yet; add it lazily
+        IAbstractFile file = mFolder.getFile(filename);
+        if (file != null && file.exists()) {
+            ResourceFile resFile = createResourceFile(file);
+            resFile.load(new ScanningContext(mRepository));
+            addFile(resFile);
+            return resFile;
+        }
+
         return null;
     }
 
