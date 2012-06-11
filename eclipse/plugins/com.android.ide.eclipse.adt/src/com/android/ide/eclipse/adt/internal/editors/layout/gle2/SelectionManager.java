@@ -1047,7 +1047,7 @@ public class SelectionManager implements ISelectionProvider {
             new ActionContributionItem(a).fill(menu, -1);
             a.setEnabled(true);
 
-            a = selectionManager.new SelectAction("Select None", SELECT_NONE);
+            a = selectionManager.new SelectAction("Deselect All", SELECT_NONE);
             new ActionContributionItem(a).fill(menu, -1);
             a.setEnabled(haveSelection);
         }

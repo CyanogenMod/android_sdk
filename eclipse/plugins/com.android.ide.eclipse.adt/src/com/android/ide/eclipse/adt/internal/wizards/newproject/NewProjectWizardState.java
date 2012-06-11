@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -85,7 +86,8 @@ public class NewProjectWizardState {
     public boolean packageNameModifiedByUser;
 
     /** True if a new activity should be created */
-    public boolean createActivity = true;
+    public boolean createActivity;
+
     /** The name of the new activity to be created */
     public String activityName;
     /** True if the activity name has been manually edited by the user */
@@ -161,6 +163,18 @@ public class NewProjectWizardState {
     public boolean testProjectModified;
     /** Package name of the tested app */
     public String testTargetPackageName;
+
+    /**
+     * Copy project into workspace? This flag only applies when importing
+     * projects (creating projects from existing source)
+     */
+    public boolean copyIntoWorkspace;
+
+    /**
+     * List of projects to be imported. Null if not importing projects.
+     */
+    @Nullable
+    public List<ImportedProject> importProjects;
 
     /**
      * Creates a new {@link NewProjectWizardState}
