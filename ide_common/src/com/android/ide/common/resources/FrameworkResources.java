@@ -120,34 +120,6 @@ public class FrameworkResources extends ResourceRepository {
 
                 ResourceType lastType = null;
                 String lastTypeName = "";
-
-                // Precompute maps from name to ResourceItem such that when we find
-                // a public item's name we can quickly locate it. Without this,
-                // it's a linear search for each item, n times -- O(n^2).
-                // Precomputing a map is O(n) and looking up n times in the map is
-                // also O(n).
-                Map<ResourceType, Map<String, ResourceItem>> nameMap =
-                        new HashMap<ResourceType, Map<String, ResourceItem>>();
-                for (Entry<ResourceType, List<ResourceItem>> entry: mResourceMap.entrySet()) {
-                    ResourceType type = entry.getKey();
-                    if (type == ResourceType.PUBLIC || type == ResourceType.DECLARE_STYLEABLE) {
-                        // These are large maps (in android-15 for example the "public"
-                        // ResourceType has 1734 items and declare-styleable has 210) that
-                        // currently have no public exported names. Therefore, don't bother
-                        // creating name lookup maps for these. (However, if by chance a future
-                        // public.xml file does specify these, it will be found by the sequential
-                        // search if map=null below.)
-                        continue;
-                    }
-                    List<ResourceItem> items = entry.getValue();
-                    int size = items.size();
-                    Map<String, ResourceItem> map = new HashMap<String, ResourceItem>(size);
-                    for (ResourceItem item : items) {
-                        map.put(item.getName(), item);
-                    }
-                    nameMap.put(type, map);
-                }
-
                 while (true) {
                     int event = parser.next();
                     if (event == XmlPullParser.START_TAG) {
@@ -183,23 +155,9 @@ public class FrameworkResources extends ResourceRepository {
                             }
                             if (type != null) {
                                 ResourceItem match = null;
-                                Map<String, ResourceItem> map = nameMap.get(type);
+                                Map<String, ResourceItem> map = mResourceMap.get(type);
                                 if (map != null) {
                                     match = map.get(name);
-                                } else {
-                                    // We skipped computing name maps for some large lists
-                                    // that currently don't have any public names, but
-                                    // on the off chance that they will show up, leave the
-                                    // old iteration based lookup here
-                                    List<ResourceItem> typeList = mResourceMap.get(type);
-                                    if (typeList != null) {
-                                        for (ResourceItem item : typeList) {
-                                            if (name.equals(item.getName())) {
-                                                match = item;
-                                                break;
-                                            }
-                                        }
-                                    }
                                 }
 
                                 if (match != null) {
@@ -276,3 +234,4 @@ public class FrameworkResources extends ResourceRepository {
         }
     }
 }
+
