@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.wizards.export;
 
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.utils.FingerprintUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ExportHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
@@ -271,6 +272,14 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                 if (entry != null) {
                     mPrivateKey = entry.getPrivateKey();
                     mCertificate = (X509Certificate)entry.getCertificate();
+
+                    AdtPlugin.printToConsole(mProject,
+                            String.format("New keystore %s has been created.",
+                                    mDestinationFile.getAbsolutePath()),
+                            "Certificate fingerprints:",
+                            String.format("  MD5 : %s", getCertMd5Fingerprint()),
+                            String.format("  SHA1: %s", getCertSha1Fingerprint()));
+
                 } else {
                     // this really shouldn't happen since we now let the user choose the key
                     // from a list read from the store.
@@ -334,7 +343,8 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
     /*
      * (non-Javadoc)
-     * @see org.eclipse.ui.IWorkbenchWizard#init(org.eclipse.ui.IWorkbench, org.eclipse.jface.viewers.IStructuredSelection)
+     * @see org.eclipse.ui.IWorkbenchWizard#init(org.eclipse.ui.IWorkbench,
+     * org.eclipse.jface.viewers.IStructuredSelection)
      */
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
@@ -476,6 +486,14 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
     String getDName() {
         return mDName;
+    }
+
+    String getCertSha1Fingerprint() {
+        return FingerprintUtils.getFingerprint(mCertificate, "SHA1");
+    }
+
+    String getCertMd5Fingerprint() {
+        return FingerprintUtils.getFingerprint(mCertificate, "MD5");
     }
 
     void setSigningInfo(PrivateKey privateKey, X509Certificate certificate) {
