@@ -89,6 +89,4 @@ public class NewTemplateWizardState {
     File getTemplateLocation() {
         return mTemplateLocation;
     }
-
-
 }

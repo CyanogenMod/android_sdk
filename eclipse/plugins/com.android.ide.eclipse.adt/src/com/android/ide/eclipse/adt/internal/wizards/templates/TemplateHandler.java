@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.sdklib.SdkConstants.FD_EXTRAS;
 import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
 import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
@@ -277,7 +278,20 @@ class TemplateHandler {
     public static File getTemplateRootFolder() {
         String location = AdtPrefs.getPrefs().getOsSdkFolder();
         if (location != null) {
-            File folder = new File(location,  FD_TOOLS + File.separator + FD_TEMPLATES);
+            File folder = new File(location, FD_TOOLS + File.separator + FD_TEMPLATES);
+            if (folder.isDirectory()) {
+                return folder;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static File getExtraTemplateRootFolder() {
+        String location = AdtPrefs.getPrefs().getOsSdkFolder();
+        if (location != null) {
+            File folder = new File(location, FD_EXTRAS + File.separator + FD_TEMPLATES);
             if (folder.isDirectory()) {
                 return folder;
             }
@@ -300,7 +314,6 @@ class TemplateHandler {
         }
 
         return null;
-
     }
 
     @Nullable
@@ -932,6 +945,17 @@ class TemplateHandler {
     static List<File> getTemplates(@NonNull String folder) {
         List<File> templates = new ArrayList<File>();
         File root = getTemplateRootFolder();
+        if (root != null) {
+            File[] files = new File(root, folder).listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    templates.add(file);
+                }
+            }
+        }
+
+        // Add in templates from extras/ as well.
+        root = getExtraTemplateRootFolder();
         if (root != null) {
             File[] files = new File(root, folder).listFiles();
             if (files != null) {
