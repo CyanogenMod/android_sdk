@@ -199,7 +199,6 @@ class ThemeMenuAction extends SubmenuAction {
                     String current = mConfiguration.getSelectedTheme();
                     for (String theme : sorted) {
                         boolean selected = theme.equals(current);
-                        theme = ResourceHelper.styleToTheme(theme);
                         addMenuItem(menu, theme, selected);
                     }
                 } else {
