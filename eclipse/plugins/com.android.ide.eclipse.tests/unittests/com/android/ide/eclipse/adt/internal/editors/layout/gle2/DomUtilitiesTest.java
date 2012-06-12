@@ -15,6 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -72,6 +75,10 @@ public class DomUtilitiesTest extends TestCase {
         assertFalse(DomUtilities.isEquivalent(root1, root2));
         foo2.setAttribute("attribute1", "value1");
         assertTrue(DomUtilities.isEquivalent(root1, root2));
+        foo2.setAttributeNS(TOOLS_URI, "foo", "bar");
+        assertTrue(DomUtilities.isEquivalent(root1, root2));
+        foo2.setAttributeNS(ANDROID_URI, "foo", "bar");
+        assertFalse(DomUtilities.isEquivalent(root1, root2));
 
         // TODO - test different tag names
         // TODO - test different name spaces!
