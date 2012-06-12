@@ -24,6 +24,8 @@ import org.apache.tools.ant.types.resources.FileResource;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class DexExecTask extends SingleDependencyTask {
 
     private String mExecutable;
     private String mOutput;
+    private String mDexedLibs;
     private boolean mVerbose = false;
     private boolean mNoLocals = false;
     private List<Path> mPathInputs;
@@ -62,6 +65,10 @@ public class DexExecTask extends SingleDependencyTask {
      */
     public void setOutput(Path output) {
         mOutput = TaskHelper.checkSinglePath("output", output);
+    }
+
+    public void setDexedLibs(Path dexedLibs) {
+        mDexedLibs = TaskHelper.checkSinglePath("dexedLibs", dexedLibs);
     }
 
     /**
@@ -102,6 +109,39 @@ public class DexExecTask extends SingleDependencyTask {
     }
 
 
+    private void preDexLibraries(List<File> inputs) {
+        if (inputs.size() == 1) {
+            // only one input, no need to put a pre-dexed version, even if this path is
+            // just a jar file (case for proguard'ed builds)
+            return;
+        }
+
+        final int count = inputs.size();
+        for (int i = 0 ; i < count; i++) {
+            File input = inputs.get(i);
+            if (input.isFile()) {
+                // check if this libs needs to be pre-dexed
+                File dexedLib = new File(mDexedLibs, input.getName());
+                String dexedLibPath = dexedLib.getAbsolutePath();
+
+                if (dexedLib.isFile() == false ||
+                        dexedLib.lastModified() < input.lastModified()) {
+
+                    System.out.println("Pre-Dexing " + input);
+
+                    if (dexedLib.isFile()) {
+                        dexedLib.delete();
+                    }
+
+                    runDx(input, dexedLibPath, false /*showInput*/);
+                }
+
+                // replace the input with the pre-dex libs.
+                inputs.set(i, dexedLib);
+            }
+        }
+    }
+
     @Override
     public void execute() throws BuildException {
 
@@ -110,6 +150,7 @@ public class DexExecTask extends SingleDependencyTask {
         if (mPathInputs != null) {
             for (Path pathList : mPathInputs) {
                 for (String path : pathList.list()) {
+                    System.out.println("input: " + path);
                     paths.add(new File(path));
                 }
             }
@@ -120,10 +161,14 @@ public class DexExecTask extends SingleDependencyTask {
                 Iterator<?> iter = fs.iterator();
                 while (iter.hasNext()) {
                     FileResource fr = (FileResource) iter.next();
+                    System.out.println("input: " + fr.getFile().toString());
                     paths.add(fr.getFile());
                 }
             }
         }
+
+        // pre dex libraries if needed
+        preDexLibraries(paths);
 
         // figure out the path to the dependency file.
         String depFile = mOutput + ".d";
@@ -141,6 +186,17 @@ public class DexExecTask extends SingleDependencyTask {
         System.out.println(String.format(
                 "Converting compiled files and external libraries into %1$s...", mOutput));
 
+        runDx(paths, mOutput, mVerbose /*showInputs*/);
+
+        // generate the dependency file.
+        generateDependencyFile(depFile, inputPaths, mOutput);
+    }
+
+    private void runDx(File input, String output, boolean showInputs) {
+        runDx(Collections.singleton(input), output, showInputs);
+    }
+
+    private void runDx(Collection<File> inputs, String output, boolean showInputs) {
         ExecTask task = new ExecTask();
         task.setProject(getProject());
         task.setOwningTarget(getOwningTarget());
@@ -159,11 +215,11 @@ public class DexExecTask extends SingleDependencyTask {
         }
 
         task.createArg().setValue("--output");
-        task.createArg().setValue(mOutput);
+        task.createArg().setValue(output);
 
-        for (File f : paths) {
-            String absPath = f.getAbsolutePath();
-            if (mVerbose) {
+        for (File input : inputs) {
+            String absPath = input.getAbsolutePath();
+            if (showInputs) {
                 System.out.println("Input: " + absPath);
             }
             task.createArg().setValue(absPath);
@@ -171,9 +227,6 @@ public class DexExecTask extends SingleDependencyTask {
 
         // execute it.
         task.execute();
-
-        // generate the dependency file.
-        generateDependencyFile(depFile, inputPaths, mOutput);
     }
 
     @Override

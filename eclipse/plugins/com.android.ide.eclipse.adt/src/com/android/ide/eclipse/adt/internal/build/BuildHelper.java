@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
@@ -694,14 +695,62 @@ public class BuildHelper {
             mOutStream.setPrefix(CONSOLE_PREFIX_DX);
             mErrStream.setPrefix(CONSOLE_PREFIX_DX);
 
-            if (mVerbose) {
+            IFolder binFolder = BaseProjectHelper.getAndroidOutputFolder(javaProject.getProject());
+            File binFile = binFolder.getLocation().toFile();
+            File dexedLibs = new File(binFile, "dexedLibs");
+            if (dexedLibs.exists() == false) {
+                dexedLibs.mkdir();
+            }
+
+            // replace the libs by their dexed versions (dexing them if needed.)
+            List<String> finalInputPaths = new ArrayList<String>(inputPaths.size());
+            if (inputPaths.size() == 1) {
+                // only one input, no need to put a pre-dexed version, even if this path is
+                // just a jar file (case for proguard'ed builds)
+                finalInputPaths.addAll(inputPaths);
+            } else {
                 for (String input : inputPaths) {
+                    File inputFile = new File(input);
+                    if (inputFile.isDirectory()) {
+                        finalInputPaths.add(input);
+                    } else if (inputFile.isFile()) {
+                        File dexedLib = new File(dexedLibs, inputFile.getName());
+                        String dexedLibPath = dexedLib.getAbsolutePath();
+
+                        if (dexedLib.isFile() == false ||
+                                dexedLib.lastModified() < inputFile.lastModified()) {
+
+                            if (mVerbose) {
+                                mOutStream.println("Pre-Dexing " + input);
+                            }
+
+                            if (dexedLib.isFile()) {
+                                dexedLib.delete();
+                            }
+
+                            int res = wrapper.run(dexedLibPath, Collections.singleton(input),
+                                    mVerbose, mOutStream, mErrStream);
+
+                            if (res != 0) {
+                                // output error message and mark the project.
+                                String message = String.format(Messages.Dalvik_Error_d, res);
+                                throw new DexException(message);
+                            }
+                        }
+
+                        finalInputPaths.add(dexedLibPath);
+                    }
+                }
+            }
+
+            if (mVerbose) {
+                for (String input : finalInputPaths) {
                     mOutStream.println("Input: " + input);
                 }
             }
 
             int res = wrapper.run(osOutFilePath,
-                    inputPaths,
+                    finalInputPaths,
                     mVerbose,
                     mOutStream, mErrStream);
 

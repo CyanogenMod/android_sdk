@@ -136,6 +136,7 @@
     <property name="out.classes.absolute.dir" location="${out.dir}/classes" />
     <property name="out.res.absolute.dir" location="${out.dir}/res" />
     <property name="out.aidl.absolute.dir" location="${out.dir}/aidl" />
+    <property name="out.dexed.absolute.dir" location="${out.dir}/dexedLibs" />
     <property name="out.manifest.abs.file" location="${out.dir}/AndroidManifest.xml" />
 
     <!-- tools location -->
@@ -274,6 +275,7 @@
 
             <dex executable="${dx}"
                     output="${intermediate.dex.file}"
+                    dexedlibs="${out.dexed.absolute.dir}"
                     nolocals="@{nolocals}"
                     verbose="${verbose}">
                 <path path="${out.dex.input.absolute.dir}"/>
@@ -541,6 +543,7 @@
         <do-only-if-manifest-hasCode>
             <mkdir dir="${gen.absolute.dir}" />
             <mkdir dir="${out.classes.absolute.dir}" />
+            <mkdir dir="${out.dexed.absolute.dir}" />
         </do-only-if-manifest-hasCode>
 
         <echo level="info">----------</echo>

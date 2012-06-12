@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 
 import org.eclipse.core.runtime.CoreException;
@@ -173,7 +174,7 @@ public final class DexWrapper {
             Object args = mArgConstructor.newInstance();
             mArgOutName.set(args, osOutFilePath);
             mArgFileNames.set(args, osFilenames.toArray(new String[osFilenames.size()]));
-            mArgJarOutput.set(args, false);
+            mArgJarOutput.set(args, osOutFilePath.endsWith(AdtConstants.DOT_JAR));
             mArgVerbose.set(args, verbose);
 
             // call the run method
