@@ -142,7 +142,6 @@ public class SdkManagerTestCase extends TestCase {
         sdkDir.mkdirs();
 
         AndroidLocation.resetFolder();
-        System.setProperty("user.home", sdkDir.getAbsolutePath());
         File addonsDir = new File(sdkDir, SdkConstants.FD_ADDONS);
         addonsDir.mkdir();
         File toolsLibEmuDir = new File(sdkDir, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + "emulator");
