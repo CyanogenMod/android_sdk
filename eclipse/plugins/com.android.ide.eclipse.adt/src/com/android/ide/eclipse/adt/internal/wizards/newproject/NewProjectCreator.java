@@ -1215,7 +1215,7 @@ public class NewProjectCreator  {
      * @throws FileNotFoundException
      * @throws CoreException
      */
-    private void addLocalFile(IProject project, File source, String destName,
+    public static void addLocalFile(IProject project, File source, String destName,
             IProgressMonitor monitor) throws FileNotFoundException, CoreException {
         IFile dest = project.getFile(destName);
         if (dest.exists() == false) {

@@ -50,11 +50,9 @@ import java.util.Set;
  * Template wizard which creates parameterized templates
  */
 public class NewTemplateWizard extends Wizard implements INewWizard {
-    /** Template name and location under /templates in the plugin */
+    /** Template name and location under $sdk/templates for the default activity */
     static final String BLANK_ACTIVITY = "activities/BlankActivity";           //$NON-NLS-1$
-    /** Template name and location under /templates in the plugin */
-    static final String MASTER_DETAIL_FLOW = "activities/MasterDetailFlow";    //$NON-NLS-1$
-    /** Template name and location under /templates in the plugin */
+    /** Template name and location under $sdk/templates for the custom view template */
     static final String CUSTOM_VIEW = "other/CustomView";                      //$NON-NLS-1$
     private static final String PROJECT_LOGO_LARGE = "android-64";             //$NON-NLS-1$
 
@@ -205,42 +203,6 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
                     }
                 }
             });
-        }
-    }
-
-    /**
-     * Specific New Master Detail Flow wizard
-     */
-    public static class MasterDetailWizard extends NewTemplateWizard {
-        /** Creates a new {@link MasterDetailWizard} */
-        public MasterDetailWizard() {
-            super(MASTER_DETAIL_FLOW);
-        }
-
-        @Override
-        public void init(IWorkbench workbench, IStructuredSelection selection) {
-            super.init(workbench, selection);
-            setWindowTitle("New Master Detail Flow");
-            super.mMainPage.setTitle("New Master Detail Flow");
-            super.mMainPage.setDescription("Creates a new Master Detail Flow");
-        }
-    }
-
-    /**
-     * Specific New Blank Activity wizard
-     */
-    public static class NewActivityWizard extends NewTemplateWizard {
-        /** Creates a new {@link NewActivityWizard} */
-        public NewActivityWizard() {
-            super(BLANK_ACTIVITY);
-        }
-
-        @Override
-        public void init(IWorkbench workbench, IStructuredSelection selection) {
-            super.init(workbench, selection);
-            setWindowTitle("New Blank Activity");
-            super.mMainPage.setTitle("New Blank Activity");
-            super.mMainPage.setDescription("Creates a new blank activity");
         }
     }
 

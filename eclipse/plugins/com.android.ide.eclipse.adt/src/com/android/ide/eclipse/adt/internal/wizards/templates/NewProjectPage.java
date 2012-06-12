@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplatePage.WIZARD_PAGE_WIDTH;
-import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -309,11 +308,11 @@ public class NewProjectPage extends WizardPage
         super.setVisible(visible);
 
         // DURING DEVELOPMENT ONLY
-        if (assertionsEnabled()) {
-            String uniqueProjectName = AdtUtils.getUniqueProjectName("Test", "");
-            mProjectText.setText(uniqueProjectName);
-            mPackageText.setText("test.pkg");
-        }
+        //if (assertionsEnabled()) {
+        //    String uniqueProjectName = AdtUtils.getUniqueProjectName("Test", "");
+        //    mProjectText.setText(uniqueProjectName);
+        //    mPackageText.setText("test.pkg");
+        //}
 
         validatePage();
     }

@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -232,6 +233,22 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             ProjectPopulator projectPopulator = new ProjectPopulator() {
                 @Override
                 public void populate(IProject project) {
+                    // Copy in the proguard file; templates don't provide this one.
+                    // add the default proguard config
+                    File libFolder = new File(AdtPlugin.getOsSdkToolsFolder(),
+                            SdkConstants.FD_LIB);
+                    try {
+                        assert project == newProject;
+                        NewProjectCreator.addLocalFile(project,
+                                new File(libFolder, SdkConstants.FN_PROJECT_PROGUARD_FILE),
+                                // Write ProGuard config files with the extension .pro which
+                                // is what is used in the ProGuard documentation and samples
+                                SdkConstants.FN_PROJECT_PROGUARD_FILE,
+                                new NullProgressMonitor());
+                    } catch (Exception e) {
+                        AdtPlugin.log(e, null);
+                    }
+
                     // Generate basic output skeleton
                     Map<String, Object> paramMap = new HashMap<String, Object>();
                     paramMap.put(ATTR_PACKAGE_NAME, mValues.packageName);

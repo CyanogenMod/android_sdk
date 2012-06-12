@@ -268,23 +268,12 @@
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$NewActivityWizard"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewActivityWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/new_adt_project.png"
-            id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.Activity"
-            name="Blank Activity"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="false" />
-        <wizard
-            canFinishEarly="false"
-            category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$MasterDetailWizard"
-            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            hasPages="true"
-            icon="icons/new_adt_project.png"
-            id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.MasterDetail"
-            name="Master Detail Flow"
+            id="com.android.ide.eclipse.editors.wizards.NewActivityWizard"
+            name="Android Activity"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
         <wizard
