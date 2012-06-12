@@ -10,25 +10,6 @@
         <d:manufacturer>
             Samsung
         </d:manufacturer>
-        <d:meta>
-            <d:icons>
-                <d:sixty-four>
-                    extras/sixtyfour.png
-                </d:sixty-four>
-                <d:sixteen>
-                    extras/sixteen.png
-                </d:sixteen>
-            </d:icons>
-            <d:frame>
-                <d:path>
-                    extras/frame.png
-                </d:path>
-                <d:portrait-x-offset>0</d:portrait-x-offset>
-                <d:portrait-y-offset>0</d:portrait-y-offset>
-                <d:landscape-x-offset>0</d:landscape-x-offset>
-                <d:landscape-y-offset>0</d:landscape-y-offset>
-            </d:frame>
-        </d:meta>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>

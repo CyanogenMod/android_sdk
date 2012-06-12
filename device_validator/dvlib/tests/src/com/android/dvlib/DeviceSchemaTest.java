@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.dvlib;
 
 import java.io.ByteArrayInputStream;
@@ -38,21 +54,18 @@ public class DeviceSchemaTest extends TestCase {
         InputStream xmlStream = getReplacedStream(replacements);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        URL location = DeviceSchemaTest.class.getResource(".");
-        File parent = new File(location.toURI());
         assertFalse(
                 "Validation Assertion Failed, XML failed to validate when it was expected to pass\n",
-                DeviceSchema.validate(xmlStream, baos, parent));
+                DeviceSchema.validate(xmlStream, baos, null));
         assertTrue(String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, baos
                 .toString().trim()), baos.toString().trim().matches(regex));
     }
 
     private void checkFailure(String resource, String regex) throws Exception {
-        URL location = DeviceSchemaTest.class.getResource(resource);
-        File xml = new File(location.toURI());
+        InputStream xml = DeviceSchemaTest.class.getResourceAsStream(resource);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         assertFalse("Validation Assertion Failed, XML validated when it was expected to fail\n",
-                DeviceSchema.validate(new FileInputStream(xml), baos, xml.getParentFile()));
+                DeviceSchema.validate(xml, baos, null));
         assertTrue(String.format("Regex Assertion Failed:\nExpected: %s\nActual: %s\n", regex, baos
                 .toString().trim()), baos.toString().trim().matches(regex));
     }
@@ -61,15 +74,12 @@ public class DeviceSchemaTest extends TestCase {
         InputStream xmlStream = getReplacedStream(replacements);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        URL location = DeviceSchemaTest.class.getResource(".");
-        File parent = new File(location.toURI());
-        assertTrue(DeviceSchema.validate(xmlStream, baos, parent));
+        assertTrue(DeviceSchema.validate(xmlStream, baos, null));
         assertTrue(baos.toString().trim().matches(""));
     }
 
-    private InputStream getReplacedStream(Map<String, String> replacements) throws Exception {
-        URL location = DeviceSchema.class.getResource("devices_minimal.xml");
-        File xml = new File(location.toURI());
+    public static InputStream getReplacedStream(Map<String, String> replacements) throws Exception {
+        InputStream xml = DeviceSchema.class.getResourceAsStream("devices_minimal.xml");
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         SAXParser parser = factory.newSAXParser();
@@ -87,10 +97,9 @@ public class DeviceSchemaTest extends TestCase {
     }
 
     public void testValidXml() throws Exception {
-        URL location = DeviceSchemaTest.class.getResource("devices.xml");
-        File xml = new File(location.toURI());
+        InputStream xml = DeviceSchemaTest.class.getResourceAsStream("devices.xml");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        boolean result = DeviceSchema.validate(new FileInputStream(xml), baos, xml.getParentFile());
+        boolean result = DeviceSchema.validate(xml, baos, null);
         String output = baos.toString().trim();
         assertTrue(
                 String.format(
@@ -164,26 +173,6 @@ public class DeviceSchemaTest extends TestCase {
         replacements.put(DeviceSchema.NODE_GL_VERSION, "2");
         checkFailure(replacements, "Error: cvc-pattern-valid: Value '2' is not facet-valid.*\n"
                 + "Error: cvc-type.3.1.3: The value '2' of element 'd:gl-version' is not valid.*");
-    }
-
-    public void testInvalidIconTypes() throws Exception {
-        Map<String, String> replacements = new HashMap<String, String>();
-        replacements.put(DeviceSchema.NODE_SIXTEEN, "extras/sixteen.jpeg");
-        replacements.put(DeviceSchema.NODE_SIXTY_FOUR, "extras/sixtyfour.jpeg");
-        replacements.put(DeviceSchema.NODE_PATH, "extras/frame.jpeg");
-        checkFailure(replacements, "Error: extras/sixtyfour.jpeg is not a valid file type.\n"
-                + "Error: extras/sixteen.jpeg is not a valid file type.\n"
-                + "Error: extras/frame.jpeg is not a valid file type.");
-    }
-
-    public void testMissingIcons() throws Exception {
-        Map<String, String> replacements = new HashMap<String, String>();
-        replacements.put(DeviceSchema.NODE_SIXTEEN, "extras/missing");
-        replacements.put(DeviceSchema.NODE_SIXTY_FOUR, "extras/missing");
-        replacements.put(DeviceSchema.NODE_PATH, "extras/missing");
-        checkFailure(replacements, "Error: extras/missing is not a valid path.\n"
-                + "Error: extras/missing is not a valid path.\n"
-                + "Error: extras/missing is not a valid path.");
     }
 
     public void testEmptyOpenGLExtensions() throws Exception {
