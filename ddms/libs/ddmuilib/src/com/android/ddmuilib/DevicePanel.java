@@ -158,9 +158,6 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * labels and images for {@link IDevice} and {@link Client} objects.
      */
     private class LabelProvider implements ITableLabelProvider {
-        private static final String DEVICE_MODEL_PROPERTY = "ro.product.model"; //$NON-NLS-1$
-        private static final String DEVICE_MANUFACTURER_PROPERTY = "ro.product.manufacturer"; //$NON-NLS-1$
-
         @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex == DEVICE_COL_SERIAL && element instanceof IDevice) {
@@ -208,7 +205,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                 IDevice device = (IDevice)element;
                 switch (columnIndex) {
                     case DEVICE_COL_SERIAL:
-                        return getDeviceName(device);
+                        return device.getName();
                     case DEVICE_COL_STATE:
                         return getStateString(device);
                     case DEVICE_COL_BUILD: {
@@ -269,54 +266,6 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                 }
             }
             return null;
-        }
-
-        private String getDeviceName(IDevice device) {
-            StringBuilder sb = new StringBuilder(20);
-            sb.append(device.getSerialNumber());
-
-            if (device.isEmulator()) {
-                sb.append(String.format(" [%s]", device.getAvdName()));
-            } else {
-                String manufacturer = device.getProperty(DEVICE_MANUFACTURER_PROPERTY);
-                manufacturer = cleanupStringForDisplay(manufacturer);
-
-                String model = device.getProperty(DEVICE_MODEL_PROPERTY);
-                model = cleanupStringForDisplay(model);
-
-                boolean hasManufacturer = manufacturer.length() > 0;
-                boolean hasModel = model.length() > 0;
-                if (hasManufacturer || hasModel) {
-                    sb.append(" [");                        //$NON-NLS-1$
-                    sb.append(manufacturer);
-
-                    if (hasManufacturer && hasModel) {
-                        sb.append(':');
-                    }
-
-                    sb.append(model);
-                    sb.append(']');
-                }
-            }
-
-            return sb.toString();
-        }
-
-        private String cleanupStringForDisplay(String s) {
-            if (s == null) {
-                return "";
-            }
-
-            StringBuilder sb = new StringBuilder(s.length());
-            for (int i = 0; i < s.length(); i++) {
-                char c = s.charAt(i);
-
-                if (Character.isLetterOrDigit(c)) {
-                    sb.append(c);
-                }
-            }
-
-            return sb.toString();
         }
 
         @Override

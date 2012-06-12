@@ -115,6 +115,12 @@ public interface IDevice {
     public String getAvdName();
 
     /**
+     * Returns a (humanized) name for this device. Typically this is the AVD name for AVD's, and
+     * a combination of the manufacturer name, model name & serial number for devices.
+     */
+    public String getName();
+
+    /**
      * Returns the state of the device.
      */
     public DeviceState getState();
