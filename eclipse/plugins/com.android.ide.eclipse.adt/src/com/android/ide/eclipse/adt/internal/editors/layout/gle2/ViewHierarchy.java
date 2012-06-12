@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
 import com.android.annotations.NonNull;
@@ -31,6 +32,7 @@ import com.android.util.Pair;
 
 import org.eclipse.swt.graphics.Rectangle;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.awt.image.BufferedImage;
@@ -446,7 +448,7 @@ public class ViewHierarchy {
             } else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
                 return mDomNodeToView.get(((Attr) node).getOwnerElement());
             } else if (node.getNodeType() == Node.DOCUMENT_NODE) {
-                return mDomNodeToView.get(node.getOwnerDocument().getDocumentElement());
+                return mDomNodeToView.get(((Document) node).getDocumentElement());
             }
         }
 
@@ -600,7 +602,11 @@ public class ViewHierarchy {
      * @return A {@link CanvasViewInfo} matching the given key, or null if not
      *         found.
      */
-    public CanvasViewInfo findViewInfoFor(NodeProxy proxy) {
+    @Nullable
+    public CanvasViewInfo findViewInfoFor(@Nullable NodeProxy proxy) {
+        if (proxy == null) {
+            return null;
+        }
         return mNodeToView.get(proxy.getNode());
     }
 
@@ -710,6 +716,7 @@ public class ViewHierarchy {
     /**
      * Dumps a {@link ViewInfo} hierarchy to stdout
      *
+     * @param session the corresponding session, if any
      * @param info the {@link ViewInfo} object to dump
      * @param depth the depth to indent it to
      */
@@ -736,6 +743,12 @@ public class ViewHierarchy {
                 sb.append("<"); //$NON-NLS-1$
                 sb.append(node.getDescriptor().getXmlName());
                 sb.append(">"); //$NON-NLS-1$
+
+                String id = node.getAttributeValue(ATTR_ID);
+                if (id != null && !id.isEmpty()) {
+                    sb.append(" ");
+                    sb.append(id);
+                }
             } else if (cookie != null) {
                 sb.append(" " + cookie); //$NON-NLS-1$
             }

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ROW_COUNT;
@@ -30,6 +31,7 @@ import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
 import static com.android.util.XmlUtils.ANDROID_URI;
+import static org.eclipse.jface.viewers.StyledString.COUNTER_STYLER;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
 import com.android.annotations.VisibleForTesting;
@@ -800,11 +802,14 @@ public class OutlinePage extends ContentOutlinePage
 
                     // Temporary diagnostics code when developing GridLayout
                     if (GridLayoutRule.sDebugGridLayout) {
+
                         String namespace;
-                        if (e.getParentNode() != null
+                        if (e.getNodeName().equals(GRID_LAYOUT) ||
+                                e.getParentNode() != null
                                 && e.getParentNode().getNodeName().equals(GRID_LAYOUT)) {
                             namespace = ANDROID_URI;
                         } else {
+                            // Else: probably a v7 gridlayout
                             IProject project = mGraphicalEditorPart.getProject();
                             ProjectState projectState = Sdk.getProjectState(project);
                             if (projectState != null && projectState.isLibrary()) {
@@ -872,6 +877,13 @@ public class OutlinePage extends ContentOutlinePage
                             styledString.append(',', QUALIFIER_STYLER);
                             styledString.append(rowSpan, QUALIFIER_STYLER);
                             styledString.append(')', QUALIFIER_STYLER);
+
+                            String gravity = e.getAttributeNS(namespace, ATTR_LAYOUT_GRAVITY);
+                            if (gravity != null && gravity.length() > 0) {
+                                styledString.append(" : ", COUNTER_STYLER);
+                                styledString.append(gravity, COUNTER_STYLER);
+                            }
+
                         }
                     }
 
@@ -886,10 +898,14 @@ public class OutlinePage extends ContentOutlinePage
                                     text = resolved;
                                 }
                             }
-                            styledString.append(LABEL_SEPARATOR, QUALIFIER_STYLER);
-                            styledString.append('"', QUALIFIER_STYLER);
-                            styledString.append(truncate(text, styledString), QUALIFIER_STYLER);
-                            styledString.append('"', QUALIFIER_STYLER);
+                            if (styledString.length() < LABEL_MAX_WIDTH - LABEL_SEPARATOR.length()
+                                    - 2) {
+                                styledString.append(LABEL_SEPARATOR, QUALIFIER_STYLER);
+
+                                styledString.append('"', QUALIFIER_STYLER);
+                                styledString.append(truncate(text, styledString), QUALIFIER_STYLER);
+                                styledString.append('"', QUALIFIER_STYLER);
+                            }
                         }
                     } else if (e.hasAttributeNS(ANDROID_URI, ATTR_SRC)) {
                         // Show ImageView source attributes etc

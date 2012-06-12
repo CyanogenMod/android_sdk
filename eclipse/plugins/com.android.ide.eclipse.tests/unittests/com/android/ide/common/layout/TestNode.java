@@ -15,8 +15,13 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -25,14 +30,30 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.google.common.base.Splitter;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import junit.framework.Assert;
 
 /** Test/mock implementation of {@link INode} */
+@SuppressWarnings("javadoc")
 public class TestNode implements INode {
     private TestNode mParent;
 
@@ -193,8 +214,9 @@ public class TestNode implements INode {
 
     @Override
     public String toString() {
-        return "TestNode [fqn=" + mFqcn + ", infos=" + mAttributeInfos
-                + ", attributes=" + mAttributes + ", bounds=" + mBounds + "]";
+        String id = getStringAttr(ANDROID_URI, ATTR_ID);
+        return "TestNode [id=" + (id != null ? id : "?") + ", fqn=" + mFqcn + ", infos="
+                + mAttributeInfos + ", attributes=" + mAttributes + ", bounds=" + mBounds + "]";
     }
 
     @Override
@@ -214,5 +236,198 @@ public class TestNode implements INode {
 
     public void setAttributeSources(List<String> attributeSources) {
         mAttributeSources = attributeSources;
+    }
+
+    /** Create a test node from the given XML */
+    public static TestNode createFromXml(String xml) {
+        Document document = DomUtilities.parseDocument(xml, false);
+        assertNotNull(document);
+        assertNotNull(document.getDocumentElement());
+
+        return createFromNode(document.getDocumentElement());
+    }
+
+    public static String toXml(TestNode node) {
+        assertTrue("This method only works with nodes constructed from XML",
+                node instanceof TestXmlNode);
+        Document document = ((TestXmlNode) node).mElement.getOwnerDocument();
+        // Insert new whitespace nodes etc
+        String xml = dumpDocument(document);
+        document = DomUtilities.parseDocument(xml, false);
+
+        XmlPrettyPrinter printer = new XmlPrettyPrinter(XmlFormatPreferences.create(),
+                XmlFormatStyle.LAYOUT, "\n");
+        StringBuilder sb = new StringBuilder(1000);
+        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+        printer.prettyPrint(-1, document, null, null, sb, false);
+        return sb.toString();
+    }
+
+    @SuppressWarnings("deprecation")
+    private static String dumpDocument(Document document) {
+        // Diagnostics: print out the XML that we're about to render
+        org.apache.xml.serialize.OutputFormat outputFormat =
+                new org.apache.xml.serialize.OutputFormat(
+                        "XML", "ISO-8859-1", true); //$NON-NLS-1$ //$NON-NLS-2$
+        outputFormat.setIndent(2);
+        outputFormat.setLineWidth(100);
+        outputFormat.setIndenting(true);
+        outputFormat.setOmitXMLDeclaration(true);
+        outputFormat.setOmitDocumentType(true);
+        StringWriter stringWriter = new StringWriter();
+        // Using FQN here to avoid having an import above, which will result
+        // in a deprecation warning, and there isn't a way to annotate a single
+        // import element with a SuppressWarnings.
+        org.apache.xml.serialize.XMLSerializer serializer =
+                new org.apache.xml.serialize.XMLSerializer(stringWriter, outputFormat);
+        serializer.setNamespaces(true);
+        try {
+            serializer.serialize(document.getDocumentElement());
+            return stringWriter.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static TestNode createFromNode(Element element) {
+        String fqcn = ANDROID_WIDGET_PREFIX + element.getTagName();
+        TestNode node = new TestXmlNode(fqcn, element);
+
+        for (Element child : DomUtilities.getChildren(element)) {
+            node.add(createFromNode(child));
+        }
+
+        return node;
+    }
+
+    @Nullable
+    public static TestNode findById(TestNode node, String id) {
+        id = BaseLayoutRule.stripIdPrefix(id);
+        return node.findById(id);
+    }
+
+    private TestNode findById(String targetId) {
+        String id = getStringAttr(ANDROID_URI, ATTR_ID);
+        if (id != null && targetId.equals(BaseLayoutRule.stripIdPrefix(id))) {
+            return this;
+        }
+
+        for (TestNode child : mChildren) {
+            TestNode result = child.findById(targetId);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    private static String getTagName(String fqcn) {
+        return fqcn.substring(fqcn.lastIndexOf('.') + 1);
+    }
+
+    private static class TestXmlNode extends TestNode {
+        private final Element mElement;
+
+        public TestXmlNode(String fqcn, Element element) {
+            super(fqcn);
+            mElement = element;
+        }
+
+        @Override
+        public boolean setAttribute(String uri, String localName, String value) {
+            mElement.setAttributeNS(uri, localName, value);
+            return super.setAttribute(uri, localName, value);
+        }
+
+        @Override
+        public INode appendChild(String viewFqcn) {
+            Element child = mElement.getOwnerDocument().createElement(getTagName(viewFqcn));
+            mElement.appendChild(child);
+            return new TestXmlNode(viewFqcn, child);
+        }
+
+        @Override
+        public INode insertChildAt(String viewFqcn, int index) {
+            if (index == -1) {
+                return appendChild(viewFqcn);
+            }
+            Element child = mElement.getOwnerDocument().createElement(getTagName(viewFqcn));
+            List<Element> children = DomUtilities.getChildren(mElement);
+            if (children.size() >= index) {
+                Element before = children.get(index);
+                mElement.insertBefore(child, before);
+            } else {
+                fail("Unexpected index");
+                mElement.appendChild(child);
+            }
+            return new TestXmlNode(viewFqcn, child);
+        }
+
+        @Override
+        public String getStringAttr(String uri, String name) {
+            String value;
+            if (uri == null) {
+                value = mElement.getAttribute(name);
+            } else {
+                value = mElement.getAttributeNS(uri, name);
+            }
+            if (value.isEmpty()) {
+                value = null;
+            }
+
+            return value;
+        }
+
+        @Override
+        public void removeChild(INode node) {
+            assert node instanceof TestXmlNode;
+            mElement.removeChild(((TestXmlNode) node).mElement);
+        }
+
+        @Override
+        public void removeChild(int index) {
+            List<Element> children = DomUtilities.getChildren(mElement);
+            assertTrue(index < children.size());
+            Element oldChild = children.get(index);
+            mElement.removeChild(oldChild);
+        }
+    }
+
+    // Recursively initialize this node with the bounds specified in the given hierarchy
+    // dump (from ViewHierarchy's DUMP_INFO flag
+    public void assignBounds(String bounds) {
+        Iterable<String> split = Splitter.on('\n').trimResults().split(bounds);
+        assignBounds(split.iterator());
+    }
+
+    private void assignBounds(Iterator<String> iterator) {
+        assertTrue(iterator.hasNext());
+        String desc = iterator.next();
+
+        Pattern pattern = Pattern.compile("^\\s*(.+)\\s+\\[(.+)\\]\\s*(<.+>)?\\s*(\\S+)?\\s*$");
+        Matcher matcher = pattern.matcher(desc);
+        assertTrue(matcher.matches());
+        String fqn = matcher.group(1);
+        assertEquals(getFqcn(), fqn);
+        String boundsString = matcher.group(2);
+        String[] bounds = boundsString.split(",");
+        assertEquals(boundsString, 4, bounds.length);
+        try {
+            int left = Integer.parseInt(bounds[0]);
+            int top = Integer.parseInt(bounds[1]);
+            int right = Integer.parseInt(bounds[2]);
+            int bottom = Integer.parseInt(bounds[3]);
+            mBounds = new Rect(left, top, right - left, bottom - top);
+        } catch (NumberFormatException nufe) {
+            Assert.fail(nufe.getLocalizedMessage());
+        }
+        String tag = matcher.group(3);
+
+        for (INode child : getChildren()) {
+            assertTrue(iterator.hasNext());
+            ((TestNode) child).assignBounds(iterator);
+        }
     }
 }
