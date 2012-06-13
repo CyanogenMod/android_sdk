@@ -45,7 +45,7 @@ public final class Device {
 
     /**
      * Returns the name of the {@link Device}.
-     * 
+     *
      * @return The name of the {@link Device}.
      */
     public String getName() {
@@ -54,7 +54,7 @@ public final class Device {
 
     /**
      * Returns the manufacturer of the {@link Device}.
-     * 
+     *
      * @return The name of the manufacturer of the {@link Device}.
      */
     public String getManufacturer() {
@@ -63,7 +63,7 @@ public final class Device {
 
     /**
      * Returns all of the {@link Software} configurations of the {@link Device}.
-     * 
+     *
      * @return A list of all the {@link Software} configurations.
      */
     public List<Software> getAllSoftware() {
@@ -72,7 +72,7 @@ public final class Device {
 
     /**
      * Returns all of the {@link State}s the {@link Device} can be in.
-     * 
+     *
      * @return A list of all the {@link State}s.
      */
     public List<State> getAllStates() {
@@ -83,7 +83,7 @@ public final class Device {
      * Returns the default {@link Hardware} configuration for the device. This
      * is really just a shortcut for getting the {@link Hardware} on the default
      * {@link State}
-     * 
+     *
      * @return The default {@link Hardware} for the device.
      */
     public Hardware getDefaultHardware() {
@@ -93,7 +93,7 @@ public final class Device {
     /**
      * Returns the {@link Meta} object for the device, which contains meta
      * information about the device, such as the location of icons.
-     * 
+     *
      * @return The {@link Meta} object for the {@link Device}.
      */
     public Meta getMeta() {
@@ -102,7 +102,7 @@ public final class Device {
 
     /**
      * Returns the default {@link State} of the {@link Device}.
-     * 
+     *
      * @return The default {@link State} of the {@link Device}.
      */
     public State getDefaultState() {
@@ -111,7 +111,7 @@ public final class Device {
 
     /**
      * Returns the software configuration for the given API version.
-     * 
+     *
      * @param apiVersion
      *            The API version requested.
      * @return The Software instance for the requested API version or null if
@@ -128,7 +128,7 @@ public final class Device {
 
     /**
      * Returns the state of the device with the given name.
-     * 
+     *
      * @param name
      *            The name of the state requested.
      * @return The State object requested or null if there's no state with the
@@ -180,6 +180,11 @@ public final class Device {
         }
 
         public Device build() {
+            if (mSoftware.size() <= 0) {
+                throw generateBuildException("Device software not configured");
+            } else if (mState.size() <= 0) {
+                throw generateBuildException("Device states not configured");
+            }
 
             if (mMeta == null) {
                 mMeta = new Meta();
@@ -193,6 +198,19 @@ public final class Device {
             return new Device(this);
         }
 
+        private IllegalStateException generateBuildException(String err) {
+            String device = "";
+            if (mManufacturer != null) {
+                device = mManufacturer + " ";
+            }
+            if (mName != null) {
+                device += mName;
+            } else {
+                device = "Unknown " + device +"Device";
+            }
+
+            return new IllegalStateException("Error building " + device + ": " +err);
+        }
     }
 
     protected Device(Builder b) {
@@ -203,5 +221,4 @@ public final class Device {
         mMeta = b.mMeta;
         mDefaultState = b.mDefaultState;
     }
-
 }
