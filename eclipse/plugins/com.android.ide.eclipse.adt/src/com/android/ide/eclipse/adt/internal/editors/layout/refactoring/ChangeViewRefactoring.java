@@ -15,11 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -266,7 +268,8 @@ public class ChangeViewRefactoring extends VisualRefactoring {
         List<String> types = new ArrayList<String>();
         for (Element primary : getElements()) {
             String oldType = primary.getTagName();
-            if (oldType.indexOf('.') == -1) {
+            if (oldType.indexOf('.') == -1
+                    && !oldType.equals(VIEW_INCLUDE) && !oldType.equals(VIEW_FRAGMENT)) {
                 oldType = ANDROID_WIDGET_PREFIX + oldType;
             }
             types.add(oldType);

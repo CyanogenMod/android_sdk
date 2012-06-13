@@ -1137,18 +1137,14 @@ public class NewProjectCreator  {
             if (!file.exists()) {
                 copyFile(JAVA_ACTIVITY_TEMPLATE, file, java_activity_parameters, monitor, false);
             }
-        }
 
-        // create the layout file
-        IFolder layoutfolder = project.getFolder(RES_DIRECTORY).getFolder(LAYOUT_DIRECTORY);
-        IFile file = layoutfolder.getFile(MAIN_LAYOUT_XML);
-        if (!file.exists()) {
-            copyFile(LAYOUT_TEMPLATE, file, parameters, monitor, true);
-            if (activityName != null) {
+            // create the layout file (if we're creating an
+            IFolder layoutfolder = project.getFolder(RES_DIRECTORY).getFolder(LAYOUT_DIRECTORY);
+            file = layoutfolder.getFile(MAIN_LAYOUT_XML);
+            if (!file.exists()) {
+                copyFile(LAYOUT_TEMPLATE, file, parameters, monitor, true);
                 dictionary.put(STRING_HELLO_WORLD, String.format("Hello World, %1$s!",
                         activityName));
-            } else {
-                dictionary.put(STRING_HELLO_WORLD, "Hello World!");
             }
         }
     }

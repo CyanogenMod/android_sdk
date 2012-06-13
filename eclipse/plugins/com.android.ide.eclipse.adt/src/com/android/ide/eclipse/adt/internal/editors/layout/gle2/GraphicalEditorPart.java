@@ -145,6 +145,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.INullSelectionListener;
+import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
@@ -1218,6 +1219,11 @@ public class GraphicalEditorPart extends EditorPart
      */
     public void deactivated() {
         mActive = false;
+
+        LayoutCanvas canvas = getCanvasControl();
+        if (canvas != null) {
+            canvas.deactivated();
+        }
     }
 
     /**

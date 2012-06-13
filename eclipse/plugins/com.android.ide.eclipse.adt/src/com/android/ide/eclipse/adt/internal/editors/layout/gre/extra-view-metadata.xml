@@ -211,13 +211,15 @@
             class="include"
             topAttrs="layout"
             name="Include Other Layout"
-            render="skip" />
+            render="skip"
+            relatedTo="fragment" />
         <view
             class="fragment"
             topAttrs="class,name"
             name="Fragment"
             fill="opposite"
-            render="skip" />
+            render="skip"
+            relatedTo="include" />
         <view
             class="android.widget.TableLayout"
             topAttrs="stretchColumns,shrinkColumns,orientation"

@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.swt.graphics.GC;
@@ -51,6 +52,11 @@ public class LintOverlay extends Overlay {
      */
     public LintOverlay(LayoutCanvas canvas) {
         mCanvas = canvas;
+    }
+
+    @Override
+    public boolean isHiding() {
+        return super.isHiding() || !AdtPrefs.getPrefs().isLintOnSave();
     }
 
     @Override

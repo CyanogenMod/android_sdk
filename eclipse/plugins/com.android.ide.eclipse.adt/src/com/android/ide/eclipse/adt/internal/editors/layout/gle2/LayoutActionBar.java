@@ -608,7 +608,7 @@ public class LayoutActionBar extends Composite {
         if (!current.equals(existing)) {
             mLintToolBar.setData(current);
             boolean layout = false;
-            boolean hasLintWarnings = markerCount > 0;
+            boolean hasLintWarnings = markerCount > 0 && AdtPrefs.getPrefs().isLintOnSave();
             if (layoutData.exclude == hasLintWarnings) {
                 layoutData.exclude = !hasLintWarnings;
                 mLintToolBar.setVisible(hasLintWarnings);

@@ -16,13 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TOGGLE_BUTTON;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
@@ -550,7 +552,11 @@ public class ViewMetadataRepository {
                             break;
                         }
                     }
-                    assert found : basename;
+                    if (basename.equals(VIEW_FRAGMENT) || basename.equals(VIEW_INCLUDE)) {
+                        result.add(basename);
+                    } else {
+                        assert found : basename;
+                    }
                 }
 
                 return result;
