@@ -219,12 +219,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
 
         for (IDevice device : devices) {
-            String name = device.getAvdName();
-            if (name == null) {
-                name = device.getSerialNumber();
-            }
-
-            if (name.equals(deviceName)) {
+            if (device.getName().equals(deviceName)) {
                 return device;
             }
         }

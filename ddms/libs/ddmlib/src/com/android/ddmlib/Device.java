@@ -34,6 +34,8 @@ import java.util.regex.Pattern;
  * A Device. It can be a physical device or an emulator.
  */
 final class Device implements IDevice {
+    private static final String DEVICE_MODEL_PROPERTY = "ro.product.model"; //$NON-NLS-1$
+    private static final String DEVICE_MANUFACTURER_PROPERTY = "ro.product.manufacturer"; //$NON-NLS-1$
 
     private final static int INSTALL_TIMEOUT = 2*60*1000; //2min
     private static final int BATTERY_TIMEOUT = 2*1000; //2 seconds
@@ -59,6 +61,7 @@ final class Device implements IDevice {
     private DeviceMonitor mMonitor;
 
     private static final String LOG_TAG = "Device";
+    private static final char SEPARATOR = '-';
 
     /**
      * Socket for the connection monitoring client connection/disconnection.
@@ -69,6 +72,8 @@ final class Device implements IDevice {
 
     private Integer mLastBatteryLevel = null;
     private long mLastBatteryCheckTime = 0;
+
+    private String mName;
 
     /**
      * Output receiver for "pm install package.apk" command line.
@@ -185,6 +190,65 @@ final class Device implements IDevice {
         }
 
         mAvdName = avdName;
+    }
+
+    @Override
+    public String getName() {
+        if (mName == null) {
+            mName = constructName();
+        }
+
+        return mName;
+    }
+
+    private String constructName() {
+        if (isEmulator()) {
+            String avdName = getAvdName();
+            if (avdName != null) {
+                return String.format("%s [%s]", avdName, getSerialNumber());
+            } else {
+                return getSerialNumber();
+            }
+        } else {
+            String manufacturer = cleanupStringForDisplay(
+                    getProperty(DEVICE_MANUFACTURER_PROPERTY));
+            String model = cleanupStringForDisplay(
+                    getProperty(DEVICE_MODEL_PROPERTY));
+
+            StringBuilder sb = new StringBuilder(20);
+
+            if (manufacturer != null) {
+                sb.append(manufacturer);
+                sb.append(SEPARATOR);
+            }
+
+            if (model != null) {
+                sb.append(model);
+                sb.append(SEPARATOR);
+            }
+
+            sb.append(getSerialNumber());
+            return sb.toString();
+        }
+    }
+
+    private String cleanupStringForDisplay(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+
+            if (Character.isLetterOrDigit(c)) {
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append('_');
+            }
+        }
+
+        return sb.toString();
     }
 
     /*

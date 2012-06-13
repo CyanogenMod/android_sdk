@@ -234,16 +234,12 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
         List<String> items = new ArrayList<String>(devices.length);
         for (IDevice d : devices) {
-            String name = d.getAvdName();
-            if (name == null) {
-                name = d.getSerialNumber();
-            }
-            items.add(name);
+            items.add(d.getName());
         }
         mDeviceCombo.setItems(items.toArray(new String[items.size()]));
 
         int index = 0;
-        if (mLastUsedDevice != null) {
+        if (items.contains(mLastUsedDevice)) {
             index = items.indexOf(mLastUsedDevice);
         }
         if (index >= 0 && index < items.size()) {

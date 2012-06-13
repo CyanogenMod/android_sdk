@@ -167,7 +167,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                 IDevice device = (IDevice)element;
                 switch (columnIndex) {
                     case 0:
-                        return device.getSerialNumber();
+                        return device.getName();
                     case 1:
                         if (device.isEmulator()) {
                             return device.getAvdName();
@@ -261,6 +261,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     public DeviceChooserDialog(Shell parent, DeviceChooserResponse response, String packageName,
             IAndroidTarget projectTarget) {
         super(parent);
+
         mResponse = response;
         mPackageName = packageName;
         mProjectTarget = projectTarget;
