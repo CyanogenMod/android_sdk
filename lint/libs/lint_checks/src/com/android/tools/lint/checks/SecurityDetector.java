@@ -25,11 +25,13 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH_PREFIX
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_READ_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_WRITE_PERMISSION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_GRANT_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_INTENT_FILTER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_PATH_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_RECEIVER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 
 import com.android.annotations.NonNull;
@@ -93,6 +95,34 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             "provider provides access to sensitive data, it should be protected by " +
             "specifying export=false in the manifest or by protecting it with a " +
             "permission that can be granted to other applications.",
+            Category.SECURITY,
+            5,
+            Severity.WARNING,
+            SecurityDetector.class,
+            Scope.MANIFEST_SCOPE);
+
+    /** Exported activities */
+    public static final Issue EXPORTED_ACTIVITY = Issue.create(
+            "ExportedActivity", //$NON-NLS-1$
+            "Checks for exported activities that do not require permissions",
+            "Exported activities (activities which either set exported=true or contain " +
+            "an intent-filter and do not specify exported=false) should define a " +
+            "permission that an entity must have in order to launch the activity " +
+            "or bind to it. Without this, any application can use this activity.",
+            Category.SECURITY,
+            2,
+            Severity.WARNING,
+            SecurityDetector.class,
+            Scope.MANIFEST_SCOPE);
+
+    /** Exported receivers */
+    public static final Issue EXPORTED_RECEIVER = Issue.create(
+            "ExportedReceiver", //$NON-NLS-1$
+            "Checks for exported receivers that do not require permissions",
+            "Exported receivers (receivers which either set exported=true or contain " +
+            "an intent-filter and do not specify exported=false) should define a " +
+            "permission that an entity must have in order to launch the receiver " +
+            "or bind to it. Without this, any application can use this receiver.",
             Category.SECURITY,
             5,
             Severity.WARNING,
@@ -164,7 +194,9 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         return Arrays.asList(
             TAG_SERVICE,
             TAG_GRANT_PERMISSION,
-            TAG_PROVIDER
+            TAG_PROVIDER,
+            TAG_ACTIVITY,
+            TAG_RECEIVER
         );
     }
 
@@ -177,42 +209,67 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             checkGrantPermission(context, element);
         } else if (tag.equals(TAG_PROVIDER)) {
             checkProvider(context, element);
+        } else if (tag.equals(TAG_ACTIVITY)) {
+            checkActivity(context, element);
+        } else if (tag.equals(TAG_RECEIVER)) {
+            checkReceiver(context, element);
+        }
+    }
+
+    private boolean getExported(Element element) {
+        // Used to check whether an activity, service or broadcast receiver is exported.
+        String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
+        if (exportValue != null && exportValue.length() > 0) {
+            return Boolean.valueOf(exportValue);
+        } else {
+            for (Element child : LintUtils.getChildren(element)) {
+                if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+                    return true;
+                }
+            }
+        }
+
+      return false;
+    }
+
+    private boolean isUnprotectedByPermission(Element element) {
+        // Used to check whether an activity, service or broadcast receiver are 
+        // protected by a permission.
+        String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
+        if (permission == null || permission.length() == 0) {
+            Node parent = element.getParentNode();
+            if (parent.getNodeType() == Node.ELEMENT_NODE
+                    && parent.getNodeName().equals(TAG_APPLICATION)) {
+                Element application = (Element) parent;
+                permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
+                return permission == null || permission.length() == 0;
+            }
+        }
+
+        return false;
+    }
+
+    private void checkActivity(XmlContext context, Element element) {
+        if (getExported(element) && isUnprotectedByPermission(element)) {
+            // No declared permission for this exported activity: complain
+            context.report(EXPORTED_ACTIVITY, element, context.getLocation(element),
+                           "Exported activity does not require permission", null);
+        }
+    }
+
+    private void checkReceiver(XmlContext context, Element element) {
+        if (getExported(element) && isUnprotectedByPermission(element)) {
+            // No declared permission for this exported receiver: complain
+            context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
+                           "Exported receiver does not require permission", null);
         }
     }
 
     private void checkService(XmlContext context, Element element) {
-        String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
-        boolean exported;
-        if (exportValue != null && exportValue.length() > 0) {
-            exported = Boolean.valueOf(exportValue);
-        } else {
-            boolean haveIntentFilters = false;
-            for (Element child : LintUtils.getChildren(element)) {
-                if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                    haveIntentFilters = true;
-                    break;
-                }
-            }
-            exported = haveIntentFilters;
-        }
-
-        if (exported) {
-            // Make sure this service has a permission
-            String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-            if (permission == null || permission.length() == 0) {
-                Node parent = element.getParentNode();
-                if (parent.getNodeType() == Node.ELEMENT_NODE
-                        && parent.getNodeName().equals(TAG_APPLICATION)) {
-                    Element application = (Element) parent;
-                    permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-                    if (permission == null || permission.length() == 0) {
-                        // No declared permission for this exported service: complain
-                        context.report(EXPORTED_SERVICE, element,
-                            context.getLocation(element),
-                            "Exported service does not require permission", null);
-                    }
-                }
-            }
+        if (getExported(element) && isUnprotectedByPermission(element)) {
+            // No declared permission for this exported service: complain
+            context.report(EXPORTED_SERVICE, element, context.getLocation(element),
+                           "Exported service does not require permission", null);
         }
     }
 
