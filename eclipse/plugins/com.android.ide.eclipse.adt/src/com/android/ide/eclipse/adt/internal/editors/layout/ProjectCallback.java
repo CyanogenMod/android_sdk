@@ -556,8 +556,7 @@ public final class ProjectCallback extends LegacyCallback {
         // Look for user-recorded preference for layout to be used for previews
         if (adapterCookie instanceof UiViewElementNode) {
             UiViewElementNode uiNode = (UiViewElementNode) adapterCookie;
-            LayoutMetadata metadata = LayoutMetadata.get();
-            AdapterBinding binding = metadata.getNodeBinding(viewObject, uiNode);
+            AdapterBinding binding = LayoutMetadata.getNodeBinding(viewObject, uiNode);
             if (binding != null) {
                 return binding;
             }

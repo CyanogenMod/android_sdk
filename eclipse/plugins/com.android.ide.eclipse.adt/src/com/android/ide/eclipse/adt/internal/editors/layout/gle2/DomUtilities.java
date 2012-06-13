@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
 import static com.android.util.XmlUtils.ANDROID_URI;
 import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentTypeIdForXML.ContentTypeID_XML;
 
@@ -614,18 +615,31 @@ public class DomUtilities {
         // Check attribute map
         NamedNodeMap attributes1 = element1.getAttributes();
         NamedNodeMap attributes2 = element2.getAttributes();
-        if (attributes1.getLength() != attributes2.getLength()) {
+
+        List<Attr> attributeNodes1 = new ArrayList<Attr>();
+        for (int i = 0, n = attributes1.getLength(); i < n; i++) {
+            Attr attribute = (Attr) attributes1.item(i);
+            // Ignore tools uri namespace attributes for equivalency test
+            if (TOOLS_URI.equals(attribute.getNamespaceURI())) {
+                continue;
+            }
+            attributeNodes1.add(attribute);
+        }
+        List<Attr> attributeNodes2 = new ArrayList<Attr>();
+        for (int i = 0, n = attributes2.getLength(); i < n; i++) {
+            Attr attribute = (Attr) attributes2.item(i);
+            // Ignore tools uri namespace attributes for equivalency test
+            if (TOOLS_URI.equals(attribute.getNamespaceURI())) {
+                continue;
+            }
+            attributeNodes2.add(attribute);
+        }
+
+        if (attributeNodes1.size() != attributeNodes2.size()) {
             return false;
         }
+
         if (attributes1.getLength() > 0) {
-            List<Attr> attributeNodes1 = new ArrayList<Attr>();
-            for (int i = 0, n = attributes1.getLength(); i < n; i++) {
-                attributeNodes1.add((Attr) attributes1.item(i));
-            }
-            List<Attr> attributeNodes2 = new ArrayList<Attr>();
-            for (int i = 0, n = attributes2.getLength(); i < n; i++) {
-                attributeNodes2.add((Attr) attributes2.item(i));
-            }
             Collections.sort(attributeNodes1, ATTRIBUTE_COMPARATOR);
             Collections.sort(attributeNodes2, ATTRIBUTE_COMPARATOR);
             for (int i = 0; i < attributeNodes1.size(); i++) {

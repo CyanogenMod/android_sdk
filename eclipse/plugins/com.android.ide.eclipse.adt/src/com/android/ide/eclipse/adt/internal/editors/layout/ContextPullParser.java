@@ -27,12 +27,10 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
 import com.android.sdklib.SdkConstants;
 
 import org.kxml2.io.KXmlParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 
@@ -55,6 +53,12 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
     /** The layout to be shown for the current {@code <fragment>} tag. Usually null. */
     private String mFragmentLayout = null;
 
+    /**
+     * Creates a new {@link ContextPullParser}
+     *
+     * @param projectCallback the associated callback
+     * @param file the file to be parsed
+     */
     public ContextPullParser(IProjectCallback projectCallback, File file) {
         super();
         mProjectCallback = projectCallback;
@@ -86,7 +90,7 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
 
         // At designtime, replace fragments with includes.
         if (name.equals(VIEW_FRAGMENT)) {
-            mFragmentLayout = findFragmentLayout();
+            mFragmentLayout = LayoutMetadata.getProperty(this, KEY_FRAGMENT_LAYOUT);
             if (mFragmentLayout != null) {
                 return VIEW_INCLUDE;
             }
@@ -115,59 +119,5 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
         }
 
         return value;
-    }
-
-    /**
-     * This method determines whether the {@code <fragment>} tag in the current parsing
-     * context has been configured with a layout to render at designtime. If so,
-     * it returns the resource name of the layout, and if not, returns null.
-     */
-    private String findFragmentLayout() {
-        try {
-            if (!isEmptyElementTag()) {
-                // We need to look inside the <fragment> tag to see
-                // if it contains a comment which indicates a fragment
-                // to be rendered.
-                String file = AdtPlugin.readFile(mFile);
-
-                int line = getLineNumber() - 1;
-                int column = getColumnNumber() - 1;
-                int offset = 0;
-                int currentLine = 0;
-                int length = file.length();
-                while (currentLine < line && offset < length) {
-                    int next = file.indexOf('\n', offset);
-                    if (next == -1) {
-                        break;
-                    }
-
-                    currentLine++;
-                    offset = next + 1;
-                }
-                if (currentLine == line) {
-                    offset += column;
-                    if (offset < length) {
-                        offset = file.indexOf('<', offset);
-                        if (offset != -1 && file.startsWith(COMMENT_PREFIX, offset)) {
-                            // The fragment tag contains a comment
-                            int end = file.indexOf(COMMENT_SUFFIX, offset);
-                            if (end != -1) {
-                                String commentText = file.substring(
-                                        offset + COMMENT_PREFIX.length(), end);
-                                String l = LayoutMetadata.getProperty(KEY_FRAGMENT_LAYOUT,
-                                        commentText);
-                                if (l != null) {
-                                    return l;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (XmlPullParserException e) {
-            AdtPlugin.log(e, null);
-        }
-
-        return null;
     }
 }

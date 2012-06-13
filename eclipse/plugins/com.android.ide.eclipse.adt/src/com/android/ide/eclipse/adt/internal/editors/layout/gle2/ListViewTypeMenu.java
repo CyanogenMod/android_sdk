@@ -20,6 +20,8 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_LV_HEADER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_LV_ITEM;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -148,7 +150,9 @@ public class ListViewTypeMenu extends SubmenuAction {
 
         @Override
         public void run() {
-            setNewType(KEY_LV_ITEM, ANDROID_LAYOUT_PREFIX + mLayout);
+            if (isChecked()) {
+                setNewType(KEY_LV_ITEM, ANDROID_LAYOUT_PREFIX + mLayout);
+            }
         }
     }
 
@@ -204,33 +208,35 @@ public class ListViewTypeMenu extends SubmenuAction {
         }
     }
 
+    @Nullable
     private String getSelectedLayout() {
         String layout = null;
-        LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
-        LayoutMetadata metadata = LayoutMetadata.get();
         SelectionManager selectionManager = mCanvas.getSelectionManager();
         for (SelectionItem item : selectionManager.getSelections()) {
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
-
-            Node xmlNode = node.getXmlNode();
-            layout = metadata.getProperty(delegate.getEditor(), xmlNode, KEY_LV_ITEM);
-            if (layout != null) {
-                return layout;
+            if (node != null) {
+                Node xmlNode = node.getXmlNode();
+                layout = LayoutMetadata.getProperty(xmlNode, KEY_LV_ITEM);
+                if (layout != null) {
+                    return layout;
+                }
             }
         }
+
         return null;
     }
 
-    public void setNewType(String type, String layout) {
+    private void setNewType(@NonNull String type, @Nullable String layout) {
         LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
         GraphicalEditorPart graphicalEditor = delegate.getGraphicalEditor();
-        LayoutMetadata metadata = LayoutMetadata.get();
         SelectionManager selectionManager = mCanvas.getSelectionManager();
 
-        for (SelectionItem item : selectionManager.getSelections()) {
+        for (SelectionItem item : selectionManager.getSnapshot()) {
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
-            Node xmlNode = node.getXmlNode();
-            metadata.setProperty(delegate.getEditor(), xmlNode, type, layout);
+            if (node != null) {
+                Node xmlNode = node.getXmlNode();
+                LayoutMetadata.setProperty(delegate.getEditor(), xmlNode, type, layout);
+            }
         }
 
         // Refresh

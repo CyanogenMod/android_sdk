@@ -710,7 +710,7 @@ public class AdtUtils {
             @NonNull final Element element,
             @NonNull final String description,
             @NonNull final String name,
-            @NonNull final String value,
+            @Nullable final String value,
             final boolean reveal,
             final boolean appendValue) {
         editor.wrapUndoEditXmlModel(description, new Runnable() {
@@ -721,15 +721,17 @@ public class AdtUtils {
                     // Add in new prefix...
                     prefix = XmlUtils.lookupNamespacePrefix(element,
                             TOOLS_URI, TOOLS_PREFIX);
-                    // ...and ensure that the header is formatted such that
-                    // the XML namespace declaration is placed in the right
-                    // position and wrapping is applied etc.
-                    editor.scheduleNodeReformat(editor.getUiRootNode(),
-                            true /*attributesOnly*/);
+                    if (value != null) {
+                        // ...and ensure that the header is formatted such that
+                        // the XML namespace declaration is placed in the right
+                        // position and wrapping is applied etc.
+                        editor.scheduleNodeReformat(editor.getUiRootNode(),
+                                true /*attributesOnly*/);
+                    }
                 }
 
                 String v = value;
-                if (appendValue) {
+                if (appendValue && v != null) {
                     String prev = element.getAttributeNS(TOOLS_URI, name);
                     if (prev.length() > 0) {
                         v = prev + ',' + value;
@@ -738,10 +740,14 @@ public class AdtUtils {
 
                 // Use the non-namespace form of set attribute since we can't
                 // reference the namespace until the model has been reloaded
-                element.setAttribute(prefix + ':' + name, v);
+                if (v != null) {
+                    element.setAttribute(prefix + ':' + name, v);
+                } else {
+                    element.removeAttribute(prefix + ':' + name);
+                }
 
                 UiElementNode rootUiNode = editor.getUiRootNode();
-                if (rootUiNode != null) {
+                if (rootUiNode != null && v != null) {
                     final UiElementNode uiNode = rootUiNode.findXmlNode(element);
                     if (uiNode != null) {
                         editor.scheduleNodeReformat(uiNode, true /*attributesOnly*/);
