@@ -70,8 +70,8 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testUri() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:24: Warning: Content provider shares everything; this is potentially dangerous.\n" +
-            "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous.",
+            "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous.\n" +
+            "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous.",
 
             lintProject(
                     "grantpermission.xml=>AndroidManifest.xml",
@@ -107,5 +107,93 @@ public class SecurityDetectorTest extends AbstractCheckTest {
             lintProject(
                 // Java files must be renamed in source tree
                 "src/test/pkg/WorldWriteableFile.java.txt=>src/test/pkg/WorldWriteableFile.java"));
+    }
+
+    public void testActivity0() throws Exception {
+        // Activities that do not have intent-filters do not need warnings
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportactivity0.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testActivity1() throws Exception {
+        assertEquals(
+            "AndroidManifest.xml:12: Warning: Exported activity does not require permission",
+            lintProject(
+                "exportactivity1.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testActivity2() throws Exception {
+        // Defines a permission on the <activity> element
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportactivity2.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testActivity3() throws Exception {
+        // Defines a permission on the parent <application> element
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportactivity3.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testActivity4() throws Exception {
+        // Not defining exported, but have intent-filters
+        assertEquals(
+            "AndroidManifest.xml:12: Warning: Exported activity does not require permission",
+            lintProject(
+                "exportactivity4.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testReceiver0() throws Exception {
+        // Activities that do not have intent-filters do not need warnings
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportreceiver0.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testReceiver1() throws Exception {
+        assertEquals(
+            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission",
+            lintProject(
+                "exportreceiver1.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testReceiver2() throws Exception {
+        // Defines a permission on the <activity> element
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportreceiver2.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testReceiver3() throws Exception {
+        // Defines a permission on the parent <application> element
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                "exportreceiver3.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
+    }
+
+    public void testReceiver4() throws Exception {
+        // Not defining exported, but have intent-filters
+        assertEquals(
+            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission",
+            lintProject(
+                "exportreceiver4.xml=>AndroidManifest.xml",
+                "res/values/strings.xml"));
     }
 }

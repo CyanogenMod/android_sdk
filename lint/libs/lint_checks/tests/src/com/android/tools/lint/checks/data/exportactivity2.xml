@@ -11,20 +11,14 @@
         android:label="@string/app_name" >
         <activity
             android:label="@string/app_name"
-            android:name=".Foo2Activity"
-            android:permission="Foo" >
+            android:name="com.sample.service.serviceClass"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
+            android:process=":remote" >
             <intent-filter >
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="com.sample.service.serviceClass" >
+                </action>
             </intent-filter>
         </activity>
-        <!-- good: -->
-        <grant-uri-permission android:pathPrefix="/all_downloads/"/>
-        <!-- bad: -->
-        <grant-uri-permission android:path="/"/>
-        <grant-uri-permission android:pathPrefix="/"/>
-        <grant-uri-permission android:pathPattern=".*"/>
     </application>
 
 </manifest>
