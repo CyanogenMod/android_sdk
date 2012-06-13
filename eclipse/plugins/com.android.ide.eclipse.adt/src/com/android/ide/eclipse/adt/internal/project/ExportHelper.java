@@ -20,6 +20,7 @@ import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.DexException;
@@ -169,14 +170,8 @@ public final class ExportHelper {
                 if (File.separatorChar != '/' && proguardConfig.indexOf('/') != -1) {
                     proguardConfig = proguardConfig.replace('/', File.separatorChar);
                 }
-                // Also split path: no need to convert to File.pathSeparator because we'll
-                // be splitting the path ourselves right here, so just ensure that both
-                // ':' and ';' work:
-                if (proguardConfig.indexOf(';') != -1) {
-                    proguardConfig = proguardConfig.replace(';', ':');
-                }
-                String[] paths = proguardConfig.split(":"); //$NON-NLS-1$
 
+                Iterable<String> paths = AdtUtils.splitPath(proguardConfig);
                 for (String path : paths) {
                     if (path.startsWith(SDK_PROPERTY_REF)) {
                         path = AdtPrefs.getPrefs().getOsSdkFolder() +

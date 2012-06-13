@@ -15,6 +15,10 @@
  */
 package com.android.ide.eclipse.adt;
 
+import com.google.common.collect.Iterables;
+
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
@@ -141,5 +145,30 @@ public class AdtUtilsTest extends TestCase {
         assertEquals("LinearLayout_Layout",
                 AdtUtils.stripSuffix("LinearLayout_LayoutParams", "Params"));
         assertEquals("Foo", AdtUtils.stripSuffix("Foo", "Bar"));
+    }
+
+    public void testSplitPath() throws Exception {
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar", "/baz" },
+                Iterables.toArray(AdtUtils.splitPath("/foo:/bar:/baz"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar" },
+                Iterables.toArray(AdtUtils.splitPath("/foo;/bar"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar:baz" },
+                Iterables.toArray(AdtUtils.splitPath("/foo;/bar:baz"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "\\foo\\bar", "\\bar\\foo" },
+                Iterables.toArray(AdtUtils.splitPath("\\foo\\bar;\\bar\\foo"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "${sdk.dir}\\foo\\bar", "\\bar\\foo" },
+                Iterables.toArray(AdtUtils.splitPath("${sdk.dir}\\foo\\bar;\\bar\\foo"),
+                        String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "${sdk.dir}/foo/bar", "/bar/foo" },
+                Iterables.toArray(AdtUtils.splitPath("${sdk.dir}/foo/bar:/bar/foo"),
+                        String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "C:\\foo", "/bar" },
+                Iterables.toArray(AdtUtils.splitPath("C:\\foo:/bar"), String.class)));
     }
 }
