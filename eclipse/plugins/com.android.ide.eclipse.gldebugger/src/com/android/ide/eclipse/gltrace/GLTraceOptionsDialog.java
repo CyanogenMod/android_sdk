@@ -52,9 +52,10 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private static final String TITLE = "OpenGL ES Trace Options";
     private static final String DEFAULT_MESSAGE = "Provide the application and activity to be traced.";
 
-    private static final String PREF_APPNAME = "gl.trace.appname";      //$NON-NLS-1$
-    private static final String PREF_TRACEFILE = "gl.trace.destfile";   //$NON-NLS-1$
-    private static final String PREF_DEVICE = "gl.trace.device";        //$NON-NLS-1$
+    private static final String PREF_APP_PACKAGE = "gl.trace.apppackage";   //$NON-NLS-1$
+    private static final String PREF_ACTIVITY = "gl.trace.activity";        //$NON-NLS-1$
+    private static final String PREF_TRACEFILE = "gl.trace.destfile";       //$NON-NLS-1$
+    private static final String PREF_DEVICE = "gl.trace.device";            //$NON-NLS-1$
     private String mLastUsedDevice;
 
     private static String sSaveToFolder = System.getProperty("user.home"); //$NON-NLS-1$
@@ -62,10 +63,12 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private Button mOkButton;
 
     private Combo mDeviceCombo;
+    private Text mAppPackageToTraceText;
     private Text mActivityToTraceText;
     private Text mTraceFilePathText;
 
     private String mSelectedDevice = "";
+    private String mAppPackageToTrace = "";
     private String mActivityToTrace = "";
     private String mTraceFilePath = "";
 
@@ -93,10 +96,13 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         mDevices = AndroidDebugBridge.getBridge().getDevices();
         createDeviceDropdown(c, mDevices);
 
-        createLabel(c, "Activity:");
-        createAppToTraceText(c, "e.g. com.example.package/.ActivityName");
+        createLabel(c, "Application Package:");
+        createAppToTraceText(c, "e.g. com.example.package");
 
-        createLabel(c, "Capture Image:");
+        createLabel(c, "Activity to launch:");
+        createActivityToTraceText(c, "Leave blank to launch default activity");
+
+        createLabel(c, "Data Collection Options:");
         createCaptureImageOptions(c);
 
         createSeparator(c);
@@ -207,6 +213,23 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private Text createAppToTraceText(Composite parent, String defaultMessage) {
+        mAppPackageToTraceText = new Text(parent, SWT.BORDER);
+        mAppPackageToTraceText.setMessage(defaultMessage);
+        mAppPackageToTraceText.setText(mAppPackageToTrace);
+
+        mAppPackageToTraceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        mAppPackageToTraceText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                validateAndSetMessage();
+            }
+        });
+
+        return mActivityToTraceText;
+    }
+
+    private Text createActivityToTraceText(Composite parent, String defaultMessage) {
         mActivityToTraceText = new Text(parent, SWT.BORDER);
         mActivityToTraceText.setMessage(defaultMessage);
         mActivityToTraceText.setText(mActivityToTrace);
@@ -277,7 +300,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
             return new DialogStatus(false, "No connected devices.");
         }
 
-        if (mActivityToTraceText.getText().trim().length() == 0) {
+        if (mAppPackageToTraceText.getText().trim().isEmpty()) {
             return new DialogStatus(false, "Provide an application name");
         }
 
@@ -297,8 +320,12 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     @Override
     protected void okPressed() {
-        mActivityToTrace = mActivityToTraceText.getText();
-        mTraceFilePath = mTraceFilePathText.getText();
+        mAppPackageToTrace = mAppPackageToTraceText.getText().trim();
+        mActivityToTrace = mActivityToTraceText.getText().trim();
+        if (mActivityToTrace.startsWith(".")) { //$NON-NLS-1$
+            mActivityToTrace = mActivityToTrace.substring(1);
+        }
+        mTraceFilePath = mTraceFilePathText.getText().trim();
         mSelectedDevice = mDeviceCombo.getText();
 
         savePreferences();
@@ -308,7 +335,8 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     private void savePreferences() {
         IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
-        prefs.put(PREF_APPNAME, mActivityToTrace);
+        prefs.put(PREF_APP_PACKAGE, mAppPackageToTrace);
+        prefs.put(PREF_ACTIVITY, mActivityToTrace);
         prefs.put(PREF_TRACEFILE, mTraceFilePath);
         prefs.put(PREF_DEVICE, mSelectedDevice);
         try {
@@ -320,13 +348,14 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     private void loadPreferences() {
         IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
-        mActivityToTrace = prefs.get(PREF_APPNAME, "");
+        mAppPackageToTrace = prefs.get(PREF_APP_PACKAGE, "");
+        mActivityToTrace = prefs.get(PREF_ACTIVITY, "");
         mTraceFilePath = prefs.get(PREF_TRACEFILE, "");
         mLastUsedDevice = prefs.get(PREF_DEVICE, "");
     }
 
     public TraceOptions getTraceOptions() {
-        return new TraceOptions(mSelectedDevice, mActivityToTrace.trim(), mTraceFilePath,
-                mCollectFbOnEglSwap, mCollectFbOnGlDraw, mCollectTextureData);
+        return new TraceOptions(mSelectedDevice, mAppPackageToTrace, mActivityToTrace,
+                mTraceFilePath, mCollectFbOnEglSwap, mCollectFbOnGlDraw, mCollectTextureData);
     }
 }
