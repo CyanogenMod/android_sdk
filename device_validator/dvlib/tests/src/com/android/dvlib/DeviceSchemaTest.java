@@ -18,11 +18,8 @@ package com.android.dvlib;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;

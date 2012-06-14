@@ -87,7 +87,7 @@
             <xsd:element name="gpu"               type= "c:gpuType" />
             <xsd:element name="abi"               type= "c:abiType" />
             <xsd:element name="dock"              type= "c:dockType" />
-            <xsd:element name="plugged-in"        type= "c:pluggedInType" />
+            <xsd:element name="power-type"        type= "c:powerType" />
         </xsd:sequence>
     </xsd:complexType>
 
@@ -298,7 +298,7 @@
             <xsd:element name="gpu"               type="c:gpuType" minOccurs="0" />
             <xsd:element name="abi"               type="c:abiType" minOccurs="0" />
             <xsd:element name="dock"              type="c:dockType" minOccurs="0" />
-            <xsd:element name="plugged-in"        type="c:pluggedInType"
+            <xsd:element name="power-type"        type="c:powerType"
                          minOccurs="0" />
         </xsd:sequence>
         <xsd:attribute name="name"    use="required" type="xsd:token" />
@@ -853,16 +853,15 @@
         </xsd:list>
     </xsd:simpleType>
 
-    <xsd:simpleType name="pluggedInType">
+    <xsd:simpleType name="powerType">
         <xsd:annotation>
             <xsd:documentation xml:lang="en">
-                Specifies when the device is plugged in.
+                Specifies whether the device is plugged in.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
-            <xsd:enumeration value="always" />
-            <xsd:enumeration value="charge" />
-            <xsd:enumeration value="never" />
+            <xsd:enumeration value="plugged-in" />
+            <xsd:enumeration value="battery" />
         </xsd:restriction>
     </xsd:simpleType>
 

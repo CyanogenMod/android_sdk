@@ -34,7 +34,8 @@ LOCAL_JAVA_LIBRARIES := \
         httpcore-4.1 \
         httpmime-4.1.1 \
         commons-logging-1.1.1 \
-        commons-codec-1.4
+        commons-codec-1.4 \
+        dvlib
 
 LOCAL_MODULE := sdklib
 

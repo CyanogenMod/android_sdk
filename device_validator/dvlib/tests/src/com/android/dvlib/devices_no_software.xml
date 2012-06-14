@@ -68,7 +68,7 @@
             <d:dock>
             </d:dock>
             <!-- plugged in (never, charge, always) -->
-            <d:plugged-in>charge</d:plugged-in>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
