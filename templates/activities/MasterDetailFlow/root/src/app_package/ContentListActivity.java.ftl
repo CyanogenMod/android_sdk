@@ -3,6 +3,8 @@ package ${packageName};
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NavUtils;
+import android.view.MenuItem;
 
 public class ${CollectionName}Activity extends FragmentActivity
         implements ${CollectionName}Fragment.Callbacks {
@@ -12,6 +14,9 @@ public class ${CollectionName}Activity extends FragmentActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_${collection_name});
+        <#if parentActivityClass != "">
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        </#if>
 
         if (findViewById(R.id.${detail_name}_container) != null) {
             mTwoPane = true;
@@ -20,6 +25,18 @@ public class ${CollectionName}Activity extends FragmentActivity
                     .setActivateOnItemClick(true);
         }
     }
+    <#if parentActivityClass != "">
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    </#if>
 
     @Override
     public void onItemSelected(String id) {

@@ -8,10 +8,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -34,7 +36,9 @@ public class ${activityClass} extends FragmentActivity<#if navType?contains("tab
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
-
+        <#if parentActivityClass != "">
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        </#if>
         // Create the adapter that will return a fragment for each of the three primary sections
         // of the app.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
@@ -78,6 +82,8 @@ public class ${activityClass} extends FragmentActivity<#if navType?contains("tab
         getMenuInflater().inflate(R.menu.${menuName}, menu);
         return true;
     }
+    <#include "_onOptionsItemSelected.java.ftl">
+
     <#if navType?contains("tabs")>
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {

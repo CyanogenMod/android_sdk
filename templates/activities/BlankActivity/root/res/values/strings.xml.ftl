@@ -1,5 +1,5 @@
 <resources>
-    <string name="activity_name">${appTitle}</string>
+    <string name="title_${activityToLayout(activityClass)}">${activityTitle}</string>
 
     <string name="menu_settings">Settings</string>
 

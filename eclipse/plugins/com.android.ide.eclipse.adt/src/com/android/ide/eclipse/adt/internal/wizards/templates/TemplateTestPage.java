@@ -147,8 +147,6 @@ public class TemplateTestPage extends WizardPage
         validatePage();
     }
 
-
-
     File getLocation() {
         return mTemplate;
     }

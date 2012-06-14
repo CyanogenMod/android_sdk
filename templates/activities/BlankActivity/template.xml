@@ -37,11 +37,20 @@
     </parameter>
 
     <parameter
-        id="appTitle"
+        id="parentActivityClass"
+        name="Hierarchical Parent"
+        type="string"
+        constraints="activity|exists"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
+
+    <parameter
+        id="activityTitle"
         name="Title"
         type="string"
         constraints="nonempty"
-        default="My Application"
+        default="MainActivity"
+        suggest="${activityClass}"
         help="The name of the activity. For launcher activities, the application title." />
 
     <parameter

@@ -34,6 +34,6 @@ public class FmUnderscoreToCamelCaseMethod implements TemplateMethodModel {
         if (args.size() != 1) {
             throw new TemplateModelException("Wrong arguments");
         }
-        return new SimpleScalar(AdtUtils.camelCaseToUnderlines(args.get(0).toString()));
+        return new SimpleScalar(AdtUtils.underlinesToCamelCase(args.get(0).toString()));
     }
 }
