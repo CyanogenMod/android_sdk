@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <template
+    format="1"
+    revision="1"
     name="New Blank Activity"
     description="Creates a new blank activity, with optional inner navigation.">
 

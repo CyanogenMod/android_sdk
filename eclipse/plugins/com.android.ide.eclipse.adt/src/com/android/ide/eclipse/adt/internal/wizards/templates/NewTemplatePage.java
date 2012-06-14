@@ -492,7 +492,7 @@ public class NewTemplatePage extends WizardPage
     // ---- Validation ----
 
     private void validatePage() {
-        IStatus status = null;
+        IStatus status = mValues.getTemplateHandler().validateTemplate();
 
         // -- validate project
         if (mChooseProject && mValues.project == null) {

@@ -43,9 +43,13 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -78,6 +82,9 @@ import lombok.ast.libs.org.parboiled.google.collect.Lists;
  * and merging into existing files
  */
 class TemplateHandler {
+    /** Highest supported format; templates with a higher number will be skipped */
+    static final int CURRENT_FORMAT = 1;
+
     /**
      * Special marker indicating that this path refers to the special shared
      * resource directory rather than being somewhere inside the root/ directory
@@ -113,6 +120,9 @@ class TemplateHandler {
     static final String TAG_OPEN = "open";               //$NON-NLS-1$
     static final String TAG_THUMB = "thumb";             //$NON-NLS-1$
     static final String TAG_THUMBS = "thumbs";           //$NON-NLS-1$
+    static final String TAG_DEPENDENCY = "dependency";   //$NON-NLS-1$
+    static final String ATTR_FORMAT = "format";          //$NON-NLS-1$
+    static final String ATTR_REVISION = "revision";      //$NON-NLS-1$
     static final String ATTR_VALUE = "value";            //$NON-NLS-1$
     static final String ATTR_DEFAULT = "default";        //$NON-NLS-1$
     static final String ATTR_SUGGEST = "suggest";        //$NON-NLS-1$
@@ -936,7 +946,8 @@ class TemplateHandler {
         }
     }
 
-    /** Returns all the templates with the given prefix
+    /**
+     * Returns all the templates with the given prefix
      *
      * @param folder the folder prefix
      * @return the available templates
@@ -966,5 +977,27 @@ class TemplateHandler {
         }
 
         return templates;
+    }
+
+    /**
+     * Validates this template to make sure it's supported
+     *
+     * @return a status object with the error, or null if there is no problem
+     */
+    @SuppressWarnings("cast") // In Eclipse 3.6.2 cast below is needed
+    @Nullable
+    public IStatus validateTemplate() {
+        TemplateMetadata template = getTemplate();
+        if (template != null && !template.isSupported()) {
+            String versionString = (String) AdtPlugin.getDefault().getBundle().getHeaders().get(
+                    Constants.BUNDLE_VERSION);
+            Version version = new Version(versionString);
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                String.format("This template requires a more recent version of the " +
+                        "Android Eclipse plugin. Please update from version %1$d.%2$d.%3$d.",
+                        version.getMajor(), version.getMinor(), version.getMicro()));
+        }
+
+        return null;
     }
 }

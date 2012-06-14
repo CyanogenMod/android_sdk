@@ -538,33 +538,42 @@ public class NewProjectPage extends WizardPage
     // Validation
 
     private void validatePage() {
-        IStatus appStatus = validateAppName();
-
-        IStatus status = appStatus;
-
-        IStatus projectStatus = validateProjectName();
-        if (projectStatus != null && (status == null
-                || projectStatus.getSeverity() > status.getSeverity())) {
-            status = projectStatus;
-        }
-
-        IStatus packageStatus = validatePackageName();
-        if (packageStatus != null && (status == null
-                || packageStatus.getSeverity() > status.getSeverity())) {
-            status = packageStatus;
-        }
-
-        if (status == null || status.getSeverity() != IStatus.ERROR) {
-            if (mValues.target == null) {
-                status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
-                        "Select an Android build target version");
+        IStatus status = mValues.template.validateTemplate();
+        if (status != null && !status.isOK()) {
+            updateDecorator(mApplicationDec, null, true);
+            updateDecorator(mPackageDec, null, true);
+            updateDecorator(mProjectDec, null, true);
+        } else {
+            IStatus appStatus = validateAppName();
+            if (appStatus != null && (status == null
+                    || appStatus.getSeverity() > status.getSeverity())) {
+                status = appStatus;
             }
-        }
 
-        if (status == null || status.getSeverity() != IStatus.ERROR) {
-            if (mValues.minSdk == null || mValues.minSdk.isEmpty()) {
-                status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
-                        "Select a minimum SDK version");
+            IStatus projectStatus = validateProjectName();
+            if (projectStatus != null && (status == null
+                    || projectStatus.getSeverity() > status.getSeverity())) {
+                status = projectStatus;
+            }
+
+            IStatus packageStatus = validatePackageName();
+            if (packageStatus != null && (status == null
+                    || packageStatus.getSeverity() > status.getSeverity())) {
+                status = packageStatus;
+            }
+
+            if (status == null || status.getSeverity() != IStatus.ERROR) {
+                if (mValues.target == null) {
+                    status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                            "Select an Android build target version");
+                }
+            }
+
+            if (status == null || status.getSeverity() != IStatus.ERROR) {
+                if (mValues.minSdk == null || mValues.minSdk.isEmpty()) {
+                    status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                            "Select a minimum SDK version");
+                }
             }
         }
 

@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FORMAT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_PARAMETER;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_THUMB;
@@ -56,6 +57,21 @@ class TemplateMetadata {
                 mParameterMap.put(parameter.id, parameter);
             }
         }
+    }
+
+    public boolean isSupported() {
+        String versionString = mDocument.getDocumentElement().getAttribute(ATTR_FORMAT);
+        if (versionString != null && !versionString.isEmpty()) {
+            try {
+                int version = Integer.parseInt(versionString);
+                return version <= TemplateHandler.CURRENT_FORMAT;
+            } catch (NumberFormatException nufe) {
+                return false;
+            }
+        }
+
+        // Older templates without version specified: supported
+        return true;
     }
 
     @Nullable
