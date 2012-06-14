@@ -20,6 +20,9 @@ public class TraceOptions {
     /** Device on which the application should be run. */
     public final String device;
 
+    /** Application to trace. */
+    public final String appToTrace;
+
     /** Activity to trace. */
     public final String activityToTrace;
 
@@ -35,9 +38,10 @@ public class TraceOptions {
     /** Flag indicating whether texture data should be captured on glTexImage*() */
     public final boolean collectTextureData;
 
-    public TraceOptions(String device, String activity, String destinationPath,
+    public TraceOptions(String device, String appPackage, String activity, String destinationPath,
             boolean collectFbOnEglSwap, boolean collectFbOnGlDraw, boolean collectTextureData) {
         this.device = device;
+        this.appToTrace = appPackage;
         this.activityToTrace = activity;
         this.traceDestination = destinationPath;
         this.collectFbOnEglSwap = collectFbOnEglSwap;

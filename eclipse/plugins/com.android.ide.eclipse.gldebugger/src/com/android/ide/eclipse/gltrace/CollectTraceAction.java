@@ -24,6 +24,7 @@ import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -40,7 +41,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     /** Abstract Unix Domain Socket Name used by the gltrace device code. */
@@ -51,6 +54,14 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
     /** Activity name to use for a system activity that has already been launched. */
     private static final String SYSTEM_APP = "system";          //$NON-NLS-1$
+
+    /** Time to wait for the application to launch (seconds) */
+    private static final int LAUNCH_TIMEOUT = 5;
+
+    /** Time to wait for the application to die (seconds) */
+    private static final int KILL_TIMEOUT = 5;
+
+    private static final int MIN_API_LEVEL = 16;
 
     @Override
     public void run(IAction action) {
@@ -79,6 +90,21 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         TraceOptions traceOptions = dlg.getTraceOptions();
 
         IDevice device = getDevice(traceOptions.device);
+        String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
+        int apiLevel;
+        try {
+            apiLevel = Integer.parseInt(apiLevelString);
+        } catch (NumberFormatException e) {
+            apiLevel = MIN_API_LEVEL;
+        }
+        if (apiLevel < MIN_API_LEVEL) {
+            MessageDialog.openError(shell, "GL Trace",
+                    String.format("OpenGL Tracing is only supported on devices at API Level %1$d."
+                            + "The selected device '%2$s' provides API level %3$s.",
+                                    MIN_API_LEVEL, traceOptions.device, apiLevelString));
+            return;
+        }
+
         try {
             setupForwarding(device, LOCAL_FORWARDED_PORT);
         } catch (Exception e) {
@@ -87,20 +113,13 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
 
         try {
-            if (!SYSTEM_APP.equals(traceOptions.activityToTrace)) {
-                startActivity(device, traceOptions.activityToTrace);
+            if (!SYSTEM_APP.equals(traceOptions.appToTrace)) {
+                startActivity(device, traceOptions.appToTrace, traceOptions.activityToTrace);
             }
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
                     "Error while launching application: " + e.getMessage());
             return;
-        }
-
-        try {
-            // wait a couple of seconds for the application to launch on the device
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // can't be interrupted
         }
 
         // if everything went well, the app should now be waiting for the gl debugger
@@ -171,21 +190,26 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
     }
 
-    private void startActivity(IDevice device, String appName)
+    private void startActivity(IDevice device, String appPackage, String activity)
             throws TimeoutException, AdbCommandRejectedException,
             ShellCommandUnresponsiveException, IOException, InterruptedException {
-        killApp(device, appName); // kill app if it is already running
+        killApp(device, appPackage); // kill app if it is already running
+        waitUntilAppKilled(device, appPackage, KILL_TIMEOUT);
 
+        String activityPath = appPackage;
+        if (!activity.isEmpty()) {
+            activityPath = String.format("%s/.%s", appPackage, activity);   //$NON-NLS-1$
+        }
         String startAppCmd = String.format(
                 "am start --opengl-trace %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
-                appName);
+                activityPath);
 
         Semaphore launchCompletionSempahore = new Semaphore(0);
         StartActivityOutputReceiver receiver = new StartActivityOutputReceiver(
                 launchCompletionSempahore);
         device.executeShellCommand(startAppCmd, receiver);
 
-        // wait until shell finishes launch
+        // wait until shell finishes launch command
         launchCompletionSempahore.acquire();
 
         // throw exception if there was an error during launch
@@ -193,12 +217,60 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         if (output.contains("Error")) {             //$NON-NLS-1$
             throw new RuntimeException(output);
         }
+
+        // wait until the app itself has been launched
+        waitUntilAppLaunched(device, appPackage, LAUNCH_TIMEOUT);
     }
 
     private void killApp(IDevice device, String appName) {
         Client client = device.getClient(appName);
         if (client != null) {
             client.kill();
+        }
+    }
+
+    private void waitUntilAppLaunched(final IDevice device, final String appName, int timeout) {
+        Callable<Boolean> c = new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                Client client;
+                do {
+                    client = device.getClient(appName);
+                } while (client == null);
+
+                return Boolean.TRUE;
+            }
+        };
+        try {
+            new SimpleTimeLimiter().callWithTimeout(c, timeout, TimeUnit.SECONDS, true);
+        } catch (Exception e) {
+            throw new RuntimeException("Timed out waiting for application to launch.");
+        }
+
+        // once the app has launched, wait an additional couple of seconds
+        // for it to start up
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    }
+
+    private void waitUntilAppKilled(final IDevice device, final String appName, int timeout) {
+        Callable<Boolean> c = new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                Client client;
+                while ((client = device.getClient(appName)) != null) {
+                    client.kill();
+                }
+                return Boolean.TRUE;
+            }
+        };
+        try {
+            new SimpleTimeLimiter().callWithTimeout(c, timeout, TimeUnit.SECONDS, true);
+        } catch (Exception e) {
+            throw new RuntimeException("Timed out waiting for running application to die.");
         }
     }
 
