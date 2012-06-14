@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -330,6 +331,37 @@ public class SdkManager {
         }
 
         return samples;
+    }
+
+    /**
+     * Returns a map of all the extras found in the <em>local</em> SDK with their major revision.
+     * <p/>
+     * Map keys are in the form "vendor-id/path-id". These ids uniquely identify an extra package.
+     * The version is the incremental integer major revision of the package.
+     *
+     * @return A non-null possibly empty map of { string "vendor/path" => integer major revision }
+     */
+    public @NonNull Map<String, Integer> getExtrasVersions() {
+        LocalSdkParser parser = new LocalSdkParser();
+        Package[] packages = parser.parseSdk(mOsSdkPath,
+                                             this,
+                                             LocalSdkParser.PARSE_EXTRAS,
+                                             new NullTaskMonitor(new NullSdkLog()));
+
+        Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
+
+        for (Package pkg : packages) {
+            if (pkg instanceof ExtraPackage && pkg.isLocal()) {
+                ExtraPackage ep = (ExtraPackage) pkg;
+                String vendor = ep.getVendorId();
+                String path = ep.getPath();
+                int majorRev = ep.getRevision().getMajor();
+
+                extraVersions.put(vendor + '/' + path, majorRev);
+            }
+        }
+
+        return extraVersions;
     }
 
 
