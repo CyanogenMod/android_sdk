@@ -121,7 +121,7 @@ public class CompatibilityLibraryHelper {
                         }
                     } else {
                         // Install library AND add dependency
-                        if (!AddCompatibilityJarAction.installLibrary(
+                        if (!AddCompatibilityJarAction.installGridLayoutLibrary(
                                 project,
                                 true /* waitForFinish */)) {
                             return tag;

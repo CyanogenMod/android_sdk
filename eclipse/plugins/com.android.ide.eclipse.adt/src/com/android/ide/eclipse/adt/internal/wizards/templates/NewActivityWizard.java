@@ -54,10 +54,10 @@ public class NewActivityWizard extends Wizard implements INewWizard {
 
     private IWorkbench mWorkbench;
     private UpdateToolsPage mUpdatePage;
-    private NewProjectPage mMainPage;
     private NewTemplatePage mTemplatePage;
     private ActivityPage mActivityPage;
     private NewProjectWizardState mValues;
+    protected InstallDependencyPage mDependencyPage;
     private NewTemplateWizardState mActivityValues;
 
     /** Creates a new {@link NewActivityWizard} */
@@ -99,7 +99,7 @@ public class NewActivityWizard extends Wizard implements INewWizard {
     @Override
     public IWizardPage getStartingPage() {
         if (mUpdatePage != null && mUpdatePage.isPageComplete()) {
-            return mMainPage;
+            return mActivityPage;
         }
         return super.getStartingPage();
     }
@@ -118,6 +118,20 @@ public class NewActivityWizard extends Wizard implements INewWizard {
                 addPage(mTemplatePage);
             }
             return mTemplatePage;
+        } else if (page == mTemplatePage) {
+            TemplateMetadata template = mActivityValues.getTemplateHandler().getTemplate();
+            if (template != null) {
+                if (InstallDependencyPage.isInstalled(template.getDependencies())) {
+                    return null;
+                } else {
+                    if (mDependencyPage == null) {
+                        mDependencyPage = new InstallDependencyPage();
+                        addPage(mDependencyPage);
+                    }
+                    mDependencyPage.setTemplate(template);
+                    return mDependencyPage;
+                }
+            }
         }
 
         return super.getNextPage(page);

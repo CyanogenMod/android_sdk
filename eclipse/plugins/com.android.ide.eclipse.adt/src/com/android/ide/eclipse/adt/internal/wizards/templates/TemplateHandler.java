@@ -17,7 +17,9 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.sdklib.SdkConstants.FD_EXTRAS;
+import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
 import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
@@ -25,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
@@ -35,6 +38,7 @@ import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.SdkConstants;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import freemarker.cache.TemplateLoader;
@@ -74,8 +78,6 @@ import java.util.Map;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-
-import lombok.ast.libs.org.parboiled.google.collect.Lists;
 
 /**
  * Handler which manages instantiating FreeMarker templates, copying resources
@@ -435,9 +437,25 @@ class TemplateHandler {
                         if (path != null) {
                             execute(freemarker, path, paramMap, outputPath);
                         }
+                    } else if (TAG_DEPENDENCY.equals(name)) {
+                        String dependencyName = attributes.getValue(ATTR_NAME);
+                        if (dependencyName.equals(SUPPORT_LIBRARY_NAME)) {
+                            // We assume the revision requirement has been satisfied
+                            // by the wizard
+                            File path = AddCompatibilityJarAction.getCompatJarFile();
+                            if (path != null) {
+                                File to = new File(outputPath, FD_NATIVE_LIBS
+                                        + File.separator + path.getName());
+                                try {
+                                    copy(path, to);
+                                } catch (IOException ioe) {
+                                    AdtPlugin.log(ioe, null);
+                                }
+                            }
+                        }
                     } else if (!name.equals("template") && !name.equals("category")
                             && !name.equals("option") && !name.equals(TAG_THUMBS) &&
-                            !name.equals(TAG_THUMB)) {
+                            !name.equals(TAG_THUMB) && !name.equals(TAG_DEPENDENCY)) {
                         System.err.println("WARNING: Unknown template directive " + name);
                     }
                 }
