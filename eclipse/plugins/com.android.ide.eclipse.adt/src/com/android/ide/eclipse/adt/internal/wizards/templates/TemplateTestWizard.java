@@ -65,6 +65,8 @@ public class TemplateTestWizard extends NewTemplateWizard {
 
                     mMainPage = new NewTemplatePage(mValues, true);
                     addPage(mMainPage);
+                } else {
+                    mValues.setTemplateLocation(file);
                 }
 
                 return mMainPage;

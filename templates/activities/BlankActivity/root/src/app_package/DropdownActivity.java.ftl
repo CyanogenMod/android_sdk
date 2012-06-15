@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -22,6 +24,9 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
+        <#if parentActivityClass != "">
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        </#if>
 
         // Set up the action bar.
         final ActionBar actionBar = getActionBar();
@@ -62,6 +67,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
         getMenuInflater().inflate(R.menu.${menuName}, menu);
         return true;
     }
+    <#include "_onOptionsItemSelected.java.ftl">
 
     @Override
     public boolean onNavigationItemSelected(int position, long id) {
