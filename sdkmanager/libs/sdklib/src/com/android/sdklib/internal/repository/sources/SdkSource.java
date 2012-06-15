@@ -34,6 +34,8 @@ import com.android.sdklib.internal.repository.packages.SamplePackage;
 import com.android.sdklib.internal.repository.packages.SourcePackage;
 import com.android.sdklib.internal.repository.packages.SystemImagePackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
+import com.android.sdklib.io.NonClosingInputStream;
+import com.android.sdklib.io.NonClosingInputStream.CloseBehavior;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -358,10 +360,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         String[] defaultNames = getDefaultXmlFileUrls();
         String firstDefaultName = defaultNames.length > 0 ? defaultNames[0] : "";
 
-        InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
+        InputStream xml = fetchXmlUrl(url, cache, monitor.createSubMonitor(1), exception);
         if (xml != null) {
             int version = getXmlSchemaVersion(xml);
             if (version == 0) {
+                closeStream(xml);
                 xml = null;
             }
         }
@@ -385,10 +388,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                 if (newUrl.equals(url)) {
                     continue;
                 }
-                xml = fetchUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
+                xml = fetchXmlUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
                 if (xml != null) {
                     int version = getXmlSchemaVersion(xml);
                     if (version == 0) {
+                        closeStream(xml);
                         xml = null;
                     } else {
                         url = newUrl;
@@ -414,7 +418,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             }
             url += firstDefaultName;
 
-            xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
+            xml = fetchXmlUrl(url, cache, monitor.createSubMonitor(1), exception);
             usingAlternateUrl = true;
         } else {
             monitor.incProgress(1);
@@ -487,7 +491,8 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                         }
                         url += firstDefaultName;
 
-                        xml = fetchUrl(url, cache, subMonitor.createSubMonitor(1),
+                        closeStream(xml);
+                        xml = fetchXmlUrl(url, cache, subMonitor.createSubMonitor(1),
                                 null /* outException */);
                         subMonitor.incProgress(1);
                         // Loop to try the alternative document
@@ -589,6 +594,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
         // done
         monitor.incProgress(1);
+        closeStream(xml);
     }
 
     private void setDefaultDescription() {
@@ -610,8 +616,6 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
     /**
      * Fetches the document at the given URL and returns it as a string. Returns
      * null if anything wrong happens and write errors to the monitor.
-     * References: <br/>
-     * URL Connection:
      *
      * @param urlString The URL to load, as a string.
      * @param monitor {@link ITaskMonitor} related to this URL.
@@ -619,12 +623,17 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      *            happens during the fetch.
      * @see UrlOpener UrlOpener, which handles all URL logic.
      */
-    private InputStream fetchUrl(String urlString,
+    private InputStream fetchXmlUrl(String urlString,
             DownloadCache cache,
             ITaskMonitor monitor,
             Exception[] outException) {
         try {
-            return cache.openCachedUrl(urlString, monitor);
+            InputStream xml = cache.openCachedUrl(urlString, monitor);
+            if (xml != null) {
+                xml.mark(500000);
+                xml = new NonClosingInputStream(xml).setCloseBehavior(CloseBehavior.RESET);
+            }
+            return xml;
         } catch (Exception e) {
             if (outException != null) {
                 outException[0] = e;
@@ -632,6 +641,21 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         }
 
         return null;
+    }
+
+    /**
+     * Closes the stream, ignore any exception from InputStream.close().
+     * If the stream is a NonClosingInputStream, sets it to CloseBehavior.CLOSE first.
+     */
+    private void closeStream(InputStream is) {
+        if (is != null) {
+            if (is instanceof NonClosingInputStream) {
+                ((NonClosingInputStream) is).setCloseBehavior(CloseBehavior.CLOSE);
+            }
+            try {
+                is.close();
+            } catch (IOException ignore) {}
+        }
     }
 
     /**
@@ -662,6 +686,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             validatorFound[0] = Boolean.TRUE;
 
             // Reset the stream if it supports that operation.
+            assert xml.markSupported();
             xml.reset();
 
             // Validation throws a bunch of possible Exceptions on failure.
@@ -702,6 +727,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         // Get an XML document
         Document doc = null;
         try {
+            assert xml.markSupported();
             xml.reset();
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -946,6 +972,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             factory.setNamespaceAware(true);
 
             DocumentBuilder builder = factory.newDocumentBuilder();
+            assert xml.markSupported();
             xml.reset();
             Document doc = builder.parse(new InputSource(xml));
 

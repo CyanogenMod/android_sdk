@@ -41,6 +41,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -61,7 +62,7 @@ import java.util.Properties;
 
 /**
  * This class holds methods for adding URLs management.
- * @see #openUrl(String, ITaskMonitor, Header[])
+ * @see #openUrl(String, boolean, ITaskMonitor, Header[])
  */
 public class UrlOpener {
 
@@ -121,13 +122,21 @@ public class UrlOpener {
      * available in the memory cache.
      *
      * @param url the URL string to be opened.
-     * @param monitor {@link ITaskMonitor} which is related to this URL
-     *            fetching.
+     * @param needsMarkResetSupport Indicates the caller <em>must</em> have an input stream that
+     *      supports the mark/reset operations (as indicated by {@link InputStream#markSupported()}.
+     *      Implementation detail: If the original stream does not, it will be fetched and wrapped
+     *      into a {@link ByteArrayInputStream}. This can only work sanely if the resource is a
+     *      small file that can fit in memory. It also means the caller has no chance of showing
+     *      a meaningful download progress. If unsure, callers should set this to false.
+     * @param monitor {@link ITaskMonitor} to output status.
      * @param headers An optional array of HTTP headers to use in the GET request.
-     * @return Returns an {@link InputStream} holding the URL content and
-     *      the HttpResponse (locale, headers and an status line).
-     *      This never returns null; an exception is thrown instead in case of
-     *      error or if the user canceled an authentication dialog.
+     * @return Returns a {@link Pair} with {@code first} holding an {@link InputStream}
+     *      and {@code second} holding an {@link HttpResponse}.
+     *      The input stream can be null. The response is never null and contains
+     *      at least a code; for http requests that provide them the response
+     *      also contains locale, headers and an status line.
+     *      The returned pair is never null.
+     *      The caller must only accept the stream if the response code is 200 or similar.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
      * @throws CanceledByUserException Exception thrown if the user cancels the
@@ -135,6 +144,7 @@ public class UrlOpener {
      */
     static @NonNull Pair<InputStream, HttpResponse> openUrl(
             @NonNull String url,
+            boolean needsMarkResetSupport,
             @NonNull ITaskMonitor monitor,
             @Nullable Header[] headers)
         throws IOException, CanceledByUserException {
@@ -154,13 +164,58 @@ public class UrlOpener {
             }
         }
 
+        // If the caller requires an InputStream that supports mark/reset, let's
+        // make sure we have such a stream.
+        if (result != null && needsMarkResetSupport) {
+            InputStream is = result.getFirst();
+            if (is != null) {
+                if (!is.markSupported()) {
+                    try {
+                        // Consume the whole input stream and offer a byte array stream instead.
+                        // This can only work sanely if the resource is a small file that can
+                        // fit in memory. It also means the caller has no chance of showing
+                        // a meaningful download progress.
+                        InputStream is2 = toByteArrayInputStream(is);
+                        if (is2 != null) {
+                            result = Pair.of(is2, result.getSecond());
+                            try {
+                                is.close();
+                            } catch (Exception ignore) {}
+                        }
+                    } catch (Exception e3) {
+                        // Ignore. If this can't work, caller will fail later.
+                    }
+                }
+            }
+        }
+
         if (result == null) {
             HttpResponse outResponse = new BasicHttpResponse(
-                    new ProtocolVersion("HTTP", 1, 0),
-                    404, "");  //$NON-NLS-1$;
+                    new ProtocolVersion("HTTP", 1, 0),  //$NON-NLS-1$
+                    424, "");                           //$NON-NLS-1$;  // 424=Method Failure
             result = Pair.of(null, outResponse);
         }
+
         return result;
+    }
+
+    // ByteArrayInputStream is the duct tape of input streams.
+    private static InputStream toByteArrayInputStream(InputStream is) throws IOException {
+        int inc = 4096;
+        int curr = 0;
+        byte[] result = new byte[inc];
+
+        int n;
+        while ((n = is.read(result, curr, result.length - curr)) != -1) {
+            curr += n;
+            if (curr == result.length) {
+                byte[] temp = new byte[curr + inc];
+                System.arraycopy(result, 0, temp, 0, curr);
+                result = temp;
+            }
+        }
+
+        return new ByteArrayInputStream(result, 0, curr);
     }
 
     private static Pair<InputStream, HttpResponse> openWithUrl(
@@ -257,9 +312,10 @@ public class UrlOpener {
 
         if (DEBUG) {
             try {
+                URI uri = new URI(url);
                 ProxySelector sel = routePlanner.getProxySelector();
-                if (sel != null) {
-                    List<Proxy> list = sel.select(new URI(url));
+                if (sel != null && uri.getScheme().startsWith("httP")) {               //$NON-NLS-1$
+                    List<Proxy> list = sel.select(uri);
                     System.out.printf(
                             "SdkLib.UrlOpener:\n  Connect to: %s\n  Proxy List: %s\n", //$NON-NLS-1$
                             url,
@@ -267,7 +323,7 @@ public class UrlOpener {
                 }
             } catch (Exception e) {
                 System.out.printf(
-                        "SdkLib.UrlOpener: Failed to get proxy info for %s: %s\n", //$NON-NLS-1$
+                        "SdkLib.UrlOpener: Failed to get proxy info for %s: %s\n",     //$NON-NLS-1$
                         url, e.toString());
             }
         }
@@ -280,7 +336,7 @@ public class UrlOpener {
             int statusCode = response.getStatusLine().getStatusCode();
 
             if (DEBUG) {
-                System.out.printf("  Status: %d", statusCode); //$NON-NLS-1$
+                System.out.printf("  Status: %d\n", statusCode);                       //$NON-NLS-1$
             }
 
             // check whether any authentication is required

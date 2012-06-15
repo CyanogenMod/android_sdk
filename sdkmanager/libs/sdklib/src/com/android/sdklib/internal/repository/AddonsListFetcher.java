@@ -18,6 +18,8 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.io.NonClosingInputStream;
+import com.android.sdklib.io.NonClosingInputStream.CloseBehavior;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 
@@ -127,10 +129,11 @@ public class AddonsListFetcher {
             defaultNames[i] = SdkAddonsListConstants.getDefaultName(version);
         }
 
-        InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
+        InputStream xml = fetchXmlUrl(url, cache, monitor.createSubMonitor(1), exception);
         if (xml != null) {
             int version = getXmlSchemaVersion(xml);
             if (version == 0) {
+                closeStream(xml);
                 xml = null;
             }
         }
@@ -153,10 +156,11 @@ public class AddonsListFetcher {
                 if (newUrl.equals(url)) {
                     continue;
                 }
-                xml = fetchUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
+                xml = fetchXmlUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
                 if (xml != null) {
                     int version = getXmlSchemaVersion(xml);
                     if (version == 0) {
+                        closeStream(xml);
                         xml = null;
                     } else {
                         url = newUrl;
@@ -190,6 +194,7 @@ public class AddonsListFetcher {
             } else if (version > SdkAddonsListConstants.NS_LATEST_VERSION) {
                 // The schema used is more recent than what is supported by this tool.
                 // We don't have an upgrade-path support yet, so simply ignore the document.
+                closeStream(xml);
                 return null;
             }
         }
@@ -223,6 +228,7 @@ public class AddonsListFetcher {
 
         // Stop here if we failed to validate the XML. We don't want to load it.
         if (validatedDoc == null) {
+            closeStream(xml);
             return null;
         }
 
@@ -239,13 +245,13 @@ public class AddonsListFetcher {
         // done
         monitor.incProgress(1);
 
+        closeStream(xml);
         return result;
     }
 
     /**
      * Fetches the document at the given URL and returns it as a stream. Returns
-     * null if anything wrong happens. References: <br/>
-     * URL Connection:
+     * null if anything wrong happens.
      *
      * @param urlString The URL to load, as a string.
      * @param monitor {@link ITaskMonitor} related to this URL.
@@ -253,12 +259,17 @@ public class AddonsListFetcher {
      *            happens during the fetch.
      * @see UrlOpener UrlOpener, which handles all URL logic.
      */
-    private InputStream fetchUrl(String urlString,
+    private InputStream fetchXmlUrl(String urlString,
             DownloadCache cache,
             ITaskMonitor monitor,
             Exception[] outException) {
         try {
-            return cache.openCachedUrl(urlString, monitor);
+            InputStream xml = cache.openCachedUrl(urlString, monitor);
+            if (xml != null) {
+                xml.mark(500000);
+                xml = new NonClosingInputStream(xml).setCloseBehavior(CloseBehavior.RESET);
+            }
+            return xml;
         } catch (Exception e) {
             if (outException != null) {
                 outException[0] = e;
@@ -266,6 +277,21 @@ public class AddonsListFetcher {
         }
 
         return null;
+    }
+
+    /**
+     * Closes the stream, ignore any exception from InputStream.close().
+     * If the stream is a NonClosingInputStream, sets it to CloseBehavior.CLOSE first.
+     */
+    private void closeStream(InputStream is) {
+        if (is != null) {
+            if (is instanceof NonClosingInputStream) {
+                ((NonClosingInputStream) is).setCloseBehavior(CloseBehavior.CLOSE);
+            }
+            try {
+                is.close();
+            } catch (IOException ignore) {}
+        }
     }
 
     /**
@@ -285,6 +311,7 @@ public class AddonsListFetcher {
         // Get an XML document
         Document doc = null;
         try {
+            assert xml.markSupported();
             xml.reset();
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -323,6 +350,7 @@ public class AddonsListFetcher {
             // Failed to create XML document builder
             // Failed to parse XML document
             // Failed to read XML document
+            //--For debug--System.err.println("getXmlSchemaVersion exception: " + e.toString());
         }
 
         if (doc == null) {
@@ -403,6 +431,7 @@ public class AddonsListFetcher {
             validatorFound[0] = Boolean.TRUE;
 
             // Reset the stream if it supports that operation.
+            assert xml.markSupported();
             xml.reset();
 
             // Validation throws a bunch of possible Exceptions on failure.
@@ -462,6 +491,7 @@ public class AddonsListFetcher {
             factory.setNamespaceAware(true);
 
             DocumentBuilder builder = factory.newDocumentBuilder();
+            assert xml.markSupported();
             xml.reset();
             Document doc = builder.parse(new InputSource(xml));
 

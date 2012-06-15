@@ -181,6 +181,7 @@ public class SdkRepoSource extends SdkSource {
         }
 
         // Reset the stream if it supports that operation.
+        assert xml.markSupported();
         xml.reset();
 
         // Get an XML document

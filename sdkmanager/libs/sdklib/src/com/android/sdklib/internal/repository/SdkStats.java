@@ -18,6 +18,8 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.io.NonClosingInputStream;
+import com.android.sdklib.io.NonClosingInputStream.CloseBehavior;
 import com.android.sdklib.repository.SdkStatsConstants;
 import com.android.sdklib.util.SparseArray;
 
@@ -159,7 +161,7 @@ public class SdkStats {
         Document validatedDoc = null;
         String validatedUri = null;
 
-        InputStream xml = fetchUrl(url, cache, monitor.createSubMonitor(1), exception);
+        InputStream xml = fetchXmlUrl(url, cache, monitor.createSubMonitor(1), exception);
 
         if (xml != null) {
             monitor.setDescription("Validate XML");
@@ -181,6 +183,7 @@ public class SdkStats {
             } else if (version > SdkStatsConstants.NS_LATEST_VERSION) {
                 // The schema used is more recent than what is supported by this tool.
                 // We don't have an upgrade-path support yet, so simply ignore the document.
+                closeStream(xml);
                 return;
             }
         }
@@ -214,6 +217,7 @@ public class SdkStats {
 
         // Stop here if we failed to validate the XML. We don't want to load it.
         if (validatedDoc == null) {
+            closeStream(xml);
             return;
         }
 
@@ -227,12 +231,12 @@ public class SdkStats {
 
         // done
         monitor.incProgress(1);
+        closeStream(xml);
     }
 
     /**
      * Fetches the document at the given URL and returns it as a stream. Returns
-     * null if anything wrong happens. References: <br/>
-     * URL Connection:
+     * null if anything wrong happens.
      *
      * @param urlString The URL to load, as a string.
      * @param monitor {@link ITaskMonitor} related to this URL.
@@ -240,12 +244,17 @@ public class SdkStats {
      *            happens during the fetch.
      * @see UrlOpener UrlOpener, which handles all URL logic.
      */
-    private InputStream fetchUrl(String urlString,
+    private InputStream fetchXmlUrl(String urlString,
             DownloadCache cache,
             ITaskMonitor monitor,
             Exception[] outException) {
         try {
-            return cache.openCachedUrl(urlString, monitor);
+            InputStream xml = cache.openCachedUrl(urlString, monitor);
+            if (xml != null) {
+                xml.mark(500000);
+                xml = new NonClosingInputStream(xml).setCloseBehavior(CloseBehavior.RESET);
+            }
+            return xml;
         } catch (Exception e) {
             if (outException != null) {
                 outException[0] = e;
@@ -253,6 +262,21 @@ public class SdkStats {
         }
 
         return null;
+    }
+
+    /**
+     * Closes the stream, ignore any exception from InputStream.close().
+     * If the stream is a NonClosingInputStream, sets it to CloseBehavior.CLOSE first.
+     */
+    private void closeStream(InputStream is) {
+        if (is != null) {
+            if (is instanceof NonClosingInputStream) {
+                ((NonClosingInputStream) is).setCloseBehavior(CloseBehavior.CLOSE);
+            }
+            try {
+                is.close();
+            } catch (IOException ignore) {}
+        }
     }
 
     /**
