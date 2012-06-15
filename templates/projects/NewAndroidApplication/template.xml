@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <template
+    format="1"
+    revision="1"
     name="New Android Application"
     description="Creates a new Android application with an activity.">
 
