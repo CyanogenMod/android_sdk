@@ -59,7 +59,7 @@ public class LintDeltaProcessor implements Runnable {
     public void process(@NonNull IResourceDelta delta)  {
         // Get the active editor file, if any
         Display display = AdtPlugin.getDisplay();
-        if (display == null) {
+        if (display == null || display.isDisposed()) {
             return;
         }
         if (display.getThread() != Thread.currentThread()) {
