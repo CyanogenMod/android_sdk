@@ -142,10 +142,10 @@ public class NewProjectPage extends WizardPage
         mPackageText.addModifyListener(this);
         mPackageText.addFocusListener(this);
         mPackageDec = createFieldDecoration(mPackageText,
-                "The package name must be a unique identifier for your application. " +
+                "The package name must be a unique identifier for your application.\n" +
                 "It is typically not shown to users, but it *must* stay the same " +
                 "for the lifetime of your application; it is how multiple versions " +
-                "of the same application are considered the \"same app\". This is " +
+                "of the same application are considered the \"same app\".\nThis is " +
                 "typically the reverse domain name of your organization plus one or " +
                 "more application identifiers, and it must be a valid Java package " +
                 "name.");
