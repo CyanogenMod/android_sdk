@@ -240,4 +240,11 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
         super(projectFolder, map, type);
     }
 
+    public ProjectProperties makeReadOnlyCopy() {
+        // copy the current properties in a new map
+        HashMap<String, String> propList = new HashMap<String, String>();
+        propList.putAll(mProperties);
+
+        return new ProjectProperties(mProjectFolder, propList, mType);
+    }
 }

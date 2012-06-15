@@ -140,17 +140,7 @@ public class DependencyHelper {
         mProjectFolder = projectFolder;
         mVerbose = verbose;
 
-        ProjectProperties properties = ProjectProperties.load(projectFolder.getAbsolutePath(),
-                PropertyType.ANT);
-
-        if (properties == null) {
-            properties = ProjectProperties.load(projectFolder.getAbsolutePath(),
-                    PropertyType.PROJECT);
-        } else {
-            properties.makeWorkingCopy().merge(PropertyType.PROJECT);
-        }
-
-        mProperties = properties;
+        mProperties = TaskHelper.getProperties(projectFolder.getAbsolutePath());
 
         init(projectFolder);
     }

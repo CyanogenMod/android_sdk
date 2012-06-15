@@ -60,6 +60,10 @@ public class GetLibraryListTask extends Task {
                     public String getProperty(String name) {
                         return antProject.getProperty(name);
                     }
+
+                    @Override
+                    public void debugPrint() {
+                    }
                 },
                 true /*verbose*/);
 

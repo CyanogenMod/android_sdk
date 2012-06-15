@@ -16,8 +16,11 @@
 
 package com.android.ant;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -94,5 +97,45 @@ final class TaskHelper {
         }
 
         return paths[0];
+    }
+
+    /**
+     * Returns the ProjectProperties for a given project path.
+     * This loads and merge all the .properties files in the same way that Ant does it.
+     *
+     * Note that this does not return all the Ant properties but only the one customized by the
+     * project's own build.xml file.
+     *
+     * If the project has no .properties files, this returns an empty {@link ProjectProperties}
+     * with type {@link PropertyType#PROJECT}.
+     *
+     * @param projectPath the path to the project root folder.
+     * @return a ProjectProperties.
+     */
+    @NonNull
+    static ProjectProperties getProperties(@NonNull String projectPath) {
+        // the import order is local, ant, project so we need to respect this.
+        PropertyType[] types = PropertyType.getOrderedTypes();
+
+        // make a working copy of the first non null props and then merge the rest into it.
+        ProjectProperties properties = null;
+        for (int i = 0 ; i < types.length ; i++) {
+            properties = ProjectProperties.load(projectPath, types[i]);
+
+            if (properties != null) {
+                ProjectPropertiesWorkingCopy workingCopy = properties.makeWorkingCopy();
+                for (int k = i + 1 ; k < types.length ; k++) {
+                    workingCopy.merge(types[k]);
+                }
+
+                // revert back to a read-only version
+                properties = workingCopy.makeReadOnlyCopy();
+
+                return properties;
+            }
+        }
+
+        // return an empty object with type PropertyType.PROJECT (doesn't actually matter).
+        return ProjectProperties.createEmpty(projectPath, PropertyType.PROJECT);
     }
 }

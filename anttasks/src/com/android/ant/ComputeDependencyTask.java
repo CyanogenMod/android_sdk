@@ -251,6 +251,10 @@ public class ComputeDependencyTask extends GetLibraryListTask {
             public String getProperty(String name) {
                 return antProject.getProperty(name);
             }
+
+            @Override
+            public void debugPrint() {
+            }
         }, jars);
 
         // and create a Path object for them

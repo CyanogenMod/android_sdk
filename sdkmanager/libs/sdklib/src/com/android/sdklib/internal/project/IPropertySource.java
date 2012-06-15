@@ -22,4 +22,5 @@ package com.android.sdklib.internal.project;
  */
 public interface IPropertySource {
     String getProperty(String name);
+    void debugPrint();
 }
