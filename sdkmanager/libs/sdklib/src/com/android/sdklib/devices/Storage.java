@@ -16,6 +16,8 @@
 
 package com.android.sdklib.devices;
 
+import com.android.sdklib.devices.Storage.Unit;
+
 public class Storage {
     private long mNoBytes;
 
@@ -74,7 +76,7 @@ public class Storage {
         KiB("KiB", 1024),
         MiB("MiB", 1024 * 1024),
         GiB("GiB", 1024 * 1024 * 1024),
-        TiB("TiB", 1024 * 1024 * 1024 * 1024);
+        TiB("TiB", 1024l * 1024l * 1024l * 1024l);
 
         private String mValue;
         /** The number of bytes needed to have one of the given unit */
@@ -102,5 +104,22 @@ public class Storage {
         public String toString() {
             return mValue;
         }
+    }
+
+    /**
+     * Finds the largest {@link Unit} which can display the storage value as a positive integer
+     * with no loss of accuracy.
+     * @return The most appropriate {@link Unit}.
+     */
+    public Unit getApproriateUnits() {
+        Unit optimalUnit = Unit.B;
+        for(Unit unit : Unit.values()) {
+            if(mNoBytes % unit.getNumberOfBytes() == 0) {
+                optimalUnit = unit;
+            } else {
+                break;
+            }
+        }
+        return optimalUnit;
     }
 }

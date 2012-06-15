@@ -22,7 +22,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,11 +33,16 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.resources.Keyboard;
+import com.android.resources.KeyboardState;
+import com.android.resources.Navigation;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.devices.Storage.Unit;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.PkgProps;
 
 /**
@@ -45,6 +53,8 @@ public class DeviceManager {
     private final static String sDeviceProfilesProp = "DeviceProfiles";
     private final static Pattern sPathPropertyPattern = Pattern.compile("^" + PkgProps.EXTRA_PATH
             + "=" + sDeviceProfilesProp + "$");
+    private static String BOOLEAN_YES = "yes";
+    private static String BOOLEAN_NO = "no";
 
     private ISdkLog mLog;
     private List<Device> mVendorDevices;
@@ -75,7 +85,7 @@ public class DeviceManager {
      * @return A list of vendor provided {@link Device}s
      */
     public List<Device> getVendorDevices(String sdkLocation) {
-        synchronized (mVendorDevices) {
+        synchronized (this) {
             if (mVendorDevices == null) {
                 List<Device> devices = new ArrayList<Device>();
                 File extrasFolder = new File(sdkLocation, SdkConstants.FD_EXTRAS);
@@ -98,7 +108,7 @@ public class DeviceManager {
      * @return All user created {@link Device}s
      */
     public List<Device> getUserDevices() {
-        synchronized (mUserDevices) {
+        synchronized (this) {
             if (mUserDevices == null) {
                 // User devices should be saved out to
                 // $HOME/.android/devices.xml
@@ -113,6 +123,53 @@ public class DeviceManager {
             }
         }
         return mUserDevices;
+    }
+
+    /**
+     * Returns hardware properties (defined in hardware.ini) as a {@link Map}.
+     * @param The {@link State} from which to derive the hardware properties.
+     * @return A {@link Map} of hardware properties.
+     */
+    public static Map<String, String> getHardwareProperties(State s) {
+        Hardware hw = s.getHardware();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("hw.ramSize", Long.toString(hw.getRam().getSizeAsUnit(Unit.MiB)));
+        props.put("hw.mainKeys", getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
+        props.put("hw.trackBall", getBooleanVal(hw.getNav().equals(Navigation.TRACKBALL)));
+        props.put("hw.keyboard", getBooleanVal(hw.getKeyboard().equals(Keyboard.QWERTY)));
+        props.put("hw.dPad", getBooleanVal(hw.getNav().equals(Navigation.DPAD)));
+        Set<Sensor> sensors = hw.getSensors();
+        props.put("hw.gps", getBooleanVal(sensors.contains(Sensor.GPS)));
+        props.put("hw.battery", getBooleanVal(hw.getChargeType().equals(PowerType.BATTERY)));
+        props.put("hw.accelerometer", getBooleanVal(sensors.contains(Sensor.ACCELEROMETER)));
+        props.put("hw.audioInput", getBooleanVal(hw.hasMic()));
+        props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
+        props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
+        props.put("hw.lcd.density", Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
+        props.put("hw.sensors.proximity", getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
+        return props;
+    }
+
+    /**
+     * Returns the hardware properties defined in {@link AvdManager.HARDWARE_INI} as a {@link Map}.
+     * @param The {@link Device} from which to derive the hardware properties.
+     * @return A {@link Map} of hardware properties.
+     */
+    public static Map<String, String> getHardwareProperties(Device d) {
+        Map<String, String> props = getHardwareProperties(d.getDefaultState());
+        for (State s : d.getAllStates()) {
+            if (s.getKeyState().equals(KeyboardState.HIDDEN)){
+                props.put("hw.keyboard.lid", getBooleanVal(true));
+            }
+        }
+        return getHardwareProperties(d.getDefaultState());
+    }
+
+    private static String getBooleanVal(boolean bool) {
+        if (bool) {
+            return HardwareProperties.BOOLEAN_VALUES[0];
+        }
+        return HardwareProperties.BOOLEAN_VALUES[1];
     }
 
     private Collection<Device> loadDevices(File deviceXml) {
