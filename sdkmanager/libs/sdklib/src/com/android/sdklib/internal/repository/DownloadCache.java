@@ -254,7 +254,7 @@ public class DownloadCache {
      * Instead the HttpClient library returns a progressive download stream.
      * <p/>
      * For details on realm authentication and user/password handling,
-     * check the underlying {@link UrlOpener#openUrl(String, ITaskMonitor, Header[])}
+     * check the underlying {@link UrlOpener#openUrl(String, boolean, ITaskMonitor, Header[])}
      * documentation.
      *
      * @param urlString the URL string to be opened.
@@ -271,8 +271,11 @@ public class DownloadCache {
         if (DEBUG) {
             System.out.println(String.format("%s : Direct download", urlString)); //$NON-NLS-1$
         }
-        Pair<InputStream, HttpResponse> result =
-            UrlOpener.openUrl(urlString, monitor, null /*headers*/);
+        Pair<InputStream, HttpResponse> result = UrlOpener.openUrl(
+                urlString,
+                false /*needsMarkResetSupport*/,
+                monitor,
+                null /*headers*/);
         return result.getFirst();
     }
 
@@ -286,7 +289,7 @@ public class DownloadCache {
      * method.
      * <p/>
      * For details on realm authentication and user/password handling,
-     * check the underlying {@link UrlOpener#openUrl(String, ITaskMonitor, Header[])}
+     * check the underlying {@link UrlOpener#openUrl(String, boolean, ITaskMonitor, Header[])}
      * documentation.
      *
      * @param urlString the URL string to be opened.
@@ -301,9 +304,14 @@ public class DownloadCache {
      */
     public InputStream openCachedUrl(String urlString, ITaskMonitor monitor)
             throws IOException, CanceledByUserException {
-        // Don't cache in direct mode. Don't try to cache non-http URLs.
-        if (mStrategy == Strategy.DIRECT || !urlString.startsWith("http")) {        //$NON-NLS-1$
-            return openDirectUrl(urlString, monitor);
+        // Don't cache in direct mode.
+        if (mStrategy == Strategy.DIRECT) {
+            Pair<InputStream, HttpResponse> result = UrlOpener.openUrl(
+                    urlString,
+                    true /*needsMarkResetSupport*/,
+                    monitor,
+                    null /*headers*/);
+            return result.getFirst();
         }
 
         File cached = new File(mCacheRoot, getCacheFilename(urlString));
@@ -561,7 +569,8 @@ public class DownloadCache {
         byte[] result = new byte[inc];
 
         try {
-            Pair<InputStream, HttpResponse> r = UrlOpener.openUrl(urlString, monitor, headers);
+            Pair<InputStream, HttpResponse> r =
+                UrlOpener.openUrl(urlString, true /*needsMarkResetSupport*/, monitor, headers);
 
             is = r.getFirst();
             HttpResponse response = r.getSecond();
