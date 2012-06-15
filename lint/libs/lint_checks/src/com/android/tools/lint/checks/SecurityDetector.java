@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_EXPORTED;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH_PATTERN;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH_PREFIX;
@@ -249,8 +250,26 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         return false;
     }
 
+    private boolean isLauncher(Element element) {
+        // Checks whether an element is a launcher activity.
+        for (Element child : LintUtils.getChildren(element)) {
+            if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+                for (Element innerChild: LintUtils.getChildren(child)) {
+                    if (innerChild.getTagName().equals("category")) { //$NON-NLS-1$
+                        String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                        return "android.intent.category.LAUNCHER".equals(categoryString); //$NON-NLS-1$
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     private void checkActivity(XmlContext context, Element element) {
-        if (getExported(element) && isUnprotectedByPermission(element)) {
+        // Do not flag launch activities. Even if not explicitly exported, it's
+        // safe to assume that those activities should be exported.
+        if (getExported(element) && isUnprotectedByPermission(element) && !isLauncher(element)) {
             // No declared permission for this exported activity: complain
             context.report(EXPORTED_ACTIVITY, element, context.getLocation(element),
                            "Exported activity does not require permission", null);
