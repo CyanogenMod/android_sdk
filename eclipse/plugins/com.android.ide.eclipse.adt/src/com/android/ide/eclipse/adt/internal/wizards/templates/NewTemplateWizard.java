@@ -59,6 +59,7 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
     protected IWorkbench mWorkbench;
     protected NewTemplatePage mMainPage;
     protected UpdateToolsPage mUpdatePage;
+    protected InstallDependencyPage mDependencyPage;
     protected NewTemplateWizardState mValues;
     private final String mTemplateName;
 
@@ -115,6 +116,22 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
 
     @Override
     public IWizardPage getNextPage(IWizardPage page) {
+        if (page == mMainPage) {
+            TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
+            if (template != null) {
+                if (InstallDependencyPage.isInstalled(template.getDependencies())) {
+                    return null;
+                } else {
+                    if (mDependencyPage == null) {
+                        mDependencyPage = new InstallDependencyPage();
+                        addPage(mDependencyPage);
+                    }
+                    mDependencyPage.setTemplate(template);
+                    return mDependencyPage;
+                }
+            }
+        }
+
         return super.getNextPage(page);
     }
 

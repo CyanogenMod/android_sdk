@@ -2,9 +2,6 @@
 <recipe>
     <merge from="AndroidManifest.xml.ftl" />
 
-    <copy from="${android.templatesRes}/android-support-v4.jar.bin"
-            to="libs/android-support-v4.jar" />
-
     <merge from="res/values-large/refs.xml.ftl" />
     <merge from="res/values-sw600dp/refs.xml.ftl" />
     <merge from="res/values/strings.xml.ftl" />

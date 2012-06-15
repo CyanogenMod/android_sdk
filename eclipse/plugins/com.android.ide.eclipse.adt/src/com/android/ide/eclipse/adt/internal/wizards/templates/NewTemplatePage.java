@@ -461,7 +461,7 @@ public class NewTemplatePage extends WizardPage
     @Override
     public boolean isPageComplete() {
         // Force user to reach this page before hitting Finish
-        return mShown;
+        return mShown && super.isPageComplete();
     }
 
     @Override

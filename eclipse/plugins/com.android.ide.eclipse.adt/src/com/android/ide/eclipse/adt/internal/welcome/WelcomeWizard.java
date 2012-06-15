@@ -173,6 +173,12 @@ public class WelcomeWizard extends Wizard {
         // are required dependencies of any platform.
         boolean result = updater.installNewSdk(apiLevels);
 
+        // TODO: Install extra package here as well since it is now core to most of
+        // the templates
+        // if (result) {
+        //     updater.installExtraPackage(vendor, path);
+        // }
+
         if (disposeShell) {
             shell.dispose();
         }

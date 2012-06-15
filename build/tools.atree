@@ -153,7 +153,7 @@ sdk/templates/projects/NewAndroidApplication                   tools/templates/p
 sdk/templates/activities/BlankActivity                         tools/templates/activities/BlankActivity
 sdk/templates/activities/MasterDetailFlow                      tools/templates/activities/MasterDetailFlow
 sdk/templates/other/CustomView                                 tools/templates/other/CustomView
-sdk/templates/resources                                        tools/templates/resources
+#sdk/templates/resources                                        tools/templates/resources
 
 # SDK Controller
 sdk/apps/SdkController       tools/apps/SdkController

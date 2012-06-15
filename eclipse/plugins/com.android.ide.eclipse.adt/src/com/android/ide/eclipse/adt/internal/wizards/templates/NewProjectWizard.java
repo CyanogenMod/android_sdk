@@ -78,6 +78,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private AppSkeletonPage mAppSkeletonPage;
     private NewTemplatePage mTemplatePage;
     private ActivityPage mActivityPage;
+    protected InstallDependencyPage mDependencyPage;
     private ConfigureAssetSetPage mIconPage;
     private NewProjectWizardState mValues;
 
@@ -154,7 +155,21 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             return mTemplatePage;
         }
 
-        if (page == mTemplatePage || !mValues.createActivity && page == mActivityPage) {
+        if (page == mTemplatePage ) {
+            TemplateMetadata template = mValues.activityValues.getTemplateHandler().getTemplate();
+            if (template != null
+                    && !InstallDependencyPage.isInstalled(template.getDependencies())) {
+                if (mDependencyPage == null) {
+                    mDependencyPage = new InstallDependencyPage();
+                    addPage(mDependencyPage);
+                }
+                mDependencyPage.setTemplate(template);
+                return mDependencyPage;
+            }
+        }
+
+        if (page == mTemplatePage || !mValues.createActivity && page == mActivityPage
+                || page == mDependencyPage) {
             if (mValues.createIcon) {
                 if (mIconPage == null) {
                     // Bundle asset studio wizard to create the launcher icon
