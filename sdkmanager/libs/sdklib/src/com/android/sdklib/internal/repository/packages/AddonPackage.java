@@ -488,7 +488,7 @@ public class AddonPackage extends MajorRevisionPackage
         return String.format("%1$s, Android API %2$s, revision %3$s%4$s",
                 getDisplayName(),
                 mVersion.getApiString(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -503,7 +503,7 @@ public class AddonPackage extends MajorRevisionPackage
         String s = String.format("%1$s, Android API %2$s, revision %3$s%4$s\nBy %5$s",
                 getDisplayName(),
                 mVersion.getApiString(),
-                getRevision(),
+                getRevision().toShortString(),
                 isObsolete() ? " (Obsolete)" : "",  //$NON-NLS-2$
                 getDisplayVendor());
 

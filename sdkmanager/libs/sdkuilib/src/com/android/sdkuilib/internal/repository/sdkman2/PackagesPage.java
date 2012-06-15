@@ -1376,7 +1376,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
                         if (update != null) {
                             return String.format(
                                     "Update available: rev. %1$s",
-                                    update.getRevision());
+                                    update.getRevision().toShortString());
                         }
                         return "Installed";
 
