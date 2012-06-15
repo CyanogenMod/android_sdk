@@ -230,10 +230,6 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
     @Override
     public boolean isPageComplete() {
-        if (!mValues.createAppSkeleton) {
-            return true;
-        }
-
         // Ensure that the Finish button isn't enabled until
         // the user has reached and completed this page
         if (!mShown) {

@@ -84,7 +84,8 @@ public class NewProjectPage extends WizardPage
     private boolean mIgnore;
     private Combo mBuildSdkCombo;
     private Button mChooseSdkButton;
-    private Button mSkeletonToggle;
+    private Button mCustomIconToggle;
+    private Button mLibraryToggle;
     private Label mHelpIcon;
     private Label mTipLabel;
 
@@ -258,11 +259,19 @@ public class NewProjectPage extends WizardPage
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
 
-        mSkeletonToggle = new Button(container, SWT.CHECK);
-        mSkeletonToggle.setSelection(true);
-        mSkeletonToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
-        mSkeletonToggle.setText("Create Application Skeleton");
-        mSkeletonToggle.addSelectionListener(this);
+        mCustomIconToggle = new Button(container, SWT.CHECK);
+        mCustomIconToggle.setSelection(true);
+        mCustomIconToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
+        mCustomIconToggle.setText("Create custom launcher icon");
+        mCustomIconToggle.setSelection(mValues.createIcon);
+        mCustomIconToggle.addSelectionListener(this);
+
+        mLibraryToggle = new Button(container, SWT.CHECK);
+        mLibraryToggle.setSelection(true);
+        mLibraryToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
+        mLibraryToggle.setText("Mark this project as a library");
+        mLibraryToggle.setSelection(mValues.isLibrary);
+        mLibraryToggle.addSelectionListener(this);
 
         Label label = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
         label.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 4, 1));
@@ -396,12 +405,15 @@ public class NewProjectPage extends WizardPage
             // TODO: implement
 
             Integer minSdk = mMinNameToApi.get(mValues.minSdk);
-            if (minSdk != null) {
-                mValues.iconState.minSdk = minSdk.intValue();
-            } else {
-                assert false : mValues.minSdk;
+            if (minSdk == null) {
+                try {
+                    minSdk = Integer.parseInt(mValues.minSdk);
+                } catch (NumberFormatException nufe) {
+                    minSdk = 1;
+                }
             }
-
+            mValues.iconState.minSdk = minSdk.intValue();
+            mValues.minSdkLevel = minSdk.intValue();
         } else if (source == mBuildSdkCombo) {
             mValues.target = getSelectedBuildTarget();
 
@@ -429,9 +441,10 @@ public class NewProjectPage extends WizardPage
                     }
                 }
             }
-        } else if (source == mSkeletonToggle) {
-            mValues.createAppSkeleton = mSkeletonToggle.getSelection();
-            mValues.createIcon = mValues.createAppSkeleton;
+        } else if (source == mCustomIconToggle) {
+            mValues.createIcon = mCustomIconToggle.getSelection();
+        } else if (source == mLibraryToggle) {
+            mValues.isLibrary = mLibraryToggle.getSelection();
         }
 
         validatePage();
@@ -573,6 +586,12 @@ public class NewProjectPage extends WizardPage
                 if (mValues.minSdk == null || mValues.minSdk.isEmpty()) {
                     status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
                             "Select a minimum SDK version");
+                } else {
+                    if (mValues.target != null && mValues.target.getVersion().getApiLevel() <
+                            mValues.minSdkLevel) {
+                        status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                            "The minimum SDK version is higher than the build target version");
+                    }
                 }
             }
         }

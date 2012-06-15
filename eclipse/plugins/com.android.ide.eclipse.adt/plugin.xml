@@ -167,8 +167,6 @@
         <category
             id="com.android.ide.eclipse.wizards.category"
             name="Android" />
-
-        <!-- New template-based project wizard -->
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -177,20 +175,7 @@
             hasPages="true"
             icon="icons/new_adt_project.png"
             id="ccom.android.ide.eclipse.adt.project.NewProjectWizard"
-            name="Android Application"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="true" />
-
-        <!-- Old custom-coded project wizard -->
-        <wizard
-            canFinishEarly="false"
-            category="com.android.ide.eclipse.wizards.category"
-            class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard"
-            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            hasPages="true"
-            icon="icons/new_adt_project.png"
-            id="com.android.ide.eclipse.adt.project.NewProjectWizard.Old"
-            name="Android Blank Project"
+            name="Android Application Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true" />
         <wizard
