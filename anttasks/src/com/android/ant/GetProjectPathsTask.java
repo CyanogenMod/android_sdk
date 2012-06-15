@@ -16,7 +16,6 @@
 
 package com.android.ant;
 
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
 
 import org.apache.tools.ant.BuildException;
@@ -24,7 +23,7 @@ import org.apache.tools.ant.Task;
 
 import java.io.File;
 
-public class GetProjectPropertyTask extends Task {
+public class GetProjectPathsTask extends Task {
 
     private String mProjectPath;
     private String mBinName;
@@ -34,11 +33,11 @@ public class GetProjectPropertyTask extends Task {
         mProjectPath = projectPath;
     }
 
-    public void setBin(String binName) {
+    public void setBinOut(String binName) {
         mBinName = binName;
     }
 
-    public void setSrc(String srcName) {
+    public void setSrcOut(String srcName) {
         mSrcName = srcName;
     }
 
@@ -51,20 +50,19 @@ public class GetProjectPropertyTask extends Task {
         ProjectProperties props = TaskHelper.getProperties(mProjectPath);
 
         if (mBinName != null) {
-            handleProp(props, "out.dir", mBinName, SdkConstants.FD_OUTPUT);
+            handleProp(props, "out.dir", mBinName);
         }
 
         if (mSrcName != null) {
-            handleProp(props, "source.dir", mSrcName, SdkConstants.FD_SOURCES);
+            handleProp(props, "source.dir", mSrcName);
         }
 
     }
 
-    private void handleProp(ProjectProperties props, String inName, String outName,
-            String defaultValue) {
+    private void handleProp(ProjectProperties props, String inName, String outName) {
         String value = props.getProperty(inName);
         if (value == null) {
-            value = defaultValue;
+            value = TaskHelper.getDefault(inName);
         }
         getProject().setProperty(outName, new File(mProjectPath, value).getAbsolutePath());
 

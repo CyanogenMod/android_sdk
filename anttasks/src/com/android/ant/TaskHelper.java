@@ -30,9 +30,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 final class TaskHelper {
+
+    private static Map<String, String> DEFAULT_ATTR_VALUES = new HashMap<String, String>();
+    static {
+        DEFAULT_ATTR_VALUES.put("source.dir", SdkConstants.FD_SOURCES);
+        DEFAULT_ATTR_VALUES.put("out.dir", SdkConstants.FD_OUTPUT);
+    }
+
+    static String getDefault(String name) {
+        return DEFAULT_ATTR_VALUES.get(name);
+    }
 
     static File getSdkLocation(Project antProject) {
         // get the SDK location

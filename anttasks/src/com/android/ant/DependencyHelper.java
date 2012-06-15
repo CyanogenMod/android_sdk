@@ -16,6 +16,7 @@
 
 package com.android.ant;
 
+import com.android.annotations.Nullable;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.JarListSanitizer;
@@ -54,10 +55,26 @@ public class DependencyHelper {
     }
 
     /**
-     * Basic implementation of {@link LibraryProcessor} that builds a list of sanitized list
+     * Advanced version of the {@link LibraryProcessor} that provides the library properties
+     * to the processor.
+     */
+    public static abstract class AdvancedLibraryProcessor implements LibraryProcessor {
+
+        public abstract void processLibrary(String libRootPath, IPropertySource properties);
+
+        @Override
+        public final void processLibrary(String libRootPath) {
+            ProjectProperties properties = TaskHelper.getProperties(libRootPath);
+
+            processLibrary(libRootPath, properties);
+        }
+    }
+
+    /**
+     * Implementation of {@link AdvancedLibraryProcessor} that builds a list of sanitized list
      * of 3rd party jar files from all the Library Projects.
      */
-    public static class LibraryProcessorFor3rdPartyJars implements LibraryProcessor {
+    public static class JarProcessor extends AdvancedLibraryProcessor {
 
         private final List<File> mJars = new ArrayList<File>();
 
@@ -77,7 +94,7 @@ public class DependencyHelper {
         }
 
         @Override
-        public void processLibrary(String libRootPath) {
+        public void processLibrary(String libRootPath, IPropertySource properties) {
             // get the library output
             // FIXME: support renamed folder.
             mJars.add(new File(libRootPath + "/" + SdkConstants.FD_OUTPUT +
@@ -94,6 +111,7 @@ public class DependencyHelper {
             }
         }
     }
+
 
     public static List<File> sanitizePaths(File projectFolder, IPropertySource properties,
             List<File> paths) {
@@ -178,7 +196,7 @@ public class DependencyHelper {
         return mProperties.getProperty(name);
     }
 
-    public void processLibraries(LibraryProcessor processor) {
+    public void processLibraries(@Nullable LibraryProcessor processor) {
         // use that same order to process the libraries.
         for (File library : mLibraries) {
             // get the root path.

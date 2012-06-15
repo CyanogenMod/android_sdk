@@ -16,7 +16,7 @@
 
 package com.android.ant;
 
-import com.android.ant.DependencyHelper.LibraryProcessorFor3rdPartyJars;
+import com.android.ant.DependencyHelper.JarProcessor;
 import com.android.io.FileWrapper;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.IPropertySource;
@@ -51,7 +51,7 @@ import java.util.List;
  * <code>verbose</code>: whether the build is verbose.
  *
  */
-public class ComputeDependencyTask extends GetLibraryListTask {
+public class ComputeDependencyTask extends GetLibraryPathTask {
 
     private String mLibraryManifestFilePathOut;
     private String mLibraryResFolderPathOut;
@@ -90,14 +90,6 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         mTargetApi = targetApi;
     }
 
-    /**
-     * Sets the value of the "verbose" attribute.
-     * @param verbose the value.
-     */
-    public void setVerbose(boolean verbose) {
-        mVerbose = verbose;
-    }
-
     @Override
     public void execute() throws BuildException {
         if (mLibraryManifestFilePathOut == null) {
@@ -134,11 +126,12 @@ public class ComputeDependencyTask extends GetLibraryListTask {
         final Path binAidlFolderPath = new Path(antProject);
         final StringBuilder packageStrBuilder = new StringBuilder();
 
-        LibraryProcessorFor3rdPartyJars processor = new LibraryProcessorFor3rdPartyJars() {
+        // custom jar processor doing a bit more than just collecting the jar files
+        JarProcessor processor = new JarProcessor() {
             @Override
-            public void processLibrary(String libRootPath) {
+            public void processLibrary(String libRootPath, IPropertySource properties) {
                 // let the super class handle the jar files
-                super.processLibrary(libRootPath);
+                super.processLibrary(libRootPath, properties);
 
                 // get the AndroidManifest.xml path.
                 // FIXME: support renamed location.
