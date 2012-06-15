@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import static com.android.sdklib.SdkConstants.FN_PROJECT_PROPERTIES;
+import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
+import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
+
 import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -28,12 +32,14 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.io.StreamException;
 import com.android.resources.Density;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.filesystem.EFS;
@@ -53,6 +59,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -108,6 +115,7 @@ public class NewProjectCreator  {
     private static final String PARAM_SOURCE = "SOURCE";                            //$NON-NLS-1$
     private static final String PARAM_SRC_FOLDER = "SRC_FOLDER";                    //$NON-NLS-1$
     private static final String PARAM_SDK_TARGET = "SDK_TARGET";                    //$NON-NLS-1$
+    private static final String PARAM_IS_LIBRARY = "IS_LIBRARY";                    //$NON-NLS-1$
     private static final String PARAM_MIN_SDK_VERSION = "MIN_SDK_VERSION";          //$NON-NLS-1$
     // Warning: The expanded string PARAM_TEST_TARGET_PACKAGE must not contain the
     // string "PACKAGE" since it collides with the replacement of PARAM_PACKAGE.
@@ -760,6 +768,31 @@ public class NewProjectCreator  {
         // Necessary for existing projects and good for new ones to.
         ProjectHelper.fixProject(project);
 
+        Boolean isLibraryProject = parameters.containsKey(PARAM_IS_LIBRARY);
+        if (isLibraryProject != null && isLibraryProject.booleanValue()
+                && Sdk.getCurrent() != null && project.isOpen()) {
+            ProjectState state = Sdk.getProjectState(project);
+            if (state != null) {
+                // make a working copy of the properties
+                ProjectPropertiesWorkingCopy properties =
+                        state.getProperties().makeWorkingCopy();
+
+                properties.setProperty(PROPERTY_LIBRARY, Boolean.TRUE.toString());
+                try {
+                    properties.save();
+                    IResource projectProp = project.findMember(FN_PROJECT_PROPERTIES);
+                    if (projectProp != null) {
+                        projectProp.refreshLocal(DEPTH_ZERO, new NullProgressMonitor());
+                    }
+                } catch (Exception e) {
+                    String msg = String.format(
+                            "Failed to save %1$s for project %2$s",
+                            SdkConstants.FN_PROJECT_PROPERTIES, project.getName());
+                    AdtPlugin.log(e, msg);
+                }
+            }
+        }
+
         return project;
     }
 
@@ -767,7 +800,8 @@ public class NewProjectCreator  {
             IProgressMonitor monitor,
             IProject project,
             IAndroidTarget target,
-            ProjectPopulator projectPopulator)
+            ProjectPopulator projectPopulator,
+            boolean isLibrary)
                 throws CoreException, IOException, StreamException {
         NewProjectCreator creator = new NewProjectCreator(null, null);
 
@@ -777,6 +811,7 @@ public class NewProjectCreator  {
         parameters.put(PARAM_SRC_FOLDER, SdkConstants.FD_SOURCES);
         parameters.put(PARAM_IS_NEW_PROJECT, false);
         parameters.put(PARAM_SAMPLE_LOCATION, null);
+        parameters.put(PARAM_IS_LIBRARY, isLibrary);
 
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
         final IProjectDescription description = workspace.newProjectDescription(project.getName());

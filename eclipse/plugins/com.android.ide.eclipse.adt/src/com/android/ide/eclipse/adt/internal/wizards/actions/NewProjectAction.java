@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.actions;
 
-import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
+import com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ui.IWorkbenchWizard;

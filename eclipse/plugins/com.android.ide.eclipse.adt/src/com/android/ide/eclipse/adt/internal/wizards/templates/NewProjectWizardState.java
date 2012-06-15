@@ -73,18 +73,12 @@ public class NewProjectWizardState {
     /** The minimum API level, as a string (if the API is a preview release with a codename) */
     public int minSdkLevel;
 
-    /** Whether to create an application skeleton */
-    public boolean createAppSkeleton = true;
+    /** Whether this project should be marked as a library project */
+    public boolean isLibrary;
 
     /** Whether to create an activity (if so, the activity state is stored in
      * {@link #activityValues}) */
     public boolean createActivity = true;
-
-    /** Whether to target phones */
-    public boolean phone = true;
-
-    /** Whether to target tablets */
-    public boolean tablet = true;
 
     /** Whether a custom icon should be created instead of just reusing the default (if so,
      * the icon wizard state is stored in {@link #iconState}) */

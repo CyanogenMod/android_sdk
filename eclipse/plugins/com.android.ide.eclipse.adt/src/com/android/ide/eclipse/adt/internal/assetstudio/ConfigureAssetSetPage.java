@@ -585,6 +585,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             chooseForegroundTab(mImageRadio, mImageForm);
         } else if (sourceType == CreateAssetSetWizardState.SourceType.CLIPART) {
             chooseForegroundTab(mClipartRadio, mClipartForm);
+            mChooseClipart.setFocus();
         } else if (sourceType == CreateAssetSetWizardState.SourceType.TEXT) {
             updateFontLabel(mFontButton.getFont());
             chooseForegroundTab(mTextRadio, mTextForm);
