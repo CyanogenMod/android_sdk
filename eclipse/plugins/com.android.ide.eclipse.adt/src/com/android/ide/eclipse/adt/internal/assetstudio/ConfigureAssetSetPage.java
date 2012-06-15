@@ -20,6 +20,7 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.assetstudiolib.ActionBarIconGenerator;
 import com.android.assetstudiolib.GraphicGenerator;
+import com.android.assetstudiolib.GraphicGenerator.Shape;
 import com.android.assetstudiolib.GraphicGeneratorContext;
 import com.android.assetstudiolib.LauncherIconGenerator;
 import com.android.assetstudiolib.MenuIconGenerator;
@@ -546,7 +547,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 }
 
                 setSourceType(mValues.sourceType);
+
+                // Shape=NONE does not apply for notification icons; it's needed for API < 9
+                if (mValues.shape == Shape.NONE && mValues.type == AssetType.NOTIFICATION) {
+                    mValues.shape = Shape.SQUARE;
+                }
+
                 setShape(mValues.shape);
+                mNoShapeRadio.setEnabled(mValues.type != AssetType.NOTIFICATION);
 
                 if (mValues.sourceType == SourceType.CLIPART
                         && mValues.clipartName != null) {

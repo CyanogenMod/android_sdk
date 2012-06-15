@@ -883,9 +883,10 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     private void onSelectActivity() {
-        String activity = getSelectedActivity();;
+        String activity = getSelectedActivity();
         mState.activity = activity;
         saveState();
+        storeState();
 
         if (activity == null) {
             return;
@@ -923,7 +924,25 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
     private String getActivityLabel(String fqcn, boolean brief) {
         if (brief) {
-            return fqcn.substring(fqcn.lastIndexOf('.') + 1);
+            String label = fqcn;
+            int packageIndex = label.lastIndexOf('.');
+            if (packageIndex != -1) {
+                label = label.substring(packageIndex + 1);
+            }
+            int innerClass = label.lastIndexOf('$');
+            if (innerClass != -1) {
+                label = label.substring(innerClass + 1);
+            }
+
+            // Also strip out the "Activity" or "Fragment" common suffix
+            // if this is a long name
+            if (label.endsWith("Activity") && label.length() > 8 + 12) { // 12 chars + 8 in suffix
+                label = label.substring(0, label.length() - 8);
+            } else if (label.endsWith("Fragment") && label.length() > 8 + 12) {
+                label = label.substring(0, label.length() - 8);
+            }
+
+            return label;
         }
 
         return fqcn;

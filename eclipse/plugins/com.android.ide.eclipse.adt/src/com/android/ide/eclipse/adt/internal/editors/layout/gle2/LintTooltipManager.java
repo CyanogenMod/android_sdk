@@ -20,6 +20,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LintOverl
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -56,10 +57,12 @@ class LintTooltipManager implements Listener {
     }
 
     void unregister() {
-        mCanvas.removeListener(SWT.Dispose, this);
-        mCanvas.removeListener(SWT.KeyDown, this);
-        mCanvas.removeListener(SWT.MouseMove, this);
-        mCanvas.removeListener(SWT.MouseHover, this);
+        if (!mCanvas.isDisposed()) {
+            mCanvas.removeListener(SWT.Dispose, this);
+            mCanvas.removeListener(SWT.KeyDown, this);
+            mCanvas.removeListener(SWT.MouseMove, this);
+            mCanvas.removeListener(SWT.MouseHover, this);
+        }
     }
 
     @Override
@@ -97,7 +100,7 @@ class LintTooltipManager implements Listener {
         }
     }
 
-    private void hide() {
+    void hide() {
         if (mTip != null) {
             mTip.dispose();
             mTip = null;
@@ -115,6 +118,10 @@ class LintTooltipManager implements Listener {
     /** Show a tooltip listing the lint errors for the given nodes */
     private void show(List<UiViewElementNode> nodes) {
         hide();
+
+        if (!AdtPrefs.getPrefs().isLintOnSave()) {
+            return;
+        }
 
         mTip = new LintTooltip(mCanvas, nodes);
         Rectangle rect = mCanvas.getBounds();

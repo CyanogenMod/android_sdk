@@ -233,6 +233,9 @@ public class LayoutCanvas extends Canvas {
      */
     private ClipboardSupport mClipboardSupport;
 
+    /** Tooltip manager for lint warnings */
+    private LintTooltipManager mLintTooltipManager;
+
     public LayoutCanvas(LayoutEditorDelegate editorDelegate,
             RulesEngine rulesEngine,
             Composite parent,
@@ -338,7 +341,8 @@ public class LayoutCanvas extends Canvas {
             mOutlinePage = editorDelegate.getGraphicalOutline();
         }
 
-        new LintTooltipManager(this).register();
+        mLintTooltipManager = new LintTooltipManager(this);
+        mLintTooltipManager.register();
     }
 
     private Runnable mZoomCheck = new Runnable() {
@@ -401,6 +405,11 @@ public class LayoutCanvas extends Canvas {
         super.dispose();
 
         mGestureManager.unregisterListeners(mDragSource, mDropTarget);
+
+        if (mLintTooltipManager != null) {
+            mLintTooltipManager.unregister();
+            mLintTooltipManager = null;
+        }
 
         if (mDropTarget != null) {
             mDropTarget.dispose();
@@ -1489,6 +1498,15 @@ public class LayoutCanvas extends Canvas {
     private void debugPrintf(String message, Object... params) {
         if (DEBUG) {
             AdtPlugin.printToConsole("Canvas", String.format(message, params));
+        }
+    }
+
+    /** The associated editor has been deactivated */
+    public void deactivated() {
+        // Force the tooltip to be hidden. If you switch from the layout editor
+        // to a Java editor with the keyboard, the tooltip can stay open.
+        if (mLintTooltipManager != null) {
+            mLintTooltipManager.hide();
         }
     }
 }

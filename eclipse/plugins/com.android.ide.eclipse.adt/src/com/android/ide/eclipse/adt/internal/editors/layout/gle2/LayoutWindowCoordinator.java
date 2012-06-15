@@ -308,31 +308,8 @@ public class LayoutWindowCoordinator implements IPartListener2 {
             }
         }
 
-        // Does this look like a window getting maximized? If so, show the editor
-        // outline and propertysheet views!
-        // (Note: We can't use activePage.isPageZoomed() here because the state flag
-        // is updated too late so querying it here gives us the previous state)
-        IViewReference[] viewReferences = activePage.getViewReferences();
-        int visibleCount = 0;
-        for (IViewReference reference : viewReferences) {
-            IWorkbenchPart part = reference.getPart(false /*restore*/);
-            if (part != null && activePage.isPartVisible(part)) {
-                visibleCount++;
-                if (visibleCount > 1) {
-                    break;
-                }
-            }
-        }
-
-        boolean wasMaximized = mEditorMaximized;
-        mEditorMaximized = visibleCount <= 1;
-        if (mEditorMaximized && !wasMaximized) {
-            // Only consider -maximizing- the window to be occasion for handling
-            // a "property sheet closed" event as a "show outline.
-            // And in fact we may want to remove it once you re-expose things
-            // in this mode!
-            syncActive();
-        }
+        // Does this look like a window getting maximized?
+        syncMaximizedState(activePage);
     }
 
     @Override
