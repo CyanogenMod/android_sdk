@@ -22,6 +22,8 @@ import static com.android.sdklib.SdkConstants.PLATFORM_LINUX;
 import static com.android.sdklib.SdkConstants.PLATFORM_WINDOWS;
 
 import com.android.AndroidConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
@@ -49,6 +51,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.google.common.io.Closeables;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.resources.IFile;
@@ -429,12 +432,16 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
      * @param file the file to be read
      * @return the String read from the file, or null if there was an error
      */
-    public static String readFile(IFile file) {
+    @SuppressWarnings("resource") // Eclipse doesn't understand Closeables.closeQuietly yet
+    @Nullable
+    public static String readFile(@NonNull IFile file) {
         InputStream contents = null;
+        InputStreamReader reader = null;
         try {
             contents = file.getContents();
             String charset = file.getCharset();
-            return readFile(new InputStreamReader(contents, charset));
+            reader = new InputStreamReader(contents, charset);
+            return readFile(reader);
         } catch (CoreException e) {
             // pass -- ignore files we can't read
         } catch (IOException e) {
@@ -447,13 +454,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
             // which is handled by this IOException catch.
 
         } finally {
-            try {
-                if (contents != null) {
-                    contents.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
+            Closeables.closeQuietly(reader);
+            Closeables.closeQuietly(contents);
         }
 
         return null;

@@ -19,47 +19,35 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectW
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_TARGET_API;
-import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.ui.INewWizard;
+import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * Template wizard which creates parameterized templates
  */
-public class NewTemplateWizard extends Wizard implements INewWizard {
+public class NewTemplateWizard extends TemplateWizard {
     /** Template name and location under $sdk/templates for the default activity */
     static final String BLANK_ACTIVITY = "activities/BlankActivity";           //$NON-NLS-1$
     /** Template name and location under $sdk/templates for the custom view template */
     static final String CUSTOM_VIEW = "other/CustomView";                      //$NON-NLS-1$
-    private static final String PROJECT_LOGO_LARGE = "android-64";             //$NON-NLS-1$
 
-    protected IWorkbench mWorkbench;
     protected NewTemplatePage mMainPage;
-    protected UpdateToolsPage mUpdatePage;
-    protected InstallDependencyPage mDependencyPage;
     protected NewTemplateWizardState mValues;
     private final String mTemplateName;
 
@@ -69,20 +57,15 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
 
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
-        mWorkbench = workbench;
-
-        setHelpAvailable(false);
-        setImageDescriptor();
+        super.init(workbench, selection);
 
         mValues = new NewTemplateWizardState();
 
         File template = TemplateHandler.getTemplateLocation(mTemplateName);
-        mValues.setTemplateLocation(template);
-        hideBuiltinParameters();
-
-        if (!UpdateToolsPage.isUpToDate()) {
-            mUpdatePage = new UpdateToolsPage();
+        if (template != null) {
+            mValues.setTemplateLocation(template);
         }
+        hideBuiltinParameters();
 
         List<IProject> projects = AdtUtils.getSelectedProjects(selection);
         if (projects.size() == 1) {
@@ -107,80 +90,44 @@ public class NewTemplateWizard extends Wizard implements INewWizard {
 
     @Override
     public void addPages() {
-        if (mUpdatePage != null) {
-            addPage(mUpdatePage);
-        }
-
+        super.addPages();
         addPage(mMainPage);
     }
 
     @Override
     public IWizardPage getNextPage(IWizardPage page) {
+        TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
         if (page == mMainPage) {
-            TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
             if (template != null) {
                 if (InstallDependencyPage.isInstalled(template.getDependencies())) {
-                    return null;
+                    return getPreviewPage(mValues);
                 } else {
-                    if (mDependencyPage == null) {
-                        mDependencyPage = new InstallDependencyPage();
-                        addPage(mDependencyPage);
-                    }
-                    mDependencyPage.setTemplate(template);
-                    return mDependencyPage;
+                    return getDependencyPage(template, true);
                 }
             }
+        } else if (page == getDependencyPage(template, false)) {
+            return getPreviewPage(mValues);
         }
 
         return super.getNextPage(page);
     }
 
     @Override
-    public IWizardPage getStartingPage() {
-        if (mUpdatePage != null && mUpdatePage.isPageComplete()) {
-            return mMainPage;
-        }
-        return super.getStartingPage();
+    @NonNull
+    protected IProject getProject() {
+        return mValues.project;
     }
 
     @Override
-    public boolean performFinish() {
-        try {
-            Map<String, Object> parameters = mValues.parameters;
-            IProject project = mValues.project;
-
-            ManifestInfo manifest = ManifestInfo.get(project);
-            parameters.put(ATTR_PACKAGE_NAME, manifest.getPackage());
-            parameters.put(ATTR_MIN_API, manifest.getMinSdkVersion());
-            parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
-            parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
-
-            File outputPath = AdtUtils.getAbsolutePath(project).toFile();
-            TemplateHandler handler = mValues.getTemplateHandler();
-            handler.render(outputPath, parameters);
-
-            try {
-                project.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
-            } catch (CoreException e) {
-                AdtPlugin.log(e, null);
-            }
-
-            List<String> filesToOpen = handler.getFilesToOpen();
-            NewTemplateWizard.openFiles(project, filesToOpen, mWorkbench);
-
-            return true;
-        } catch (Exception ioe) {
-            AdtPlugin.log(ioe, null);
-            return false;
-        }
+    @NonNull
+    protected List<String> getFilesToOpen() {
+        TemplateHandler activityTemplate = mValues.getTemplateHandler();
+        return activityTemplate.getFilesToOpen();
     }
 
-    /**
-     * Returns an image descriptor for the wizard logo.
-     */
-    private void setImageDescriptor() {
-        ImageDescriptor desc = IconFactory.getInstance().getImageDescriptor(PROJECT_LOGO_LARGE);
-        setDefaultPageImageDescriptor(desc);
+    @Override
+    protected List<Change> computeChanges() {
+        return mValues.computeChanges();
     }
 
     /**

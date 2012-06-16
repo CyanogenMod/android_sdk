@@ -16,15 +16,23 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_TARGET_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard.BLANK_ACTIVITY;
 
 import com.android.annotations.NonNull;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.ltk.core.refactoring.Change;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,5 +96,21 @@ public class NewTemplateWizardState {
     /** Returns the current template */
     File getTemplateLocation() {
         return mTemplateLocation;
+    }
+
+    /** Computes the changes this wizard will make */
+    @NonNull
+    List<Change> computeChanges() {
+        if (project == null) {
+            return Collections.emptyList();
+        }
+
+        ManifestInfo manifest = ManifestInfo.get(project);
+        parameters.put(ATTR_PACKAGE_NAME, manifest.getPackage());
+        parameters.put(ATTR_MIN_API, manifest.getMinSdkVersion());
+        parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
+        parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
+
+        return getTemplateHandler().render(project, parameters);
     }
 }

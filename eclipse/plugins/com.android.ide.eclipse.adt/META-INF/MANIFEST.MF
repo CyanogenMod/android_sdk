@@ -52,7 +52,8 @@ Require-Bundle: com.android.ide.eclipse.base,
  org.eclipse.jdt.junit.runtime,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.ltk.ui.refactoring,
- org.eclipse.core.expressions
+ org.eclipse.core.expressions,
+ org.eclipse.compare
 Eclipse-LazyStart: true
 Export-Package: com.android.ide.common.layout;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.log;x-friends:="com.android.ide.eclipse.tests",

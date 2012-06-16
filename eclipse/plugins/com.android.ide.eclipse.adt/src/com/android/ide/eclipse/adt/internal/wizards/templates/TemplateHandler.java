@@ -15,8 +15,14 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_AIDL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_RS;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_SVG;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_TXT;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.sdklib.SdkConstants.FD_EXTRAS;
 import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
@@ -25,6 +31,7 @@ import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
@@ -47,11 +54,21 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.NullChange;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.swt.SWT;
+import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.w3c.dom.Document;
@@ -159,6 +176,14 @@ class TemplateHandler {
     @NonNull
     private final File mRootPath;
 
+    /** The changes being processed by the template handler */
+    private List<Change> mMergeChanges;
+    private List<Change> mTextChanges;
+    private List<Change> mOtherChanges;
+
+    /** The project to write the template into */
+    private IProject mProject;
+
     /** The template loader which is responsible for finding (and sharing) template files */
     private final MyTemplateLoader mLoader;
 
@@ -200,10 +225,14 @@ class TemplateHandler {
         mBackupMergedFiles = backupMergedFiles;
     }
 
-    public void render(final File outputPath, Map<String, Object> args) {
-        if (!outputPath.exists()) {
-            outputPath.mkdirs();
-        }
+    @NonNull
+    public List<Change> render(IProject project, Map<String, Object> args) {
+        mOpen.clear();
+
+        mProject = project;
+        mMergeChanges = new ArrayList<Change>();
+        mTextChanges = new ArrayList<Change>();
+        mOtherChanges = new ArrayList<Change>();
 
         // Render the instruction list template.
         Map<String, Object> paramMap = createParameterMap(args);
@@ -211,7 +240,15 @@ class TemplateHandler {
         freemarker.setObjectWrapper(new DefaultObjectWrapper());
         freemarker.setTemplateLoader(mLoader);
 
-        processVariables(freemarker, TEMPLATE_XML, paramMap, outputPath);
+        processVariables(freemarker, TEMPLATE_XML, paramMap);
+
+        // Add the changes in the order where merges are shown first, then text files,
+        // and finally other files (like jars and icons which don't have previews).
+        List<Change> changes = new ArrayList<Change>();
+        changes.addAll(mMergeChanges);
+        changes.addAll(mTextChanges);
+        changes.addAll(mOtherChanges);
+        return changes;
     }
 
     Map<String, Object> createParameterMap(Map<String, Object> args) {
@@ -389,7 +426,7 @@ class TemplateHandler {
 
     /** Read the given FreeMarker file and process the variable definitions */
     private void processVariables(final Configuration freemarker,
-            String file, final Map<String, Object> paramMap, final File outputPath) {
+            String file, final Map<String, Object> paramMap) {
         try {
             String xml;
             if (file.endsWith(DOT_XML)) {
@@ -430,12 +467,12 @@ class TemplateHandler {
                         // Handle evaluation of variables
                         String path = attributes.getValue(ATTR_FILE);
                         if (path != null) {
-                            processVariables(freemarker, path, paramMap, outputPath);
+                            processVariables(freemarker, path, paramMap);
                         } // else: <globals> root element
                     } else if (TAG_EXECUTE.equals(name)) {
                         String path = attributes.getValue(ATTR_FILE);
                         if (path != null) {
-                            execute(freemarker, path, paramMap, outputPath);
+                            execute(freemarker, path, paramMap);
                         }
                     } else if (TAG_DEPENDENCY.equals(name)) {
                         String dependencyName = attributes.getValue(ATTR_NAME);
@@ -444,8 +481,7 @@ class TemplateHandler {
                             // by the wizard
                             File path = AddCompatibilityJarAction.getCompatJarFile();
                             if (path != null) {
-                                File to = new File(outputPath, FD_NATIVE_LIBS
-                                        + File.separator + path.getName());
+                                IPath to = getTargetPath(FD_NATIVE_LIBS +'/' + path.getName());
                                 try {
                                     copy(path, to);
                                 } catch (IOException ioe) {
@@ -466,7 +502,7 @@ class TemplateHandler {
     }
 
     private boolean canOverwrite(File file) {
-        if (file.exists() && !file.isDirectory()) {
+        if (file.exists()) {
             // Warn that the file already exists and ask the user what to do
             if (!mYesToAll) {
                 MessageDialog dialog = new MessageDialog(null, "File Already Exists", null,
@@ -511,8 +547,7 @@ class TemplateHandler {
     private void execute(
             final Configuration freemarker,
             String file,
-            final Map<String, Object> paramMap,
-            final File outputPath) {
+            final Map<String, Object> paramMap) {
         try {
             mLoader.setTemplateFile(new File(mRootPath, file));
             Template freemarkerTemplate = freemarker.getTemplate(file);
@@ -545,11 +580,11 @@ class TemplateHandler {
                                 toPath = attributes.getValue(ATTR_FROM);
                                 toPath = AdtUtils.stripSuffix(toPath, DOT_FTL);
                             }
-                            File to = new File(outputPath, toPath);
+                            IPath to = getTargetPath(toPath);
                             if (instantiate) {
                                 instantiate(freemarker, paramMap, fromPath, to);
                             } else {
-                                copyBundledResource(fromPath, to);
+                                copyTemplateResource(fromPath, to);
                             }
                         } else if (TAG_MERGE.equals(name)) {
                             String fromPath = attributes.getValue(ATTR_FROM);
@@ -559,7 +594,7 @@ class TemplateHandler {
                                 toPath = AdtUtils.stripSuffix(toPath, DOT_FTL);
                             }
                             // Resources in template.xml are located within root/
-                            File to = new File(outputPath, toPath);
+                            IPath to = getTargetPath(toPath);
                             merge(freemarker, paramMap, fromPath, to);
                         } else if (name.equals(TAG_OPEN)) {
                             // The relative path here is within the output directory:
@@ -591,23 +626,44 @@ class TemplateHandler {
         return new File(mRootPath, DATA_ROOT + File.separator + fromPath);
     }
 
+    @NonNull
+    private IPath getTargetPath(@NonNull String relative) {
+        if (relative.indexOf('\\') != -1) {
+            relative = relative.replace('\\', '/');
+        }
+        return new Path(relative);
+    }
+
+    @NonNull
+    private IFile getTargetFile(@NonNull IPath path) {
+        return mProject.getFile(path);
+    }
+
     private void merge(
             @NonNull final Configuration freemarker,
             @NonNull final Map<String, Object> paramMap,
             @NonNull String relativeFrom,
-            @NonNull File to) throws IOException, TemplateException {
-        if (!to.exists()) {
+            @NonNull IPath toPath) throws IOException, TemplateException {
+
+        String currentXml = null;
+
+        IFile to = getTargetFile(toPath);
+        if (to.exists()) {
+            currentXml = AdtPlugin.readFile(to);
+        }
+
+        if (currentXml == null) {
             // The target file doesn't exist: don't merge, just copy
             boolean instantiate = relativeFrom.endsWith(DOT_FTL);
             if (instantiate) {
-                instantiate(freemarker, paramMap, relativeFrom, to);
+                instantiate(freemarker, paramMap, relativeFrom, toPath);
             } else {
-                copyBundledResource(relativeFrom, to);
+                copyTemplateResource(relativeFrom, toPath);
             }
             return;
         }
 
-        if (!to.getPath().endsWith(DOT_XML)) {
+        if (!to.getFileExtension().equals(EXT_XML)) {
             throw new RuntimeException("Only XML files can be merged at this point: " + to);
         }
 
@@ -628,21 +684,21 @@ class TemplateHandler {
             }
         }
 
-        String currentXml = Files.toString(to, Charsets.UTF_8);
         Document currentManifest = DomUtilities.parseStructuredDocument(currentXml);
         Document fragment = DomUtilities.parseStructuredDocument(xml);
 
         XmlFormatStyle formatStyle = XmlFormatStyle.MANIFEST;
         boolean modified;
         boolean ok;
-        if (to.getName().equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
+        String fileName = to.getName();
+        if (fileName.equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
             modified = ok = mergeManifest(currentManifest, fragment);
         } else {
             // Merge plain XML files
-            ResourceFolderType folderType =
-                    ResourceFolderType.getFolderType(to.getParentFile().getName());
+            String parentFolderName = to.getParent().getName();
+            ResourceFolderType folderType = ResourceFolderType.getFolderType(parentFolderName);
             if (folderType != null) {
-                formatStyle = XmlFormatStyle.getForFolderType(folderType);
+                formatStyle = XmlFormatStyle.getForFile(toPath);
             } else {
                 formatStyle = XmlFormatStyle.FILE;
             }
@@ -652,58 +708,34 @@ class TemplateHandler {
         }
 
         // Finally write out the merged file (formatting etc)
+        String contents = null;
         if (ok) {
             if (modified) {
                 XmlPrettyPrinter printer = new XmlPrettyPrinter(
                         XmlFormatPreferences.create(), formatStyle, null);
                 StringBuilder sb = new StringBuilder(2 );
                 printer.prettyPrint(-1, currentManifest, null, null, sb, false /*openTagOnly*/);
-                String contents = sb.toString();
-                writeString(to, contents, false);
+                contents = sb.toString();
             }
         } else {
             // Just insert into file along with comment, using the "standard" conflict
             // syntax that many tools and editors recognize.
             String sep = AdtUtils.getLineSeparator();
-            String contents =
+            contents =
                     "<<<<<<< Original" + sep
                     + currentXml + sep
                     + "=======" + sep
                     + xml
                     + ">>>>>>> Added" + sep;
-            writeString(to, contents, false);
         }
-    }
 
-    /**
-     * Writes the given contents into the given file (unless that file already
-     * contains the given contents), and if the file exists ask user whether
-     * the file should be overwritten (unless the user has already answered "Yes to All"
-     * or "Cancel" (no to all).
-     */
-    private void writeString(File destination, String contents, boolean confirmOverwrite)
-            throws IOException {
-        // First make sure that the files aren't identical, in which case we can do
-        // nothing (and not involve user)
-        if (!(destination.exists()
-                && isIdentical(contents.getBytes(Charsets.UTF_8), destination))) {
-            // And if the file does exist (and is now known to be different),
-            // ask user whether it should be replaced (canOverwrite will also
-            // return true if the file doesn't exist)
-            if (confirmOverwrite) {
-                if (!canOverwrite(destination)) {
-                    return;
-                }
-            } else {
-                if (destination.exists()) {
-                    if (mBackupMergedFiles) {
-                        makeBackup(destination);
-                    } else {
-                        destination.delete();
-                    }
-                }
-            }
-            Files.write(contents, destination, Charsets.UTF_8);
+        if (contents != null) {
+            TextFileChange change = new TextFileChange("Merge " + fileName, to);
+            MultiTextEdit rootEdit = new MultiTextEdit();
+            rootEdit.addChild(new ReplaceEdit(0, currentXml.length(), contents));
+            change.setEdit(rootEdit);
+            change.setTextType(AdtConstants.EXT_XML);
+            mMergeChanges.add(change);
         }
     }
 
@@ -830,18 +862,13 @@ class TemplateHandler {
             @NonNull final Configuration freemarker,
             @NonNull final Map<String, Object> paramMap,
             @NonNull String relativeFrom,
-            @NonNull File to) throws IOException, TemplateException {
-        File parentFile = to.getParentFile();
-        if (!parentFile.exists()) {
-            parentFile.mkdirs();
-        }
-
+            @NonNull IPath to) throws IOException, TemplateException {
         // For now, treat extension-less files as directories... this isn't quite right
         // so I should refine this! Maybe with a unique attribute in the template file?
         boolean isDirectory = relativeFrom.indexOf('.') == -1;
         if (isDirectory) {
             // It's a directory
-            copyBundledResource(relativeFrom, to);
+            copyTemplateResource(relativeFrom, to);
         } else {
             File from = getFullPath(relativeFrom);
             mLoader.setTemplateFile(from);
@@ -852,13 +879,32 @@ class TemplateHandler {
             String contents = out.toString();
 
             if (relativeFrom.endsWith(DOT_XML)) {
-                XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(new Path(to.getPath()));
+                XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(to);
                 XmlFormatPreferences prefs = XmlFormatPreferences.create();
                 contents = XmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
             }
 
-            writeString(to, contents, true);
+            IFile targetFile = getTargetFile(to);
+            TextFileChange change = createTextChange(targetFile);
+            MultiTextEdit rootEdit = new MultiTextEdit();
+            rootEdit.addChild(new InsertEdit(0, contents));
+            change.setEdit(rootEdit);
+            mTextChanges.add(change);
         }
+    }
+
+    private static TextFileChange createTextChange(IFile targetFile) {
+        String fileName = targetFile.getName();
+        String message;
+        if (targetFile.exists()) {
+            message = String.format("Replace %1$s", fileName);
+        } else {
+            message = String.format("Create %1$s", fileName);
+        }
+
+        TextFileChange change = new TextFileChange(message, targetFile);
+        change.setTextType(fileName.substring(fileName.lastIndexOf('.') + 1));
+        return change;
     }
 
     /**
@@ -871,19 +917,18 @@ class TemplateHandler {
         return mOpen;
     }
 
-    /** Copy a bundled resource (part of the plugin .jar file) into the given file system path */
-    private final void copyBundledResource(
+    /** Copy a template resource */
+    private final void copyTemplateResource(
             @NonNull String relativeFrom,
-            @NonNull File output) throws IOException {
+            @NonNull IPath output) throws IOException {
         File from = getFullPath(relativeFrom);
         copy(from, output);
     }
 
     /** Returns true if the given file contains the given bytes */
-    private static boolean isIdentical(@Nullable byte[] data, @NonNull File dest)
-            throws IOException {
-        assert dest.isFile();
-        byte[] existing = Files.toByteArray(dest);
+    private static boolean isIdentical(@Nullable byte[] data, @NonNull IFile dest) {
+        assert dest.exists();
+        byte[] existing = AdtUtils.readData(dest);
         return Arrays.equals(existing, data);
     }
 
@@ -892,30 +937,55 @@ class TemplateHandler {
      * source is allowed to be a directory, in which case the whole directory is
      * copied recursively)
      */
-    private void copy(File src, File dest) throws IOException {
-        if (src.isDirectory()){
-            if (!dest.exists() && !dest.mkdirs()) {
-                throw new IOException("Could not create directory " + dest);
-            }
+    private void copy(File src, IPath path) throws IOException {
+        if (src.isDirectory()) {
             File[] children = src.listFiles();
             if (children != null) {
                 for (File child : children) {
-                    copy(child, new File(dest, child.getName()));
+                    copy(child, path.append(child.getName()));
                 }
             }
         } else {
-            if (dest.exists() && isIdentical(Files.toByteArray(src), dest)) {
+            IResource dest = mProject.getFile(path);
+            if (dest.exists() && !(dest instanceof IFile)) {// Don't attempt to overwrite a folder
+                assert false : dest.getClass().getName();
                 return;
             }
-            if (!canOverwrite(dest)) {
-                return;
+            IFile file = (IFile) dest;
+            String targetName = path.lastSegment();
+            if (dest instanceof IFile) {
+                if (dest.exists() && isIdentical(Files.toByteArray(src), file)) {
+                    String label = String.format(
+                            "Not overwriting %1$s because the files are identical", targetName);
+                    NullChange change = new NullChange(label);
+                    change.setEnabled(false);
+                    mOtherChanges.add(change);
+                    return;
+                }
             }
 
-            File parent = dest.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
+            if (targetName.endsWith(DOT_XML)
+                    || targetName.endsWith(DOT_JAVA)
+                    || targetName.endsWith(DOT_TXT)
+                    || targetName.endsWith(DOT_RS)
+                    || targetName.endsWith(DOT_AIDL)
+                    || targetName.endsWith(DOT_SVG)) {
+
+                String newFile = Files.toString(src, Charsets.UTF_8);
+                if (targetName.endsWith(DOT_XML)) {
+                    newFile = XmlPrettyPrinter.prettyPrint(newFile,
+                            XmlFormatPreferences.create(), XmlFormatStyle.getForFile(path),
+                            null /*lineSeparator*/);
+                }
+
+                TextFileChange addFile = createTextChange(file);
+                addFile.setEdit(new InsertEdit(0, newFile));
+                mTextChanges.add(addFile);
+            } else {
+                // Write binary file: Need custom change for that
+                IPath workspacePath = mProject.getFullPath().append(path);
+                mOtherChanges.add(new CreateFileChange(targetName, workspacePath, src));
             }
-            Files.copy(src, dest);
         }
     }
 

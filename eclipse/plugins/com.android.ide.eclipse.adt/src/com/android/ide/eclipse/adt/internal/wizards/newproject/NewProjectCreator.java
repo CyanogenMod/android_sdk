@@ -641,7 +641,7 @@ public class NewProjectCreator  {
     }
 
     public interface ProjectPopulator {
-        public void populate(IProject project);
+        public void populate(IProject project) throws InvocationTargetException;
     }
 
     /**
@@ -693,7 +693,11 @@ public class NewProjectCreator  {
         }
 
         if (projectPopulator != null) {
-            projectPopulator.populate(project);
+            try {
+                projectPopulator.populate(project);
+            } catch (InvocationTargetException ite) {
+                AdtPlugin.log(ite, null);
+            }
         }
 
         // Setup class path: mark folders as source folders
@@ -768,7 +772,7 @@ public class NewProjectCreator  {
         // Necessary for existing projects and good for new ones to.
         ProjectHelper.fixProject(project);
 
-        Boolean isLibraryProject = parameters.containsKey(PARAM_IS_LIBRARY);
+        Boolean isLibraryProject = (Boolean) parameters.get(PARAM_IS_LIBRARY);
         if (isLibraryProject != null && isLibraryProject.booleanValue()
                 && Sdk.getCurrent() != null && project.isOpen()) {
             ProjectState state = Sdk.getProjectState(project);

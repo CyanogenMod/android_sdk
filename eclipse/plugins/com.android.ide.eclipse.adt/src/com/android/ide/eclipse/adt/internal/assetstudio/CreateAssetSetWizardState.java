@@ -69,6 +69,9 @@ public class CreateAssetSetWizardState {
     /** The background shape */
     public Shape shape = Shape.SQUARE;
 
+    /** Whether the image should be cropped */
+    public boolean crop;
+
     /** The background color to use for the shape (unless the shape is {@link Shape#NONE} */
     public RGB background = new RGB(0xff, 0x00, 0x00);
 
