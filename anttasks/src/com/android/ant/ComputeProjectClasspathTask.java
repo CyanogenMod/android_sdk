@@ -16,7 +16,7 @@
 
 package com.android.ant;
 
-import com.android.ant.DependencyHelper.LibraryProcessorFor3rdPartyJars;
+import com.android.ant.DependencyHelper.JarProcessor;
 import com.android.sdklib.SdkConstants;
 
 import org.apache.tools.ant.BuildException;
@@ -53,7 +53,7 @@ public class ComputeProjectClasspathTask extends Task {
         DependencyHelper helper = new DependencyHelper(new File(mProjectLocation),
                 false /*verbose*/);
 
-        LibraryProcessorFor3rdPartyJars processor = new LibraryProcessorFor3rdPartyJars();
+        JarProcessor processor = new JarProcessor();
 
         helper.processLibraries(processor);
         List<File> jars = processor.getJars();

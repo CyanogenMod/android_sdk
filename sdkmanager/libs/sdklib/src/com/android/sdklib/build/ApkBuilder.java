@@ -456,10 +456,14 @@ public final class ApkBuilder implements IArchiveBuilder {
             }
 
         } catch (ApkCreationException e) {
-            mBuilder.cleanUp();
+            if (mBuilder != null) {
+                mBuilder.cleanUp();
+            }
             throw e;
         } catch (Exception e) {
-            mBuilder.cleanUp();
+            if (mBuilder != null) {
+                mBuilder.cleanUp();
+            }
             throw new ApkCreationException(e);
         }
     }

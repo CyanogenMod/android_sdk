@@ -473,7 +473,7 @@
         <if>
             <condition><not><isset property="dont.do.deps" /></not></condition>
             <then>
-                <getlibs libraryFolderPathOut="project.library.folder.path" />
+                <getlibpath libraryFolderPathOut="project.library.folder.path" />
                 <if>
                     <condition>
                         <isreference refid="project.library.folder.path" />
@@ -570,6 +570,7 @@
                         antfile="build.xml">
                     <target name="nodeps" />
                     <target name="${project.libraries.target}" />
+                    <property name="emma.coverage.absolute.file" location="${out.absolute.dir}/coverage.em" />
                 </subant>
             </then>
         </if>
@@ -706,12 +707,17 @@
                             libraryPackagesRefId="project.library.packages"
                             filterOut="emma.default.filter"/>
 
+                    <!-- define where the .em file is going. This may have been
+                         setup already if this is a library -->
+                    <property name="emma.coverage.absolute.file" location="${out.absolute.dir}/coverage.em" />
+
                     <!-- It only instruments class files, not any external libs -->
                     <emma enabled="true">
                         <instr verbosity="${verbosity}"
                                mode="overwrite"
                                instrpath="${out.absolute.dir}/classes"
-                               outdir="${out.absolute.dir}/classes">
+                               outdir="${out.absolute.dir}/classes"
+                               metadatafile="${emma.coverage.absolute.file}">
                             <filter excludes="${emma.default.filter}" />
                             <filter value="${emma.filter}" />
                         </instr>
@@ -1185,10 +1191,27 @@
             <!-- Application package of the tested project extracted from its manifest file -->
             <xpath input="${tested.project.absolute.dir}/AndroidManifest.xml"
                     expression="/manifest/@package" output="tested.project.app.package" />
+
+            <if condition="${emma.enabled}">
+                <then>
+                    <getprojectpaths projectPath="${tested.project.absolute.dir}"
+                            binOut="tested.project.out.absolute.dir"
+                            srcOut="tested.project.source.absolute.dir" />
+                </then>
+            </if>
+
         </then>
         <else>
             <!-- this is a test app, the tested package is the app's own package -->
             <property name="tested.project.app.package" value="${project.app.package}" />
+
+            <if condition="${emma.enabled}">
+                <then>
+                    <property name="tested.project.out.absolute.dir" value="${out.absolute.dir}" />
+                    <property name="tested.project.source.absolute.dir" value="${source.absolute.dir}" />
+                </then>
+            </if>
+
         </else>
         </if>
 
@@ -1210,25 +1233,24 @@
                     <arg line="${adb.device.arg}" />
                     <arg value="pull" />
                     <arg value="${emma.dump.file}" />
-                    <arg value="coverage.ec" />
+                    <arg value="${out.absolute.dir}/coverage.ec" />
                 </exec>
                 <echo level="info">Extracting coverage report...</echo>
+
                 <emma>
-                    <report sourcepath="${tested.project.absolute.dir}/${source.dir}"
-                                      verbosity="${verbosity}">
+                    <report sourcepath="${tested.project.source.absolute.dir}"
+                            verbosity="${verbosity}">
                         <!-- TODO: report.dir or something like should be introduced if necessary -->
-                        <infileset dir="${out.absolute.dir}">
-                            <include name="coverage.ec" />
-                            <include name="coverage.em" />
-                        </infileset>
+                        <infileset file="${out.absolute.dir}/coverage.ec" />
+                        <infileset file="${tested.project.out.absolute.dir}/coverage.em" />
                         <!-- TODO: reports in other, indicated by user formats -->
-                        <html outfile="coverage.html" />
+                        <html outfile="${out.absolute.dir}/coverage.html" />
                    </report>
                 </emma>
                 <echo level="info">Cleaning up temporary files...</echo>
                 <delete file="${out.absolute.dir}/coverage.ec" />
                 <delete file="${out.absolute.dir}/coverage.em" />
-                <echo level="info">Saving the report file in ${basedir}/coverage/coverage.html</echo>
+                <echo level="info">Saving the report file in ${out.absolute.dir}/coverage.html</echo>
             </then>
             <else>
                 <run-tests-helper />

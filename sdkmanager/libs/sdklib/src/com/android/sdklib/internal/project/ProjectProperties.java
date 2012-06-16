@@ -21,6 +21,7 @@ import static com.android.sdklib.SdkConstants.FD_TOOLS;
 import static com.android.sdklib.SdkConstants.FN_ANDROID_PROGUARD_FILE;
 import static com.android.sdklib.SdkConstants.FN_PROJECT_PROGUARD_FILE;
 
+import com.android.annotations.NonNull;
 import com.android.io.FolderWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
@@ -37,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,6 +112,15 @@ public class ProjectProperties implements IPropertySource {
         private final String mHeader;
         private final Set<String> mKnownProps;
         private final Set<String> mRemovedProps;
+
+        /**
+         * Returns the PropertyTypes ordered the same way Ant order them.
+         */
+        public static PropertyType[] getOrderedTypes() {
+            return new PropertyType[] {
+                    PropertyType.LOCAL, PropertyType.ANT, PropertyType.PROJECT
+            };
+        }
 
         PropertyType(String filename, String header, String[] validProps, String[] removedProps) {
             mFilename = filename;
@@ -284,9 +295,11 @@ public class ProjectProperties implements IPropertySource {
      * <p/>The file is not created until {@link ProjectPropertiesWorkingCopy#save()} is called.
      * @param projectFolderOsPath the project folder.
      * @param type the type of property file to create
+     *
+     * @see #createEmpty(String, PropertyType)
      */
-    public static ProjectPropertiesWorkingCopy create(String projectFolderOsPath,
-            PropertyType type) {
+    public static ProjectPropertiesWorkingCopy create(@NonNull String projectFolderOsPath,
+            @NonNull PropertyType type) {
         // create and return a ProjectProperties with an empty map.
         IAbstractFolder folder = new FolderWrapper(projectFolderOsPath);
         return create(folder, type);
@@ -297,11 +310,44 @@ public class ProjectProperties implements IPropertySource {
      * <p/>The file is not created until {@link ProjectPropertiesWorkingCopy#save()} is called.
      * @param projectFolder the project folder.
      * @param type the type of property file to create
+     *
+     * @see #createEmpty(IAbstractFolder, PropertyType)
      */
-    public static ProjectPropertiesWorkingCopy create(IAbstractFolder projectFolder,
-            PropertyType type) {
+    public static ProjectPropertiesWorkingCopy create(@NonNull IAbstractFolder projectFolder,
+            @NonNull PropertyType type) {
         // create and return a ProjectProperties with an empty map.
         return new ProjectPropertiesWorkingCopy(projectFolder, new HashMap<String, String>(), type);
+    }
+
+    /**
+     * Creates a new project properties object, with no properties.
+     * <p/>Nothing can be added to it, unless a {@link ProjectPropertiesWorkingCopy} is created
+     * first with {@link #makeWorkingCopy()}.
+     * @param projectFolderOsPath the project folder.
+     * @param type the type of property file to create
+     *
+     * @see #create(String, PropertyType)
+     */
+    public static ProjectProperties createEmpty(@NonNull String projectFolderOsPath,
+            @NonNull PropertyType type) {
+        // create and return a ProjectProperties with an empty map.
+        IAbstractFolder folder = new FolderWrapper(projectFolderOsPath);
+        return createEmpty(folder, type);
+    }
+
+    /**
+     * Creates a new project properties object, with no properties.
+     * <p/>Nothing can be added to it, unless a {@link ProjectPropertiesWorkingCopy} is created
+     * first with {@link #makeWorkingCopy()}.
+     * @param projectFolder the project folder.
+     * @param type the type of property file to create
+     *
+     * @see #create(IAbstractFolder, PropertyType)
+     */
+    public static ProjectProperties createEmpty(@NonNull IAbstractFolder projectFolder,
+            @NonNull PropertyType type) {
+        // create and return a ProjectProperties with an empty map.
+        return new ProjectProperties(projectFolder, new HashMap<String, String>(), type);
     }
 
     /**
@@ -436,8 +482,10 @@ public class ProjectProperties implements IPropertySource {
      * Use {@link #load(String, PropertyType)} or {@link #create(String, PropertyType)}
      * to instantiate.
      */
-    protected ProjectProperties(IAbstractFolder projectFolder, Map<String, String> map,
-            PropertyType type) {
+    protected ProjectProperties(
+            @NonNull IAbstractFolder projectFolder,
+            @NonNull Map<String, String> map,
+            @NonNull PropertyType type) {
         mProjectFolder = projectFolder;
         mProperties = map;
         mType = type;
@@ -450,4 +498,16 @@ public class ProjectProperties implements IPropertySource {
     protected static String escape(String value) {
         return value.replaceAll("\\\\", "\\\\\\\\");
     }
+
+    @Override
+    public void debugPrint() {
+        System.out.println("DEBUG PROJECTPROPERTIES: " + mProjectFolder);
+        System.out.println("type: " + mType);
+        for (Entry<String, String> entry : mProperties.entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+        System.out.println("<<< DEBUG PROJECTPROPERTIES");
+
+    }
+
 }
