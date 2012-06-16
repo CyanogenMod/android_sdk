@@ -1197,6 +1197,11 @@
                     <getprojectpaths projectPath="${tested.project.absolute.dir}"
                             binOut="tested.project.out.absolute.dir"
                             srcOut="tested.project.source.absolute.dir" />
+
+                    <getlibpath projectPath="${tested.project.absolute.dir}"
+                            libraryFolderPathOut="tested.project.lib.source.path"
+                            leaf="@{source.dir}" />
+
                 </then>
             </if>
 
@@ -1209,6 +1214,11 @@
                 <then>
                     <property name="tested.project.out.absolute.dir" value="${out.absolute.dir}" />
                     <property name="tested.project.source.absolute.dir" value="${source.absolute.dir}" />
+
+                    <getlibpath
+                            libraryFolderPathOut="tested.project.lib.source.path"
+                            leaf="@{source.dir}" />
+
                 </then>
             </if>
 
@@ -1233,12 +1243,20 @@
                     <arg line="${adb.device.arg}" />
                     <arg value="pull" />
                     <arg value="${emma.dump.file}" />
-                    <arg value="${out.absolute.dir}/coverage.ec" />
+                    <arg path="${out.absolute.dir}/coverage.ec" />
                 </exec>
                 <echo level="info">Extracting coverage report...</echo>
 
+                <pathconvert property="tested.project.lib.source.path.value" refid="tested.project.lib.source.path">
+                    <firstmatchmapper>
+                        <regexpmapper from='^([^ ]*)( .*)$$' to='"\1\2"'/>
+                        <identitymapper/>
+                    </firstmatchmapper>
+                </pathconvert>
+
+
                 <emma>
-                    <report sourcepath="${tested.project.source.absolute.dir}"
+                    <report sourcepath="${tested.project.source.absolute.dir}:${tested.project.lib.source.path.value}"
                             verbosity="${verbosity}">
                         <!-- TODO: report.dir or something like should be introduced if necessary -->
                         <infileset file="${out.absolute.dir}/coverage.ec" />
