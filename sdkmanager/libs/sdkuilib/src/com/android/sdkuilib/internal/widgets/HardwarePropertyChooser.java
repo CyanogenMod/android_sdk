@@ -17,7 +17,7 @@
 package com.android.sdkuilib.internal.widgets;
 
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
-import com.android.sdklib.internal.avd.HardwareProperties.ValueType;
+import com.android.sdklib.internal.avd.HardwareProperties.HardwarePropertyType;
 import com.android.sdkuilib.ui.GridDialog;
 
 import org.eclipse.swt.SWT;
@@ -30,8 +30,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Dialog to choose a hardware property
@@ -44,7 +47,8 @@ class HardwarePropertyChooser extends GridDialog {
     private Label mTypeLabel;
     private Label mDescriptionLabel;
 
-    HardwarePropertyChooser(Shell parentShell, Map<String, HardwareProperty> properties,
+    HardwarePropertyChooser(Shell parentShell,
+            Map<String, HardwareProperty> properties,
             Collection<String> exceptProperties) {
         super(parentShell, 2, false);
         mProperties = properties;
@@ -63,7 +67,25 @@ class HardwarePropertyChooser extends GridDialog {
         final Combo c = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         // simple list for index->name resolution.
         final ArrayList<String> indexToName = new ArrayList<String>();
-        for (Entry<String, HardwareProperty> entry : mProperties.entrySet()) {
+
+        // Sort the combo entries by display name if available, otherwise by hardware name.
+        Set<Entry<String, HardwareProperty>> entries =
+            new TreeSet<Map.Entry<String,HardwareProperty>>(
+                    new Comparator<Map.Entry<String,HardwareProperty>>() {
+                @Override
+                public int compare(Entry<String, HardwareProperty> entry0,
+                                   Entry<String, HardwareProperty> entry1) {
+                    String s0 = entry0.getValue().getAbstract();
+                    String s1 = entry1.getValue().getAbstract();
+                    if (s0 != null && s1 != null) {
+                        return s0.compareTo(s1);
+                    }
+                    return entry0.getKey().compareTo(entry1.getKey());
+                }
+            });
+        entries.addAll(mProperties.entrySet());
+
+        for (Entry<String, HardwareProperty> entry : entries) {
             if (entry.getValue().isValidForUi() &&
                     mExceptProperties.contains(entry.getKey()) == false) {
                 c.add(entry.getValue().getAbstract());
@@ -111,9 +133,9 @@ class HardwarePropertyChooser extends GridDialog {
 
         if (mChosenProperty != null) {
             desc = mChosenProperty.getDescription();
-            ValueType vt = mChosenProperty.getType();
+            HardwarePropertyType vt = mChosenProperty.getType();
             if (vt != null) {
-                type = vt.getValue();
+                type = vt.getName();
             }
         }
 
