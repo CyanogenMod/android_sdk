@@ -700,9 +700,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         if (source == mCropRadio) {
             mCropRadio.setSelection(true); // Ensure that you can't toggle it off
             mCenterRadio.setSelection(false);
+            mValues.crop = true;
         } else if (source == mCenterRadio) {
             mCenterRadio.setSelection(true);
             mCropRadio.setSelection(false);
+            mValues.crop = false;
         }
         if (source == mSquareRadio) {
             mValues.shape = GraphicGenerator.Shape.SQUARE;
@@ -1117,15 +1119,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 generator = new LauncherIconGenerator();
                 LauncherIconGenerator.LauncherOptions launcherOptions =
                         new LauncherIconGenerator.LauncherOptions();
-                if (mCircleButton.getSelection()) {
-                    launcherOptions.shape = GraphicGenerator.Shape.CIRCLE;
-                } else if (mSquareRadio.getSelection()) {
-                    launcherOptions.shape = GraphicGenerator.Shape.SQUARE;
-                } else {
-                    assert mNoShapeRadio.getSelection();
-                    launcherOptions.shape = GraphicGenerator.Shape.NONE;
-                }
-                launcherOptions.crop = mCropRadio.getSelection();
+                launcherOptions.shape = mValues.shape;
+                launcherOptions.crop = mValues.crop;
 
                 if (SUPPORT_LAUNCHER_ICON_TYPES) {
                     launcherOptions.style = mFancyRadio.getSelection() ?

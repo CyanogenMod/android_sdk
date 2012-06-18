@@ -31,9 +31,13 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.util.XmlUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 import org.eclipse.core.filesystem.URIUtil;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -67,6 +71,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -985,5 +990,52 @@ public class AdtUtils {
         }
 
         return combined;
+    }
+
+    /**
+     * Reads the contents of an {@link IFile} and return it as a byte array
+     *
+     * @param file the file to be read
+     * @return the String read from the file, or null if there was an error
+     */
+    @SuppressWarnings("resource") // Eclipse doesn't understand Closeables.closeQuietly yet
+    @Nullable
+    public static byte[] readData(@NonNull IFile file) {
+        InputStream contents = null;
+        try {
+            contents = file.getContents();
+            return ByteStreams.toByteArray(contents);
+        } catch (Exception e) {
+            // Pass -- just return null
+        } finally {
+            Closeables.closeQuietly(contents);
+        }
+
+        return null;
+    }
+
+    /**
+     * Ensure that a given folder (and all its parents) are created
+     *
+     * @param container the container to ensure exists
+     * @throws CoreException if an error occurs
+     */
+    public static void ensureExists(@Nullable IContainer container) throws CoreException {
+        if (container == null || container.exists()) {
+            return;
+        }
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        IFolder folder = root.getFolder(container.getFullPath());
+        ensureExists(folder);
+    }
+
+    private static void ensureExists(IFolder folder) throws CoreException {
+        if (folder != null && !folder.exists()) {
+            IContainer parent = folder.getParent();
+            if (parent instanceof IFolder) {
+                ensureExists((IFolder) parent);
+            }
+            folder.create(false, false, null);
+        }
     }
 }

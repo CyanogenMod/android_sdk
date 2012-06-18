@@ -17,13 +17,12 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
+import com.android.annotations.NonNull;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
@@ -38,13 +37,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import java.awt.image.BufferedImage;
@@ -53,6 +50,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,60 +61,38 @@ import javax.imageio.ImageIO;
 /**
  * Wizard for creating new projects
  */
-public class NewProjectWizard extends Wizard implements INewWizard {
+public class NewProjectWizard extends TemplateWizard {
     private static final String ATTR_COPY_ICONS = "copyIcons";     //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
     static final String ATTR_MIN_API_LEVEL = "minApiLevel";        //$NON-NLS-1$
     static final String ATTR_PACKAGE_NAME = "packageName";         //$NON-NLS-1$
     static final String ATTR_APP_TITLE = "appTitle";               //$NON-NLS-1$
-    private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
 
-    private IWorkbench mWorkbench;
-    private UpdateToolsPage mUpdatePage;
     private NewProjectPage mMainPage;
     private ActivityPage mActivityPage;
     private NewTemplatePage mTemplatePage;
-    protected InstallDependencyPage mDependencyPage;
     private ConfigureAssetSetPage mIconPage;
     private NewProjectWizardState mValues;
+    /** The project being created */
+    private IProject mProject;
 
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
-        mWorkbench = workbench;
+        super.init(workbench, selection);
 
         setWindowTitle("New Android App");
-        setHelpAvailable(false);
-        setImageDescriptor();
-
-        if (!UpdateToolsPage.isUpToDate()) {
-            mUpdatePage = new UpdateToolsPage();
-        }
 
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);
         mActivityPage = new ActivityPage(mValues);
     }
 
-    /**
-     * Adds pages to this wizard.
-     */
     @Override
     public void addPages() {
-        if (mUpdatePage != null) {
-            addPage(mUpdatePage);
-        }
-
+        super.addPages();
         addPage(mMainPage);
         addPage(mActivityPage);
-    }
-
-    @Override
-    public IWizardPage getStartingPage() {
-        if (mUpdatePage != null && mUpdatePage.isPageComplete()) {
-            return mMainPage;
-        }
-        return super.getStartingPage();
     }
 
     @Override
@@ -177,17 +153,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             TemplateMetadata template = mValues.activityValues.getTemplateHandler().getTemplate();
             if (template != null
                     && !InstallDependencyPage.isInstalled(template.getDependencies())) {
-                if (mDependencyPage == null) {
-                    mDependencyPage = new InstallDependencyPage();
-                    addPage(mDependencyPage);
-                }
-                mDependencyPage.setTemplate(template);
-                return mDependencyPage;
+                return getDependencyPage(template, true);
             }
         }
 
         if (page == mTemplatePage || !mValues.createActivity && page == mActivityPage
-                || page == mDependencyPage) {
+                || page == getDependencyPage(null, false)) {
             return null;
         }
 
@@ -224,15 +195,41 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     @Override
-    public boolean performFinish() {
+    @NonNull
+    protected IProject getProject() {
+        return mProject;
+    }
+
+    @Override
+    @NonNull
+    protected List<String> getFilesToOpen() {
+        return mValues.template.getFilesToOpen();
+    }
+
+    @Override
+    protected List<Change> computeChanges() {
+        final TemplateHandler template = mValues.template;
+        // We'll be merging in an activity template, but don't create *~ backup files
+        // of the merged files (such as the manifest file) in that case.
+        // (NOTE: After the change from direct file manipulation to creating a list of Change
+        // objects, this no longer applies - but the code is kept around a little while longer
+        // in case we want to generate change objects that makes backups of merged files)
+        template.setBackupMergedFiles(false);
+
+        // Generate basic output skeleton
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        addProjectInfo(paramMap);
+
+        return template.render(mProject, paramMap);
+    }
+
+    @Override
+    protected boolean performFinish(final IProgressMonitor monitor)
+            throws InvocationTargetException {
         try {
-            Shell shell = getShell();
-            if (shell != null) {
-                shell.setVisible(false);
-            }
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
             String name = mValues.projectName;
-            final IProject newProject = root.getProject(name);
+            mProject = root.getProject(name);
 
             final TemplateHandler template = mValues.template;
             // We'll be merging in an activity template, but don't create *~ backup files
@@ -241,13 +238,13 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
             ProjectPopulator projectPopulator = new ProjectPopulator() {
                 @Override
-                public void populate(IProject project) {
+                public void populate(IProject project) throws InvocationTargetException {
                     // Copy in the proguard file; templates don't provide this one.
                     // add the default proguard config
                     File libFolder = new File(AdtPlugin.getOsSdkToolsFolder(),
                             SdkConstants.FD_LIB);
                     try {
-                        assert project == newProject;
+                        assert project == mProject;
                         NewProjectCreator.addLocalFile(project,
                                 new File(libFolder, SdkConstants.FN_PROJECT_PROGUARD_FILE),
                                 // Write ProGuard config files with the extension .pro which
@@ -258,41 +255,53 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                         AdtPlugin.log(e, null);
                     }
 
-                    // Generate basic output skeleton
-                    Map<String, Object> paramMap = new HashMap<String, Object>();
-                    paramMap.put(ATTR_PACKAGE_NAME, mValues.packageName);
-                    paramMap.put(ATTR_APP_TITLE, mValues.applicationName);
-                    paramMap.put(ATTR_MIN_API, mValues.minSdk);
-                    paramMap.put(ATTR_MIN_API_LEVEL, mValues.minSdkLevel);
-                    paramMap.put(ATTR_TARGET_API, 15);
-                    paramMap.put(ATTR_COPY_ICONS, !mValues.createIcon);
-
-                    File outputPath = AdtUtils.getAbsolutePath(newProject).toFile();
-                    template.render(outputPath, paramMap);
-
-                    if (mValues.createIcon) {
-                        generateIcons(newProject);
+                    try {
+                        mProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
+                    } catch (CoreException e) {
+                        AdtPlugin.log(e, null);
                     }
 
+                    // Render the project template
+                    List<Change> changes = computeChanges();
+                    if (!changes.isEmpty()) {
+                        monitor.beginTask("Creating project...", changes.size());
+                        try {
+                            CompositeChange composite = new CompositeChange("",
+                                    changes.toArray(new Change[changes.size()]));
+                            composite.perform(monitor);
+                        } catch (CoreException e) {
+                            AdtPlugin.log(e, null);
+                            throw new InvocationTargetException(e);
+                        } finally {
+                            monitor.done();
+                        }
+                    }
+
+                    if (mValues.createIcon) { // TODO: Set progress
+                        generateIcons(mProject);
+                    }
+
+                    // Render the embedded activity template template
                     if (mValues.createActivity) {
-                        generateActivity(template, paramMap, outputPath);
+                        final TemplateHandler activityTemplate =
+                                mValues.activityValues.getTemplateHandler();
+                        // We'll be merging in an activity template, but don't create
+                        // *~ backup files of the merged files (such as the manifest file)
+                        // in that case.
+                        activityTemplate.setBackupMergedFiles(false);
+                        generateActivity(template, project, monitor);
                     }
                 }
             };
 
-            IProgressMonitor monitor = new NullProgressMonitor();
-            NewProjectCreator.create(monitor, newProject, mValues.target, projectPopulator,
+            NewProjectCreator.create(monitor, mProject, mValues.target, projectPopulator,
                     mValues.isLibrary);
 
             try {
-                newProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
+                mProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
             } catch (CoreException e) {
                 AdtPlugin.log(e, null);
             }
-
-            // Open the primary file/files
-            final List<String> filesToOpen = template.getFilesToOpen();
-            NewTemplateWizard.openFiles(newProject, filesToOpen, mWorkbench);
 
             return true;
         } catch (Exception ioe) {
@@ -353,30 +362,41 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * activity needs but that we don't need to ask about when creating a new
      * project
      */
-    private void generateActivity(final TemplateHandler template,
-            Map<String, Object> paramMap, File outputPath) {
+    private void generateActivity(TemplateHandler projectTemplate, IProject project,
+            IProgressMonitor monitor) throws InvocationTargetException {
         assert mValues.createActivity;
         NewTemplateWizardState activityValues = mValues.activityValues;
         Map<String, Object> parameters = activityValues.parameters;
-        parameters.put(ATTR_PACKAGE_NAME, paramMap.get(ATTR_PACKAGE_NAME));
-        parameters.put(ATTR_APP_TITLE, paramMap.get(ATTR_APP_TITLE));
-        parameters.put(ATTR_MIN_API, paramMap.get(ATTR_MIN_API));
-        parameters.put(ATTR_MIN_API_LEVEL, paramMap.get(ATTR_MIN_API_LEVEL));
 
-        parameters.put(ATTR_TARGET_API, paramMap.get(ATTR_TARGET_API));
+        addProjectInfo(parameters);
 
         TemplateHandler activityTemplate = activityValues.getTemplateHandler();
         activityTemplate.setBackupMergedFiles(false);
-        activityTemplate.render(outputPath, parameters);
+        List<Change> changes = activityTemplate.render(project, parameters);
+        if (!changes.isEmpty()) {
+            monitor.beginTask("Creating template...", changes.size());
+            try {
+                CompositeChange composite = new CompositeChange("",
+                        changes.toArray(new Change[changes.size()]));
+                composite.perform(monitor);
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+                throw new InvocationTargetException(e);
+            } finally {
+                monitor.done();
+            }
+        }
+
         List<String> filesToOpen = activityTemplate.getFilesToOpen();
-        template.getFilesToOpen().addAll(filesToOpen);
+        projectTemplate.getFilesToOpen().addAll(filesToOpen);
     }
 
-    /**
-     * Returns an image descriptor for the wizard logo.
-     */
-    private void setImageDescriptor() {
-        ImageDescriptor desc = IconFactory.getInstance().getImageDescriptor(PROJECT_LOGO_LARGE);
-        setDefaultPageImageDescriptor(desc);
+    private void addProjectInfo(Map<String, Object> parameters) {
+        parameters.put(ATTR_PACKAGE_NAME, mValues.packageName);
+        parameters.put(ATTR_APP_TITLE, mValues.applicationName);
+        parameters.put(ATTR_MIN_API, mValues.minSdk);
+        parameters.put(ATTR_MIN_API_LEVEL, mValues.minSdkLevel);
+        parameters.put(ATTR_TARGET_API, 15);
+        parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
     }
 }

@@ -496,7 +496,7 @@ public class NewTemplatePage extends WizardPage
 
         // -- validate project
         if (mChooseProject && mValues.project == null) {
-            status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Please select an Android project.");
         }
 
@@ -507,7 +507,7 @@ public class NewTemplatePage extends WizardPage
                String value = parameter.value == null ? "" : parameter.value.toString();
                String error = validator.isValid(value);
                if (error != null) {
-                   status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID, error);
+                   status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, error);
                    if (decoration != null) {
                        updateDecorator(decoration, status, parameter.help);
                    }

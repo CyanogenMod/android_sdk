@@ -127,6 +127,8 @@ public class AdtConstants {
     public static final String DOT_SVG = ".svg"; //$NON-NLS-1$
     /** Dot-Extension for template files */
     public static final String DOT_FTL = ".ftl"; //$NON-NLS-1$
+    /** Dot-Extension of text files, i.e. ".txt" */
+    public final static String DOT_TXT = ".txt"; //$NON-NLS-1$
 
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$
