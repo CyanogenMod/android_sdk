@@ -370,8 +370,7 @@ public class ProjectProperties implements IPropertySource {
      */
     public ProjectPropertiesWorkingCopy makeWorkingCopy(PropertyType type) {
         // copy the current properties in a new map
-        HashMap<String, String> propList = new HashMap<String, String>();
-        propList.putAll(mProperties);
+        Map<String, String> propList = new HashMap<String, String>(mProperties);
 
         return new ProjectPropertiesWorkingCopy(mProjectFolder, propList, type);
     }

@@ -113,7 +113,7 @@ final class TaskHelper {
 
     /**
      * Returns the ProjectProperties for a given project path.
-     * This loads and merge all the .properties files in the same way that Ant does it.
+     * This loads and merges all the .properties files in the same way that Ant does it.
      *
      * Note that this does not return all the Ant properties but only the one customized by the
      * project's own build.xml file.
