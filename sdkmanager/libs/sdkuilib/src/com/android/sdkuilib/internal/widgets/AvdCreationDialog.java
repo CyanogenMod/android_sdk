@@ -619,6 +619,7 @@ final class AvdCreationDialog extends GridDialog {
             protected void setValue(Object element, Object value) {
                 String hardwareName = (String)element;
                 HardwareProperty property = mHardwareMap.get(hardwareName);
+                int index;
                 switch (property.getType()) {
                     case INTEGER:
                         mProperties.put((String)element, (String)value);
@@ -629,8 +630,17 @@ final class AvdCreationDialog extends GridDialog {
                         }
                         break;
                     case BOOLEAN:
-                        int index = (Integer)value;
+                        index = (Integer)value;
                         mProperties.put((String)element, HardwareProperties.BOOLEAN_VALUES[index]);
+                        break;
+                    case STRING_ENUM:
+                    case INTEGER_ENUM:
+                        // For a combo, value is the index of the enum to use.
+                        index = (Integer)value;
+                        String[] values = property.getEnum();
+                        if (values != null && values.length > index) {
+                            mProperties.put((String)element, values[index]);
+                        }
                         break;
                 }
                 mHardwareViewer.refresh(element);
@@ -648,6 +658,17 @@ final class AvdCreationDialog extends GridDialog {
                         return value;
                     case BOOLEAN:
                         return HardwareProperties.getBooleanValueIndex(value);
+                    case STRING_ENUM:
+                    case INTEGER_ENUM:
+                        // For a combo, we need to return the index of the value in the enum
+                        String[] values = property.getEnum();
+                        if (values != null) {
+                            for (int i = 0; i < values.length; i++) {
+                                if (values[i].equals(value)) {
+                                    return i;
+                                }
+                            }
+                        }
                 }
 
                 return null;
@@ -667,6 +688,14 @@ final class AvdCreationDialog extends GridDialog {
                         return new ComboBoxCellEditor(hardwareTable,
                                 HardwareProperties.BOOLEAN_VALUES,
                                 SWT.READ_ONLY | SWT.DROP_DOWN);
+                    case STRING_ENUM:
+                    case INTEGER_ENUM:
+                        String[] values = property.getEnum();
+                        if (values != null && values.length > 0) {
+                            return new ComboBoxCellEditor(hardwareTable,
+                                    values,
+                                    SWT.READ_ONLY | SWT.DROP_DOWN);
+                        }
                 }
                 return null;
             }
