@@ -631,7 +631,8 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             InputStream xml = cache.openCachedUrl(urlString, monitor);
             if (xml != null) {
                 xml.mark(500000);
-                xml = new NonClosingInputStream(xml).setCloseBehavior(CloseBehavior.RESET);
+                xml = new NonClosingInputStream(xml);
+                ((NonClosingInputStream) xml).setCloseBehavior(CloseBehavior.RESET);
             }
             return xml;
         } catch (Exception e) {
