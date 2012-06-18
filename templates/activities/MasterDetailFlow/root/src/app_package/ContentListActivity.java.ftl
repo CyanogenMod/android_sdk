@@ -11,6 +11,7 @@ public class ${CollectionName}Activity extends FragmentActivity
 
     private boolean mTwoPane;
 
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_${collection_name});

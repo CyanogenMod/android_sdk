@@ -20,6 +20,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.TabL
 
     private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
@@ -56,7 +57,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.TabL
         getMenuInflater().inflate(R.menu.${menuName}, menu);
         return true;
     }
-    <#include "_onOptionsItemSelected.java.ftl">
+    <#include "include_onOptionsItemSelected.java.ftl">
 
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {

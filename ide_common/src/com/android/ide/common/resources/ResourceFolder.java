@@ -251,7 +251,7 @@ public final class ResourceFolder implements Configurable {
      * @param name the name of the file.
      */
     public boolean hasFile(String name) {
-        if (mNames.containsKey(name)) {
+        if (mNames != null && mNames.containsKey(name)) {
             return true;
         }
 
