@@ -1115,17 +1115,18 @@ public final class Sdk  {
 
                 ProjectState state = Sdk.getProjectState(iProject);
 
-                Collection<ProjectState> parents = state.getFullParentProjects();
-                for (ProjectState s : parents) {
-                    javaProject = BaseProjectHelper.getJavaProject(s.getProject());
-                    if (javaProject != null) {
-                        projectList.add(javaProject);
+                if (state != null) {
+                    Collection<ProjectState> parents = state.getFullParentProjects();
+                    for (ProjectState s : parents) {
+                        javaProject = BaseProjectHelper.getJavaProject(s.getProject());
+                        if (javaProject != null) {
+                            projectList.add(javaProject);
+                        }
                     }
+
+                    ProjectHelper.updateProjects(
+                            projectList.toArray(new IJavaProject[projectList.size()]));
                 }
-
-                ProjectHelper.updateProjects(
-                        projectList.toArray(new IJavaProject[projectList.size()]));
-
             } catch (CoreException e) {
                 // This can't happen as it's only for closed project (or non existing)
                 // but in that case we can't get a fileChanged on this file.
