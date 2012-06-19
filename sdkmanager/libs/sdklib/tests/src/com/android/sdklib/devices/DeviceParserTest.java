@@ -32,6 +32,7 @@ import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
+import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRatio;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
@@ -128,11 +129,13 @@ public class DeviceParserTest extends TestCase {
         assertEquals("Portrait", s.getName());
         assertTrue(s.isDefaultState());
         assertEquals("The phone in portrait view", s.getDescription());
+        assertEquals(ScreenOrientation.PORTRAIT, s.getOrientation());
         assertEquals(KeyboardState.SOFT, s.getKeyState());
         assertEquals(NavigationState.HIDDEN, s.getNavState());
         s = device.getState("Landscape");
         assertEquals("Landscape", s.getName());
         assertFalse(s.isDefaultState());
+        assertEquals(ScreenOrientation.LANDSCAPE, s.getOrientation());
     }
 
     public void testApiRange() throws Exception {
@@ -176,6 +179,5 @@ public class DeviceParserTest extends TestCase {
         } catch (SAXParseException e) {
             assertTrue(e.getMessage().startsWith("cvc-enumeration-valid: Value 'NFD'"));
         }
-
     }
 }

@@ -240,8 +240,8 @@
                 </xsd:annotation>
                 <xsd:simpleType>
                     <xsd:restriction base="xsd:token">
-                        <xsd:enumeration value="portrait" />
-                        <xsd:enumeration value="landscape" />
+                        <xsd:enumeration value="port" />
+                        <xsd:enumeration value="land" />
                         <xsd:enumeration value="square" />
                     </xsd:restriction>
                 </xsd:simpleType>
@@ -846,7 +846,7 @@
             <xsd:simpleType>
                 <xsd:restriction base="xsd:token">
                     <xsd:enumeration value="desk" />
-                    <xsd:enumeration value="tv" />
+                    <xsd:enumeration value="television" />
                     <xsd:enumeration value="car" />
                 </xsd:restriction>
             </xsd:simpleType>
