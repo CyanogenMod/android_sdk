@@ -267,7 +267,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
         return compareTo(o.mApiLevel, o.mCodename);
     }
 
-    private int compareTo(int apiLevel, String codename) {
+    public int compareTo(int apiLevel, String codename) {
         if (mCodename == null) {
             if (codename == null) {
                 return mApiLevel - apiLevel;

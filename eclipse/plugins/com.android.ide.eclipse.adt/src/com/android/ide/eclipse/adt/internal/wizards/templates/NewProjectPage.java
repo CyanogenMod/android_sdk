@@ -162,11 +162,12 @@ public class NewProjectPage extends WizardPage
 
         mBuildSdkCombo = new Combo(container, SWT.READ_ONLY);
         mBuildSdkCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        IAndroidTarget[] targets = Sdk.getCurrent().getTargets();
+        IAndroidTarget[] targets = getCompilationTargets();
         mMinNameToApi = Maps.newHashMap();
         List<String> labels = new ArrayList<String>(targets.length);
         for (IAndroidTarget target : targets) {
-            String targetLabel = target.getFullName();
+            String targetLabel = String.format("%1$s (API %2$s)", target.getFullName(),
+                    target.getVersion().getApiString());
             labels.add(targetLabel);
             mMinNameToApi.put(targetLabel, target.getVersion().getApiLevel());
 
@@ -183,7 +184,7 @@ public class NewProjectPage extends WizardPage
             int apiLevel = version.getApiLevel();
             if (version.isPreview()) {
                 String codeName = version.getCodename();
-                String targetLabel = "API " + apiLevel + ":" + codeName;
+                String targetLabel = codeName + " Preview";
                 codeNames.add(targetLabel);
                 mMinNameToApi.put(targetLabel, apiLevel);
             } else if (target.isPlatform()
@@ -298,6 +299,22 @@ public class NewProjectPage extends WizardPage
         data.widthHint = WIZARD_PAGE_WIDTH;
         dummy.setLayoutData(data);
 
+    }
+
+    private IAndroidTarget[] getCompilationTargets() {
+        IAndroidTarget[] targets = Sdk.getCurrent().getTargets();
+        List<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
+
+        for (IAndroidTarget target : targets) {
+            if (target.isPlatform() == false &&
+                    (target.getOptionalLibraries() == null ||
+                            target.getOptionalLibraries().length == 0)) {
+                continue;
+            }
+            list.add(target);
+        }
+
+        return list.toArray(new IAndroidTarget[list.size()]);
     }
 
     private ControlDecoration createFieldDecoration(Control control, String description) {
@@ -587,8 +604,14 @@ public class NewProjectPage extends WizardPage
                     status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
                             "Select a minimum SDK version");
                 } else {
-                    if (mValues.target != null && mValues.target.getVersion().getApiLevel() <
-                            mValues.minSdkLevel) {
+                    AndroidVersion version = mValues.target.getVersion();
+                    if (version.isPreview()) {
+                        if (version.getCodename().equals(mValues.minSdk) == false) {
+                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                            "Preview platforms require the min SDK version to match their codenames.");
+                       }
+                    } else if (mValues.target.getVersion().compareTo(
+                            mValues.minSdkLevel, mValues.minSdk) < 0) {
                         status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
                             "The minimum SDK version is higher than the build target version");
                     }

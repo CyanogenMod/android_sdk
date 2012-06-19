@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFi
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.PkgProps;
 import com.android.util.XmlUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -817,8 +818,14 @@ public class AdtUtils {
                         if (target.isPlatform()) {
                             AndroidVersion version = target.getVersion();
                             if (version.getApiLevel() == api) {
+                                String codename = target.getProperty(PkgProps.PLATFORM_CODENAME);
+                                if (codename != null) {
+                                    return String.format("API %1$d: Android %2$s (%3$s)", api,
+                                            target.getProperty("ro.build.version.release"), //$NON-NLS-1$
+                                            codename);
+                                }
                                 return String.format("API %1$d: Android %2$s", api,
-                                        target.getProperty("ro.build.version.release"));
+                                        target.getProperty("ro.build.version.release")); //$NON-NLS-1$
                             }
                         }
                     }
