@@ -2515,7 +2515,6 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                 }
             }
 
-            mTargetCombo.setEnabled(mTargetList.size() > 1);
             if (match == null) {
                 selectTarget(null);
 

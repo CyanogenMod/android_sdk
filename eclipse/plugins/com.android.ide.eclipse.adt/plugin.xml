@@ -158,7 +158,7 @@
             hasPages="true"
             icon="icons/new_adt_project.png"
             id="com.android.ide.eclipse.adt.project.ImportProjectWizard"
-            name="Existing Android code into workspace"
+            name="Existing Android Code Into Workspace"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true">
         </wizard>
@@ -174,10 +174,14 @@
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
             icon="icons/new_adt_project.png"
-            id="ccom.android.ide.eclipse.adt.project.NewProjectWizard"
+            id="com.android.ide.eclipse.adt.project.NewProjectWizard"
             name="Android Application Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="true" />
+            project="true" >
+            <description>
+               Create an Android Application Project
+            </description>
+        </wizard>
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -189,6 +193,9 @@
             name="Android Test Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true">
+            <description>
+               Create an Android Test Project
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -201,6 +208,9 @@
             name="Android Sample Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true">
+            <description>
+               Create an Android Sample Project
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -213,6 +223,9 @@
             name="Android Project from Existing Code"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="true">
+            <description>
+               Create one or more Android projects from existing code
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -225,6 +238,9 @@
             name="Android XML File"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false">
+            <description>
+               Create an Android resource XML file
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -237,6 +253,9 @@
             name="Android XML Layout File"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false">
+            <description>
+               Create an Android layout XML file
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -249,6 +268,9 @@
             name="Android XML Values File"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false">
+            <description>
+               Create an Android XML values file such as strings.xml
+            </description>
         </wizard>
         <wizard
             canFinishEarly="false"
@@ -260,7 +282,11 @@
             id="com.android.ide.eclipse.editors.wizards.NewActivityWizard"
             name="Android Activity"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="false" />
+            project="false" >
+            <description>
+               Create an Android Activity
+            </description>
+        </wizard>
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -271,7 +297,11 @@
             id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.CustomView"
             name="Custom View"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="false" />
+            project="false" >
+            <description>
+               Create an Android custom view
+            </description>
+        </wizard>
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -282,7 +312,11 @@
             id="com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizard"
             name="Android Icon Set"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
-            project="false" />
+            project="false" >
+            <description>
+               Create an Android icon set
+            </description>
+        </wizard>
 
         <!-- During development only: Support for testing templates -->
         <wizard

@@ -120,8 +120,8 @@ public class NewProjectPage extends WizardPage
         mApplicationText.addModifyListener(this);
         mApplicationText.addFocusListener(this);
         mApplicationDec = createFieldDecoration(mApplicationText,
-                "The application name is shown in the Play store, as well as in the " +
-                "Manage Application list in settings.");
+                "The application name is shown in the Play Store, as well as in the " +
+                "Manage Application list in Settings.");
 
         Label projectLabel = new Label(container, SWT.NONE);
         projectLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
