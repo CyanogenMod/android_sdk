@@ -110,7 +110,7 @@ public class ConfigGenerator {
     public static final String NODE_GPU = "gpu";
     public static final String NODE_DOCK = "dock";
     public static final String NODE_YDPI = "ydpi";
-    public static final String NODE_PLUGGED_IN = "plugged-in";
+    public static final String NODE_POWER_TYPE = "power-type";
     public static final String NODE_Y_DIMENSION = "y-dimension";
     public static final String NODE_SCREEN_RATIO = "screen-ratio";
     public static final String NODE_NAV_STATE = "nav-state";
@@ -521,7 +521,7 @@ public class ConfigGenerator {
             hardware.appendChild(dock);
             dock.appendChild(doc.createTextNode(" "));
 
-            Element pluggedIn = doc.createElement(PREFIX + NODE_PLUGGED_IN);
+            Element pluggedIn = doc.createElement(PREFIX + NODE_POWER_TYPE);
             hardware.appendChild(pluggedIn);
             pluggedIn.appendChild(doc.createTextNode(" "));
 
