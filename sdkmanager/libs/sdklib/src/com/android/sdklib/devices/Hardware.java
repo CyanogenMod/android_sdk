@@ -115,7 +115,7 @@ public class Hardware {
     public PowerType getChargeType() {
         return mPluggedIn;
     }
-    
+
     public Screen getScreen() {
         return mScreen;
     }
@@ -123,12 +123,12 @@ public class Hardware {
     /**
      * Returns a copy of the object that shares no state with it,
      * but is initialized to equivalent values.
-     * 
+     *
      * @return A copy of the object.
      */
     public Hardware deepCopy() {
         Hardware hw = new Hardware();
-        hw.mScreen = mScreen;
+        hw.mScreen = mScreen.deepCopy();
         hw.mNetworking = new HashSet<Network>(mNetworking);
         hw.mSensors = new HashSet<Sensor>(mSensors);
         // Get the constant boolean value
@@ -155,5 +155,55 @@ public class Hardware {
         hw.mUiModes = new HashSet<UiMode>(mUiModes);
         hw.mPluggedIn = mPluggedIn;
         return hw;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Hardware)) {
+            return false;
+        }
+        Hardware hw = (Hardware) o;
+        return mScreen.equals(hw.getScreen())
+                && mNetworking.equals(hw.getNetworking())
+                && mSensors.equals(hw.getSensors())
+                && mMic == hw.hasMic()
+                && mCameras.equals(hw.getCameras())
+                && mKeyboard == hw.getKeyboard()
+                && mNav == hw.getNav()
+                && mRam.equals(hw.getRam())
+                && mButtons == hw.getButtonType()
+                && mInternalStorage.equals(hw.getInternalStorage())
+                && mRemovableStorage.equals(hw.getRemovableStorage())
+                && mCpu.equals(hw.getCpu())
+                && mGpu.equals(hw.getGpu())
+                && mAbis.equals(hw.getSupportedAbis())
+                && mUiModes.equals(hw.getSupportedUiModes())
+                && mPluggedIn == hw.getChargeType();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + mScreen.hashCode();
+        hash = 31 * hash + mNetworking.hashCode();
+        hash = 31 * hash + mSensors.hashCode();
+        hash = 31 * hash + (mMic ? 1 : 0);
+        hash = 31 * hash + mCameras.hashCode();
+        hash = 31 * hash + mKeyboard.hashCode();
+        hash = 31 * hash + mNav.hashCode();
+        hash = 31 * hash + mRam.hashCode();
+        hash = 31 * hash + mButtons.hashCode();
+        hash = 31 * hash + mInternalStorage.hashCode();
+        hash = 31 * hash + mRemovableStorage.hashCode();
+        hash = 31 * hash + mCpu.hashCode();
+        hash = 31 * hash + mGpu.hashCode();
+        hash = 31 * hash + mAbis.hashCode();
+        hash = 31 * hash + mUiModes.hashCode();
+        hash = 31 * hash + mPluggedIn.hashCode();
+        return hash;
     }
 }

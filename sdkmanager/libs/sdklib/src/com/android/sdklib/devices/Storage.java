@@ -16,8 +16,6 @@
 
 package com.android.sdklib.devices;
 
-import com.android.sdklib.devices.Storage.Unit;
-
 public class Storage {
     private long mNoBytes;
 
