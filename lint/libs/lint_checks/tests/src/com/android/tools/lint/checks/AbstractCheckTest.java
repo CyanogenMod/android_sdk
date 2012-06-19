@@ -381,6 +381,22 @@ public abstract class AbstractCheckTest extends TestCase {
                         fail(e.getLocalizedMessage());
                     }
                 }
+            } else if (relativePath.equals("tools/support/typos-en.txt")) {
+                CodeSource source = getClass().getProtectionDomain().getCodeSource();
+                if (source != null) {
+                    URL location = source.getLocation();
+                    try {
+                        File dir = new File(location.toURI());
+                        assertTrue(dir.getPath(), dir.exists());
+                        File sdkDir = dir.getParentFile().getParentFile().getParentFile()
+                                .getParentFile().getParentFile().getParentFile();
+                        File file = new File(sdkDir, "sdk" + File.separator + "files"
+                                + File.separator + "typos-en.txt");
+                        return file;
+                    } catch (URISyntaxException e) {
+                        fail(e.getLocalizedMessage());
+                    }
+                }
             } else {
                 fail("Unit tests don't support arbitrary resource lookup yet.");
             }

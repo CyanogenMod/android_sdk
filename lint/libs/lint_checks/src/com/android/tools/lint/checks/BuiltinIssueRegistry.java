@@ -54,7 +54,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 95;
+        final int initialCapacity = 96;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -137,6 +137,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(StringFormatDetector.INVALID);
         issues.add(StringFormatDetector.ARG_COUNT);
         issues.add(StringFormatDetector.ARG_TYPES);
+        issues.add(TypoDetector.ISSUE);
         issues.add(ViewTypeDetector.ISSUE);
         issues.add(WrongImportDetector.ISSUE);
         issues.add(ViewConstructorDetector.ISSUE);
@@ -300,6 +301,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             sAdtFixes.add(TypographyDetector.QUOTES);
             sAdtFixes.add(UseCompoundDrawableDetector.ISSUE);
             sAdtFixes.add(ApiDetector.UNSUPPORTED);
+            sAdtFixes.add(TypoDetector.ISSUE);
         }
 
         return sAdtFixes.contains(issue);

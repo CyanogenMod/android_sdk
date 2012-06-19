@@ -211,7 +211,11 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         } else if (source == mFixButton) {
             List<IMarker> selection = mList.getSelectedMarkers();
             for (IMarker marker : selection) {
-                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
+                List<LintFix> fixes = LintFix.getFixes(EclipseLintClient.getId(marker), marker);
+                if (fixes == null) {
+                    continue;
+                }
+                LintFix fix = fixes.get(0);
                 IEditorPart editor = AdtUtils.getActiveEditor();
                 if (editor instanceof AndroidXmlEditor) {
                     IStructuredDocument doc = ((AndroidXmlEditor) editor).getStructuredDocument();
@@ -273,8 +277,8 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
 
             // Some fixes cannot be run in bulk
             if (selection.size() > 1) {
-                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
-                if (!fix.isBulkCapable()) {
+                List<LintFix> fixes = LintFix.getFixes(EclipseLintClient.getId(marker), marker);
+                if (fixes == null || !fixes.get(0).isBulkCapable()) {
                     canFix = false;
                     break;
                 }

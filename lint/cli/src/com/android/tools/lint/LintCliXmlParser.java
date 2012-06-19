@@ -72,7 +72,18 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
 
     @Override
     public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
-        OffsetPosition pos = (OffsetPosition) getPosition(node);
+        OffsetPosition pos = (OffsetPosition) getPosition(node, 0, 0);
+        if (pos != null) {
+            return Location.create(context.file, pos, (OffsetPosition) pos.getEnd());
+        }
+
+        return Location.create(context.file);
+    }
+
+    @Override
+    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node,
+            int start, int end) {
+        OffsetPosition pos = (OffsetPosition) getPosition(node, start, end);
         if (pos != null) {
             return Location.create(context.file, pos, (OffsetPosition) pos.getEnd());
         }

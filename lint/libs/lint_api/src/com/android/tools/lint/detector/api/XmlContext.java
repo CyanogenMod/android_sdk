@@ -82,6 +82,25 @@ public class XmlContext extends Context {
     }
 
     /**
+     * Creates a new location within an XML text node
+     *
+     * @param textNode the text node
+     * @param begin the start offset within the text node (inclusive)
+     * @param end the end offset within the text node (exclusive)
+     * @return a new location
+     */
+    @NonNull
+    public Location getLocation(@NonNull Node textNode, int begin, int end) {
+        assert textNode.getNodeType() == Node.TEXT_NODE;
+        if (parser != null) {
+            return parser.getLocation(this, textNode, begin, end);
+        }
+
+        return Location.create(file);
+    }
+
+
+    /**
      * Reports an issue applicable to a given DOM node. The DOM node is used as the
      * scope to check for suppress lint annotations.
      *

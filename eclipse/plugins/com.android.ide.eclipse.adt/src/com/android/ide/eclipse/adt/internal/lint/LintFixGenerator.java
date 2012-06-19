@@ -177,15 +177,17 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                             ""); //$NON-NLS-1$
 
                     // TODO: Allow for more than one fix?
-                    ICompletionProposal fix = LintFix.getFix(id, marker);
-                    if (fix != null) {
-                        proposals.add(fix);
+                    List<LintFix> fixes = LintFix.getFixes(id, marker);
+                    if (fixes != null) {
+                        for (LintFix fix : fixes) {
+                            proposals.add(fix);
+                        }
                     }
 
                     String message = marker.getAttribute(IMarker.MESSAGE, null);
                     proposals.add(new MoreInfoProposal(id, message));
 
-                    fix = AddSuppressAttribute.createFix(editor, marker, id);
+                    ICompletionProposal fix = AddSuppressAttribute.createFix(editor, marker, id);
                     if (fix != null) {
                         proposals.add(fix);
                     }
