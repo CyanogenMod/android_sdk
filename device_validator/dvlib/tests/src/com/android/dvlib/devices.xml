@@ -126,13 +126,13 @@
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
-            <d:screen-orientation>portrait</d:screen-orientation>
+            <d:screen-orientation>port</d:screen-orientation>
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
         <d:state name="Landscape">
             <d:description>The phone in landscape view</d:description>
-            <d:screen-orientation>landscape</d:screen-orientation>
+            <d:screen-orientation>land</d:screen-orientation>
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
@@ -251,19 +251,19 @@
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
-            <d:screen-orientation>portrait</d:screen-orientation>
+            <d:screen-orientation>port</d:screen-orientation>
             <d:keyboard-state>keyshidden</d:keyboard-state>
             <d:nav-state>navhidden</d:nav-state>
         </d:state>
         <d:state name="Landscape, closed">
             <d:description>The phone in landscape view with the keyboard closed</d:description>
-            <d:screen-orientation>landscape</d:screen-orientation>
+            <d:screen-orientation>land</d:screen-orientation>
             <d:keyboard-state>keyshidden</d:keyboard-state>
             <d:nav-state>navhidden</d:nav-state>
         </d:state>
         <d:state name="Landscape, open">
             <d:description>The phone in landscape view with the keyboard open</d:description>
-            <d:screen-orientation>landscape</d:screen-orientation>
+            <d:screen-orientation>land</d:screen-orientation>
             <d:keyboard-state>keysexposed</d:keyboard-state>
             <d:nav-state>navexposed</d:nav-state>
         </d:state>

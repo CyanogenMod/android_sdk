@@ -120,13 +120,13 @@
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
-            <d:screen-orientation>portrait</d:screen-orientation>
+            <d:screen-orientation>port</d:screen-orientation>
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
         <d:state name="Landscape">
             <d:description>The phone in landscape view</d:description>
-            <d:screen-orientation>landscape</d:screen-orientation>
+            <d:screen-orientation>land</d:screen-orientation>
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
