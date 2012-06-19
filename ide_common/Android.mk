@@ -21,7 +21,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under,src)
 LOCAL_JAVA_LIBRARIES := \
 	layoutlib_api \
 	common \
-	kxml2-2.3.0
+	kxml2-2.3.0 \
+	sdklib
 
 LOCAL_MODULE := ide_common
 
