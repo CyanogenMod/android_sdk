@@ -56,4 +56,35 @@ public class State {
     public Hardware getHardware() {
         return mHardwareOverride;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof State)) {
+            return false;
+        }
+        State s = (State) o;
+        return mDefaultState == s.isDefaultState()
+                && mName.equals(s.getName())
+                && mDescription.equals(s.getDescription())
+                && mOrientation.equals(s.getOrientation())
+                && mKeyState.equals(s.getKeyState())
+                && mNavState.equals(s.getNavState())
+                && mHardwareOverride.equals(s.getHardware());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + (mDefaultState ? 1 : 0);
+        hash = 31 * hash + mName.hashCode();
+        hash = 31 * hash + mDescription.hashCode();
+        hash = 31 * hash + mOrientation.hashCode();
+        hash = 31 * hash + mKeyState.hashCode();
+        hash = 31 * hash + mNavState.hashCode();
+        hash = 31 * hash + mHardwareOverride.hashCode();
+        return hash;
+    }
 }

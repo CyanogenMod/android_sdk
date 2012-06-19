@@ -46,4 +46,27 @@ public class Camera {
         c.mFlash = mFlash;
         return c;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Camera)) {
+            return false;
+        }
+        Camera c = (Camera) o;
+        return mLocation == c.mLocation
+                && mAutofocus == c.hasAutofocus()
+                && mFlash == c.hasFlash();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + mLocation.hashCode();
+        hash = 31 * hash + (mAutofocus ? 1 : 0);
+        hash = 31 * hash + (mFlash ? 1 : 0);
+        return hash;
+    }
 }

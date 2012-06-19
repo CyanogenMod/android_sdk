@@ -221,4 +221,33 @@ public final class Device {
         mMeta = b.mMeta;
         mDefaultState = b.mDefaultState;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Device)) {
+            return false;
+        }
+        Device d = (Device) o;
+        return mName.equals(d.getName())
+                && mManufacturer.equals(d.getManufacturer())
+                && mSoftware.equals(d.getAllSoftware())
+                && mState.equals(d.getAllStates())
+                && mMeta.equals(d.getMeta())
+                && mDefaultState.equals(d.getDefaultState());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + mName.hashCode();
+        hash = 31 * hash + mManufacturer.hashCode();
+        hash = 31 * hash + mSoftware.hashCode();
+        hash = 31 * hash + mState.hashCode();
+        hash = 31 * hash + mMeta.hashCode();
+        hash = 31 * hash + mDefaultState.hashCode();
+        return hash;
+    }
 }

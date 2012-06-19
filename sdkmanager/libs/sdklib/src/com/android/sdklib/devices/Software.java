@@ -49,4 +49,34 @@ public class Software {
     public Set<String> getGlExtensions() {
         return mGlExtensions;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Software)) {
+            return false;
+        }
+
+        Software sw = (Software) o;
+        return mMinSdkLevel == sw.getMinSdkLevel()
+                && mMaxSdkLevel == sw.getMaxSdkLevel()
+                && mLiveWallpaperSupport == sw.hasLiveWallpaperSupport()
+                && mBluetoothProfiles.equals(sw.getBluetoothProfiles())
+                && mGlVersion.equals(sw.getGlVersion())
+                && mGlExtensions.equals(sw.getGlExtensions());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + mMinSdkLevel;
+        hash = 31 * hash + mMaxSdkLevel;
+        hash = 31 * hash + (mLiveWallpaperSupport ? 1 : 0);
+        hash = 31 * hash + mBluetoothProfiles.hashCode();
+        hash = 31 * hash + mGlVersion.hashCode();
+        hash = 31 * hash + mGlExtensions.hashCode();
+        return hash;
+    }
 }

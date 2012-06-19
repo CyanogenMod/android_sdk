@@ -34,7 +34,7 @@ public class Screen {
     Multitouch mMultitouch;
     TouchScreen mMechanism;
     ScreenType mScreenType;
-    
+
     public ScreenSize getSize() {
         return mScreenSize;
     }
@@ -50,11 +50,11 @@ public class Screen {
     public int getXDimension() {
         return mXDimension;
     }
-    
+
     public int getYDimension() {
         return mYDimension;
     }
-    
+
     public double getXdpi() {
         return mXdpi;
     }
@@ -69,5 +69,69 @@ public class Screen {
     }
     public ScreenType getScreenType() {
         return mScreenType;
+    }
+
+    /**
+     * Returns a copy of the object that shares no state with it,
+     * but is initialized to equivalent values.
+     *
+     * @return A copy of the object.
+     */
+    public Screen deepCopy() {
+        Screen s = new Screen();
+        s.mScreenSize = mScreenSize;
+        s.mDiagonalLength = mDiagonalLength;
+        s.mPixelDensity = mPixelDensity;
+        s.mScreenRatio = mScreenRatio;
+        s.mXDimension = mXDimension;
+        s.mYDimension = mYDimension;
+        s.mXdpi = mXdpi;
+        s.mYdpi = mYdpi;
+        s.mMultitouch = mMultitouch;
+        s.mMechanism = mMechanism;
+        s.mScreenType = mScreenType;
+        return s;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Screen)) {
+            return false;
+        }
+        Screen s = (Screen) o;
+        return s.mScreenSize == mScreenSize
+                && s.mDiagonalLength == mDiagonalLength
+                && s.mPixelDensity == mPixelDensity
+                && s.mScreenRatio == mScreenRatio
+                && s.mXDimension == mXDimension
+                && s.mYDimension == mYDimension
+                && s.mXdpi == mXdpi
+                && s.mYdpi == mYdpi
+                && s.mMultitouch == mMultitouch
+                && s.mMechanism == mMechanism
+                && s.mScreenType == mScreenType;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash = 31 * hash + mScreenSize.hashCode();
+        long f = Double.doubleToLongBits(mDiagonalLength);
+        hash = 31 * hash + (int) (f ^ (f >>> 32));
+        hash = 31 * hash + mPixelDensity.hashCode();
+        hash = 31 * hash + mScreenRatio.hashCode();
+        hash = 31 * hash + mXDimension;
+        hash = 31 * hash + mYDimension;
+        f = Double.doubleToLongBits(mXdpi);
+        hash = 31 * hash + (int) (f ^ (f >>> 32));
+        f = Double.doubleToLongBits(mYdpi);
+        hash = 31 * hash + (int) (f ^ (f >>> 32));
+        hash = 31 * hash + mMultitouch.hashCode();
+        hash = 31 * hash + mMechanism.hashCode();
+        hash = 31 * hash + mScreenType.hashCode();
+        return hash;
     }
 }

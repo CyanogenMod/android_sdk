@@ -54,9 +54,6 @@ public class DeviceManager {
     private final static String sDeviceProfilesProp = "DeviceProfiles";
     private final static Pattern sPathPropertyPattern = Pattern.compile("^" + PkgProps.EXTRA_PATH
             + "=" + sDeviceProfilesProp + "$");
-    private static String BOOLEAN_YES = "yes";
-    private static String BOOLEAN_NO = "no";
-
     private ISdkLog mLog;
     private List<Device> mVendorDevices;
     private List<Device> mUserDevices;
@@ -146,8 +143,10 @@ public class DeviceManager {
         props.put("hw.audioInput", getBooleanVal(hw.hasMic()));
         props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
         props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
-        props.put("hw.lcd.density", Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
-        props.put("hw.sensors.proximity", getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
+        props.put("hw.lcd.density",
+                Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
+        props.put("hw.sensors.proximity",
+                getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
         return props;
     }
 
