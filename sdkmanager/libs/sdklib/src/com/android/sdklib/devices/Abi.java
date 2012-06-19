@@ -16,11 +16,13 @@
 
 package com.android.sdklib.devices;
 
+import com.android.sdklib.SdkConstants;
+
 public enum Abi {
-    ARMEABI("armeabi"),
-    ARMEABI_V7A("armeabi-v7a"),
-    X86("x86"),
-    MIPS("mips");
+    ARMEABI(SdkConstants.ABI_ARMEABI),
+    ARMEABI_V7A(SdkConstants.ABI_ARMEABI_V7A),
+    X86(SdkConstants.ABI_INTEL_ATOM),
+    MIPS(SdkConstants.ABI_MIPS);
 
     private final String mValue;
 

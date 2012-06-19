@@ -16,22 +16,15 @@
 
 package com.android.sdkuilib.internal.widgets;
 
-import com.android.io.FileWrapper;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.ISystemImage;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.SdkManager;
-import com.android.sdklib.internal.avd.AvdInfo;
-import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
-import com.android.sdklib.internal.avd.HardwareProperties;
-import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
-import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.ui.GridDialog;
-import com.android.util.Pair;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.CellEditor;
@@ -71,13 +64,27 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
+import com.android.io.FileWrapper;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISdkLog;
+import com.android.sdklib.ISystemImage;
+import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SdkManager;
+import com.android.sdklib.devices.Abi;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.Hardware;
+import com.android.sdklib.devices.Storage;
+import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
+import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
+import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.ui.GridDialog;
+import com.android.util.Pair;
 
 /**
  * AVD creation or edit dialog.
@@ -99,6 +106,8 @@ final class AvdCreationDialog extends GridDialog {
     private final ArrayList<String> mEditedProperties = new ArrayList<String>();
     private final ImageFactory mImageFactory;
     private final ISdkLog mSdkLog;
+    private final DeviceManager mDeviceManager;
+    private final List<Device> mDeviceList = new ArrayList<Device>();
     /**
      * The original AvdInfo if we're editing an existing AVD.
      * Null when we're creating a new AVD.
@@ -110,6 +119,8 @@ final class AvdCreationDialog extends GridDialog {
 
     private Combo mAbiTypeCombo;
     private String mAbiType;
+
+    private Combo mDeviceCombo;
 
     private Button mSdCardSizeRadio;
     private Text mSdCardSize;
@@ -230,6 +241,8 @@ final class AvdCreationDialog extends GridDialog {
         mEditAvdInfo = editAvdInfo;
 
         File hardwareDefs = null;
+        mDeviceManager = new DeviceManager(log);
+        mDeviceList.addAll(mDeviceManager.getUserDevices());
 
         SdkManager sdkMan = avdManager.getSdkManager();
         if (sdkMan != null) {
@@ -237,6 +250,7 @@ final class AvdCreationDialog extends GridDialog {
             if (sdkPath != null) {
                 hardwareDefs = new File (sdkPath + File.separator +
                         SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
+                mDeviceList.addAll(mDeviceManager.getVendorDevices(sdkPath));
             }
         }
 
@@ -303,8 +317,30 @@ final class AvdCreationDialog extends GridDialog {
                 super.widgetSelected(e);
                 reloadSkinCombo();
                 reloadAbiTypeCombo();
+                reloadDeviceCombo();
                 validatePage();
             }
+        });
+
+        // Device Selection
+        label = new Label(parent, SWT.NONE);
+        label.setText("Device:");
+        tooltip = "The device to base the AVD on. This is an optional setting and will merely " +
+                "prefill the settings so they match the selected device as closely as possible.";
+        label.setToolTipText(tooltip);
+        mDeviceCombo = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
+        mDeviceCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mDeviceCombo.setToolTipText(tooltip);
+        mDeviceCombo.setEnabled(false);
+        mDeviceCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                super.widgetSelected(e);
+                prefillWithDeviceConfig();
+                validatePage();
+            }
+
+
         });
 
         //ABI group
@@ -729,6 +765,7 @@ final class AvdCreationDialog extends GridDialog {
 
         IAndroidTarget target = mEditAvdInfo.getTarget();
         if (target != null && !mCurrentTargets.isEmpty()) {
+            mDeviceCombo.setEnabled(true);
             // Try to select the target in the target combo.
             // This will fail if the AVD needs to be repaired.
             //
@@ -852,6 +889,67 @@ final class AvdCreationDialog extends GridDialog {
         mHardwareViewer.refresh();
     }
 
+    // Sets all of the other options based on the device currently selected in mDeviceCombo
+    private void prefillWithDeviceConfig() {
+        int index = mDeviceCombo.getSelectionIndex();
+        if (index >= 0 && index < mDeviceList.size()){
+            Device d = mDeviceList.get(index);
+            Hardware hw = d.getDefaultHardware();
+
+            // Try setting the CPU/ABI
+            if (mAbiTypeCombo.isEnabled()) {
+                Set<Abi> abis = hw.getSupportedAbis();
+                // This is O(n*m), but the two lists should be sufficiently small.
+                for (Abi abi : abis) {
+                    for (int i = 0; i < mAbiTypeCombo.getItemCount(); i++) {
+                        if (mAbiTypeCombo.getItem(i)
+                                .equals(AvdInfo.getPrettyAbiType(abi.toString()))){
+                            mAbiTypeCombo.select(i);
+                        }
+                    }
+                }
+            }
+
+            // Set the SD card size
+            if (hw.getRemovableStorage().size() > 0){
+                Storage card = hw.getRemovableStorage().get(0);
+                enableSdCardWidgets(true);
+                mSdCardSizeRadio.setSelection(true);
+                mSdCardFileRadio.setSelection(false);
+                Storage.Unit unit = card.getApproriateUnits();
+                // Storage.Unit supports TiB and Bytes, but the AVD creator doesn't, so round
+                // them to the nearest values.
+                if (unit.equals(Storage.Unit.TiB)) {
+                    unit = Storage.Unit.GiB;
+                } else if (unit.equals(Storage.Unit.B)) {
+                    unit = Storage.Unit.KiB;
+                }
+                for(int i = 0; i < mSdCardSizeCombo.getItemCount(); i++){
+                    String u = mSdCardSizeCombo.getItem(i).trim();
+                    if (unit.equals(Storage.Unit.getEnum(u))) {
+                        mSdCardSizeCombo.select(i);
+                        break;
+                    }
+                }
+                mSdCardSize.setText(Long.toString(card.getSizeAsUnit(unit)));
+
+            }
+
+            // Set the screen resolution
+            mSkinListRadio.setSelection(false);
+            mSkinSizeRadio.setSelection(true);
+            mSkinCombo.setEnabled(false);
+            mSkinSizeWidth.setEnabled(true);
+            mSkinSizeWidth.setText(Integer.toString(hw.getScreen().getXDimension()));
+            mSkinSizeHeight.setEnabled(true);
+            mSkinSizeHeight.setText(Integer.toString(hw.getScreen().getYDimension()));
+
+            mProperties.putAll(DeviceManager.getHardwareProperties(d));
+            mHardwareViewer.refresh();
+
+        }
+    }
+
     @Override
     protected void okPressed() {
         if (createAvd()) {
@@ -894,6 +992,8 @@ final class AvdCreationDialog extends GridDialog {
             mSdCardFile.setText(fileName);
         }
     }
+
+
 
     private void reloadTargetCombo() {
         String selected = null;
@@ -938,6 +1038,14 @@ final class AvdCreationDialog extends GridDialog {
         }
 
         reloadSkinCombo();
+    }
+
+
+    private void reloadDeviceCombo() {
+        for (Device d : mDeviceList) {
+            mDeviceCombo.add(d.getManufacturer() + " " + d.getName());
+        }
+        mDeviceCombo.setEnabled(true);
     }
 
     private void reloadSkinCombo() {
