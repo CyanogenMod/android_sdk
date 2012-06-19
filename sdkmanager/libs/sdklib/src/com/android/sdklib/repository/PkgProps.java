@@ -41,6 +41,7 @@ public class PkgProps {
     // AndroidVersion
 
     public static final String VERSION_API_LEVEL        = "AndroidVersion.ApiLevel";//$NON-NLS-1$
+    /** Code name of the platform if the platform is not final */
     public static final String VERSION_CODENAME         = "AndroidVersion.CodeName";//$NON-NLS-1$
 
 
@@ -79,6 +80,8 @@ public class PkgProps {
     // PlatformPackage
 
     public static final String PLATFORM_VERSION         = "Platform.Version";       //$NON-NLS-1$
+    /** Code name of the platform. This has no bearing on the package being a preview or not. */
+    public static final String PLATFORM_CODENAME        = "Platform.CodeName";      //$NON-NLS-1$
     public static final String PLATFORM_INCLUDED_ABI    = "Platform.Included.Abi";  //$NON-NLS-1$
 
     // ToolPackage
