@@ -817,7 +817,8 @@ public class AdtUtils {
                         if (target.isPlatform()) {
                             AndroidVersion version = target.getVersion();
                             if (version.getApiLevel() == api) {
-                                return version.getApiString();
+                                return String.format("API %1$d: Android %2$s", api,
+                                        target.getProperty("ro.build.version.release"));
                             }
                         }
                     }
