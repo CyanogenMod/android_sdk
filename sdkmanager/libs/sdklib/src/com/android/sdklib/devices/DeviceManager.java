@@ -176,11 +176,11 @@ public class DeviceManager {
         try {
             return DeviceParser.parse(deviceXml);
         } catch (SAXException e) {
-            mLog.error(null, "Error parsing %1$", deviceXml.getAbsolutePath());
+            mLog.error(null, "Error parsing %1$s", deviceXml.getAbsolutePath());
         } catch (ParserConfigurationException e) {
-            mLog.error(null, "Error parsing %1$", deviceXml.getAbsolutePath());
+            mLog.error(null, "Error parsing %1$s", deviceXml.getAbsolutePath());
         } catch (IOException e) {
-            mLog.error(null, "Error reading %1$", deviceXml.getAbsolutePath());
+            mLog.error(null, "Error reading %1$s", deviceXml.getAbsolutePath());
         } catch (IllegalStateException e) {
             // The device builders can throw IllegalStateExceptions if
             // build gets called before everything is properly setup
