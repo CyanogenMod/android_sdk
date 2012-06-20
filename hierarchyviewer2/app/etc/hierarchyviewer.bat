@@ -68,6 +68,8 @@ if exist %swt_path% goto SetPath
 
 :SetPath
 
+echo The standalone version of hieararchyviewer is deprecated.
+echo Please use Android Device Monitor (tools/monitor.bat) instead.
 call %java_exe% %java_debug% -Xmx512m -Dcom.android.hierarchyviewer.bindir=%prog_dir% -classpath "%jarpath%;%swt_path%\swt.jar" com.android.hierarchyviewer.HierarchyViewerApplication %*
 
 

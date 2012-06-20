@@ -101,4 +101,6 @@ else
     exit 1
 fi
 
+echo "The standalone version of traceview is deprecated."
+echo "Please use Android Device Monitor (tools/monitor) instead."
 exec "${javaCmd}" $javaOpts -Djava.ext.dirs="$frameworkdir" -Dcom.android.traceview.toolsdir="$progdir" -jar "$jarpath" "$@"
