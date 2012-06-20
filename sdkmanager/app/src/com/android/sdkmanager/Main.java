@@ -36,6 +36,8 @@ import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.DownloadCache.Strategy;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.repository.SdkAddonConstants;
@@ -229,6 +231,13 @@ public class Main {
      * Actually do an action...
      */
     private void doAction() {
+
+        if (mSdkCommandLine.hasClearCache()) {
+            DownloadCache d = new DownloadCache(Strategy.SERVE_CACHE);
+            d.clearCache();
+            mSdkLog.printf("SDK Manager repository: manifest cache cleared.\n");
+        }
+
         String verb = mSdkCommandLine.getVerb();
         String directObject = mSdkCommandLine.getDirectObject();
 
