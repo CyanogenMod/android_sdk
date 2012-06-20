@@ -138,18 +138,18 @@ public class AddonsListFetcher {
             }
         }
 
+        String baseUrl = url;
+        if (!baseUrl.endsWith("/")) {                       //$NON-NLS-1$
+            int pos = baseUrl.lastIndexOf('/');
+            if (pos > 0) {
+                baseUrl = baseUrl.substring(0, pos + 1);
+            }
+        }
+
         // If we can't find the latest version, try earlier schema versions.
         if (xml == null && defaultNames.length > 0) {
             ITaskMonitor subMonitor = monitor.createSubMonitor(1);
             subMonitor.setProgressMax(defaultNames.length);
-
-            String baseUrl = url;
-            if (!baseUrl.endsWith("/")) {                       //$NON-NLS-1$
-                int pos = baseUrl.lastIndexOf('/');
-                if (pos > 0) {
-                    baseUrl = baseUrl.substring(0, pos + 1);
-                }
-            }
 
             for (String name : defaultNames) {
                 String newUrl = baseUrl + name;
@@ -239,7 +239,7 @@ public class AddonsListFetcher {
         if (xml != null) {
             monitor.setDescription("Parse XML");
             monitor.incProgress(1);
-            result = parseAddonsList(validatedDoc, validatedUri, monitor);
+            result = parseAddonsList(validatedDoc, validatedUri, baseUrl, monitor);
         }
 
         // done
@@ -512,14 +512,23 @@ public class AddonsListFetcher {
 
     /**
      * Parse all sites defined in the Addaons list XML and returns an array of sites.
+     *
+     * @param doc The XML DOM to parse.
+     * @param nsUri The addons-list schema URI of the document.
+     * @param baseUrl The base URL of the caller (e.g. where addons-list-N.xml was fetched from.)
+     * @param monitor A non-null monitor to print to.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected Site[] parseAddonsList(Document doc, String nsUri, ITaskMonitor monitor) {
+    protected Site[] parseAddonsList(
+            Document doc,
+            String nsUri,
+            String baseUrl,
+            ITaskMonitor monitor) {
 
-        String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
-        if (baseUrl != null) {
-            if (baseUrl.length() <= 0 || !baseUrl.endsWith("/")) {      //$NON-NLS-1$
-                baseUrl = null;
+        String testBaseUrl = System.getenv("SDK_TEST_BASE_URL");                //$NON-NLS-1$
+        if (testBaseUrl != null) {
+            if (testBaseUrl.length() <= 0 || !testBaseUrl.endsWith("/")) {      //$NON-NLS-1$
+                testBaseUrl = null;
             }
         }
 
@@ -555,10 +564,14 @@ public class AddonsListFetcher {
                         String strUrl  = url.getTextContent().trim();
                         String strName = name.getTextContent().trim();
 
-                        if (baseUrl != null &&
+                        if (testBaseUrl != null &&
                                 strUrl.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
-                            strUrl = baseUrl +
+                            strUrl = testBaseUrl +
                                    strUrl.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
+                        } else if (!strUrl.startsWith("http://") &&             //$NON-NLS-1$
+                                !strUrl.startsWith("https://")) {               //$NON-NLS-1$
+                            // This looks like a relative URL, add the fetcher's base URL to it.
+                            strUrl = baseUrl + strUrl;
                         }
 
                         if (strUrl.length() > 0 && strName.length() > 0) {

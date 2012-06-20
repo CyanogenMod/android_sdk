@@ -40,16 +40,22 @@ public class AddonsListFetcherTest extends TestCase {
      */
     private static class MockAddonsListFetcher extends AddonsListFetcher {
 
-        public Site[] _parseAddonsList(Document doc, String nsUri, ITaskMonitor monitor) {
-            return super.parseAddonsList(doc, nsUri, monitor);
+        public Site[] _parseAddonsList(Document doc,
+                String nsUri,
+                String baseUrl,
+                ITaskMonitor monitor) {
+            return super.parseAddonsList(doc, nsUri, baseUrl, monitor);
         }
 
         public int _getXmlSchemaVersion(InputStream xml) {
             return super.getXmlSchemaVersion(xml);
         }
 
-        public String _validateXml(InputStream xml, String url, int version,
-                                   String[] outError, Boolean[] validatorFound) {
+        public String _validateXml(InputStream xml,
+                String url,
+                int version,
+                String[] outError,
+                Boolean[] validatorFound) {
             return super.validateXml(xml, url, version, outError, validatorFound);
         }
 
@@ -102,7 +108,7 @@ public class AddonsListFetcherTest extends TestCase {
         assertNotNull(doc);
 
         // Get the sites
-        Site[] result = mFetcher._parseAddonsList(doc, uri, monitor);
+        Site[] result = mFetcher._parseAddonsList(doc, uri, "http://base/url/", monitor);
 
         assertEquals("", monitor.getCapturedDescriptions());
         assertEquals("", monitor.getCapturedLog());
@@ -115,9 +121,10 @@ public class AddonsListFetcherTest extends TestCase {
         assertEquals(
                 "[<ADDON_SITE URL='http://www.example.com/my_addons.xml' Name='My Example Add-ons.'>, " +
                  "<ADDON_SITE URL='http://www.example.co.jp/addons.xml' Name='\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002'>, " +
-                 "<ADDON_SITE URL='http://www.example.com/' Name='Example of directory URL.'>]",
+                 "<ADDON_SITE URL='http://www.example.com/' Name='Example of directory URL.'>, " +
+                 "<ADDON_SITE URL='http://base/url/relative_url.xml' Name='Relative URL.'>]",
                  Arrays.toString(result));
-        assertEquals(3, result.length);
+        assertEquals(4, result.length);
     }
 
     /**
@@ -147,7 +154,7 @@ public class AddonsListFetcherTest extends TestCase {
         assertNotNull(doc);
 
         // Get the sites
-        Site[] result = mFetcher._parseAddonsList(doc, uri, monitor);
+        Site[] result = mFetcher._parseAddonsList(doc, uri, "http://base/url/", monitor);
 
         assertEquals("", monitor.getCapturedDescriptions());
         assertEquals("", monitor.getCapturedLog());
@@ -162,9 +169,10 @@ public class AddonsListFetcherTest extends TestCase {
                  "<ADDON_SITE URL='http://www.example.co.jp/addons.xml' Name='\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002'>, " +
                  "<ADDON_SITE URL='http://www.example.com/' Name='Example of directory URL.'>, " +
                  "<SYS_IMG_SITE URL='http://www.example.com/' Name='Example of sys-img URL using the default xml filename.'>, " +
-                 "<SYS_IMG_SITE URL='http://www.example.com/specific_file.xml' Name='Example of sys-img URL using a specific xml filename.'>]",
+                 "<SYS_IMG_SITE URL='http://www.example.com/specific_file.xml' Name='Example of sys-img URL using a specific xml filename.'>, " +
+                 "<ADDON_SITE URL='http://base/url/relative/url.xml' Name='Relative URL.'>]",
                  Arrays.toString(result));
-        assertEquals(5, result.length);
+        assertEquals(6, result.length);
     }
 
     // IMPORTANT: Each time you add a test here for a new version, you should
