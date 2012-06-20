@@ -202,6 +202,9 @@ public final class AaptParser {
     private final static Pattern sPattern9Line1 = Pattern.compile(
             "^Invalid configuration: (.+)$"); //$NON-NLS-1$
 
+    private final static Pattern sXmlBlockPattern = Pattern.compile(
+            "W/ResourceType\\(.*\\): Bad XML block: no root element node found"); //$NON-NLS-1$
+
     /**
      * Parse the output of aapt and mark the incorrect file with error markers
      *
@@ -462,7 +465,19 @@ public final class AaptParser {
                 continue;
             }
 
-            // invalid line format, flag as error, and bail
+            m = sXmlBlockPattern.matcher(p);
+            if (m.matches()) {
+                // W/ResourceType(12345): Bad XML block: no root element node found
+                // Sadly there's NO filename reference; this error typically describes the
+                // error *after* this line.
+                if (results.length == 1) {
+                    // This is the only error message: dump to console and quit
+                    return true;
+                }
+                // Continue: the real culprit is displayed next and should get a marker
+                continue;
+            }
+
             return true;
         }
 
