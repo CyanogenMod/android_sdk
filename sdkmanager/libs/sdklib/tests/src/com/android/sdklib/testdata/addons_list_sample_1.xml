@@ -35,4 +35,9 @@
         <sdk:name>Example of directory URL.</sdk:name>
     </sdk:addon-site>
 
+    <sdk:addon-site>
+        <sdk:url>relative_url.xml</sdk:url>
+        <sdk:name>Relative URL.</sdk:name>
+    </sdk:addon-site>
+
 </sdk:sdk-addons-list>
