@@ -60,4 +60,6 @@ if exist %swt_path% goto SetPath
 :SetPath
 set javaextdirs=%swt_path%;%frameworkdir%
 
+echo The standalone version of traceview is deprecated.
+echo Please use Android Device Monitor (tools/monitor) instead.
 call %java_exe% -Djava.ext.dirs=%javaextdirs% -Dcom.android.traceview.toolsdir= -jar %jarpath% %*

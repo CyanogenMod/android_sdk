@@ -68,5 +68,7 @@ if exist %swt_path% goto SetPath
 :SetPath
 set javaextdirs=%swt_path%;%frameworkdir%
 
+echo The standalone version of DDMS is deprecated.
+echo Please use Android Device Monitor (monitor.bat) instead.
 call %java_exe% %java_debug% -Dcom.android.ddms.bindir=%prog_dir% -classpath "%jarpath%;%swt_path%\swt.jar" com.android.ddms.Main %*
 
