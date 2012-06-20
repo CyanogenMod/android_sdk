@@ -31,6 +31,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.Maps;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.fieldassist.ControlDecoration;
@@ -54,6 +55,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,6 @@ public class NewProjectPage extends WizardPage
     private Text mPackageText;
     private Text mApplicationText;
     private Combo mMinSdkCombo;
-    private Button mCompatToggle;
 
     private boolean mIgnore;
     private Combo mBuildSdkCombo;
@@ -245,15 +246,6 @@ public class NewProjectPage extends WizardPage
                 "targeting API 8 and later, you reach approximately 93% of the market.");
 
         new Label(container, SWT.NONE);
-        new Label(container, SWT.NONE);
-        new Label(container, SWT.NONE);
-
-        mCompatToggle = new Button(container, SWT.CHECK);
-        mCompatToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-        mCompatToggle.setSelection(true);
-        mCompatToggle.setEnabled(false);
-        mCompatToggle.setText("Include compatibility code");
-        mCompatToggle.addSelectionListener(this);
         new Label(container, SWT.NONE);
 
         new Label(container, SWT.NONE);
@@ -586,6 +578,12 @@ public class NewProjectPage extends WizardPage
                 status = projectStatus;
             }
 
+            IStatus locationStatus = validateLocation();
+            if (locationStatus != null && (status == null
+                    || locationStatus.getSeverity() > status.getSeverity())) {
+                status = locationStatus;
+            }
+
             IStatus packageStatus = validatePackageName();
             if (packageStatus != null && (status == null
                     || packageStatus.getSeverity() > status.getSeverity())) {
@@ -651,6 +649,21 @@ public class NewProjectPage extends WizardPage
         updateDecorator(mProjectDec, status, true);
 
         return status;
+    }
+
+    private IStatus validateLocation() {
+        // Validate location
+        if (mValues.projectName != null) {
+            File dest = Platform.getLocation().append(mValues.projectName).toFile();
+            if (dest.exists()) {
+                return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        String.format(
+                                "There is already a file or directory named \"%1$s\" in the selected location.",
+                        mValues.projectName));
+            }
+        }
+
+        return null;
     }
 
     private IStatus validatePackageName() {
