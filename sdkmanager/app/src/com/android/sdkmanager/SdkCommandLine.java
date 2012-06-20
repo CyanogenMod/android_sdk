@@ -91,6 +91,7 @@ class SdkCommandLine extends CommandLineParser {
     public static final String KEY_ALIAS        = "alias";                          //$NON-NLS-1$
     public static final String KEY_STOREPASS    = "storepass";                      //$NON-NLS-1$
     public static final String KEY_KEYPASS      = "keypass";                        //$NON-NLS-1$
+    public static final String KEY_CLEAR_CACHE   = "clear-cache";                   //$NON-NLS-1$
 
     /**
      * Action definitions for SdkManager command line.
@@ -164,6 +165,12 @@ class SdkCommandLine extends CommandLineParser {
         super(logger, ACTIONS);
 
         // The following defines the parameters of the actions defined in mAction.
+
+        // --- generic actions that can work on any verb ---
+
+        define(Mode.BOOLEAN, false,
+                GLOBAL_FLAG_VERB, NO_VERB_OBJECT, ""/*shortName*/, KEY_CLEAR_CACHE, //$NON-NLS-1$
+                "Clear the SDK Manager repository manifest cache.", false);         //$NON-NLS-1$
 
         // --- list avds ---
 
@@ -437,6 +444,12 @@ class SdkCommandLine extends CommandLineParser {
     }
 
     // -- some helpers for generic action flags
+
+    /** Helper that returns true if --verbose was requested. */
+    public boolean hasClearCache() {
+        return
+            ((Boolean) getValue(GLOBAL_FLAG_VERB, NO_VERB_OBJECT, KEY_CLEAR_CACHE)).booleanValue();
+    }
 
     /** Helper to retrieve the --path value. */
     public String getParamLocationPath() {

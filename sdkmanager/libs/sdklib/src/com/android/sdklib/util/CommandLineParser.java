@@ -16,6 +16,8 @@
 
 package com.android.sdklib.util;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.ISdkLog;
 
 import java.util.ArrayList;
@@ -801,20 +803,22 @@ public class CommandLineParser {
          *
          * @param mode The {@link Mode} for the argument.
          * @param mandatory True if this argument is mandatory for this action.
-         * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
+         * @param verb The verb name. Never null. Can be {@link CommandLineParser#GLOBAL_FLAG_VERB}.
+         * @param directObject The action name. Can be {@link CommandLineParser#NO_VERB_OBJECT}.
          * @param shortName The one-letter short argument name. Can be empty but not null.
          * @param longName The long argument name. Can be empty but not null.
          * @param description The description. Cannot be null.
-         * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
+         * @param defaultValue The default value (or values), which depends on the selected
+         *          {@link Mode}. Can be null.
          */
         public Arg(Mode mode,
                    boolean mandatory,
-                   String verb,
-                   String directObject,
-                   String shortName,
-                   String longName,
-                   String description,
-                   Object defaultValue) {
+                   @NonNull String verb,
+                   @NonNull String directObject,
+                   @NonNull String shortName,
+                   @NonNull String longName,
+                   @NonNull String description,
+                   @Nullable Object defaultValue) {
             mMode = mode;
             mMandatory = mandatory;
             mVerb = verb;
@@ -897,19 +901,23 @@ public class CommandLineParser {
      *
      * @param mode The {@link Mode} for the argument.
      * @param mandatory The argument is required (never if {@link Mode#BOOLEAN})
-     * @param verb The verb name. Can be #INTERNAL_VERB.
-     * @param directObject The action name. Can be #NO_VERB_OBJECT or #INTERNAL_FLAG.
+     * @param verb The verb name. Never null. Can be {@link CommandLineParser#GLOBAL_FLAG_VERB}.
+     * @param directObject The action name. Can be {@link CommandLineParser#NO_VERB_OBJECT}.
      * @param shortName The one-letter short argument name. Can be empty but not null.
      * @param longName The long argument name. Can be empty but not null.
      * @param description The description. Cannot be null.
-     * @param defaultValue The default value (or values), which depends on the selected {@link Mode}.
+     * @param defaultValue The default value (or values), which depends on the selected
+     *          {@link Mode}.
      */
     protected void define(Mode mode,
             boolean mandatory,
-            String verb,
-            String directObject,
-            String shortName, String longName,
-            String description, Object defaultValue) {
+            @NonNull String verb,
+            @NonNull String directObject,
+            @NonNull String shortName,
+            @NonNull String longName,
+            @NonNull String description,
+            @Nullable Object defaultValue) {
+        assert verb != null;
         assert(!(mandatory && mode == Mode.BOOLEAN)); // a boolean mode cannot be mandatory
 
         // We should always have at least a short or long name, ideally both but never none.
