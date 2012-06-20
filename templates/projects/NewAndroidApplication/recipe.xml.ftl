@@ -7,9 +7,9 @@
     <copy from="res/drawable-mdpi" />
     <copy from="res/drawable-xhdpi" />
 </#if>
-    <copy from="res/values/dimens.xml" />
     <copy from="res/values/styles.xml" />
-    <copy from="res/values-large/dimens.xml" />
+    <copy from="res/values-v11/styles.xml" />
+    <copy from="res/values-v14/styles.xml" />
 
     <instantiate from="res/values/strings.xml.ftl" />
 </recipe>

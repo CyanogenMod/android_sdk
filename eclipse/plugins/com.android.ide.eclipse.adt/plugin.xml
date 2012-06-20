@@ -188,7 +188,7 @@
             class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
-            icon="icons/androidjunit.png"
+            icon="icons/newJunit.png"
             id="com.android.ide.eclipse.adt.project.NewTestProjectWizard"
             name="Android Test Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
@@ -293,9 +293,9 @@
             class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$NewCustomViewWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
-            icon="icons/customView.png"
+            icon="icons/newCustomView.png"
             id="com.android.ide.eclipse.editors.wizards.NewTemplateWizard.CustomView"
-            name="Custom View"
+            name="Android Custom View"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" >
             <description>
