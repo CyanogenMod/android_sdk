@@ -310,8 +310,13 @@ public class ImageUtils {
         int height = y2 - y1;
 
         // Now extract the sub-image
-        BufferedImage cropped = new BufferedImage(width, height,
-                imageType != -1 ? imageType : image.getType());
+        if (imageType == -1) {
+            imageType = image.getType();
+        }
+        if (imageType == BufferedImage.TYPE_CUSTOM) {
+            imageType = BufferedImage.TYPE_INT_ARGB;
+        }
+        BufferedImage cropped = new BufferedImage(width, height, imageType);
         Graphics g = cropped.getGraphics();
         g.drawImage(image, 0, 0, width, height, x1, y1, x2, y2, null);
 
@@ -467,7 +472,11 @@ public class ImageUtils {
     public static BufferedImage subImage(BufferedImage source, int x1, int y1, int x2, int y2) {
         int width = x2 - x1;
         int height = y2 - y1;
-        BufferedImage sub = new BufferedImage(width, height, source.getType());
+        int imageType = source.getType();
+        if (imageType == BufferedImage.TYPE_CUSTOM) {
+            imageType = BufferedImage.TYPE_INT_ARGB;
+        }
+        BufferedImage sub = new BufferedImage(width, height, imageType);
         Graphics g = sub.getGraphics();
         g.drawImage(source, 0, 0, width, height, x1, y1, x2, y2, null);
         g.dispose();
@@ -541,7 +550,11 @@ public class ImageUtils {
         int sourceHeight = source.getHeight();
         int destWidth = Math.max(1, (int) (xScale * sourceWidth));
         int destHeight = Math.max(1, (int) (yScale * sourceHeight));
-        BufferedImage scaled = new BufferedImage(destWidth, destHeight, source.getType());
+        int imageType = source.getType();
+        if (imageType == BufferedImage.TYPE_CUSTOM) {
+            imageType = BufferedImage.TYPE_INT_ARGB;
+        }
+        BufferedImage scaled = new BufferedImage(destWidth, destHeight, imageType);
         Graphics2D g2 = scaled.createGraphics();
         g2.setComposite(AlphaComposite.Src);
         g2.setColor(new Color(0, true));
