@@ -168,7 +168,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
             if (path != null) {
                 assert path.exists(); // guaranteed by the getCompatJarFile call
                 int installedRevision = getInstalledRevision();
-                if (installedRevision != -1 && minimumRevision >= installedRevision) {
+                if (installedRevision != -1 && minimumRevision <= installedRevision) {
                     return path;
                 }
             }
