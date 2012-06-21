@@ -318,7 +318,7 @@
             </description>
         </wizard>
 
-        <!-- During development only: Support for testing templates -->
+        <!-- During development only: Support for testing templates
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
@@ -330,7 +330,7 @@
             name="Template Development Wizard"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
-
+        -->
     </extension>
     <extension point="org.eclipse.debug.core.launchConfigurationTypes">
         <launchConfigurationType
