@@ -1689,7 +1689,8 @@ public class GridModel {
                 int endColumn = column + view.columnSpan;
                 if (endColumn > newColumn
                         || endColumn == newColumn && (view.node.getBounds().x2() > x
-                                || !GravityHelper.isLeftAligned(view.gravity))) {
+                                || GravityHelper.isConstrainedHorizontally(view.gravity)
+                                    &&  !GravityHelper.isLeftAligned(view.gravity))) {
                     // This cell spans the new insert position, so increment the column span
                     view.columnSpan += insertMarginColumn ? 2 : 1;
                     setColumnSpanAttribute(node, view.columnSpan);
@@ -1773,7 +1774,8 @@ public class GridModel {
                 int endRow = row + view.rowSpan;
                 if (endRow > newRow
                         || endRow == newRow && (view.node.getBounds().y2() > y
-                                || !GravityHelper.isTopAligned(view.gravity))) {
+                                || GravityHelper.isConstrainedVertically(view.gravity)
+                                    && !GravityHelper.isTopAligned(view.gravity))) {
                     // This cell spans the new insert position, so increment the row span
                     view.rowSpan += insertMarginRow ? 2 : 1;
                     setRowSpanAttribute(node, view.rowSpan);
