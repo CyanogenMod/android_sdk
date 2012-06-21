@@ -65,9 +65,13 @@ public class NewProjectWizard extends TemplateWizard {
     private static final String ATTR_COPY_ICONS = "copyIcons";     //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
+    static final String ATTR_BUILD_API = "buildApi";               //$NON-NLS-1$
+    static final String ATTR_REVISION = "revision";                //$NON-NLS-1$
     static final String ATTR_MIN_API_LEVEL = "minApiLevel";        //$NON-NLS-1$
     static final String ATTR_PACKAGE_NAME = "packageName";         //$NON-NLS-1$
     static final String ATTR_APP_TITLE = "appTitle";               //$NON-NLS-1$
+    static final String CATEGORY_PROJECTS = "projects";            //$NON-NLS-1$
+    static final String CATEGORY_ACTIVITIES = "activities";        //$NON-NLS-1$
 
     private NewProjectPage mMainPage;
     private ActivityPage mActivityPage;
@@ -142,10 +146,12 @@ public class NewProjectWizard extends TemplateWizard {
                 hidden.add(ATTR_MIN_API);
                 hidden.add(ATTR_MIN_API_LEVEL);
                 hidden.add(ATTR_TARGET_API);
+                hidden.add(ATTR_BUILD_API);
 
                 mTemplatePage = new NewTemplatePage(activityValues, false);
                 addPage(mTemplatePage);
             }
+            mTemplatePage.setCustomMinSdk(mValues.minSdkLevel);
             return mTemplatePage;
         }
 
@@ -397,6 +403,7 @@ public class NewProjectWizard extends TemplateWizard {
         parameters.put(ATTR_MIN_API, mValues.minSdk);
         parameters.put(ATTR_MIN_API_LEVEL, mValues.minSdkLevel);
         parameters.put(ATTR_TARGET_API, 15);
+        parameters.put(ATTR_BUILD_API, mValues.target.getVersion().getApiLevel());
         parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
     }
 }

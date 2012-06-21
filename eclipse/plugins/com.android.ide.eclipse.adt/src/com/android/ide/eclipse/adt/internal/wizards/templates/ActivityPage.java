@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_ACTIVITIES;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
@@ -89,7 +90,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
         mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
 
-        mTemplates = TemplateHandler.getTemplates("activities");
+        mTemplates = mValues.template.getManager().getTemplates(CATEGORY_ACTIVITIES);
         java.util.List<String> names = new ArrayList<String>(mTemplates.size());
         File current = mValues.activityValues.getTemplateLocation();
         int index = -1;
@@ -214,7 +215,8 @@ class ActivityPage extends WizardPage implements SelectionListener {
             status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Select an activity type");
         } else {
-            status = mValues.activityValues.getTemplateHandler().validateTemplate();
+            TemplateHandler templateHandler = mValues.activityValues.getTemplateHandler();
+            status = templateHandler.validateTemplate(mValues.minSdkLevel);
         }
 
         setPageComplete(status == null || status.getSeverity() != IStatus.ERROR);

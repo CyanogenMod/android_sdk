@@ -65,7 +65,7 @@ class UpdateToolsPage extends WizardPage implements SelectionListener {
     }
 
     static boolean isUpToDate() {
-        return TemplateHandler.getTemplateRootFolder() != null;
+        return TemplateManager.getTemplateRootFolder() != null;
     }
 
     private void validatePage() {

@@ -52,6 +52,13 @@
         default="15" />
 
     <parameter
+        id="buildApi"
+        name="Build API level"
+        type="string"
+        constraints="apilevel"
+        default="15" />
+
+    <parameter
         id="copyIcons"
         name="Include launcher icons"
         type="boolean"

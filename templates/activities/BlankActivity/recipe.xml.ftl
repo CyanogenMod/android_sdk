@@ -6,7 +6,7 @@
     <copy from="res/drawable-mdpi" />
     <copy from="res/drawable-xhdpi" />
 
-    <copy from="res/menu/main.xml"
+    <instantiate from="res/menu/main.xml.ftl"
             to="res/menu/${menuName}.xml" />
 
     <merge from="res/values/dimens.xml" />
@@ -23,7 +23,7 @@
                      to="res/layout/${layoutName}.xml" />
 
     <#else>
-        <instantiate from="res/layout/activity_simple.xml"
+        <instantiate from="res/layout/activity_simple.xml.ftl"
                      to="res/layout/${layoutName}.xml" />
     </#if>
 

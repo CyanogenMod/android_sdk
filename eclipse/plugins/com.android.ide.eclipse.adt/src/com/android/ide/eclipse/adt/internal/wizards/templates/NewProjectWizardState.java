@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_PROJECTS;
+
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.sdklib.IAndroidTarget;
 
@@ -24,11 +26,10 @@ import com.android.sdklib.IAndroidTarget;
  * {@link NewProjectWizard}
  */
 public class NewProjectWizardState {
-    private static final String TEMPLATE_NAME = "projects/NewAndroidApplication"; //$NON-NLS-1$
-
     /** Creates a new {@link NewProjectWizardState} */
     public NewProjectWizardState() {
-        template = TemplateHandler.createFromName(TEMPLATE_NAME);
+        template = TemplateHandler.createFromName(CATEGORY_PROJECTS,
+                "NewAndroidApplication"); //$NON-NLS-1$
     }
 
     /** The template handler instantiating the project */
