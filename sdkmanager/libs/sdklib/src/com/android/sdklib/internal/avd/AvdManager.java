@@ -86,6 +86,15 @@ public class AvdManager {
      */
     public final static String AVD_INI_CPU_MODEL = "hw.cpu.model"; //$NON-NLS-1$
 
+    /**
+     * AVD/config.ini key name representing the manufacturer of the device this avd was based on.
+     */
+    public static final String AVD_INI_DEVICE_MANUFACTURER = "hw.device.manufacturer"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing the name of the device this avd was based on.
+     */
+    public static final String AVD_INI_DEVICE_NAME = "hw.device.name"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,

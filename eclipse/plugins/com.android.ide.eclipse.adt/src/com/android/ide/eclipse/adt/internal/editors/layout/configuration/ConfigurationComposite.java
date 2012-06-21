@@ -33,6 +33,7 @@ import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
+import com.android.ide.common.resources.configuration.DeviceConfigHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
@@ -53,9 +54,6 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
@@ -66,6 +64,10 @@ import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.State;
+import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.util.Pair;
@@ -118,6 +120,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 
 /**
  * A composite that displays the current configuration displayed in a Graphical Layout Editor.
@@ -189,7 +192,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     /** updates are disabled if > 0 */
     private int mDisableUpdates = 0;
 
-    private List<LayoutDevice> mDeviceList;
+    private List<Device> mDeviceList = new ArrayList<Device>();
     private final List<IAndroidTarget> mTargetList = new ArrayList<IAndroidTarget>();
 
     private final List<String> mThemeList = new ArrayList<String>();
@@ -284,8 +287,8 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      * rendering to its original configuration.
      */
     private class ConfigState {
-        LayoutDevice device;
-        String configName;
+        Device device;
+        String stateName;
         ResourceQualifier[] locale;
         String theme;
         // TODO: Need to know if it's the project theme or the framework theme!
@@ -302,14 +305,14 @@ public class ConfigurationComposite extends Composite implements SelectionListen
             if (device != null) {
                 sb.append(device.getName());
                 sb.append(SEP);
-                if (configName == null) {
-                    DeviceConfig config = getSelectedDeviceConfig();
-                    if (config != null) {
-                        configName = config.getName();
+                if (stateName == null) {
+                    State state= getSelectedDeviceState();
+                    if (state != null) {
+                        stateName = state.getName();
                     }
                 }
-                if (configName != null) {
-                    sb.append(configName);
+                if (stateName != null) {
+                    sb.append(stateName);
                 }
                 sb.append(SEP);
                 if (isLocaleSpecificLayout() && locale != null) {
@@ -357,17 +360,17 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         boolean setData(String data) {
             String[] values = data.split(SEP);
             if (values.length >= 6 && values.length <= 8) {
-                for (LayoutDevice d : mDeviceList) {
+                for (Device d : mDeviceList) {
                     if (d.getName().equals(values[0])) {
                         device = d;
                         FolderConfiguration config = null;
                         if (!values[1].isEmpty() && !values[1].equals("null")) { //$NON-NLS-1$
-                            configName = values[1];
-                            config = device.getFolderConfigByName(configName);
-                        } else if (device.getConfigs().size() > 0) {
-                            DeviceConfig first = device.getConfigs().get(0);
-                            configName = first.getName();
-                            config = first.getConfig();
+                            stateName = values[1];
+                            config = DeviceConfigHelper.getFolderConfig(device, stateName);
+                        } else if (device.getAllStates().size() > 0) {
+                            State first = device.getAllStates().get(0);
+                            stateName = first.getName();
+                            config = DeviceConfigHelper.getFolderConfig(first);
                         }
                         if (config != null) {
                             // Load locale. Note that this can get overwritten by the
@@ -507,7 +510,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         mOrientationCombo = new ToolItem(toolBar, SWT.DROP_DOWN);
         mOrientationCombo.setImage(icons.getIcon(ICON_PORTRAIT));
-        mOrientationCombo.setToolTipText("Flip Orientation");
+        mOrientationCombo.setToolTipText("Go to next state");
 
         @SuppressWarnings("unused")
         ToolItem separator4 = new ToolItem(toolBar, SWT.SEPARATOR);
@@ -752,7 +755,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                     if (loadedConfigData) {
                         // first make sure we have the config to adapt
                         selectDevice(mState.device);
-                        selectConfig(mState.configName);
+                        selectState(mState.stateName);
 
                         adaptConfigSelection(false /*needBestMatch*/);
 
@@ -1145,12 +1148,12 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
     private static class ConfigMatch {
         final FolderConfiguration testConfig;
-        final LayoutDevice device;
+        final Device device;
         final String name;
         final ConfigBundle bundle;
 
-        public ConfigMatch(FolderConfiguration testConfig,
-                LayoutDevice device, String name, ConfigBundle bundle) {
+        public ConfigMatch(FolderConfiguration testConfig, Device device, String name,
+                ConfigBundle bundle) {
             this.testConfig = testConfig;
             this.device = device;
             this.name = name;
@@ -1171,10 +1174,11 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      * the current config. This must only be true if the current config is compatible.
      */
     private void findAndSetCompatibleConfig(boolean favorCurrentConfig) {
-        // list of compatible device/config/locale
+        // list of compatible device/state/locale
         List<ConfigMatch> anyMatches = new ArrayList<ConfigMatch>();
 
-        // list of actual best match (ie the file is a best match for the device/config)
+        // list of actual best match (ie the file is a best match for the
+        // device/state)
         List<ConfigMatch> bestMatches = new ArrayList<ConfigMatch>();
 
         // get a locale that match the host locale roughly (may not be exact match on the region.)
@@ -1219,27 +1223,30 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         addRenderTargetToBundles(configBundles);
 
-        for (LayoutDevice device : mDeviceList) {
-            for (DeviceConfig config : device.getConfigs()) {
+        for (Device device : mDeviceList) {
+            for (State state : device.getAllStates()) {
 
-                // loop on the list of config bundles to create full configurations.
+                // loop on the list of config bundles to create full
+                // configurations.
+                FolderConfiguration stateConfig = DeviceConfigHelper.getFolderConfig(state);
                 for (ConfigBundle bundle : configBundles) {
                     // create a new config with device config
                     FolderConfiguration testConfig = new FolderConfiguration();
-                    testConfig.set(config.getConfig());
+                    testConfig.set(stateConfig);
 
                     // add on top of it, the extra qualifiers from the bundle
                     testConfig.add(bundle.config);
 
                     if (mEditedConfig.isMatchFor(testConfig)) {
-                        // this is a basic match. record it in case we don't find a match
+                        // this is a basic match. record it in case we don't
+                        // find a match
                         // where the edited file is a best config.
-                        anyMatches.add(new ConfigMatch(testConfig, device, config.getName(),
-                                bundle));
+                        anyMatches
+                                .add(new ConfigMatch(testConfig, device, state.getName(), bundle));
 
                         if (isCurrentFileBestMatchFor(testConfig)) {
                             // this is what we want.
-                            bestMatches.add(new ConfigMatch(testConfig, device, config.getName(),
+                            bestMatches.add(new ConfigMatch(testConfig, device, state.getName(),
                                     bundle));
                         }
                     }
@@ -1267,7 +1274,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                 // select the best device anyway.
                 ConfigMatch match = selectConfigMatch(anyMatches);
                 selectDevice(mState.device = match.device);
-                selectConfig(match.name);
+                selectState(match.name);
                 selectLocale(mLocaleList.get(match.bundle.localeIndex));
 
                 mState.uiMode = UiMode.getByIndex(match.bundle.dockModeIndex);
@@ -1285,13 +1292,13 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
             } else {
                 // TODO: there is no device/config able to display the layout, create one.
-                // For the base config values, we'll take the first device and config,
+                // For the base config values, we'll take the first device and state,
                 // and replace whatever qualifier required by the layout file.
             }
         } else {
             ConfigMatch match = selectConfigMatch(bestMatches);
             selectDevice(mState.device = match.device);
-            selectConfig(match.name);
+            selectState(match.name);
             selectLocale(mLocaleList.get(match.bundle.localeIndex));
             mState.uiMode = UiMode.getByIndex(match.bundle.dockModeIndex);
             mState.night = NightMode.getByIndex(match.bundle.nightModeIndex);
@@ -1493,10 +1500,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         // check the device config (ie sans locale)
         boolean needConfigChange = true; // if still true, we need to find another config.
         boolean currentConfigIsCompatible = false;
-        DeviceConfig selectedConfig = getSelectedDeviceConfig();
-        if (selectedConfig != null) {
-            String configName = selectedConfig.getName();
-            FolderConfiguration currentConfig = mState.device.getFolderConfigByName(configName);
+        State selectedState = getSelectedDeviceState();
+        if (selectedState != null) {
+            FolderConfiguration currentConfig = DeviceConfigHelper.getFolderConfig(selectedState);
             if (currentConfig != null && mEditedConfig.isMatchFor(currentConfig)) {
                 currentConfigIsCompatible = true; // current config is compatible
                 if (needBestMatch == false || isCurrentFileBestMatchFor(currentConfig)) {
@@ -1506,15 +1512,15 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         }
 
         if (needConfigChange) {
-            // if the current config/locale isn't a correct match, then
-            // look for another config/locale in the same device.
+            // if the current state/locale isn't a correct match, then
+            // look for another state/locale in the same device.
             FolderConfiguration testConfig = new FolderConfiguration();
 
             // first look in the current device.
             String matchName = null;
             int localeIndex = -1;
-            mainloop: for (DeviceConfig config : mState.device.getConfigs()) {
-                testConfig.set(config.getConfig());
+            mainloop: for (State state : mState.device.getAllStates()) {
+                testConfig.set(DeviceConfigHelper.getFolderConfig(state));
 
                 // loop on the locales.
                 for (int i = 0 ; i < mLocaleList.size() ; i++) {
@@ -1526,7 +1532,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
                     if (mEditedConfig.isMatchFor(testConfig) &&
                             isCurrentFileBestMatchFor(testConfig)) {
-                        matchName = config.getName();
+                        matchName = state.getName();
                         localeIndex = i;
                         break mainloop;
                     }
@@ -1534,11 +1540,12 @@ public class ConfigurationComposite extends Composite implements SelectionListen
             }
 
             if (matchName != null) {
-                selectConfig(matchName);
+                selectState(matchName);
                 selectLocale(mLocaleList.get(localeIndex));
             } else {
-                // no match in current device with any config/locale
-                // attempt to find another device that can display this particular config.
+                // no match in current device with any state/locale
+                // attempt to find another device that can display this
+                // particular state.
                 findAndSetCompatibleConfig(currentConfigIsCompatible);
             }
         }
@@ -1590,9 +1597,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
     private void saveState() {
         if (mDisableUpdates == 0) {
-            DeviceConfig deviceConfig = getSelectedDeviceConfig();
-            String configName = deviceConfig != null ? deviceConfig.getName() : null;
-            mState.configName = configName;
+            State state = getSelectedDeviceState();
+            String stateName = state != null ? state.getName() : null;
+            mState.stateName = stateName;
 
             // since the locales are relative to the project, only keeping the index is enough
             mState.locale = getSelectedLocale();
@@ -1721,7 +1728,10 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         }
     }
 
-    private String getDeviceLabel(LayoutDevice device, boolean brief) {
+    private String getDeviceLabel(Device device, boolean brief) {
+        if(device == null) {
+            return "";
+        }
         String name = device.getName();
 
         if (brief) {
@@ -1747,40 +1757,71 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         Listener menuListener = new Listener() {
             @Override
             public void handleEvent(Event event) {
+                Device current = getSelectedDevice();
                 Menu menu = new Menu(ConfigurationComposite.this.getShell(), SWT.POP_UP);
 
-                LayoutDevice current = getSelectedDevice();
-                if (mDeviceList != null && mDeviceList.size() > 0) {
-                    for (final LayoutDevice device : mDeviceList) {
-                        String title = getDeviceLabel(device, false);
-                        MenuItem item = new MenuItem(menu, SWT.CHECK);
-                        item.setText(title);
+                AvdManager avdManager = Sdk.getCurrent().getAvdManager();
+                AvdInfo[] avds = avdManager.getValidAvds();
+                boolean separatorNeeded = false;
+                for (AvdInfo avd : avds) {
+                    for (final Device d : mDeviceList) {
+                        if (d.getManufacturer().equals(avd.getDeviceManufacturer())
+                                && d.getName().equals(avd.getDeviceName())) {
+                            separatorNeeded = true;
+                            MenuItem item = new MenuItem(menu, SWT.CHECK);
+                            item.setText(avd.getName());
+                            item.setSelection(current == d);
 
-                        boolean selected = current == device;
-                        if (selected) {
-                            item.setSelection(true);
+                            item.addSelectionListener(new SelectionAdapter() {
+
+                                @Override
+                                public void widgetSelected(SelectionEvent e) {
+                                    selectDevice(d);
+                                    onDeviceChange(true /*recomputeLayout*/);
+                                }
+                            });
                         }
-
-                        item.addSelectionListener(new SelectionAdapter() {
-                            @Override
-                            public void widgetSelected(SelectionEvent e) {
-                                selectDevice(device);
-                                onDeviceChange(true /*recomputeLayout*/);
-                            }
-                        });
                     }
+                }
 
+                if (separatorNeeded) {
                     @SuppressWarnings("unused")
                     MenuItem separator = new MenuItem(menu, SWT.SEPARATOR);
+                }
 
-                    MenuItem item = new MenuItem(menu, SWT.PUSH);
-                    item.setText("Add Custom...");
-                    item.addSelectionListener(new SelectionAdapter() {
-                        @Override
-                        public void widgetSelected(SelectionEvent e) {
-                            onCustomDeviceConfig();
+                // Group the devices by manufacturer, then put them in the menu
+                if (!mDeviceList.isEmpty()) {
+                    Map<String, List<Device>> manufacturers = new TreeMap<String, List<Device>>();
+                    for (Device device : mDeviceList) {
+                        List<Device> devices;
+                        if(manufacturers.containsKey(device.getManufacturer())) {
+                            devices = manufacturers.get(device.getManufacturer());
+                        } else {
+                            devices = new ArrayList<Device>();
+                            manufacturers.put(device.getManufacturer(), devices);
                         }
-                    });
+                        devices.add(device);
+                    }
+                    for (List<Device> devices : manufacturers.values()) {
+                        MenuItem item = new MenuItem(menu, SWT.CASCADE);
+                        item.setText(devices.get(0).getManufacturer());
+                        Menu manufacturerMenu = new Menu(menu);
+                        item.setMenu(manufacturerMenu);
+                        for (final Device d : devices) {
+                            MenuItem deviceItem = new MenuItem(manufacturerMenu, SWT.CHECK);
+                            deviceItem.setText(d.getName());
+                            deviceItem.setSelection(current == d);
+
+                            deviceItem.addSelectionListener(new SelectionAdapter() {
+
+                                @Override
+                                public void widgetSelected(SelectionEvent e) {
+                                    selectDevice(d);
+                                    onDeviceChange(true /*recomputeLayout*/);
+                                }
+                            });
+                        }
+                    }
 
                 }
 
@@ -1849,31 +1890,31 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                  if (event.detail == SWT.ARROW) {
                      OrientationMenuAction.showMenu(ConfigurationComposite.this, combo);
                  } else {
-                     flipOrientation();
+                     gotoNextState();
                  }
             }
         };
         combo.addListener(SWT.Selection, menuListener);
     }
 
-    /** Flip the current orientation to the next available device orientation, if any */
-    private void flipOrientation() {
-        DeviceConfig config = getSelectedDeviceConfig();
-        DeviceConfig flipped = getNextDeviceConfig(getSelectedDeviceConfig());
-        if (flipped != config) {
-            selectDeviceConfig(flipped);
+    /** Move to the next device state, changing the icon if it changes orientation */
+    private void gotoNextState() {
+        State state = getSelectedDeviceState();
+        State flipped = getNextDeviceState(state);
+        if (flipped != state) {
+            selectDeviceState(flipped);
             onDeviceConfigChange();
         }
     }
 
-    /** Get the next cyclical orientation after the given orientation */
+    /** Get the next cyclical state after the given state */
     @Nullable
-    DeviceConfig getNextDeviceConfig(DeviceConfig config) {
-        LayoutDevice device = getSelectedDevice();
-        List<DeviceConfig> configs = device.getConfigs();
-        for (int i = 0; i < configs.size(); i++) {
-            if (configs.get(i) == config) {
-                return configs.get((i + 1) % configs.size());
+    State getNextDeviceState(State state) {
+        Device device = getSelectedDevice();
+        List<State> states = device.getAllStates();
+        for (int i = 0; i < states.size(); i++) {
+            if (states.get(i) == state) {
+                return states.get((i + 1) % states.size());
             }
         }
 
@@ -2304,13 +2345,13 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         IProject project = mEditedFile.getProject();
         ManifestInfo manifest = ManifestInfo.get(project);
 
-        // Look up the screen size for the current configuration
+        // Look up the screen size for the current state
         ScreenSize screenSize = null;
         if (mState.device != null) {
-            List<DeviceConfig> configs = mState.device.getConfigs();
-            for (DeviceConfig config : configs) {
+            List<State> states = mState.device.getAllStates();
+            for (State state : states) {
                 ScreenSizeQualifier qualifier =
-                    config.getConfig().getScreenSizeQualifier();
+                    DeviceConfigHelper.getFolderConfig(state).getScreenSizeQualifier();
                 screenSize = qualifier.getValue();
                 break;
             }
@@ -2378,7 +2419,12 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      */
     public float getXDpi() {
         if (mState.device != null) {
-            float dpi = mState.device.getXDpi();
+
+            State currState = mState.device.getState(mState.stateName);
+            if (currState == null) {
+                currState = mState.device.getDefaultState();
+            }
+            float dpi = (float) currState.getHardware().getScreen().getXdpi();
             if (Float.isNaN(dpi) == false) {
                 return dpi;
             }
@@ -2393,7 +2439,12 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      */
     public float getYDpi() {
         if (mState.device != null) {
-            float dpi = mState.device.getYDpi();
+
+            State currState = mState.device.getState(mState.stateName);
+            if (currState == null) {
+                currState = mState.device.getDefaultState();
+            }
+            float dpi = (float) currState.getHardware().getScreen().getYdpi();
             if (Float.isNaN(dpi) == false) {
                 return dpi;
             }
@@ -2459,7 +2510,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      * @return the device name, or null
      */
     public String getDevice() {
-        LayoutDevice device = getSelectedDevice();
+        Device device = getSelectedDevice();
         if (device != null) {
             return device.getName();
         }
@@ -2530,24 +2581,22 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     /**
-     * Loads the list of {@link LayoutDevice} and inits the UI with it.
+     * Loads the list of {@link Device}s and inits the UI with it.
      */
     private void initDevices() {
-        mDeviceList = null;
-
         Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            LayoutDeviceManager manager = sdk.getLayoutDeviceManager();
-            mDeviceList = manager.getCombinedList();
+            mDeviceList = sdk.getDevices();
+        } else {
+            mDeviceList = new ArrayList<Device>();
         }
 
-
         // fill with the devices
-        if (mDeviceList != null && mDeviceList.size() > 0) {
-            LayoutDevice first = mDeviceList.get(0);
+        if (!mDeviceList.isEmpty()) {
+            Device first = mDeviceList.get(0);
             selectDevice(first);
-            List<DeviceConfig> configs = first.getConfigs();
-            selectDeviceConfig(configs.get(0));
+            List<State> states = first.getAllStates();
+            selectDeviceState(states.get(0));
         } else {
             selectDevice(null);
         }
@@ -2580,11 +2629,11 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     @NonNull
-    ScreenOrientation getOrientation(DeviceConfig config) {
-        ScreenOrientationQualifier qualifier = config.getConfig().getScreenOrientationQualifier();
+    ScreenOrientation getOrientation(State state) {
+        FolderConfiguration config = DeviceConfigHelper.getFolderConfig(state);
         ScreenOrientation orientation = null;
-        if (qualifier != null) {
-            orientation = qualifier.getValue();
+        if (config != null && config.getScreenOrientationQualifier() != null) {
+            orientation = config.getScreenOrientationQualifier().getValue();
         }
 
         if (orientation == null) {
@@ -2594,24 +2643,24 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         return orientation;
     }
 
-    void selectDeviceConfig(@Nullable DeviceConfig config) {
-        mOrientationCombo.setData(config);
+    void selectDeviceState(@Nullable State state) {
+        mOrientationCombo.setData(state);
 
-        DeviceConfig nextConfig = getNextDeviceConfig(config);
-        mOrientationCombo.setImage(getOrientationIcon(getOrientation(nextConfig),
-                nextConfig != config));
+        State nextState = getNextDeviceState(state);
+        mOrientationCombo.setImage(getOrientationIcon(getOrientation(state),
+                nextState != state));
     }
 
-    DeviceConfig getSelectedDeviceConfig() {
-        return (DeviceConfig) mOrientationCombo.getData();
+    State getSelectedDeviceState() {
+        return (State) mOrientationCombo.getData();
     }
 
     /**
-     * Selects a given {@link LayoutDevice} in the device combo, if it is found.
+     * Selects a given {@link Device} in the device combo, if it is found.
      * @param device the device to select
      * @return true if the device was found.
      */
-    private boolean selectDevice(@Nullable LayoutDevice device) {
+    private boolean selectDevice(@Nullable Device device) {
         mDeviceCombo.setData(device);
         if (device != null) {
             mDeviceCombo.setText(getDeviceLabel(device, true));
@@ -2623,21 +2672,22 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         return false;
     }
 
-    LayoutDevice getSelectedDevice() {
-        return (LayoutDevice) mDeviceCombo.getData();
+    @Nullable
+    Device getSelectedDevice() {
+        return (Device) mDeviceCombo.getData();
     }
 
     /**
-     * Selects a config by name.
-     * @param name the name of the config to select.
+     * Selects a state by name.
+     * @param name the name of the state to select.
      */
-    private void selectConfig(String name) {
-        LayoutDevice device = getSelectedDevice();
-        DeviceConfig config = null;
+    private void selectState(String name) {
+        Device device = getSelectedDevice();
+        State state = null;
         if (device != null) {
-            config = device.getDeviceConfigByName(name);
+            state = device.getState(name);
         }
-        selectDeviceConfig(config);
+        selectDeviceState(state);
     }
 
     /**
@@ -2653,17 +2703,16 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         String newConfigName = null;
 
-        DeviceConfig prevConfig = getSelectedDeviceConfig();
-        LayoutDevice device = getSelectedDevice();
-        if (mState.device != null && prevConfig != null && device != null) {
+        State prevState = getSelectedDeviceState();
+        Device device = getSelectedDevice();
+        if (mState.device != null && prevState != null && device != null) {
             // get the previous config, so that we can look for a close match
-            FolderConfiguration oldConfig = mState.device.getFolderConfigByName(
-                    prevConfig.getName());
-            newConfigName = getClosestMatch(oldConfig, device.getConfigs());
+            FolderConfiguration oldConfig = DeviceConfigHelper.getFolderConfig(prevState);
+            newConfigName = getClosestMatch(oldConfig, device.getAllStates());
         }
         mState.device = device;
 
-        selectConfig(newConfigName);
+        selectState(newConfigName);
 
         computeCurrentConfig();
 
@@ -2673,80 +2722,37 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     }
 
     /**
-     * Handles a user request for the {@link ConfigManagerDialog}.
-     */
-    private void onCustomDeviceConfig() {
-        ConfigManagerDialog dialog = new ConfigManagerDialog(getShell());
-        dialog.open();
-
-        // save the user devices
-        Sdk.getCurrent().getLayoutDeviceManager().save();
-
-        // Update the UI with no triggered event
-        mDisableUpdates++;
-
-        try {
-            LayoutDevice oldCurrent = mState.device;
-
-            // but first, update the device combo
-            initDevices();
-
-            // attempts to reselect the current device.
-            if (selectDevice(oldCurrent)) {
-                // current device still exists.
-                // reselect the config
-                selectConfig(mState.configName);
-
-                // reset the UI as if it was just a replacement file, since we can keep
-                // the current device (and possibly config).
-                adaptConfigSelection(false /*needBestMatch*/);
-
-            } else {
-                // find a new device/config to match the current file.
-                findAndSetCompatibleConfig(false /*favorCurrentConfig*/);
-            }
-        } finally {
-            mDisableUpdates--;
-        }
-
-        // recompute the current config
-        computeCurrentConfig();
-
-        // force a redraw
-        onDeviceChange(true /*recomputeLayout*/);
-    }
-
-    /**
-     * Attempts to find a close config among a list
+     * Attempts to find a close state among a list
      * @param oldConfig the reference config.
-     * @param configs the list of config to search through
-     * @return the name of the closest config match, or possibly null if no configs are compatible
-     * (this can only happen if the configs don't have a single qualifier that is the same).
+     * @param states the list of states to search through
+     * @return the name of the closest state match, or possibly null if no states are compatible
+     * (this can only happen if the states don't have a single qualifier that is the same).
      */
-    private String getClosestMatch(FolderConfiguration oldConfig, List<DeviceConfig> configs) {
+    private String getClosestMatch(FolderConfiguration oldConfig, List<State> states) {
 
-        // create 2 lists as we're going to go through one and put the candidates in the other.
-        ArrayList<DeviceConfig> list1 = new ArrayList<DeviceConfig>();
-        ArrayList<DeviceConfig> list2 = new ArrayList<DeviceConfig>();
+        // create 2 lists as we're going to go through one and put the
+        // candidates in the other.
+        ArrayList<State> list1 = new ArrayList<State>();
+        ArrayList<State> list2 = new ArrayList<State>();
 
-        list1.addAll(configs);
+        list1.addAll(states);
 
         final int count = FolderConfiguration.getQualifierCount();
         for (int i = 0 ; i < count ; i++) {
-            // compute the new candidate list by only taking configs that have
-            // the same i-th qualifier as the old config
-            for (DeviceConfig c : list1) {
+            // compute the new candidate list by only taking states that have
+            // the same i-th qualifier as the old state
+            for (State s : list1) {
                 ResourceQualifier oldQualifier = oldConfig.getQualifier(i);
 
-                FolderConfiguration folderConfig = c.getConfig();
+                FolderConfiguration folderConfig = DeviceConfigHelper.getFolderConfig(s);
                 ResourceQualifier newQualifier = folderConfig.getQualifier(i);
 
                 if (oldQualifier == null) {
                     if (newQualifier == null) {
-                        list2.add(c);
+                        list2.add(s);
                     }
                 } else if (oldQualifier.equals(newQualifier)) {
-                    list2.add(c);
+                    list2.add(s);
                 }
             }
 
@@ -2756,9 +2762,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                 return list2.get(0).getName();
             }
 
-            // if the list is empty, then all the new configs failed. It is considered ok, and
+            // if the list is empty, then all the new states failed. It is considered ok, and
             // we move to the next qualifier anyway. This way, if a qualifier is different for
-            // all new configs it is simply ignored.
+            // all new states it is simply ignored.
             if (list2.size() != 0) {
                 // move the candidates back into list1.
                 list1.clear();
@@ -2768,7 +2774,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         }
 
         // the only way to reach this point is if there's an exact match.
-        // (if there are more than one, then there's a duplicate config and it doesn't matter,
+        // (if there are more than one, then there's a duplicate state and it doesn't matter,
         // we take the first one).
         if (list1.size() > 0) {
             return list1.get(0).getName();
@@ -2861,9 +2867,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         saveState();
 
         if (mState.device != null) {
-            // get the device config from the device/config combos.
-            FolderConfiguration config = mState.device.getFolderConfigByName(
-                    getSelectedDeviceConfig().getName());
+            // get the device config from the device/state combos.
+            FolderConfiguration config =
+                DeviceConfigHelper.getFolderConfig(getSelectedDeviceState());
 
             // replace the config with the one from the device
             mCurrentConfig.set(config);
@@ -2875,6 +2881,18 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                         (LanguageQualifier)localeQualifiers[LOCALE_LANG]);
                 mCurrentConfig.setRegionQualifier(
                         (RegionQualifier)localeQualifiers[LOCALE_REGION]);
+            }
+
+            // Replace the UiMode with the selected one, if one is selected
+            UiMode uiMode = getSelectedUiMode();
+            if (uiMode != null) {
+                mCurrentConfig.setUiModeQualifier(new UiModeQualifier(uiMode));
+            }
+
+            // Replace the NightMode with the selected one, if one is selected
+            NightMode night = getSelectedNightMode();
+            if (night != null) {
+                mCurrentConfig.setNightModeQualifier(new NightModeQualifier(night));
             }
 
             // replace the API level by the selection of the combo
@@ -3209,7 +3227,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         final Object source = e.getSource();
         if (source == mOrientationCombo) {
-            flipOrientation();
+            gotoNextState();
         }
     }
 

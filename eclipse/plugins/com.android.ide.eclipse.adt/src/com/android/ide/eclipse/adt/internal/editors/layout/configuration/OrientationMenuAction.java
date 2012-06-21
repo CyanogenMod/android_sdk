@@ -22,6 +22,10 @@ import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.resources.NightMode;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.UiMode;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.State;
+
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -59,19 +63,19 @@ class OrientationMenuAction extends SubmenuAction {
         MenuManager manager = new MenuManager();
 
         // Show toggles for all the available configurations
-        DeviceConfig current = configuration.getSelectedDeviceConfig();
-        LayoutDevice device = configuration.getSelectedDevice();
+        State current = configuration.getSelectedDeviceState();
+        Device device = configuration.getSelectedDevice();
         if (device != null) {
-            List<DeviceConfig> configs = device.getConfigs();
+            List<State> states = device.getAllStates();
 
-            if (configs.size() > 1 && current != null) {
-                DeviceConfig flip = configuration.getNextDeviceConfig(current);
+            if (states.size() > 1 && current != null) {
+                State flip = configuration.getNextDeviceState(current);
                 manager.add(new DeviceConfigAction(configuration,
                         String.format("Switch to %1$s", flip.getName()), flip, false, true));
                 manager.add(new Separator());
             }
 
-            for (DeviceConfig config : configs) {
+            for (State config : states) {
                 manager.add(new DeviceConfigAction(configuration, config.getName(),
                         config, config == current, false));
             }
@@ -150,23 +154,23 @@ class OrientationMenuAction extends SubmenuAction {
 
     private static class DeviceConfigAction extends Action {
         private final ConfigurationComposite mConfiguration;
-        private final DeviceConfig mConfig;
+        private final State mState;
 
         private DeviceConfigAction(ConfigurationComposite configuration, String title,
-                DeviceConfig config, boolean checked, boolean flip) {
+                State state, boolean checked, boolean flip) {
             super(title, IAction.AS_RADIO_BUTTON);
             mConfiguration = configuration;
-            mConfig = config;
+            mState = state;
             if (checked) {
                 setChecked(true);
             }
-            ScreenOrientation orientation = configuration.getOrientation(config);
+            ScreenOrientation orientation = configuration.getOrientation(state);
             setImageDescriptor(configuration.getOrientationImage(orientation, flip));
         }
 
         @Override
         public void run() {
-            mConfiguration.selectDeviceConfig(mConfig);
+            mConfiguration.selectDeviceState(mState);
             mConfiguration.onDeviceConfigChange();
         }
     }

@@ -17,6 +17,8 @@
 package com.android.ide.common.resources.configuration;
 
 import com.android.annotations.Nullable;
+import com.android.resources.NightMode;
+import com.android.resources.UiMode;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.Hardware;
 import com.android.sdklib.devices.Screen;
@@ -63,6 +65,15 @@ public class DeviceConfigHelper {
             new ScreenOrientationQualifier(state.getOrientation()));
 
         config.updateScreenWidthAndHeight();
+
+        // Setup some default qualifiers
+        config.setUiModeQualifier(new UiModeQualifier(UiMode.NORMAL));
+        config.setNightModeQualifier(new NightModeQualifier(NightMode.NOTNIGHT));
+        config.setCountryCodeQualifier(new CountryCodeQualifier());
+        config.setLanguageQualifier(new LanguageQualifier());
+        config.setNetworkCodeQualifier(new NetworkCodeQualifier());
+        config.setRegionQualifier(new RegionQualifier());
+        config.setVersionQualifier(new VersionQualifier());
 
         return config;
     }

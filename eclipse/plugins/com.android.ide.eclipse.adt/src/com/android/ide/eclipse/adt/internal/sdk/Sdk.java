@@ -44,6 +44,8 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
@@ -129,6 +131,7 @@ public final class Sdk  {
     private final SdkManager mManager;
     private final DexWrapper mDexWrapper;
     private final AvdManager mAvdManager;
+    private final DeviceManager mDeviceManager;
 
     /** Map associating an {@link IAndroidTarget} to an {@link AndroidTargetData} */
     private final HashMap<IAndroidTarget, AndroidTargetData> mTargetDataMap =
@@ -144,8 +147,6 @@ public final class Sdk  {
     private boolean mDontLoadTargetData = false;
 
     private final String mDocBaseUrl;
-
-    private final LayoutDeviceManager mLayoutDeviceManager = new LayoutDeviceManager();
 
     /**
      * Classes implementing this interface will receive notification when targets are changed.
@@ -662,8 +663,13 @@ public final class Sdk  {
         }
     }
 
-    public LayoutDeviceManager getLayoutDeviceManager() {
-        return mLayoutDeviceManager;
+    public DeviceManager getDeviceManager() {
+        return mDeviceManager;
+    }
+
+    /** Returns the devices provided by the SDK, including user created devices */
+    public List<Device> getDevices() {
+        return mDeviceManager.getDevices(getSdkLocation());
     }
 
     /**
@@ -744,10 +750,7 @@ public final class Sdk  {
         mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        // load the built-in and user layout devices
-        mLayoutDeviceManager.loadDefaultAndUserDevices(mManager.getLocation());
-        // and the ones from the add-on
-        loadLayoutDevices();
+        mDeviceManager = new DeviceManager(AdtPlugin.getDefault());
 
         // update whatever ProjectState is already present with new IAndroidTarget objects.
         synchronized (LOCK) {
@@ -823,24 +826,6 @@ public final class Sdk  {
         }
 
         return null;
-    }
-
-    /**
-     * Parses the SDK add-ons to look for files called {@link SdkConstants#FN_DEVICES_XML} to
-     * load {@link LayoutDevice} from them.
-     */
-    private void loadLayoutDevices() {
-        IAndroidTarget[] targets = mManager.getTargets();
-        for (IAndroidTarget target : targets) {
-            if (target.isPlatform() == false) {
-                File deviceXml = new File(target.getLocation(), SdkConstants.FN_DEVICES_XML);
-                if (deviceXml.isFile()) {
-                    mLayoutDeviceManager.parseAddOnLayoutDevice(deviceXml);
-                }
-            }
-        }
-
-        mLayoutDeviceManager.sealAddonLayoutDevices();
     }
 
     /**
