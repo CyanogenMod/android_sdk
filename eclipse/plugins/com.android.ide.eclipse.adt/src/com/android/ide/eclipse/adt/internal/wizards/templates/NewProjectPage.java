@@ -611,7 +611,8 @@ public class NewProjectPage extends WizardPage
                             "Preview platforms require the min SDK version to match their codenames.");
                        }
                     } else if (mValues.target.getVersion().compareTo(
-                            mValues.minSdkLevel, mValues.minSdk) < 0) {
+                            mValues.minSdkLevel,
+                            version.isPreview() ? mValues.minSdk : null) < 0) {
                         status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
                             "The minimum SDK version is higher than the build target version");
                     }
