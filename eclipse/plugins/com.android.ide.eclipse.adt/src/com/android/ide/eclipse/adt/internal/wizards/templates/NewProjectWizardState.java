@@ -92,4 +92,7 @@ public class NewProjectWizardState {
 
     /** State for the template wizard, used to embed an activity template */
     public NewTemplateWizardState activityValues = new NewTemplateWizardState();
+
+    /** Folder where the project should be created. */
+    public String projectLocation;
 }
