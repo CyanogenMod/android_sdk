@@ -669,6 +669,8 @@ public class GridDropHandler {
         if (!GravityHelper.isConstrainedHorizontally(gravity)) {
             gravity |= GravityHelper.GRAVITY_LEFT;
         }
+        /* This causes problems: Try placing two buttons vertically from the top of the layout.
+           We need to solve the free column/free row problem first.
         if (!GravityHelper.isConstrainedVertically(gravity)
                 // There is no baseline constant, so we have to leave it unconstrained instead
                 && mRowMatch.type != SegmentType.BASELINE
@@ -678,6 +680,7 @@ public class GridDropHandler {
                 && !mRowMatch.createCell) {
             gravity |= GravityHelper.GRAVITY_TOP;
         }
+        */
         mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, getGravity(gravity));
 
         mGrid.setGridAttribute(newChild, ATTR_LAYOUT_ROW, row);
