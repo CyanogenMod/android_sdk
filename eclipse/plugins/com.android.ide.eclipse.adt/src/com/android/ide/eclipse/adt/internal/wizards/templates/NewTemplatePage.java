@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
@@ -100,6 +101,7 @@ public class NewTemplatePage extends WizardPage
 
     private final NewTemplateWizardState mValues;
     private final boolean mChooseProject;
+    private int mCustomMinSdk = -1;
     private boolean mIgnore;
     private boolean mShown;
     private Control mFirst;
@@ -113,10 +115,27 @@ public class NewTemplatePage extends WizardPage
     private List<Parameter> mParameters;
     private StringEvaluator mEvaluator;
 
+    /**
+     * Creates a new {@link NewTemplatePage}
+     *
+     * @param values the wizard state
+     * @param chooseProject whether the wizard should present a project chooser,
+     *            and update {@code values}' project field
+     */
     NewTemplatePage(NewTemplateWizardState values, boolean chooseProject) {
         super("newTemplatePage"); //$NON-NLS-1$
         mValues = values;
         mChooseProject = chooseProject;
+    }
+
+    /**
+     * @param minSdk a minimum SDK to use, provided chooseProject is
+     *            false. If it is true, then the minimum SDK used for validation
+     *            will be the one of the project
+     */
+    void setCustomMinSdk(int minSdk) {
+        assert !mChooseProject;
+        mCustomMinSdk = minSdk;
     }
 
     @Override
@@ -326,6 +345,7 @@ public class NewTemplatePage extends WizardPage
                         assert options.size() > 0;
                         int selected = 0;
                         List<String> ids = Lists.newArrayList();
+                        List<Integer> minSdks = Lists.newArrayList();
                         List<String> labels = Lists.newArrayList();
                         for (int i = 0, n = options.size(); i < n; i++) {
                             Element option = options.get(i);
@@ -340,12 +360,27 @@ public class NewTemplatePage extends WizardPage
                             assert childNodes.getLength() == 1 &&
                                     childNodes.item(0).getNodeType() == Node.TEXT_NODE;
                             String optionLabel = childNodes.item(0).getNodeValue().trim();
+
+                            String minApiString = option.getAttribute(ATTR_MIN_API);
+                            int minSdk = 1;
+                            if (minApiString != null && !minApiString.isEmpty()) {
+                                try {
+                                    minSdk = Integer.parseInt(minApiString);
+                                } catch (NumberFormatException nufe) {
+                                    // Templates aren't allowed to contain codenames, should
+                                    // always be an integer
+                                    AdtPlugin.log(nufe, null);
+                                    minSdk = 1;
+                                }
+                            }
+                            minSdks.add(minSdk);
                             ids.add(optionId);
                             labels.add(optionLabel);
                         }
                         combo.setData(parameter);
                         parameter.control = combo;
                         combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
+                        combo.setData(ATTR_MIN_API, minSdks.toArray(new Integer[minSdks.size()]));
                         assert labels.size() > 0;
                         combo.setItems(labels.toArray(new String[labels.size()]));
                         combo.select(selected);
@@ -492,12 +527,15 @@ public class NewTemplatePage extends WizardPage
     // ---- Validation ----
 
     private void validatePage() {
-        IStatus status = mValues.getTemplateHandler().validateTemplate();
+        int currentMinSdk = getMinSdk();
+        int minSdk = currentMinSdk;
+        IStatus status = mValues.getTemplateHandler().validateTemplate(minSdk);
 
-        // -- validate project
-        if (mChooseProject && mValues.project == null) {
-            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    "Please select an Android project.");
+        if (status == null || status.isOK()) {
+            if (mChooseProject && mValues.project == null) {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        "Please select an Android project.");
+            }
         }
 
         for (Parameter parameter : mParameters) {
@@ -507,13 +545,34 @@ public class NewTemplatePage extends WizardPage
                String value = parameter.value == null ? "" : parameter.value.toString();
                String error = validator.isValid(value);
                if (error != null) {
-                   status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, error);
+                   IStatus s = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, error);
                    if (decoration != null) {
-                       updateDecorator(decoration, status, parameter.help);
+                       updateDecorator(decoration, s, parameter.help);
+                   }
+                   if (status == null || status.isOK()) {
+                       status = s;
                    }
                } else if (decoration != null) {
                    updateDecorator(decoration, null, parameter.help);
                }
+            }
+
+            if (status == null || status.isOK()) {
+                if (parameter.control instanceof Combo) {
+                    Combo combo = (Combo) parameter.control;
+                    Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
+                    int index = combo.getSelectionIndex();
+                    if (index != -1 && index < optionIds.length) {
+                        Integer requiredMinSdk = optionIds[index];
+                        if (requiredMinSdk > currentMinSdk) {
+                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                                String.format(
+                                        "This template requires a minimum SDK version of at " +
+                                        "least %1$d, and the current min version is %2$d",
+                                        requiredMinSdk, currentMinSdk));
+                        }
+                    }
+                }
             }
         }
 
@@ -526,6 +585,10 @@ public class NewTemplatePage extends WizardPage
             setErrorMessage(null);
             setMessage(null);
         }
+    }
+
+    private int getMinSdk() {
+        return mChooseProject ? mValues.getMinSdk() : mCustomMinSdk;
     }
 
     private void updateDecorator(ControlDecoration decorator, IStatus status, String help) {

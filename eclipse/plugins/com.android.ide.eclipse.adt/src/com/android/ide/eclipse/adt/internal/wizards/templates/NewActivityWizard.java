@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
@@ -80,6 +81,7 @@ public class NewActivityWizard extends TemplateWizard {
                 hidden.add(ATTR_MIN_API);
                 hidden.add(ATTR_MIN_API_LEVEL);
                 hidden.add(ATTR_TARGET_API);
+                hidden.add(ATTR_BUILD_API);
 
                 mTemplatePage = new NewTemplatePage(mActivityValues, true);
                 addPage(mTemplatePage);

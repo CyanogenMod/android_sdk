@@ -233,9 +233,11 @@ public class NewProjectPage extends WizardPage
             mValues.minSdk = mValues.target.getVersion().getCodename();
             mMinSdkCombo.setText(mValues.minSdk);
             mValues.iconState.minSdk = mValues.target.getVersion().getApiLevel();
+            mValues.minSdkLevel = mValues.iconState.minSdk;
         } else {
             mMinSdkCombo.select(INITIAL_MIN_SDK - 1);
             mValues.minSdk = Integer.toString(INITIAL_MIN_SDK);
+            mValues.minSdkLevel = INITIAL_MIN_SDK;
             mValues.iconState.minSdk = INITIAL_MIN_SDK;
         }
         mMinSdkCombo.addSelectionListener(this);
@@ -560,7 +562,7 @@ public class NewProjectPage extends WizardPage
     // Validation
 
     private void validatePage() {
-        IStatus status = mValues.template.validateTemplate();
+        IStatus status = mValues.template.validateTemplate(mValues.minSdkLevel);
         if (status != null && !status.isOK()) {
             updateDecorator(mApplicationDec, null, true);
             updateDecorator(mPackageDec, null, true);

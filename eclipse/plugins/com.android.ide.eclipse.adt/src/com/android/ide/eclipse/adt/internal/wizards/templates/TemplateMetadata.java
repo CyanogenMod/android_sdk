@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_REVISION;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FORMAT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
@@ -47,6 +49,8 @@ class TemplateMetadata {
     private final List<Parameter> mParameters;
     private final Map<String, Parameter> mParameterMap;
     private List<Pair<String, Integer>> mDependencies;
+    private Integer mMinApi;
+    private Integer mRevision;
 
     TemplateMetadata(@NonNull Document document) {
         mDocument = document;
@@ -97,6 +101,41 @@ class TemplateMetadata {
         }
 
         return null;
+    }
+
+    int getMinSdk() {
+        if (mMinApi == null) {
+            mMinApi = 1;
+            String api = mDocument.getDocumentElement().getAttribute(ATTR_MIN_API);
+            if (api != null && !api.isEmpty()) {
+                try {
+                    mMinApi = Integer.parseInt(api);
+                } catch (NumberFormatException nufe) {
+                    // Templates aren't allowed to contain codenames, should always be an integer
+                    AdtPlugin.log(nufe, null);
+                    mMinApi = 1;
+                }
+            }
+        }
+
+        return mMinApi.intValue();
+    }
+
+    public int getRevision() {
+        if (mRevision == null) {
+            mRevision = 1;
+            String revision = mDocument.getDocumentElement().getAttribute(ATTR_REVISION);
+            if (revision != null && !revision.isEmpty()) {
+                try {
+                    mRevision = Integer.parseInt(revision);
+                } catch (NumberFormatException nufe) {
+                    AdtPlugin.log(nufe, null);
+                    mRevision = 1;
+                }
+            }
+        }
+
+        return mRevision.intValue();
     }
 
     @Nullable

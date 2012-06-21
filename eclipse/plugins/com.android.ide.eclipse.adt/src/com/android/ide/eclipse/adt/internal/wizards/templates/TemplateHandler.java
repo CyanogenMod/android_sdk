@@ -24,10 +24,8 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_TXT;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
-import static com.android.sdklib.SdkConstants.FD_EXTRAS;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
 import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
-import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
-import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -39,7 +37,6 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferen
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
@@ -204,21 +201,40 @@ class TemplateHandler {
      */
     private TemplateMetadata mTemplate;
 
+    private TemplateManager mManager;
+
     /** Creates a new {@link TemplateHandler} for the given root path */
     static TemplateHandler createFromPath(File rootPath) {
-        return new TemplateHandler(rootPath);
+        return new TemplateHandler(rootPath, new TemplateManager());
     }
 
     /** Creates a new {@link TemplateHandler} for the template name, which should
      * be relative to the templates directory */
-    static TemplateHandler createFromName(String relative) {
-        return new TemplateHandler(new File(getTemplateRootFolder(), relative));
+    static TemplateHandler createFromName(String category, String name) {
+        TemplateManager manager = new TemplateManager();
+
+        // Use the TemplateManager iteration which should merge contents between the
+        // extras/templates/ and tools/templates folders and pick the most recent version
+        List<File> templates = manager.getTemplates(category);
+        for (File file : templates) {
+            if (file.getName().equals(name) && category.equals(file.getParentFile().getName())) {
+                return new TemplateHandler(file, manager);
+            }
+        }
+
+        return new TemplateHandler(new File(getTemplateRootFolder(),
+                category + File.separator + name), manager);
     }
 
-    private TemplateHandler(File rootPath) {
+    private TemplateHandler(File rootPath, TemplateManager manager) {
         mRootPath = rootPath;
+        mManager = manager;
         mLoader = new MyTemplateLoader();
         mLoader.setPrefix(mRootPath.getPath());
+    }
+
+    public TemplateManager getManager() {
+        return mManager;
     }
 
     public void setBackupMergedFiles(boolean backupMergedFiles) {
@@ -285,37 +301,10 @@ class TemplateHandler {
     @Nullable
     public TemplateMetadata getTemplate() {
         if (mTemplate == null) {
-            String xml = readTemplateTextResource(TEMPLATE_XML);
-            if (xml != null) {
-                Document doc = DomUtilities.parseDocument(xml, true);
-                if (doc != null && doc.getDocumentElement() != null) {
-                    mTemplate = new TemplateMetadata(doc);
-                }
-            }
+            mTemplate = mManager.getTemplate(mRootPath);
         }
 
         return mTemplate;
-    }
-
-    @Nullable
-    public static TemplateMetadata getTemplate(String templateName) {
-        String relative = templateName + '/' + TEMPLATE_XML;
-
-        File templateFile = getTemplateLocation(relative);
-        if (templateFile != null) {
-            try {
-                String xml = Files.toString(templateFile, Charsets.UTF_8);
-                Document doc = DomUtilities.parseDocument(xml, true);
-                if (doc != null && doc.getDocumentElement() != null) {
-                    return new TemplateMetadata(doc);
-                }
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-                return null;
-            }
-        }
-
-        return null;
     }
 
     @NonNull
@@ -323,64 +312,7 @@ class TemplateHandler {
         return new File(mRootPath.getPath(), templateName).getPath();
     }
 
-    @Nullable
-    public static File getTemplateRootFolder() {
-        String location = AdtPrefs.getPrefs().getOsSdkFolder();
-        if (location != null) {
-            File folder = new File(location, FD_TOOLS + File.separator + FD_TEMPLATES);
-            if (folder.isDirectory()) {
-                return folder;
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static File getExtraTemplateRootFolder() {
-        String location = AdtPrefs.getPrefs().getOsSdkFolder();
-        if (location != null) {
-            File folder = new File(location, FD_EXTRAS + File.separator + FD_TEMPLATES);
-            if (folder.isDirectory()) {
-                return folder;
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static File getTemplateLocation(@NonNull File root, @NonNull String relativePath) {
-        File templateRoot = getTemplateRootFolder();
-        if (templateRoot != null) {
-            String rootPath = root.getPath();
-            File templateFile = new File(templateRoot,
-                    rootPath.replace('/', File.separatorChar) + File.separator
-                    + relativePath.replace('/', File.separatorChar));
-            if (templateFile.exists()) {
-                return templateFile;
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static File getTemplateLocation(@NonNull String relativePath) {
-        File templateRoot = getTemplateRootFolder();
-        if (templateRoot != null) {
-            File templateFile = new File(templateRoot,
-                    relativePath.replace('/', File.separatorChar));
-            if (templateFile.exists()) {
-                return templateFile;
-            }
-        }
-
-        return null;
-
-    }
-
-    /**
+     /**
      * Load a text resource for the given relative path within the template
      *
      * @param relativePath relative path within the template
@@ -1035,48 +967,19 @@ class TemplateHandler {
     }
 
     /**
-     * Returns all the templates with the given prefix
-     *
-     * @param folder the folder prefix
-     * @return the available templates
-     */
-    @NonNull
-    static List<File> getTemplates(@NonNull String folder) {
-        List<File> templates = new ArrayList<File>();
-        File root = getTemplateRootFolder();
-        if (root != null) {
-            File[] files = new File(root, folder).listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    templates.add(file);
-                }
-            }
-        }
-
-        // Add in templates from extras/ as well.
-        root = getExtraTemplateRootFolder();
-        if (root != null) {
-            File[] files = new File(root, folder).listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    templates.add(file);
-                }
-            }
-        }
-
-        return templates;
-    }
-
-    /**
      * Validates this template to make sure it's supported
+     * @param currentMinSdk the minimum SDK in the project, or -1 or 0 if unknown (e.g. codename)
      *
      * @return a status object with the error, or null if there is no problem
      */
     @SuppressWarnings("cast") // In Eclipse 3.6.2 cast below is needed
     @Nullable
-    public IStatus validateTemplate() {
+    public IStatus validateTemplate(int currentMinSdk) {
         TemplateMetadata template = getTemplate();
-        if (template != null && !template.isSupported()) {
+        if (template == null) {
+            return null;
+        }
+        if (!template.isSupported()) {
             String versionString = (String) AdtPlugin.getDefault().getBundle().getHeaders().get(
                     Constants.BUNDLE_VERSION);
             Version version = new Version(versionString);
@@ -1084,6 +987,13 @@ class TemplateHandler {
                 String.format("This template requires a more recent version of the " +
                         "Android Eclipse plugin. Please update from version %1$d.%2$d.%3$d.",
                         version.getMajor(), version.getMinor(), version.getMicro()));
+        }
+        int templateMinSdk = template.getMinSdk();
+        if (templateMinSdk > currentMinSdk && currentMinSdk >= 1) {
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    String.format("This template requires a minimum SDK version of at " +
+                            "least %1$d, and the current min version is %2$d",
+                            templateMinSdk, currentMinSdk));
         }
 
         return null;

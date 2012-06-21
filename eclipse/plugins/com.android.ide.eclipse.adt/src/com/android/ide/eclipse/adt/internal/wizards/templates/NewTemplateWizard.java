@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
@@ -61,7 +62,7 @@ public class NewTemplateWizard extends TemplateWizard {
 
         mValues = new NewTemplateWizardState();
 
-        File template = TemplateHandler.getTemplateLocation(mTemplateName);
+        File template = TemplateManager.getTemplateLocation(mTemplateName);
         if (template != null) {
             mValues.setTemplateLocation(template);
         }
@@ -86,6 +87,7 @@ public class NewTemplateWizard extends TemplateWizard {
         hidden.add(ATTR_MIN_API);
         hidden.add(ATTR_MIN_API_LEVEL);
         hidden.add(ATTR_TARGET_API);
+        hidden.add(ATTR_BUILD_API);
     }
 
     @Override
