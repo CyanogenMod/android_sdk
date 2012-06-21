@@ -805,7 +805,8 @@ public class NewProjectCreator  {
             IProject project,
             IAndroidTarget target,
             ProjectPopulator projectPopulator,
-            boolean isLibrary)
+            boolean isLibrary,
+            String projectLocation)
                 throws CoreException, IOException, StreamException {
         NewProjectCreator creator = new NewProjectCreator(null, null);
 
@@ -819,6 +820,15 @@ public class NewProjectCreator  {
 
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
         final IProjectDescription description = workspace.newProjectDescription(project.getName());
+
+        if (projectLocation != null) {
+            IPath path = new Path(projectLocation);
+            IPath parent = new Path(path.toFile().getParent());
+            IPath workspaceLocation = Platform.getLocation();
+            if (!workspaceLocation.equals(parent)) {
+                description.setLocation(path);
+            }
+        }
 
         return creator.createEclipseProject(monitor, project, description, parameters,
                 dictionary, projectPopulator);

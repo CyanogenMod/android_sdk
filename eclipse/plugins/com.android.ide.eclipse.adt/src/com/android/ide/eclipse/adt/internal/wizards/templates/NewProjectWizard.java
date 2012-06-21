@@ -301,7 +301,7 @@ public class NewProjectWizard extends TemplateWizard {
             };
 
             NewProjectCreator.create(monitor, mProject, mValues.target, projectPopulator,
-                    mValues.isLibrary);
+                    mValues.isLibrary, mValues.projectLocation);
 
             try {
                 mProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());
