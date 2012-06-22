@@ -431,25 +431,28 @@ public class DependencyGraph {
      * @return null if the file could not be read
      */
     private static String readFile(String filepath) {
+        FileInputStream fStream = null;
+        BufferedReader reader = null;
         try {
-            FileInputStream fStream = new FileInputStream(filepath);
-            if (fStream != null) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(fStream));
+            fStream = new FileInputStream(filepath);
+            reader = new BufferedReader(new InputStreamReader(fStream));
 
-                try {
-                    String line;
-                    StringBuilder total = new StringBuilder(reader.readLine());
-                    while ((line = reader.readLine()) != null) {
-                        total.append('\n');
-                        total.append(line);
-                    }
-                    return total.toString();
-                } finally {
-                    reader.close();
-                }
+            String line;
+            StringBuilder total = new StringBuilder(reader.readLine());
+            while ((line = reader.readLine()) != null) {
+                total.append('\n');
+                total.append(line);
             }
+            return total.toString();
         } catch (IOException e) {
             // we'll just return null
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
         }
         return null;
     }
