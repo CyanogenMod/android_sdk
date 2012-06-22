@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: GLESv2 Debugger Client
+Bundle-Name: Tracer for OpenGL ES
 Bundle-SymbolicName: com.android.ide.eclipse.gldebugger;singleton:=true
 Bundle-Version: 20.0.0.qualifier
 Bundle-Activator: com.android.ide.eclipse.gldebugger.GlTracePlugin
