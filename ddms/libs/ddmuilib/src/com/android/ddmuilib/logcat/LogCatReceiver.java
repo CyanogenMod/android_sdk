@@ -19,8 +19,8 @@ package com.android.ddmuilib.logcat;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.MultiLineReceiver;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -97,7 +97,7 @@ public final class LogCatReceiver {
             @Override
             public void run() {
                 /* wait while the device comes online */
-                while (!mCurrentDevice.isOnline()) {
+                while (mCurrentDevice != null && !mCurrentDevice.isOnline()) {
                     try {
                         Thread.sleep(DEVICE_POLL_INTERVAL_MSEC);
                     } catch (InterruptedException e) {
@@ -106,8 +106,10 @@ public final class LogCatReceiver {
                 }
 
                 try {
-                    mCurrentDevice.executeShellCommand(LOGCAT_COMMAND,
+                    if (mCurrentDevice != null) {
+                        mCurrentDevice.executeShellCommand(LOGCAT_COMMAND,
                             mCurrentLogCatOutputReceiver, 0);
+                    }
                 } catch (Exception e) {
                     /* There are 4 possible exceptions: TimeoutException,
                      * AdbCommandRejectedException, ShellCommandUnresponsiveException and
