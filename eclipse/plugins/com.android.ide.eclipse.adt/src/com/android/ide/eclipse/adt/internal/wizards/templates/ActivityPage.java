@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_ACTIVITIES;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_OTHER;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
@@ -57,16 +58,29 @@ class ActivityPage extends WizardPage implements SelectionListener {
     private Image mPreviewImage;
     private Label mHeading;
     private Label mDescription;
+    private boolean mOnlyActivities;
+    private boolean mAskCreate;
 
     /**
      * Create the wizard.
      */
-    ActivityPage(NewProjectWizardState values) {
+    ActivityPage(NewProjectWizardState values, boolean onlyActivities, boolean askCreate) {
         super("activityPage"); //$NON-NLS-1$
         mValues = values;
+        mOnlyActivities = onlyActivities;
+        mAskCreate = askCreate;
 
-        setTitle("Create Activity");
-        setDescription("Select whether to create an activity, and if so, what kind of activity.");
+        if (onlyActivities) {
+            setTitle("Create Activity");
+        } else {
+            setTitle("Create Android Object");
+        }
+        if (onlyActivities && askCreate) {
+            setDescription(
+                    "Select whether to create an activity, and if so, what kind of activity.");
+        } else {
+            setDescription("Select which template to use");
+        }
     }
 
     @Override
@@ -80,17 +94,23 @@ class ActivityPage extends WizardPage implements SelectionListener {
         Composite container = (Composite) getControl();
         container.setLayout(new GridLayout(3, false));
 
-        mCreateToggle = new Button(container, SWT.CHECK);
-        mCreateToggle.setSelection(true);
-        mCreateToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        mCreateToggle.setText("Create Activity");
-        mCreateToggle.addSelectionListener(this);
+        if (mAskCreate) {
+            mCreateToggle = new Button(container, SWT.CHECK);
+            mCreateToggle.setSelection(true);
+            mCreateToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+            mCreateToggle.setText("Create Activity");
+            mCreateToggle.addSelectionListener(this);
+        }
 
         mList = new List(container, SWT.BORDER | SWT.V_SCROLL);
         mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
 
-        mTemplates = mValues.template.getManager().getTemplates(CATEGORY_ACTIVITIES);
+        TemplateManager manager = mValues.template.getManager();
+        mTemplates = manager.getTemplates(CATEGORY_ACTIVITIES);
+        if (!mOnlyActivities) {
+            mTemplates.addAll(manager.getTemplates(CATEGORY_OTHER));
+        }
         java.util.List<String> names = new ArrayList<String>(mTemplates.size());
         File current = mValues.activityValues.getTemplateLocation();
         int index = -1;
@@ -196,11 +216,13 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
         if (visible) {
             mShown = true;
-            try {
-                mIgnore = true;
-                mCreateToggle.setSelection(mValues.createActivity);
-            } finally {
-                mIgnore = false;
+            if (mAskCreate) {
+                try {
+                    mIgnore = true;
+                    mCreateToggle.setSelection(mValues.createActivity);
+                } finally {
+                    mIgnore = false;
+                }
             }
         }
 

@@ -290,6 +290,22 @@
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.templates.NewActivityWizard$OtherWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/newCustomView.png"
+            id="com.android.ide.eclipse.editors.wizards.NewActivityWizard.OtherWizard"
+            name="Android Object"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false" >
+            <description>
+               Create an Android object such as a Service, an Activity, a Broadcast Receiver, etc.
+            </description>
+        </wizard>
+        <!-- Available through generic object list above
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
             class="com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard$NewCustomViewWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
@@ -302,6 +318,7 @@
                Create an Android custom view
             </description>
         </wizard>
+        -->
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
