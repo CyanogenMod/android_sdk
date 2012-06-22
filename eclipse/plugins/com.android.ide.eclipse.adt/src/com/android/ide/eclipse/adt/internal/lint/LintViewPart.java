@@ -337,8 +337,8 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
 
             // Some fixes cannot be run in bulk
             if (markers.size() > 1) {
-                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
-                if (!fix.isBulkCapable()) {
+                List<LintFix> fixes = LintFix.getFixes(EclipseLintClient.getId(marker), marker);
+                if (fixes == null || !fixes.get(0).isBulkCapable()) {
                     canFix = false;
                     break;
                 }
@@ -488,7 +488,12 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                 case ACTION_FIX: {
                     List<IMarker> markers = mLintView.getSelectedMarkers();
                     for (IMarker marker : markers) {
-                        LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
+                        List<LintFix> fixes = LintFix.getFixes(EclipseLintClient.getId(marker),
+                                marker);
+                        if (fixes == null) {
+                            continue;
+                        }
+                        LintFix fix = fixes.get(0);
                         IResource resource = marker.getResource();
                         if (fix.needsFocus() && resource instanceof IFile) {
                             IRegion region = null;

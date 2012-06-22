@@ -16,6 +16,8 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
@@ -26,6 +28,7 @@ import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
+import com.android.tools.lint.checks.TypoDetector;
 import com.android.tools.lint.checks.TypographyDetector;
 import com.android.tools.lint.checks.UseCompoundDrawableDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
@@ -43,7 +46,9 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 abstract class LintFix implements ICompletionProposal {
@@ -83,7 +88,7 @@ abstract class LintFix implements ICompletionProposal {
      * (for non-cancelable fixes) or if it should be left alone and detected fix
      * on the next save.
      *
-     * @return true if the
+     * @return true if the fix can be cancelled
      */
     public boolean isCancelable() {
         return true;
@@ -158,6 +163,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(TypographyDetector.QUOTES.getId(), TypographyFix.class);
         sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(),
                 UseCompoundDrawableDetectorFix.class);
+        sFixes.put(TypoDetector.ISSUE.getId(), TypoFix.class);
         // ApiDetector.UNSUPPORTED is provided as a marker resolution rather than
         // a quick assistant (the marker resolution adds a suitable @TargetApi annotation)
     }
@@ -167,25 +173,45 @@ abstract class LintFix implements ICompletionProposal {
     }
 
     /**
-     * Returns a fix for the given issue, or null if no fix is available
+     * Returns one or more fixes for the given issue, or null if no fixes are available
      *
      * @param id the id o the issue to obtain a fix for (see {@link Issue#getId()})
      * @param marker the marker corresponding to the error
-     * @return a fix, or null
+     * @return a nonempty list of fix, or null
      */
-    public static LintFix getFix(String id, final IMarker marker) {
+    @Nullable
+    public static List<LintFix> getFixes(@NonNull String id, @NonNull IMarker marker) {
         Class<? extends LintFix> clazz = sFixes.get(id);
         if (clazz != null) {
             try {
                 Constructor<? extends LintFix> constructor = clazz.getDeclaredConstructor(
                         String.class, IMarker.class);
                 constructor.setAccessible(true);
-                return constructor.newInstance(id, marker);
+                LintFix fix = constructor.newInstance(id, marker);
+                List<LintFix> alternatives = fix.getAllFixes();
+                if (alternatives != null) {
+                    return alternatives;
+                } else {
+                    return Collections.singletonList(fix);
+                }
             } catch (Throwable t) {
                 AdtPlugin.log(t, null);
             }
         }
 
+        return null;
+    }
+
+    /**
+     * Returns a full list of fixes for this issue. This will produce a list of
+     * multiple fixes, in the desired order, which provide alternative ways of
+     * fixing the issue.
+     *
+     * @return a list of fixes to fix this issue, or null if there are no
+     *         variations
+     */
+    @Nullable
+    protected List<LintFix> getAllFixes() {
         return null;
     }
 }

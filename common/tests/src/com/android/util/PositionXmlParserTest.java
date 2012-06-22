@@ -155,6 +155,12 @@ public class PositionXmlParserTest extends TestCase {
         assertEquals(11, start.getLine());
         assertEquals(10, start.getColumn());
         assertEquals(xml.indexOf("some text"), start.getOffset());
+
+        // Check attribute positions with text node offsets
+        start = parser.getPosition(text, 13, 15);
+        assertEquals(11, start.getLine());
+        assertEquals(12, start.getColumn());
+        assertEquals(xml.indexOf("me"), start.getOffset());
     }
 
     public void testLineEndings() throws Exception {

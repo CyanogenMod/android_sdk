@@ -704,6 +704,23 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
+    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node,
+            int start, int end) {
+        IndexedRegion region = (IndexedRegion) node;
+        int nodeStart = region.getStartOffset();
+
+        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+        // Get line number
+        LazyLocation location = new LazyLocation(context.file, model.getStructuredDocument(),
+                region);
+        int line = location.getStart().getLine();
+
+        Position startPos = new DefaultPosition(line, -1, nodeStart + start);
+        Position endPos = new DefaultPosition(line, -1, nodeStart + end);
+        return Location.create(context.file, startPos, endPos);
+    }
+
+    @Override
     public @NonNull Handle createLocationHandle(final @NonNull XmlContext context,
             final @NonNull Node node) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);

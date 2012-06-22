@@ -58,6 +58,20 @@ public interface IDomParser {
     Location getLocation(@NonNull XmlContext context, @NonNull Node node);
 
     /**
+     * Returns a {@link Location} for the given DOM node. Like
+     * {@link #getLocation(XmlContext, Node)}, but allows a position range that
+     * is a subset of the node range.
+     *
+     * @param context information about the file being parsed
+     * @param node the node to create a location for
+     * @param start the starting position within the node, inclusive
+     * @param end the ending position within the node, exclusive
+     * @return a location for the given node
+     */
+    @NonNull
+    Location getLocation(@NonNull XmlContext context, @NonNull Node node, int start, int end);
+
+    /**
      * Creates a light-weight handle to a location for the given node. It can be
      * turned into a full fledged location by
      * {@link com.android.tools.lint.detector.api.Location.Handle#resolve()}.

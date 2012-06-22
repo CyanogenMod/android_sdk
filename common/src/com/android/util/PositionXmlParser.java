@@ -286,6 +286,25 @@ public class PositionXmlParser {
      */
     @Nullable
     public Position getPosition(@NonNull Node node) {
+        return getPosition(node, -1, -1);
+    }
+
+    /**
+     * Returns the position for the given node. This is the start position. The
+     * end position can be obtained via {@link Position#getEnd()}. A specific
+     * range within the node can be specified with the {@code start} and
+     * {@code end} parameters.
+     *
+     * @param node the node to look up position for
+     * @param start the relative offset within the node range to use as the
+     *            starting position, inclusive, or -1 to not limit the range
+     * @param end the relative offset within the node range to use as the ending
+     *            position, or -1 to not limit the range
+     * @return the position, or null if the node type is not supported for
+     *         position info
+     */
+    @Nullable
+    public Position getPosition(@NonNull Node node, int start, int end) {
         // Look up the position information stored while parsing for the given node.
         // Note however that we only store position information for elements (because
         // there is no SAX callback for individual attributes).
@@ -301,6 +320,12 @@ public class PositionXmlParser {
             if (pos != null) {
                 int startOffset = pos.getOffset();
                 int endOffset = pos.getEnd().getOffset();
+                if (start != -1) {
+                    startOffset += start;
+                    if (end != -1) {
+                        endOffset = start + end;
+                    }
+                }
 
                 // Find attribute in the text
                 String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
@@ -369,26 +394,40 @@ public class PositionXmlParser {
 
                         // Skip >
                         offset++;
+                        column++;
 
-                        // Skip text whitespace prefix, if the text node contains non-whitespace
-                        // characters
                         String text = node.getNodeValue();
                         int textIndex = 0;
                         int textLength = text.length();
                         int newLine = line;
                         int newColumn = column;
-                        for (; textIndex < text.length(); textIndex++) {
-                            char t = text.charAt(textIndex);
-                            if (t == '\n') {
-                                newLine++;
-                                newColumn = 0;
-                            } else if (!Character.isWhitespace(t)) {
-                                break;
-                            } else {
-                                newColumn++;
+                        if (start != -1) {
+                            textLength = Math.min(textLength, start);
+                            for (; textIndex < textLength; textIndex++) {
+                                char t = text.charAt(textIndex);
+                                if (t == '\n') {
+                                    newLine++;
+                                    newColumn = 0;
+                                } else {
+                                    newColumn++;
+                                }
+                            }
+                        } else {
+                            // Skip text whitespace prefix, if the text node contains
+                            // non-whitespace characters
+                            for (; textIndex < textLength; textIndex++) {
+                                char t = text.charAt(textIndex);
+                                if (t == '\n') {
+                                    newLine++;
+                                    newColumn = 0;
+                                } else if (!Character.isWhitespace(t)) {
+                                    break;
+                                } else {
+                                    newColumn++;
+                                }
                             }
                         }
-                        if (textIndex == textLength) {
+                        if (textIndex == text.length()) {
                             textIndex = 0; // Whitespace node
                         } else {
                             line = newLine;
@@ -398,8 +437,13 @@ public class PositionXmlParser {
                         Position attributePosition = createPosition(line, column,
                                 offset + textIndex);
                         // Also set end range for retrieval in getLocation
-                        attributePosition.setEnd(createPosition(line, column,
-                                offset + textLength));
+                        if (end != -1) {
+                            attributePosition.setEnd(createPosition(line, column,
+                                    offset + end));
+                        } else {
+                            attributePosition.setEnd(createPosition(line, column,
+                                    offset + textLength));
+                        }
                         return attributePosition;
                     } else if (c == '"') {
                         inAttribute = !inAttribute;
