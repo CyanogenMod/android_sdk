@@ -235,7 +235,7 @@ public class UpdaterData implements IUpdaterData {
                 example);
 
             // We may not have any UI. Only display a dialog if there's a window shell available.
-            if (mWindowShell != null) {
+            if (mWindowShell != null && !mWindowShell.isDisposed()) {
                 MessageDialog.openError(mWindowShell,
                     "Android Virtual Devices Manager",
                     error);
@@ -1064,7 +1064,7 @@ public class UpdaterData implements IUpdaterData {
      * This can be called from any thread.
      */
     public void broadcastOnSdkLoaded() {
-        if (mWindowShell != null && mListeners.size() > 0) {
+        if (mWindowShell != null && !mWindowShell.isDisposed() && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
@@ -1085,7 +1085,7 @@ public class UpdaterData implements IUpdaterData {
      * This can be called from any thread.
      */
     private void broadcastOnSdkReload() {
-        if (mWindowShell != null && mListeners.size() > 0) {
+        if (mWindowShell != null && !mWindowShell.isDisposed() && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
@@ -1106,7 +1106,7 @@ public class UpdaterData implements IUpdaterData {
      * This can be called from any thread.
      */
     private void broadcastPreInstallHook() {
-        if (mWindowShell != null && mListeners.size() > 0) {
+        if (mWindowShell != null && !mWindowShell.isDisposed() && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
@@ -1127,7 +1127,7 @@ public class UpdaterData implements IUpdaterData {
      * This can be called from any thread.
      */
     private void broadcastPostInstallHook() {
-        if (mWindowShell != null && mListeners.size() > 0) {
+        if (mWindowShell != null && !mWindowShell.isDisposed() && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
