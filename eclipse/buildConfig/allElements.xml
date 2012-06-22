@@ -39,8 +39,12 @@
              <property name="id" value="com.android.ide.eclipse.traceview" />
          </ant>
 
-         <antcall target="buildInternalFeatures"/>
+        <ant antfile="${genericTargets}" target="${target}">
+            <property name="type" value="feature" />
+            <property name="id" value="com.android.ide.eclipse.gldebugger" />
+        </ant>
 
+         <antcall target="buildInternalFeatures"/>
      </target>
 
      <!-- ===================================================================== -->
@@ -56,11 +60,6 @@
         <ant antfile="${genericTargets}" target="${target}">
             <property name="type" value="feature" />
             <property name="id" value="com.android.ide.eclipse.pdt" />
-        </ant>
-
-        <ant antfile="${genericTargets}" target="${target}">
-            <property name="type" value="feature" />
-            <property name="id" value="com.android.ide.eclipse.gldebugger" />
         </ant>
      </target>
 
