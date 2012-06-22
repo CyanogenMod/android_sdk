@@ -17,15 +17,11 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SubmenuAction;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.resources.NightMode;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.UiMode;
 import com.android.sdklib.devices.Device;
-import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.State;
-
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
