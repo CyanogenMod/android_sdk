@@ -115,6 +115,8 @@ public class NewTemplatePage extends WizardPage
     private List<Parameter> mParameters;
     private StringEvaluator mEvaluator;
 
+    private TemplateMetadata mShowingTemplate;
+
     /**
      * Creates a new {@link NewTemplatePage}
      *
@@ -158,6 +160,12 @@ public class NewTemplatePage extends WizardPage
 
     @SuppressWarnings("unused") // SWT constructors have side effects and aren't unused
     private void onEnter() {
+        TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
+        if (template == mShowingTemplate) {
+            return;
+        }
+        mShowingTemplate = template;
+
         Composite parent = (Composite) getControl();
 
         Control[] children = parent.getChildren();
@@ -198,7 +206,6 @@ public class NewTemplatePage extends WizardPage
 
         // Add parameters
         mFirst = null;
-        TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
         String thumb = null;
         if (template != null) {
             thumb = template.getThumbnailPath();

@@ -72,6 +72,7 @@ public class NewProjectWizard extends TemplateWizard {
     static final String ATTR_APP_TITLE = "appTitle";               //$NON-NLS-1$
     static final String CATEGORY_PROJECTS = "projects";            //$NON-NLS-1$
     static final String CATEGORY_ACTIVITIES = "activities";        //$NON-NLS-1$
+    static final String CATEGORY_OTHER = "other";                  //$NON-NLS-1$
 
     private NewProjectPage mMainPage;
     private ActivityPage mActivityPage;
@@ -89,7 +90,7 @@ public class NewProjectWizard extends TemplateWizard {
 
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);
-        mActivityPage = new ActivityPage(mValues);
+        mActivityPage = new ActivityPage(mValues, true, true);
     }
 
     @Override

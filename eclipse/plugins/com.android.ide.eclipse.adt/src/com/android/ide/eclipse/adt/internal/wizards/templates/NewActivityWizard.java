@@ -45,19 +45,21 @@ public class NewActivityWizard extends TemplateWizard {
     private ActivityPage mActivityPage;
     private NewProjectWizardState mValues;
     private NewTemplateWizardState mActivityValues;
+    protected boolean mOnlyActivities;
 
     /** Creates a new {@link NewActivityWizard} */
     public NewActivityWizard() {
+        mOnlyActivities = true;
     }
 
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         super.init(workbench, selection);
 
-        setWindowTitle("New Activity");
+        setWindowTitle(mOnlyActivities ? "New Activity" : "New Android Object");
 
         mValues = new NewProjectWizardState();
-        mActivityPage = new ActivityPage(mValues);
+        mActivityPage = new ActivityPage(mValues, mOnlyActivities, false);
 
         mActivityValues = mValues.activityValues;
         List<IProject> projects = AdtUtils.getSelectedProjects(selection);
@@ -133,5 +135,13 @@ public class NewActivityWizard extends TemplateWizard {
     @Override
     protected List<Change> computeChanges() {
         return mActivityValues.computeChanges();
+    }
+
+    /** Wizard for creating other Android components */
+    public static class OtherWizard extends NewActivityWizard {
+        /** Create new {@link OtherWizard} */
+        public OtherWizard() {
+            mOnlyActivities = false;
+        }
     }
 }
