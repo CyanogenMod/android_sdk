@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.project;
 
+import com.android.annotations.NonNull;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
@@ -240,6 +241,7 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
         super(projectFolder, map, type);
     }
 
+    @NonNull
     public ProjectProperties makeReadOnlyCopy() {
         // copy the current properties in a new map
         Map<String, String> propList = new HashMap<String, String>(mProperties);
