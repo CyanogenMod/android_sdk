@@ -25,10 +25,12 @@
       <category name="platform"/>
    </feature>
    <feature url="features/com.android.ide.eclipse.gldebugger_20.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="20.0.0.qualifier">
-      <category name="preview"/>
+      <category name="developer"/>
+      <category name="platform"/>
    </feature>
    <feature url="features/com.android.ide.eclipse.ndk_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="20.0.0.qualifier">
-      <category name="preview"/>
+      <category name="developer"/>
+      <category name="platform"/>
    </feature>
    <category-def name="developer" label="Application Developer Tools">
       <description>
@@ -43,11 +45,6 @@
    <category-def name="platform" label="Platform Tools">
       <description>
          Features that add Android support to Eclipse for platform developers.
-      </description>
-   </category-def>
-   <category-def name="preview" label="Preview Tools">
-      <description>
-         Preview features that are not ready for prime time yet.
       </description>
    </category-def>
 </site>

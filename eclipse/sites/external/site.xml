@@ -15,6 +15,9 @@
    <feature url="features/com.android.ide.eclipse.traceview_20.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="20.0.0.qualifier">
       <category name="developer"/>
    </feature>
+   <feature url="features/com.android.ide.eclipse.gldebugger_20.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="20.0.0.qualifier">
+      <category name="developer"/>
+   </feature>
    <feature url="features/com.android.ide.eclipse.ndk_20.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk" version="20.0.0.qualifier">
       <category name="ndk"/>
    </feature>

@@ -6,10 +6,10 @@
          point="org.eclipse.ui.views">
       <category
             id="com.android.ide.eclipse.gltrace"
-            name="Android OpenGL Trace">
+            name="Tracer for OpenGL ES">
       </category>
       <view
-            name="OpenGL ES 2.0 Debugger"
+            name="OpenGL Trace"
             icon="icons/sample.gif"
             category="com.android.ide.eclipse.gltrace"
             class="com.android.ide.eclipse.gldebugger.GLFramesView"
@@ -84,7 +84,7 @@
             class="com.android.ide.eclipse.gltrace.GLTracePerspective"
             icon="icons/opengl.png"
             id="com.android.ide.eclipse.gltrace.perspective"
-            name="OpenGL Trace">
+            name="Tracer for OpenGL ES">
       </perspective>
    </extension>
    <extension
