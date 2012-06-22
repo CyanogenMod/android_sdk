@@ -21,7 +21,7 @@
         id="layoutName"
         name="Layout Name"
         type="string"
-        constraints="layout|unique"
+        constraints="layout|unique|nonempty"
         suggest="${activityToLayout(activityClass)}"
         default="activity_main"
         help="The name of the layout to create for the activity" />
@@ -43,7 +43,7 @@
         id="parentActivityClass"
         name="Hierarchical Parent"
         type="string"
-        constraints="activity|exists"
+        constraints="activity|exists|empty"
         default=""
         help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
 

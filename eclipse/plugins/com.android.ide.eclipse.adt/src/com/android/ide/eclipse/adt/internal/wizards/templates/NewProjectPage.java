@@ -30,6 +30,9 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.Maps;
 
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -413,9 +416,9 @@ public class NewProjectPage extends WizardPage
             try {
                 mIgnore = true;
                 if (!mValues.projectModified) {
-                    mValues.projectName = mValues.applicationName;
-                    mProjectText.setText(mValues.applicationName);
-                    updateProjectLocation(mValues.applicationName);
+                    mValues.projectName = appNameToProjectName(mValues.applicationName);
+                    mProjectText.setText(mValues.projectName);
+                    updateProjectLocation(mValues.projectName);
                 }
                 updateActivityNames(mValues.applicationName);
             } finally {
@@ -427,6 +430,23 @@ public class NewProjectPage extends WizardPage
         }
 
         validatePage();
+    }
+
+    private String appNameToProjectName(String appName) {
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+        IStatus nameStatus = workspace.validateName(appName, IResource.PROJECT);
+        if (nameStatus.isOK()) {
+            return appName;
+        }
+        StringBuilder sb = new StringBuilder(appName.length());
+        for (int i = 0, n = appName.length(); i < n; i++) {
+            char c = appName.charAt(i);
+            if (Character.isLetterOrDigit(c) || c == '.' || c == '-' || c == ' ') {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString().trim();
     }
 
     /** If the project should be created in the workspace, then update the project location

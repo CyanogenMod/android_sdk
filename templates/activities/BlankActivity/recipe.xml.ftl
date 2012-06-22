@@ -9,8 +9,6 @@
     <instantiate from="res/menu/main.xml.ftl"
             to="res/menu/${menuName}.xml" />
 
-    <merge from="res/values/dimens.xml" />
-    <merge from="res/values-large/dimens.xml" />
     <merge from="res/values/strings.xml.ftl" />
 
     <!-- Decide what kind of layout to add (viewpager or not) -->

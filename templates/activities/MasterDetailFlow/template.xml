@@ -33,7 +33,7 @@
         id="parentActivityClass"
         name="Hierarchical Parent"
         type="string"
-        constraints="activity|exists"
+        constraints="activity|exists|empty"
         default=""
         help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
 

@@ -8,7 +8,6 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:padding="@dimen/padding_medium"
         android:text="@string/hello_world"
         tools:context=".${activityClass}" />
 
