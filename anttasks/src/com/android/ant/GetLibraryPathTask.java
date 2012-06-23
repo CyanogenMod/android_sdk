@@ -83,7 +83,7 @@ public class GetLibraryPathTask extends Task {
             element.setPath(sb.toString());
         }
 
-        public Path getPath() {
+        @NonNull public Path getPath() {
             return mPath;
         }
     }
@@ -175,6 +175,8 @@ public class GetLibraryPathTask extends Task {
 
         System.out.println("Library dependencies:");
 
+        Path path = new Path(antProject);
+
         if (helper.getLibraryCount() > 0) {
             System.out.println("\n------------------\nOrdered libraries:");
 
@@ -182,27 +184,25 @@ public class GetLibraryPathTask extends Task {
 
             if (mLibraryFolderPathOut != null) {
                 if (mLeaf == null) {
-                    // Create a Path object of all the libraries in reverse order.
+                    // Fill a Path object with all the libraries in reverse order.
                     // This is important so that compilation of libraries happens
                     // in the reverse order.
-                    Path rootPath = new Path(antProject);
-
                     List<File> libraries = helper.getLibraries();
 
                     for (int i = libraries.size() - 1 ; i >= 0; i--) {
                         File library = libraries.get(i);
-                        PathElement element = rootPath.createPathElement();
+                        PathElement element = path.createPathElement();
                         element.setPath(library.getAbsolutePath());
                     }
 
-                    antProject.addReference(mLibraryFolderPathOut, rootPath);
                 } else {
-                    antProject.addReference(mLibraryFolderPathOut,
-                            ((LeafProcessor) processor).getPath());
+                    path = ((LeafProcessor) processor).getPath();
                 }
             }
         } else {
             System.out.println("No Libraries");
         }
+
+        antProject.addReference(mLibraryFolderPathOut, path);
     }
 }
