@@ -111,7 +111,9 @@ ColorBuffer *ColorBuffer::create(int p_width, int p_height,
 
 ColorBuffer::ColorBuffer() :
     m_tex(0),
+    m_blitTex(0),
     m_eglImage(NULL),
+    m_blitEGLImage(NULL),
     m_fbo(0),
     m_internalFormat(0),
     m_warYInvertBug(false)
@@ -134,13 +136,21 @@ ColorBuffer::~ColorBuffer()
 {
     FrameBuffer *fb = FrameBuffer::getFB();
     fb->bind_locked();
-    s_gl.glDeleteTextures(1, &m_tex);
+
+    if (m_blitEGLImage) {
+        s_egl.eglDestroyImageKHR(fb->getDisplay(), m_blitEGLImage);
+    }
     if (m_eglImage) {
         s_egl.eglDestroyImageKHR(fb->getDisplay(), m_eglImage);
     }
+
     if (m_fbo) {
         s_gl.glDeleteFramebuffersOES(1, &m_fbo);
     }
+
+    GLuint tex[2] = {m_tex, m_blitTex};
+    s_gl.glDeleteTextures(2, tex);
+
     fb->unbind_locked();
 }
 
