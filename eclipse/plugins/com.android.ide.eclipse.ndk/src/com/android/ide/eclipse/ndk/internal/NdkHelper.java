@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 
 import java.io.ByteArrayOutputStream;
@@ -123,26 +124,36 @@ public class NdkHelper {
     }
 
     private static IPath getPathToMake() {
-        return getUtilitiesFolder().append(MAKE);
+        return getFullPathTo(MAKE);
     }
 
     /**
-     * Obtain a path to the utilities prebult folder in NDK. This is typically
-     * "${NdkRoot}/prebuilt/<platform>/"
+     * Obtain a path to the utilities prebuilt folder in NDK. This is typically
+     * "${NdkRoot}/prebuilt/<platform>/bin/". If the executable is not found, it simply returns
+     * the name of the executable (which is equal to assuming that it is available on the path).
      */
-    private static synchronized IPath getUtilitiesFolder() {
+    private static synchronized IPath getFullPathTo(String executable) {
+        if (Platform.getOS().equals(Platform.OS_WIN32)) {
+            executable += ".exe";
+        }
+
         IPath ndkRoot = new Path(NdkManager.getNdkLocation());
         IPath prebuilt = ndkRoot.append("prebuilt");                      //$NON-NLS-1$
         if (!prebuilt.toFile().exists() || !prebuilt.toFile().canRead()) {
-            return ndkRoot;
+            return new Path(executable);
         }
 
         File[] platforms = prebuilt.toFile().listFiles();
-        if (platforms.length == 1) {
-            return prebuilt.append(platforms[0].getName()).append("bin"); //$NON-NLS-1$
+        for (File p: platforms) {
+            IPath exePath = prebuilt.append(p.getName())
+                                    .append("bin")          //$NON-NLS-1$
+                                    .append(executable);
+            if (exePath.toFile().exists()) {
+                return exePath;
+            }
         }
 
-        return ndkRoot;
+        return new Path(executable);
     }
 
     public static void setLaunchConfigDefaults(ILaunchConfigurationWorkingCopy config) {
