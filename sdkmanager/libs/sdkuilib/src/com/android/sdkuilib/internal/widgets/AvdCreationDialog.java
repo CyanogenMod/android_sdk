@@ -243,6 +243,7 @@ final class AvdCreationDialog extends GridDialog {
         File hardwareDefs = null;
         mDeviceManager = new DeviceManager(log);
         mDeviceList.addAll(mDeviceManager.getUserDevices());
+        mDeviceList.addAll(mDeviceManager.getDefaultDevices());
 
         SdkManager sdkMan = avdManager.getSdkManager();
         if (sdkMan != null) {
