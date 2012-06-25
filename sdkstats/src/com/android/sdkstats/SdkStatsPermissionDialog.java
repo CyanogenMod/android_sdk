@@ -124,7 +124,7 @@ public class SdkStatsPermissionDialog extends Dialog {
         bodyText.setLayoutData(gd);
         bodyText.setText(BODY_TEXT);
 
-        final Link privacyLink = new Link(composite, SWT.NONE);
+        final Link privacyLink = new Link(composite, SWT.NO_FOCUS);
         privacyLink.setText(PRIVACY_POLICY_LINK_TEXT);
         privacyLink.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -142,6 +142,7 @@ public class SdkStatsPermissionDialog extends Dialog {
                 mAllowPing = checkbox.getSelection();
             }
         });
+        checkbox.setFocus();
 
         final Label footer = new Label(composite, SWT.WRAP);
         gd = new GridData();
