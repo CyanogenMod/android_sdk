@@ -32,9 +32,11 @@ import org.xml.sax.SAXException;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,6 +47,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 
 /**
  * Manager class for interacting with {@link Device}s within the SDK
@@ -57,6 +61,7 @@ public class DeviceManager {
     private ISdkLog mLog;
     private List<Device> mVendorDevices;
     private List<Device> mUserDevices;
+    private List<Device> mDefaultDevices;
 
     public DeviceManager(ISdkLog log) {
         mLog = log;
@@ -69,10 +74,31 @@ public class DeviceManager {
      *            Location of the Android SDK
      * @return A list of both vendor and user provided {@link Device}s
      */
-    public List<Device> getVendorAndUserDevices(String sdkLocation) {
+    public List<Device> getDevices(String sdkLocation) {
         List<Device> devices = new ArrayList<Device>(getVendorDevices(sdkLocation));
+        devices.addAll(getDefaultDevices());
         devices.addAll(getUserDevices());
         return devices;
+    }
+
+    private List<Device> getDefaultDevices() {
+        synchronized (this) {
+            if (mDefaultDevices == null) {
+                try {
+                    mDefaultDevices = DeviceParser.parse(
+                            DeviceManager.class.getResourceAsStream(SdkConstants.FN_DEVICES_XML));
+                } catch (IllegalStateException e) {
+                    // The device builders can throw IllegalStateExceptions if
+                    // build gets called before everything is properly setup
+                    mLog.error(e, null);
+                    mDefaultDevices = new ArrayList<Device>();
+                } catch (Exception e) {
+                    mLog.error(null, "Error reading default devices");
+                    mDefaultDevices = new ArrayList<Device>();
+                }
+            }
+        }
+        return mDefaultDevices;
     }
 
     /**
@@ -116,11 +142,34 @@ public class DeviceManager {
                             SdkConstants.FN_DEVICES_XML);
                     mUserDevices.addAll(loadDevices(userDevicesFile));
                 } catch (AndroidLocationException e) {
-                    mLog.warning("Couldn't load user devices: %1$", e.getMessage());
+                    mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
                 }
             }
         }
         return mUserDevices;
+    }
+
+    public void saveUserDevices() {
+        synchronized (this) {
+            if (mUserDevices != null && mUserDevices.size() != 0) {
+                File userDevicesFile;
+                try {
+                    userDevicesFile = new File(AndroidLocation.getFolder(),
+                            SdkConstants.FN_DEVICES_XML);
+                    DeviceWriter.writeToXml(new FileOutputStream(userDevicesFile), mUserDevices);
+                } catch (AndroidLocationException e) {
+                    mLog.warning("Couldn't find user directory: %1$s", e.getMessage());
+                } catch (FileNotFoundException e) {
+                    mLog.warning("Couldn't open file: %1$s", e.getMessage());
+                } catch (ParserConfigurationException e) {
+                    mLog.warning("Error writing file: %1$s", e.getMessage());
+                } catch (TransformerFactoryConfigurationError e) {
+                    mLog.warning("Error writing file: %1$s", e.getMessage());
+                } catch (TransformerException e) {
+                    mLog.warning("Error writing file: %1$s", e.getMessage());
+                }
+            }
+        }
     }
 
     /**
