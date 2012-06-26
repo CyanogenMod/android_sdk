@@ -36,7 +36,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -81,7 +80,7 @@ public class DeviceManager {
         return devices;
     }
 
-    private List<Device> getDefaultDevices() {
+    public List<Device> getDefaultDevices() {
         synchronized (this) {
             if (mDefaultDevices == null) {
                 try {
