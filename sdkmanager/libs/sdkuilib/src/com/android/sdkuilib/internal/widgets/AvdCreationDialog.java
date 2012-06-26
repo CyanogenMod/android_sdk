@@ -27,7 +27,6 @@ import com.android.sdklib.devices.Abi;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.Hardware;
-import com.android.sdklib.devices.Storage;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
@@ -928,31 +927,6 @@ final class AvdCreationDialog extends GridDialog {
                         }
                     }
                 }
-            }
-
-            // Set the SD card size
-            if (hw.getRemovableStorage().size() > 0){
-                Storage card = hw.getRemovableStorage().get(0);
-                enableSdCardWidgets(true);
-                mSdCardSizeRadio.setSelection(true);
-                mSdCardFileRadio.setSelection(false);
-                Storage.Unit unit = card.getApproriateUnits();
-                // Storage.Unit supports TiB and Bytes, but the AVD creator doesn't, so round
-                // them to the nearest values.
-                if (unit.equals(Storage.Unit.TiB)) {
-                    unit = Storage.Unit.GiB;
-                } else if (unit.equals(Storage.Unit.B)) {
-                    unit = Storage.Unit.KiB;
-                }
-                for(int i = 0; i < mSdCardSizeCombo.getItemCount(); i++){
-                    String u = mSdCardSizeCombo.getItem(i).trim();
-                    if (unit.equals(Storage.Unit.getEnum(u))) {
-                        mSdCardSizeCombo.select(i);
-                        break;
-                    }
-                }
-                mSdCardSize.setText(Long.toString(card.getSizeAsUnit(unit)));
-
             }
 
             // Set the screen resolution
