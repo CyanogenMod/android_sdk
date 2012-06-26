@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="libs/dvlib.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/androidprefs.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/common.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/commons-codec-1.4.jar"/>

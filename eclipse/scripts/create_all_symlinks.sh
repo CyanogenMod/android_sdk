@@ -108,7 +108,7 @@ CP_FILES=""
 ### BASE ###
 
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
-BASE_PLUGIN_LIBS="common sdkstats androidprefs sdklib"
+BASE_PLUGIN_LIBS="common sdkstats androidprefs sdklib dvlib"
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \
     prebuilts/tools/common/guava-tools/guava-10.0.1.jar \

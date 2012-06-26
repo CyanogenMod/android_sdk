@@ -573,6 +573,7 @@ final class AvdCreationDialog extends GridDialog {
         mStatusLabel.setText(" \n "); //$NON-NLS-1$
 
         reloadTargetCombo();
+        reloadDeviceCombo();
     }
 
     /**
@@ -763,9 +764,25 @@ final class AvdCreationDialog extends GridDialog {
 
         mAvdName.setText(mEditAvdInfo.getName());
 
+        Map<String, String> props = mEditAvdInfo.getProperties();
+
+        if (props != null) {
+            // Try to match it to a device
+
+            // The device has to be set before everything else because
+            // selecting a device will modify other options
+            for (int i = 0; i < mDeviceList.size(); i++){
+                Device d = mDeviceList.get(i);
+                if(d.getManufacturer().equals(props.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER))
+                        && d.getName().equals(props.get(AvdManager.AVD_INI_DEVICE_NAME))) {
+                    mDeviceCombo.select(i);
+                    break;
+                }
+            }
+        }
+
         IAndroidTarget target = mEditAvdInfo.getTarget();
         if (target != null && !mCurrentTargets.isEmpty()) {
-            mDeviceCombo.setEnabled(true);
             // Try to select the target in the target combo.
             // This will fail if the AVD needs to be repaired.
             //
@@ -776,6 +793,7 @@ final class AvdCreationDialog extends GridDialog {
                 if (target.equals(mCurrentTargets.get(mTargetCombo.getItem(i)))) {
                     mTargetCombo.select(i);
                     reloadAbiTypeCombo();
+                    reloadDeviceCombo();
                     reloadSkinCombo();
                     break;
                 }
@@ -797,8 +815,8 @@ final class AvdCreationDialog extends GridDialog {
             }
         }
 
-        Map<String, String> props = mEditAvdInfo.getProperties();
         if (props != null) {
+
             // First try the skin name and if it doesn't work fallback on the skin path
             nextSkin: for (int s = 0; s < 2; s++) {
                 String skin = props.get(s == 0 ? AvdManager.AVD_INI_SKIN_NAME
@@ -885,15 +903,16 @@ final class AvdCreationDialog extends GridDialog {
         mProperties.remove(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_1);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_2);
+        mProperties.remove(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
+        mProperties.remove(AvdManager.AVD_INI_DEVICE_NAME);
 
         mHardwareViewer.refresh();
     }
 
     // Sets all of the other options based on the device currently selected in mDeviceCombo
     private void prefillWithDeviceConfig() {
-        int index = mDeviceCombo.getSelectionIndex();
-        if (index >= 0 && index < mDeviceList.size()){
-            Device d = mDeviceList.get(index);
+        Device d = getSelectedDevice();
+        if (d != null) {
             Hardware hw = d.getDefaultHardware();
 
             // Try setting the CPU/ABI
@@ -1042,10 +1061,22 @@ final class AvdCreationDialog extends GridDialog {
 
 
     private void reloadDeviceCombo() {
+        Device selectedDevice = getSelectedDevice();
+
+        mDeviceCombo.removeAll();
         for (Device d : mDeviceList) {
             mDeviceCombo.add(d.getManufacturer() + " " + d.getName());
         }
-        mDeviceCombo.setEnabled(true);
+
+        // Try to select the previously selected device if it still exists
+        if (selectedDevice != null) {
+            int index = mDeviceList.indexOf(selectedDevice);
+            if (index >= 0) {
+                mDeviceCombo.select(index);
+            }
+        }
+
+        mDeviceCombo.setEnabled(mTargetCombo.getSelectionIndex() >= 0);
     }
 
     private void reloadSkinCombo() {
@@ -1392,6 +1423,15 @@ final class AvdCreationDialog extends GridDialog {
             return false;
         }
 
+        targetIndex = mDeviceCombo.getSelectionIndex();
+        if (targetIndex >= 0 && targetIndex < mDeviceList.size()) {
+            Device d = mDeviceList.get(targetIndex);
+            // Set the properties so it gets saved to the avd's ini
+            mProperties.put(AvdManager.AVD_INI_DEVICE_MANUFACTURER, d.getManufacturer());
+            mProperties.put(AvdManager.AVD_INI_DEVICE_NAME, d.getName());
+        }
+
+
         // resolve the target.
         String targetName = mTargetCombo.getItem(targetIndex);
         IAndroidTarget target = mCurrentTargets.get(targetName);
@@ -1492,6 +1532,10 @@ final class AvdCreationDialog extends GridDialog {
 
         success = avdInfo != null;
 
+        // Remove the device name and manufacturer properties so they don't show up in the hardware list
+        mProperties.remove(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
+        mProperties.remove(AvdManager.AVD_INI_DEVICE_NAME);
+
         if (log instanceof MessageBoxLog) {
             ((MessageBoxLog) log).displayResult(success);
         }
@@ -1522,6 +1566,15 @@ final class AvdCreationDialog extends GridDialog {
         }
 
         return new ISystemImage[0];
+    }
+
+    private Device getSelectedDevice() {
+        int targetIndex = mDeviceCombo.getSelectionIndex();
+        if (targetIndex >= 0 && mDeviceList.size() > targetIndex){
+            return mDeviceList.get(targetIndex);
+        } else {
+            return null;
+        }
     }
 
     // End of hiding from SWT Designer

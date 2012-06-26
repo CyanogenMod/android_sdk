@@ -140,6 +140,24 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         return SdkConstants.CPU_ARCH_ARM;
     }
 
+    public String getDeviceManufacturer() {
+        String deviceManufacturer = mProperties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
+        if (deviceManufacturer != null && !deviceManufacturer.isEmpty()) {
+            return deviceManufacturer;
+        }
+
+        return "";
+    }
+
+    public String getDeviceName() {
+        String deviceName = mProperties.get(AvdManager.AVD_INI_DEVICE_NAME);
+        if (deviceName != null && !deviceName.isEmpty()) {
+            return deviceName;
+        }
+
+        return "";
+    }
+
     /** Convenience function to return a more user friendly name of the abi type. */
     public static String getPrettyAbiType(String raw) {
         String s = null;
