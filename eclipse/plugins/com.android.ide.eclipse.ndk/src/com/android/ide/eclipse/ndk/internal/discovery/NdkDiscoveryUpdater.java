@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class NdkDiscoveryUpdater {
-
     private final NdkDiscoveredPathInfo mPathInfo;
     private final IProject mProject;
 
@@ -81,8 +80,9 @@ public class NdkDiscoveryUpdater {
                 line = reader.readLine();
             }
 
-            if (mCommand == null)
+            if (mCommand == null) {
                 return;
+            }
 
             // Run the unique commands with special gcc options to extract the
             // symbols and paths
@@ -134,7 +134,6 @@ public class NdkDiscoveryUpdater {
             }
         }
         // Add variables from build info
-        @SuppressWarnings("unchecked")
         Map<String, String> builderEnv = builder.getExpandedEnvironment();
         if (builderEnv != null)
             envMap.putAll(builderEnv);
@@ -211,13 +210,13 @@ public class NdkDiscoveryUpdater {
         String cmd = line.getToken();
         if (cmd == null) {
             return;
-        } else if (cmd.endsWith("g++")) { //$NON-NLS-1$
+        } else if (cmd.endsWith("g++")) {           //$NON-NLS-1$
             if (mCommand == null || !mCPlusPlus) {
                 mCommand = cmd;
                 mCPlusPlus = true;
             }
             gatherOptions(line);
-        } else if (cmd.endsWith("gcc")) { //$NON-NLS-1$
+        } else if (cmd.endsWith("gcc")) {   //$NON-NLS-1$
             if (mCommand == null)
                 mCommand = cmd;
             gatherOptions(line);
