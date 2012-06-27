@@ -16,6 +16,27 @@
 
 package com.example.android.deviceconfig;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.pm.FeatureInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
+import android.os.Build;
+import android.os.Environment;
+import android.os.StatFs;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.ViewConfiguration;
+import android.widget.Toast;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Text;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,26 +59,9 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Text;
-
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.hardware.Camera;
-import android.hardware.Camera.CameraInfo;
-import android.os.Environment;
-import android.os.StatFs;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.widget.Toast;
-
 public class ConfigGenerator {
     private Context mCtx;
+    private String mExtensions;
 
     public static final String NS_DEVICES_XSD = "http://schemas.android.com/sdk/devices/1";
 
@@ -151,8 +155,9 @@ public class ConfigGenerator {
 
     private static final String TAG = "ConfigGenerator";
 
-    public ConfigGenerator(Context ctx) {
-        mCtx = ctx;
+    public ConfigGenerator(Context context, String extensions) {
+        mCtx = context;
+        mExtensions = extensions;
     }
 
     @SuppressLint("WorldReadableFiles")
@@ -547,14 +552,29 @@ public class ConfigGenerator {
 
             Element glVersion = doc.createElement(PREFIX + NODE_GL_VERSION);
             software.appendChild(glVersion);
-            glVersion.appendChild(doc.createTextNode(" "));
+            String glVersionString = " ";
+
+            FeatureInfo[] features = packageMgr.getSystemAvailableFeatures();
+            for (FeatureInfo feature : features) {
+                if (feature.reqGlEsVersion > 0) {
+                    glVersionString = feature.getGlEsVersion();
+                    break;
+                }
+            }
+
+            glVersion.appendChild(doc.createTextNode(glVersionString));
 
             Element glExtensions = doc.createElement(PREFIX + NODE_GL_EXTENSIONS);
             software.appendChild(glExtensions);
-            glExtensions.appendChild(doc.createTextNode(" "));
+            if (mExtensions != null && !mExtensions.trim().equals("")) {
+                glExtensions.appendChild(doc.createTextNode(mExtensions));
+            } else {
+                glExtensions.appendChild(doc.createTextNode(" "));
+            }
 
             Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.setOutputProperty(OutputKeys.INDENT, "yes");
+            tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             DOMSource source = new DOMSource(doc);
             String filename = String.format("devices_%1$tm_%1$td_%1$ty.xml", Calendar.getInstance()
                     .getTime());
