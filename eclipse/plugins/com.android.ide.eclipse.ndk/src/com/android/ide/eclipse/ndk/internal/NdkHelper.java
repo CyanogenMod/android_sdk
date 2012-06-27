@@ -144,12 +144,14 @@ public class NdkHelper {
         }
 
         File[] platforms = prebuilt.toFile().listFiles();
-        for (File p: platforms) {
-            IPath exePath = prebuilt.append(p.getName())
-                                    .append("bin")          //$NON-NLS-1$
-                                    .append(executable);
-            if (exePath.toFile().exists()) {
-                return exePath;
+        if (platforms != null) {
+            for (File p: platforms) {
+                IPath exePath = prebuilt.append(p.getName())
+                        .append("bin")          //$NON-NLS-1$
+                        .append(executable);
+                if (exePath.toFile().exists()) {
+                    return exePath;
+                }
             }
         }
 
