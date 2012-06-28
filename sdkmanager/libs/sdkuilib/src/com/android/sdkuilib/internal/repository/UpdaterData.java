@@ -258,8 +258,8 @@ public class UpdaterData implements IUpdaterData {
     protected void initSdk() {
         setSdkManager(SdkManager.createManager(mOsSdkRoot, mSdkLog));
         try {
-            mAvdManager = null; // remove the old one if needed.
-            mAvdManager = new AvdManager(mSdkManager, mSdkLog);
+          mAvdManager = null;
+          mAvdManager = new AvdManager(mSdkManager, mSdkLog);
         } catch (AndroidLocationException e) {
             mSdkLog.error(e, "Unable to read AVDs: " + e.getMessage());  //$NON-NLS-1$
 
