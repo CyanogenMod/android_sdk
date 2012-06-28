@@ -54,7 +54,6 @@ public class Activator extends AbstractUIPlugin {
         return mPlugin;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> T getService(Class<T> clazz) {
         BundleContext context = mPlugin.getBundle().getBundleContext();
         ServiceReference ref = context.getServiceReference(clazz.getName());

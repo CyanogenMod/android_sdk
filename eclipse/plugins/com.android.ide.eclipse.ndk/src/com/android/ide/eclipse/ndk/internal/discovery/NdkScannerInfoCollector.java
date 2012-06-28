@@ -36,14 +36,12 @@ public class NdkScannerInfoCollector implements IScannerInfoCollector3,
     private NdkDiscoveredPathInfo mPathInfo;
 
     @Override
-    public void contributeToScannerConfig(Object resource, @SuppressWarnings("rawtypes")
-    Map scannerInfo) {
+    public void contributeToScannerConfig(Object resource, Map scannerInfo) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
     @Override
-    public @SuppressWarnings("rawtypes")
-    List getCollectedScannerInfo(Object resource, ScannerInfoTypes type) {
+    public List getCollectedScannerInfo(Object resource, ScannerInfoTypes type) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
@@ -68,8 +66,7 @@ public class NdkScannerInfoCollector implements IScannerInfoCollector3,
     }
 
     @Override
-    public @SuppressWarnings("rawtypes")
-    List getIncludePaths() {
+    public List getIncludePaths() {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
