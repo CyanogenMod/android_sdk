@@ -270,7 +270,7 @@ public final class Sdk  {
                 // create the AVD Manager
                 AvdManager avdManager = null;
                 try {
-                    avdManager = new AvdManager(manager, log);
+                    avdManager = AvdManager.getInstance(manager, log);
                 } catch (AndroidLocationException e) {
                     log.error(e, "Error parsing the AVDs");
                 }
