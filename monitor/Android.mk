@@ -1,7 +1,7 @@
 # Copyright 2012 The Android Open Source Project
 
 # Expose the Monitor RCP only for the SDK builds.
-ifneq (,$(is_sdk_build)$(filter sdk sdk_x86,$(TARGET_PRODUCT)))
+ifneq (,$(is_sdk_build)$(filter sdk sdk_x86 sdk_mips,$(TARGET_PRODUCT)))
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
