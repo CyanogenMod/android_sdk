@@ -59,7 +59,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -961,24 +960,10 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 try {
                     unit = mParser.parse(sourceUnit, compilationResult);
                 } catch (AbortCompilation e) {
-
-                    String message;
-                    Location location;
-                    if (e.problem != null) {
-                        CategorizedProblem problem = e.problem;
-                        message = problem.getMessage();
-                        location = Location.create(context.file,
-                                new DefaultPosition(problem.getSourceLineNumber() - 1, -1,
-                                        problem.getSourceStart()),
-                                new DefaultPosition(problem.getSourceLineNumber() - 1, -1,
-                                        problem.getSourceEnd()));
-                    } else {
-                        location = Location.create(context.file);
-                        message = e.getCause() != null ? e.getCause().getLocalizedMessage() :
-                            e.getLocalizedMessage();
-                    }
-
-                    context.report(IssueRegistry.PARSER_ERROR, location, message, null);
+                    // No need to report Java parsing errors while running in Eclipse.
+                    // Eclipse itself will already provide problem markers for these files,
+                    // so all this achieves is creating "multiple annotations on this line"
+                    // tooltips instead.
                     return null;
                 }
                 if (unit == null) {
