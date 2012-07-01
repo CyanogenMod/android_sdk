@@ -107,7 +107,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.wb.internal.core.nls.ui.FlagImagesRepository;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -157,7 +156,6 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     private static final String ICON_PORTRAIT_FLIP = "flip_portrait";//$NON-NLS-1$
     private static final String ICON_DISPLAY = "display";         //$NON-NLS-1$
     private static final String ICON_NEW_CONFIG = "newConfig";    //$NON-NLS-1$
-    private static final String ICON_GLOBE = "globe";             //$NON-NLS-1$
     private static final String ICON_THEMES = "themes";           //$NON-NLS-1$
     private static final String ICON_ACTIVITY = "activity";       //$NON-NLS-1$
     private final static String SEP = ":";                        //$NON-NLS-1$
@@ -540,7 +538,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         ToolBar rightToolBar = toolBar;
 
         mLocaleCombo = new ToolItem(rightToolBar, SWT.DROP_DOWN);
-        mLocaleCombo.setImage(icons.getIcon(ICON_GLOBE));
+        mLocaleCombo.setImage(LocaleManager.getGlobeIcon());
         mLocaleCombo.setToolTipText("Locale to use when rendering layouts in Eclipse");
 
         @SuppressWarnings("unused")
@@ -548,7 +546,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         mTargetCombo = new ToolItem(rightToolBar, SWT.DROP_DOWN);
         mTargetCombo.setImage(AdtPlugin.getAndroidLogo());
-        mLocaleCombo.setToolTipText("Android version to use when rendering layouts in Eclipse");
+        mTargetCombo.setToolTipText("Android version to use when rendering layouts in Eclipse");
 
         addConfigurationMenuListener(mConfigCombo);
         addActivityMenuListener(mActivityCombo);
@@ -1016,6 +1014,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
             }
         }
 
+        String languageCode = language.getValue();
+        String languageName = LocaleManager.getLanguageName(languageCode);
+
         RegionQualifier region = (RegionQualifier) qualifiers[LOCALE_REGION];
         if (region.hasFakeValue()) {
             // TODO: Make the region string use "Other" instead of "Any" if
@@ -1025,9 +1026,23 @@ public class ConfigurationComposite extends Composite implements SelectionListen
             //} else {
             //    return String.format("%1$s / Any", language);
             //}
-            return language.getValue();
+            if (!brief && languageName != null) {
+                return String.format("%1$s (%2$s)", languageName, languageCode);
+            } else {
+                return languageCode;
+            }
         } else {
-            return String.format("%1$s / %2$s", language.getValue(), region.getValue());
+            String regionCode = region.getValue();
+            if (!brief && languageName != null) {
+                String regionName = LocaleManager.getRegionName(regionCode);
+                if (regionName != null) {
+                    return String.format("%1$s (%2$s) in %3$s (%4$s)", languageName, languageCode,
+                            regionName, regionCode);
+                }
+                return String.format("%1$s (%2$s) in %3$s", languageName, languageCode,
+                        regionCode);
+            }
+            return String.format("%1$s / %2$s", languageCode, regionCode);
         }
     }
 
@@ -1718,16 +1733,20 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         Image image = null;
         assert qualifiers.length == 2;
         String language = ((LanguageQualifier) qualifiers[LOCALE_LANG]).getValue();
-        String region = ((RegionQualifier) qualifiers[LOCALE_REGION]).getValue();
         if (LanguageQualifier.FAKE_LANG_VALUE.equals(language)) {
-            return IconFactory.getInstance().getIcon(ICON_GLOBE);
+            language = null;
+        }
+        String region = ((RegionQualifier) qualifiers[LOCALE_REGION]).getValue();
+        if (RegionQualifier.FAKE_REGION_VALUE.equals(region)) {
+            region = null;
+        }
+        LocaleManager icons = LocaleManager.get();
+        if (language == null && region == null) {
+            return LocaleManager.getGlobeIcon();
         } else {
-            String country = getCountry(language, region);
-            if (country != null) {
-                image = FlagImagesRepository.getFlagImage(country, language);
-            }
+            image = icons.getFlag(language, region);
             if (image == null) {
-                image = FlagImagesRepository.getEmptyFlagImage();
+                image = LocaleManager.getEmptyIcon();
             }
 
             return image;

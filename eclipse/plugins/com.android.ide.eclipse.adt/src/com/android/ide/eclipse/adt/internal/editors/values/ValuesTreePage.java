@@ -21,10 +21,12 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
@@ -50,6 +52,18 @@ public final class ValuesTreePage extends FormPage implements IPageImageProvider
 
     @Override
     public Image getPageImage() {
+        // See if we should use a flag icon if this is a language-specific configuration
+        IFile file = mEditor.getInputFile();
+        if (file != null) {
+            IContainer parent = file.getParent();
+            if (parent != null) {
+                Image flag = LocaleManager.get().getFlagForFolderName(parent.getName());
+                if (flag != null) {
+                    return flag;
+                }
+            }
+        }
+
         return IconFactory.getInstance().getIcon("editor_page_design");  //$NON-NLS-1$
     }
 

@@ -39,6 +39,7 @@ import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
@@ -89,7 +90,10 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Custom UI widget to let user build a Folder configuration.
@@ -856,11 +860,17 @@ public class ConfigurationSelector extends Composite {
      */
     private class LanguageEdit extends QualifierEditBase {
         private Combo mLanguage;
+        private Label mName;
 
         public LanguageEdit(Composite parent) {
             super(parent, LanguageQualifier.NAME);
 
             mLanguage = new Combo(this, SWT.DROP_DOWN);
+            Set<String> codes = LocaleManager.getLanguageCodes();
+            String[] items = codes.toArray(new String[codes.size()]);
+            Arrays.sort(items);
+            mLanguage.setItems(items);
+
             mLanguage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mLanguage.addVerifyListener(new LanguageRegionVerifier());
             mLanguage.addSelectionListener(new SelectionListener() {
@@ -881,11 +891,24 @@ public class ConfigurationSelector extends Composite {
             });
 
             new Label(this, SWT.NONE).setText("(2 letter code)");
+
+            mName = new Label(this, SWT.NONE);
+            mName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
         }
 
         private void onLanguageChange() {
             // update the current config
             String value = mLanguage.getText();
+
+            String newName = "";
+            if (value.length() == 2) {
+                String name = LocaleManager.getLanguageName(value.toLowerCase(Locale.US));
+                if (name != null) {
+                    newName = name;
+                }
+            }
+            mName.setText(newName);
 
             if (value.length() == 0) {
                 // empty string, means no qualifier.
