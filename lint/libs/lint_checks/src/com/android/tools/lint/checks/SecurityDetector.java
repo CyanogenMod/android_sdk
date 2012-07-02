@@ -276,8 +276,25 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
+    private boolean isStandardReceiver(Element element) {
+      // Checks whether a broadcast receiver receives a standard Android action
+      for (Element child : LintUtils.getChildren(element)) {
+        if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+            for (Element innerChild: LintUtils.getChildren(child)) {
+                if (innerChild.getTagName().equals("action")) { //$NON-NLS-1$
+                    String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                    return categoryString.startsWith("android.intent.action."); //$NON-NLS-1$
+                }
+            }
+        }
+      }
+
+      return false;
+    }
+
     private void checkReceiver(XmlContext context, Element element) {
-        if (getExported(element) && isUnprotectedByPermission(element)) {
+        if (getExported(element) && isUnprotectedByPermission(element) &&
+            !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
             context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
                            "Exported receiver does not require permission", null);
