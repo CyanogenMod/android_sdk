@@ -54,7 +54,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 96;
+        final int initialCapacity = 97;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -94,7 +94,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(Utf8Detector.ISSUE);
         issues.add(ProguardDetector.WRONGKEEP);
         issues.add(ProguardDetector.SPLITCONFIG);
-        issues.add(PxUsageDetector.ISSUE);
+        issues.add(PxUsageDetector.PX_ISSUE);
+        issues.add(PxUsageDetector.DP_ISSUE);
         issues.add(TextFieldDetector.ISSUE);
         issues.add(TextViewDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE);
@@ -288,7 +289,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             sAdtFixes.add(HardcodedValuesDetector.ISSUE);
             sAdtFixes.add(UselessViewDetector.USELESS_LEAF);
             sAdtFixes.add(UselessViewDetector.USELESS_PARENT);
-            sAdtFixes.add(PxUsageDetector.ISSUE);
+            sAdtFixes.add(PxUsageDetector.PX_ISSUE);
             sAdtFixes.add(TextFieldDetector.ISSUE);
             sAdtFixes.add(SecurityDetector.EXPORTED_SERVICE);
             sAdtFixes.add(DetectMissingPrefix.MISSING_NAMESPACE);
