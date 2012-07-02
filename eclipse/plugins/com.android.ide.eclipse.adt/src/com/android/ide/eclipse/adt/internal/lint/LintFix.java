@@ -150,7 +150,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(HardcodedValuesDetector.ISSUE.getId(), ExtractStringFix.class);
         sFixes.put(UselessViewDetector.USELESS_LEAF.getId(), RemoveUselessViewFix.class);
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
-        sFixes.put(PxUsageDetector.ISSUE.getId(), ConvertToDpFix.class);
+        sFixes.put(PxUsageDetector.PX_ISSUE.getId(), ConvertToDpFix.class);
         sFixes.put(TextFieldDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(SecurityDetector.EXPORTED_SERVICE.getId(), SetAttributeFix.class);
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);

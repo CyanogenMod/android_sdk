@@ -25,9 +25,16 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
         return new PxUsageDetector();
     }
 
-    public void testProguard() throws Exception {
+    public void testPx() throws Exception {
         assertEquals(
             "now_playing_after.xml:41: Warning: Avoid using \"px\" as units; use \"dp\" instead",
             lintFiles("res/layout/now_playing_after.xml"));
+    }
+
+    public void testSp() throws Exception {
+        assertEquals(
+            "textsize.xml:11: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
+            "textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes",
+            lintFiles("res/layout/textsize.xml"));
     }
 }

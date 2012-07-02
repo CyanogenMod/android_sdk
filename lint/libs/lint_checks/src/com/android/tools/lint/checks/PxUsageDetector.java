@@ -30,12 +30,14 @@ import org.w3c.dom.Attr;
 import java.util.Collection;
 
 /**
- * Check which looks at the children of ScrollViews and ensures that they fill/match
- * the parent width instead of setting wrap_content.
+ * Check for px dimensions instead of dp dimensions.
+ * Also look for non-"sp" text sizes.
+ * <p>
+ * TODO: Look in themes as well (text node usages).
  */
 public class PxUsageDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
+    public static final Issue PX_ISSUE = Issue.create(
             "PxUsage", //$NON-NLS-1$
             "Looks for use of the \"px\" dimension",
             // This description is from the below screen support document
@@ -55,6 +57,29 @@ public class PxUsageDetector extends LayoutDetector {
             Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html#screen-independence"); //$NON-NLS-1$
 
+    /** The main issue discovered by this detector */
+    public static final Issue DP_ISSUE = Issue.create(
+            "SpUsage", //$NON-NLS-1$
+            "Looks for uses of \"dp\" instead of \"sp\" dimensions for text sizes",
+
+            "When setting text sizes, you should normally use \"sp\", or \"scale-independent " +
+            "pixels\". This is like the dp unit, but it is also scaled " +
+            "by the user's font size preference. It is recommend you use this unit when " +
+            "specifying font sizes, so they will be adjusted for both the screen density " +
+            "and the user's preference.\n" +
+            "\n" +
+            "There *are* cases where you might need to use \"dp\"; typically this happens when " +
+            "the text is in a container with a specific dp-size. This will prevent the text " +
+            "from spilling outside the container. Note however that this means that the user's " +
+            "font size settings are not respected, so consider adjusting the layout itself " +
+            "to be more flexible.",
+            Category.CORRECTNESS,
+            2,
+            Severity.WARNING,
+            PxUsageDetector.class,
+            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            "http://developer.android.com/training/multiscreen/screendensities.html"); //$NON-NLS-1$
+
     /** Constructs a new {@link PxUsageDetector} */
     public PxUsageDetector() {
     }
@@ -72,13 +97,22 @@ public class PxUsageDetector extends LayoutDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
-        if (value.endsWith("px") && value.matches("\\d+px")) { //$NON-NLS-1$
+        if (value.endsWith("px") && value.matches("\\d+px")) { //$NON-NLS-1$ //$NON-NLS-2$
             if (value.charAt(0) == '0') {
                 // 0px is fine. 0px is 0dp regardless of density...
                 return;
             }
-            context.report(ISSUE, attribute, context.getLocation(attribute),
+            if (context.isEnabled(PX_ISSUE)) {
+                context.report(PX_ISSUE, attribute, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead", null);
+            }
+        } else if ("textSize".equals(attribute.getLocalName())
+                && (value.endsWith("dp") || value.endsWith("dip")) //$NON-NLS-1$ //$NON-NLS-2$
+                && (value.matches("\\d+di?p"))) {
+            if (context.isEnabled(DP_ISSUE)) {
+                context.report(DP_ISSUE, attribute, context.getLocation(attribute),
+                    "Should use \"sp\" instead of \"dp\" for text sizes", null);
+            }
         }
     }
 }
