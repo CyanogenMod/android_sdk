@@ -233,12 +233,14 @@ class ActivityPage extends WizardPage implements SelectionListener {
     private void validatePage() {
         IStatus status = null;
 
-        if (mList.getSelectionCount() < 1) {
-            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    "Select an activity type");
-        } else {
-            TemplateHandler templateHandler = mValues.activityValues.getTemplateHandler();
-            status = templateHandler.validateTemplate(mValues.minSdkLevel);
+        if (mValues.createActivity) {
+            if (mList.getSelectionCount() < 1) {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        "Select an activity type");
+            } else {
+                TemplateHandler templateHandler = mValues.activityValues.getTemplateHandler();
+                status = templateHandler.validateTemplate(mValues.minSdkLevel);
+            }
         }
 
         setPageComplete(status == null || status.getSeverity() != IStatus.ERROR);

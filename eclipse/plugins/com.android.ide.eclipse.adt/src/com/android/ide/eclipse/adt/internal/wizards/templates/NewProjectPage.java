@@ -329,7 +329,11 @@ public class NewProjectPage extends WizardPage
     }
 
     private IAndroidTarget[] getCompilationTargets() {
-        IAndroidTarget[] targets = Sdk.getCurrent().getTargets();
+        Sdk current = Sdk.getCurrent();
+        if (current == null) {
+            return new IAndroidTarget[0];
+        }
+        IAndroidTarget[] targets = current.getTargets();
         List<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
 
         for (IAndroidTarget target : targets) {
