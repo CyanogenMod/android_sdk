@@ -36,7 +36,7 @@ import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
+import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -406,7 +406,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                           1 /* default button: Cancel */);
                       int answer = dialog.open();
                       if (answer == 0) {
-                          if (!AddCompatibilityJarAction.install(project)) {
+                          if (!AddSupportJarAction.install(project)) {
                               return null;
                           }
                       } else {

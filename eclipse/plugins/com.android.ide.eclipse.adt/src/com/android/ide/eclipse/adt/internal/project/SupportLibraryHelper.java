@@ -24,7 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
+import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Display;
  * {@code <GridLayout>} into {@code <com.android.support.v7.GridLayout>} if it
  * does not.
  */
-public class CompatibilityLibraryHelper {
+public class SupportLibraryHelper {
     /**
      * Returns the correct tag to use for the given view tag. This is normally
      * the same as the tag itself. However, for some views which are not available
@@ -113,7 +113,7 @@ public class CompatibilityLibraryHelper {
                 if (answer == 0) {
                     if (supportProject != null) {
                         // Just add library dependency
-                        if (!AddCompatibilityJarAction.addLibraryDependency(
+                        if (!AddSupportJarAction.addLibraryDependency(
                                 supportProject,
                                 project,
                                 true /* waitForFinish */)) {
@@ -121,7 +121,7 @@ public class CompatibilityLibraryHelper {
                         }
                     } else {
                         // Install library AND add dependency
-                        if (!AddCompatibilityJarAction.installGridLayoutLibrary(
+                        if (!AddSupportJarAction.installGridLayoutLibrary(
                                 project,
                                 true /* waitForFinish */)) {
                             return tag;
