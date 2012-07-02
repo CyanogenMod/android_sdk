@@ -668,7 +668,7 @@ public class DmTraceReader extends TraceReader {
         System.out.print("\nMethod Stats\n");
         System.out.print("Excl Cpu  Incl Cpu  Excl Real Incl Real    Calls  Method\n");
         for (MethodData md : mSortedMethods) {
-            System.out.format("%9d %9d %9s  %s\n",
+            System.out.format("%9d %9d %9d %9d %9s  %s\n",
                     md.getElapsedExclusiveCpuTime(), md.getElapsedInclusiveCpuTime(),
                     md.getElapsedExclusiveRealTime(), md.getElapsedInclusiveRealTime(),
                     md.getCalls(), md.getProfileName());
