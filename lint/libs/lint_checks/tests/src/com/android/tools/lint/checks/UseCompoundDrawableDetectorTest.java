@@ -38,4 +38,11 @@ public class UseCompoundDrawableDetectorTest extends AbstractCheckTest {
                 "No warnings.",
                 lintFiles("res/layout/compound2.xml"));
     }
+
+    public void testCompound3() throws Exception {
+        // Ignore layouts that set an image scale type
+        assertEquals(
+                "No warnings.",
+                lintFiles("res/layout/compound3.xml"));
+    }
 }
