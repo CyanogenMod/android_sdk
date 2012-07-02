@@ -196,4 +196,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 "exportreceiver4.xml=>AndroidManifest.xml",
                 "res/values/strings.xml"));
     }
+
+    public void testReceiver5() throws Exception {
+      // Intent filter for standard Android action
+      assertEquals(
+          "No warnings.",
+          lintProject(
+              "exportreceiver5.xml=>AndroidManifest.xml",
+              "res/values/strings.xml"));
+  }
 }
