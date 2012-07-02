@@ -19,6 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.google.common.annotations.Beta;
 
 import java.util.ArrayList;
@@ -353,6 +354,10 @@ public final class Issue implements Comparable<Issue> {
                     return true;
                 }
             }
+        }
+
+        if (this == IssueRegistry.LINT_ERROR || this == IssueRegistry.PARSER_ERROR) {
+            return true;
         }
 
         return false;
