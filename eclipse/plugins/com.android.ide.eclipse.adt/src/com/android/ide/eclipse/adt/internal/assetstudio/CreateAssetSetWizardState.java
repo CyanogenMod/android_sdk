@@ -15,11 +15,14 @@
  */
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
+import com.android.annotations.NonNull;
 import com.android.assetstudiolib.GraphicGenerator.Shape;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.graphics.RGB;
 
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 
 /**
@@ -77,6 +80,53 @@ public class CreateAssetSetWizardState {
 
     /** The background color to use for the text or clipart (unless shape is {@link Shape#NONE} */
     public RGB foreground = new RGB(0x00, 0x00, 0x00);
+
+    /** If {@link #sourceType} is a {@link SourceType#TEXT}, the font of the text to render */
+    private Font mTextFont;
+
+    /**
+     * Gets the text font to be used for text rendering if the
+     * {@link #sourceType} is a {@link SourceType#TEXT}
+     *
+     * @return the text font
+     */
+    @NonNull
+    public Font getTextFont() {
+        if (mTextFont == null) {
+            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            String[] fontNames = env.getAvailableFontFamilyNames();
+            for (String familyName : fontNames) {
+                if (familyName.equals("Helvetica")) {
+                    mTextFont = new java.awt.Font(familyName, java.awt.Font.BOLD, 512);
+                    break;
+                }
+            }
+            if (mTextFont == null) {
+                for (String familyName : fontNames) {
+                    if (familyName.equals("Arial")) {
+                        mTextFont = new java.awt.Font(familyName, java.awt.Font.BOLD, 512);
+                        break;
+                    }
+                }
+
+                if (mTextFont == null) {
+                    mTextFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 512);
+                }
+            }
+        }
+
+        return mTextFont;
+    }
+
+    /**
+     * Sets the text font to be used for text rendering if the
+     * {@link #sourceType} is a {@link SourceType#TEXT}
+     *
+     * @param textFont the font to use
+     */
+    public void setTextFont(@NonNull Font textFont) {
+        mTextFont = textFont;
+    }
 
     /** Types of sources that the asset studio can use to generate icons from */
     public enum SourceType {
