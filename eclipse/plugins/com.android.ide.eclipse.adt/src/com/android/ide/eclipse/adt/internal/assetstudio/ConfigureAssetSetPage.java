@@ -587,7 +587,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             chooseForegroundTab(mClipartRadio, mClipartForm);
             mChooseClipart.setFocus();
         } else if (sourceType == CreateAssetSetWizardState.SourceType.TEXT) {
-            updateFontLabel(mFontButton.getFont());
+            updateFontLabel();
             chooseForegroundTab(mTextRadio, mTextForm);
             mText.setFocus();
         }
@@ -681,7 +681,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             chooseForegroundTab((Button) source, mClipartForm);
         } else if (source == mTextRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.TEXT;
-            updateFontLabel(mFontButton.getFont());
+            updateFontLabel();
             chooseForegroundTab((Button) source, mTextForm);
             mText.setFocus();
         }
@@ -769,7 +769,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                     chooserForm.setLayout(clipartFormLayout);
 
                     MouseAdapter clickListener = new MouseAdapter() {
-                        @SuppressWarnings("unused")
                         @Override
                         public void mouseDown(MouseEvent event) {
                             // Clicked on some of the sample art
@@ -838,7 +837,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             FontDialog dialog = new FontDialog(mFontButton.getShell());
             FontData[] fontList;
             if (mFontButton.getData() == null) {
-                fontList = mFontButton.getDisplay().getFontList("Helvetica", true /*scalable*/);
+                fontList = mFontButton.getDisplay().getFontList(
+                        mValues.getTextFont().getFontName(), true /*scalable*/);
             } else {
                 fontList = mFontButton.getFont().getFontData();
             }
@@ -847,11 +847,26 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             if (data != null) {
                 Font font = new Font(mFontButton.getDisplay(), dialog.getFontList());
                 mFontButton.setFont(font);
-                updateFontLabel(font);
+                mFontButton.setData(font);
+
+                // Always use a large font for the rendering, even though user is typically
+                // picking small font sizes in the font chooser
+                //int dpi = mFontButton.getDisplay().getDPI().y;
+                //int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
+                int fontHeight = new TextRenderUtil.Options().fontSize;
+                FontData fontData = font.getFontData()[0];
+                int awtStyle = java.awt.Font.PLAIN;
+                int swtStyle = fontData.getStyle();
+                if ((swtStyle & SWT.ITALIC) != 0) {
+                    awtStyle |= java.awt.Font.ITALIC;
+                }
+                if ((swtStyle & SWT.BOLD) != 0) {
+                    awtStyle = java.awt.Font.BOLD;
+                }
+                mValues.setTextFont(new java.awt.Font(fontData.getName(), awtStyle, fontHeight));
+
+                updateFontLabel();
                 mFontButton.getParent().pack();
-                // Mark the font on the button as custom (since the renderer needs to
-                // distinguish between this font and the default font it starts out with)
-                mFontButton.setData(Boolean.TRUE);
             }
         }
 
@@ -907,41 +922,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
     }
 
-    private void updateFontLabel(Font f) {
-        FontData[] fd = f.getFontData();
-        FontData primary = fd[0];
-        String description = String.format("%1$s", primary.getName());
-        mFontButton.setText(description);
-    }
-
-    private java.awt.Font getSelectedFont() {
-        // Always use a large font for the rendering, even though user is typically
-        // picking small font sizes in the font chooser
-        //int dpi = mFontButton.getDisplay().getDPI().y;
-        //int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
-        int fontHeight = new TextRenderUtil.Options().fontSize;
-
-        if (mFontButton.getData() == null) {
-            // The user has not yet picked a font; look up the default font to use
-            // (Helvetica Bold, not whatever font happened to be used for button widgets
-            // in SWT on this platform)
-            return new java.awt.Font("Helvetica", java.awt.Font.BOLD, fontHeight); //$NON-NLS-1$
-        }
-
-        Font font = mFontButton.getFont();
-        FontData fontData = font.getFontData()[0];
-
-        int awtStyle = java.awt.Font.PLAIN;
-        int swtStyle = fontData.getStyle();
-
-        if ((swtStyle & SWT.ITALIC) != 0) {
-            awtStyle |= java.awt.Font.ITALIC;
-        }
-        if ((swtStyle & SWT.BOLD) != 0) {
-            awtStyle = java.awt.Font.BOLD;
-        }
-
-        return new java.awt.Font(fontData.getName(), awtStyle, fontHeight);
+    private void updateFontLabel() {
+        mFontButton.setText(mValues.getTextFont().getFontName());
     }
 
     private int getPadding() {
@@ -1089,7 +1071,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             case TEXT: {
                 String text = mValues.text;
                 TextRenderUtil.Options options = new TextRenderUtil.Options();
-                options.font = getSelectedFont();
+                options.font = mValues.getTextFont();
                 int color;
                 if (type.needsColors()) {
                     color = 0xFF000000
