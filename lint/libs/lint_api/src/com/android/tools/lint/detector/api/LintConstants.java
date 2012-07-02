@@ -189,6 +189,7 @@ public class LintConstants {
     public static final String ATTR_AUTO_TEXT = "autoText";            //$NON-NLS-1$
     public static final String ATTR_ENABLED = "enabled";               //$NON-NLS-1$
     public static final String ATTR_SINGLE_LINE = "singleLine";        //$NON-NLS-1$
+    public static final String ATTR_SCALE_TYPE = "scaleType";        //$NON-NLS-1$
 
     // AbsoluteLayout layout params
     public static final String ATTR_LAYOUT_Y = "layout_y";             //$NON-NLS-1$

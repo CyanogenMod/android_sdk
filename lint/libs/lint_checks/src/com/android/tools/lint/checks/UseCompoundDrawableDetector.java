@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WEIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_SCALE_TYPE;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
@@ -91,6 +92,15 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                 // If the layout has a background, ignore since it would disappear from
                 // the TextView
                 if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
+                    return;
+                }
+
+                // Certain scale types cannot be done with compound drawables
+                String scaleType = first.getTagName().equals(IMAGE_VIEW)
+                        ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
+                        : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
+                if (scaleType != null && !scaleType.isEmpty()) {
+                    // For now, ignore if any scale type is set
                     return;
                 }
 
