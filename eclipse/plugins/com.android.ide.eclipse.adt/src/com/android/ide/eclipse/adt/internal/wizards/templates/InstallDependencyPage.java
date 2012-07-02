@@ -264,9 +264,8 @@ class InstallDependencyPage extends WizardPage implements SelectionListener {
             sCachedName = null;
             if (isInstalled()) {
                 showNextPage();
-            } else {
-                updateVersionLabels();
             }
+            updateVersionLabels();
         } else if (source == mInstallButton) {
             sCachedName = null;
             for (Pair<String, Integer> dependency : mTemplate.getDependencies()) {
@@ -276,9 +275,8 @@ class InstallDependencyPage extends WizardPage implements SelectionListener {
                     File installed = AddSupportJarAction.installSupport(version);
                     if (installed != null) {
                         showNextPage();
-                    } else {
-                        updateVersionLabels();
                     }
+                    updateVersionLabels();
                 }
             }
         } else if (source == mLink) {
