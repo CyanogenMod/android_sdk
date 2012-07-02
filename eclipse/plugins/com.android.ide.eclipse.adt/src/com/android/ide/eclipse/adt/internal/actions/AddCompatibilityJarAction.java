@@ -68,7 +68,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * An action to add the android-support-v4.jar compatibility library
+ * An action to add the android-support-v4.jar support library
  * to the selected project.
  * <p/>
  * This should be used by the GLE. The action itself is currently more
@@ -78,8 +78,12 @@ import java.util.Map;
  */
 public class AddCompatibilityJarAction implements IObjectActionDelegate {
 
-    private static final String FD_ANDROID = "android";                            //$NON-NLS-1$
-    private static final String FD_SUPPORT = "support";                            //$NON-NLS-1$
+    /** The vendor ID of the support library. */
+    private static final String VENDOR_ID = "android";                             //$NON-NLS-1$
+    /** The path ID of the support library. */
+    private static final String SUPPORT_ID = "support";                            //$NON-NLS-1$
+    /** The path ID of the compatibility library (which was its id for releases 1-3). */
+    private static final String COMPATIBILITY_ID = "compatibility";                //$NON-NLS-1$
     private static final String FD_GRIDLAYOUT = "gridlayout";                      //$NON-NLS-1$
     private static final String FD_V7 = "v7";                                      //$NON-NLS-1$
     private static final String FD_V4 = "v4";                                      //$NON-NLS-1$
@@ -120,9 +124,9 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
     }
 
     /**
-     * Install the compatibility jar into the given project.
+     * Install the support jar into the given project.
      *
-     * @param project The Android project to install the compatibility jar into
+     * @param project The Android project to install the support jar into
      * @return true if the installation was successful
      */
     public static boolean install(final IProject project) {
@@ -164,9 +168,9 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
 
         String sdkLocation = sdk.getSdkLocation();
         if (minimumRevision > 0) {
-            File path = getCompatJarFile();
+            File path = getSupportJarFile();
             if (path != null) {
-                assert path.exists(); // guaranteed by the getCompatJarFile call
+                assert path.exists(); // guaranteed by the getSupportJarFile call
                 int installedRevision = getInstalledRevision();
                 if (installedRevision != -1 && minimumRevision <= installedRevision) {
                     return path;
@@ -184,14 +188,13 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
                 new AdtConsoleSdkLog(),
                 sdkLocation);
 
-        Pair<Boolean, File> result = window.installExtraPackage(
-                FD_ANDROID, FD_SUPPORT);
+        Pair<Boolean, File> result = window.installExtraPackage(VENDOR_ID, SUPPORT_ID);
 
         // TODO: Make sure the version is at the required level; we know we need at least one
         // containing the v7 support
 
         if (!result.getFirst().booleanValue()) {
-            AdtPlugin.printErrorToConsole("Failed to install Android Compatibility library");
+            AdtPlugin.printErrorToConsole("Failed to install Android Support library");
             return null;
         }
 
@@ -203,7 +206,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         final File jarPath = new File(path, ANDROID_SUPPORT_V4_JAR);
 
         if (!jarPath.isFile()) {
-            AdtPlugin.printErrorToConsole("Android Compatibility JAR not found:",
+            AdtPlugin.printErrorToConsole("Android Support Jar not found:",
                     jarPath.getAbsolutePath());
             return null;
         }
@@ -212,7 +215,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
     }
 
     /**
-     * Returns the installed revision number of the Android Compatibility
+     * Returns the installed revision number of the Android Support
      * library, or -1 if the package is not installed.
      *
      * @return the installed revision number, or -1
@@ -223,7 +226,13 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
             String sdkLocation = sdk.getSdkLocation();
             SdkManager manager = SdkManager.createManager(sdkLocation, new NullSdkLog());
             Map<String, Integer> versions = manager.getExtrasVersions();
-            Integer version = versions.get("android/support"); //$NON-NLS-1$
+            Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
+            if (version == null) {
+                // Check the old compatibility library. When the library is updated in-place
+                // the manager doesn't change its folder name (since that is a source of
+                // endless issues on Windows.)
+                version = versions.get(VENDOR_ID + '/' + COMPATIBILITY_ID);
+            }
             if (version != null) {
                 return version.intValue();
             }
@@ -235,7 +244,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
     /**
      * Similar to {@link #install}, but rather than copy a jar into the given
      * project, it creates a new library project in the workspace for the
-     * compatibility library, and adds a library dependency on the newly
+     * support library, and adds a library dependency on the newly
      * installed library from the given project.
      *
      * @param project the project to add a dependency on the library to
@@ -249,7 +258,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         final IJavaProject javaProject = JavaCore.create(project);
         if (javaProject != null) {
 
-            File supportPath = getCompatPackageDir();
+            File supportPath = getSupportPackageDir();
             if (!supportPath.isDirectory()) {
                 File path = installSupport(8); // GridLayout arrived in rev 7 and fixed in rev 8
                 if (path == null) {
@@ -281,28 +290,53 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
     /**
      * Returns the directory containing the support libraries (v4, v7, v13,
      * ...), which may or may not exist
+     *
+     * @return a path to the support library or null
      */
-    private static File getCompatPackageDir() {
-        File sdk = new File(Sdk.getCurrent().getSdkLocation());
-        File supportPath = new File(sdk,
-                SdkConstants.FD_EXTRAS + File.separator
-                + FD_ANDROID + File.separator
-                + FD_SUPPORT);
-        return supportPath;
+    private static File getSupportPackageDir() {
+        final Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            String sdkLocation = sdk.getSdkLocation();
+            SdkManager manager = SdkManager.createManager(sdkLocation, new NullSdkLog());
+            Map<String, Integer> versions = manager.getExtrasVersions();
+            Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
+            if (version != null) {
+                File supportPath = new File(sdkLocation,
+                        SdkConstants.FD_EXTRAS + File.separator
+                        + VENDOR_ID + File.separator
+                        + SUPPORT_ID);
+                return supportPath;
+            }
+
+            // Check the old compatibility library. When the library is updated in-place
+            // the manager doesn't change its folder name (since that is a source of
+            // endless issues on Windows.)
+            version = versions.get(VENDOR_ID + '/' + COMPATIBILITY_ID);
+            if (version != null) {
+                File supportPath = new File(sdkLocation,
+                        SdkConstants.FD_EXTRAS + File.separator
+                        + VENDOR_ID + File.separator
+                        + COMPATIBILITY_ID);
+                return supportPath;
+            }
+        }
+        return null;
     }
 
     /**
-     * Returns a path to the installed jar file for the compatibility library,
+     * Returns a path to the installed jar file for the support library,
      * or null if it does not exist
      *
-     * @return a path to the library or null
+     * @return a path to the v4.jar or null
      */
     @Nullable
-    public static File getCompatJarFile() {
-        File supportDir = getCompatPackageDir();
-        File path = new File(supportDir, FD_V4 + File.separator + ANDROID_SUPPORT_V4_JAR);
-        if (path.exists()) {
-            return path;
+    public static File getSupportJarFile() {
+        File supportDir = getSupportPackageDir();
+        if (supportDir != null) {
+            File path = new File(supportDir, FD_V4 + File.separator + ANDROID_SUPPORT_V4_JAR);
+            if (path.exists()) {
+                return path;
+            }
         }
 
         return null;
@@ -323,7 +357,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
             boolean waitForFinish) {
 
         // Install a new library into the workspace. This is a copy rather than
-        // a reference to the compatibility library version such that modifications
+        // a reference to the support library version such that modifications
         // do not modify the pristine copy in the SDK install area.
 
         final IProject newProject;
@@ -390,7 +424,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         // Now add library dependency
 
         // Run an Eclipse asynchronous job to update the project
-        Job job = new Job("Add Compatibility Library Dependency to Project") {
+        Job job = new Job("Add Support Library Dependency to Project") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
