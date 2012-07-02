@@ -671,6 +671,18 @@ public class ApplicationInfoPage extends WizardPage implements SelectionListener
         return null;
     }
 
+    public static IStatus validateClass(String className) {
+        if (className == null || className.length() == 0) {
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    "Class name must be specified.");
+        }
+        if (className.indexOf('.') != -1) {
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    "Enter just a class name, not a full package name");
+        }
+        return JavaConventions.validateJavaTypeName(className, JDK_15, JDK_15);
+    }
+
     private IStatus validateActivity() {
         // Validate activity (if creating an activity)
         if (!mValues.createActivity) {

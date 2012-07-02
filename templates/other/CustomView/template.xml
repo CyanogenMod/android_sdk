@@ -18,7 +18,7 @@
         id="viewClass"
         name="View Class"
         type="string"
-        constraints="class|unique"
+        constraints="class|unique|nonempty"
         default="MyView"
         help="By convention, should end in 'View'" />
 

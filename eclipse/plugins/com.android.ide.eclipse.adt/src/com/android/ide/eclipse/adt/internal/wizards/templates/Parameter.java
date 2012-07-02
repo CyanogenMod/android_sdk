@@ -97,6 +97,9 @@ class Parameter {
         /** The associated value must not be empty */
         NONEMPTY,
 
+        /** The associated value is allowed to be empty */
+        EMPTY,
+
         /** The associated value should represent a fully qualified activity class name */
         ACTIVITY,
 
@@ -278,33 +281,35 @@ class Parameter {
                     mValidator = ResourceNameValidator.create(false, ResourceFolderType.DRAWABLE);
                 }
                 return mValidator;
-            } else if (constraints.contains(Constraint.CLASS)
+            } else if (constraints.contains(Constraint.PACKAGE)
+                    || constraints.contains(Constraint.CLASS)
                     || constraints.contains(Constraint.ACTIVITY)) {
                 mValidator = new IInputValidator() {
                     @Override
                     public String isValid(String newText) {
-                        // Deliberately allow empty strings for parameters that aren't required
-                        if (newText.trim().isEmpty()
-                                && !constraints.contains(Constraint.NONEMPTY)) {
-                            return null;
+                        newText = newText.trim();
+                        if (newText.isEmpty()) {
+                            if (constraints.contains(Constraint.EMPTY)) {
+                                return null;
+                            } else if (constraints.contains(Constraint.NONEMPTY)) {
+                                return String.format("Enter a value for %1$s", name);
+                            } else {
+                                // Compatibility mode: older templates might not specify;
+                                // in that case, accept empty
+                                if (!"activityClass".equals(id)) { //$NON-NLS-1$
+                                    return null;
+                                }
+                            }
                         }
-
-                        // TODO: Don't use *activity* validator if it doesn't have to be one
-                        // (e.g. is CLASS, not ACTIVITY)
-                        IStatus status = ApplicationInfoPage.validateActivity(newText.trim());
-                        if (status != null && !status.isOK()) {
-                            return status.getMessage();
+                        IStatus status;
+                        if (constraints.contains(Constraint.ACTIVITY)) {
+                            status = ApplicationInfoPage.validateActivity(newText);
+                        } else if (constraints.contains(Constraint.PACKAGE)) {
+                            status = ApplicationInfoPage.validatePackage(newText);
+                        } else {
+                            assert constraints.contains(Constraint.CLASS);
+                            status = ApplicationInfoPage.validateClass(newText);
                         }
-
-                        return null;
-                    }
-                };
-                return mValidator;
-            } else if (constraints.contains(Constraint.PACKAGE)) {
-                mValidator = new IInputValidator() {
-                    @Override
-                    public String isValid(String newText) {
-                        IStatus status = ApplicationInfoPage.validatePackage(newText.trim());
                         if (status != null && !status.isOK()) {
                             return status.getMessage();
                         }

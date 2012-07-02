@@ -125,7 +125,13 @@ public class NewTemplateWizardState {
         parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
         parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
         IAndroidTarget target = Sdk.getCurrent().getTarget(project);
-        parameters.put(NewProjectWizard.ATTR_BUILD_API, target.getVersion().getApiLevel());
+        int buildApi;
+        if (target != null) {
+            buildApi = target.getVersion().getApiLevel();
+        } else {
+            buildApi = manifest.getTargetSdkVersion();
+        }
+        parameters.put(NewProjectWizard.ATTR_BUILD_API, buildApi);
 
         return getTemplateHandler().render(project, parameters);
     }

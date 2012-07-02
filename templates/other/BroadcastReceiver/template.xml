@@ -9,7 +9,7 @@
         id="className"
         name="Class Name"
         type="string"
-        constraints="class|unique"
+        constraints="class|unique|nonempty"
         default="MyReceiver" />
 
     <parameter
