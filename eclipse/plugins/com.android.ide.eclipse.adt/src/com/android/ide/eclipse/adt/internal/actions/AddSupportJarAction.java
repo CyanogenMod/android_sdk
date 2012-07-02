@@ -76,7 +76,7 @@ import java.util.Map;
  * <p/>
  * TODO: make this more configurable.
  */
-public class AddCompatibilityJarAction implements IObjectActionDelegate {
+public class AddSupportJarAction implements IObjectActionDelegate {
 
     /** The vendor ID of the support library. */
     private static final String VENDOR_ID = "android";                             //$NON-NLS-1$
@@ -161,7 +161,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk == null) {
             AdtPlugin.printErrorToConsole(
-                    AddCompatibilityJarAction.class.getSimpleName(),   // tag
+                    AddSupportJarAction.class.getSimpleName(),   // tag
                     "Error: Android SDK is not loaded yet."); //$NON-NLS-1$
             return null;
         }

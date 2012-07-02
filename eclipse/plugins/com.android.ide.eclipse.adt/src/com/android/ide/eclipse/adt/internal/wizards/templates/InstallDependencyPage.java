@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
+import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IStatus;
@@ -203,7 +203,7 @@ class InstallDependencyPage extends WizardPage implements SelectionListener {
         if (SUPPORT_LIBRARY_NAME.equals(sCachedName)) {
             return sCachedVersion;
         } else {
-            int version = AddCompatibilityJarAction.getInstalledRevision();
+            int version = AddSupportJarAction.getInstalledRevision();
             sCachedName = SUPPORT_LIBRARY_NAME;
             sCachedVersion = version;
             return version;
@@ -273,7 +273,7 @@ class InstallDependencyPage extends WizardPage implements SelectionListener {
                 String name = dependency.getFirst();
                 if (SUPPORT_LIBRARY_NAME.equals(name)) {
                     int version = dependency.getSecond();
-                    File installed = AddCompatibilityJarAction.installSupport(version);
+                    File installed = AddSupportJarAction.installSupport(version);
                     if (installed != null) {
                         showNextPage();
                     } else {

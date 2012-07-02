@@ -467,7 +467,7 @@
                 label="Fix Project Properties"
                 menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3" />
             <action
-                class="com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction"
+                class="com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction"
                 enablesFor="1"
                 icon="icons/android.png"
                 id="com.android.ide.eclipse.adt.wizards.actions.AddCompatibilityJarAction"

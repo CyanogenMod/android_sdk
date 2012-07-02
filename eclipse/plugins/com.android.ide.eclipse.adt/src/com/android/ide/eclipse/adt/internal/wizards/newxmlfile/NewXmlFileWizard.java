@@ -31,7 +31,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.ide.eclipse.adt.internal.project.CompatibilityLibraryHelper;
+import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.resources.ResourceFolderType;
 import com.android.util.Pair;
@@ -210,7 +210,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             IProject project = file.getParent().getProject();
             int minSdk = ManifestInfo.get(project).getMinSdkVersion();
             if (minSdk < 14) {
-                root = CompatibilityLibraryHelper.getTagFor(project, FQCN_GRID_LAYOUT);
+                root = SupportLibraryHelper.getTagFor(project, FQCN_GRID_LAYOUT);
                 if (root.equals(FQCN_GRID_LAYOUT)) {
                     root = GRID_LAYOUT;
                 }

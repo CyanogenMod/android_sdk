@@ -32,7 +32,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
+import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
@@ -411,7 +411,7 @@ class TemplateHandler {
                         if (dependencyName.equals(SUPPORT_LIBRARY_NAME)) {
                             // We assume the revision requirement has been satisfied
                             // by the wizard
-                            File path = AddCompatibilityJarAction.getSupportJarFile();
+                            File path = AddSupportJarAction.getSupportJarFile();
                             if (path != null) {
                                 IPath to = getTargetPath(FD_NATIVE_LIBS +'/' + path.getName());
                                 try {
@@ -433,6 +433,7 @@ class TemplateHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     private boolean canOverwrite(File file) {
         if (file.exists()) {
             // Warn that the file already exists and ask the user what to do
