@@ -29,11 +29,18 @@ import org.eclipse.core.runtime.Platform;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("restriction") // for AdtPlugin internal classes
 public class NdkCommandLauncher extends CommandLauncher {
     private static CygPath sCygPath = null;
-    private static final String WINDOWS_EXE = "exe"; //$NON-NLS-1$
+
+    private static final List<String> WINDOWS_NATIVE_EXECUTABLES = Arrays.asList(
+            "exe",      //$NON-NLS-1$
+            "cmd",      //$NON-NLS-1$
+            "bat"       //$NON-NLS-1$
+            );
 
     static {
         if (Platform.OS_WIN32.equals(Platform.getOS())) {
@@ -66,10 +73,8 @@ public class NdkCommandLauncher extends CommandLauncher {
             }
 
             if (isWindowsExecutable(commandPath)) {
-                // Make sure it has the full file name extension
-                if (!WINDOWS_EXE.equalsIgnoreCase(commandPath.getFileExtension())) {
-                    commandPath = commandPath.addFileExtension(WINDOWS_EXE);
-                }
+                // append necessary extension
+                commandPath = appendExecutableExtension(commandPath);
             } else {
                 // Invoke using Cygwin shell if this is not a native windows executable
                 String[] newargs = new String[args.length + 1];
@@ -85,15 +90,44 @@ public class NdkCommandLauncher extends CommandLauncher {
     }
 
     private boolean isWindowsExecutable(IPath commandPath) {
-        if (WINDOWS_EXE.equalsIgnoreCase(commandPath.getFileExtension())) {
+        String ext = commandPath.getFileExtension();
+        if (isWindowsExecutableExtension(ext)) {
             return true;
         }
 
-        File exeFile = commandPath.addFileExtension(WINDOWS_EXE).toFile();
-        if (exeFile.exists()) {
+        ext = findWindowsExecutableExtension(commandPath);
+        if (ext != null) {
             return true;
         }
 
         return false;
+    }
+
+    private IPath appendExecutableExtension(IPath commandPath) {
+        if (isWindowsExecutableExtension(commandPath.getFileExtension())) {
+            return commandPath;
+        }
+
+        String ext = findWindowsExecutableExtension(commandPath);
+        if (ext != null) {
+            return commandPath.addFileExtension(ext);
+        }
+
+        return commandPath;
+    }
+
+    private String findWindowsExecutableExtension(IPath command) {
+        for (String e: WINDOWS_NATIVE_EXECUTABLES) {
+            File exeFile = command.addFileExtension(e).toFile();
+            if (exeFile.exists()) {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isWindowsExecutableExtension(String extension) {
+        return extension != null && WINDOWS_NATIVE_EXECUTABLES.contains(extension);
     }
 }
