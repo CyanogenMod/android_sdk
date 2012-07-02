@@ -47,7 +47,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
 
     /**
      * Manifest constant for declaring an issue provider. Example:
-     * Lint-Issues: foo.bar.CustomIssueRegistry
+     * Lint-Registry: foo.bar.CustomIssueRegistry
      */
     private static final String MF_LINT_REGISTRY = "Lint-Registry"; //$NON-NLS-1$
 
