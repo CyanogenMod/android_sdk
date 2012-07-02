@@ -411,7 +411,7 @@ class TemplateHandler {
                         if (dependencyName.equals(SUPPORT_LIBRARY_NAME)) {
                             // We assume the revision requirement has been satisfied
                             // by the wizard
-                            File path = AddCompatibilityJarAction.getCompatJarFile();
+                            File path = AddCompatibilityJarAction.getSupportJarFile();
                             if (path != null) {
                                 IPath to = getTargetPath(FD_NATIVE_LIBS +'/' + path.getName());
                                 try {
