@@ -406,42 +406,6 @@
             </then>
         </if>
 
-        <!-- If the "debug" build type changed, clear out the compiled code.
-             This is to make sure the new BuildConfig.DEBUG value is picked up
-             as javac can't deal with this type of change in its dependency computation. -->
-        <if>
-            <condition>
-                <and>
-                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
-                    <not><equals
-                            arg1="${build.is.packaging.debug}"
-                            arg2="${build.last.is.packaging.debug}" /></not>
-                </and>
-            </condition>
-            <then>
-                <echo level="info">Switching between debug and non debug build: Deleting previous compilation output...</echo>
-                <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
-            </then>
-            <else>
-                <!-- Else, we may still need to clean the code, for another reason.
-                     special case for instrumented: if the previous build was
-                     instrumented but not this one, clear out the compiled code -->
-                <if>
-                    <condition>
-                        <and>
-                            <istrue value="${build.last.is.instrumented}" />
-                            <isfalse value="${build.is.instrumented}" />
-                        </and>
-                    </condition>
-                    <then>
-                        <echo level="info">Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
-                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
-                    </then>
-                </if>
-            </else>
-        </if>
-
-
         <!-- get the project manifest package -->
         <xpath input="${manifest.abs.file}"
                 expression="/manifest/@package" output="project.app.package" />
@@ -505,6 +469,41 @@
         <property name="build.last.is.instrumented" value="" />
         <property name="build.last.is.packaging.debug" value="" />
         <property name="build.last.is.signing.debug" value="" />
+
+        <!-- If the "debug" build type changed, clear out the compiled code.
+             This is to make sure the new BuildConfig.DEBUG value is picked up
+             as javac can't deal with this type of change in its dependency computation. -->
+        <if>
+            <condition>
+                <and>
+                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
+                    <not><equals
+                            arg1="${build.is.packaging.debug}"
+                            arg2="${build.last.is.packaging.debug}" /></not>
+                </and>
+            </condition>
+            <then>
+                <echo level="info">Switching between debug and non debug build: Deleting previous compilation output...</echo>
+                <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
+            </then>
+            <else>
+                <!-- Else, we may still need to clean the code, for another reason.
+                     special case for instrumented: if the previous build was
+                     instrumented but not this one, clear out the compiled code -->
+                <if>
+                    <condition>
+                        <and>
+                            <istrue value="${build.last.is.instrumented}" />
+                            <isfalse value="${build.is.instrumented}" />
+                        </and>
+                    </condition>
+                    <then>
+                        <echo level="info">Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
+                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
+                    </then>
+                </if>
+            </else>
+        </if>
 
         <echo level="info">Resolving Build Target for ${ant.project.name}...</echo>
         <!-- load project properties, resolve Android target, library dependencies
