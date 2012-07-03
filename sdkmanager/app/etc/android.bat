@@ -59,6 +59,7 @@ for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set swt_path=lib\%%a
     copy /B /D /Y lib\httpclient*        %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\httpcore*          %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\httpmime*          %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\dvlib.jar          %tmp_dir%\lib\        > nul
 
     rem jar_path and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
     set tools_dir=%cd%
