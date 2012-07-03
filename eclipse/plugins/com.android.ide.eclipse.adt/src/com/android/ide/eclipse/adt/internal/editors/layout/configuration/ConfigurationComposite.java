@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
+import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
@@ -728,9 +729,14 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                         mResources = ResourceManager.getInstance().getProjectResources(iProject);
                     }
                     if (mEditedConfig == null) {
-                        ResourceFolder resFolder = mResources.getResourceFolder(
-                                (IFolder) mEditedFile.getParent());
-                        mEditedConfig = resFolder.getConfiguration();
+                        IFolder parent = (IFolder) mEditedFile.getParent();
+                        ResourceFolder resFolder = mResources.getResourceFolder(parent);
+                        if (resFolder != null) {
+                            mEditedConfig = resFolder.getConfiguration();
+                        } else {
+                            mEditedConfig = FolderConfiguration.getConfig(
+                                    parent.getName().split(RES_QUALIFIER_SEP));
+                        }
                     }
 
                     targetData = Sdk.getCurrent().getTargetData(mProjectTarget);
