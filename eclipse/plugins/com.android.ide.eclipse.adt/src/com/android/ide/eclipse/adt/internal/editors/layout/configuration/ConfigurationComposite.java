@@ -1158,7 +1158,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         final String name;
         final ConfigBundle bundle;
 
-        public ConfigMatch(FolderConfiguration testConfig, Device device, String name,
+        public ConfigMatch(@NonNull FolderConfiguration testConfig, Device device, String name,
                 ConfigBundle bundle) {
             this.testConfig = testConfig;
             this.device = device;
@@ -1317,18 +1317,40 @@ public class ConfigurationComposite extends Composite implements SelectionListen
     private static class TabletConfigComparator implements Comparator<ConfigMatch> {
         @Override
         public int compare(ConfigMatch o1, ConfigMatch o2) {
-            ScreenSize ss1 = o1.testConfig.getScreenSizeQualifier().getValue();
-            ScreenSize ss2 = o2.testConfig.getScreenSizeQualifier().getValue();
+            FolderConfiguration config1 = o1 != null ? o1.testConfig : null;
+            FolderConfiguration config2 = o2 != null ? o2.testConfig : null;
+            if (config1 == null) {
+                if (config2 == null) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            } else if (config2 == null) {
+                return 1;
+            }
+
+            ScreenSizeQualifier size1 = config1.getScreenSizeQualifier();
+            ScreenSizeQualifier size2 = config2.getScreenSizeQualifier();
+            ScreenSize ss1 = size1 != null ? size1.getValue() : ScreenSize.NORMAL;
+            ScreenSize ss2 = size2 != null ? size2.getValue() : ScreenSize.NORMAL;
 
             // X-LARGE is better than all others (which are considered identical)
             // if both X-LARGE, then LANDSCAPE is better than all others (which are identical)
 
             if (ss1 == ScreenSize.XLARGE) {
                 if (ss2 == ScreenSize.XLARGE) {
-                    ScreenOrientation so1 =
-                        o1.testConfig.getScreenOrientationQualifier().getValue();
-                    ScreenOrientation so2 =
-                        o2.testConfig.getScreenOrientationQualifier().getValue();
+                    ScreenOrientationQualifier orientation1 =
+                            config1.getScreenOrientationQualifier();
+                    ScreenOrientation so1 = orientation1.getValue();
+                    if (so1 == null) {
+                        so1 = ScreenOrientation.PORTRAIT;
+                    }
+                    ScreenOrientationQualifier orientation2 =
+                            config2.getScreenOrientationQualifier();
+                    ScreenOrientation so2 = orientation2.getValue();
+                    if (so2 == null) {
+                        so2 = ScreenOrientation.PORTRAIT;
+                    }
 
                     if (so1 == ScreenOrientation.LANDSCAPE) {
                         if (so2 == ScreenOrientation.LANDSCAPE) {
@@ -1369,24 +1391,55 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
         @Override
         public int compare(ConfigMatch o1, ConfigMatch o2) {
-            int dpi1 = Density.DEFAULT_DENSITY;
-            if (o1.testConfig.getDensityQualifier() != null) {
-                dpi1 = o1.testConfig.getDensityQualifier().getValue().getDpiValue();
-                dpi1 = mDensitySort.get(dpi1, 100 /* valueIfKeyNotFound*/);
+            FolderConfiguration config1 = o1 != null ? o1.testConfig : null;
+            FolderConfiguration config2 = o2 != null ? o2.testConfig : null;
+            if (config1 == null) {
+                if (config2 == null) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            } else if (config2 == null) {
+                return 1;
             }
 
+            int dpi1 = Density.DEFAULT_DENSITY;
             int dpi2 = Density.DEFAULT_DENSITY;
-            if (o2.testConfig.getDensityQualifier() != null) {
-                dpi2 = o2.testConfig.getDensityQualifier().getValue().getDpiValue();
-                dpi2 = mDensitySort.get(dpi2, 100 /* valueIfKeyNotFound*/);
+
+            DensityQualifier dpiQualifier1 = config1.getDensityQualifier();
+            if (dpiQualifier1 != null) {
+                Density value = dpiQualifier1.getValue();
+                dpi1 = value != null ? value.getDpiValue() : Density.DEFAULT_DENSITY;
             }
+            dpi1 = mDensitySort.get(dpi1, 100 /* valueIfKeyNotFound*/);
+
+            DensityQualifier dpiQualifier2 = config2.getDensityQualifier();
+            if (dpiQualifier2 != null) {
+                Density value = dpiQualifier2.getValue();
+                dpi2 = value != null ? value.getDpiValue() : Density.DEFAULT_DENSITY;
+            }
+            dpi2 = mDensitySort.get(dpi2, 100 /* valueIfKeyNotFound*/);
 
             if (dpi1 == dpi2) {
                 // portrait is better
-                ScreenOrientation so1 =
-                    o1.testConfig.getScreenOrientationQualifier().getValue();
-                ScreenOrientation so2 =
-                    o2.testConfig.getScreenOrientationQualifier().getValue();
+                ScreenOrientation so1 = ScreenOrientation.PORTRAIT;
+                ScreenOrientationQualifier orientationQualifier1 =
+                        config1.getScreenOrientationQualifier();
+                if (orientationQualifier1 != null) {
+                    so1 = orientationQualifier1.getValue();
+                    if (so1 == null) {
+                        so1 = ScreenOrientation.PORTRAIT;
+                    }
+                }
+                ScreenOrientation so2 = ScreenOrientation.PORTRAIT;
+                ScreenOrientationQualifier orientationQualifier2 =
+                        config2.getScreenOrientationQualifier();
+                if (orientationQualifier2 != null) {
+                    so2 = orientationQualifier2.getValue();
+                    if (so2 == null) {
+                        so2 = ScreenOrientation.PORTRAIT;
+                    }
+                }
 
                 if (so1 == ScreenOrientation.PORTRAIT) {
                     if (so2 == ScreenOrientation.PORTRAIT) {
