@@ -463,7 +463,11 @@ public class AdtUtils {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         IResource res = root.findMember(path);
         if (res != null) {
-            return res.getLocation().toFile();
+            IPath location = res.getLocation();
+            if (location != null) {
+                return location.toFile();
+            }
+            return root.getLocation().append(path).toFile();
         }
 
         return path.toFile();

@@ -763,6 +763,10 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
                         if (kind == IClasspathEntry.CPE_VARIABLE) {
                             entry = JavaCore.getResolvedClasspathEntry(entry);
+                            if (entry == null) {
+                                // It's possible that the variable is no longer valid; ignore
+                                continue;
+                            }
                             kind = entry.getEntryKind();
                         }
 
