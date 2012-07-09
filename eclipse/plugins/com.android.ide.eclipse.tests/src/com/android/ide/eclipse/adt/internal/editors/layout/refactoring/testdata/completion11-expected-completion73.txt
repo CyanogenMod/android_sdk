@@ -1,0 +1,14 @@
+Code completion in completion11.xml for ?android:attr/Textapp^:
+?android:attr/textAppearance
+?android:attr/textAppearanceButton
+?android:attr/textAppearanceInverse
+?android:attr/textAppearanceLarge
+?android:attr/textAppearanceLargeInverse
+?android:attr/textAppearanceLargePopupMenu
+?android:attr/textAppearanceMedium
+?android:attr/textAppearanceMediumInverse
+?android:attr/textAppearanceSearchResultSubtitle
+?android:attr/textAppearanceSearchResultTitle
+?android:attr/textAppearanceSmall
+?android:attr/textAppearanceSmallInverse
+?android:attr/textAppearanceSmallPopupMenu

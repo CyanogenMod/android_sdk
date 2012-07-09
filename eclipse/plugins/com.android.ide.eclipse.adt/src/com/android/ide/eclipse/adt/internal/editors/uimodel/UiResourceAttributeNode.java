@@ -19,6 +19,9 @@ package com.android.ide.eclipse.adt.internal.editors.uimodel;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
 import com.android.ide.common.api.IAttributeInfo;
@@ -250,6 +253,14 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // This prefix does not have a / in it, so the resource string is either empty
             // or does not have the resource type in it. Simply offer the list of potential
             // resource types.
+            if (prefix != null && prefix.startsWith(PREFIX_THEME_REF)) {
+                results.add(PREFIX_ANDROID_THEME_REF + ResourceType.ATTR.getName() + '/');
+                if (resTypes.contains(ResourceType.ATTR)
+                        || resTypes.contains(ResourceType.STYLE)) {
+                    results.add(PREFIX_THEME_REF + ResourceType.ATTR.getName() + '/');
+                }
+                return results.toArray(new String[results.size()]);
+            }
 
             for (ResourceType resType : resTypes) {
                 if (isSystem) {
@@ -273,10 +284,12 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // We have a style name and a repository. Find all resources that match this
             // type and recreate suggestions out of them.
 
+            String initial = prefix != null && prefix.startsWith(PREFIX_THEME_REF)
+                    ? PREFIX_THEME_REF : PREFIX_RESOURCE_REF;
             ResourceType resType = ResourceType.getEnum(typeName);
             if (resType != null) {
                 StringBuilder sb = new StringBuilder();
-                sb.append('@');
+                sb.append(initial);
                 if (prefix != null && prefix.indexOf('+') >= 0) {
                     sb.append('+');
                 }
@@ -290,6 +303,13 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
 
                 for (ResourceItem item : repository.getResourceItemsOfType(resType)) {
                     results.add(base + item.getName());
+                }
+
+                if (!isSystem && resType == ResourceType.ATTR) {
+                    for (ResourceItem item : repository.getResourceItemsOfType(
+                            ResourceType.STYLE)) {
+                        results.add(base + item.getName());
+                    }
                 }
             }
         }
@@ -358,12 +378,23 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             }
 
             if (type != null) {
-                if (value.startsWith('@' + type + '/')) {
-                    return -2;
-                }
+                if (value.startsWith(PREFIX_RESOURCE_REF)) {
+                    if (value.startsWith(PREFIX_RESOURCE_REF + type + '/')) {
+                        return -2;
+                    }
 
-                if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
-                    return -2;
+                    if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
+                        return -2;
+                    }
+                }
+                if (value.startsWith(PREFIX_THEME_REF)) {
+                    if (value.startsWith(PREFIX_THEME_REF + type + '/')) {
+                        return -2;
+                    }
+
+                    if (value.startsWith(PREFIX_ANDROID_THEME_REF + type + '/')) {
+                        return -2;
+                    }
                 }
             }
         }
@@ -386,12 +417,23 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         }
 
         if (type != null) {
-            if (value.startsWith('@' + type + '/')) {
-                return -2;
-            }
+            if (value.startsWith(PREFIX_RESOURCE_REF)) {
+                if (value.startsWith(PREFIX_RESOURCE_REF + type + '/')) {
+                    return -2;
+                }
 
-            if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
-                return -2;
+                if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
+                    return -2;
+                }
+            }
+            if (value.startsWith(PREFIX_THEME_REF)) {
+                if (value.startsWith(PREFIX_THEME_REF + type + '/')) {
+                    return -2;
+                }
+
+                if (value.startsWith(PREFIX_ANDROID_THEME_REF + type + '/')) {
+                    return -2;
+                }
             }
         }
 

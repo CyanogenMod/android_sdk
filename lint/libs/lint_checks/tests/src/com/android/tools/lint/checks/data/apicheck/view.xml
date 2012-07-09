@@ -18,4 +18,10 @@
         android:layout_height="fill_parent"
         class="CalendarView" />
 
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        unknown="?android:attr/dividerHorizontal"
+        android:textColor="?android:attr/textColorLinkInverse" />
+
 </LinearLayout>

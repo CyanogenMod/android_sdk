@@ -281,6 +281,7 @@ public class LintConstants {
 
     // Resources
     public static final String ANDROID_RESOURCE_PREFIX = "@android:";   //$NON-NLS-1$
+    public static final String ANDROID_THEME_PREFIX = "?android:";      //$NON-NLS-1$
     public static final String ID_RESOURCE_PREFIX = "@id/";             //$NON-NLS-1$
     public static final String NEW_ID_RESOURCE_PREFIX = "@+id/";        //$NON-NLS-1$
     public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/"; //$NON-NLS-1$

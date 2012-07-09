@@ -474,9 +474,20 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 "<item name=\"main_layout5\" type=\"string\">@string/^app_name</item>");
     }
 
+    public void testCompletion72() throws Exception {
+        // Test completion of theme attributes
+        checkLayoutCompletion("completion11.xml", "?^android:attr/Textapp");
+    }
+
+    public void testCompletion73() throws Exception {
+        checkLayoutCompletion("completion11.xml", "?android:attr/Textapp^");
+    }
+
+    public void testCompletion74() throws Exception {
+        checkLayoutCompletion("completion11.xml", "?and^roid:attr/Textapp");
+    }
+
     // ---- Test *applying* code completion ----
-
-
 
     // The following tests check -applying- a specific code completion
     // match - this verifies that the document is updated correctly, the
@@ -764,6 +775,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
     public void testApplyCompletion45() throws Exception {
         checkApplyResourceCompletion("completionvalues2.xml",
                 "@string/^app_name", "@string/hello");
+    }
+
+    public void testApplyCompletion46() throws Exception {
+        checkApplyLayoutCompletion("completion11.xml",
+                "?android:attr/Textapp^", "?android:attr/textAppearanceLargeInverse");
     }
 
     // --- Code Completion test infrastructure ----

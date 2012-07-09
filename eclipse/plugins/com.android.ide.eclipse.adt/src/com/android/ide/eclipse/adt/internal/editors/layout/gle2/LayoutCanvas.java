@@ -649,7 +649,9 @@ public class LayoutCanvas extends Canvas {
                     getDisplay().asyncExec(new Runnable() {
                         @Override
                         public void run() {
-                            ensureZoomed();
+                            if (!isDisposed()) {
+                                ensureZoomed();
+                            }
                         }
                     });
                 }
