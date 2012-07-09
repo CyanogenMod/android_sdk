@@ -42,7 +42,7 @@ public class CheckEnvTask extends Task {
         Project antProject = getProject();
 
         // check the Ant version
-        DeweyDecimal version = getVersion(antProject);
+        DeweyDecimal version = getAntVersion(antProject);
         DeweyDecimal atLeast = new DeweyDecimal(ANT_MIN_VERSION);
         if (atLeast.isGreaterThan(version)) {
             throw new BuildException(
@@ -67,8 +67,8 @@ public class CheckEnvTask extends Task {
         }
 
         // display SDK Tools revision
-        int toolsRevison = TaskHelper.getToolsRevision(sdkDir);
-        if (toolsRevison != -1) {
+        DeweyDecimal toolsRevison = TaskHelper.getToolsRevision(sdkDir);
+        if (toolsRevison != null) {
             System.out.println("Android SDK Tools Revision " + toolsRevison);
             System.out.println("Installed at " + sdkDir.getAbsolutePath());
         }
@@ -83,7 +83,7 @@ public class CheckEnvTask extends Task {
      * @param antProject the current ant project.
      * @return the ant version.
      */
-    private DeweyDecimal getVersion(Project antProject) {
+    private DeweyDecimal getAntVersion(Project antProject) {
         char[] versionString = antProject.getProperty("ant.version").toCharArray();
         StringBuilder sb = new StringBuilder();
         boolean foundFirstDigit = false;

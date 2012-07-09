@@ -17,6 +17,7 @@
 package com.android.ant;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
@@ -25,6 +26,7 @@ import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.util.DeweyDecimal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,7 +70,8 @@ final class TaskHelper {
      * @param sdkFile the {@link File} for the root folder of the SDK
      * @return the tools revision or -1 if not found.
      */
-    static int getToolsRevision(File sdkFile) {
+    @Nullable
+    static DeweyDecimal getToolsRevision(File sdkFile) {
         Properties p = new Properties();
         try{
             // tools folder must exist, or this custom task wouldn't run!
@@ -90,7 +93,7 @@ final class TaskHelper {
 
             String value = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (value != null) {
-                return Integer.parseInt(value);
+                return new DeweyDecimal(value);
             }
         } catch (FileNotFoundException e) {
             // couldn't find the file? return -1 below.
@@ -98,7 +101,7 @@ final class TaskHelper {
             // couldn't find the file? return -1 below.
         }
 
-        return -1;
+        return null;
     }
 
     static String checkSinglePath(String attribute, Path path) {
