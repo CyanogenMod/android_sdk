@@ -23,6 +23,8 @@ class RenderServer : public osUtils::Thread
 {
 public:
     static RenderServer *create(int port);
+    virtual ~RenderServer();
+
     virtual int Main();
 
     bool isExiting() const { return m_exiting; }
