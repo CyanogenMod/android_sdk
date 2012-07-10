@@ -32,6 +32,12 @@ RenderServer::RenderServer() :
 {
 }
 
+RenderServer::~RenderServer()
+{
+    delete m_listenSock;
+}
+
+
 extern "C" int gRendererStreamMode;
 
 RenderServer *RenderServer::create(int port)
@@ -78,7 +84,8 @@ int RenderServer::Main()
             continue;
         }
 
-        DBG("\n\n\n\n Got new stream!!!! \n\n\n\n\n");
+        DBG("RenderServer: Got new stream!\n");
+
         // check if we have been requested to exit while waiting on accept
         if ((clientFlags & IOSTREAM_CLIENT_EXIT_SERVER) != 0) {
             m_exiting = true;
