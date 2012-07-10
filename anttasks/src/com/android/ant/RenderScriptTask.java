@@ -163,8 +163,13 @@ public class RenderScriptTask extends MultiFilesTask {
         mExecutable = TaskHelper.checkSinglePath("executable", executable);
     }
 
-    public void setIncludePath(Path value) {
-        mIncludePath = value;
+    public void setIncludePathRefId(String refId) {
+        Object path = getProject().getReference(refId);
+        if (path instanceof Path) {
+            mIncludePath = (Path) path;
+        } else if (path != null) {
+            throw new BuildException(refId + " is expected to reference a Path object.");
+        }
     }
 
     public void setGenFolder(Path value) {
