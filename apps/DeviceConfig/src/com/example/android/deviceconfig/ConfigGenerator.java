@@ -488,10 +488,15 @@ public class ConfigGenerator {
             ram.setAttribute(ATTR_UNIT, unit);
             ram.appendChild(doc.createTextNode(Long.toString(ramAmount)));
 
-            // Can't actually get whether we're using software buttons
             Element buttons = doc.createElement(PREFIX + NODE_BUTTONS);
             hardware.appendChild(buttons);
-            buttons.appendChild(doc.createTextNode(" "));
+            Text buttonsText;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                buttonsText = doc.createTextNode(getButtonsType());
+            } else {
+                buttonsText = doc.createTextNode("hard");
+            }
+            buttons.appendChild(buttonsText);
 
             Element internalStorage = doc.createElement(PREFIX + NODE_INTERNAL_STORAGE);
             hardware.appendChild(internalStorage);
@@ -645,6 +650,17 @@ public class ConfigGenerator {
             c.release();
         }
         return cList;
+    }
+
+    @TargetApi(14)
+    private String getButtonsType() {
+        ViewConfiguration vConfig = ViewConfiguration.get(mCtx);
+
+        if (vConfig.hasPermanentMenuKey()) {
+            return "hard";
+        } else {
+            return "soft";
+        }
     }
 
     private void error(String err, Throwable e) {
