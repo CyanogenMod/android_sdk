@@ -86,15 +86,13 @@ make_unix_path(char *path, size_t  pathlen, int port_number)
 }
 
 
-int UnixStream::listen(unsigned short port)
+int UnixStream::listen(char addrstr[MAX_ADDRSTR_LEN])
 {
-    char  path[PATH_MAX];
-
-    if (make_unix_path(path, sizeof(path), port) < 0) {
+    if (make_unix_path(addrstr, MAX_ADDRSTR_LEN, getpid()) < 0) {
         return -1;
     }
 
-    m_sock = socket_local_server(path, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
+    m_sock = socket_local_server(addrstr, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
     if (!valid()) return int(ERR_INVALID_SOCKET);
 
     return 0;
@@ -123,14 +121,9 @@ SocketStream * UnixStream::accept()
     return clientStream;
 }
 
-int UnixStream::connect(unsigned short port)
+int UnixStream::connect(const char* addr)
 {
-    char  path[PATH_MAX];
-
-    if (make_unix_path(path, sizeof(path), port) < 0)
-        return -1;
-
-    m_sock = socket_local_client(path, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
+    m_sock = socket_local_client(addr, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
     if (!valid()) return -1;
 
     return 0;

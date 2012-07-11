@@ -73,10 +73,10 @@ make_pipe_name(char *path, size_t  pathlen, int port_number)
  * Also, connect() must create a pipe handle with CreateFile() and
  * wait for a server instance with WaitNamedPipe()
  */
-int Win32PipeStream::listen(unsigned short port)
+int Win32PipeStream::listen(char addrstr[MAX_ADDRSTR_LEN])
 {
-    // just save the port number for accept()
-    m_port = port;
+    m_port = GetCurrentProcessId();
+    make_pipe_name(addrstr, MAX_ADDRSTR_LEN, m_port);
     return 0;
 }
 
@@ -120,20 +120,17 @@ SocketStream * Win32PipeStream::accept()
     return clientStream;
 }
 
-int Win32PipeStream::connect(unsigned short port)
+int Win32PipeStream::connect(const char* addr)
 {
-    char   path[NAMED_PIPE_MAX+1];
     HANDLE pipe;
     int    tries = 10;
-
-    make_pipe_name(path, sizeof(path), port);
 
     /* We're going to loop in order to wait for the pipe server to
      * be setup properly.
      */
     for (; tries > 0; tries--) {
         pipe = ::CreateFile(
-                    path,                          // pipe name
+                    addr,                          // pipe name
                     GENERIC_READ | GENERIC_WRITE,  // read & write
                     0,                             // no sharing
                     NULL,                          // default security attrs
@@ -161,7 +158,7 @@ int Win32PipeStream::connect(unsigned short port)
         }
 
         /* Wait for 5 seconds */
-        if ( !WaitNamedPipe(path, 5000) ) {
+        if ( !WaitNamedPipe(addr, 5000) ) {
             ERR("%s: WaitNamedPipe failed: %d\n", __FUNCTION__, (int)GetLastError());
             errno = EINVAL;
             return -1;

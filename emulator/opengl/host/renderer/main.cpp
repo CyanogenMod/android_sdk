@@ -34,7 +34,6 @@ static void printUsage(const char *progName)
 {
     fprintf(stderr, "Usage: %s -windowid <windowid> [options]\n", progName);
     fprintf(stderr, "    -windowid <windowid>   - window id to render into\n");
-    fprintf(stderr, "    -port <portNum>        - listening TCP port number\n");
     fprintf(stderr, "    -x <num>               - render subwindow x position\n");
     fprintf(stderr, "    -y <num>               - render subwindow y position\n");
     fprintf(stderr, "    -width <num>           - render subwindow width\n");
@@ -44,7 +43,6 @@ static void printUsage(const char *progName)
 
 int main(int argc, char *argv[])
 {
-    int portNum = CODEC_SERVER_PORT;
     int winX = 0;
     int winY = 0;
     int winWidth = 320;
@@ -58,11 +56,6 @@ int main(int argc, char *argv[])
     for (int i=1; i<argc; i++) {
         if (!strcmp(argv[i], "-windowid")) {
             if (++i >= argc || sscanf(argv[i],"%d", &iWindowId) != 1) {
-                printUsage(argv[0]);
-            }
-        }
-        else if (!strncmp(argv[i], "-port", 5)) {
-            if (++i >= argc || sscanf(argv[i],"%d", &portNum) != 1) {
                 printUsage(argv[0]);
             }
         }
@@ -136,11 +129,13 @@ int main(int argc, char *argv[])
     //
     // Create and run a render server listening to the given port number
     //
-    RenderServer *server = RenderServer::create(portNum);
+    char addr[256];
+    RenderServer *server = RenderServer::create(addr, sizeof(addr));
     if (!server) {
         fprintf(stderr,"Cannot initialize render server\n");
         return -1;
     }
+    printf("render server listening at '%s'\n", addr);
 
 #ifndef _WIN32
     //

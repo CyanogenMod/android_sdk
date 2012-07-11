@@ -22,13 +22,14 @@
 class SocketStream : public IOStream {
 public:
     typedef enum { ERR_INVALID_SOCKET = -1000 } SocketStreamError;
+    static const size_t MAX_ADDRSTR_LEN = 256;
 
     explicit SocketStream(size_t bufsize = 10000);
     virtual ~SocketStream();
 
-    virtual int listen(unsigned short port) = 0;
+    virtual int listen(char addrstr[MAX_ADDRSTR_LEN]) = 0;
     virtual SocketStream *accept() = 0;
-    virtual int connect(unsigned short port) = 0;
+    virtual int connect(const char* addr) = 0;
 
     virtual void *allocBuffer(size_t minSize);
     virtual int commitBuffer(size_t size);

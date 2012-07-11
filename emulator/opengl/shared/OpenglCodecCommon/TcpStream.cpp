@@ -28,6 +28,8 @@
 #include <ws2tcpip.h>
 #endif
 
+#define LISTEN_BACKLOG 4
+
 TcpStream::TcpStream(size_t bufSize) :
     SocketStream(bufSize)
 {
@@ -47,10 +49,22 @@ TcpStream::TcpStream(int sock, size_t bufSize) :
     setsockopt( sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag) );
 }
 
-int TcpStream::listen(unsigned short port)
+int TcpStream::listen(char addrstr[MAX_ADDRSTR_LEN])
 {
-    m_sock = socket_loopback_server(port, SOCK_STREAM);
-    if (!valid()) return int(ERR_INVALID_SOCKET);
+    m_sock = socket_loopback_server(0, SOCK_STREAM);
+    if (!valid())
+        return int(ERR_INVALID_SOCKET);
+
+    /* get the actual port number assigned by the system */
+    struct sockaddr_in addr;
+    socklen_t addrLen = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    if (getsockname(m_sock, (struct sockaddr*)&addr, &addrLen) < 0) {
+        close(m_sock);
+        return int(ERR_INVALID_SOCKET);
+    }
+    snprintf(addrstr, MAX_ADDRSTR_LEN - 1, "%hu", ntohs(addr.sin_port));
+    addrstr[MAX_ADDRSTR_LEN-1] = '\0';
 
     return 0;
 }
@@ -78,8 +92,9 @@ SocketStream * TcpStream::accept()
     return clientStream;
 }
 
-int TcpStream::connect(unsigned short port)
+int TcpStream::connect(const char* addr)
 {
+    int port = atoi(addr);
     return connect("127.0.0.1",port);
 }
 

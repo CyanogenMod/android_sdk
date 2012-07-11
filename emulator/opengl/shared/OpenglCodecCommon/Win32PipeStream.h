@@ -23,9 +23,9 @@ class Win32PipeStream : public SocketStream {
 public:
     explicit Win32PipeStream(size_t bufsize = 10000);
     virtual ~Win32PipeStream();
-    virtual int listen(unsigned short port);
+    virtual int listen(char addrstr[MAX_ADDRSTR_LEN]);
     virtual SocketStream *accept();
-    virtual int connect(unsigned short port);
+    virtual int connect(const char* addr);
 
     virtual int commitBuffer(size_t size);
     virtual const unsigned char *readFully(void *buf, size_t len);

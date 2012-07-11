@@ -59,14 +59,21 @@ DECL(int, initLibrary, (void));
 DECL(int, setStreamMode, (int mode));
 
 /* initOpenGLRenderer - initialize the OpenGL renderer process.
- *     portNum is the tcp port number the renderer is listening to.
- *     width and height are the framebuffer dimensions that will be
- *     reported to the guest display driver.
+ *
+ * width and height are the framebuffer dimensions that will be reported to the
+ * guest display driver.
+ *
+ * addr is a buffer of addrLen bytes that will receive the address that clients
+ * should connect to. The interpretation depends on the transport:
+ *   - TCP: The buffer contains the port number as a string. The server is
+ *     listening only on the loopback address.
+ *   - Win32 and UNIX named pipes: The buffer contains the full path clients
+ *     should connect to.
  *
  * This function is *NOT* thread safe and should be called first
  * to initialize the renderer after initLibrary().
  */
-DECL(int, initOpenGLRenderer, (int width, int height, int portNum));
+DECL(int, initOpenGLRenderer, (int width, int height, char* addr, size_t addrLen));
 
 /* getHardwareStrings - describe the GPU hardware and driver.
  *    The underlying GL's vendor/renderer/version strings are returned to the
