@@ -16,27 +16,44 @@
 
 package com.example.android.deviceconfig;
 
-import java.io.File;
-
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.android.deviceconfig.R;
+
+import java.io.File;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 
 public class MyActivity extends Activity implements OnClickListener {
+
+    public static final String TAG = "DeviceConfig";
+    private static GLView mGl;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.main);
+        // Instantiate a GL surface view so we can get extensions information
+        mGl = new GLView(this);
+        LinearLayout vg = (LinearLayout) findViewById(R.id.buttonHolder);
+        // If we set the layout to be 0, it just won't render
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(1, 1);
+        mGl.setLayoutParams(params);
+        vg.addView(mGl);
 
         Button btn = (Button) findViewById(R.id.generateConfigButton);
         btn.setOnClickListener(this);
@@ -114,7 +131,7 @@ public class MyActivity extends Activity implements OnClickListener {
     }
 
     public void onClick(View v) {
-        ConfigGenerator configGen = new ConfigGenerator(this);
+        ConfigGenerator configGen = new ConfigGenerator(this, mGl.getExtensions());
         final String filename = configGen.generateConfig();
         if (filename != null) {
             Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
@@ -130,4 +147,40 @@ public class MyActivity extends Activity implements OnClickListener {
         }
     }
 
+    private static class GLView extends GLSurfaceView {
+        private GlRenderer mRenderer;
+
+        public GLView(Context context) {
+            super(context);
+            setEGLContextClientVersion(2);
+            mRenderer = new GlRenderer();
+            setRenderer(mRenderer);
+            requestRender();
+        }
+
+        public String getExtensions() {
+            return mRenderer.extensions;
+        }
+
+    }
+
+    private static class GlRenderer implements GLSurfaceView.Renderer {
+        public String extensions = "";
+
+        public void onDrawFrame(GL10 gl) {
+        }
+
+        public void onSurfaceChanged(GL10 gl, int width, int height) {
+            gl.glViewport(0, 0, 0, 0);
+        }
+
+        public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+            if (extensions.equals("")) {
+                String extensions10 = gl.glGetString(GL10.GL_EXTENSIONS);
+                if(extensions10 != null) {
+                    extensions += extensions10;
+                }
+            }
+        }
+    }
 }
