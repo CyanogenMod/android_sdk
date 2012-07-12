@@ -142,9 +142,15 @@ public final class ExportHelper {
             // Make sure the PNG crunch cache is up to date
             helper.updateCrunchCache();
 
+            // get the merged manifest
+            IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
+            IFile mergedManifestFile = androidOutputFolder.getFile(
+                    SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+
             // package the resources.
             helper.packageResources(
-                    project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML),
+                    mergedManifestFile,
                     libProjects,
                     null,   // res filter
                     0,      // versionCode
@@ -199,7 +205,6 @@ public final class ExportHelper {
 
                 // get the proguard file output by aapt
                 if (proguardConfigFiles != null) {
-                    IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
                     IFile proguardFile = androidOutputFolder.getFile(AdtConstants.FN_AAPT_PROGUARD);
                     proguardConfigFiles.add(proguardFile.getLocation().toFile());
                 }
