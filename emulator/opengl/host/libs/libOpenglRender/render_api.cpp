@@ -33,7 +33,7 @@
 
 static osUtils::childProcess *s_renderProc = NULL;
 static RenderServer *s_renderThread = NULL;
-static int s_renderPort = 0;
+static char s_renderAddr[256];
 
 static IOStream *createRenderThread(int p_stream_buffer_size,
                                     unsigned int clientFlags);
@@ -76,7 +76,7 @@ int initLibrary(void)
     return true;
 }
 
-int initOpenGLRenderer(int width, int height, int portNum)
+int initOpenGLRenderer(int width, int height, char* addr, size_t addrLen)
 {
 
     //
@@ -85,8 +85,6 @@ int initOpenGLRenderer(int width, int height, int portNum)
     if (s_renderProc || s_renderThread) {
         return false;
     }
-
-    s_renderPort = portNum;
 
 #ifdef RENDER_API_USE_THREAD  // should be defined for mac
     //
@@ -98,10 +96,11 @@ int initOpenGLRenderer(int width, int height, int portNum)
         return false;
     }
 
-    s_renderThread = RenderServer::create(portNum);
+    s_renderThread = RenderServer::create(addr, addrLen);
     if (!s_renderThread) {
         return false;
     }
+    strncpy(s_renderAddr, addr, sizeof(s_renderAddr));
 
     s_renderThread->start();
 
@@ -345,7 +344,7 @@ IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
         ERR("createRenderThread failed to create stream\n");
         return NULL;
     }
-    if (stream->connect(s_renderPort) < 0) {
+    if (stream->connect(s_renderAddr) < 0) {
         ERR("createRenderThread failed to connect\n");
         delete stream;
         return NULL;

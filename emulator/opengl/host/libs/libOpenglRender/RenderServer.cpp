@@ -40,7 +40,7 @@ RenderServer::~RenderServer()
 
 extern "C" int gRendererStreamMode;
 
-RenderServer *RenderServer::create(int port)
+RenderServer *RenderServer::create(char* addr, size_t addrLen)
 {
     RenderServer *server = new RenderServer();
     if (!server) {
@@ -57,11 +57,21 @@ RenderServer *RenderServer::create(int port)
 #endif
     }
 
-    if (server->m_listenSock->listen(port) < 0) {
-        ERR("RenderServer::create failed to listen on port %d\n", port);
+    char addrstr[SocketStream::MAX_ADDRSTR_LEN];
+    if (server->m_listenSock->listen(addrstr) < 0) {
+        ERR("RenderServer::create failed to listen\n");
         delete server;
         return NULL;
     }
+
+    size_t len = strlen(addrstr) + 1;
+    if (len > addrLen) {
+        ERR("RenderServer address name too big for provided buffer: %zu > %zu\n",
+                len, addrLen);
+        delete server;
+        return NULL;
+    }
+    memcpy(addr, addrstr, len);
 
     return server;
 }

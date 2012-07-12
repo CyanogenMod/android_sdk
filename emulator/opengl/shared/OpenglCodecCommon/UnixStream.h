@@ -21,9 +21,9 @@
 class UnixStream : public SocketStream {
 public:
     explicit UnixStream(size_t bufsize = 10000);
-    virtual int listen(unsigned short port);
+    virtual int listen(char addrstr[MAX_ADDRSTR_LEN]);
     virtual SocketStream *accept();
-    virtual int connect(unsigned short port);
+    virtual int connect(const char* addr);
 private:
     UnixStream(int sock, size_t bufSize);
 };

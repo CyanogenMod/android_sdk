@@ -22,7 +22,7 @@
 class RenderServer : public osUtils::Thread
 {
 public:
-    static RenderServer *create(int port);
+    static RenderServer *create(char* addr, size_t addrLen);
     virtual ~RenderServer();
 
     virtual int Main();
