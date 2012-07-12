@@ -24,11 +24,9 @@ import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextValueDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
@@ -44,7 +42,6 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
-import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
@@ -555,7 +552,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             if (choice instanceof ElementDescriptor) {
                 keyword = ((ElementDescriptor)choice).getXmlName();
                 icon    = ((ElementDescriptor)choice).getGenericIcon();
-                tooltip = DescriptorsUtils.formatTooltip(((ElementDescriptor)choice).getTooltip());
+                // Tooltip computed lazily in {@link CompletionProposal}
             } else if (choice instanceof TextValueDescriptor) {
                 continue; // Value nodes are not part of the completion choices
             } else if (choice instanceof SeparatorAttributeDescriptor) {
@@ -563,9 +560,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             } else if (choice instanceof AttributeDescriptor) {
                 keyword = ((AttributeDescriptor)choice).getXmlLocalName();
                 icon    = ((AttributeDescriptor)choice).getGenericIcon();
-                if (choice instanceof TextAttributeDescriptor) {
-                    tooltip = ((TextAttributeDescriptor) choice).getTooltip();
-                }
+                // Tooltip computed lazily in {@link CompletionProposal}
 
                 // Get the namespace URI for the attribute. Note that some attributes
                 // do not have a namespace and thus return null here.
@@ -649,6 +644,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 // inside the quotes.
                 // Special case for attributes: insert ="" stuff and locate caret inside ""
                 proposals.add(new CompletionProposal(
+                    this,
+                    choice,
                     keyword + suffix,                   // String replacementString
                     offset - wordPrefix.length(),       // int replacementOffset
                     wordPrefix.length() + replaceLength,// int replacementLength
@@ -685,6 +682,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return true;
+    }
+
+    /** @return the editor associated with this content assist */
+    AndroidXmlEditor getEditor() {
+        return mEditor;
     }
 
     /**

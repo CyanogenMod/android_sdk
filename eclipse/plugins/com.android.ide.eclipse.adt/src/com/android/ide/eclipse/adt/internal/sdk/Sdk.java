@@ -125,7 +125,7 @@ public final class Sdk  {
      */
     private final static class TargetLoadBundle {
         LoadStatus status;
-        final HashSet<IJavaProject> projecsToReload = new HashSet<IJavaProject>();
+        final HashSet<IJavaProject> projectsToReload = new HashSet<IJavaProject>();
     }
 
     private final SdkManager mManager;
@@ -534,7 +534,7 @@ public final class Sdk  {
 
                 // add project to bundle
                 if (project != null) {
-                    bundle.projecsToReload.add(project);
+                    bundle.projectsToReload.add(project);
                 }
 
                 // and set the flag to start the loading below
@@ -542,7 +542,7 @@ public final class Sdk  {
             } else if (bundle.status == LoadStatus.LOADING) {
                 // add project to bundle
                 if (project != null) {
-                    bundle.projecsToReload.add(project);
+                    bundle.projectsToReload.add(project);
                 }
 
                 return bundle.status;
@@ -566,14 +566,14 @@ public final class Sdk  {
 
                             if (status.getCode() != IStatus.OK) {
                                 bundle.status = LoadStatus.FAILED;
-                                bundle.projecsToReload.clear();
+                                bundle.projectsToReload.clear();
                             } else {
                                 bundle.status = LoadStatus.LOADED;
 
                                 // Prepare the array of project to recompile.
                                 // The call is done outside of the synchronized block.
-                                javaProjectArray = bundle.projecsToReload.toArray(
-                                        new IJavaProject[bundle.projecsToReload.size()]);
+                                javaProjectArray = bundle.projectsToReload.toArray(
+                                        new IJavaProject[bundle.projectsToReload.size()]);
 
                                 // and update the UI of the editors that depend on the target data.
                                 plugin.updateTargetListeners(target);
