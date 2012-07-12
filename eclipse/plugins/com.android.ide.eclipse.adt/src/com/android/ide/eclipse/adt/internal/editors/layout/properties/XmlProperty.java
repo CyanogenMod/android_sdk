@@ -141,7 +141,7 @@ class XmlProperty extends Property {
                 if (formats.contains(Format.FLAG)) {
                     return adapter.cast(new FlagValueCompleter(this, info.getFlagValues()));
                 } else if (formats.contains(Format.ENUM)) {
-                    return adapter.cast(new FlagValueCompleter(this, info.getEnumValues()));
+                    return adapter.cast(new EnumValueCompleter(this, info.getEnumValues()));
                 }
             }
             // Fallback: complete values on resource values
@@ -202,7 +202,11 @@ class XmlProperty extends Property {
 
         Object viewObject = getFactory().getCurrentViewObject();
         if (viewObject != null) {
-            ViewHierarchy views = getGraphicalEditor().getCanvasControl().getViewHierarchy();
+            GraphicalEditorPart graphicalEditor = getGraphicalEditor();
+            if (graphicalEditor == null) {
+                return null;
+            }
+            ViewHierarchy views = graphicalEditor.getCanvasControl().getViewHierarchy();
             Map<String, String> defaultProperties = views.getDefaultProperties(viewObject);
             if (defaultProperties != null) {
                 return defaultProperties.get(name);

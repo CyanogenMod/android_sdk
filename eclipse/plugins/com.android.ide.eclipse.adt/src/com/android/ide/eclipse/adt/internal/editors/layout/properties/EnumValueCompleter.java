@@ -24,12 +24,12 @@ import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Text value completion for the given flag property */
-class FlagValueCompleter implements IContentProposalProvider {
+/** Text value completion for the given enum property */
+class EnumValueCompleter implements IContentProposalProvider {
     protected final XmlProperty mProperty;
     private String[] mValues;
 
-    FlagValueCompleter(XmlProperty property, String[] values) {
+    EnumValueCompleter(XmlProperty property, String[] values) {
         mProperty = property;
         mValues = values;
     }
@@ -38,40 +38,16 @@ class FlagValueCompleter implements IContentProposalProvider {
     public IContentProposal[] getProposals(String contents, int position) {
         List<IContentProposal> proposals = new ArrayList<IContentProposal>(mValues.length);
         String prefix = contents;
-        int flagStart = prefix.lastIndexOf('|');
-        String prepend = null;
-        if (flagStart != -1) {
-            prepend = prefix.substring(0, flagStart + 1);
-            prefix = prefix.substring(flagStart + 1).trim();
-        }
-
-        boolean exactMatch = false;
-        for (String value : mValues) {
-            if (prefix.equals(value)) {
-                exactMatch = true;
-                proposals.add(new ContentProposal(contents));
-
-                break;
-            }
-        }
-
-        if (exactMatch) {
-            prepend = contents + '|';
-            prefix = "";
-        }
 
         for (String value : mValues) {
             if (AdtUtils.startsWithIgnoreCase(value, prefix)) {
-                if (prepend != null && prepend.contains(value)) {
-                    continue;
-                }
-                String match;
-                if (prepend != null) {
-                    match = prepend + value;
-                } else {
-                    match = value;
-                }
-                proposals.add(new ContentProposal(match));
+                proposals.add(new ContentProposal(value));
+            }
+        }
+
+        for (String value : mValues) {
+            if (!AdtUtils.startsWithIgnoreCase(value, prefix)) {
+                proposals.add(new ContentProposal(value));
             }
         }
 
