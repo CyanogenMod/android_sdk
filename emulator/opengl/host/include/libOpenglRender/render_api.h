@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
 #include "render_api_platform_types.h"
 
 #if defined(RENDER_API_NO_PROTOTYPES)
