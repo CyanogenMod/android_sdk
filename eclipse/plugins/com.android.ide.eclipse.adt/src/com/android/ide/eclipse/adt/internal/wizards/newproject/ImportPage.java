@@ -36,8 +36,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -59,7 +63,7 @@ import java.util.List;
 
 /** WizardPage for importing Android projects */
 class ImportPage extends WizardPage implements SelectionListener, IStructuredContentProvider,
-        ICheckStateListener, ILabelProvider, IColorProvider {
+        ICheckStateListener, ILabelProvider, IColorProvider, KeyListener, TraverseListener {
     private final NewProjectWizardState mValues;
     private List<ImportedProject> mProjectPaths;
     private final IProject[] mExistingProjects;
@@ -104,7 +108,8 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
 
         mDir = new Text(container, SWT.BORDER);
         mDir.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mDir.addSelectionListener(this);
+        mDir.addKeyListener(this);
+        mDir.addTraverseListener(this);
 
         mBrowseButton = new Button(container, SWT.NONE);
         mBrowseButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
@@ -307,6 +312,32 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
 
     @Override
     public void widgetDefaultSelected(SelectionEvent e) {
+    }
+
+    // ---- KeyListener ----
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getSource() == mDir) {
+            if (e.keyCode == SWT.CR) {
+                refresh();
+            }
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+
+    // ---- TraverseListener ----
+
+    @Override
+    public void keyTraversed(TraverseEvent e) {
+        // Prevent Return from running through the wizard; return is handled by
+        // key listener to refresh project list instead
+        if (SWT.TRAVERSE_RETURN == e.detail) {
+            e.doit = false;
+        }
     }
 
     // ---- Implements IStructuredContentProvider ----
