@@ -91,6 +91,10 @@ class ImportedProject {
                         }
                     }
                 }
+                if (mActivityName != null) {
+                    int index = mActivityName.lastIndexOf('.');
+                    mActivityName = mActivityName.substring(index + 1);
+                }
             }
         }
 
