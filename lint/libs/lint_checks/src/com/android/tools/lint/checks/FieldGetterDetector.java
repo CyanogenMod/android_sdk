@@ -62,9 +62,9 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             "nothing other than return the field, you might want to just reference the " +
             "local field directly instead.\n" +
             "\n" +
-            "NOTE: As of Android 2.2 (Froyo), this optimization is performed automatically " +
-            "by Dalvik, so there is no need to change your code; this is only relevant if " +
-            "you are targeting older versions of Android.",
+            "NOTE: As of Android 2.3 (Gingerbread), this optimization is performed " +
+            "automatically by Dalvik, so there is no need to change your code; this is " +
+            "only relevant if you are targeting older versions of Android.",
 
             Category.PERFORMANCE,
             4,
@@ -94,8 +94,8 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
     @SuppressWarnings("rawtypes")
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        // As of Froyo/API 8, Dalvik performs this optimization automatically
-        if (context.getProject().getMinSdk() >= 8) {
+        // As of Gingerbread/API 9, Dalvik performs this optimization automatically
+        if (context.getProject().getMinSdk() >= 9) {
             return;
         }
 
