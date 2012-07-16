@@ -813,6 +813,7 @@ public class AdtUtils {
             case 13: return "API 13: Android 3.2 (Honeycomb)";
             case 14: return "API 14: Android 4.0 (IceCreamSandwich)";
             case 15: return "API 15: Android 4.0.3 (IceCreamSandwich)";
+            case 16: return "API 16: Android 4.1 (Jelly Bean)";
             default: {
                 // Consult SDK manager to see if we know any more (later) names,
                 // installed by user
