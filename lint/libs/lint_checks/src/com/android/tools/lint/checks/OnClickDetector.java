@@ -206,17 +206,13 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
 
                 // Make sure the method is public
                 if ((method.access & Opcodes.ACC_PUBLIC) == 0) {
-                    int lineNumber = ClassContext.findLineNumber(method);
-                    Location location = null;
-                    location = context.getLocationForLine(lineNumber, method.name, null);
+                    Location location = context.getLocation(method, classNode);
                     String message = String.format(
                             "On click handler %1$s(View) must be public",
                             method.name);
                     context.report(ISSUE, location, message, null);
                 } else if ((method.access & Opcodes.ACC_STATIC) != 0) {
-                    int lineNumber = ClassContext.findLineNumber(method);
-                    Location location = null;
-                    location = context.getLocationForLine(lineNumber, method.name, null);
+                    Location location = context.getLocation(method, classNode);
                     String message = String.format(
                             "On click handler %1$s(View) should not be static",
                             method.name);

@@ -196,7 +196,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
             }
         }
         if (wrongClass != null) {
-            Location location = context.getLocationForLine(-1, className, null);
+            Location location = context.getLocation(classNode);
             context.report(
                     ISSUE,
                     location,
@@ -205,7 +205,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
                             className, tag, classToTag(wrongClass)),
                     null);
         } else if (!tag.equals(TAG_RECEIVER)) { // don't need to be registered
-            Location location = context.getLocationForLine(-1, className, null);
+            Location location = context.getLocation(classNode);
             context.report(
                     ISSUE,
                     location,

@@ -261,7 +261,7 @@ public class Location {
      */
     @NonNull
     public static Location create(@NonNull File file, @NonNull String contents, int line) {
-        return create(file, contents, line, null, null);
+        return create(file, contents, line, null, null, null);
     }
 
     /**
@@ -277,11 +277,13 @@ public class Location {
      * @param patternEnd an optional pattern to search for behind the start
      *            pattern; if found, adjust the end offset to match the end of
      *            the pattern
+     * @param hints optional additional information regarding the pattern search
      * @return a new location
      */
     @NonNull
     public static Location create(@NonNull File file, @NonNull String contents, int line,
-            @Nullable String patternStart, @Nullable String patternEnd) {
+            @Nullable String patternStart, @Nullable String patternEnd,
+            @Nullable SearchHints hints) {
         int currentLine = 0;
         int offset = 0;
         while (currentLine < line) {
@@ -295,23 +297,45 @@ public class Location {
 
         if (line == currentLine) {
             if (patternStart != null) {
-                int index = contents.indexOf(patternStart, offset);
-                if (index == -1) {
-                    // Allow some flexibility: peek at previous couple of lines
-                    // as well (for example, bytecode line numbers are sometimes
-                    // a few lines off from their location in a source file
-                    // since they are attached to executable lines of code)
-                    int lineStart = offset;
-                    for (int i = 0; i < 4; i++) {
-                        int prevLineStart = contents.lastIndexOf('\n', lineStart - 1);
-                        if (prevLineStart == -1) {
-                            break;
-                        }
-                        index = contents.indexOf(patternStart, prevLineStart);
-                        if (index != -1 || prevLineStart == 0) {
-                            break;
-                        }
-                        lineStart = prevLineStart;
+                int index = offset;
+
+                SearchDirection direction = SearchDirection.NEAREST;
+                if (hints != null) {
+                    direction = hints.mDirection;
+                }
+
+                if (direction == SearchDirection.BACKWARD) {
+                    index = findPreviousMatch(contents, offset, patternStart, hints);
+                    line = adjustLine(contents, line, offset, index);
+                } else if (direction == SearchDirection.EOL_BACKWARD) {
+                    int lineEnd = contents.indexOf('\n', offset);
+                    if (lineEnd == -1) {
+                        lineEnd = contents.length();
+                    }
+
+                    index = findPreviousMatch(contents, lineEnd, patternStart, hints);
+                    line = adjustLine(contents, line, offset, index);
+                } else if (direction == SearchDirection.FORWARD) {
+                    index = findNextMatch(contents, offset, patternStart, hints);
+                    line = adjustLine(contents, line, offset, index);
+                } else {
+                    assert direction == SearchDirection.NEAREST;
+
+                    int before = findPreviousMatch(contents, offset, patternStart, hints);
+                    int after = findNextMatch(contents, offset, patternStart, hints);
+
+                    if (before == -1) {
+                        index = after;
+                        line = adjustLine(contents, line, offset, index);
+                    } else if (after == -1) {
+                        index = before;
+                        line = adjustLine(contents, line, offset, index);
+                    } else if (offset - before < after - offset) {
+                        index = before;
+                        line = adjustLine(contents, line, offset, index);
+                    } else {
+                        index = after;
+                        line = adjustLine(contents, line, offset, index);
                     }
                 }
 
@@ -340,6 +364,97 @@ public class Location {
         }
 
         return Location.create(file);
+    }
+
+    private static int findPreviousMatch(@NonNull String contents, int offset, String pattern,
+            @Nullable SearchHints hints) {
+        while (true) {
+            int index = contents.lastIndexOf(pattern, offset);
+            if (index == -1) {
+                return -1;
+            } else {
+                if (isMatch(contents, index, pattern, hints)) {
+                    return index;
+                } else {
+                    offset = index - pattern.length();
+                }
+            }
+        }
+    }
+
+    private static int findNextMatch(@NonNull String contents, int offset, String pattern,
+            @Nullable SearchHints hints) {
+        while (true) {
+            int index = contents.indexOf(pattern, offset);
+            if (index == -1) {
+                return -1;
+            } else {
+                if (isMatch(contents, index, pattern, hints)) {
+                    return index;
+                } else {
+                    offset = index + pattern.length();
+                }
+            }
+        }
+    }
+
+    private static boolean isMatch(@NonNull String contents, int offset, String pattern,
+            @Nullable SearchHints hints) {
+        if (!contents.startsWith(pattern, offset)) {
+            return false;
+        }
+
+        if (hints != null) {
+            char prevChar = offset > 0 ? contents.charAt(offset - 1) : 0;
+            int lastIndex = offset + pattern.length() - 1;
+            char nextChar = lastIndex < contents.length() - 1 ? contents.charAt(lastIndex + 1) : 0;
+
+            if (hints.isWholeWord() && (Character.isLetter(prevChar)
+                    || Character.isLetter(nextChar))) {
+                return false;
+
+            }
+
+            if (hints.isJavaSymbol()) {
+                if (Character.isJavaIdentifierPart(prevChar)
+                        || Character.isJavaIdentifierPart(nextChar)) {
+                    return false;
+                }
+
+                if (prevChar == '"') {
+                    return false;
+                }
+
+                // TODO: Additional validation to see if we're in a comment, string, etc.
+                // This will require lexing from the beginning of the buffer.
+            }
+        }
+
+        return true;
+    }
+
+    private static int adjustLine(String doc, int line, int offset, int newOffset) {
+        if (newOffset == -1) {
+            return line;
+        }
+
+        if (newOffset < offset) {
+            return line - countLines(doc, newOffset, offset);
+        } else {
+            return line + countLines(doc, offset, newOffset);
+        }
+    }
+
+    private static int countLines(String doc, int start, int end) {
+        int lines = 0;
+        for (int offset = start; offset < end; offset++) {
+            char c = doc.charAt(offset);
+            if (c == '\n') {
+                lines++;
+            }
+        }
+
+        return lines;
     }
 
     /**
@@ -433,6 +548,103 @@ public class Location {
         @Nullable
         public Object getClientData() {
             return mClientData;
+        }
+    }
+
+    /**
+     * Whether to look forwards, or backwards, or in both directions, when
+     * searching for a pattern in the source code to determine the right
+     * position range for a given symbol.
+     * <p>
+     * When dealing with bytecode for example, there are only line number entries
+     * within method bodies, so when searching for the method declaration, we should only
+     * search backwards from the first line entry in the method.
+     */
+    public enum SearchDirection {
+        /** Only search forwards */
+        FORWARD,
+
+        /** Only search backwards */
+        BACKWARD,
+
+        /** Search backwards from the current end of line (normally it's the beginning of
+         * the current line) */
+        EOL_BACKWARD,
+
+        /**
+         * Search both forwards and backwards from the given line, and prefer
+         * the match that is closest
+         */
+        NEAREST,
+    }
+
+    /**
+     * Extra information pertaining to finding a symbol in a source buffer,
+     * used by {@link Location#create(File, String, int, String, String, SearchHints)}
+     */
+    public static class SearchHints {
+        /**
+         * the direction to search for the nearest match in (provided
+         * {@code patternStart} is non null)
+         */
+        @NonNull
+        private SearchDirection mDirection;
+
+        /** Whether the matched pattern should be a whole word */
+        public boolean mWholeWord;
+
+        /**
+         * Whether the matched pattern should be a Java symbol (so for example,
+         * a match inside a comment or string literal should not be used)
+         */
+        public boolean mJavaSymbol;
+
+        private SearchHints(SearchDirection direction) {
+            super();
+            mDirection = direction;
+        }
+
+        /**
+         * Constructs a new {@link SearchHints} object
+         *
+         * @param direction the direction to search in for the pattern
+         * @return a new @link SearchHints} object
+         */
+        public static SearchHints create(SearchDirection direction) {
+            return new SearchHints(direction);
+        }
+
+        /**
+         * Indicates that pattern matches should apply to whole words only
+
+         * @return this, for constructor chaining
+         */
+        public SearchHints matchWholeWord() {
+            mWholeWord = true;
+
+            return this;
+        }
+
+        /** @return true if the pattern match should be for whole words only */
+        public boolean isWholeWord() {
+            return mWholeWord;
+        }
+
+        /**
+         * Indicates that pattern matches should apply to Java symbols only
+         *
+         * @return this, for constructor chaining
+         */
+        public SearchHints matchJavaSymbol() {
+            mJavaSymbol = true;
+            mWholeWord = true;
+
+            return this;
+        }
+
+        /** @return true if the pattern match should be for Java symbols only */
+        public boolean isJavaSymbol() {
+            return mJavaSymbol;
         }
     }
 }

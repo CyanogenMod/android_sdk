@@ -1,6 +1,7 @@
 package test.pkg;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 
 /** Test data for the OnClickDetector */
@@ -41,4 +42,7 @@ public class OnClickActivity extends Activity {
     public void simple_tyop(View view) {
     }
 
+    void wrong7(View view) {
+        Log.i("x", "wrong7: called");
+    }
 }

@@ -85,8 +85,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi1() throws Exception {
         assertEquals(
+            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:20: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError\n" +
             "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
             "ApiCallTest.java:27: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener\n" +
@@ -95,8 +95,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo\n" +
             "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo\n" +
             "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:46: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout\n" +
-            "ApiCallTest.java:50: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport",
+            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout\n" +
+            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -108,8 +108,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi2() throws Exception {
         assertEquals(
+            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 2): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:20: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMError\n" +
             "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMErrorHandler\n" +
             "ApiCallTest.java:27: Error: Call requires API level 3 (current min is 2): android.widget.Chronometer#getOnChronometerTickListener\n" +
@@ -118,8 +118,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport.BatteryInfo\n" +
             "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo\n" +
             "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:46: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout\n" +
-            "ApiCallTest.java:50: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport",
+            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout\n" +
+            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -131,8 +131,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi4() throws Exception {
         assertEquals(
+            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 4): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:20: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMLocator\n" +
             "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMError\n" +
             "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler\n" +
             "ApiCallTest.java:30: Error: Call requires API level 11 (current min is 4): android.widget.Chronometer#setTextIsSelectable\n" +
@@ -140,8 +140,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport.BatteryInfo\n" +
             "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo\n" +
             "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:46: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout\n" +
-            "ApiCallTest.java:50: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport",
+            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout\n" +
+            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -159,8 +159,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport.BatteryInfo\n" +
             "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo\n" +
             "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:46: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout\n" +
-            "ApiCallTest.java:50: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport",
+            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout\n" +
+            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -220,8 +220,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // These errors are correctly -not- suppressed because they
             // appear in method3 (line 74-98) which is annotated with a
             // @SuppressLint annotation specifying only an unrelated issue id
+            "SuppressTest1.java:74: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
             "SuppressTest1.java:76: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar\n" +
-            "SuppressTest1.java:76: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
             "SuppressTest1.java:79: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError\n" +
             "SuppressTest1.java:80: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
             "SuppressTest1.java:83: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener\n" +

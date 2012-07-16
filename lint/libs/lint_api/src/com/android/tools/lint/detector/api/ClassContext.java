@@ -19,10 +19,13 @@ package com.android.tools.lint.detector.api;
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.EOL_BACKWARD;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.Type;
@@ -220,16 +223,19 @@ public class ClassContext extends Context {
      *            range start
      * @param patternEnd optional pattern to search for in the source for range
      *            end
+     * @param hints additional hints about the pattern search (provided
+     *            {@code patternStart} is non null)
      * @return a location, never null
      */
     @NonNull
-    public Location getLocationForLine(int line, String patternStart, String patternEnd) {
+    public Location getLocationForLine(int line, @Nullable String patternStart,
+            @Nullable String patternEnd, @Nullable SearchHints hints) {
         File sourceFile = getSourceFile();
         if (sourceFile != null) {
             // ASM line numbers are 1-based, and lint line numbers are 0-based
             if (line != -1) {
                 return Location.create(sourceFile, getSourceContents(), line - 1,
-                        patternStart, patternEnd);
+                        patternStart, patternEnd, hints);
             } else {
                 return Location.create(sourceFile);
             }
@@ -419,12 +425,21 @@ public class ClassContext extends Context {
         // around it for a suitable tag, such as the class name.
         String pattern;
         if (isAnonymousClass(classNode.name)) {
-            pattern = classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1);
+            pattern = classNode.superName;
         } else {
-            pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1);
+            pattern = classNode.name;
+        }
+        int index = pattern.lastIndexOf('$');
+        if (index != -1) {
+            pattern = pattern.substring(index + 1);
+        }
+        index = pattern.lastIndexOf('/');
+        if (index != -1) {
+            pattern = pattern.substring(index + 1);
         }
 
-        return getLocationForLine(findLineNumber(classNode), pattern, null);
+        return getLocationForLine(findLineNumber(classNode), pattern, null,
+                SearchHints.create(BACKWARD).matchJavaSymbol());
     }
 
     @Nullable
@@ -475,7 +490,8 @@ public class ClassContext extends Context {
             pattern = methodNode.name;
         }
 
-        return getLocationForLine(findLineNumber(methodNode), pattern, null);
+        return getLocationForLine(findLineNumber(methodNode), pattern, null,
+                SearchHints.create(EOL_BACKWARD).matchJavaSymbol());
     }
 
     private static boolean isAnonymousClass(@NonNull String fqcn) {

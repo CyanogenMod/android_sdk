@@ -30,8 +30,8 @@ public class FragmentDetectorTest extends AbstractCheckTest {
             "FragmentTest.java:10: Warning: This fragment class should be public (test.pkg.FragmentTest.Fragment1)\n" +
             "FragmentTest.java:15: Warning: This fragment inner class should be static (test.pkg.FragmentTest.Fragment2)\n" +
             "FragmentTest.java:21: Warning: The default constructor must be public\n" +
+            "FragmentTest.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment4)\n" +
             "FragmentTest.java:27: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead\n" +
-            "FragmentTest.java:27: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment4)\n" +
             "FragmentTest.java:36: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead",
 
             lintProject(
