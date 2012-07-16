@@ -35,7 +35,19 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
-                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.class.data=>bin/classes/test/bytecode/GetterTest.class"
+                ));
+    }
+
+    public void testPostFroyo() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "apicheck/minsdk10.xml=>AndroidManifest.xml",
                 "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
                 "bytecode/GetterTest.class.data=>bin/classes/test/bytecode/GetterTest.class"
                 ));
@@ -50,7 +62,7 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
 
             lintProject(
                 "bytecode/classpath-lib=>.classpath",
-                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
                 "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
                 "bytecode/GetterTest.jar.data=>libs/library.jar"
                 ));
@@ -66,7 +78,7 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
 
             lintProject(
                 "bytecode/classpath-jar=>.classpath",
-                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
                 "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
                 "bytecode/GetterTest.jar.data=>bin/classes.jar"
                 ));
