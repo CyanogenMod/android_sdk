@@ -182,7 +182,14 @@ public class PropertyFactory {
                 if (formats.contains(Format.BOOLEAN)) {
                     editor = BooleanXmlPropertyEditor.INSTANCE;
                 } else if (formats.contains(Format.ENUM)) {
-                    editor = EnumXmlPropertyEditor.INSTANCE;
+                    // We deliberately don't use EnumXmlPropertyEditor.INSTANCE here,
+                    // since some attributes (such as layout_width) can have not just one
+                    // of the enum values but custom values such as "42dp" as well. And
+                    // furthermore, we don't even bother limiting this to formats.size()==1,
+                    // since the editing experience with the enum property editor is
+                    // more limited than the text editor plus enum completer anyway
+                    // (for example, you can't type to filter the values, and clearing
+                    // the value is harder.)
                 }
             }
 
