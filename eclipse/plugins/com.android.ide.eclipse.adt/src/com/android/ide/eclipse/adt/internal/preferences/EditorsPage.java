@@ -67,7 +67,7 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
 
         final MyBooleanFieldEditor editor = new MyBooleanFieldEditor(
                 AdtPrefs.PREFS_USE_CUSTOM_XML_FORMATTER,
-                "Format XML files using the standard Android XML style rather than the\n" +
+                "Format XML files using the standard Android XML style rather than the \n" +
                 "configured Eclipse XML style (additional options below)",
                 parent);
         addField(editor);
@@ -89,7 +89,7 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
 
         mIndentEditor = new BooleanFieldEditor(AdtPrefs.PREFS_USE_ECLIPSE_INDENT,
                 "Use Eclipse setting for indentation width and space or tab character "
-                + "indentation\n(Android default is 4 space characters)",
+                + "indentation \n(Android default is 4 space characters)",
                 parent);
         addField(mIndentEditor);
 
