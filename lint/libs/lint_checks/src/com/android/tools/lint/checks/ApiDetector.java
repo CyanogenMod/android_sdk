@@ -17,8 +17,10 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
+import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.NEAREST;
@@ -202,6 +204,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 }
             }
         } else if (folderType == ResourceFolderType.LAYOUT) {
+            if (VIEW_TAG.equals(tag)) {
+                tag = element.getAttribute(ATTR_CLASS);
+                if (tag == null || tag.isEmpty()) {
+                    return;
+                }
+            }
+
             // Check widgets to make sure they're available in this version of the SDK.
             if (tag.indexOf('.') != -1 ||
                     folderType != ResourceFolderType.LAYOUT) {

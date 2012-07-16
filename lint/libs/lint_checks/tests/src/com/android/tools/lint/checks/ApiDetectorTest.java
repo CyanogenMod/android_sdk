@@ -213,6 +213,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testViewClassLayoutReference() throws Exception {
+        assertEquals(
+            "view.xml:16: Error: View requires API level 11 (current min is 1): <CalendarView>\n" +
+            "view.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge>",
+
+            lintProject(
+                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                    "apicheck/view.xml=>res/layout/view.xml"
+                ));
+    }
+
     // Test suppressing errors -- on classes, methods etc.
 
     public void testSuppress() throws Exception {
