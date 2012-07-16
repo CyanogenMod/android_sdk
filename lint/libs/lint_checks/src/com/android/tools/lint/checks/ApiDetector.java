@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_THEME_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
@@ -143,22 +144,30 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
         String value = attribute.getValue();
 
+        String prefix = null;
         if (value.startsWith(ANDROID_RESOURCE_PREFIX)) {
-            // Convert @android:type/foo into android/R$type and "foo"
-            int index = value.indexOf('/', ANDROID_RESOURCE_PREFIX.length());
-            if (index != -1) {
-                String owner = "android/R$"    //$NON-NLS-1$
-                        + value.substring(ANDROID_RESOURCE_PREFIX.length(), index);
-                String name = value.substring(index + 1);
-                int api = mApiDatabase.getFieldVersion(owner, name);
-                int minSdk = getMinSdk(context);
-                if (api > minSdk && api > context.getFolderVersion()) {
-                    Location location = context.getLocation(attribute);
-                    String message = String.format(
-                            "%1$s requires API level %2$d (current min is %3$d)",
-                            value, api, minSdk);
-                    context.report(UNSUPPORTED, attribute, location, message, null);
-                }
+            prefix = ANDROID_RESOURCE_PREFIX;
+        } else if (value.startsWith(ANDROID_THEME_PREFIX)) {
+            prefix = ANDROID_THEME_PREFIX;
+        } else {
+            return;
+        }
+        assert prefix != null;
+
+        // Convert @android:type/foo into android/R$type and "foo"
+        int index = value.indexOf('/', prefix.length());
+        if (index != -1) {
+            String owner = "android/R$"    //$NON-NLS-1$
+                    + value.substring(prefix.length(), index);
+            String name = value.substring(index + 1);
+            int api = mApiDatabase.getFieldVersion(owner, name);
+            int minSdk = getMinSdk(context);
+            if (api > minSdk && api > context.getFolderVersion()) {
+                Location location = context.getLocation(attribute);
+                String message = String.format(
+                        "%1$s requires API level %2$d (current min is %3$d)",
+                        value, api, minSdk);
+                context.report(UNSUPPORTED, attribute, location, message, null);
             }
         }
     }
