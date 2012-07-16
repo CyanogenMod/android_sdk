@@ -1137,6 +1137,9 @@ public class LintDriver {
         for (File classPathEntry : classPath) {
             if (classPathEntry.getName().endsWith(DOT_JAR)) {
                 File jarFile = classPathEntry;
+                if (!jarFile.exists()) {
+                    continue;
+                }
                 ZipInputStream zis = null;
                 try {
                     FileInputStream fis = new FileInputStream(jarFile);
