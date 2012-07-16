@@ -2,7 +2,6 @@ package ${packageName};
 
 import ${packageName}.dummy.DummyContent;
 
-import android.R;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -35,8 +34,8 @@ public class ${CollectionName}Fragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setListAdapter(new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                R.layout.simple_list_item_activated_1,
-                R.id.text1,
+                android.R.layout.simple_list_item_activated_1,
+                android.R.id.text1,
                 DummyContent.ITEMS));
     }
 
