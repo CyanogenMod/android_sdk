@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.IDevice;
 
+import java.util.Collection;
+
 /**
  * An action to perform after performing a launch of an Android application
  */
@@ -27,11 +29,11 @@ public interface IAndroidLaunchAction {
      * Do the launch
      *
      * @param info the {@link DelayedLaunchInfo} that contains launch details
-     * @param device the Android device to perform action on
+     * @param devices Android devices on which the action will be performed
      * @returns true if launch was successfully, and controller should wait for debugger to attach
      *     (if applicable)
      */
-    boolean doLaunchAction(DelayedLaunchInfo info, IDevice device);
+    boolean doLaunchAction(DelayedLaunchInfo info, Collection<IDevice> devices);
 
     /**
      * Return a description of launch, to be used for logging and error messages

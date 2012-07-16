@@ -18,10 +18,10 @@ package com.android.ddmlib.testrunner;
 
 import com.android.ddmlib.testrunner.ITestRunListener.TestFailure;
 
+import junit.framework.TestCase;
+
 import org.easymock.Capture;
 import org.easymock.EasyMock;
-
-import junit.framework.TestCase;
 
 import java.util.Collections;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class InstrumentationResultParserTest extends TestCase {
     private static final String CLASS_NAME = "com.test.FooTest";
     private static final String TEST_NAME = "testFoo";
     private static final String STACK_TRACE = "java.lang.AssertionFailedException";
-    private static final TestIdentifier TEST_ID = new TestIdentifier(CLASS_NAME, TEST_NAME);
+    private static final TestIdentifier TEST_ID = new TestIdentifier(CLASS_NAME, TEST_NAME, null);
 
     /**
      * @param name - test name

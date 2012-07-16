@@ -23,6 +23,7 @@ import com.android.ddmlib.TimeoutException;
 import com.android.ide.eclipse.adt.AdtPlugin;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Launches the given activity
@@ -43,15 +44,6 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
         mLaunchController = controller;
     }
 
-    /**
-     * Launches the activity on targeted device
-     *
-     * @param info the {@link DelayedLaunchInfo} that contains launch details
-     * @param device the Android device to perform action on
-     *
-     * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
-     */
-    @Override
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         String command = "am start" //$NON-NLS-1$
             + (info.isDebugMode() ? " -D" //$NON-NLS-1$
@@ -103,6 +95,24 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
     }
 
     /**
+     * Launches the activity on targeted device
+     *
+     * @param info the {@link DelayedLaunchInfo} that contains launch details
+     * @param devices list of Android devices on which the activity will be launched
+     */
+    @Override
+    public boolean doLaunchAction(DelayedLaunchInfo info, Collection<IDevice> devices) {
+        boolean result = true;
+        for (IDevice d : devices) {
+            // Note that this expression should not short circuit - even if an action fails
+            // on a device, it should still be performed on all other devices.
+            result = doLaunchAction(info, d) && result;
+        }
+
+        return result;
+    }
+
+    /**
      * Returns a description of the activity being launched
      *
      * @see IAndroidLaunchAction#getLaunchDescription()
@@ -111,5 +121,4 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
     public String getLaunchDescription() {
        return String.format("%1$s activity launch", mActivity);
     }
-
 }

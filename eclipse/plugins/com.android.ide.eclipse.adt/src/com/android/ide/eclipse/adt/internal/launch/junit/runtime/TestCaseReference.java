@@ -19,9 +19,6 @@ package com.android.ide.eclipse.adt.internal.launch.junit.runtime;
 import com.android.ddmlib.testrunner.TestIdentifier;
 
 import org.eclipse.jdt.internal.junit.runner.IVisitsTestTrees;
-import org.eclipse.jdt.internal.junit.runner.MessageIds;
-
-import java.text.MessageFormat;
 
 /**
  * Reference for a single Android test method.
@@ -31,13 +28,15 @@ class TestCaseReference extends AndroidTestReference {
 
     private final String mClassName;
     private final String mTestName;
+    private final String mDeviceName;
 
     /**
      * Creates a TestCaseReference from a class and method name
      */
-    TestCaseReference(String className, String testName) {
+    TestCaseReference(String className, String testName, String deviceName) {
         mClassName = className;
         mTestName = testName;
+        mDeviceName = deviceName == null ? "?" : deviceName;        //$NON-NLS-1$
     }
 
     /**
@@ -45,8 +44,7 @@ class TestCaseReference extends AndroidTestReference {
      * @param test
      */
     TestCaseReference(TestIdentifier test) {
-        mClassName = test.getClassName();
-        mTestName = test.getTestName();
+        this(test.getClassName(), test.getTestName(), test.getDeviceName());
     }
 
     /**
@@ -72,7 +70,6 @@ class TestCaseReference extends AndroidTestReference {
      */
     @Override
     public String getName() {
-        return MessageFormat.format(MessageIds.TEST_IDENTIFIER_MESSAGE_FORMAT,
-                new Object[] { mTestName, mClassName});
+        return String.format("%s (%s) [%s]", mTestName, mClassName, mDeviceName);
     }
 }

@@ -18,12 +18,21 @@ package com.android.ide.eclipse.adt.internal.launch;
 import com.android.ddmlib.IDevice;
 import com.android.ide.eclipse.adt.AdtPlugin;
 
+import java.util.Collection;
+
 /**
  * A launch action that does nothing after the application has been installed
  */
 public class EmptyLaunchAction implements IAndroidLaunchAction {
-
     @Override
+    public boolean doLaunchAction(DelayedLaunchInfo info, Collection<IDevice> devices) {
+        for (IDevice d : devices) {
+            doLaunchAction(info, d);
+        }
+
+        return false;
+    }
+
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         // we're not supposed to do anything, just return;
         String msg = String.format("%1$s installed on device",

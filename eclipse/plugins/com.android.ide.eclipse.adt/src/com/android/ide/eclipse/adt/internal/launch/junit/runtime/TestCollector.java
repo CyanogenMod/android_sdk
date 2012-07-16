@@ -91,12 +91,32 @@ class TestCollector implements ITestRunListener {
      */
     @Override
     public void testStarted(TestIdentifier test) {
-        TestSuiteReference suiteRef = mTestTree.get(test.getClassName());
-        if (suiteRef == null) {
-            // this test suite has not been seen before, create it
-            suiteRef = new TestSuiteReference(test.getClassName());
-            mTestTree.put(test.getClassName(), suiteRef);
+        TestSuiteReference suiteRef;
+        TestSuiteReference deviceSuiteRef;
+
+        String deviceName = test.getDeviceName();
+        if (deviceName != null) {
+            // if the device name is available, nest the test under a per device test suite
+            deviceSuiteRef = mTestTree.get(deviceName);
+            if (deviceSuiteRef == null) {
+                deviceSuiteRef = new TestSuiteReference(deviceName);
+                mTestTree.put(deviceName, deviceSuiteRef);
+            }
+
+            suiteRef = deviceSuiteRef.getTestSuite(test.getClassName());
+            if (suiteRef == null) {
+                suiteRef = new TestSuiteReference(test.getClassName());
+                deviceSuiteRef.addTest(suiteRef);
+            }
+        } else {
+            suiteRef = mTestTree.get(test.getClassName());
+            if (suiteRef == null) {
+                // this test suite has not been seen before, create it
+                suiteRef = new TestSuiteReference(test.getClassName());
+                mTestTree.put(test.getClassName(), suiteRef);
+            }
         }
+
         suiteRef.addTest(new TestCaseReference(test));
     }
 
