@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -23,6 +25,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -113,7 +116,8 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
                                         "value conversion", name);
                             }
                             int lineNumber = ClassContext.findLineNumber(instruction);
-                            Location location = context.getLocationForLine(lineNumber, name, null);
+                            Location location = context.getLocationForLine(lineNumber, name, null,
+                                    SearchHints.create(FORWARD).matchJavaSymbol());
                             context.report(ISSUE, method, location, message, null /*data*/);
                         }
                     }

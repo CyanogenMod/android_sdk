@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -23,6 +25,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -147,7 +150,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                             if (source != null) {
                                 // ASM line numbers are 1-based, Lint needs 0-based
                                 location = Location.create(source, contents, line - 1, name,
-                                        null);
+                                        null, SearchHints.create(FORWARD).matchJavaSymbol());
                             } else {
                                 location = Location.create(context.file);
                             }

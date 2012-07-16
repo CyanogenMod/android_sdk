@@ -19,6 +19,9 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.NEAREST;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -29,6 +32,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -275,7 +279,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                 "Class requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
                             report(context, message, var.start, method,
-                                    className.substring(className.lastIndexOf('/') + 1), null);
+                                    className.substring(className.lastIndexOf('/') + 1), null,
+                                    SearchHints.create(NEAREST).matchJavaSymbol());
                         }
 
                     }
@@ -298,7 +303,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             "Class requires API level %1$d (current min is %2$d): %3$s",
                             api, minSdk, fqcn);
                         AbstractInsnNode first = nodes.size() > 0 ? nodes.get(0) : null;
-                        report(context, message, first, method, method.name, null);
+                        report(context, message, first, method, method.name, null,
+                                SearchHints.create(BACKWARD).matchJavaSymbol());
                     }
                 }
             }
@@ -326,7 +332,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             String message = String.format(
                                     "Call requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
-                            report(context, message, node, method, name, null);
+                            report(context, message, node, method, name, null,
+                                    SearchHints.create(FORWARD).matchJavaSymbol());
                         }
 
                         // For virtual dispatch, walk up the inheritance chain checking
@@ -350,7 +357,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         String message = String.format(
                                 "Field requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
-                        report(context, message, node, method, name, null);
+                        report(context, message, node, method, name, null,
+                                SearchHints.create(FORWARD).matchJavaSymbol());
                     }
                 } else if (type == AbstractInsnNode.LDC_INSN) {
                     LdcInsnNode node = (LdcInsnNode) instruction;
@@ -365,7 +373,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                     "Class requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
                             report(context, message, node, method,
-                                    className.substring(className.lastIndexOf('/') + 1), null);
+                                    className.substring(className.lastIndexOf('/') + 1), null,
+                                    SearchHints.create(FORWARD).matchJavaSymbol());
                         }
                     }
                 }
@@ -459,7 +468,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     private void report(final ClassContext context, String message, AbstractInsnNode node,
-            MethodNode method, String patternStart, String patternEnd) {
+            MethodNode method, String patternStart, String patternEnd, SearchHints hints) {
         int lineNumber = node != null ? ClassContext.findLineNumber(node) : -1;
 
         // If looking for a constructor, the string we'll see in the source is not the
@@ -470,7 +479,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             patternStart = owner.substring(owner.lastIndexOf('/') + 1);
         }
 
-        Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd);
+        Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd, hints);
         context.report(UNSUPPORTED, method, location, message, null);
     }
 }

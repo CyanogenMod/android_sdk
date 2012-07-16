@@ -29,6 +29,7 @@ public class OnClickDetectorTest extends AbstractCheckTest {
         assertEquals(
             "OnClickActivity.java:27: Error: On click handler wrong5(View) must be public\n" +
             "OnClickActivity.java:31: Error: On click handler wrong6(View) should not be static\n" +
+            "OnClickActivity.java:45: Error: On click handler wrong7(View) must be public\n" +
             "onclick.xml:10: Error: Corresponding method handler 'public void nonexistent(android.view.View)' not found\n" +
             "onclick.xml:16: Error: Corresponding method handler 'public void wrong1(android.view.View)' not found\n" +
             "onclick.xml:22: Error: Corresponding method handler 'public void wrong2(android.view.View)' not found\n" +

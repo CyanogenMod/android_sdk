@@ -27,10 +27,10 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
 
     public void testRegistered() throws Exception {
         assertEquals(
-            "OnClickActivity.java: Warning: The <activity> test.pkg.OnClickActivity is not registered in the manifest\n" +
-            "TestProvider.java: Warning: The <provider> test.pkg.TestProvider is not registered in the manifest\n" +
-            "TestProvider2.java: Warning: The <provider> test.pkg.TestProvider2 is not registered in the manifest\n" +
-            "TestService.java: Warning: The <service> test.pkg.TestService is not registered in the manifest",
+            "OnClickActivity.java:8: Warning: The <activity> test.pkg.OnClickActivity is not registered in the manifest\n" +
+            "TestProvider.java:8: Warning: The <provider> test.pkg.TestProvider is not registered in the manifest\n" +
+            "TestProvider2.java:3: Warning: The <provider> test.pkg.TestProvider2 is not registered in the manifest\n" +
+            "TestService.java:7: Warning: The <service> test.pkg.TestService is not registered in the manifest",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -61,11 +61,11 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
 
     public void testWrongRegistrations() throws Exception {
         assertEquals(
-            "OnClickActivity.java: Warning: test.pkg.OnClickActivity is a <activity> but is registered in the manifest as a <receiver>\n" +
-            "TestProvider.java: Warning: test.pkg.TestProvider is a <provider> but is registered in the manifest as a <activity>\n" +
-            "TestProvider2.java: Warning: test.pkg.TestProvider2 is a <provider> but is registered in the manifest as a <service>\n" +
-            "TestReceiver.java: Warning: test.pkg.TestReceiver is a <receiver> but is registered in the manifest as a <service>\n" +
-            "TestService.java: Warning: test.pkg.TestService is a <service> but is registered in the manifest as a <provider>",
+            "OnClickActivity.java:8: Warning: test.pkg.OnClickActivity is a <activity> but is registered in the manifest as a <receiver>\n" +
+            "TestProvider.java:8: Warning: test.pkg.TestProvider is a <provider> but is registered in the manifest as a <activity>\n" +
+            "TestProvider2.java:3: Warning: test.pkg.TestProvider2 is a <provider> but is registered in the manifest as a <service>\n" +
+            "TestReceiver.java:7: Warning: test.pkg.TestReceiver is a <receiver> but is registered in the manifest as a <service>\n" +
+            "TestService.java:7: Warning: test.pkg.TestService is a <service> but is registered in the manifest as a <provider>",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
