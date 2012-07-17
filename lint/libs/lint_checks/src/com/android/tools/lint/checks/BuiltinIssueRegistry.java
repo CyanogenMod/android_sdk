@@ -54,7 +54,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 100;
+        final int initialCapacity = 101;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -157,6 +157,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SharedPrefsDetector.ISSUE);
         issues.add(NonInternationalizedSmsDetector.ISSUE);
         issues.add(PrivateKeyDetector.ISSUE);
+        issues.add(AnnotationDetector.ISSUE);
 
         assert initialCapacity >= issues.size() : issues.size();
 

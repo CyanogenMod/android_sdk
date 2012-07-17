@@ -26,6 +26,7 @@ import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.tools.lint.checks.AnnotationDetector;
 import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
@@ -174,10 +175,14 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         } else {
             Expression existingValue = existing.getValue();
             if (existingValue instanceof StringLiteral) {
+                StringLiteral stringLiteral = (StringLiteral) existingValue;
+                if (mId.equals(stringLiteral.getLiteralValue())) {
+                    // Already contains the id
+                    return null;
+                }
                 // Create a new array initializer holding the old string plus the new id
                 ArrayInitializer array = ast.newArrayInitializer();
                 StringLiteral old = ast.newStringLiteral();
-                StringLiteral stringLiteral = (StringLiteral) existingValue;
                 old.setLiteralValue(stringLiteral.getLiteralValue());
                 array.expressions().add(old);
                 StringLiteral value = ast.newStringLiteral();
@@ -187,6 +192,17 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
             } else if (existingValue instanceof ArrayInitializer) {
                 // Existing array: just append the new string
                 ArrayInitializer array = (ArrayInitializer) existingValue;
+                List expressions = array.expressions();
+                if (expressions != null) {
+                    for (Object o : expressions) {
+                        if (o instanceof StringLiteral) {
+                            if (mId.equals(((StringLiteral)o).getLiteralValue())) {
+                                // Already contains the id
+                                return null;
+                            }
+                        }
+                    }
+                }
                 StringLiteral value = ast.newStringLiteral();
                 value.setLiteralValue(mId);
                 ListRewrite listRewrite = rewriter.getListRewrite(array, EXPRESSIONS_PROPERTY);
@@ -282,6 +298,7 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         if (document == null) {
             return;
         }
+
         IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
         ICompilationUnit compilationUnit = manager.getWorkingCopy(editorInput);
         int offset = 0;
@@ -310,6 +327,11 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
 
         Issue issue = EclipseLintClient.getRegistry().getIssue(id);
         boolean isClassDetector = issue != null && issue.getScope().contains(Scope.CLASS_FILE);
+
+        // Don't offer to suppress (with an annotation) the annotation checks
+        if (issue == AnnotationDetector.ISSUE) {
+            return;
+        }
 
         NodeFinder nodeFinder = new NodeFinder(root, offset, length);
         ASTNode coveringNode;
