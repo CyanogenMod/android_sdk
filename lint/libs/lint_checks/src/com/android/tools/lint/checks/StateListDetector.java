@@ -23,6 +23,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -34,7 +35,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Checks for unreachable states in an Android state list definition
@@ -52,6 +57,8 @@ public class StateListDetector extends ResourceXmlDetector {
             Severity.WARNING,
             StateListDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
+
+    private static final String STATE_PREFIX = "state_"; //$NON-NLS-1$
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {
@@ -77,18 +84,23 @@ public class StateListDetector extends ResourceXmlDetector {
         Element root = document.getDocumentElement();
         if (root != null && root.getTagName().equals("selector")) { //$NON-NLS-1$
             List<Element> children = LintUtils.getChildren(root);
-            for (int i = 0; i < children.size() - 1; i++) {
+            Map<Element, Set<String>> states =
+                    new HashMap<Element, Set<String>>(children.size());
+
+            for (int i = 0; i < children.size(); i++) {
                 Element child = children.get(i);
-                boolean hasState = false;
                 NamedNodeMap attributes = child.getAttributes();
+                Set<String> stateNames = new HashSet<String>(attributes.getLength());
+                states.put(child, stateNames);
+
                 for (int j = 0; j < attributes.getLength(); j++) {
                     Attr attribute = (Attr) attributes.item(j);
-                    if (attribute.getLocalName() == null) {
+                    String name = attribute.getLocalName();
+                    if (name == null) {
                         continue;
                     }
-                    if (attribute.getLocalName().startsWith("state_")) {
-                        hasState = true;
-                        break;
+                    if (name.startsWith(STATE_PREFIX)) {
+                        stateNames.add(name + '=' + attribute.getValue());
                     } else {
                         String namespaceUri = attribute.getNamespaceURI();
                         if (namespaceUri != null && namespaceUri.length() > 0 &&
@@ -97,14 +109,34 @@ public class StateListDetector extends ResourceXmlDetector {
                             // This could be a state, see
                             //   http://code.google.com/p/android/issues/detail?id=22339
                             // so don't flag this one.
-                            hasState = true;
+                            stateNames.add(attribute.getName() + '=' + attribute.getValue());
                         }
                     }
                 }
-                if (!hasState) {
-                    context.report(ISSUE, child, context.getLocation(child),
-                        String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
-                                i), null);
+            }
+
+            // See if for each state, any subsequent state fully contains all the same
+            // state requirements
+
+            for (int i = 0; i < children.size() - 1; i++) {
+                Element prev = children.get(i);
+                Set<String> prevStates = states.get(prev);
+                assert prevStates != null : prev;
+                for (int j = i + 1; j < children.size(); j++) {
+                    Element current = children.get(j);
+                    Set<String> currentStates = states.get(current);
+                    assert currentStates != null : current;
+                    if (currentStates.containsAll(prevStates)) {
+                        Location location = context.getLocation(current);
+                        Location secondary = context.getLocation(prev);
+                        secondary.setMessage("Earlier item which masks item");
+                        location.setSecondary(secondary);
+                        context.report(ISSUE, current, location, String.format(
+                                "This item is unreachable because a previous item (item #%1$d) is a more general match than this one",
+                                i + 1),  null);
+                        // Don't keep reporting errors for all the remaining cases in this file
+                        return;
+                    }
                 }
             }
         }
