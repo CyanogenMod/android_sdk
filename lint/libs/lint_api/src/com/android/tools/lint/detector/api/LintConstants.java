@@ -67,6 +67,7 @@ public class LintConstants {
     public static final String TAG_STYLE = "style";                    //$NON-NLS-1$
     public static final String TAG_ITEM = "item";                      //$NON-NLS-1$
     public static final String TAG_STRING_ARRAY = "string-array";      //$NON-NLS-1$
+    public static final String TAG_PLURALS = "plurals";                //$NON-NLS-1$
     public static final String TAG_INTEGER_ARRAY = "integer-array";    //$NON-NLS-1$
 
     // Tags: Layouts
