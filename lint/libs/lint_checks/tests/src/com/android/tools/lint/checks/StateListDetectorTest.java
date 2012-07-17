@@ -27,8 +27,8 @@ public class StateListDetectorTest extends AbstractCheckTest {
 
     public void testStates() throws Exception {
         assertEquals(
-                "states.xml:2: Warning: No android:state_ attribute found on <item> 0, " +
-                        "later states not reachable",
+                "drawable/states.xml:3: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one\n" +
+                "=> drawable/states.xml:2: Earlier item which masks item",
                 lintProject("res/drawable/states.xml"));
     }
 
@@ -36,5 +36,12 @@ public class StateListDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "No warnings.",
                 lintProject("res/drawable/states2.xml"));
+    }
+
+    public void testStates3() throws Exception {
+        assertEquals(
+                "drawable/states3.xml:24: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one\n" +
+                "=> drawable/states3.xml:18: Earlier item which masks item",
+                lintProject("res/drawable/states3.xml"));
     }
 }
