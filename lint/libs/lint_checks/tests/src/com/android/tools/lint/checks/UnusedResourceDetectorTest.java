@@ -141,4 +141,16 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                     "gen/my/pkg/R2.java.txt=>gen/my/pkg/R.java"
             ));
     }
+
+    public void testPlurals() throws Exception {
+        assertEquals(
+           "plurals.xml:3: Warning: The resource R.plurals.my_plural appears to be unused",
+
+            lintProject(
+                "res/values/strings4.xml",
+                "res/values/plurals.xml",
+                "AndroidManifest.xml"));
+    }
+
+
 }

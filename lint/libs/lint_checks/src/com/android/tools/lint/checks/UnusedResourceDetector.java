@@ -33,6 +33,7 @@ import static com.android.tools.lint.detector.api.LintConstants.R_ID_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.R_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_PLURALS;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
@@ -327,7 +328,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 TAG_STYLE,
                 TAG_RESOURCES,
                 TAG_ARRAY,
-                TAG_STRING_ARRAY
+                TAG_STRING_ARRAY,
+                TAG_PLURALS
         );
     }
 
@@ -369,6 +371,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         } else if (mReferences != null) {
             assert TAG_STYLE.equals(element.getTagName())
                 || TAG_ARRAY.equals(element.getTagName())
+                || TAG_PLURALS.equals(element.getTagName())
                 || TAG_STRING_ARRAY.equals(element.getTagName());
             for (Element item : LintUtils.getChildren(element)) {
                 checkChildRefs(item);
