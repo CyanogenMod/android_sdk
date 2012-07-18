@@ -350,6 +350,10 @@ public class LayoutWindowCoordinator implements IPartListener2 {
 
     @Override
     public void partActivated(IWorkbenchPartReference partRef) {
+        IWorkbenchPart part = partRef.getPart(false);
+        if (part instanceof AndroidXmlEditor) {
+            ((AndroidXmlEditor)part).activated();
+        }
     }
 
     @Override
@@ -358,5 +362,9 @@ public class LayoutWindowCoordinator implements IPartListener2 {
 
     @Override
     public void partDeactivated(IWorkbenchPartReference partRef) {
+        IWorkbenchPart part = partRef.getPart(false);
+        if (part instanceof AndroidXmlEditor) {
+            ((AndroidXmlEditor)part).deactivated();
+        }
     }
 }

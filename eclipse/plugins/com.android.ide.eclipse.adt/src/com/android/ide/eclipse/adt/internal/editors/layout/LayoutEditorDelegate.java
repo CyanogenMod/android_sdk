@@ -66,7 +66,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
-import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IShowEditorInput;
@@ -94,7 +93,7 @@ import java.util.Set;
  * Multi-page form editor for /res/layout XML files.
  */
 public class LayoutEditorDelegate extends CommonXmlDelegate
-         implements IShowEditorInput, IPartListener, CommonXmlDelegate.IActionContributorDelegate {
+         implements IShowEditorInput, CommonXmlDelegate.IActionContributorDelegate {
 
     public static class Creator implements IDelegateCreator {
         @Override
@@ -223,7 +222,6 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             mGraphicalEditor.dispose();
             mGraphicalEditor = null;
         }
-        getEditor().getSite().getPage().removePartListener(this);
     }
 
     /**
@@ -283,9 +281,6 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
                     mGraphicalEditor.replaceFile(editedFile);
                 }
             }
-
-            // put in place the listener to handle layout recompute only when needed.
-            getEditor().getSite().getPage().addPartListener(this);
         } catch (PartInitException e) {
             AdtPlugin.log(e, "Error creating nested page"); //$NON-NLS-1$
         }
@@ -724,50 +719,22 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     }
 
 
-    // ----- IPartListener Methods ----
-
     @Override
-    public void partActivated(IWorkbenchPart part) {
-        if (part == getEditor()) {
-            if (mGraphicalEditor != null) {
-                if (getEditor().getActivePage() == mGraphicalEditorIndex) {
-                    mGraphicalEditor.activated();
-                } else {
-                    mGraphicalEditor.deactivated();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void partBroughtToTop(IWorkbenchPart part) {
-        partActivated(part);
-    }
-
-    @Override
-    public void partClosed(IWorkbenchPart part) {
-        // pass
-    }
-
-    @Override
-    public void partDeactivated(IWorkbenchPart part) {
-        if (part == getEditor()) {
-            if (mGraphicalEditor != null && getEditor().getActivePage() == mGraphicalEditorIndex) {
+    public void delegateActivated() {
+        if (mGraphicalEditor != null) {
+            if (getEditor().getActivePage() == mGraphicalEditorIndex) {
+                mGraphicalEditor.activated();
+            } else {
                 mGraphicalEditor.deactivated();
             }
         }
     }
 
     @Override
-    public void partOpened(IWorkbenchPart part) {
-        /*
-         * We used to automatically bring the outline and the property sheet to view
-         * when opening the editor. This behavior has always been a mixed bag and not
-         * exactly satisfactory. GLE1 is being useless/deprecated and GLE2 will need to
-         * improve on that, so right now let's comment this out.
-         */
-        //EclipseUiHelper.showView(EclipseUiHelper.CONTENT_OUTLINE_VIEW_ID, false /* activate */);
-        //EclipseUiHelper.showView(EclipseUiHelper.PROPERTY_SHEET_VIEW_ID, false /* activate */);
+    public void delegateDeactivated() {
+        if (mGraphicalEditor != null && getEditor().getActivePage() == mGraphicalEditorIndex) {
+            mGraphicalEditor.deactivated();
+        }
     }
 
     // ---- Local Methods ----

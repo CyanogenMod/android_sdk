@@ -217,4 +217,12 @@ public abstract class CommonXmlDelegate {
     public IFormPage delegatePostSetActivePage(IFormPage superReturned, String pageIndex) {
         return superReturned;
     }
+
+    /** Called after an editor has been activated */
+    public void delegateActivated() {
+    }
+
+    /** Called after an editor has been deactivated */
+    public void delegateDeactivated() {
+    }
 }

@@ -42,6 +42,7 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.ISourceViewerExtension2;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IShowEditorInput;
@@ -400,6 +401,21 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         return super.supportsFormatOnGuiEdit();
     }
 
+    @Override
+    public void activated() {
+        super.activated();
+        if (mDelegate != null) {
+            mDelegate.delegateActivated();
+        }
+    }
+
+    @Override
+    public void deactivated() {
+        super.deactivated();
+        if (mDelegate != null) {
+            mDelegate.delegateDeactivated();
+        }
+    }
 
     // --------------------
     // Base methods exposed so that XmlEditorDelegate can access them
