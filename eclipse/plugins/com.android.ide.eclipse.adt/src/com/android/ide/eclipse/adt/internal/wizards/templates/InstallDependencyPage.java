@@ -54,7 +54,7 @@ class InstallDependencyPage extends WizardPage implements SelectionListener {
 
     /** URL containing more info */
     private static final String URL =
-            "http://developer.android.com/sdk/compatibility-library.html"; //$NON-NLS-1$
+            "http://developer.android.com/tools/extras/support-library.html"; //$NON-NLS-1$
 
     private Button mCheckButton;
     private Button mInstallButton;
