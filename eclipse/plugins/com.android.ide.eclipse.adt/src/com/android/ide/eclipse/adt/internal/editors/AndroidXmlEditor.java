@@ -310,7 +310,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         mIsCreatingPage = true;
         createFormPages();
         createTextEditor();
-        createUndoRedoActions();
+        updateActionBindings();
         postCreatePages();
         mIsCreatingPage = false;
     }
@@ -357,7 +357,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * multi-page editor) by re-using the actions defined by the {@link StructuredTextEditor}
      * (aka the XML text editor.)
      */
-    private void createUndoRedoActions() {
+    private void updateActionBindings() {
         IActionBars bars = getEditorSite().getActionBars();
         if (bars != null) {
             IAction action = mTextEditor.getAction(ActionFactory.UNDO.getId());
@@ -1575,6 +1575,15 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         }
 
         return null;
+    }
+
+    /** Called when this editor is activated */
+    public void activated() {
+        updateActionBindings();
+    }
+
+    /** Called when this editor is deactivated */
+    public void deactivated() {
     }
 
     /**
