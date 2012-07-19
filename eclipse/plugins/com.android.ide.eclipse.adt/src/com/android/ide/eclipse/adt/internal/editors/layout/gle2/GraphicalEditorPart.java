@@ -863,14 +863,12 @@ public class GraphicalEditorPart extends EditorPart
                         String path = res.getLocation().toOSString();
 
                         File newLayoutFolder = new File(path + File.separator + folderName);
-                        if (newLayoutFolder.isFile()) {
+                        if (newLayoutFolder.isDirectory()) {
                             // this should not happen since aapt would have complained
                             // before, but if one disable the automatic build, this could
                             // happen.
-                            String message = String.format("File 'res/%1$s' is in the way!",
+                            String message = String.format("File 'res/%1$s' already exists!",
                                     folderName);
-
-                            AdtPlugin.displayError("Layout Creation", message);
 
                             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, message);
                         } else if (newLayoutFolder.exists() == false) {
