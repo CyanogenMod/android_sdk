@@ -78,6 +78,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -926,9 +927,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                         "Launch failed on device: " + deviceName);
                 continue;
             }
-
-            doLaunchAction(launchInfo, d);
         }
+
+        doLaunchAction(launchInfo, devices);
 
         // multiple launches are only supported for run configuration, so we can terminate
         // the launch itself
@@ -1268,14 +1269,20 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         }
     }
 
-    private boolean doLaunchAction(final DelayedLaunchInfo info, IDevice device) {
-        boolean result = info.getLaunchAction().doLaunchAction(info, device);
+    private boolean doLaunchAction(final DelayedLaunchInfo info, Collection<IDevice> devices) {
+        boolean result = info.getLaunchAction().doLaunchAction(info, devices);
 
         // Monitor the logcat output on the launched device to notify
         // the user if any significant error occurs that is visible from logcat
-        DdmsPlugin.getDefault().startLogCatMonitor(device);
+        for (IDevice d : devices) {
+            DdmsPlugin.getDefault().startLogCatMonitor(d);
+        }
 
         return result;
+    }
+
+    private boolean doLaunchAction(final DelayedLaunchInfo info, IDevice device) {
+        return doLaunchAction(info, Collections.singletonList(device));
     }
 
     private boolean launchEmulator(AndroidLaunchConfiguration config, AvdInfo avdToLaunch) {

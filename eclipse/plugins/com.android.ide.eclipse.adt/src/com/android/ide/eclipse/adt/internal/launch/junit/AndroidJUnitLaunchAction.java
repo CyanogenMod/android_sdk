@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.launch.IAndroidLaunchAction;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.launch.junit.runtime.AndroidJUnitLaunchInfo;
 import com.android.ide.eclipse.adt.internal.launch.junit.runtime.RemoteAdtTestRunner;
+import com.google.common.base.Joiner;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -36,11 +37,13 @@ import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.swt.widgets.Display;
 
+import java.util.Collection;
+
 /**
  * A launch action that executes a instrumentation test run on an Android device.
  */
 class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
-
+    private static final Joiner JOINER = Joiner.on(',').skipNulls();
     private final AndroidJUnitLaunchInfo mLaunchInfo;
 
     /**
@@ -53,22 +56,22 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
     }
 
     /**
-     * Launch a instrumentation test run on given Android device.
+     * Launch a instrumentation test run on given Android devices.
      * Reuses JDT JUnit launch delegate so results can be communicated back to JDT JUnit UI.
      * <p/>
      * Note: Must be executed on non-UI thread.
      *
-     * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
+     * @see IAndroidLaunchAction#doLaunchActions(DelayedLaunchInfo, IDevice)
      */
     @Override
-    public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
+    public boolean doLaunchAction(DelayedLaunchInfo info, Collection<IDevice> devices) {
         String msg = String.format(LaunchMessages.AndroidJUnitLaunchAction_LaunchInstr_2s,
-                mLaunchInfo.getRunner(), device.getSerialNumber());
+                mLaunchInfo.getRunner(), JOINER.join(devices));
         AdtPlugin.printToConsole(info.getProject(), msg);
 
         try {
            mLaunchInfo.setDebugMode(info.isDebugMode());
-           mLaunchInfo.setDevice(info.getDevice());
+           mLaunchInfo.setDevices(devices);
            JUnitLaunchDelegate junitDelegate = new JUnitLaunchDelegate(mLaunchInfo);
            final String mode = info.isDebugMode() ? ILaunchManager.DEBUG_MODE :
                ILaunchManager.RUN_MODE;
@@ -237,7 +240,6 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
          */
         @Override
-        @SuppressWarnings("unchecked")
         public Object getAdapter(Class adapter) {
             return null;
         }

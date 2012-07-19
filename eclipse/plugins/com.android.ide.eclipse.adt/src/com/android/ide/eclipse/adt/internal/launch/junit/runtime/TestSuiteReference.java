@@ -28,7 +28,7 @@ import java.util.List;
 class TestSuiteReference extends AndroidTestReference {
 
     private final String mClassName;
-    private List<TestCaseReference> mTests;
+    private List<AndroidTestReference> mTests;
 
     /**
      * Creates a TestSuiteReference
@@ -37,7 +37,7 @@ class TestSuiteReference extends AndroidTestReference {
      */
     TestSuiteReference(String className) {
          mClassName = className;
-         mTests = new ArrayList<TestCaseReference>();
+         mTests = new ArrayList<AndroidTestReference>();
     }
 
     /**
@@ -57,7 +57,7 @@ class TestSuiteReference extends AndroidTestReference {
     @Override
     public void sendTree(IVisitsTestTrees notified) {
         notified.visitTreeEntry(getIdentifier(), true, countTestCases());
-        for (TestCaseReference ref : mTests) {
+        for (AndroidTestReference ref: mTests) {
             ref.sendTree(notified);
         }
     }
@@ -75,7 +75,18 @@ class TestSuiteReference extends AndroidTestReference {
      *
      * @param testRef the {@link TestCaseReference} to add
      */
-    void addTest(TestCaseReference testRef) {
+    void addTest(AndroidTestReference testRef) {
         mTests.add(testRef);
+    }
+
+    /** Returns the test suite of given name, null if no such test suite exists */
+    public TestSuiteReference getTestSuite(String name) {
+        for (AndroidTestReference ref: mTests) {
+            if (ref instanceof TestSuiteReference && ref.getName().equals(name)) {
+                return (TestSuiteReference) ref;
+            }
+        }
+
+        return null;
     }
 }

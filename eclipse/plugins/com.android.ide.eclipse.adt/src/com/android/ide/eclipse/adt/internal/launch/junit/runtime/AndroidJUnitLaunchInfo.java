@@ -21,6 +21,9 @@ import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.debug.core.ILaunch;
 
+import java.util.Collection;
+import java.util.Collections;
+
 /**
  * Contains info about Android JUnit launch
  */
@@ -30,7 +33,7 @@ public class AndroidJUnitLaunchInfo {
     private final String mRunner;
 
     private boolean mDebugMode = false;
-    private IDevice mDevice = null;
+    private Collection<IDevice> mDevices = Collections.EMPTY_LIST;
     private String mTestPackage = null;
     private String mTestClass = null;
     private String mTestMethod = null;
@@ -58,7 +61,7 @@ public class AndroidJUnitLaunchInfo {
     public boolean isDebugMode() {
         return mDebugMode;
     }
-    
+
     public void setDebugMode(boolean debugMode) {
         mDebugMode = debugMode;
     }
@@ -71,12 +74,12 @@ public class AndroidJUnitLaunchInfo {
         mTestSize = size;
     }
 
-    public IDevice getDevice() {
-        return mDevice;
+    public Collection<IDevice> getDevices() {
+        return mDevices;
     }
 
-    public void setDevice(IDevice device) {
-        mDevice = device;
+    public void setDevices(Collection<IDevice> devices) {
+        mDevices = devices;
     }
 
     /**
@@ -94,12 +97,12 @@ public class AndroidJUnitLaunchInfo {
      * @return fully qualified java package. <code>null</code> if not specified.
      */
     public String getTestPackage() {
-        return mTestPackage;       
+        return mTestPackage;
     }
 
     /**
      * Sets the test class to run.
-     * 
+     *
      * @param testClass fully qualfied test class to run
      *    Expected format: x.y.x.testclass
      */
@@ -107,7 +110,7 @@ public class AndroidJUnitLaunchInfo {
         mTestClass = testClass;
     }
 
-    /** 
+    /**
      * Returns the test class to run.
      *
      * @return fully qualfied test class to run.
@@ -116,17 +119,17 @@ public class AndroidJUnitLaunchInfo {
     public String getTestClass() {
         return mTestClass;
     }
-    
+
     /**
-     * Sets the test method to run. testClass must also be set. 
-     * 
+     * Sets the test method to run. testClass must also be set.
+     *
      * @param testMethod test method to run
      */
     public void setTestMethod(String testMethod) {
         mTestMethod = testMethod;
     }
 
-    /** 
+    /**
      * Returns the test method to run.
      *
      * @return test method to run. <code>null</code> if not specified.

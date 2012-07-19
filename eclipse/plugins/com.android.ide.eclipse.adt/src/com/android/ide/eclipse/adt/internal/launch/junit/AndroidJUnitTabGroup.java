@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.launch.junit;
 
 import com.android.ide.eclipse.adt.internal.launch.EmulatorConfigTab;
 
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup;
 import org.eclipse.debug.ui.CommonTab;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
@@ -35,7 +36,7 @@ public class AndroidJUnitTabGroup extends AbstractLaunchConfigurationTabGroup {
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
         ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
                 new AndroidJUnitLaunchConfigurationTab(),
-                new EmulatorConfigTab(false),
+                new EmulatorConfigTab(ILaunchManager.RUN_MODE.equals(mode)),
                 new CommonTab()
         };
         setTabs(tabs);

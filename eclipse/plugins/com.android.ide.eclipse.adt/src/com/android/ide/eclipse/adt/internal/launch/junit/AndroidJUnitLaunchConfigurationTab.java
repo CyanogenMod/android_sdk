@@ -15,7 +15,6 @@
  */
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
-import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -885,8 +884,8 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         return JUnitMessages.JUnitLaunchConfigurationTab_tab_label;
     }
 
-    @SuppressWarnings("unchecked")
     private IJavaElement chooseContainer(IJavaElement initElement) {
+        @SuppressWarnings("rawtypes")
         Class[] acceptedClasses = new Class[] { IJavaProject.class,
                 IPackageFragment.class };
         TypedElementSelectionValidator validator = new TypedElementSelectionValidator(
