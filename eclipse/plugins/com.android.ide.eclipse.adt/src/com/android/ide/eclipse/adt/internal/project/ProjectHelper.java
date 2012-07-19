@@ -16,6 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import static com.android.ide.eclipse.adt.AdtConstants.COMPILER_COMPLIANCE_PREFERRED;
+
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
@@ -48,6 +51,10 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.IVMInstall2;
+import org.eclipse.jdt.launching.IVMInstallType;
 import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.ArrayList;
@@ -445,6 +452,45 @@ public final class ProjectHelper {
             } catch (CoreException e) {
                 AdtPlugin.printErrorToConsole(javaProject.getProject(),
                         "Project compiler settings changed. Clean your project.");
+            }
+        }
+    }
+
+    /**
+     * Makes the given project use JDK 6 (or more specifically,
+     * {@link AdtConstants#COMPILER_COMPLIANCE_PREFERRED} as the compilation
+     * target, regardless of what the default IDE JDK level is, provided a JRE
+     * of the given level is installed.
+     *
+     * @param javaProject the Java project
+     * @throws CoreException if the IDE throws an exception setting the compiler
+     *             level
+     */
+    @SuppressWarnings("restriction") // JDT API for setting compliance options
+    public static void enforcePreferredCompilerCompliance(@NonNull IJavaProject javaProject)
+            throws CoreException {
+        String compliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+        if (compliance == null ||
+                JavaModelUtil.isVersionLessThan(compliance, COMPILER_COMPLIANCE_PREFERRED)) {
+            IVMInstallType[] types = JavaRuntime.getVMInstallTypes();
+            for (int i = 0; i < types.length; i++) {
+                IVMInstallType type = types[i];
+                IVMInstall[] installs = type.getVMInstalls();
+                for (int j = 0; j < installs.length; j++) {
+                    IVMInstall install = installs[j];
+                    if (install instanceof IVMInstall2) {
+                        IVMInstall2 install2 = (IVMInstall2) install;
+                        // Java version can be 1.6.0, and preferred is 1.6
+                        if (install2.getJavaVersion().startsWith(COMPILER_COMPLIANCE_PREFERRED)) {
+                            Map<String, String> options = javaProject.getOptions(false);
+                            JavaCore.setComplianceOptions(COMPILER_COMPLIANCE_PREFERRED, options);
+                            JavaModelUtil.setDefaultClassfileOptions(options,
+                                    COMPILER_COMPLIANCE_PREFERRED);
+                            javaProject.setOptions(options);
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
