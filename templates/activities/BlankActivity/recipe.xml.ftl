@@ -2,10 +2,6 @@
 <recipe>
     <merge from="AndroidManifest.xml.ftl" />
 
-    <copy from="res/drawable-hdpi" />
-    <copy from="res/drawable-mdpi" />
-    <copy from="res/drawable-xhdpi" />
-
     <instantiate from="res/menu/main.xml.ftl"
             to="res/menu/${menuName}.xml" />
 

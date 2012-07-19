@@ -49,14 +49,14 @@
         name="Target API level"
         type="string"
         constraints="apilevel"
-        default="15" />
+        default="16" />
 
     <parameter
         id="buildApi"
         name="Build API level"
         type="string"
         constraints="apilevel"
-        default="15" />
+        default="16" />
 
     <parameter
         id="copyIcons"
