@@ -62,6 +62,16 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(9, mDb.getCallVersion("java/nio/Buffer", "array", "()"));
     }
 
+    public void testNoInheritedConstructors() {
+        assertTrue(mDb.getCallVersion("java/util/zip/ZipOutputStream", "<init>", "()") <= 1);
+        assertTrue(mDb.getCallVersion("android/app/AliasActivity", "<init>", "(Landroid/content/Context;I)") <= 1);
+    }
+
+    public void testIssue35190() {
+        assertEquals(9, mDb.getCallVersion("java/io/IOException", "<init>",
+                "(Ljava/lang/Throwable;)V"));
+    }
+
     public void testInheritInterfaces() {
         // The onPreferenceStartFragment is inherited via the
         // android/preference/PreferenceFragment$OnPreferenceStartFragmentCallback

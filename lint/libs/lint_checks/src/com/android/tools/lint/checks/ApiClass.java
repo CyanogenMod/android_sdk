@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
+
 import com.android.util.Pair;
 import com.google.common.collect.Lists;
 
@@ -144,6 +146,11 @@ public class ApiClass {
         Integer i = mMethods.get(methodSignature);
         if (i != null) {
             min = i;
+
+            // Constructors aren't inherited
+            if (methodSignature.startsWith(CONSTRUCTOR_NAME)) {
+                return i;
+            }
         }
 
         // now look at the super classes
@@ -236,21 +243,29 @@ public class ApiClass {
      */
     Set<String> getAllMethods(Api info) {
         Set<String> members = new HashSet<String>(100);
-        addAllMethods(info, members);
+        addAllMethods(info, members, true /*includeConstructors*/);
 
         return members;
     }
 
-    private void addAllMethods(Api info, Set<String> set) {
-        for (String method : mMethods.keySet()) {
-            set.add(method);
+    private void addAllMethods(Api info, Set<String> set, boolean includeConstructors) {
+        if (!includeConstructors) {
+            for (String method : mMethods.keySet()) {
+                if (!method.startsWith(CONSTRUCTOR_NAME)) {
+                    set.add(method);
+                }
+            }
+        } else {
+            for (String method : mMethods.keySet()) {
+                set.add(method);
+            }
         }
 
         for (Pair<String, Integer> superClass : mSuperClasses) {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
             if (clz != null) {
-                clz.addAllMethods(info, set);
+                clz.addAllMethods(info, set, false);
             }
         }
 
@@ -259,7 +274,7 @@ public class ApiClass {
             ApiClass clz = info.getClass(superClass.getFirst());
             assert clz != null : superClass.getSecond();
             if (clz != null) {
-                clz.addAllMethods(info, set);
+                clz.addAllMethods(info, set, false);
             }
         }
     }

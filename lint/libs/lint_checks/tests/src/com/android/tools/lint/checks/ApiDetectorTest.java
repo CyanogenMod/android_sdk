@@ -226,6 +226,21 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testIOException() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=35190
+        assertEquals(
+            "ApiCallTest6.java:8: Error: Call requires API level 9 (current min is 1): java.io.IOException#<init>",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                    "apicheck/Intermediate.java.txt=>src/test/pkg/Intermediate.java",
+                    "apicheck/ApiCallTest6.java.txt=>src/test/pkg/ApiCallTest6.java",
+                    "apicheck/ApiCallTest6.class.data=>bin/classes/test/pkg/ApiCallTest6.class"
+                ));
+    }
+
+
     // Test suppressing errors -- on classes, methods etc.
 
     public void testSuppress() throws Exception {
