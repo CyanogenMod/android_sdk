@@ -811,8 +811,7 @@
                 id="com.android.ide.eclipse.adt.wizards.actions.NewXmlFileAction"
                 label="New Android XML File"
                 style="push"
-                toolbarPath="android_project"
-                tooltip="Opens a wizard to help create a new Android XML file">
+                toolbarPath="android_project">
             </action>
             <action
                 class="com.android.ide.eclipse.adt.internal.wizards.actions.NewTestProjectAction"
@@ -821,16 +820,15 @@
                 label="New Android Test Project"
                 style="push"
                 toolbarPath="android_project"
-                tooltip="Opens a wizard to help create a new Android Test Project">
+                >
             </action>
             <action
                 class="com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction"
                 icon="icons/new_adt_project.png"
                 id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-                label="New Android Project"
+                label="New Android App"
                 style="push"
-                toolbarPath="android_project"
-                tooltip="Opens a wizard to help create a new Android project">
+                toolbarPath="android_project">
             </action>
         </actionSet>
         <actionSet
@@ -940,11 +938,10 @@
                 class="com.android.ide.eclipse.adt.internal.actions.AvdManagerAction"
                 icon="icons/avd_manager.png"
                 id="com.android.ide.eclipse.adt.ui.avdmanager"
-                label="AVD Manager"
+                label="Android Virtual Device Manager"
                 menubarPath="Window/additions"
                 style="push"
-                toolbarPath="android_project"
-                tooltip="Opens the Android Virtual Device Manager">
+                toolbarPath="android_project">
             </action>
             <action
                 class="com.android.ide.eclipse.adt.internal.actions.SdkManagerAction"
@@ -953,8 +950,7 @@
                 label="Android SDK Manager"
                 menubarPath="Window/additions"
                 style="push"
-                toolbarPath="android_project"
-                tooltip="Opens the Android SDK Manager">
+                toolbarPath="android_project">
             </action>
         </actionSet>
         <actionSet
@@ -969,8 +965,7 @@
                 id="com.android.ide.eclipse.adt.ui.lintrunner"
                 label="Run Android Lint"
                 menubarPath="Window/additions"
-                toolbarPath="android_project"
-                tooltip="Runs Android Lint">
+                toolbarPath="android_project">
             </action>
         </actionSet>
     </extension>
