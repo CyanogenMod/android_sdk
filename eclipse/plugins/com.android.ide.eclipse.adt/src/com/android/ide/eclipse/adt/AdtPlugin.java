@@ -331,6 +331,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     public static Display getDisplay() {
         IWorkbench bench = null;
         synchronized (AdtPlugin.class) {
+            if (sPlugin == null) {
+                return null;
+            }
             bench = sPlugin.getWorkbench();
         }
 
@@ -1696,7 +1699,11 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
         final List<ITargetChangeListener> listeners =
             (List<ITargetChangeListener>)mTargetChangeListeners.clone();
 
-        AdtPlugin.getDisplay().asyncExec(new Runnable() {
+        Display display = AdtPlugin.getDisplay();
+        if (display == null) {
+            return;
+        }
+        display.asyncExec(new Runnable() {
             @Override
             public void run() {
                 for (ITargetChangeListener listener : listeners) {
