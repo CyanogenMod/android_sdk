@@ -73,7 +73,7 @@ public class ApiLookup {
     /** Relative path to the api-versions.xml database file within the Lint installation */
     private static final String XML_FILE_PATH = "platform-tools/api/api-versions.xml"; //$NON-NLS-1$
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 3;
+    private static final int BINARY_FORMAT_VERSION = 4;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
@@ -352,6 +352,7 @@ public class ApiLookup {
             // or not, then we'd need to put this data back in.
             List<String> members = new ArrayList<String>(allMethods.size() + allFields.size());
             for (String member : allMethods) {
+
                 Integer since = apiClass.getMethod(member, info);
                 if (since == null) {
                     assert false : className + ':' + member;
