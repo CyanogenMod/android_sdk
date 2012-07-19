@@ -3139,7 +3139,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         Pair<ResourceQualifier[], IAndroidTarget> pair = loadRenderState();
 
         // Only sync the locale if this layout is not already a locale-specific layout!
-        if (!isLocaleSpecificLayout()) {
+        if (pair != null && !isLocaleSpecificLayout()) {
             ResourceQualifier[] locale = pair.getFirst();
             if (locale != null) {
                 localeChanged = setLocaleCombo(locale[0], locale[1]);
@@ -3147,7 +3147,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         }
 
         // Sync render target
-        IAndroidTarget target = pair.getSecond();
+        IAndroidTarget target = pair != null ? pair.getSecond() : getSelectedTarget();
         if (target != null) {
             if (getRenderingTarget() != target) {
                 selectTarget(target);
@@ -3202,6 +3202,10 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      */
     private Pair<ResourceQualifier[], IAndroidTarget> loadRenderState() {
         IProject project = mEditedFile.getProject();
+        if (!project.isAccessible()) {
+            return null;
+        }
+
         try {
             String data = project.getPersistentProperty(NAME_RENDER_STATE);
             if (data != null) {
