@@ -22,6 +22,8 @@ import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.ResourceManagerBuilder;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.jdt.core.JavaCore;
+
 import java.io.File;
 
 /**
@@ -272,15 +274,15 @@ public class AdtConstants {
     public final static String MARKER_ATTR_TYPE_PROVIDER = "provider"; //$NON-NLS-1$
 
     /**
-     * Preferred compiler level, i.e. "1.5".
+     * Preferred compiler level, i.e. "1.6".
      */
-    public final static String COMPILER_COMPLIANCE_PREFERRED = "1.5"; //$NON-NLS-1$
+    public final static String COMPILER_COMPLIANCE_PREFERRED = JavaCore.VERSION_1_6;
     /**
      * List of valid compiler level, i.e. "1.5" and "1.6"
      */
     public final static String[] COMPILER_COMPLIANCE = {
-        "1.5", //$NON-NLS-1$
-        "1.6", //$NON-NLS-1$
+        JavaCore.VERSION_1_5,
+        JavaCore.VERSION_1_6,
     };
 
     /** The base URL where to find the Android class & manifest documentation */

@@ -23,6 +23,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
@@ -37,6 +39,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -303,6 +306,13 @@ public class NewProjectWizard extends TemplateWizard {
 
             NewProjectCreator.create(monitor, mProject, mValues.target, projectPopulator,
                     mValues.isLibrary, mValues.projectLocation);
+
+            // For new projects, ensure that we're actually using the preferred compliance,
+            // not just the default one
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(mProject);
+            if (javaProject != null) {
+                ProjectHelper.enforcePreferredCompilerCompliance(javaProject);
+            }
 
             try {
                 mProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());

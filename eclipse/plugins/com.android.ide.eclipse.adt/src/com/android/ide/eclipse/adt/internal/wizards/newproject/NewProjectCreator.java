@@ -628,6 +628,7 @@ public class NewProjectCreator  {
                         final IJavaProject javaProject = JavaCore.create(project);
                         Display.getDefault().syncExec(new WorksetAdder(javaProject,
                                 mValues.workingSets));
+                        ProjectHelper.enforcePreferredCompilerCompliance(javaProject);
                     }
                 }
             }
