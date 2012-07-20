@@ -32,11 +32,10 @@ public class SecureRandomDetectorTest extends AbstractCheckTest {
             "SecureRandomTest.java:15: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
             "SecureRandomTest.java:16: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
             "SecureRandomTest.java:17: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:18: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().",
-            // Missing errors on lines 28 and 40, using flow analysis to determine that
-            // setSeed on a random instance is really a call on a SecureRandom instance,
-            // and using flow analysis to determine that the seed byte array passed into
-            // the SecureRandom constructor is static.
+            "SecureRandomTest.java:18: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
+            "SecureRandomTest.java:28: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().",
+            // Missing error on line 40, using flow analysis to determine that the seed byte
+            // array passed into the SecureRandom constructor is static.
 
             lintProject(
                 "bytecode/.classpath=>.classpath",

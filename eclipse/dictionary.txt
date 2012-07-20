@@ -131,6 +131,7 @@ infos
 init
 inits
 inline
+inlined
 inset
 instanceof
 instantiatable

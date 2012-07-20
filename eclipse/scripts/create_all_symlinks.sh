@@ -130,6 +130,7 @@ ADT_PREBUILTS="\
     prebuilts/tools/common/freemarker/freemarker-2.3.19.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
+    prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar \
     prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"
 
 LIBS="$LIBS $ADT_LIBS"
