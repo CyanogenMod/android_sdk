@@ -21,6 +21,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.EOL_BACKWARD;
+import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,6 +34,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.File;
@@ -492,6 +494,38 @@ public class ClassContext extends Context {
 
         return getLocationForLine(findLineNumber(methodNode), pattern, null,
                 SearchHints.create(EOL_BACKWARD).matchJavaSymbol());
+    }
+
+    /**
+     * Returns a location for the given {@link AbstractInsnNode}.
+     *
+     * @param instruction the instruction to look up the location for
+     * @return a location pointing to the instruction, or as close to it
+     *         as possible
+     */
+    @NonNull
+    public Location getLocation(@NonNull AbstractInsnNode instruction) {
+        String pattern = null;
+        if (instruction instanceof MethodInsnNode) {
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            if (call.name.equals(CONSTRUCTOR_NAME)) {
+                pattern = call.owner;
+            } else {
+                pattern = call.name;
+            }
+            int index = pattern.lastIndexOf('$');
+            if (index != -1) {
+                pattern = pattern.substring(index + 1);
+            }
+            index = pattern.lastIndexOf('/');
+            if (index != -1) {
+                pattern = pattern.substring(index + 1);
+            }
+        }
+
+        int line = findLineNumber(instruction);
+        return getLocationForLine(line, pattern, null,
+                SearchHints.create(FORWARD).matchJavaSymbol());
     }
 
     private static boolean isAnonymousClass(@NonNull String fqcn) {

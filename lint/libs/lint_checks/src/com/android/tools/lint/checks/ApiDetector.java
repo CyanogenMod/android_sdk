@@ -58,7 +58,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -98,11 +97,6 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
     /** Constructs a new API check */
     public ApiDetector() {
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     @Override
@@ -493,8 +487,15 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         // method name (<init>) but the class name
         if (patternStart != null && patternStart.equals(CONSTRUCTOR_NAME)
                 && node instanceof MethodInsnNode) {
-            String owner = ((MethodInsnNode) node).owner;
-            patternStart = owner.substring(owner.lastIndexOf('/') + 1);
+            patternStart = ((MethodInsnNode) node).owner;
+            int index = patternStart.lastIndexOf('$');
+            if (index != -1) {
+                patternStart = patternStart.substring(index + 1);
+            }
+            index = patternStart.lastIndexOf('/');
+            if (index != -1) {
+                patternStart = patternStart.substring(index + 1);
+            }
         }
 
         Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd, hints);

@@ -332,4 +332,10 @@ public class LintConstants {
     public static final String CONSTRUCTOR_NAME = "<init>";                          //$NON-NLS-1$
     public static final String FRAGMENT = "android/app/Fragment";                    //$NON-NLS-1$
     public static final String FRAGMENT_V4 = "android/support/v4/app/Fragment";      //$NON-NLS-1$
+    public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";        //$NON-NLS-1$
+    public static final String ANDROID_APP_SERVICE = "android/app/Service";          //$NON-NLS-1$
+    public static final String ANDROID_CONTENT_CONTENT_PROVIDER =
+            "android/content/ContentProvider";                                       //$NON-NLS-1$
+    public static final String ANDROID_CONTENT_BROADCAST_RECEIVER =
+            "android/content/BroadcastReceiver";                                     //$NON-NLS-1$
 }

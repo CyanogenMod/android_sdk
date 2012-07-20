@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_APP_ACTIVITY;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_APP_SERVICE;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_CONTENT_BROADCAST_RECEIVER;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_CONTENT_CONTENT_PROVIDER;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
@@ -27,7 +31,6 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -43,7 +46,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.w3c.dom.Element;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -54,13 +56,6 @@ import java.util.Map.Entry;
  * and also makes sure that they are registered with the correct tag
  */
 public class RegistrationDetector extends LayoutDetector implements ClassScanner {
-    private static final String ANDROID_APP_ACTIVITY = "android/app/Activity";  //$NON-NLS-1$
-    private static final String ANDROID_APP_SERVICE = "android/app/Service";    //$NON-NLS-1$
-    private static final String ANDROID_CONTENT_CONTENT_PROVIDER =
-            "android/content/ContentProvider";   //$NON-NLS-1$
-    private static final String ANDROID_CONTENT_BROADCAST_RECEIVER =
-            "android/content/BroadcastReceiver"; //$NON-NLS-1$
-
     /** Unregistered activities and services */
     public static final Issue ISSUE = Issue.create(
         "Registered", //$NON-NLS-1$
@@ -88,11 +83,6 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     @Override
     public @NonNull Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     // ---- Implements XmlScanner ----

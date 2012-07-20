@@ -118,7 +118,7 @@ class XmlVisitor {
         }
     }
 
-    void visitFile(@NonNull XmlContext context,@NonNull  File file) {
+    void visitFile(@NonNull XmlContext context, @NonNull File file) {
         assert LintUtils.isXmlFile(file);
         context.parser = mParser;
 

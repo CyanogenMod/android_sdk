@@ -16,31 +16,26 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
+import static com.android.tools.lint.detector.api.LintUtils.getNextOpcode;
+import static com.android.tools.lint.detector.api.LintUtils.getPrevOpcode;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.io.File;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Looks for usages of {@link java.lang.Math} methods which can be replaced with
@@ -72,93 +67,48 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
     }
 
     @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
-    }
-
-    @Override
     public @NonNull Speed getSpeed() {
         return Speed.FAST;
     }
 
     // ---- Implements ClassScanner ----
 
-    @SuppressWarnings("rawtypes")
     @Override
-    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        List methodList = classNode.methods;
-        for (Object m : methodList) {
-            MethodNode method = (MethodNode) m;
-            InsnList nodes = method.instructions;
-            for (int i = 0, n = nodes.size(); i < n; i++) {
-                AbstractInsnNode instruction = nodes.get(i);
-                int type = instruction.getType();
-                if (type == AbstractInsnNode.METHOD_INSN) {
-                    MethodInsnNode node = (MethodInsnNode) instruction;
-                    String name = node.name;
-                    String owner = node.owner;
+    @Nullable
+    public List<String> getApplicableCallNames() {
+        return Arrays.asList(
+                "sin",   //$NON-NLS-1$
+                "cos",   //$NON-NLS-1$
+                "ceil",  //$NON-NLS-1$
+                "sqrt",  //$NON-NLS-1$
+                "floor"  //$NON-NLS-1$
+        );
+    }
 
-                    if (sFloatMethods.contains(name)
-                            && owner.equals("java/lang/Math")) { //$NON-NLS-1$
-                        boolean paramFromFloat = getPrevOpcode(nodes, i) == Opcodes.F2D;
-                        boolean returnToFloat = getNextOpcode(nodes, i) == Opcodes.D2F;
-                        if (paramFromFloat || returnToFloat) {
-                            String message;
-                            if (paramFromFloat) {
-                                message = String.format(
-                                        "Use android.util.FloatMath#%1$s() instead of " +
-                                        "java.lang.Math#%1$s to avoid argument float to " +
-                                        "double conversion", name);
-                            } else {
-                                message = String.format(
-                                        "Use android.util.FloatMath#%1$s() instead of " +
-                                        "java.lang.Math#%1$s to avoid double to float return " +
-                                        "value conversion", name);
-                            }
-                            int lineNumber = ClassContext.findLineNumber(instruction);
-                            Location location = context.getLocationForLine(lineNumber, name, null,
-                                    SearchHints.create(FORWARD).matchJavaSymbol());
-                            context.report(ISSUE, method, location, message, null /*data*/);
-                        }
-                    }
+    @Override
+    public void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
+            @NonNull MethodNode method, @NonNull MethodInsnNode call) {
+        String owner = call.owner;
+
+        if (owner.equals("java/lang/Math")) { //$NON-NLS-1$
+            String name = call.name;
+            boolean paramFromFloat = getPrevOpcode(call) == Opcodes.F2D;
+            boolean returnToFloat = getNextOpcode(call) == Opcodes.D2F;
+            if (paramFromFloat || returnToFloat) {
+                String message;
+                if (paramFromFloat) {
+                    message = String.format(
+                            "Use android.util.FloatMath#%1$s() instead of " +
+                            "java.lang.Math#%1$s to avoid argument float to " +
+                            "double conversion", name);
+                } else {
+                    message = String.format(
+                            "Use android.util.FloatMath#%1$s() instead of " +
+                            "java.lang.Math#%1$s to avoid double to float return " +
+                            "value conversion", name);
                 }
+                context.report(ISSUE, method, context.getLocation(call), message, null /*data*/);
             }
         }
-    }
-
-    private int getPrevOpcode(InsnList nodes, int i) {
-        for (i--; i >= 0; i--) {
-            AbstractInsnNode node = nodes.get(i);
-            int type = node.getType();
-            if (type == AbstractInsnNode.LINE || type == AbstractInsnNode.LABEL) {
-                continue;
-            }
-            return node.getOpcode();
-        }
-
-        return Opcodes.NOP;
-    }
-
-    private int getNextOpcode(InsnList nodes, int i) {
-        for (i++; i < nodes.size(); i++) {
-            AbstractInsnNode node = nodes.get(i);
-            int type = node.getType();
-            if (type == AbstractInsnNode.LINE || type == AbstractInsnNode.LABEL) {
-                continue;
-            }
-            return node.getOpcode();
-        }
-
-        return Opcodes.NOP;
-    }
-
-    /** Methods on java.lang.Math that we want to find and suggest replacements for */
-    private static final Set<String> sFloatMethods = new HashSet<String>();
-    static {
-        sFloatMethods.add("sin");   //$NON-NLS-1$
-        sFloatMethods.add("cos");   //$NON-NLS-1$
-        sFloatMethods.add("ceil");  //$NON-NLS-1$
-        sFloatMethods.add("sqrt");  //$NON-NLS-1$
-        sFloatMethods.add("floor"); //$NON-NLS-1$
     }
 }
