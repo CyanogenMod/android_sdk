@@ -77,6 +77,17 @@
     <!-- Verbosity -->
     <property name="verbose" value="false" />
 
+    <!-- Output location of the HTML report for the "lint" target.
+         Ideally this would be specified as
+            value="${out.dir}/lint.html"
+         but we can't make a forward reference to the definition for
+         ${out.dir}, and it is not a configurable property (yet).
+     -->
+    <property name="lint.out.html" value="bin/lint.html" />
+
+    <!-- Output location of the XML report for the "lint" target -->
+    <property name="lint.out.xml" value="bin/lint.xml" />
+
     <!-- ******************************************************* -->
     <!-- ********************* Custom Tasks ******************** -->
     <!-- ******************************************************* -->
@@ -138,6 +149,7 @@
     <property name="aapt" location="${android.platform.tools.dir}/aapt${exe}" />
     <property name="dx" location="${android.platform.tools.dir}/dx${bat}" />
     <property name="renderscript" location="${android.platform.tools.dir}/llvm-rs-cc${exe}"/>
+    <property name="lint" location="${android.tools.dir}/lint${bat}" />
 
     <!-- Renderscript include Path -->
     <path id="android.renderscript.include.path">
@@ -1275,6 +1287,16 @@
         </if>
     </target>
 
+    <!-- ******************************************************* -->
+    <!-- **********        Run Lint on the project     ********* -->
+    <!-- ******************************************************* -->
+
+    <target name="lint"
+            description="Runs lint on the project to look for potential bugs" >
+        <lint executable="${lint}"
+              html="${lint.out.html}"
+              xml="${lint.out.xml}" />
+    </target>
 
     <!-- ******************************************************* -->
     <!-- ********** Install/uninstall specific targets ********* -->

@@ -40,13 +40,17 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,6 +80,7 @@ public class Main extends LintClient {
     private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
     private static final String ARG_SIMPLEHTML = "--simplehtml";   //$NON-NLS-1$
     private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
+    private static final String ARG_TEXT       = "--text";         //$NON-NLS-1$
     private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
@@ -108,7 +113,7 @@ public class Main extends LintClient {
     private int mErrorCount;
     private int mWarningCount;
     private boolean mShowLines = true;
-    private Reporter mReporter;
+    private List<Reporter> mReporters = Lists.newArrayList();
     private boolean mQuiet;
     private boolean mWarnAll;
     private boolean mNoWarnings;
@@ -283,7 +288,7 @@ public class Main extends LintClient {
                         if (arg.equals(ARG_SIMPLEHTML)) {
                             reporter.setSimpleFormat(true);
                         }
-                        mReporter = reporter;
+                        mReporters.add(reporter);
                     } catch (IOException e) {
                         log(e, null);
                         System.exit(ERRNO_INVALIDARGS);
@@ -306,7 +311,7 @@ public class Main extends LintClient {
                     if (arg.equals(ARG_SIMPLEHTML)) {
                         htmlReporter.setSimpleFormat(true);
                     }
-                    mReporter = htmlReporter;
+                    mReporters.add(htmlReporter);
                 } catch (IOException e) {
                     log(e, null);
                     System.exit(ERRNO_INVALIDARGS);
@@ -329,11 +334,45 @@ public class Main extends LintClient {
                     System.exit(ERRNO_EXISTS);
                 }
                 try {
-                    mReporter = new XmlReporter(this, output);
+                    mReporters.add(new XmlReporter(this, output));
                 } catch (IOException e) {
                     log(e, null);
                     System.exit(ERRNO_INVALIDARGS);
                 }
+            } else if (arg.equals(ARG_TEXT)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing XML output file name");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+
+                Writer writer = null;
+                boolean closeWriter;
+                String outputName = args[++index];
+                if (outputName.equals("stdout")) { //$NON-NLS-1$
+                    writer = new PrintWriter(System.out, true);
+                    closeWriter = false;
+                } else {
+                    File output = getOutArgumentPath(outputName);
+                    if (output.exists()) {
+                        boolean delete = output.delete();
+                        if (!delete) {
+                            System.err.println("Could not delete old " + output);
+                            System.exit(ERRNO_EXISTS);
+                        }
+                    }
+                    if (output.canWrite()) {
+                        System.err.println("Cannot write XML output file " + output);
+                        System.exit(ERRNO_EXISTS);
+                    }
+                    try {
+                        writer = new BufferedWriter(new FileWriter(output));
+                    } catch (IOException e) {
+                        log(e, null);
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    closeWriter = true;
+                }
+                mReporters.add(new TextReporter(this, writer, closeWriter));
             } else if (arg.equals(ARG_DISABLE) || arg.equals(ARG_IGNORE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to disable");
@@ -438,22 +477,24 @@ public class Main extends LintClient {
             System.exit(ERRNO_INVALIDARGS);
         }
 
-        if (mReporter == null) {
+        if (mReporters.isEmpty()) {
             if (urlMap != null) {
                 System.err.println(String.format(
                         "Warning: The %1$s option only applies to HTML reports (%2$s)",
                             ARG_URL, ARG_HTML));
             }
 
-            mReporter = new TextReporter(this, new PrintWriter(System.out, true));
+            mReporters.add(new TextReporter(this, new PrintWriter(System.out, true), false));
         } else {
             if (urlMap == null) {
                 // By default just map from /foo to file:///foo
                 // TODO: Find out if we need file:// on Windows.
                 urlMap = "=file://"; //$NON-NLS-1$
             } else {
-                if (!mReporter.isSimpleFormat()) {
-                    mReporter.setBundleResources(true);
+                for (Reporter reporter : mReporters) {
+                    if (!reporter.isSimpleFormat()) {
+                        reporter.setBundleResources(true);
+                    }
                 }
             }
 
@@ -472,7 +513,9 @@ public class Main extends LintClient {
                     String value = s.substring(index + 1);
                     map.put(key, value);
                 }
-                mReporter.setUrlMap(map);
+                for (Reporter reporter : mReporters) {
+                    reporter.setUrlMap(map);
+                }
             }
         }
 
@@ -487,11 +530,13 @@ public class Main extends LintClient {
 
         Collections.sort(mWarnings);
 
-        try {
-            mReporter.write(mErrorCount, mWarningCount, mWarnings);
-        } catch (IOException e) {
-            log(e, null);
-            System.exit(ERRNO_INVALIDARGS);
+        for (Reporter reporter : mReporters) {
+            try {
+                reporter.write(mErrorCount, mWarningCount, mWarnings);
+            } catch (IOException e) {
+                log(e, null);
+                System.exit(ERRNO_INVALIDARGS);
+            }
         }
 
         System.exit(mSetExitCode ? (mHasErrors ? ERRNO_ERRORS : 0) : 0);
