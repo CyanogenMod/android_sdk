@@ -437,15 +437,33 @@ public class NewProjectPage extends WizardPage
     }
 
     private String appNameToProjectName(String appName) {
+        // Strip out whitespace (and capitalize subsequent words where spaces were removed
+        boolean upcaseNext = false;
+        StringBuilder sb = new StringBuilder(appName.length());
+        for (int i = 0, n = appName.length(); i < n; i++) {
+            char c = appName.charAt(i);
+            if (c == ' ') {
+                upcaseNext = true;
+            } else if (upcaseNext) {
+                sb.append(Character.toUpperCase(c));
+                upcaseNext = false;
+            } else {
+                sb.append(c);
+            }
+        }
+
+        appName = sb.toString().trim();
+
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
         IStatus nameStatus = workspace.validateName(appName, IResource.PROJECT);
         if (nameStatus.isOK()) {
             return appName;
         }
-        StringBuilder sb = new StringBuilder(appName.length());
+
+        sb = new StringBuilder(appName.length());
         for (int i = 0, n = appName.length(); i < n; i++) {
             char c = appName.charAt(i);
-            if (Character.isLetterOrDigit(c) || c == '.' || c == '-' || c == ' ') {
+            if (Character.isLetterOrDigit(c) || c == '.' || c == '-') {
                 sb.append(c);
             }
         }
@@ -609,7 +627,11 @@ public class NewProjectPage extends WizardPage
             sb.append(SAMPLE_PACKAGE_PREFIX);
             appendPackage(sb, original);
 
-            mValues.packageName = sb.toString();
+            String pkg = sb.toString();
+            if (pkg.endsWith(".")) { //$NON-NLS-1$
+                pkg = pkg.substring(0, pkg.length() - 1);
+            }
+            mValues.packageName = pkg;
             try {
                 mIgnore = true;
                 mPackageText.setText(mValues.packageName);
@@ -625,7 +647,7 @@ public class NewProjectPage extends WizardPage
             if (i == 0 && Character.isJavaIdentifierStart(c)
                     || i != 0 && Character.isJavaIdentifierPart(c)) {
                 sb.append(Character.toLowerCase(c));
-            } else if ((c == '.' || c == ' ')
+            } else if ((c == '.')
                     && (sb.length() > 0 && sb.charAt(sb.length() - 1) != '.')) {
                 sb.append('.');
             } else if (c == '-') {
