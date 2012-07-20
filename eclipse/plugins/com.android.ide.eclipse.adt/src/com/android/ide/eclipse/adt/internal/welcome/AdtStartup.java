@@ -21,7 +21,6 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutWindowCoordinator;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
@@ -37,6 +36,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IStartup;
+import org.eclipse.ui.IWindowListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  *       dialog will run instead.)
  * </ul>
  */
-public class AdtStartup implements IStartup {
+public class AdtStartup implements IStartup, IWindowListener {
 
     private DdmsPreferenceStore mStore = new DdmsPreferenceStore();
 
@@ -206,12 +206,12 @@ public class AdtStartup implements IStartup {
 
     private void initializeWindowCoordinator() {
         final IWorkbench workbench = PlatformUI.getWorkbench();
+        workbench.addWindowListener(this);
         workbench.getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
-                IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-                if (window != null) {
-                    LayoutWindowCoordinator.start(window);
+                for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
+                    LayoutWindowCoordinator.get(window, true /*create*/);
                 }
             }
         });
@@ -300,5 +300,28 @@ public class AdtStartup implements IStartup {
         SdkStatsService stats = new SdkStatsService();
         stats.ping("adt", adtVersionString); //$NON-NLS-1$
         stats.ping("eclipse", eclipseVersionString); //$NON-NLS-1$
+    }
+
+    // ---- Implements IWindowListener ----
+
+    @Override
+    public void windowActivated(IWorkbenchWindow window) {
+    }
+
+    @Override
+    public void windowDeactivated(IWorkbenchWindow window) {
+    }
+
+    @Override
+    public void windowClosed(IWorkbenchWindow window) {
+        LayoutWindowCoordinator listener = LayoutWindowCoordinator.get(window, false /*create*/);
+        if (listener != null) {
+            listener.dispose();
+        }
+    }
+
+    @Override
+    public void windowOpened(IWorkbenchWindow window) {
+        LayoutWindowCoordinator.get(window, true /*create*/);
     }
 }

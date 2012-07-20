@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.google.common.collect.Maps;
 
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
@@ -29,6 +30,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
+
+import java.util.Map;
 
 /**
  * The {@link LayoutWindowCoordinator} keeps track of Eclipse window events (opening, closing,
@@ -55,7 +58,13 @@ import org.eclipse.ui.IWorkbenchWindow;
  *       When the editor view is un-maximized, the view state will return to what it
  *       was before.
  * </ul>
- * Note that this coordinator is a singleton and is shared between all the open editors.
+ * </p>
+ * There is one coordinator per workbench window, shared between all editors in that window.
+ * <p>
+ * TODO: Rename this class to AdtWindowCoordinator. It is used for more than just layout
+ * window coordination now. For example, it's also used to dispatch {@code activated()} and
+ * {@code deactivated()} events to all the XML editors, to ensure that key bindings are
+ * properly dispatched to the right editors in Eclipse 4.x.
  */
 public class LayoutWindowCoordinator implements IPartListener2 {
     static final String PROPERTY_SHEET_PART_ID = "org.eclipse.ui.views.PropertySheet"; //$NON-NLS-1$
@@ -75,36 +84,48 @@ public class LayoutWindowCoordinator implements IPartListener2 {
      */
     private boolean mInitialized;
 
-    /** Singleton reference */
-    private static LayoutWindowCoordinator sSingleton;
+    /** Map from workbench windows to each layout window coordinator instance for that window */
+    private static Map<IWorkbenchWindow, LayoutWindowCoordinator> sCoordinators =
+            Maps.newHashMapWithExpectedSize(2);
 
     /**
-     * Start the coordinator
+     * Returns the coordinator for the given window.
      *
      * @param window the associated window
+     * @param create whether to create the window if it does not already exist
+     * @return the new coordinator, never null if {@code create} is true
      */
-    public static void start(@NonNull IWorkbenchWindow window) {
-        assert sSingleton == null;
+    @Nullable
+    public static LayoutWindowCoordinator get(@NonNull IWorkbenchWindow window, boolean create) {
+        synchronized (LayoutWindowCoordinator.class){
+            LayoutWindowCoordinator coordinator = sCoordinators.get(window);
+            if (coordinator == null && create) {
+                coordinator = new LayoutWindowCoordinator(window);
 
-        LayoutWindowCoordinator coordinator = new LayoutWindowCoordinator(window);
-        sSingleton = coordinator;
+                IPartService service = window.getPartService();
+                if (service != null) {
+                    // What if the editor part is *already* open? How do I deal with that?
+                    service.addPartListener(coordinator);
+                }
 
-        IPartService service = window.getPartService();
-        if (service != null) {
-            // What if the window is *already* open? How do I deal with that?
-            service.addPartListener(coordinator);
+                sCoordinators.put(window, coordinator);
+            }
+
+            return coordinator;
         }
     }
 
-    /**
-     * Returns the coordinator. This method will return null if it is called before
-     * {@link #start} has been called, and non null after.
-     *
-     * @return the coordinator
-     */
-    @Nullable
-    public static LayoutWindowCoordinator get() {
-        return sSingleton;
+
+    /** Disposes this coordinator (when a window is closed) */
+    public void dispose() {
+        IPartService service = mWindow.getPartService();
+        if (service != null) {
+            service.removePartListener(this);
+        }
+
+        synchronized (LayoutWindowCoordinator.class){
+            sCoordinators.remove(mWindow);
+        }
     }
 
     /**

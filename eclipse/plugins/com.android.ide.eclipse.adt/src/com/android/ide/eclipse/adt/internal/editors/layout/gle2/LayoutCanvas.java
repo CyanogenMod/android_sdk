@@ -85,6 +85,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
@@ -298,10 +299,14 @@ public class LayoutCanvas extends Canvas {
                 super.controlResized(e);
 
                 // Check editor state:
-                LayoutWindowCoordinator coordinator = LayoutWindowCoordinator.get();
-                if (coordinator != null) {
-                    IEditorSite editorSite = getEditorDelegate().getEditor().getEditorSite();
-                    coordinator.syncMaximizedState(editorSite.getPage());
+                LayoutWindowCoordinator coordinator = null;
+                IEditorSite editorSite = getEditorDelegate().getEditor().getEditorSite();
+                IWorkbenchWindow window = editorSite.getWorkbenchWindow();
+                if (window != null) {
+                    coordinator = LayoutWindowCoordinator.get(window, false);
+                    if (coordinator != null) {
+                        coordinator.syncMaximizedState(editorSite.getPage());
+                    }
                 }
 
                 Rectangle clientArea = getClientArea();
@@ -354,18 +359,22 @@ public class LayoutCanvas extends Canvas {
                 return;
             }
 
-            LayoutWindowCoordinator coordinator = LayoutWindowCoordinator.get();
-            if (coordinator != null) {
-                Boolean zoomed = coordinator.isEditorMaximized();
-                if (mWasZoomed != zoomed) {
-                    if (mWasZoomed != null) {
-                        LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
-                                .getLayoutActionBar();
-                        if (actionBar.isZoomingAllowed()) {
-                            setFitScale(true /*onlyZoomOut*/);
+            IEditorSite editorSite = getEditorDelegate().getEditor().getEditorSite();
+            IWorkbenchWindow window = editorSite.getWorkbenchWindow();
+            if (window != null) {
+                LayoutWindowCoordinator coordinator = LayoutWindowCoordinator.get(window, false);
+                if (coordinator != null) {
+                    Boolean zoomed = coordinator.isEditorMaximized();
+                    if (mWasZoomed != zoomed) {
+                        if (mWasZoomed != null) {
+                            LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
+                                    .getLayoutActionBar();
+                            if (actionBar.isZoomingAllowed()) {
+                                setFitScale(true /*onlyZoomOut*/);
+                            }
                         }
+                        mWasZoomed = zoomed;
                     }
-                    mWasZoomed = zoomed;
                 }
             }
         }
