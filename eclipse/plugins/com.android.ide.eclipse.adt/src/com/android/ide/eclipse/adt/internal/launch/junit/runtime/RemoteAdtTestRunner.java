@@ -27,6 +27,10 @@ import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.internal.junit.runner.MessageIds;
 import org.eclipse.jdt.internal.junit.runner.RemoteTestRunner;
 import org.eclipse.jdt.internal.junit.runner.TestExecution;
@@ -84,6 +88,15 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
      * executing the tests,  and send it back to JDT JUnit. The second is the actual test execution,
      * whose results will be communicated back in real-time to JDT JUnit.
      *
+     * The tests are run concurrently on all devices. The overall structure is as follows:
+     * <ol>
+     *   <li> First, a separate job per device is run to collect test tree data. </li>
+     *   <li> Once all the devices have reported their test tree data, the tree info is
+     *        passed to the Junit UI </li>
+     *   <li> A job per device is again launched to do the actual test run. </li>
+     *   <li> As tests complete, the test run listener updates the Junit UI </li>
+     * </ol>
+     *
      * @param testClassNames ignored - the AndroidJUnitLaunchInfo will be used to determine which
      *     tests to run.
      * @param testName ignored
@@ -122,66 +135,165 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
             runners.add(runner);
         }
 
+        // Launch all test info collector jobs
         TestCollector collector = new TestCollector();
-        for (RemoteAndroidTestRunner runner : runners) {
-            // set log only to first collect test case info, so Eclipse has correct test case count/
-            // tree info
-            runner.setLogOnly(true);
-            // add a small delay between each test. Otherwise for large test suites framework may
-            // report Binder transaction failures
-            runner.addInstrumentationArg(DELAY_MSEC_KEY, COLLECT_TEST_DELAY_MS);
+        List<TestRunnerJob> collectorJobs = new ArrayList<TestRunnerJob>(devices.size());
+        for (int i = 0; i < devices.size(); i++) {
+            RemoteAndroidTestRunner runner = runners.get(i);
 
+            TestTreeCollectorJob job = new TestTreeCollectorJob(
+                    "Test Tree Collector for " + devices.get(i).getName(),
+                    runner, mLaunchInfo.isDebugMode(), collector);
+            job.setPriority(Job.INTERACTIVE);
+            job.schedule();
+
+            collectorJobs.add(job);
+        }
+
+        // wait for all test info collector jobs to complete
+        for (TestRunnerJob job : collectorJobs) {
             try {
-                AdtPlugin.printToConsole(mLaunchInfo.getProject(), "Collecting test information");
+                job.join();
+            } catch (InterruptedException e) {
+                endTestRunWithError(e.getMessage());
+                return;
+            }
 
-                runner.run(collector);
-                if (collector.getErrorMessage() != null) {
-                    // error occurred during test collection.
-                    reportError(collector.getErrorMessage());
-                    // abort here
-                    notifyTestRunEnded(0);
-                    return;
-                }
-                AdtPlugin.printToConsole(mLaunchInfo.getProject(),
-                        "Sending test information to Eclipse");
-            } catch (TimeoutException e) {
-                reportError(LaunchMessages.RemoteAdtTestRunner_RunTimeoutException);
-            } catch (IOException e) {
-                reportError(String.format(LaunchMessages.RemoteAdtTestRunner_RunIOException_s,
-                        e.getMessage()));
-            } catch (AdbCommandRejectedException e) {
-                reportError(String.format(
-                        LaunchMessages.RemoteAdtTestRunner_RunAdbCommandRejectedException_s,
-                        e.getMessage()));
-            } catch (ShellCommandUnresponsiveException e) {
-                reportError(LaunchMessages.RemoteAdtTestRunner_RunTimeoutException);
+            if (!job.getResult().isOK()) {
+                endTestRunWithError(job.getResult().getMessage());
+                return;
             }
         }
+
+        if (collector.getErrorMessage() != null) {
+            endTestRunWithError(collector.getErrorMessage());
+            return;
+        }
+
+        AdtPlugin.printToConsole(mLaunchInfo.getProject(), "Sending test information to Eclipse");
         notifyTestRunStarted(collector.getTestCaseCount() * devices.size());
         collector.sendTrees(this);
 
         TestRunListener testRunListener = new TestRunListener(devices.size());
-        for (RemoteAndroidTestRunner runner : runners) {
+        List<TestRunnerJob> instrumentationRunnerJobs =
+                new ArrayList<TestRunnerJob>(devices.size());
+
+        // Spawn all instrumentation runner jobs
+        for (int i = 0; i < devices.size(); i++) {
+            RemoteAndroidTestRunner runner = runners.get(i);
+
+            InstrumentationRunJob job = new InstrumentationRunJob(
+                    "Test Tree Collector for " + devices.get(i).getName(),
+                    runner, mLaunchInfo.isDebugMode(), testRunListener);
+            job.setPriority(Job.INTERACTIVE);
+            job.schedule();
+
+            instrumentationRunnerJobs.add(job);
+        }
+
+        // Wait for all jobs to complete
+        for (TestRunnerJob job : instrumentationRunnerJobs) {
             try {
-                // now do real execution
-                runner.setLogOnly(false);
-                runner.removeInstrumentationArg(DELAY_MSEC_KEY);
-                if (mLaunchInfo.isDebugMode()) {
-                    runner.setDebug(true);
-                }
-                AdtPlugin.printToConsole(mLaunchInfo.getProject(), "Running tests...");
-                runner.run(testRunListener);
+                job.join();
+            } catch (InterruptedException e) {
+                endTestRunWithError(e.getMessage());
+                return;
+            }
+
+            if (!job.getResult().isOK()) {
+                endTestRunWithError(job.getResult().getMessage());
+                return;
+            }
+        }
+    }
+
+    private static abstract class TestRunnerJob extends Job {
+        private ITestRunListener mListener;
+        private RemoteAndroidTestRunner mRunner;
+        private boolean mIsDebug;
+
+        public TestRunnerJob(String name, RemoteAndroidTestRunner runner,
+                boolean isDebug, ITestRunListener listener) {
+            super(name);
+
+            mRunner = runner;
+            mIsDebug = isDebug;
+            mListener = listener;
+        }
+
+        @Override
+        protected IStatus run(IProgressMonitor monitor) {
+            try {
+                setupRunner();
+                mRunner.run(mListener);
             } catch (TimeoutException e) {
-                reportError(LaunchMessages.RemoteAdtTestRunner_RunTimeoutException);
+                return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID,
+                        LaunchMessages.RemoteAdtTestRunner_RunTimeoutException,
+                        e);
             } catch (IOException e) {
-                reportError(String.format(LaunchMessages.RemoteAdtTestRunner_RunIOException_s,
-                        e.getMessage()));
+                return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID,
+                        String.format(LaunchMessages.RemoteAdtTestRunner_RunIOException_s,
+                                e.getMessage()),
+                        e);
             } catch (AdbCommandRejectedException e) {
-                reportError(String.format(
-                        LaunchMessages.RemoteAdtTestRunner_RunAdbCommandRejectedException_s,
-                        e.getMessage()));
+                return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID,
+                        String.format(
+                                LaunchMessages.RemoteAdtTestRunner_RunAdbCommandRejectedException_s,
+                                e.getMessage()),
+                        e);
             } catch (ShellCommandUnresponsiveException e) {
-                reportError(LaunchMessages.RemoteAdtTestRunner_RunTimeoutException);
+                return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID,
+                        LaunchMessages.RemoteAdtTestRunner_RunTimeoutException,
+                        e);
+            }
+
+            return Status.OK_STATUS;
+        }
+
+        public RemoteAndroidTestRunner getRunner() {
+            return mRunner;
+        }
+
+        public boolean isDebug() {
+            return mIsDebug;
+        }
+
+        protected abstract void setupRunner();
+    }
+
+    private static class TestTreeCollectorJob extends TestRunnerJob {
+        public TestTreeCollectorJob(String name, RemoteAndroidTestRunner runner, boolean isDebug,
+                ITestRunListener listener) {
+            super(name, runner, isDebug, listener);
+        }
+
+        @Override
+        protected void setupRunner() {
+            RemoteAndroidTestRunner runner = getRunner();
+
+            // set log only to just collect test case info,
+            // so Eclipse has correct test case count/tree info
+            runner.setLogOnly(true);
+
+            // add a small delay between each test. Otherwise for large test suites framework may
+            // report Binder transaction failures
+            runner.addInstrumentationArg(DELAY_MSEC_KEY, COLLECT_TEST_DELAY_MS);
+        }
+    }
+
+    private static class InstrumentationRunJob extends TestRunnerJob {
+        public InstrumentationRunJob(String name, RemoteAndroidTestRunner runner, boolean isDebug,
+                ITestRunListener listener) {
+            super(name, runner, isDebug, listener);
+        }
+
+        @Override
+        protected void setupRunner() {
+            RemoteAndroidTestRunner runner = getRunner();
+            runner.setLogOnly(false);
+            runner.removeInstrumentationArg(DELAY_MSEC_KEY);
+            if (isDebug()) {
+                runner.setDebug(true);
             }
         }
     }
@@ -228,6 +340,11 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         //notifyTestRunStopped(-1);
     }
 
+    private void endTestRunWithError(String message) {
+        reportError(message);
+        notifyTestRunEnded(0);
+    }
+
     /**
      * TestRunListener that communicates results in real-time back to JDT JUnit
      */
@@ -243,7 +360,8 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         }
 
         @Override
-        public void testEnded(TestIdentifier test, Map<String, String> ignoredTestMetrics) {
+        public synchronized void testEnded(TestIdentifier test,
+                Map<String, String> ignoredTestMetrics) {
             mExecution.getListener().notifyTestEnded(new TestCaseReference(test));
         }
 
@@ -251,7 +369,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testFailed(com.android.ddmlib.testrunner.ITestRunListener.TestFailure, com.android.ddmlib.testrunner.TestIdentifier, java.lang.String)
          */
         @Override
-        public void testFailed(TestFailure status, TestIdentifier test, String trace) {
+        public synchronized void testFailed(TestFailure status, TestIdentifier test, String trace) {
             String statusString;
             if (status == TestFailure.ERROR) {
                 statusString = MessageIds.TEST_ERROR;
@@ -268,7 +386,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testRunEnded(long, Map<String, String>)
          */
         @Override
-        public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
+        public synchronized void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
             mRunCount--;
 
             if (mRunCount > 0) {
@@ -285,7 +403,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testRunFailed(java.lang.String)
          */
         @Override
-        public void testRunFailed(String errorMessage) {
+        public synchronized void testRunFailed(String errorMessage) {
             reportError(errorMessage);
         }
 
@@ -293,7 +411,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStarted(int)
          */
         @Override
-        public void testRunStarted(String runName, int testCount) {
+        public synchronized void testRunStarted(String runName, int testCount) {
             // ignore
         }
 
@@ -301,7 +419,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStopped(long)
          */
         @Override
-        public void testRunStopped(long elapsedTime) {
+        public synchronized void testRunStopped(long elapsedTime) {
             notifyTestRunStopped(elapsedTime);
             AdtPlugin.printToConsole(mLaunchInfo.getProject(),
                     LaunchMessages.RemoteAdtTestRunner_RunStoppedMsg);
@@ -311,7 +429,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
          * @see com.android.ddmlib.testrunner.ITestRunListener#testStarted(com.android.ddmlib.testrunner.TestIdentifier)
          */
         @Override
-        public void testStarted(TestIdentifier test) {
+        public synchronized void testStarted(TestIdentifier test) {
             TestCaseReference testId = new TestCaseReference(test);
             mExecution.getListener().notifyTestStarted(testId);
         }

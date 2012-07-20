@@ -42,7 +42,7 @@ class TestCollector implements ITestRunListener {
     }
 
     @Override
-    public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {
+    public synchronized void testEnded(TestIdentifier test, Map<String, String> testMetrics) {
         // ignore
     }
 
@@ -50,7 +50,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testFailed(com.android.ddmlib.testrunner.ITestRunListener.TestFailure, com.android.ddmlib.testrunner.TestIdentifier, java.lang.String)
      */
     @Override
-    public void testFailed(TestFailure status, TestIdentifier test, String trace) {
+    public synchronized void testFailed(TestFailure status, TestIdentifier test, String trace) {
         // ignore - should be impossible since this is only collecting test information
     }
 
@@ -58,7 +58,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunEnded(long, Map<String, String>)
      */
     @Override
-    public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
+    public synchronized void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
         // ignore
     }
 
@@ -66,7 +66,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunFailed(java.lang.String)
      */
     @Override
-    public void testRunFailed(String errorMessage) {
+    public synchronized void testRunFailed(String errorMessage) {
         mErrorMessage = errorMessage;
     }
 
@@ -74,7 +74,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStarted(int)
      */
     @Override
-    public void testRunStarted(String ignoredRunName, int testCount) {
+    public synchronized void testRunStarted(String ignoredRunName, int testCount) {
         mTotalTestCount = testCount;
     }
 
@@ -82,7 +82,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStopped(long)
      */
     @Override
-    public void testRunStopped(long elapsedTime) {
+    public synchronized void testRunStopped(long elapsedTime) {
         // ignore
     }
 
@@ -90,7 +90,7 @@ class TestCollector implements ITestRunListener {
      * @see com.android.ddmlib.testrunner.ITestRunListener#testStarted(com.android.ddmlib.testrunner.TestIdentifier)
      */
     @Override
-    public void testStarted(TestIdentifier test) {
+    public synchronized void testStarted(TestIdentifier test) {
         TestSuiteReference suiteRef;
         TestSuiteReference deviceSuiteRef;
 
@@ -123,7 +123,7 @@ class TestCollector implements ITestRunListener {
     /**
      * Returns the total test count in the test run.
      */
-    public int getTestCaseCount() {
+    public synchronized int getTestCaseCount() {
         return mTotalTestCount;
     }
 
@@ -132,7 +132,7 @@ class TestCollector implements ITestRunListener {
      *
      * @param notified the {@link IVisitsTestTrees} to send test data to
      */
-    public void sendTrees(IVisitsTestTrees notified) {
+    public synchronized void sendTrees(IVisitsTestTrees notified) {
         for (ITestReference ref : mTestTree.values()) {
             ref.sendTree(notified);
         }
@@ -142,7 +142,7 @@ class TestCollector implements ITestRunListener {
      * Returns the error message that was reported when collecting test info.
      * Returns <code>null</code> if no error occurred.
      */
-    public String getErrorMessage() {
+    public synchronized String getErrorMessage() {
         return mErrorMessage;
     }
 }
