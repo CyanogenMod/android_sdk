@@ -331,6 +331,8 @@ varargs
 verbosity
 viewport
 vs
+wakelock
+wakelocks
 wallpaper
 webtools
 whilst
