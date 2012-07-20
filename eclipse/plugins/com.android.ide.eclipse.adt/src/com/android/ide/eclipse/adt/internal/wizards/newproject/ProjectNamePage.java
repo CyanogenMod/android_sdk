@@ -60,7 +60,6 @@ import org.eclipse.ui.IWorkingSet;
 
 import java.io.File;
 import java.net.URI;
-import java.util.regex.Pattern;
 
 /**
  * Initial page shown when creating projects which asks for the project name,
@@ -70,12 +69,6 @@ public class ProjectNamePage extends WizardPage implements SelectionListener, Mo
     private final NewProjectWizardState mValues;
     /** Flag used when setting button/text state manually to ignore listener updates */
     private boolean mIgnore;
-    /**
-     * Pattern for characters accepted in a project name. Since this will be
-     * used as a directory name, we're being a bit conservative on purpose and
-     * limiting it to shell-agnostic characters. It cannot start with a space.
-     */
-    private static final Pattern sProjectNamePattern = Pattern.compile("^[\\w][\\w. -]*$");  //$NON-NLS-1$
     /** Last user-browsed location, static so that it be remembered for the whole session */
     private static String sCustomLocationOsPath = "";  //$NON-NLS-1$
     private static boolean sAutoComputeCustomLocation = true;
@@ -581,9 +574,6 @@ public class ProjectNamePage extends WizardPage implements SelectionListener, Mo
         if (projectName == null || projectName.length() == 0) {
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Project name must be specified");
-        } else if (!sProjectNamePattern.matcher(projectName).matches()) {
-            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    "The project name must start with an alphanumeric characters, followed by one or more alphanumerics, digits, dots, dashes, underscores or spaces.");
         } else {
             IWorkspace workspace = ResourcesPlugin.getWorkspace();
             IStatus nameStatus = workspace.validateName(projectName, IResource.PROJECT);
