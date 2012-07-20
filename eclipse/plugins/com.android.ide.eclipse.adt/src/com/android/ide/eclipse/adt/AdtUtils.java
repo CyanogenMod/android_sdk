@@ -62,6 +62,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IURIEditorInput;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -367,7 +368,14 @@ public class AdtUtils {
      * @return the current editor, or null
      */
     public static IEditorPart getActiveEditor() {
-        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+        if (window == null) {
+            IWorkbenchWindow[] windows = workbench.getWorkbenchWindows();
+            if (windows.length > 0) {
+                window = windows[0];
+            }
+        }
         if (window != null) {
             IWorkbenchPage page = window.getActivePage();
             if (page != null) {

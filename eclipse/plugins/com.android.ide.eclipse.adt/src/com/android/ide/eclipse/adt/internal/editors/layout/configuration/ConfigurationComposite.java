@@ -47,6 +47,7 @@ import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -102,11 +103,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -1489,10 +1486,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         // look up its configuration and if the configuration is in our match list,
         // use it. This means we "preserve" the current configuration when you open
         // new layouts.
-        IWorkbench workbench = PlatformUI.getWorkbench();
-        IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
-        IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
-        IEditorPart activeEditor = page.getActiveEditor();
+        IEditorPart activeEditor = AdtUtils.getActiveEditor();
         LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(activeEditor);
         if (delegate != null
                 && mEditedFile != null
