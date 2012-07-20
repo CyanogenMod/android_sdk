@@ -37,7 +37,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         assertEquals(
             "AndroidManifest.xml:12: Warning: Exported service does not require permission",
             lintProject(
-                    "exportservice1.xml=>AndroidManifest.xml",
+                    "exportservice2.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
 
@@ -64,7 +64,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         assertEquals(
             "No warnings.",
             lintProject(
-                    "exportservice3.xml=>AndroidManifest.xml",
+                    "exportservice4.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
 
