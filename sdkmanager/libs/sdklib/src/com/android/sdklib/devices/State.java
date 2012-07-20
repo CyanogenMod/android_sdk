@@ -21,40 +21,86 @@ import com.android.resources.NavigationState;
 import com.android.resources.ScreenOrientation;
 
 public class State {
-    boolean mDefaultState;
-    String mName;
-    String mDescription;
-    ScreenOrientation mOrientation;
-    KeyboardState mKeyState;
-    NavigationState mNavState;
-    Hardware mHardwareOverride;
+    private boolean mDefaultState;
+    private String mName;
+    private String mDescription;
+    private ScreenOrientation mOrientation;
+    private KeyboardState mKeyState;
+    private NavigationState mNavState;
+    private Hardware mHardwareOverride;
 
     public boolean isDefaultState() {
         return mDefaultState;
+    }
+
+    public void setDefaultState(boolean defaultState) {
+        mDefaultState = defaultState;
     }
 
     public String getName() {
         return mName;
     }
 
+    public void setName(String name) {
+        mName = name;
+    }
+
     public String getDescription() {
         return mDescription;
+    }
+
+    public void setDescription(String description) {
+        mDescription = description;
     }
 
     public ScreenOrientation getOrientation() {
         return mOrientation;
     }
 
+    public void setOrientation(ScreenOrientation orientation) {
+        mOrientation = orientation;
+    }
+
     public KeyboardState getKeyState() {
         return mKeyState;
+    }
+
+    public void setKeyState(KeyboardState keyState) {
+        mKeyState = keyState;
     }
 
     public NavigationState getNavState() {
         return mNavState;
     }
 
+    public void setNavState(NavigationState navState) {
+        mNavState = navState;
+    }
+
     public Hardware getHardware() {
         return mHardwareOverride;
+    }
+
+    public void setHardware(Hardware hw) {
+        mHardwareOverride = hw;
+    }
+
+    /**
+     * Returns a copy of the object that shares no state with it,
+     * but is initialized to equivalent values.
+     *
+     * @return A copy of the object.
+     */
+    public State deepCopy() {
+        State s = new State();
+        s.setDefaultState(isDefaultState());
+        s.setName(getName());
+        s.setDescription(getDescription());
+        s.setOrientation(getOrientation());
+        s.setKeyState(getKeyState());
+        s.setNavState(getNavState());
+        s.setHardware(getHardware().deepCopy());
+        return s;
     }
 
     @Override

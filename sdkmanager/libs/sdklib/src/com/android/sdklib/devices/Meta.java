@@ -20,14 +20,18 @@ import java.awt.Point;
 import java.io.File;
 
 public class Meta {
-    File mIconSixtyFour;
-    File mIconSixteen;
-    File mFrame;
-    Point mFrameOffsetLandscape;
-    Point mFrameOffsetPortrait;
+    private File mIconSixtyFour;
+    private File mIconSixteen;
+    private File mFrame;
+    private Point mFrameOffsetLandscape;
+    private Point mFrameOffsetPortrait;
 
     public File getIconSixtyFour() {
         return mIconSixtyFour;
+    }
+
+    public void setIconSixtyFour(File iconSixtyFour) {
+        mIconSixtyFour = iconSixtyFour;
     }
 
     public boolean hasIconSixtyFour() {
@@ -42,6 +46,10 @@ public class Meta {
         return mIconSixteen;
     }
 
+    public void setIconSixteen(File iconSixteen) {
+        mIconSixteen = iconSixteen;
+    }
+
     public boolean hasIconSixteen() {
         if (mIconSixteen != null && mIconSixteen.isFile()) {
             return true;
@@ -52,6 +60,10 @@ public class Meta {
 
     public File getFrame() {
         return mFrame;
+    }
+
+    public void setFrame(File frame) {
+        mFrame = frame;
     }
 
     public boolean hasFrame() {
@@ -66,8 +78,16 @@ public class Meta {
         return mFrameOffsetLandscape;
     }
 
+    public void setFrameOffsetLandscape(Point offset) {
+        mFrameOffsetLandscape = offset;
+    }
+
     public Point getFrameOffsetPortrait() {
         return mFrameOffsetPortrait;
+    }
+
+    public void setFrameOffsetPortrait(Point offset) {
+        mFrameOffsetPortrait = offset;
     }
 
     @Override

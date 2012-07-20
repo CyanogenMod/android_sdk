@@ -16,38 +16,83 @@
 
 package com.android.sdklib.devices;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Software {
-    int mMinSdkLevel = 0;
-    int mMaxSdkLevel = Integer.MAX_VALUE;
-    boolean mLiveWallpaperSupport;
-    Set<BluetoothProfile> mBluetoothProfiles;
-    String mGlVersion;
-    Set<String> mGlExtensions;
+    private int mMinSdkLevel = 0;
+    private int mMaxSdkLevel = Integer.MAX_VALUE;
+    private boolean mLiveWallpaperSupport;
+    private Set<BluetoothProfile> mBluetoothProfiles = new HashSet<BluetoothProfile>();
+    private String mGlVersion;
+    private Set<String> mGlExtensions = new HashSet<String>();
 
     public int getMinSdkLevel() {
         return mMinSdkLevel;
+    }
+
+    public void setMinSdkLevel(int sdkLevel) {
+        mMinSdkLevel = sdkLevel;
     }
 
     public int getMaxSdkLevel() {
         return mMaxSdkLevel;
     }
 
+    public void setMaxSdkLevel(int sdkLevel) {
+        mMaxSdkLevel = sdkLevel;
+    }
+
     public boolean hasLiveWallpaperSupport() {
         return mLiveWallpaperSupport;
+    }
+
+    public void setLiveWallpaperSupport(boolean liveWallpaperSupport) {
+        mLiveWallpaperSupport = liveWallpaperSupport;
     }
 
     public Set<BluetoothProfile> getBluetoothProfiles() {
         return mBluetoothProfiles;
     }
 
+    public void addBluetoothProfile(BluetoothProfile bp) {
+        mBluetoothProfiles.add(bp);
+    }
+
+    public void addAllBluetoothProfiles(Collection<BluetoothProfile> bps) {
+        mBluetoothProfiles.addAll(bps);
+    }
+
     public String getGlVersion() {
         return mGlVersion;
     }
 
+    public void setGlVersion(String version) {
+        mGlVersion = version;
+    }
+
     public Set<String> getGlExtensions() {
         return mGlExtensions;
+    }
+
+    public void addGlExtension(String extension) {
+        mGlExtensions.add(extension);
+    }
+
+    public void addAllGlExtensions(Collection<String> extensions) {
+        mGlExtensions.addAll(extensions);
+    }
+
+    public Software deepCopy() {
+        Software s = new Software();
+        s.setMinSdkLevel(getMinSdkLevel());
+        s.setMaxSdkLevel(getMaxSdkLevel());
+        s.setLiveWallpaperSupport(hasLiveWallpaperSupport());
+        s.addAllBluetoothProfiles(getBluetoothProfiles());
+        s.setGlVersion(getGlVersion());
+        s.addAllGlExtensions(getGlExtensions());
+        return s;
     }
 
     @Override
