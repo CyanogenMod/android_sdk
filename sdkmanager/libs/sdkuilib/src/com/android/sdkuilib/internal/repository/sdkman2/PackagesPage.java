@@ -174,12 +174,12 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
         // First a package loader is created that only checks
         // the local cache xml files. It populates the package
         // list based on what the client got last, essentially.
-        loadPackages(true /*useLocalCache*/);
+        loadPackages(true /*useLocalCache*/, false /*overrideExisting*/);
 
         // Next a regular package loader is created that will
         // respect the expiration and refresh parameters of the
         // download cache.
-        loadPackages(false /*useLocalCache*/);
+        loadPackages(false /*useLocalCache*/, true /*overrideExisting*/);
     }
 
     @SuppressWarnings("unused")
@@ -591,7 +591,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
      * cache and refreshing strategy as needed.
      */
     private void loadPackages() {
-        loadPackages(false /*useLocalCache*/);
+        loadPackages(false /*useLocalCache*/, false /*overrideExisting*/);
     }
 
     /**
@@ -603,7 +603,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
      *  manifests. This is used once the very first time the sdk manager window opens
      *  and is typically followed by a regular load with refresh.
      */
-    private void loadPackages(final boolean useLocalCache) {
+    private void loadPackages(final boolean useLocalCache, final boolean overrideExisting) {
         if (mUpdaterData == null) {
             return;
         }
@@ -635,7 +635,7 @@ public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
         assert packageLoader != null;
 
         mDiffLogic.updateStart();
-        packageLoader.loadPackages(new ISourceLoadedCallback() {
+        packageLoader.loadPackages(overrideExisting, new ISourceLoadedCallback() {
             @Override
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.
