@@ -354,3 +354,15 @@ void ColorBuffer::drawTexQuad(bool flipy)
     s_gl.glVertexPointer(3, GL_FLOAT, 0, verts);
     s_gl.glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
+
+void ColorBuffer::readback(unsigned char* img)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (fb->bind_locked()) {
+        if (bind_fbo()) {
+            s_gl.glReadPixels(0, 0, m_width, m_height,
+                    GL_RGBA, GL_UNSIGNED_BYTE, img);
+        }
+        fb->unbind_locked();
+    }
+}

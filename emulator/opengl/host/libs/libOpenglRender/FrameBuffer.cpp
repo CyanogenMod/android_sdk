@@ -831,16 +831,6 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
 
         if (ret) {
             //
-            // Send framebuffer (without FPS overlay) to callback
-            //
-            if (m_onPost) {
-                s_gl.glReadPixels(0, 0, m_width, m_height,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
-                m_onPost(m_onPostContext, m_width, m_height, -1,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
-            }
-
-            //
             // output FPS statistics
             //
             if (m_fpsStats) {
@@ -859,6 +849,16 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
  
         // restore previous binding
         unbind_locked();
+
+        //
+        // Send framebuffer (without FPS overlay) to callback
+        //
+        if (m_onPost) {
+            (*c).second.cb->readback(m_fbImage);
+            m_onPost(m_onPostContext, m_width, m_height, -1,
+                    GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+        }
+
     }
 
     if (needLock) m_lock.unlock();
