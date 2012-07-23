@@ -43,7 +43,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -131,7 +131,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -225,7 +225,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -319,7 +319,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -407,7 +407,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -494,7 +494,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -582,7 +582,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -670,7 +670,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -764,7 +764,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -989,7 +989,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -1077,7 +1077,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -1165,7 +1165,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:camera>
-                <d:location>front</d:location>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
@@ -1343,6 +1343,11 @@
             <d:mic>true</d:mic>
             <d:camera>
                 <d:location>front</d:location>
+                <d:autofocus>true</d:autofocus>
+                <d:flash>true</d:flash>
+            </d:camera>
+            <d:camera>
+                <d:location>back</d:location>
                 <d:autofocus>true</d:autofocus>
                 <d:flash>true</d:flash>
             </d:camera>
