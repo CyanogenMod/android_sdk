@@ -16,7 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -26,8 +32,12 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Check for px dimensions instead of dp dimensions.
@@ -90,12 +100,28 @@ public class PxUsageDetector extends LayoutDetector {
     }
 
     @Override
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        // Look in both layouts (at attribute values) and in value files (at style definitions)
+        return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.VALUES;
+    }
+
+    @Override
     public Collection<String> getApplicableAttributes() {
         return ALL;
     }
 
     @Override
+    @Nullable
+    public Collection<String> getApplicableElements() {
+        return Collections.singletonList(TAG_STYLE);
+    }
+
+    @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
+        if (context.getResourceFolderType() != ResourceFolderType.LAYOUT) {
+            return;
+        }
+
         String value = attribute.getValue();
         if (value.endsWith("px") && value.matches("\\d+px")) { //$NON-NLS-1$ //$NON-NLS-2$
             if (value.charAt(0) == '0') {
@@ -112,6 +138,63 @@ public class PxUsageDetector extends LayoutDetector {
             if (context.isEnabled(DP_ISSUE)) {
                 context.report(DP_ISSUE, attribute, context.getLocation(attribute),
                     "Should use \"sp\" instead of \"dp\" for text sizes", null);
+            }
+        }
+    }
+
+    @Override
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
+        if (context.getResourceFolderType() != ResourceFolderType.VALUES) {
+            return;
+        }
+
+        assert element.getTagName().equals(TAG_STYLE);
+        NodeList itemNodes = element.getChildNodes();
+        for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
+            Node item = itemNodes.item(j);
+            if (item.getNodeType() == Node.ELEMENT_NODE &&
+                    TAG_ITEM.equals(item.getNodeName())) {
+                Element itemElement = (Element) item;
+                NodeList childNodes = item.getChildNodes();
+                for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                    Node child = childNodes.item(i);
+                    if (child.getNodeType() != Node.TEXT_NODE) {
+                        return;
+                    }
+
+                    checkStyleItem(context, itemElement, child);
+                }
+            }
+        }
+    }
+
+    private void checkStyleItem(XmlContext context, Element item, Node textNode) {
+        String text = textNode.getNodeValue();
+        for (int j = text.length() - 1; j > 0; j--) {
+            char c = text.charAt(j);
+            if (!Character.isWhitespace(c)) {
+                if (c == 'x' && text.charAt(j - 1) == 'p') { // ends with px
+                    text = text.trim();
+                    if (text.matches("\\d+px")) { //$NON-NLS-1$
+                        if (context.isEnabled(PX_ISSUE)) {
+                            context.report(PX_ISSUE, item, context.getLocation(textNode),
+                                "Avoid using \"px\" as units; use \"dp\" instead", null);
+                        }
+                    }
+                } else if (c == 'p' && (text.charAt(j - 1) == 'd'
+                        || text.charAt(j - 1) == 'i')) { // ends with dp or di
+                    text = text.trim();
+                    String name = item.getAttribute(ATTR_NAME);
+                    if ((name.equals("textSize")                 //$NON-NLS-1$
+                            || name.equals("android:textSize"))  //$NON-NLS-1$
+                            && text.matches("\\d+di?p")) {  //$NON-NLS-1$
+                        if (context.isEnabled(DP_ISSUE)) {
+                            context.report(DP_ISSUE, item, context.getLocation(textNode),
+                                "Should use \"sp\" instead of \"dp\" for text sizes", null);
+                        }
+                    }
+                }
+                break;
             }
         }
     }

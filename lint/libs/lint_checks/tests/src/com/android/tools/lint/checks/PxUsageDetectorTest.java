@@ -37,4 +37,15 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
             "textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes",
             lintFiles("res/layout/textsize.xml"));
     }
+
+    public void testStyles() throws Exception {
+        assertEquals(
+            "pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
+            "pxsp.xml:17: Warning: Avoid using \"px\" as units; use \"dp\" instead\n" +
+            "pxsp.xml:18: Warning: Avoid using \"px\" as units; use \"dp\" instead\n" +
+            "pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
+            "pxsp.xml:9: Warning: Avoid using \"px\" as units; use \"dp\" instead",
+
+            lintFiles("res/values/pxsp.xml"));
+    }
 }
