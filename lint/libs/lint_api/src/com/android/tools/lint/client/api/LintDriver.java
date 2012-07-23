@@ -175,6 +175,16 @@ public class LintDriver {
     }
 
     /**
+     * Returns the current {@link IssueRegistry}.
+     *
+     * @return the current {@link IssueRegistry}
+     */
+    @NonNull
+    public IssueRegistry getRegistry() {
+        return mRegistry;
+    }
+
+    /**
      * Returns the project containing a given file, or null if not found. This searches
      * only among the currently checked project and its library projects, not among all
      * possible projects being scanned sequentially.
