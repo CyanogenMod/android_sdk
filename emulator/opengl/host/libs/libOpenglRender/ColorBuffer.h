@@ -37,6 +37,7 @@ public:
     bool bindToTexture();
     bool bindToRenderbuffer();
     bool blitFromCurrentReadBuffer();
+    void readback(unsigned char* img);
 
 private:
     ColorBuffer();
