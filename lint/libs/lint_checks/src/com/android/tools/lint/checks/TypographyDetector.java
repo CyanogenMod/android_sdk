@@ -226,7 +226,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             Node child = childNodes.item(i);
             if (child.getNodeType() == Node.TEXT_NODE) {
                 String text = child.getNodeValue();
-                checkText(context, element, text);
+                checkText(context, element, child, text);
             } else if (child.getNodeType() == Node.ELEMENT_NODE &&
                     child.getParentNode().getNodeName().equals(TAG_STRING_ARRAY)) {
                 // String array item children
@@ -235,19 +235,19 @@ public class TypographyDetector extends ResourceXmlDetector {
                     Node item = items.item(j);
                     if (item.getNodeType() == Node.TEXT_NODE) {
                         String text = item.getNodeValue();
-                        checkText(context, child, text);
+                        checkText(context, child, item, text);
                     }
                 }
             }
         }
     }
 
-    private void checkText(XmlContext context, Node element, String text) {
+    private void checkText(XmlContext context, Node element, Node textNode, String text) {
         if (mCheckEllipsis) {
             // Replace ... with ellipsis character?
             int ellipsis = text.indexOf("..."); //$NON-NLS-1$
             if (ellipsis != -1 && !text.startsWith(".", ellipsis + 3)) { //$NON-NLS-1$
-                context.report(ELLIPSIS, element, context.getLocation(element),
+                context.report(ELLIPSIS, element, context.getLocation(textNode),
                         ELLIPSIS_MESSAGE, null);
             }
         }
@@ -267,7 +267,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             Character.isWhitespace(matcher.group(1).charAt(
                                     matcher.group(1).length() - 1));
                     if (!isNegativeNumber) {
-                        context.report(DASHES, element, context.getLocation(element),
+                        context.report(DASHES, element, context.getLocation(textNode),
                             EN_DASH_MESSAGE,
                             null);
                     }
@@ -278,7 +278,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                 // Don't suggest replacing -- or "--" with an m dash since these are sometimes
                 // used as digit marker strings
                 if (emdash > 1 && !text.startsWith("-", emdash + 2)) {   //$NON-NLS-1$
-                    context.report(DASHES, element, context.getLocation(element),
+                    context.report(DASHES, element, context.getLocation(textNode),
                             EM_DASH_MESSAGE, null);
                 }
             }
@@ -292,7 +292,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                 if (quoteEnd != -1 && quoteEnd > quoteStart + 1
                         && (quoteEnd < text.length() -1 || quoteStart > 0)
                         && SINGLE_QUOTE.matcher(text).matches()) {
-                    context.report(QUOTES, element, context.getLocation(element),
+                    context.report(QUOTES, element, context.getLocation(textNode),
                         SINGLE_QUOTE_MESSAGE, null);
                     return;
                 }
@@ -300,7 +300,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                 // Check for apostrophes that can be replaced by typographic apostrophes
                 if (quoteEnd == -1 && quoteStart > 0
                         && Character.isLetterOrDigit(text.charAt(quoteStart - 1))) {
-                    context.report(QUOTES, element, context.getLocation(element),
+                    context.report(QUOTES, element, context.getLocation(textNode),
                             TYPOGRAPHIC_APOSTROPHE_MESSAGE, null);
                     return;
                 }
@@ -312,7 +312,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                 int quoteEnd = text.indexOf('"', quoteStart + 1);
                 if (quoteEnd != -1 && quoteEnd > quoteStart + 1) {
                     if (quoteEnd < text.length() -1 || quoteStart > 0) {
-                        context.report(QUOTES, element, context.getLocation(element),
+                        context.report(QUOTES, element, context.getLocation(textNode),
                             DBL_QUOTES_MESSAGE, null);
                         return;
                     }
@@ -322,7 +322,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             // Check for grave accent quotations
             if (text.indexOf('`') != -1 && GRAVE_QUOTATION.matcher(text).matches()) {
                 // Are we indenting ``like this'' or `this' ? If so, complain
-                context.report(QUOTES, element, context.getLocation(element),
+                context.report(QUOTES, element, context.getLocation(textNode),
                         GRAVE_QUOTE_MESSAGE, null);
                 return;
             }
@@ -341,19 +341,19 @@ public class TypographyDetector extends ResourceXmlDetector {
                 String top = matcher.group(1);    // Numerator
                 String bottom = matcher.group(2); // Denominator
                 if (top.equals("1") && bottom.equals("2")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    context.report(FRACTIONS, element, context.getLocation(element),
+                    context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2"), null);
                 } else if (top.equals("1") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    context.report(FRACTIONS, element, context.getLocation(element),
+                    context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4"), null);
                 } else if (top.equals("3") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    context.report(FRACTIONS, element, context.getLocation(element),
+                    context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4"), null);
                 } else if (top.equals("1") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    context.report(FRACTIONS, element, context.getLocation(element),
+                    context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3"), null);
                 } else if (top.equals("2") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    context.report(FRACTIONS, element, context.getLocation(element),
+                    context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3"), null);
                 }
             }
@@ -364,7 +364,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             if (text.indexOf('(') != -1
                     && (text.contains("(c)") || text.contains("(C)"))) { //$NON-NLS-1$ //$NON-NLS-2$
                 // Suggest replacing with copyright symbol?
-                context.report(OTHER, element, context.getLocation(element),
+                context.report(OTHER, element, context.getLocation(textNode),
                     COPYRIGHT_MESSAGE, null);
                 // Replace (R) and TM as well? There are unicode characters for these but they
                 // are probably not very common within Android app strings.

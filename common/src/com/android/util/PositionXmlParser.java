@@ -356,7 +356,8 @@ public class PositionXmlParser {
 
                     Position attributePosition = createPosition(line, column, index);
                     // Also set end range for retrieval in getLocation
-                    attributePosition.setEnd(createPosition(line, column, matcher.end()));
+                    attributePosition.setEnd(createPosition(line, column + matcher.end() - index,
+                            matcher.end()));
                     return attributePosition;
                 } else {
                     // No regexp match either: just fall back to element position

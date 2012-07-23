@@ -1008,7 +1008,23 @@ public class Main extends LintClient {
                             for (int i = 0; i < column; i++) {
                                 sb.append(' ');
                             }
-                            sb.append('^');
+
+                            boolean displayCaret = true;
+                            Position endPosition = location.getEnd();
+                            if (endPosition != null) {
+                                int endLine = endPosition.getLine();
+                                int endColumn = endPosition.getColumn();
+                                if (endLine == line && endColumn > column) {
+                                    for (int i = column; i < endColumn; i++) {
+                                        sb.append("~");
+                                    }
+                                    displayCaret = false;
+                                }
+                            }
+
+                            if (displayCaret) {
+                                sb.append('^');
+                            }
                             sb.append('\n');
                             warning.errorLine = sb.toString();
                         }

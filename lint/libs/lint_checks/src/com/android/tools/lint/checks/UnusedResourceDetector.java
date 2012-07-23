@@ -337,8 +337,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (TAG_RESOURCES.equals(element.getTagName())) {
             for (Element item : LintUtils.getChildren(element)) {
-                String name = item.getAttribute(ATTR_NAME);
-                if (name.length() > 0) {
+                Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
+                if (nameAttribute != null) {
+                    String name = nameAttribute.getValue();
                     if (name.indexOf('.') != -1) {
                         name = name.replace('.', '_');
                     }
@@ -363,7 +364,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                                 mUnused.remove(resource);
                                 return;
                             }
-                            recordLocation(resource, context.getLocation(item));
+                            recordLocation(resource, context.getLocation(nameAttribute));
                         }
                     }
                 }
