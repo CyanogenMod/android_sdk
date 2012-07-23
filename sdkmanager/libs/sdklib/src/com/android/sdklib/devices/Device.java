@@ -151,6 +151,23 @@ public final class Device {
         private Meta mMeta;
         private State mDefaultState;
 
+        public Builder() { }
+
+        public Builder(Device d) {
+            mName = d.getName();
+            mManufacturer = d.getManufacturer();
+            for (Software s : d.getAllSoftware()) {
+                mSoftware.add(s.deepCopy());
+            }
+            for (State s : d.getAllStates()) {
+                mState.add(s.deepCopy());
+            }
+            mSoftware.addAll(d.getAllSoftware());
+            mState.addAll(d.getAllStates());
+            mMeta = d.getMeta();
+            mDefaultState = d.getDefaultState();
+        }
+
         public void setName(String name) {
             mName = name;
         }
@@ -175,6 +192,21 @@ public final class Device {
             mState.addAll(states);
         }
 
+        /**
+         * Removes the first {@link State} with the given name
+         * @param stateName The name of the {@link State} to remove.
+         * @return Whether a {@link State} was removed or not.
+         */
+        public boolean removeState(String stateName) {
+            for (int i = 0; i < mState.size(); i++) {
+                if (stateName != null && stateName.equals(mState.get(i).getName())) {
+                    mState.remove(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void setMeta(Meta meta) {
             mMeta = meta;
         }
@@ -190,7 +222,7 @@ public final class Device {
                 mMeta = new Meta();
             }
             for (State s : mState) {
-                if (s.mDefaultState) {
+                if (s.isDefaultState()) {
                     mDefaultState = s;
                     break;
                 }

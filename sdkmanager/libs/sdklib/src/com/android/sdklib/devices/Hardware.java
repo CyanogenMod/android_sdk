@@ -16,47 +16,76 @@
 
 package com.android.sdklib.devices;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.UiMode;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class Hardware {
-    Screen mScreen;
-    Set<Network> mNetworking;
-    Set<Sensor> mSensors;
-    boolean mMic;
-    List<Camera> mCameras;
-    Keyboard mKeyboard;
-    Navigation mNav;
-    Storage mRam;
-    ButtonType mButtons;
-    List<Storage> mInternalStorage;
-    List<Storage> mRemovableStorage;
-    String mCpu;
-    String mGpu;
-    Set<Abi> mAbis;
-    Set<UiMode> mUiModes;
-    PowerType mPluggedIn;
+    private Screen mScreen;
+    private Set<Network> mNetworking = new HashSet<Network>();
+    private Set<Sensor> mSensors = new HashSet<Sensor>();
+    private boolean mMic;
+    private List<Camera> mCameras = new ArrayList<Camera>();
+    private Keyboard mKeyboard;
+    private Navigation mNav;
+    private Storage mRam;
+    private ButtonType mButtons;
+    private List<Storage> mInternalStorage = new ArrayList<Storage>();
+    private List<Storage> mRemovableStorage = new ArrayList<Storage>();
+    private String mCpu;
+    private String mGpu;
+    private Set<Abi> mAbis = new HashSet<Abi>();
+    private Set<UiMode> mUiModes = new HashSet<UiMode>();
+    private PowerType mPluggedIn;
 
     public Set<Network> getNetworking() {
         return mNetworking;
+    }
+
+    public void addNetwork(Network n) {
+        mNetworking.add(n);
+    }
+
+    public void addAllNetworks(Collection<Network> ns) {
+        mNetworking.addAll(ns);
     }
 
     public Set<Sensor> getSensors() {
         return mSensors;
     }
 
+    public void addSensor(Sensor sensor) {
+        mSensors.add(sensor);
+    }
+
+    public void addAllSensors(Collection<Sensor> sensors) {
+        mSensors.addAll(sensors);
+    }
+
     public boolean hasMic() {
         return mMic;
     }
 
+    public void setHasMic(boolean hasMic) {
+        mMic = hasMic;
+    }
+
     public List<Camera> getCameras() {
         return mCameras;
+    }
+
+    public void addCamera(Camera c) {
+        mCameras.add(c);
+    }
+
+    public void addAllCameras(Collection<Camera> cs) {
+        mCameras.addAll(cs);
     }
 
     public Camera getCamera(int i) {
@@ -65,7 +94,7 @@ public class Hardware {
 
     public Camera getCamera(CameraLocation location) {
         for (Camera c : mCameras) {
-            if (location.equals(c.mLocation)) {
+            if (location.equals(c.getLocation())) {
                 return c;
             }
         }
@@ -76,48 +105,112 @@ public class Hardware {
         return mKeyboard;
     }
 
+    public void setKeyboard(Keyboard k) {
+        mKeyboard = k;
+    }
+
     public Navigation getNav() {
         return mNav;
+    }
+
+    public void setNav(Navigation n) {
+        mNav = n;
     }
 
     public Storage getRam() {
         return mRam;
     }
 
+    public void setRam(Storage ram) {
+        mRam = ram;
+    }
+
     public ButtonType getButtonType() {
         return mButtons;
+    }
+
+    public void setButtonType(ButtonType bt) {
+        mButtons = bt;
     }
 
     public List<Storage> getInternalStorage() {
         return mInternalStorage;
     }
 
+    public void addInternalStorage(Storage is) {
+        mInternalStorage.add(is);
+    }
+
+    public void addAllInternalStorage(Collection<Storage> is) {
+        mInternalStorage.addAll(is);
+    }
+
     public List<Storage> getRemovableStorage() {
         return mRemovableStorage;
+    }
+
+    public void addRemovableStorage(Storage rs) {
+        mRemovableStorage.add(rs);
+    }
+
+    public void addAllRemovableStorage(Collection<Storage> rs) {
+        mRemovableStorage.addAll(rs);
     }
 
     public String getCpu() {
         return mCpu;
     }
 
+    public void setCpu(String cpuName) {
+        mCpu = cpuName;
+    }
+
     public String getGpu() {
         return mGpu;
+    }
+
+    public void setGpu(String gpuName) {
+        mGpu = gpuName;
     }
 
     public Set<Abi> getSupportedAbis() {
         return mAbis;
     }
 
+    public void addSupportedAbi(Abi abi) {
+        mAbis.add(abi);
+    }
+
+    public void addAllSupportedAbis(Collection<Abi> abis) {
+        mAbis.addAll(abis);
+    }
+
     public Set<UiMode> getSupportedUiModes() {
         return mUiModes;
+    }
+
+    public void addSupportedUiMode(UiMode uiMode) {
+        mUiModes.add(uiMode);
+    }
+
+    public void addAllSupportedUiModes(Collection<UiMode> uiModes) {
+        mUiModes.addAll(uiModes);
     }
 
     public PowerType getChargeType() {
         return mPluggedIn;
     }
 
+    public void setChargeType(PowerType chargeType) {
+        mPluggedIn = chargeType;
+    }
+
     public Screen getScreen() {
         return mScreen;
+    }
+
+    public void setScreen(Screen s) {
+        mScreen = s;
     }
 
     /**

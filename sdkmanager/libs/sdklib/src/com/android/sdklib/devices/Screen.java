@@ -23,52 +23,104 @@ import com.android.resources.TouchScreen;
 
 
 public class Screen {
-    ScreenSize mScreenSize;
-    double mDiagonalLength;
-    Density mPixelDensity;
-    ScreenRatio mScreenRatio;
-    int mXDimension;
-    int mYDimension;
-    double mXdpi;
-    double mYdpi;
-    Multitouch mMultitouch;
-    TouchScreen mMechanism;
-    ScreenType mScreenType;
+    private ScreenSize mScreenSize;
+    private double mDiagonalLength;
+    private Density mPixelDensity;
+    private ScreenRatio mScreenRatio;
+    private int mXDimension;
+    private int mYDimension;
+    private double mXdpi;
+    private double mYdpi;
+    private Multitouch mMultitouch;
+    private TouchScreen mMechanism;
+    private ScreenType mScreenType;
 
     public ScreenSize getSize() {
         return mScreenSize;
     }
+
+    public void setSize(ScreenSize s) {
+        mScreenSize = s;
+    }
+
     public double getDiagonalLength() {
         return mDiagonalLength;
     }
+
+    public void setDiagonalLength(double diagonalLength) {
+        mDiagonalLength = diagonalLength;
+    }
+
     public Density getPixelDensity() {
         return mPixelDensity;
     }
+
+    public void setPixelDensity(Density pDensity) {
+        mPixelDensity = pDensity;
+    }
+
     public ScreenRatio getRatio() {
         return mScreenRatio;
     }
+
+    public void setRatio(ScreenRatio ratio) {
+        mScreenRatio = ratio;
+    }
+
     public int getXDimension() {
         return mXDimension;
+    }
+
+    public void setXDimension(int xDimension) {
+        mXDimension = xDimension;
     }
 
     public int getYDimension() {
         return mYDimension;
     }
 
+    public void setYDimension(int yDimension) {
+        mYDimension = yDimension;
+    }
+
     public double getXdpi() {
         return mXdpi;
     }
+
+    public void setXdpi(double xdpi) {
+        mXdpi = xdpi;
+    }
+
     public double getYdpi() {
         return mYdpi;
     }
+
+    public void setYdpi(double ydpi) {
+        mYdpi = ydpi;
+    }
+
     public Multitouch getMultitouch() {
         return mMultitouch;
     }
+
+    public void setMultitouch(Multitouch m) {
+        mMultitouch = m;
+    }
+
     public TouchScreen getMechanism() {
         return mMechanism;
     }
+
+    public void setMechanism(TouchScreen mechanism) {
+        mMechanism = mechanism;
+    }
+
     public ScreenType getScreenType() {
         return mScreenType;
+    }
+
+    public void setScreenType(ScreenType screenType) {
+        mScreenType = screenType;
     }
 
     /**

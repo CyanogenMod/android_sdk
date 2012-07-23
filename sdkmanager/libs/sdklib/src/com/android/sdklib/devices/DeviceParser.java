@@ -16,24 +16,6 @@
 
 package com.android.sdklib.devices;
 
-import java.awt.Point;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
-
 import com.android.annotations.Nullable;
 import com.android.dvlib.DeviceSchema;
 import com.android.resources.Density;
@@ -46,6 +28,22 @@ import com.android.resources.ScreenRatio;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.resources.UiMode;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import java.awt.Point;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 public class DeviceParser {
 
@@ -86,11 +84,6 @@ public class DeviceParser {
                 mMeta = new Meta();
             } else if (DeviceSchema.NODE_HARDWARE.equals(localName)) {
                 mHardware = new Hardware();
-                mHardware.mCameras = new ArrayList<Camera>();
-                mHardware.mInternalStorage = new ArrayList<Storage>();
-                mHardware.mRemovableStorage = new ArrayList<Storage>();
-                mHardware.mAbis = new HashSet<Abi>();
-                mHardware.mUiModes = new HashSet<UiMode>();
             } else if (DeviceSchema.NODE_SOFTWARE.equals(localName)) {
                 mSoftware = new Software();
             } else if (DeviceSchema.NODE_STATE.equals(localName)) {
@@ -99,9 +92,9 @@ public class DeviceParser {
                 mHardware = mHardware.deepCopy();
                 String defaultState = attributes.getValue(DeviceSchema.ATTR_DEFAULT);
                 if ("true".equals(defaultState) || "1".equals(defaultState)) {
-                    mState.mDefaultState = true;
+                    mState.setDefaultState(true);
                 }
-                mState.mName = attributes.getValue(DeviceSchema.ATTR_NAME).trim();
+                mState.setName(attributes.getValue(DeviceSchema.ATTR_NAME).trim());
             } else if (DeviceSchema.NODE_CAMERA.equals(localName)) {
                 mCamera = new Camera();
             } else if (DeviceSchema.NODE_RAM.equals(localName)
@@ -109,10 +102,10 @@ public class DeviceParser {
                     || DeviceSchema.NODE_REMOVABLE_STORAGE.equals(localName)) {
                 mUnit = Storage.Unit.getEnum(attributes.getValue(DeviceSchema.ATTR_UNIT));
             } else if (DeviceSchema.NODE_FRAME.equals(localName)) {
-                mMeta.mFrameOffsetLandscape = new Point();
-                mMeta.mFrameOffsetPortrait = new Point();
+                mMeta.setFrameOffsetLandscape(new Point());
+                mMeta.setFrameOffsetPortrait(new Point());
             } else if (DeviceSchema.NODE_SCREEN.equals(localName)) {
-                mHardware.mScreen = new Screen();
+                mHardware.setScreen(new Screen());
             }
             mStringAccumulator.setLength(0);
         }
@@ -135,119 +128,115 @@ public class DeviceParser {
             } else if (DeviceSchema.NODE_SOFTWARE.equals(localName)) {
                 mBuilder.addSoftware(mSoftware);
             } else if (DeviceSchema.NODE_STATE.equals(localName)) {
-                mState.mHardwareOverride = mHardware;
+                mState.setHardware(mHardware);
                 mBuilder.addState(mState);
             } else if (DeviceSchema.NODE_SIXTY_FOUR.equals(localName)) {
-                mMeta.mIconSixtyFour = new File(mParentFolder, getString(mStringAccumulator));
+                mMeta.setIconSixtyFour(new File(mParentFolder, getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_SIXTEEN.equals(localName)) {
-                mMeta.mIconSixteen = new File(mParentFolder, getString(mStringAccumulator));
+                mMeta.setIconSixteen(new File(mParentFolder, getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_PATH.equals(localName)) {
-                mMeta.mFrame = new File(mParentFolder, mStringAccumulator.toString().trim());
+                mMeta.setFrame(new File(mParentFolder, mStringAccumulator.toString().trim()));
             } else if (DeviceSchema.NODE_PORTRAIT_X_OFFSET.equals(localName)) {
-                mMeta.mFrameOffsetPortrait.x = getInteger(mStringAccumulator);
+                mMeta.getFrameOffsetPortrait().x = getInteger(mStringAccumulator);
             } else if (DeviceSchema.NODE_PORTRAIT_Y_OFFSET.equals(localName)) {
-                mMeta.mFrameOffsetPortrait.y = getInteger(mStringAccumulator);
+                mMeta.getFrameOffsetPortrait().y = getInteger(mStringAccumulator);
             } else if (DeviceSchema.NODE_LANDSCAPE_X_OFFSET.equals(localName)) {
-                mMeta.mFrameOffsetLandscape.x = getInteger(mStringAccumulator);
+                mMeta.getFrameOffsetLandscape().x = getInteger(mStringAccumulator);
             } else if (DeviceSchema.NODE_LANDSCAPE_Y_OFFSET.equals(localName)) {
-                mMeta.mFrameOffsetLandscape.y = getInteger(mStringAccumulator);
+                mMeta.getFrameOffsetLandscape().y = getInteger(mStringAccumulator);
             } else if (DeviceSchema.NODE_SCREEN_SIZE.equals(localName)) {
-                mHardware.mScreen.mScreenSize = ScreenSize.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setSize(ScreenSize.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_DIAGONAL_LENGTH.equals(localName)) {
-                mHardware.mScreen.mDiagonalLength = getDouble(mStringAccumulator);
+                mHardware.getScreen().setDiagonalLength(getDouble(mStringAccumulator));
             } else if (DeviceSchema.NODE_PIXEL_DENSITY.equals(localName)) {
-                mHardware.mScreen.mPixelDensity = Density.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setPixelDensity(
+                        Density.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_SCREEN_RATIO.equals(localName)) {
-                mHardware.mScreen.mScreenRatio =
-                    ScreenRatio.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setRatio(
+                    ScreenRatio.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_X_DIMENSION.equals(localName)) {
-                mHardware.mScreen.mXDimension = getInteger(mStringAccumulator);
+                mHardware.getScreen().setXDimension(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_Y_DIMENSION.equals(localName)) {
-                mHardware.mScreen.mYDimension = getInteger(mStringAccumulator);
+                mHardware.getScreen().setYDimension(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_XDPI.equals(localName)) {
-                mHardware.mScreen.mXdpi = getDouble(mStringAccumulator);
+                mHardware.getScreen().setXdpi(getDouble(mStringAccumulator));
             } else if (DeviceSchema.NODE_YDPI.equals(localName)) {
-                mHardware.mScreen.mYdpi = getDouble(mStringAccumulator);
+                mHardware.getScreen().setYdpi(getDouble(mStringAccumulator));
             } else if (DeviceSchema.NODE_MULTITOUCH.equals(localName)) {
-                mHardware.mScreen.mMultitouch = Multitouch.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setMultitouch(
+                        Multitouch.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_MECHANISM.equals(localName)) {
-                mHardware.mScreen.mMechanism = TouchScreen.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setMechanism(
+                        TouchScreen.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_SCREEN_TYPE.equals(localName)) {
-                mHardware.mScreen.mScreenType = ScreenType.getEnum(getString(mStringAccumulator));
+                mHardware.getScreen().setScreenType(
+                        ScreenType.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_NETWORKING.equals(localName)) {
-                Set<Network> networking = new HashSet<Network>();
                 for (String n : getStringList(mStringAccumulator)) {
                     Network net = Network.getEnum(n);
                     if (net != null) {
-                        networking.add(net);
+                        mHardware.addNetwork(net);
                     }
                 }
-                mHardware.mNetworking = networking;
             } else if (DeviceSchema.NODE_SENSORS.equals(localName)) {
-                Set<Sensor> sensors = new HashSet<Sensor>();
                 for (String s : getStringList(mStringAccumulator)) {
                     Sensor sens = Sensor.getEnum(s);
                     if (sens != null) {
-                        sensors.add(sens);
+                        mHardware.addSensor(sens);
                     }
                 }
-                mHardware.mSensors = sensors;
             } else if (DeviceSchema.NODE_MIC.equals(localName)) {
-                mHardware.mMic = getBool(mStringAccumulator);
+                mHardware.setHasMic(getBool(mStringAccumulator));
             } else if (DeviceSchema.NODE_CAMERA.equals(localName)) {
-                mHardware.mCameras.add(mCamera);
+                mHardware.addCamera(mCamera);
                 mCamera = null;
             } else if (DeviceSchema.NODE_LOCATION.equals(localName)) {
-                mCamera.mLocation = CameraLocation.getEnum(getString(mStringAccumulator));
+                mCamera.setLocation(CameraLocation.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_AUTOFOCUS.equals(localName)) {
-                mCamera.mAutofocus = getBool(mStringAccumulator);
+                mCamera.setFlash(getBool(mStringAccumulator));
             } else if (DeviceSchema.NODE_FLASH.equals(localName)) {
-                mCamera.mFlash = getBool(mStringAccumulator);
+                mCamera.setFlash(getBool(mStringAccumulator));
             } else if (DeviceSchema.NODE_KEYBOARD.equals(localName)) {
-                mHardware.mKeyboard = Keyboard.getEnum(getString(mStringAccumulator));
+                mHardware.setKeyboard(Keyboard.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_NAV.equals(localName)) {
-                mHardware.mNav = Navigation.getEnum(getString(mStringAccumulator));
+                mHardware.setNav(Navigation.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_RAM.equals(localName)) {
                 int val = getInteger(mStringAccumulator);
-                mHardware.mRam = new Storage(val, mUnit);
+                mHardware.setRam(new Storage(val, mUnit));
             } else if (DeviceSchema.NODE_BUTTONS.equals(localName)) {
-                mHardware.mButtons = ButtonType.getEnum(getString(mStringAccumulator));
+                mHardware.setButtonType(ButtonType.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_INTERNAL_STORAGE.equals(localName)) {
                 for (String s : getStringList(mStringAccumulator)) {
                     int val = Integer.parseInt(s);
-                    mHardware.mInternalStorage.add(new Storage(val, mUnit));
+                    mHardware.addInternalStorage(new Storage(val, mUnit));
                 }
             } else if (DeviceSchema.NODE_REMOVABLE_STORAGE.equals(localName)) {
                 for (String s : getStringList(mStringAccumulator)) {
                     if (s != null && !s.isEmpty()) {
                         int val = Integer.parseInt(s);
-                        mHardware.mRemovableStorage.add(new Storage(val, mUnit));
+                        mHardware.addRemovableStorage(new Storage(val, mUnit));
                     }
                 }
             } else if (DeviceSchema.NODE_CPU.equals(localName)) {
-                mHardware.mCpu = getString(mStringAccumulator);
+                mHardware.setCpu(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_GPU.equals(localName)) {
-                mHardware.mGpu = getString(mStringAccumulator);
+                mHardware.setGpu(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_ABI.equals(localName)) {
-                Set<Abi> abis = new HashSet<Abi>();
                 for (String s : getStringList(mStringAccumulator)) {
                     Abi abi = Abi.getEnum(s);
                     if (abi != null) {
-                        abis.add(abi);
+                        mHardware.addSupportedAbi(abi);
                     }
                 }
-                mHardware.mAbis = abis;
             } else if (DeviceSchema.NODE_DOCK.equals(localName)) {
-                Set<UiMode> uimodes = new HashSet<UiMode>();
                 for (String s : getStringList(mStringAccumulator)) {
                     UiMode d = UiMode.getEnum(s);
                     if (d != null) {
-                        uimodes.add(d);
+                        mHardware.addSupportedUiMode(d);
                     }
                 }
-                mHardware.mUiModes = uimodes;
             } else if (DeviceSchema.NODE_POWER_TYPE.equals(localName)) {
-                mHardware.mPluggedIn = PowerType.getEnum(getString(mStringAccumulator));
+                mHardware.setChargeType(PowerType.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_API_LEVEL.equals(localName)) {
                 String val = getString(mStringAccumulator);
                 // Can be one of 5 forms:
@@ -259,63 +248,61 @@ public class DeviceParser {
                 int index;
                 if (val.charAt(0) == '-') {
                     if (val.length() == 1) { // -
-                        mSoftware.mMinSdkLevel = 0;
-                        mSoftware.mMaxSdkLevel = Integer.MAX_VALUE;
+                        mSoftware.setMinSdkLevel(0);
+                        mSoftware.setMaxSdkLevel(Integer.MAX_VALUE);
                     } else { // -2
                         // Remove the front dash and any whitespace between it
                         // and the upper bound.
                         val = val.substring(1).trim();
-                        mSoftware.mMinSdkLevel = 0;
-                        mSoftware.mMaxSdkLevel = Integer.parseInt(val);
+                        mSoftware.setMinSdkLevel(0);
+                        mSoftware.setMaxSdkLevel(Integer.parseInt(val));
                     }
                 } else if ((index = val.indexOf('-')) > 0) {
                     if (index == val.length() - 1) { // 1-
                         // Strip the last dash and any whitespace between it and
                         // the lower bound.
                         val = val.substring(0, val.length() - 1).trim();
-                        mSoftware.mMinSdkLevel = Integer.parseInt(val);
-                        mSoftware.mMaxSdkLevel = Integer.MAX_VALUE;
+                        mSoftware.setMinSdkLevel(Integer.parseInt(val));
+                        mSoftware.setMaxSdkLevel(Integer.MAX_VALUE);
                     } else { // 1-2
                         String min = val.substring(0, index).trim();
                         String max = val.substring(index + 1);
-                        mSoftware.mMinSdkLevel = Integer.parseInt(min);
-                        mSoftware.mMaxSdkLevel = Integer.parseInt(max);
+                        mSoftware.setMinSdkLevel(Integer.parseInt(min));
+                        mSoftware.setMaxSdkLevel(Integer.parseInt(max));
                     }
                 } else { // 1
                     int apiLevel = Integer.parseInt(val);
-                    mSoftware.mMinSdkLevel = apiLevel;
-                    mSoftware.mMaxSdkLevel = apiLevel;
+                    mSoftware.setMinSdkLevel(apiLevel);
+                    mSoftware.setMaxSdkLevel(apiLevel);
                 }
             } else if (DeviceSchema.NODE_LIVE_WALLPAPER_SUPPORT.equals(localName)) {
-                mSoftware.mLiveWallpaperSupport = getBool(mStringAccumulator);
+                mSoftware.setLiveWallpaperSupport(getBool(mStringAccumulator));
             } else if (DeviceSchema.NODE_BLUETOOTH_PROFILES.equals(localName)) {
-                Set<BluetoothProfile> bps = new HashSet<BluetoothProfile>();
                 for (String s : getStringList(mStringAccumulator)) {
                     BluetoothProfile profile = BluetoothProfile.getEnum(s);
                     if (profile != null) {
-                        bps.add(profile);
+                        mSoftware.addBluetoothProfile(profile);
                     }
                 }
-                mSoftware.mBluetoothProfiles = bps;
             } else if (DeviceSchema.NODE_GL_VERSION.equals(localName)) {
                 // Guaranteed to be in the form [\d]\.[\d]
-                mSoftware.mGlVersion = getString(mStringAccumulator);
+                mSoftware.setGlVersion(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_GL_EXTENSIONS.equals(localName)) {
-                mSoftware.mGlExtensions = new HashSet<String>(getStringList(mStringAccumulator));
+                mSoftware.addAllGlExtensions(getStringList(mStringAccumulator));
             } else if (DeviceSchema.NODE_DESCRIPTION.equals(localName)) {
-                mState.mDescription = getString(mStringAccumulator);
+                mState.setDescription(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_SCREEN_ORIENTATION.equals(localName)) {
-                mState.mOrientation = ScreenOrientation.getEnum(getString(mStringAccumulator));
+                mState.setOrientation(ScreenOrientation.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_KEYBOARD_STATE.equals(localName)) {
-                mState.mKeyState = KeyboardState.getEnum(getString(mStringAccumulator));
+                mState.setKeyState(KeyboardState.getEnum(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_NAV_STATE.equals(localName)) {
                 // We have an extra state in our XML for nonav that
                 // NavigationState doesn't contain
                 String navState = getString(mStringAccumulator);
                 if (navState.equals("nonav")) {
-                    mState.mNavState = NavigationState.HIDDEN;
+                    mState.setNavState(NavigationState.HIDDEN);
                 } else {
-                    mState.mNavState = NavigationState.getEnum(getString(mStringAccumulator));
+                    mState.setNavState(NavigationState.getEnum(getString(mStringAccumulator)));
                 }
             }
         }

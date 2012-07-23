@@ -17,20 +17,55 @@
 package com.android.sdklib.devices;
 
 public class Camera {
-    CameraLocation mLocation;
-    boolean mAutofocus;
-    boolean mFlash;
+    private CameraLocation mLocation;
+    private boolean mAutofocus;
+    private boolean mFlash;
+
+    /**
+     * Creates a {@link Camera} with reasonable defaults.
+     * 
+     * The resulting {@link Camera} with be on the {@link CameraLocation#BACK} with both autofocus
+     * and flash.
+     */
+    public Camera() {
+        this(CameraLocation.BACK, true, true);
+    }
+
+    /**
+     * Creates a new {@link Camera} which describes an on device camera and it's features.
+     * @param location The location of the {@link Camera} on the device. Either
+     * {@link CameraLocation#FRONT} or {@link CameraLocation#BACK}.
+     * @param autofocus Whether the {@link Camera} can auto-focus.
+     * @param flash Whether the {@link Camera} has flash.
+     */
+    public Camera(CameraLocation location, boolean autofocus, boolean flash) {
+        mLocation = location;
+        mAutofocus = autofocus;
+        mFlash = flash;
+    }
 
     public CameraLocation getLocation() {
         return mLocation;
+    }
+
+    public void setLocation(CameraLocation cl) {
+        mLocation = cl;
     }
 
     public boolean hasAutofocus() {
         return mAutofocus;
     }
 
+    public void setAutofocus(boolean hasAutofocus) {
+        mAutofocus = hasAutofocus;
+    }
+
     public boolean hasFlash() {
         return mFlash;
+    }
+
+    public void setFlash(boolean flash) {
+        mFlash = flash;
     }
 
     /**
