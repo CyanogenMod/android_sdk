@@ -243,7 +243,7 @@ public class Location {
             }
             char c = contents.charAt(offset);
             if (c == '\n') {
-                lineOffset = offset;
+                lineOffset = offset + 1;
                 line++;
             }
         }
@@ -353,6 +353,10 @@ public class Location {
                             return new Location(file, new DefaultPosition(line, column, index),
                                     new DefaultPosition(line, -1, end + patternEnd.length()));
                         }
+                    } else if (hints != null && (hints.isJavaSymbol() || hints.isWholeWord())) {
+                        return new Location(file, new DefaultPosition(line, column, index),
+                                new DefaultPosition(line, column + patternStart.length(),
+                                        index + patternStart.length()));
                     }
                     return new Location(file, new DefaultPosition(line, column, index),
                             new DefaultPosition(line, column, index + patternStart.length()));
