@@ -41,9 +41,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -215,6 +217,12 @@ public class AvdManager {
         CONFLICT_EXISTING_PATH,
     }
 
+    // A map where the keys are the locations of the SDK and the values are the corresponding
+    // AvdManagers. This prevents us from creating multiple AvdManagers for the same SDK and having
+    // them get out of sync.
+    private static final Map<String, AvdManager> mManagers =
+        Collections.synchronizedMap(new WeakHashMap<String, AvdManager>());
+
     private final ArrayList<AvdInfo> mAllAvdList = new ArrayList<AvdInfo>();
     private AvdInfo[] mValidAvdList;
     private AvdInfo[] mBrokenAvdList;
@@ -230,9 +238,22 @@ public class AvdManager {
      *            logging needs. Cannot be null.
      * @throws AndroidLocationException
      */
-    public AvdManager(SdkManager sdkManager, ISdkLog log) throws AndroidLocationException {
+    protected AvdManager(SdkManager sdkManager, ISdkLog log) throws AndroidLocationException {
         mSdkManager = sdkManager;
         buildAvdList(mAllAvdList, log);
+    }
+
+    public static AvdManager getInstance(SdkManager sdkManager, ISdkLog log)
+            throws AndroidLocationException {
+        synchronized(mManagers) {
+            AvdManager manager;
+            if ((manager = mManagers.get(sdkManager.getLocation())) != null) {
+                return manager;
+            }
+            manager = new AvdManager(sdkManager, log);
+            mManagers.put(sdkManager.getLocation(), manager);
+            return manager;
+        }
     }
 
     /**
