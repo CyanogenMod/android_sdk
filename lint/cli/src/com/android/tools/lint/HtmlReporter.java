@@ -156,9 +156,9 @@ public class HtmlReporter extends Reporter {
                     mWriter.write("\n<a name=\"");                       //$NON-NLS-1$
                     mWriter.write(issue.getCategory().getFullName());
                     mWriter.write("\"></a>\n");                          //$NON-NLS-1$
-                    mWriter.write("<div class=\"category\">");           //$NON-NLS-1$
+                    mWriter.write("<div class=\"category\"><a href=\"#\" title=\"Return to top\">");           //$NON-NLS-1$
                     mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
+                    mWriter.write("</a><div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
                     mWriter.write("</div>\n");                           //$NON-NLS-1$
                 }
 
@@ -166,9 +166,9 @@ public class HtmlReporter extends Reporter {
                 mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
 
                 // Explain this issue
-                mWriter.write("<div class=\"id\">");                     //$NON-NLS-1$
+                mWriter.write("<div class=\"id\"><a href=\"#\" title=\"Return to top\">");                     //$NON-NLS-1$
                 mWriter.write(issue.getId());
-                mWriter.write("<div class=\"issueSeparator\"></div>\n"); //$NON-NLS-1$
+                mWriter.write("</a><div class=\"issueSeparator\"></div>\n"); //$NON-NLS-1$
                 mWriter.write("</div>\n");                               //$NON-NLS-1$
 
                 mWriter.write("<div class=\"warningslist\">\n");         //$NON-NLS-1$
