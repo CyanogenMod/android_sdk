@@ -28,10 +28,17 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.sun.xml.internal.ws.org.objectweb.asm.Opcodes;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.analysis.Analyzer;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.BasicInterpreter;
+import org.objectweb.asm.tree.analysis.BasicValue;
+import org.objectweb.asm.tree.analysis.Frame;
 
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +65,7 @@ public class SecureRandomDetector extends Detector implements ClassScanner {
     private static final String SET_SEED = "setSeed"; //$NON-NLS-1$
     private static final String OWNER_SECURE_RANDOM = "java/security/SecureRandom"; //$NON-NLS-1$
     private static final String OWNER_RANDOM = "java/util/Random"; //$NON-NLS-1$
+    private static final String VM_SECURE_RANDOM = 'L' + OWNER_SECURE_RANDOM + ';';
     /** Method description for a method that takes a long argument (no return type specified */
     private static final String LONG_ARG = "(J)"; //$NON-NLS-1$
 
@@ -87,6 +95,37 @@ public class SecureRandomDetector extends Detector implements ClassScanner {
                 // passed in appears to be fixed.
                 // However, people calling this constructor rather than the simpler one
                 // with a fixed integer are probably less likely to make that mistake... right?
+            }
+        } else if (owner.equals(OWNER_RANDOM) && desc.startsWith(LONG_ARG)) {
+            // Called setSeed(long) on an instanceof a Random object. Flag this if the instance
+            // is likely a SecureRandom.
+
+            // Track allocations such that we know whether the type of the call
+            // is on a SecureRandom rather than a Random
+            Analyzer analyzer = new Analyzer(new BasicInterpreter() {
+                @Override
+                public BasicValue newValue(Type type) {
+                    if (type != null && type.getDescriptor().equals(VM_SECURE_RANDOM)) {
+                        return new BasicValue(type);
+                    }
+                    return super.newValue(type);
+                }
+            });
+            try {
+                Frame[] frames = analyzer.analyze(classNode.name, method);
+                InsnList instructions = method.instructions;
+                Frame frame = frames[instructions.indexOf(call)];
+                int stackSlot = frame.getStackSize();
+                for (Type type : Type.getArgumentTypes(desc)) {
+                    stackSlot -= type.getSize();
+                }
+                BasicValue stackValue = (BasicValue) frame.getStack(stackSlot);
+                Type type = stackValue.getType();
+                if (type != null && type.getDescriptor().equals(VM_SECURE_RANDOM)) {
+                    checkValidSetSeed(context, call);
+                }
+            } catch (AnalyzerException e) {
+                context.log(e, null);
             }
         } else if (owner.equals(OWNER_RANDOM) && desc.startsWith(LONG_ARG)) {
             // Called setSeed(long) on an instanceof a Random object. Flag this if the instance

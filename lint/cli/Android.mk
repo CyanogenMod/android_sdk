@@ -16,6 +16,7 @@ LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
 	asm-tools \
 	asm-tree-tools \
+	asm-analysis-tools \
 	guava-tools
 
 LOCAL_MODULE := lint

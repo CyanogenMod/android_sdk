@@ -15,9 +15,10 @@ LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
 	androidprefs \
 	lint_api \
-        asm-tools \
-        asm-tree-tools \
-        guava-tools
+	asm-tools \
+	asm-tree-tools \
+	asm-analysis-tools \
+	guava-tools
 
 LOCAL_MODULE := lint_checks
 LOCAL_MODULE_TAGS := optional

@@ -50,4 +50,59 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 "bytecode/WakelockActivity2.class.data=>bin/classes/test/pkg/WakelockActivity2.class"
                 ));
     }
+
+    public void test3() throws Exception {
+        assertEquals(
+            "WakelockActivity3.java:13: Warning: The release() call is not always reached",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "res/layout/onclick.xml=>res/layout/onclick.xml",
+                "bytecode/WakelockActivity3.java.txt=>src/test/pkg/WakelockActivity3.java",
+                "bytecode/WakelockActivity3.class.data=>bin/classes/test/pkg/WakelockActivity3.class"
+                ));
+    }
+
+    public void test4() throws Exception {
+        assertEquals(
+            "WakelockActivity4.java:10: Warning: The release() call is not always reached",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "res/layout/onclick.xml=>res/layout/onclick.xml",
+                "bytecode/WakelockActivity4.java.txt=>src/test/pkg/WakelockActivity4.java",
+                "bytecode/WakelockActivity4.class.data=>bin/classes/test/pkg/WakelockActivity4.class"
+                ));
+    }
+
+    public void test5() throws Exception {
+        assertEquals(
+            // Missing 13
+            "WakelockActivity5.java:13: Warning: The release() call is not always reached",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "res/layout/onclick.xml=>res/layout/onclick.xml",
+                "bytecode/WakelockActivity5.java.txt=>src/test/pkg/WakelockActivity5.java",
+                "bytecode/WakelockActivity5.class.data=>bin/classes/test/pkg/WakelockActivity5.class"
+                ));
+    }
+
+    public void test6() throws Exception {
+        assertEquals(
+            "WakelockActivity6.java:19: Warning: The release() call is not always reached\n" +
+            "WakelockActivity6.java:28: Warning: The release() call is not always reached\n" +
+            "WakelockActivity6.java:65: Warning: The release() call is not always reached",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "res/layout/onclick.xml=>res/layout/onclick.xml",
+                "bytecode/WakelockActivity6.java.txt=>src/test/pkg/WakelockActivity6.java",
+                "bytecode/WakelockActivity6.class.data=>bin/classes/test/pkg/WakelockActivity6.class"
+                ));
+    }
 }
