@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Issue;
@@ -37,7 +36,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -80,11 +78,6 @@ public class FragmentDetector extends Detector implements ClassScanner {
     @Override
     public @NonNull Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     // ---- Implements ClassScanner ----

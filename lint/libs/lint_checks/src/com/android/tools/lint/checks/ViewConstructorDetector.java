@@ -21,7 +21,6 @@ import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -71,11 +70,6 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
 
     /** Constructs a new {@link ViewConstructorDetector} check */
     public ViewConstructorDetector() {
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     @Override

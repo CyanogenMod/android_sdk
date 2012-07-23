@@ -32,6 +32,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.w3c.dom.Element;
@@ -519,6 +520,87 @@ public class LintUtils {
         }
 
         return true;
+    }
+
+    /**
+     * Returns the previous opcode prior to the given node, ignoring label and
+     * line number nodes
+     *
+     * @param node the node to look up the previous opcode for
+     * @return the previous opcode, or {@link Opcodes#NOP} if no previous node
+     *         was found
+     */
+    public static int getPrevOpcode(@NonNull AbstractInsnNode node) {
+        AbstractInsnNode prev = getPrevInstruction(node);
+        if (prev != null) {
+            return prev.getOpcode();
+        } else {
+            return Opcodes.NOP;
+        }
+    }
+
+    /**
+     * Returns the previous instruction prior to the given node, ignoring label
+     * and line number nodes.
+     *
+     * @param node the node to look up the previous instruction for
+     * @return the previous instruction, or null if no previous node was found
+     */
+    @Nullable
+    public static AbstractInsnNode getPrevInstruction(@NonNull AbstractInsnNode node) {
+        AbstractInsnNode prev = node;
+        while (true) {
+            prev = prev.getPrevious();
+            if (prev == null) {
+                return null;
+            } else {
+                int type = prev.getType();
+                if (type != AbstractInsnNode.LINE && type != AbstractInsnNode.LABEL
+                        && type != AbstractInsnNode.FRAME) {
+                    return prev;
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the next opcode after to the given node, ignoring label and line
+     * number nodes
+     *
+     * @param node the node to look up the next opcode for
+     * @return the next opcode, or {@link Opcodes#NOP} if no next node was found
+     */
+    public static int getNextOpcode(@NonNull AbstractInsnNode node) {
+        AbstractInsnNode next = getNextInstruction(node);
+        if (next != null) {
+            return next.getOpcode();
+        } else {
+            return Opcodes.NOP;
+        }
+    }
+
+    /**
+     * Returns the next instruction after to the given node, ignoring label and
+     * line number nodes.
+     *
+     * @param node the node to look up the next node for
+     * @return the next instruction, or null if no next node was found
+     */
+    @Nullable
+    public static AbstractInsnNode getNextInstruction(@NonNull AbstractInsnNode node) {
+        AbstractInsnNode next = node;
+        while (true) {
+            next = next.getNext();
+            if (next == null) {
+                return null;
+            } else {
+                int type = next.getType();
+                if (type != AbstractInsnNode.LINE && type != AbstractInsnNode.LABEL
+                        && type != AbstractInsnNode.FRAME) {
+                    return next;
+                }
+            }
+        }
     }
 
     /**

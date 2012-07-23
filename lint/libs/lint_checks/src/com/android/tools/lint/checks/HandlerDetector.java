@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Issue;
@@ -30,8 +29,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.objectweb.asm.tree.ClassNode;
-
-import java.io.File;
 
 /**
  * Checks that Handler implementations are top level classes or static.
@@ -63,11 +60,6 @@ public class HandlerDetector extends Detector implements ClassScanner {
     @Override
     public @NonNull Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     // ---- Implements ClassScanner ----

@@ -41,7 +41,6 @@ import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,11 +83,6 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
     @Override
     public @NonNull Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
     }
 
     @Override

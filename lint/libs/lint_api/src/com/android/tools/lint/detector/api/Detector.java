@@ -21,7 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -203,6 +206,98 @@ public abstract class Detector {
          * @param classNode the root class node
          */
         void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode);
+
+        /**
+         * Returns the list of node types (corresponding to the constants in the
+         * {@link AbstractInsnNode} class) that this scanner applies to. The
+         * {@link #checkInstruction(ClassContext, ClassNode, MethodNode, AbstractInsnNode)}
+         * method will be called for each match.
+         *
+         * @return an array containing all the node types this detector should be
+         *         called for, or null if none.
+         */
+        @Nullable
+        int[] getApplicableAsmNodeTypes();
+
+        /**
+         * Process a given instruction node, and register lint issues if
+         * applicable.
+         *
+         * @param context the context of the lint check, pointing to for example
+         *            the file
+         * @param classNode the root class node
+         * @param method the method node containing the call
+         * @param instruction the actual instruction
+         */
+        void checkInstruction(@NonNull ClassContext context, @NonNull ClassNode classNode,
+                @NonNull MethodNode method, @NonNull AbstractInsnNode instruction);
+
+        /**
+         * Return the list of method call names (in VM format, e.g. "<init>" for
+         * constructors, etc) for method calls this detector is interested in,
+         * or null. T his will be used to dispatch calls to
+         * {@link #checkCall(ClassContext, ClassNode, MethodNode, MethodInsnNode)}
+         * for only the method calls in owners that the detector is interested
+         * in.
+         * <p>
+         * <b>NOTE</b>: If you return non null from this method, then <b>only</b>
+         * {@link #checkCall(ClassContext, ClassNode, MethodNode, MethodInsnNode)}
+         * will be called if a suitable method is found;
+         * {@link #checkClass(ClassContext, ClassNode)} will not be called under
+         * any circumstances.
+         * <p>
+         * This makes it easy to write detectors that focus on some fixed calls,
+         * and allows lint to make a single pass over the bytecode over a class,
+         * and efficiently dispatch method calls to any detectors that are
+         * interested in it. Without this, each new lint check interested in a
+         * single method, would be doing a complete pass through all the
+         * bytecode instructions of the class via the
+         * {@link #checkClass(ClassContext, ClassNode)} method, which would make
+         * each newly added lint check make lint slower. Now a single dispatch
+         * map is used instead, and for each encountered call in the single
+         * dispatch, it looks up in the map which if any detectors are
+         * interested in the given call name, and dispatches to each one in
+         * turn.
+         *
+         * @return a list of applicable method names, or null.
+         */
+        @Nullable
+        List<String> getApplicableCallNames();
+
+        /**
+         * Just like {@link Detector#getApplicableCallNames()}, but for the owner
+         * field instead. The
+         * {@link #checkCall(ClassContext, ClassNode, MethodNode, MethodInsnNode)}
+         * method will be called for all {@link MethodInsnNode} instances where the
+         * owner field matches any of the members returned in this node.
+         * <p>
+         * Note that if your detector provides both a name and an owner, the
+         * method will be called for any nodes matching either the name <b>or</b>
+         * the owner, not only where they match <b>both</b>. Note also that it will
+         * be called twice - once for the name match, and (at least once) for the owner
+         * match.
+         *
+         * @return a list of applicable owner names, or null.
+         */
+        @Nullable
+        List<String> getApplicableCallOwners();
+
+        /**
+         * Process a given method call node, and register lint issues if
+         * applicable. This is similar to the
+         * {@link #checkInstruction(ClassContext, ClassNode, MethodNode, AbstractInsnNode)}
+         * method, but has the additional advantage that it is only called for known
+         * method names or method owners, according to
+         * {@link #getApplicableCallNames()} and {@link #getApplicableCallOwners()}.
+         *
+         * @param context the context of the lint check, pointing to for example
+         *            the file
+         * @param classNode the root class node
+         * @param method the method node containing the call
+         * @param call the actual method call node
+         */
+        void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
+                @NonNull MethodNode method, @NonNull MethodInsnNode call);
     }
 
     /** Specialized interface for detectors that scan XML files */
@@ -454,4 +549,33 @@ public abstract class Detector {
     @SuppressWarnings("javadoc")
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
     }
+
+    @SuppressWarnings("javadoc")
+    @Nullable
+    public List<String> getApplicableCallNames() {
+        return null;
+    }
+
+    @SuppressWarnings("javadoc")
+    @Nullable
+    public List<String> getApplicableCallOwners() {
+        return null;
+    }
+
+    @SuppressWarnings("javadoc")
+    public void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
+            @NonNull MethodNode method, @NonNull MethodInsnNode call) {
+    }
+
+    @SuppressWarnings("javadoc")
+    @Nullable
+    public int[] getApplicableAsmNodeTypes() {
+        return null;
+    }
+
+    @SuppressWarnings("javadoc")
+    public void checkInstruction(@NonNull ClassContext context, @NonNull ClassNode classNode,
+            @NonNull MethodNode method, @NonNull AbstractInsnNode instruction) {
+    }
+
 }

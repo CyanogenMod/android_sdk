@@ -1023,6 +1023,8 @@ public class LintDriver {
         if (mScope.contains(scope)) {
             List<Detector> classDetectors = mScopeDetectors.get(scope);
             if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
+                AsmVisitor visitor = new AsmVisitor(mClient, classDetectors);
+
                 mOuterClasses = new ArrayDeque<ClassNode>();
                 for (ClassEntry entry : entries) {
                     ClassReader reader;
@@ -1055,7 +1057,11 @@ public class LintDriver {
                     ClassContext context = new ClassContext(this, project, main,
                             entry.file, entry.jarFile, entry.binDir, entry.bytes,
                             classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/);
-                    runClassDetectors(context, classDetectors);
+                    try {
+                        visitor.runClassDetectors(context);
+                    } catch (Exception e) {
+                        mClient.log(e, null);
+                    }
 
                     if (mCanceled) {
                         return;
@@ -1196,29 +1202,6 @@ public class LintDriver {
             } else {
                 mClient.log(null, "Ignoring class path entry %1$s", classPathEntry);
             }
-        }
-    }
-
-    private void runClassDetectors(ClassContext context, @NonNull List<Detector> checks) {
-        try {
-            File file = context.file;
-            ClassNode classNode = context.getClassNode();
-            for (Detector detector : checks) {
-                if (detector.appliesTo(context, file)) {
-                    fireEvent(EventType.SCANNING_FILE, context);
-                    detector.beforeCheckFile(context);
-
-                    Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
-                    scanner.checkClass(context, classNode);
-                    detector.afterCheckFile(context);
-                }
-
-                if (mCanceled) {
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            mClient.log(e, null);
         }
     }
 
