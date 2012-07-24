@@ -114,4 +114,27 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                         "res/values/strings3.xml=>res/values/strings.xml",
                         "res/values-fr/strings.xml=>res/values-fr/strings.xml"));
     }
+
+    public void testLibraryProjects() throws Exception {
+        // If a library project provides additional locales, that should not force
+        // the main project to include all those translations
+        assertEquals(
+            "No warnings.",
+
+             lintProject(
+                 // Master project
+                 "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                 "multiproject/main.properties=>project.properties",
+                 "res/values/strings2.xml",
+
+                 // Library project
+                 "multiproject/library-manifest.xml=>../LibraryProject/AndroidManifest.xml",
+                 "multiproject/library.properties=>../LibraryProject/project.properties",
+
+                 "res/values/strings.xml=>../LibraryProject/res/values/strings.xml",
+                 "res/values-cs/strings.xml=>../LibraryProject/res/values-cs/strings.xml",
+                 "res/values-cs/strings.xml=>../LibraryProject/res/values-de/strings.xml",
+                 "res/values-cs/strings.xml=>../LibraryProject/res/values-nl/strings.xml"
+             ));
+    }
 }

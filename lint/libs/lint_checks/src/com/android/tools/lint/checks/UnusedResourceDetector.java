@@ -49,6 +49,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -99,6 +100,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             Severity.WARNING,
             UnusedResourceDetector.class,
             EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES));
+
     /** Unused id's */
     public static final Issue ISSUE_IDS = Issue.create("UnusedIds", //$NON-NLS-1$
             "Looks for unused id's",
@@ -175,12 +177,16 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                                 if (xmlContext.getDriver().isSuppressed(ISSUE, root)) {
                                     //  Also remove it from consideration such that even the
                                     // presence of this field in the R file is ignored.
-                                    if (mUnused != null) {
-                                        mUnused.remove(resource);
-                                    }
+                                    mUnused.remove(resource);
                                     return;
                                 }
                             }
+                        }
+
+                        if (!context.getProject().getReportIssues()) {
+                            // If this is a library project not being analyzed, ignore it
+                            mUnused.remove(resource);
+                            return;
                         }
 
                         recordLocation(resource, Location.create(file));
@@ -289,12 +295,34 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 List<String> sorted = new ArrayList<String>(mUnused.keySet());
                 Collections.sort(sorted);
 
+                Boolean skippedLibraries = null;
+
                 for (String resource : sorted) {
                     Location location = mUnused.get(resource);
                     if (location != null) {
                         // We were prepending locations, but we want to prefer the base folders
                         location = Location.reverse(location);
                     }
+
+                    if (location == null) {
+                        if (skippedLibraries == null) {
+                            skippedLibraries = false;
+                            for (Project project : context.getDriver().getProjects()) {
+                                if (!project.getReportIssues()) {
+                                    skippedLibraries = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (skippedLibraries) {
+                            // Skip this resource if we don't have a location, and one or
+                            // more library projects were skipped; the resource was very
+                            // probably defined in that library project and only encountered
+                            // in the main project's java R file
+                            continue;
+                        }
+                    }
+
                     String message = String.format("The resource %1$s appears to be unused",
                             resource);
                     Issue issue = getIssue(resource);
@@ -364,6 +392,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                                 mUnused.remove(resource);
                                 return;
                             }
+                            if (!context.getProject().getReportIssues()) {
+                                mUnused.remove(resource);
+                                return;
+                            }
                             recordLocation(resource, context.getLocation(nameAttribute));
                         }
                     }
@@ -419,6 +451,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 mDeclarations.add(resource);
             } else if (mUnused.containsKey(resource)) {
                 if (context.getDriver().isSuppressed(getIssue(resource), attribute)) {
+                    mUnused.remove(resource);
+                    return;
+                }
+                if (!context.getProject().getReportIssues()) {
                     mUnused.remove(resource);
                     return;
                 }

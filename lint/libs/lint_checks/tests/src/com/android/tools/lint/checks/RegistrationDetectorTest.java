@@ -85,4 +85,25 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 "bytecode/TestReceiver$1.class.data=>bin/classes/test/pkg/TestReceiver$1.class"
                 ));
     }
+
+    public void testLibraryProjects() throws Exception {
+        // If a library project provides additional activities, it is not an error to
+        // not register all of those here
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                // Master project
+                "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                "multiproject/main.properties=>project.properties",
+
+                // Library project
+                "multiproject/library-manifest.xml=>../LibraryProject/AndroidManifest.xml",
+                "multiproject/library.properties=>../LibraryProject/project.properties",
+
+                "bytecode/.classpath=>../LibraryProject/.classpath",
+                "bytecode/OnClickActivity.java.txt=>../LibraryProject/src/test/pkg/OnClickActivity.java",
+                "bytecode/OnClickActivity.class.data=>../LibraryProject/bin/classes/test/pkg/OnClickActivity.class"
+                ));
+    }
 }

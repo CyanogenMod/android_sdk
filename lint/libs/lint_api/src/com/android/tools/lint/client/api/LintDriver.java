@@ -126,6 +126,7 @@ public class LintDriver {
     private List<Detector> mRepeatingDetectors;
     private EnumSet<Scope> mRepeatScope;
     private Project[] mCurrentProjects;
+    private Project mCurrentProject;
     private boolean mAbbreviating = true;
 
     /**
@@ -225,6 +226,19 @@ public class LintDriver {
      */
     public boolean isAbbreviating() {
         return mAbbreviating;
+    }
+
+    /**
+     * Returns the projects being analyzed
+     *
+     * @return the projects being analyzed
+     */
+    @NonNull
+    public List<Project> getProjects() {
+        if (mCurrentProjects != null) {
+            return Arrays.asList(mCurrentProjects);
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -604,6 +618,15 @@ public class LintDriver {
             roots.removeAll(project.getAllLibraries());
         }
 
+        // Report issues for all projects that are explicitly referenced. We need to
+        // do this here, since the project initialization will mark all library
+        // projects as no-report projects by default.
+        for (Project project : allProjects) {
+            // Report issues for all projects explicitly listed or found via a directory
+            // traversal -- including library projects.
+            project.setReportIssues(true);
+        }
+
         if (LintUtils.assertionsEnabled()) {
             // Make sure that all the project directories are unique. This ensures
             // that we didn't accidentally end up with different project instances
@@ -661,6 +684,8 @@ public class LintDriver {
         allProjects.addAll(allLibraries);
         mCurrentProjects = allProjects.toArray(new Project[allProjects.size()]);
 
+        mCurrentProject = project;
+
         for (Detector check : mApplicableDetectors) {
             check.beforeCheckProject(projectContext);
             if (mCanceled) {
@@ -668,6 +693,7 @@ public class LintDriver {
             }
         }
 
+        assert mCurrentProject == project;
         runFileDetectors(project, project);
 
         if (!Scope.checkSingleFile(mScope)) {
@@ -675,6 +701,7 @@ public class LintDriver {
             for (Project library : libraries) {
                 Context libraryContext = new Context(this, library, project, projectDir);
                 fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext);
+                mCurrentProject = library;
 
                 for (Detector check : mApplicableDetectors) {
                     check.beforeCheckLibraryProject(libraryContext);
@@ -682,11 +709,14 @@ public class LintDriver {
                         return;
                     }
                 }
+                assert mCurrentProject == library;
 
                 runFileDetectors(library, project);
                 if (mCanceled) {
                     return;
                 }
+
+                assert mCurrentProject == library;
 
                 for (Detector check : mApplicableDetectors) {
                     check.afterCheckLibraryProject(libraryContext);
@@ -696,6 +726,8 @@ public class LintDriver {
                 }
             }
         }
+
+        mCurrentProject = project;
 
         for (Detector check : mApplicableDetectors) {
             check.afterCheckProject(projectContext);
@@ -1487,6 +1519,11 @@ public class LintDriver {
                 @Nullable Location location,
                 @NonNull String message,
                 @Nullable Object data) {
+            assert mCurrentProject != null;
+            if (!mCurrentProject.getReportIssues()) {
+                return;
+            }
+
             Configuration configuration = context.getConfiguration();
             if (!configuration.isEnabled(issue)) {
                 if (issue != IssueRegistry.PARSER_ERROR && issue != IssueRegistry.LINT_ERROR) {

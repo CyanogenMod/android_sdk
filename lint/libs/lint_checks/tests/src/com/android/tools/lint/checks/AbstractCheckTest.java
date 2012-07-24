@@ -77,13 +77,14 @@ public abstract class AbstractCheckTest extends TestCase {
 
     protected String lintFiles(String... relativePaths) throws Exception {
         List<File> files = new ArrayList<File>();
+        File targetDir = getTargetDir();
         for (String relativePath : relativePaths) {
-            File file = getTestfile(relativePath);
+            File file = getTestfile(targetDir, relativePath);
             assertNotNull(file);
             files.add(file);
         }
 
-        addManifestFile(getTargetDir());
+        addManifestFile(targetDir);
 
         return checkLint(files);
     }
@@ -107,7 +108,16 @@ public abstract class AbstractCheckTest extends TestCase {
             mOutput.append("No warnings.");
         }
 
-        return mOutput.toString();
+        String result = mOutput.toString();
+
+        // The output typically contains a few directory/filenames.
+        // On Windows we need to change the separators to the unix-style
+        // forward slash to make the test as OS-agnostic as possible.
+        if (File.separatorChar != '/') {
+            result = result.replace(File.separatorChar, '/');
+        }
+
+        return result;
     }
 
     /**
@@ -116,28 +126,30 @@ public abstract class AbstractCheckTest extends TestCase {
      *   separators to the unix-style forward slash.
      */
     protected String lintProject(String... relativePaths) throws Exception {
+        File projectDir = getProjectDir(null, relativePaths);
+        return checkLint(Collections.singletonList(projectDir));
+    }
+
+    /** Creates a project directory structure from the given files */
+    protected File getProjectDir(String name, String ...relativePaths) throws Exception {
         assertFalse("getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
 
         File projectDir = getTargetDir();
+        if (name != null) {
+            projectDir = new File(projectDir, name);
+        }
+        assertTrue(projectDir.getPath(), projectDir.mkdirs());
 
         List<File> files = new ArrayList<File>();
         for (String relativePath : relativePaths) {
-            File file = getTestfile(relativePath);
+            File file = getTestfile(projectDir, relativePath);
             assertNotNull(file);
             files.add(file);
         }
 
         addManifestFile(projectDir);
-
-        String result = checkLint(Collections.singletonList(projectDir));
-        // The output typically contains a few directory/filenames.
-        // On Windows we need to change the separators to the unix-style
-        // forward slash to make the test as OS-agnostic as possible.
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-        return result;
+        return projectDir;
     }
 
     private void addManifestFile(File projectDir) throws IOException {
@@ -185,7 +197,11 @@ public abstract class AbstractCheckTest extends TestCase {
 
     private File makeTestFile(String name, String relative,
             final InputStream contents) throws IOException {
-        File dir = getTargetDir();
+        return makeTestFile(getTargetDir(), name, relative, contents);
+    }
+
+    private File makeTestFile(File dir, String name, String relative,
+            final InputStream contents) throws IOException {
         if (relative != null) {
             dir = new File(dir, relative);
             if (!dir.exists()) {
@@ -210,7 +226,7 @@ public abstract class AbstractCheckTest extends TestCase {
         return tempFile;
     }
 
-    private File getTestfile(String relativePath) throws IOException {
+    private File getTestfile(File targetDir, String relativePath) throws IOException {
         // Support replacing filenames and paths with a => syntax, e.g.
         //   dir/file.txt=>dir2/dir3/file2.java
         // will read dir/file.txt from the test data and write it into the target
@@ -236,7 +252,7 @@ public abstract class AbstractCheckTest extends TestCase {
             relative = targetPath.substring(0, index);
         }
 
-        return makeTestFile(name, relative, stream);
+        return makeTestFile(targetDir, name, relative, stream);
     }
 
     protected boolean isEnabled(Issue issue) {
