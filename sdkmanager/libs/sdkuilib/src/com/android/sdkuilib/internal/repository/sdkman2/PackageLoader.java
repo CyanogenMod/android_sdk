@@ -70,7 +70,7 @@ public class PackageLoader {
 
     /**
      * Interface for the callback called by
-     * {@link PackageLoader#loadPackages(ISourceLoadedCallback)}.
+     * {@link PackageLoader#loadPackages(boolean, ISourceLoadedCallback)}.
      * <p/>
      * After processing each source, the package loader calls {@link #onUpdateSource}
      * with the list of packages found in that source.
@@ -184,8 +184,18 @@ public class PackageLoader {
      * The caller is responsible to accumulate the packages given to the callback
      * after each source is finished loaded. In return the callback tells the loader
      * whether to continue loading sources.
+     * <p/>
+     * Normally this method doesn't access the remote source if it's already
+     * been loaded in the in-memory source (e.g. don't fetch twice).
+     *
+     * @param overrideExisting Set this to true  when the caller wants to
+     *          check for updates and discard any existing source already
+     *          loaded in memory. It should be false for normal use.
+     * @param sourceLoadedCallback The callback to invoke for each loaded source.
      */
-    public void loadPackages(final ISourceLoadedCallback sourceLoadedCallback) {
+    public void loadPackages(
+            final boolean overrideExisting,
+            final ISourceLoadedCallback sourceLoadedCallback) {
         try {
             if (mUpdaterData == null) {
                 return;
@@ -218,7 +228,7 @@ public class PackageLoader {
                             subMonitor.setProgressMax(sources.length);
                             for (SdkSource source : sources) {
                                 Package[] pkgs = source.getPackages();
-                                if (pkgs == null) {
+                                if (pkgs == null || overrideExisting) {
                                     source.load(getDownloadCache(),
                                             subMonitor.createSubMonitor(1),
                                             forceHttp);
@@ -248,7 +258,8 @@ public class PackageLoader {
     }
 
     /**
-     * Load packages, source by source using {@link #loadPackages(ISourceLoadedCallback)},
+     * Load packages, source by source using
+     * {@link #loadPackages(boolean, ISourceLoadedCallback)},
      * and executes the given {@link IAutoInstallTask} on the current package list.
      * That is for each package known, the install task is queried to find if
      * the package is the one to be installed or updated.
@@ -280,7 +291,7 @@ public class PackageLoader {
             final int installFlags,
             final IAutoInstallTask installTask) {
 
-        loadPackages(new ISourceLoadedCallback() {
+        loadPackages(false /*overrideExisting*/, new ISourceLoadedCallback() {
             List<Archive> mArchivesToInstall = new ArrayList<Archive>();
             Map<Package, File> mInstallPaths = new HashMap<Package, File>();
 

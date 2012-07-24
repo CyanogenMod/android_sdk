@@ -79,9 +79,11 @@ public class DownloadCache {
     private static final String KEY_URL = "URL";                        //$NON-NLS-1$
 
     /** Prefix of binary files stored in the {@link SdkConstants#FD_CACHE} directory. */
-    private final static String BIN_FILE_PREFIX = "sdkbin-";            //$NON-NLS-1$
+    private final static String BIN_FILE_PREFIX = "sdkbin";             //$NON-NLS-1$
     /** Prefix of meta info files stored in the {@link SdkConstants#FD_CACHE} directory. */
-    private final static String INFO_FILE_PREFIX = "sdkinf-";           //$NON-NLS-1$
+    private final static String INFO_FILE_PREFIX = "sdkinf";            //$NON-NLS-1$
+    /* Revision suffixed to the prefix. */
+    private final static String REV_FILE_PREFIX = "-1_";                //$NON-NLS-1$
 
     /**
      * Minimum time before we consider a cached entry is potentially stale.
@@ -218,6 +220,31 @@ public class DownloadCache {
                         if (name.startsWith(BIN_FILE_PREFIX) ||
                                 name.startsWith(INFO_FILE_PREFIX)) {
                             f.delete();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes all obsolete cached files from the cache directory
+     * that do not match the latest revision.
+     */
+    public void clearOldCache() {
+        String prefix1 = BIN_FILE_PREFIX + REV_FILE_PREFIX;
+        String prefix2 = INFO_FILE_PREFIX + REV_FILE_PREFIX;
+        if (mCacheRoot != null) {
+            File[] files = mCacheRoot.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isFile()) {
+                        String name = f.getName();
+                        if (name.startsWith(BIN_FILE_PREFIX) ||
+                                name.startsWith(INFO_FILE_PREFIX)) {
+                            if (!name.startsWith(prefix1) && !name.startsWith(prefix2)) {
+                                f.delete();
+                            }
                         }
                     }
                 }
@@ -735,12 +762,13 @@ public class DownloadCache {
         leaf = leaf.replaceAll("__+", "_");
 
         leaf = hash + '-' + leaf;
-        int n = 64 - BIN_FILE_PREFIX.length();
+        String prefix = BIN_FILE_PREFIX + REV_FILE_PREFIX;
+        int n = 64 - prefix.length();
         if (leaf.length() > n) {
             leaf = leaf.substring(0, n);
         }
 
-        return BIN_FILE_PREFIX + leaf;
+        return prefix + leaf;
     }
 
     private String getInfoFilename(String cacheFilename) {
