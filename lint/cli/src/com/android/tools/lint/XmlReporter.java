@@ -111,7 +111,7 @@ public class XmlReporter extends Reporter {
         mWriter.close();
 
         String path = mOutput.getAbsolutePath();
-        System.out.println(String.format("Wrote HTML report to %1$s", path));
+        System.out.println(String.format("Wrote XML report to %1$s", path));
     }
 
     private static void writeAttribute(Writer writer, int indent, String name, String value)

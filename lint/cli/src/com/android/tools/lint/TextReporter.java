@@ -33,16 +33,19 @@ import java.util.List;
 @Beta
 public class TextReporter extends Reporter {
     private final Writer mWriter;
+    private final boolean mClose;
 
     /**
      * Constructs a new {@link TextReporter}
      *
      * @param client the client
      * @param writer the writer to write into
+     * @param close whether the writer should be closed when done
      */
-    public TextReporter(Main client, Writer writer) {
+    public TextReporter(Main client, Writer writer, boolean close) {
         super(client, null);
         mWriter = writer;
+        mClose = close;
     }
 
     @Override
@@ -161,6 +164,9 @@ public class TextReporter extends Reporter {
                     errorCount, warningCount));
             mWriter.write('\n');
             mWriter.flush();
+            if (mClose) {
+                mWriter.close();
+            }
         }
     }
 }
