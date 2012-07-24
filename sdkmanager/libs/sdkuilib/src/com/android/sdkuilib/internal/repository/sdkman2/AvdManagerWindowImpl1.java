@@ -19,6 +19,8 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
@@ -27,10 +29,12 @@ import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman1.AvdManagerPage;
+import com.android.sdkuilib.internal.widgets.DeviceCreationDialog;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
 
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -43,6 +47,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This is an intermediate version of the {@link AvdManagerPage}
@@ -175,61 +184,64 @@ public class AvdManagerWindowImpl1 {
         mAvdPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
 
-    @SuppressWarnings("unused") // MenuBarWrapper works using side effects
+    @SuppressWarnings("unused")
+    // MenuBarWrapper works using side effects
     private void createMenuBar() {
-
-        // Only create the menu when running as standalone.
-        // We don't need the menu when invoked from the IDE, or the SDK Manager
-        // or from the AVD Chooser dialog. The only point of the menu is to
-        // get the about box, and invoke Tools > SDK Manager, which we don't
-        // need to do in these cases.
-        if (mContext != AvdInvocationContext.STANDALONE) {
-            return;
-        }
-
         Menu menuBar = new Menu(mShell, SWT.BAR);
         mShell.setMenuBar(menuBar);
 
-        MenuItem menuBarTools = new MenuItem(menuBar, SWT.CASCADE);
-        menuBarTools.setText("Tools");
+        // Only create the tools menu when running as standalone.
+        // We don't need the tools menu when invoked from the IDE, or the SDK Manager
+        // or from the AVD Chooser dialog. The only point of the tools menu is to
+        // get the about box, and invoke Tools > SDK Manager, which we don't
+        // need to do in these cases.
+        if (mContext == AvdInvocationContext.STANDALONE) {
 
-        Menu menuTools = new Menu(menuBarTools);
-        menuBarTools.setMenu(menuTools);
+            MenuItem menuBarTools = new MenuItem(menuBar, SWT.CASCADE);
+            menuBarTools.setText("Tools");
 
-        MenuItem manageSdk = new MenuItem(menuTools, SWT.NONE);
-        manageSdk.setText("Manage SDK...");
-        manageSdk.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                onSdkManager();
-            }
-        });
+            Menu menuTools = new Menu(menuBarTools);
+            menuBarTools.setMenu(menuTools);
 
-        try {
-            new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
+            MenuItem manageSdk = new MenuItem(menuTools, SWT.NONE);
+            manageSdk.setText("Manage SDK...");
+            manageSdk.addSelectionListener(new SelectionAdapter() {
                 @Override
-                public void onPreferencesMenuSelected() {
-                    SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
-                    sd.open();
+                public void widgetSelected(SelectionEvent event) {
+                    onSdkManager();
                 }
+            });
 
-                @Override
-                public void onAboutMenuSelected() {
-                    AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
-                    ad.open();
-                }
-
-                @Override
-                public void printError(String format, Object... args) {
-                    if (mUpdaterData != null) {
-                        mUpdaterData.getSdkLog().error(null, format, args);
+            try {
+                new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
+                    @Override
+                    public void onPreferencesMenuSelected() {
+                        SettingsDialog sd = new SettingsDialog(mShell, mUpdaterData);
+                        sd.open();
                     }
-                }
-            };
-        } catch (Throwable e) {
-            mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
-            e.printStackTrace();
+
+                    @Override
+                    public void onAboutMenuSelected() {
+                        AboutDialog ad = new AboutDialog(mShell, mUpdaterData);
+                        ad.open();
+                    }
+
+                    @Override
+                    public void printError(String format, Object... args) {
+                        if (mUpdaterData != null) {
+                            mUpdaterData.getSdkLog().error(null, format, args);
+                        }
+                    }
+                };
+            } catch (Throwable e) {
+                mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
+                e.printStackTrace();
+            }
         }
+
+        MenuItem menuBarDevices = new MenuItem(menuBar, SWT.CASCADE);
+        menuBarDevices.setText("Devices");
+        setupDevices(menuBarDevices);
     }
 
 
@@ -331,6 +343,62 @@ public class AvdManagerWindowImpl1 {
      */
     private void setupSources() {
         mUpdaterData.setupDefaultSources();
+    }
+
+    /**
+     * Sets up the devices in the device menu.
+     */
+    @SuppressWarnings("unused")
+    private void setupDevices(final MenuItem menuBarDevices) {
+        Menu menuDevices = new Menu(menuBarDevices);
+        menuBarDevices.setMenu(menuDevices);
+
+        final DeviceManager manager = new DeviceManager(mUpdaterData.getSdkLog());
+
+        MenuItem createDevice = new MenuItem(menuDevices, SWT.NONE);
+        createDevice.setText("Create New Device");
+        createDevice.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                DeviceCreationDialog dlg = new DeviceCreationDialog(
+                        mShell, manager, mUpdaterData.getImageFactory(), null);
+                dlg.open();
+            }
+        });
+        new MenuItem(menuDevices, SWT.SEPARATOR);
+
+        Map<String, List<Device>> devices = new HashMap<String, List<Device>>();
+        for (Device d : manager.getDevices(mUpdaterData.getOsSdkRoot())) {
+            List<Device> l;
+            if (devices.containsKey(d.getManufacturer())) {
+                l = devices.get(d.getManufacturer());
+            } else {
+                l = new ArrayList<Device>();
+                devices.put(d.getManufacturer(), l);
+            }
+            l.add(d);
+        }
+
+        for (String manufacturer : devices.keySet()) {
+            MenuItem manufacturerItem = new MenuItem(menuDevices, SWT.CASCADE);
+            manufacturerItem.setText(manufacturer);
+            Menu manufacturerMenu = new Menu(menuDevices);
+            manufacturerItem.setMenu(manufacturerMenu);
+            for (final Device d : devices.get(manufacturer)) {
+                MenuItem deviceItem = new MenuItem(manufacturerMenu, SWT.NONE);
+                deviceItem.setText(d.getName());
+                deviceItem.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        DeviceCreationDialog dlg = new DeviceCreationDialog(
+                                mShell, manager, mUpdaterData.getImageFactory(), d);
+                        if(dlg.open() == Window.OK) {
+                            setupDevices(menuBarDevices);
+                        }
+                    }
+                });
+            }
+        }
     }
 
     /**
