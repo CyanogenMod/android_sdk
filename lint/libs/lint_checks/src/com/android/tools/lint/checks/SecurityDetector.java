@@ -234,7 +234,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     }
 
     private boolean isUnprotectedByPermission(Element element) {
-        // Used to check whether an activity, service or broadcast receiver are 
+        // Used to check whether an activity, service or broadcast receiver are
         // protected by a permission.
         String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
         if (permission == null || permission.length() == 0) {
@@ -278,18 +278,17 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
 
     private boolean isStandardReceiver(Element element) {
       // Checks whether a broadcast receiver receives a standard Android action
-      for (Element child : LintUtils.getChildren(element)) {
-        if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-            for (Element innerChild: LintUtils.getChildren(child)) {
-                if (innerChild.getTagName().equals("action")) { //$NON-NLS-1$
-                    String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                    return categoryString.startsWith("android.intent.action."); //$NON-NLS-1$
+        for (Element child : LintUtils.getChildren(element)) {
+            if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+                for (Element innerChild : LintUtils.getChildren(child)) {
+                    if (innerChild.getTagName().equals("action")) { //$NON-NLS-1$
+                        String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                        return categoryString.startsWith("android."); //$NON-NLS-1$
+                    }
                 }
             }
         }
-      }
-
-      return false;
+        return false;
     }
 
     private void checkReceiver(XmlContext context, Element element) {
