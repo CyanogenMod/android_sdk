@@ -48,7 +48,7 @@ public class NdkPreferencePage extends FieldEditorPreferencePage implements
     private static class NdkDirectoryFieldEditor extends DirectoryFieldEditor {
         public NdkDirectoryFieldEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
-            setEmptyStringAllowed(false);
+            setEmptyStringAllowed(true);
         }
 
         @Override
@@ -59,7 +59,7 @@ public class NdkPreferencePage extends FieldEditorPreferencePage implements
             }
 
             String dirname = getTextControl().getText().trim();
-            if (!NdkManager.isValidNdkLocation(dirname)) {
+            if (!dirname.isEmpty() && !NdkManager.isValidNdkLocation(dirname)) {
                 setErrorMessage(Messages.NDKPreferencePage_not_a_valid_NDK_directory);
                 return false;
             }
