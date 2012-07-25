@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ui.IWorkbench;
 
@@ -50,6 +51,11 @@ public class NewActivityWizard extends TemplateWizard {
     /** Creates a new {@link NewActivityWizard} */
     public NewActivityWizard() {
         mOnlyActivities = true;
+    }
+
+    @Override
+    protected boolean shouldAddIconPage() {
+        return mActivityValues.getIconState() != null;
     }
 
     @Override
@@ -89,7 +95,12 @@ public class NewActivityWizard extends TemplateWizard {
                 addPage(mTemplatePage);
             }
             return mTemplatePage;
-        } else if (page == mTemplatePage) {
+        } else if (page == mTemplatePage && shouldAddIconPage()) {
+            WizardPage iconPage = getIconPage(mActivityValues.getIconState());
+            mActivityValues.updateIconState(mTemplatePage.getEvaluator());
+            return iconPage;
+        } else if (page == mTemplatePage
+                || shouldAddIconPage() && page == getIconPage(mActivityValues.getIconState())) {
             TemplateMetadata template = mActivityValues.getTemplateHandler().getTemplate();
             if (template != null) {
                 if (InstallDependencyPage.isInstalled(template.getDependencies())) {

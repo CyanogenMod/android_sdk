@@ -27,7 +27,6 @@ import static com.android.sdklib.SdkConstants.CLASS_ACTIVITY;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
@@ -84,7 +83,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,7 +112,6 @@ public class NewTemplatePage extends WizardPage
     private ImageControl mPreview;
     private Image mPreviewImage;
     private ProjectCombo mProjectButton;
-    private List<Parameter> mParameters;
     private StringEvaluator mEvaluator;
 
     private TemplateMetadata mShowingTemplate;
@@ -230,7 +227,6 @@ public class NewTemplatePage extends WizardPage
             }
 
             List<Parameter> parameters = template.getParameters();
-            mParameters = new ArrayList<Parameter>(parameters.size());
             for (Parameter parameter : parameters) {
                 Parameter.Type type = parameter.type;
 
@@ -242,7 +238,6 @@ public class NewTemplatePage extends WizardPage
 
                 String id = parameter.id;
                 assert id != null && !id.isEmpty() : ATTR_ID;
-                mParameters.add(parameter);
                 String value = defaults.get(id);
                 if (value == null) {
                     value = parameter.initial;
@@ -353,7 +348,7 @@ public class NewTemplatePage extends WizardPage
                         combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
                                 2, 1));
 
-                        List<Element> options = DomUtilities.getChildren(parameter.element);
+                        List<Element> options = parameter.getOptions();
                         assert options.size() > 0;
                         int selected = 0;
                         List<String> ids = Lists.newArrayList();
@@ -552,6 +547,16 @@ public class NewTemplatePage extends WizardPage
         return (Parameter) control.getData();
     }
 
+    /**
+     * Returns the current string evaluator, if any
+     *
+     * @return the evaluator or null
+     */
+    @Nullable
+    public StringEvaluator getEvaluator() {
+        return mEvaluator;
+    }
+
     // ---- Validation ----
 
     private void validatePage() {
@@ -566,7 +571,10 @@ public class NewTemplatePage extends WizardPage
             }
         }
 
-        for (Parameter parameter : mParameters) {
+        for (Parameter parameter : mShowingTemplate.getParameters()) {
+            if (parameter.type == Parameter.Type.SEPARATOR) {
+                continue;
+            }
             IInputValidator validator = parameter.getValidator(mValues.project);
             if (validator != null) {
                ControlDecoration decoration = mDecorations.get(parameter.id);
@@ -807,8 +815,10 @@ public class NewTemplatePage extends WizardPage
             mValues.parameters.put(id, value);
 
             // Update dependent variables, if any
-            for (Parameter p : mParameters) {
-                if (p == parameter || p.suggest == null || p.edited) {
+            List<Parameter> parameters = mShowingTemplate.getParameters();
+            for (Parameter p : parameters) {
+                if (p == parameter || p.suggest == null || p.edited ||
+                        p.type == Parameter.Type.SEPARATOR) {
                     continue;
                 }
                 p.suggest.indexOf(id);
@@ -820,7 +830,7 @@ public class NewTemplatePage extends WizardPage
                     if (mEvaluator == null) {
                         mEvaluator = new StringEvaluator();
                     }
-                    String updated = mEvaluator.evaluate(p.suggest, mParameters);
+                    String updated = mEvaluator.evaluate(p.suggest, parameters);
                     if (updated != null && !updated.equals(p.value)) {
                         setValue(p, updated);
                     }

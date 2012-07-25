@@ -1077,4 +1077,30 @@ public class AdtUtils {
             return Integer.toString((int) value);
         }
     }
+
+    /**
+     * Creates all the directories required for the given path.
+     *
+     * @param wsPath the path to create all the parent directories for
+     * @return true if all the parent directories were created
+     */
+    public static boolean createWsParentDirectory(IContainer wsPath) {
+        if (wsPath.getType() == IResource.FOLDER) {
+            if (wsPath.exists()) {
+                return true;
+            }
+
+            IFolder folder = (IFolder) wsPath;
+            try {
+                if (createWsParentDirectory(wsPath.getParent())) {
+                    folder.create(true /* force */, true /* local */, null /* monitor */);
+                    return true;
+                }
+            } catch (CoreException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
 }

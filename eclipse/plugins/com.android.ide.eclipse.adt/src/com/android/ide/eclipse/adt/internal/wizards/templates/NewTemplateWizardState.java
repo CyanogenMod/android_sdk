@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_BUILD_API;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_COPY_ICONS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
@@ -23,10 +25,16 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectW
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplateWizard.BLANK_ACTIVITY;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
+import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.NullChange;
 
 import java.io.File;
 import java.util.Collections;
@@ -63,12 +71,14 @@ public class NewTemplateWizardState {
     /** The minimum API level to use for this template */
     public int minSdkLevel;
 
-    /** The build API level to use for this template */
-// TODO: Populate
-    public int buildApiLevel;
-
     /** Location of the template being created */
     private File mTemplateLocation;
+
+    /**
+     * State for the asset studio wizard, used to create custom icons provided
+     * the icon requests it with an {@code <icons>} element
+     */
+    private CreateAssetSetWizardState mIconState;
 
     /**
      * Create a new state object for use by the {@link NewTemplatePage}
@@ -135,8 +145,56 @@ public class NewTemplateWizardState {
         parameters.put(ATTR_MIN_API, manifest.getMinSdkVersion());
         parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
         parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
-        parameters.put(NewProjectWizard.ATTR_BUILD_API, getBuildApi());
+        parameters.put(ATTR_BUILD_API, getBuildApi());
+        parameters.put(ATTR_COPY_ICONS, mIconState == null);
 
-        return getTemplateHandler().render(project, parameters);
+        List<Change> changes = getTemplateHandler().render(project, parameters);
+
+        if (mIconState != null) {
+            String title = String.format("Generate icons (res/drawable-<density>/%1$s.png)",
+                    mIconState.outputName);
+            changes.add(new NullChange(title) {
+                @Override
+                public Change perform(IProgressMonitor pm) throws CoreException {
+                    ConfigureAssetSetPage.generateIcons(mIconState.project,
+                            mIconState, false, null);
+
+                    // Not undoable: just return null instead of an undo-change.
+                    return null;
+                }
+            });
+
+        }
+
+        return changes;
+    }
+
+    @NonNull
+    CreateAssetSetWizardState getIconState() {
+        if (mIconState == null) {
+            TemplateHandler handler = getTemplateHandler();
+            if (handler != null) {
+                TemplateMetadata template = handler.getTemplate();
+                if (template != null) {
+                    mIconState = template.getIconState(project);
+                }
+            }
+        }
+
+        return mIconState;
+    }
+
+    /**
+     * Updates the icon state, such as the output name, based on other parameter settings
+     * @param evaluator the string evaluator, or null if none exists
+     */
+    public void updateIconState(@Nullable StringEvaluator evaluator) {
+        TemplateMetadata template = getTemplateHandler().getTemplate();
+        if (template != null) {
+            if (evaluator == null) {
+                evaluator = new StringEvaluator();
+            }
+            template.updateIconName(template.getParameters(), evaluator);
+        }
     }
 }

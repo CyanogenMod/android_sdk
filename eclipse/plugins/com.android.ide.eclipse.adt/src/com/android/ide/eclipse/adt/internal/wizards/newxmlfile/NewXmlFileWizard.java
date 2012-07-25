@@ -24,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
@@ -36,9 +37,7 @@ import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreatio
 import com.android.resources.ResourceFolderType;
 import com.android.util.Pair;
 
-import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -201,7 +200,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             }
             need_delete = true;
         } else {
-            createWsParentDirectory(file.getParent());
+            AdtUtils.createWsParentDirectory(file.getParent());
         }
 
         StringBuilder sb = new StringBuilder(XML_HEADER_LINE);
@@ -317,32 +316,6 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         }
         String attrs = type.getDefaultAttrs(project, root);
         return createXmlFile(file, xmlns, root, attrs, null, folderType);
-    }
-
-    /**
-     * Creates all the directories required for the given path.
-     *
-     * @param wsPath the path to create all the parent directories for
-     * @return true if all the parent directories were created
-     */
-    public static boolean createWsParentDirectory(IContainer wsPath) {
-        if (wsPath.getType() == IResource.FOLDER) {
-            if (wsPath.exists()) {
-                return true;
-            }
-
-            IFolder folder = (IFolder) wsPath;
-            try {
-                if (createWsParentDirectory(wsPath.getParent())) {
-                    folder.create(true /* force */, true /* local */, null /* monitor */);
-                    return true;
-                }
-            } catch (CoreException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return false;
     }
 
     /**
