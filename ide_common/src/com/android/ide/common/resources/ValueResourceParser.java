@@ -44,6 +44,7 @@ public final class ValueResourceParser extends DefaultHandler {
 
     public interface IValueResourceRepository {
         void addResourceValue(ResourceValue value);
+        boolean hasResourceValue(ResourceType type, String name);
     }
 
     private boolean inResources = false;

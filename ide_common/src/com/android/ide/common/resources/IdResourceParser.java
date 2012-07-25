@@ -130,7 +130,8 @@ public class IdResourceParser {
                             // Validate resource references (unless we're scanning a framework
                             // resource or if we've already scheduled a full aapt run)
                             boolean exists = resources.hasResourceItem(value);
-                            if (!exists) {
+                            if (!exists && !mRepository.hasResourceValue(ResourceType.ID,
+                                    value.substring(value.indexOf('/') + 1))) {
                                 String error = String.format(
                                     // Don't localize because the exact pattern matches AAPT's
                                     // output which has hardcoded regexp matching in
