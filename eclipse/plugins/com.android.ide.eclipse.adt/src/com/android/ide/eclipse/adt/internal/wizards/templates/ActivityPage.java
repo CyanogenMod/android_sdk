@@ -239,7 +239,8 @@ class ActivityPage extends WizardPage implements SelectionListener {
                         "Select an activity type");
             } else {
                 TemplateHandler templateHandler = mValues.activityValues.getTemplateHandler();
-                status = templateHandler.validateTemplate(mValues.minSdkLevel);
+                status = templateHandler.validateTemplate(mValues.minSdkLevel,
+                        mValues.getBuildApi());
             }
         }
 

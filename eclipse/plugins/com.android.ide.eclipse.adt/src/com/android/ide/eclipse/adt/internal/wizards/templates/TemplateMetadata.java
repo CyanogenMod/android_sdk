@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_REVISION;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FORMAT;
@@ -50,6 +51,7 @@ class TemplateMetadata {
     private final Map<String, Parameter> mParameterMap;
     private List<Pair<String, Integer>> mDependencies;
     private Integer mMinApi;
+    private Integer mMinBuildApi;
     private Integer mRevision;
 
     TemplateMetadata(@NonNull Document document) {
@@ -119,6 +121,24 @@ class TemplateMetadata {
         }
 
         return mMinApi.intValue();
+    }
+
+    int getMinBuildApi() {
+        if (mMinBuildApi == null) {
+            mMinBuildApi = 1;
+            String api = mDocument.getDocumentElement().getAttribute(ATTR_MIN_BUILD_API);
+            if (api != null && !api.isEmpty()) {
+                try {
+                    mMinBuildApi = Integer.parseInt(api);
+                } catch (NumberFormatException nufe) {
+                    // Templates aren't allowed to contain codenames, should always be an integer
+                    AdtPlugin.log(nufe, null);
+                    mMinBuildApi = 1;
+                }
+            }
+        }
+
+        return mMinBuildApi.intValue();
     }
 
     public int getRevision() {

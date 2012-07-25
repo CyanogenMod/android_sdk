@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
@@ -102,6 +103,7 @@ public class NewTemplatePage extends WizardPage
     private final NewTemplateWizardState mValues;
     private final boolean mChooseProject;
     private int mCustomMinSdk = -1;
+    private int mCustomBuildApi = -1;
     private boolean mIgnore;
     private boolean mShown;
     private Control mFirst;
@@ -131,13 +133,16 @@ public class NewTemplatePage extends WizardPage
     }
 
     /**
-     * @param minSdk a minimum SDK to use, provided chooseProject is
-     *            false. If it is true, then the minimum SDK used for validation
-     *            will be the one of the project
+     * @param minSdk a minimum SDK to use, provided chooseProject is false. If
+     *            it is true, then the minimum SDK used for validation will be
+     *            the one of the project
+     * @param buildApi the build API to use
      */
-    void setCustomMinSdk(int minSdk) {
+    void setCustomMinSdk(int minSdk, int buildApi) {
         assert !mChooseProject;
+        //assert buildApi >= minSdk;
         mCustomMinSdk = minSdk;
+        mCustomBuildApi = buildApi;
     }
 
     @Override
@@ -353,6 +358,7 @@ public class NewTemplatePage extends WizardPage
                         int selected = 0;
                         List<String> ids = Lists.newArrayList();
                         List<Integer> minSdks = Lists.newArrayList();
+                        List<Integer> minBuildApis = Lists.newArrayList();
                         List<String> labels = Lists.newArrayList();
                         for (int i = 0, n = options.size(); i < n; i++) {
                             Element option = options.get(i);
@@ -380,7 +386,20 @@ public class NewTemplatePage extends WizardPage
                                     minSdk = 1;
                                 }
                             }
+                            String minBuildApiString = option.getAttribute(ATTR_MIN_BUILD_API);
+                            int minBuildApi = 1;
+                            if (minBuildApiString != null && !minBuildApiString.isEmpty()) {
+                                try {
+                                    minBuildApi = Integer.parseInt(minBuildApiString);
+                                } catch (NumberFormatException nufe) {
+                                    // Templates aren't allowed to contain codenames, should
+                                    // always be an integer
+                                    AdtPlugin.log(nufe, null);
+                                    minBuildApi = 1;
+                                }
+                            }
                             minSdks.add(minSdk);
+                            minBuildApis.add(minBuildApi);
                             ids.add(optionId);
                             labels.add(optionLabel);
                         }
@@ -388,6 +407,8 @@ public class NewTemplatePage extends WizardPage
                         parameter.control = combo;
                         combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
                         combo.setData(ATTR_MIN_API, minSdks.toArray(new Integer[minSdks.size()]));
+                        combo.setData(ATTR_MIN_BUILD_API, minBuildApis.toArray(
+                                new Integer[minBuildApis.size()]));
                         assert labels.size() > 0;
                         combo.setItems(labels.toArray(new String[labels.size()]));
                         combo.select(selected);
@@ -534,9 +555,9 @@ public class NewTemplatePage extends WizardPage
     // ---- Validation ----
 
     private void validatePage() {
-        int currentMinSdk = getMinSdk();
-        int minSdk = currentMinSdk;
-        IStatus status = mValues.getTemplateHandler().validateTemplate(minSdk);
+        int minSdk = getMinSdk();
+        int buildApi = getBuildApi();
+        IStatus status = mValues.getTemplateHandler().validateTemplate(minSdk, buildApi);
 
         if (status == null || status.isOK()) {
             if (mChooseProject && mValues.project == null) {
@@ -569,14 +590,29 @@ public class NewTemplatePage extends WizardPage
                     Combo combo = (Combo) parameter.control;
                     Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
                     int index = combo.getSelectionIndex();
+
+                    // Check minSdk
                     if (index != -1 && index < optionIds.length) {
                         Integer requiredMinSdk = optionIds[index];
-                        if (requiredMinSdk > currentMinSdk) {
+                        if (requiredMinSdk > minSdk) {
                             status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                                 String.format(
                                         "This template requires a minimum SDK version of at " +
                                         "least %1$d, and the current min version is %2$d",
-                                        requiredMinSdk, currentMinSdk));
+                                        requiredMinSdk, minSdk));
+                        }
+                    }
+
+                    // Check minimum build target
+                    optionIds = (Integer[]) combo.getData(ATTR_MIN_BUILD_API);
+                    if (index != -1 && index < optionIds.length) {
+                        Integer requiredBuildApi = optionIds[index];
+                        if (requiredBuildApi > buildApi) {
+                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                                String.format(
+                                    "This template requires a build target API version of at " +
+                                    "least %1$d, and the current min version is %2$d",
+                                    requiredBuildApi, buildApi));
                         }
                     }
                 }
@@ -596,6 +632,10 @@ public class NewTemplatePage extends WizardPage
 
     private int getMinSdk() {
         return mChooseProject ? mValues.getMinSdk() : mCustomMinSdk;
+    }
+
+    private int getBuildApi() {
+        return mChooseProject ? mValues.getBuildApi() : mCustomBuildApi;
     }
 
     private void updateDecorator(ControlDecoration decorator, IStatus status, String help) {

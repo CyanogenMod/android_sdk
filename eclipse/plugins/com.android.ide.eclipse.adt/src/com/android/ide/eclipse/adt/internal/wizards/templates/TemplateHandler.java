@@ -970,12 +970,13 @@ class TemplateHandler {
     /**
      * Validates this template to make sure it's supported
      * @param currentMinSdk the minimum SDK in the project, or -1 or 0 if unknown (e.g. codename)
+     * @param buildApi the build API, or -1 or 0 if unknown (e.g. codename)
      *
      * @return a status object with the error, or null if there is no problem
      */
     @SuppressWarnings("cast") // In Eclipse 3.6.2 cast below is needed
     @Nullable
-    public IStatus validateTemplate(int currentMinSdk) {
+    public IStatus validateTemplate(int currentMinSdk, int buildApi) {
         TemplateMetadata template = getTemplate();
         if (template == null) {
             return null;
@@ -995,6 +996,13 @@ class TemplateHandler {
                     String.format("This template requires a minimum SDK version of at " +
                             "least %1$d, and the current min version is %2$d",
                             templateMinSdk, currentMinSdk));
+        }
+        int templateMinBuildApi = template.getMinBuildApi();
+        if (templateMinBuildApi >  buildApi && buildApi >= 1) {
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    String.format("This template requires a build target API version of at " +
+                            "least %1$d, and the current version is %2$d",
+                            templateMinBuildApi, buildApi));
         }
 
         return null;

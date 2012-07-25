@@ -24,8 +24,6 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplate
 
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -64,6 +62,10 @@ public class NewTemplateWizardState {
 
     /** The minimum API level to use for this template */
     public int minSdkLevel;
+
+    /** The build API level to use for this template */
+// TODO: Populate
+    public int buildApiLevel;
 
     /** Location of the template being created */
     private File mTemplateLocation;
@@ -112,6 +114,15 @@ public class NewTemplateWizardState {
         return manifest.getMinSdkVersion();
     }
 
+    /** Returns the min SDK version to use */
+    int getBuildApi() {
+        if (project == null) {
+            return -1;
+        }
+        ManifestInfo manifest = ManifestInfo.get(project);
+        return manifest.getMinSdkVersion();
+    }
+
     /** Computes the changes this wizard will make */
     @NonNull
     List<Change> computeChanges() {
@@ -124,14 +135,7 @@ public class NewTemplateWizardState {
         parameters.put(ATTR_MIN_API, manifest.getMinSdkVersion());
         parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
         parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
-        IAndroidTarget target = Sdk.getCurrent().getTarget(project);
-        int buildApi;
-        if (target != null) {
-            buildApi = target.getVersion().getApiLevel();
-        } else {
-            buildApi = manifest.getTargetSdkVersion();
-        }
-        parameters.put(NewProjectWizard.ATTR_BUILD_API, buildApi);
+        parameters.put(NewProjectWizard.ATTR_BUILD_API, getBuildApi());
 
         return getTemplateHandler().render(project, parameters);
     }
