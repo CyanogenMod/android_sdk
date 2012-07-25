@@ -872,7 +872,7 @@ public final class AvdSelector {
     }
 
     private void onNew() {
-        AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(),
+        LegacyAvdEditDialog dlg = new LegacyAvdEditDialog(mTable.getShell(),
                 mAvdManager,
                 mImageFactory,
                 mSdkLog,
@@ -886,7 +886,7 @@ public final class AvdSelector {
     private void onEdit() {
         AvdInfo avdInfo = getTableSelection();
 
-        AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(),
+        LegacyAvdEditDialog dlg = new LegacyAvdEditDialog(mTable.getShell(),
                 mAvdManager,
                 mImageFactory,
                 mSdkLog,
