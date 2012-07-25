@@ -10,6 +10,7 @@ WIN_SDK_TARGETS := \
 	emulator \
 	emulator-arm \
 	emulator-x86 \
+	emulator-mips \
 	find_java \
 	find_lock \
 	mksdcard \

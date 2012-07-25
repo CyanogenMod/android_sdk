@@ -43,6 +43,7 @@ bin/zipalign     strip tools/zipalign
 bin/emulator                         strip tools/emulator
 bin/emulator-x86                     strip tools/emulator-x86
 bin/emulator-arm                     strip tools/emulator-arm
+bin/emulator-mips                    strip tools/emulator-mips
 sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
 usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
 usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin

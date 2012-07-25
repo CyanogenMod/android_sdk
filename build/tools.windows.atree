@@ -42,9 +42,11 @@ sdk/lint/cli/etc/lint.bat                         tools/lint.bat
 rm tools/emulator
 rm tools/emulator-arm
 rm tools/emulator-x86
+rm tools/emulator-mips
 bin/emulator.exe                            strip tools/emulator.exe
 bin/emulator-arm.exe                        strip tools/emulator-arm.exe
 bin/emulator-x86.exe                        strip tools/emulator-x86.exe
+bin/emulator-mips.exe                       strip tools/emulator-mips.exe
 # Emulator libraries
 rm tools/lib/libOpenglRender.so
 rm tools/lib/libGLES_CM_translator.so
