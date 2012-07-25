@@ -87,6 +87,7 @@ public class Project {
     private List<File> mJavaLibraries;
     private List<Project> mDirectLibraries;
     private List<Project> mAllLibraries;
+    private boolean mReportIssues = true;
 
     /**
      * Creates a new {@link Project} for the given directory.
@@ -159,7 +160,12 @@ public class Project {
                             }
                         }
 
-                        mDirectLibraries.add(client.getProject(libraryDir, libraryReferenceDir));
+                        Project libraryPrj = client.getProject(libraryDir, libraryReferenceDir);
+                        mDirectLibraries.add(libraryPrj);
+                        // By default, we don't report issues in inferred library projects.
+                        // The driver will set report = true for those library explicitly
+                        // requested.
+                        libraryPrj.setReportIssues(false);
                     }
                 } finally {
                     Closeables.closeQuietly(is);
@@ -571,6 +577,34 @@ public class Project {
         }
 
         return mName;
+    }
+
+    /**
+     * Sets whether lint should report issues in this project. See
+     * {@link #getReportIssues()} for a full description of what that means.
+     *
+     * @param reportIssues whether lint should report issues in this project
+     */
+    public void setReportIssues(boolean reportIssues) {
+        mReportIssues = reportIssues;
+    }
+
+    /**
+     * Returns whether lint should report issues in this project.
+     * <p>
+     * If a user specifies a project and its library projects for analysis, then
+     * those library projects are all "included", and all errors found in all
+     * the projects are reported. But if the user is only running lint on the
+     * main project, we shouldn't report errors in any of the library projects.
+     * We still need to <b>consider</b> them for certain types of checks, such
+     * as determining whether resources found in the main project are unused, so
+     * the detectors must still get a chance to look at these projects. The
+     * {@code #getReportIssues()} attribute is used for this purpose.
+     *
+     * @return whether lint should report issues in this project
+     */
+    public boolean getReportIssues() {
+        return mReportIssues;
     }
 
     // ---------------------------------------------------------------------------

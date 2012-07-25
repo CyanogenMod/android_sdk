@@ -121,5 +121,4 @@ public class IconDetectorTest extends AbstractCheckTest {
                     "res/drawable/states.xml=>res/drawable-hdpi/f.xml",
                     "res/drawable/states.xml=>res/drawable-xhdpi/f.xml"));
     }
-
 }

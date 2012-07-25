@@ -19,6 +19,9 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 
+import java.io.File;
+import java.util.Arrays;
+
 @SuppressWarnings("javadoc")
 public class UnusedResourceDetectorTest extends AbstractCheckTest {
     private boolean mEnableIds = false;
@@ -101,12 +104,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "AndroidManifest.xml"));
     }
 
-    public void testMultiProject() throws Exception {
+    public void testMultiProjectIgnoreLibraries() throws Exception {
         assertEquals(
-           // string1 is defined and used in the library project
-           // string2 is defined in the library project and used in the master project
-           // string3 is defined in the library project and not used anywhere
-           "strings.xml:7: Warning: The resource R.string.string3 appears to be unused",
+           "No warnings.",
 
             lintProject(
                 // Master project
@@ -120,6 +120,29 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "multiproject/LibraryCode.java.txt=>../LibraryProject/src/foo/library/LibraryCode.java",
                 "multiproject/strings.xml=>../LibraryProject/res/values/strings.xml"
             ));
+    }
+
+    public void testMultiProject() throws Exception {
+        File master = getProjectDir("MasterProject",
+                // Master project
+                "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                "multiproject/main.properties=>project.properties",
+                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+        );
+        File library = getProjectDir("LibraryProject",
+                // Library project
+                "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                "multiproject/library.properties=>project.properties",
+                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
+                "multiproject/strings.xml=>res/values/strings.xml"
+        );
+        assertEquals(
+           // string1 is defined and used in the library project
+           // string2 is defined in the library project and used in the master project
+           // string3 is defined in the library project and not used anywhere
+           "strings.xml:7: Warning: The resource R.string.string3 appears to be unused",
+
+           checkLint(Arrays.asList(master, library)));
     }
 
     public void testFqcnReference() throws Exception {
@@ -151,6 +174,4 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "res/values/plurals.xml",
                 "AndroidManifest.xml"));
     }
-
-
 }
