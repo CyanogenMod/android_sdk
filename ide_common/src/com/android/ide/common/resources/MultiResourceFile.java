@@ -204,6 +204,12 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
     }
 
     @Override
+    public boolean hasResourceValue(ResourceType type, String name) {
+        Map<String, ResourceValue> map = mResourceItems.get(type);
+        return map != null && map.containsKey(name);
+    }
+
+    @Override
     public ResourceValue getValue(ResourceType type, String name) {
         // get the list for the given type
         Map<String, ResourceValue> list = mResourceItems.get(type);

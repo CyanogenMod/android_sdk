@@ -87,7 +87,9 @@ public final class IdGeneratingResourceFile extends ResourceFile
         // need to parse the file and find the IDs.
         if (!parseFileForIds(context)) {
             context.requestFullAapt();
-            return;
+            // Continue through to updating the resource item here since it
+            // will make for example layout rendering more accurate until
+            // aapt is re-run
         }
 
         // We only need to update the repository if our IDs have changed
@@ -225,5 +227,14 @@ public final class IdGeneratingResourceFile extends ResourceFile
         // Just overwrite collisions. We're only interested in the unique
         // IDs declared
         mIdResources.put(value.getName(), value);
+    }
+
+    @Override
+    public boolean hasResourceValue(ResourceType type, String name) {
+        if (type == ResourceType.ID) {
+            return mIdResources.containsKey(name);
+        }
+
+        return false;
     }
 }
