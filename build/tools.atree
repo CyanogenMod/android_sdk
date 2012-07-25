@@ -176,8 +176,9 @@ external/chromium-trace/style.css      tools/systrace/style.css
 external/chromium-trace/LICENSE        tools/systrace/LICENSE
 external/chromium-trace/AUTHORS        tools/systrace/AUTHORS
 
-# Misspelling database for tools such as lint
+# Misspelling databases for tools such as lint
 sdk/files/typos-en.txt                 tools/support/typos-en.txt
+sdk/files/typos-nb.txt                 tools/support/typos-nb.txt
 
 ##############################################################################
 # Tests Component

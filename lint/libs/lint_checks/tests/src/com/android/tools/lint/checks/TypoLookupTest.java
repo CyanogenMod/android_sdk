@@ -17,35 +17,54 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.google.common.base.Charsets;
 
 import java.util.Iterator;
 
 @SuppressWarnings("javadoc")
 public class TypoLookupTest extends AbstractCheckTest {
-    private final TypoLookup mDb = TypoLookup.get(new TestLintClient());
 
     public void test1() {
-        assertNull(mDb.getTypos("hello", 0, "hello".length()));
-        assertNull(mDb.getTypos("this", 0, "this".length()));
+        TypoLookup db = TypoLookup.get(new TestLintClient(), "en");
+        assertNull(db.getTypos("hello", 0, "hello".length()));
+        assertNull(db.getTypos("this", 0, "this".length()));
 
-        assertNotNull(mDb.getTypos("wiht", 0, "wiht".length()));
-        assertNotNull(mDb.getTypos("woudl", 0, "woudl".length()));
-        assertEquals("would", mDb.getTypos("woudl", 0, "woudl".length()).iterator().next());
-        assertEquals("would", mDb.getTypos("  woudl  ", 2, 7).iterator().next());
-        assertNotNull(mDb.getTypos("foo wiht bar", 4, 8));
+        assertNotNull(db.getTypos("wiht", 0, "wiht".length()));
+        assertNotNull(db.getTypos("woudl", 0, "woudl".length()));
+        assertEquals("would", db.getTypos("woudl", 0, "woudl".length()).iterator().next());
+        assertEquals("would", db.getTypos("  woudl  ", 2, 7).iterator().next());
+        assertNotNull(db.getTypos("foo wiht bar", 4, 8));
 
-        Iterator<String> typos = mDb.getTypos("throught", 0, "throught".length()).iterator();
+        Iterator<String> typos = db.getTypos("throught", 0, "throught".length()).iterator();
         assertEquals("thought", typos.next());
         assertEquals("through", typos.next());
         assertEquals("throughout", typos.next());
 
         // Capitalization handling
-        assertNotNull(mDb.getTypos("Woudl", 0, "Woudl".length()));
-        assertNotNull(mDb.getTypos("Enlish", 0, "Enlish".length()));
-        assertNull(mDb.getTypos("enlish", 0, "enlish".length()));
-        assertNotNull(mDb.getTypos("ok", 0, "ok".length()));
-        assertNotNull(mDb.getTypos("Ok", 0, "Ok".length()));
-        assertNull(mDb.getTypos("OK", 0, "OK".length()));
+        assertNotNull(db.getTypos("Woudl", 0, "Woudl".length()));
+        assertNotNull(db.getTypos("Enlish", 0, "Enlish".length()));
+        assertNull(db.getTypos("enlish", 0, "enlish".length()));
+        assertNotNull(db.getTypos("ok", 0, "ok".length()));
+        assertNotNull(db.getTypos("Ok", 0, "Ok".length()));
+        assertNull(db.getTypos("OK", 0, "OK".length()));
+    }
+
+    public void test2() {
+        TypoLookup db = TypoLookup.get(new TestLintClient(), "nb"); //$NON-NLS-1$
+        assertNull(db.getTypos("hello", 0, "hello".length()));
+        assertNull(db.getTypos("this", 0, "this".length()));
+
+        assertNotNull(db.getTypos("altid", 0, "altid".length()));
+        assertEquals("alltid", db.getTypos("altid", 0, "altid".length()).iterator().next());
+        assertEquals("alltid", db.getTypos("  altid  ", 2, 7).iterator().next());
+        assertNotNull(db.getTypos("foo altid bar", 4, 9));
+
+        // Test utf-8 string which isn't ASCII
+        String s = "karriære";
+        byte[] sb = s.getBytes(Charsets.UTF_8);
+        assertNotNull(db.getTypos(sb, 0, sb.length));
+
+        assertEquals("karrière", db.getTypos(sb, 0, sb.length).iterator().next());
     }
 
     @Override
