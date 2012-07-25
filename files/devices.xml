@@ -396,6 +396,32 @@
         </d:config>
     </d:device>
 
+    <d:device name="7in WXGA (Nexus 7)">
+        <d:default>
+            <d:screen-size>large</d:screen-size>
+            <d:screen-ratio>long</d:screen-ratio>
+            <d:screen-orientation>land</d:screen-orientation>
+            <d:pixel-density>tvdpi</d:pixel-density>
+            <d:touch-type>finger</d:touch-type>
+            <d:keyboard-state>keyssoft</d:keyboard-state>
+            <d:text-input-method>nokeys</d:text-input-method>
+            <d:nav-state>navexposed</d:nav-state>
+            <d:nav-method>nonav</d:nav-method>
+            <d:screen-dimension>
+                <d:size>1280</d:size>
+                <d:size>800</d:size>
+            </d:screen-dimension>
+            <d:xdpi>195</d:xdpi>
+            <d:ydpi>200</d:ydpi>
+        </d:default>
+
+        <d:config name="Landscape">
+            <d:screen-orientation>land</d:screen-orientation>
+        </d:config>
+        <d:config name="Portrait">
+            <d:screen-orientation>port</d:screen-orientation>
+        </d:config>
+    </d:device>
 
     <d:device name="10.1in WXGA (Tablet)">
         <d:default>
