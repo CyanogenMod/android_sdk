@@ -151,12 +151,28 @@ public class DeviceManager {
                 // User devices should be saved out to
                 // $HOME/.android/devices.xml
                 mUserDevices = new ArrayList<Device>();
+                File userDevicesFile = null;
                 try {
-                    File userDevicesFile = new File(AndroidLocation.getFolder(),
+                    userDevicesFile = new File(AndroidLocation.getFolder(),
                             SdkConstants.FN_DEVICES_XML);
-                    mUserDevices.addAll(loadDevices(userDevicesFile));
+                    mUserDevices.addAll(DeviceParser.parse(userDevicesFile));
                 } catch (AndroidLocationException e) {
                     mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
+                } catch (SAXException e) {
+                    // Probably an old config file which we don't want to overwrite.
+                    String base = userDevicesFile.getAbsoluteFile()+".old";
+                    File renamedConfig = new File(base);
+                    int i = 0;
+                    while (renamedConfig.exists()) {
+                        renamedConfig = new File(base+"."+i);
+                    }
+                    mLog.error(null, "Error parsing %1$s, backing up to %2$s",
+                            userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
+                    userDevicesFile.renameTo(renamedConfig);
+                } catch (ParserConfigurationException e) {
+                    mLog.error(null, "Error parsing %1$s", userDevicesFile.getAbsolutePath());
+                } catch (IOException e) {
+                    mLog.error(null, "Error parsing %1$s", userDevicesFile.getAbsolutePath());
                 }
             }
         }
