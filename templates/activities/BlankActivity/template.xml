@@ -27,6 +27,30 @@
         help="The name of the layout to create for the activity" />
 
     <parameter
+        id="activityTitle"
+        name="Title"
+        type="string"
+        constraints="nonempty"
+        default="MainActivity"
+        suggest="${activityClass}"
+        help="The name of the activity. For launcher activities, the application title." />
+
+    <parameter
+        id="isLauncher"
+        name="Launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+
+    <parameter
+        id="parentActivityClass"
+        name="Hierarchical Parent"
+        type="string"
+        constraints="activity|exists|empty"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
+
+    <parameter
         id="navType"
         name="Navigation Type"
         type="enum"
@@ -38,23 +62,6 @@
         <option id="pager_strip" minApi="11">Swipe Views + Title Strip</option>
         <option id="dropdown" minApi="11">Dropdown</option>
     </parameter>
-
-    <parameter
-        id="parentActivityClass"
-        name="Hierarchical Parent"
-        type="string"
-        constraints="activity|exists|empty"
-        default=""
-        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
-
-    <parameter
-        id="activityTitle"
-        name="Title"
-        type="string"
-        constraints="nonempty"
-        default="MainActivity"
-        suggest="${activityClass}"
-        help="The name of the activity. For launcher activities, the application title." />
 
     <parameter
         id="packageName"
