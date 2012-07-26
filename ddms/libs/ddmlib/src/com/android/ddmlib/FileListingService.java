@@ -100,9 +100,11 @@ public final class FileListingService {
      * Represents an entry in a directory. This can be a file or a directory.
      */
     public final static class FileEntry {
-        /** Pattern to escape filenames for shell command consumption. */
+        /** Pattern to escape filenames for shell command consumption.
+         *  This pattern identifies any special characters that need to be escaped with a
+         *  backslash. */
         private final static Pattern sEscapePattern = Pattern.compile(
-                "([\\\\()*+?\"'#/\\s])"); //$NON-NLS-1$
+                "([\\\\()*+?\"'&#/\\s])"); //$NON-NLS-1$
 
         /**
          * Comparator object for FileEntry
