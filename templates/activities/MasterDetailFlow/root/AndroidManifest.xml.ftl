@@ -2,7 +2,8 @@
 
     <application>
         <activity android:name=".${CollectionName}Activity"
-            android:label="@string/title_${collection_name}">
+            android:label="@string/title_${collection_name}"
+            <#if buildApi gte 16 && parentActivityClass != "">android:parentActivityName="${parentActivityClass}"</#if>>
             <#if parentActivityClass != "">
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
@@ -15,7 +16,8 @@
         </activity>
 
         <activity android:name=".${DetailName}Activity"
-            android:label="@string/title_${detail_name}">
+            android:label="@string/title_${detail_name}"
+            <#if buildApi gte 16>android:parentActivityName=".${CollectionName}Activity"</#if>>
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value=".${CollectionName}Activity" />
         </activity>

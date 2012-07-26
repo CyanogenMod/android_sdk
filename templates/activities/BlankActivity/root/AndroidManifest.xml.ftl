@@ -2,7 +2,8 @@
 
     <application>
         <activity android:name=".${activityClass}"
-            android:label="@string/title_${activityToLayout(activityClass)}">
+            android:label="@string/title_${activityToLayout(activityClass)}"
+            <#if buildApi gte 16 && parentActivityClass != "">android:parentActivityName="${parentActivityClass}"</#if>>
             <#if parentActivityClass != "">
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
