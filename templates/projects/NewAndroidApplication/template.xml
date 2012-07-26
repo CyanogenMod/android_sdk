@@ -3,7 +3,7 @@
     format="1"
     revision="1"
     name="New Android Application"
-    description="Creates a new Android application with an activity.">
+    description="Creates a new Android application.">
     <dependency name="android-support-v4" revision="8" />
 
     <thumbs>
@@ -25,6 +25,18 @@
         type="string"
         constraints="nonempty"
         default="My Application" />
+
+    <parameter
+        id="baseTheme"
+        name="Base Theme"
+        type="enum"
+        default="holo_light_darkactionbar"
+        help="The base user interface theme for the application">
+        <option id="none">None</option>
+        <option id="holo_dark" minBuildApi="11">Holo Dark</option>
+        <option id="holo_light" minBuildApi="11">Holo Light</option>
+        <option id="holo_light_darkactionbar" minBuildApi="14" default="true">Holo Light with Dark Action Bar</option>
+    </parameter>
 
     <parameter
         id="minApi"
