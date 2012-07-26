@@ -17,16 +17,17 @@
 package com.android.ide.eclipse.ndk.internal.launch;
 
 import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChoiceCache;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog.DeviceChooserResponse;
@@ -119,6 +120,10 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         }
 
         final ManifestData manifestData = AndroidManifestHelper.parseForData(project);
+        final ManifestInfo manifestInfo = ManifestInfo.get(project);
+        final AndroidVersion minSdkVersion = new AndroidVersion(
+                manifestInfo.getMinSdkVersion(),
+                manifestInfo.getMinSdkCodeName());
 
         // Get the activity name to launch
         String activityName = getActivityToLaunch(
@@ -159,7 +164,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
                             AdtPlugin.getDisplay().getActiveShell(),
                             response,
                             manifestData.getPackage(),
-                            projectTarget);
+                            projectTarget, minSdkVersion);
                     if (dialog.open() == Dialog.OK) {
                         DeviceChoiceCache.put(configName, response);
                         continueLaunch[0] = true;

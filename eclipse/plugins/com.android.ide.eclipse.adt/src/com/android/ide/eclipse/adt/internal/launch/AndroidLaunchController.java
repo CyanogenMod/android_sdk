@@ -31,6 +31,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AvdManagerAction;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.internal.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog.DeviceChooserResponse;
@@ -324,8 +325,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             config.mTargetMode = TargetMode.MANUAL;
         }
 
-        // get the project target
+        // get the sdk against which the project is built
         IAndroidTarget projectTarget = currentSdk.getTarget(project);
+
+        // get the min required android version
+        ManifestInfo mi = ManifestInfo.get(project);
+        final int minApiLevel = mi.getMinSdkVersion();
+        final String minApiCodeName = mi.getMinSdkCodeName();
+        final AndroidVersion minApiVersion = new AndroidVersion(minApiLevel, minApiCodeName);
 
         // FIXME: check errors on missing sdk, AVD manager, or project target.
 
@@ -370,17 +377,22 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             AvdInfo preferredAvd = null;
             if (config.mAvdName != null) {
                 preferredAvd = avdManager.getAvd(config.mAvdName, true /*validAvdOnly*/);
-                if (projectTarget.canRunOn(preferredAvd.getTarget()) == false) {
+                IAndroidTarget preferredAvdTarget = preferredAvd.getTarget();
+                if (preferredAvdTarget != null
+                        && !preferredAvdTarget.getVersion().canRun(minApiVersion)) {
                     preferredAvd = null;
 
                     AdtPlugin.printErrorToConsole(project, String.format(
-                            "Preferred AVD '%1$s' is not compatible with the project target '%2$s'. Looking for a compatible AVD...",
-                            config.mAvdName, projectTarget.getName()));
+                            "Preferred AVD '%1$s' (API Level: %2$d) cannot run application with minApi %3$s. Looking for a compatible AVD...",
+                            config.mAvdName,
+                            preferredAvdTarget.getVersion().getApiLevel(),
+                            minApiVersion));
                 }
             }
 
             if (preferredAvd != null) {
-                // look for a matching device
+                // We have a preferred avd that can actually run the application.
+                // Now see if the AVD is running, and if so use it, otherwise launch it.
 
                 for (IDevice d : devices) {
                     String deviceAvd = d.getAvdName();
@@ -416,38 +428,31 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // a device which target is the same as the project's target) and use it as the
             // new default.
 
-            int reqApiLevel = 0;
-            try {
-                reqApiLevel = Integer.parseInt(requiredApiVersionNumber);
+            if (minApiCodeName != null && minApiLevel < projectTarget.getVersion().getApiLevel()) {
+                int maxDist = projectTarget.getVersion().getApiLevel() - minApiLevel;
+                IAndroidTarget candidate = null;
 
-                if (reqApiLevel > 0 && reqApiLevel < projectTarget.getVersion().getApiLevel()) {
-                    int maxDist = projectTarget.getVersion().getApiLevel() - reqApiLevel;
-                    IAndroidTarget candidate = null;
-
-                    for (IAndroidTarget target : currentSdk.getTargets()) {
-                        if (target.canRunOn(projectTarget)) {
-                            int currDist = target.getVersion().getApiLevel() - reqApiLevel;
-                            if (currDist >= 0 && currDist < maxDist) {
-                                maxDist = currDist;
-                                candidate = target;
-                                if (maxDist == 0) {
-                                    // Found a perfect match
-                                    break;
-                                }
+                for (IAndroidTarget target : currentSdk.getTargets()) {
+                    if (target.canRunOn(projectTarget)) {
+                        int currDist = target.getVersion().getApiLevel() - minApiLevel;
+                        if (currDist >= 0 && currDist < maxDist) {
+                            maxDist = currDist;
+                            candidate = target;
+                            if (maxDist == 0) {
+                                // Found a perfect match
+                                break;
                             }
                         }
                     }
-
-                    if (candidate != null) {
-                        // We found a better SDK target candidate, that is closer to the
-                        // API level from minSdkVersion than the one currently used by the
-                        // project. Below (in the for...devices loop) we'll try to find
-                        // a device/AVD for it.
-                        projectTarget = candidate;
-                    }
                 }
-            } catch (NumberFormatException e) {
-                // pass
+
+                if (candidate != null) {
+                    // We found a better SDK target candidate, that is closer to the
+                    // API level from minSdkVersion than the one currently used by the
+                    // project. Below (in the for...devices loop) we'll try to find
+                    // a device/AVD for it.
+                    projectTarget = candidate;
+                }
             }
 
             HashMap<IDevice, AvdInfo> compatibleRunningAvds = new HashMap<IDevice, AvdInfo>();
@@ -578,7 +583,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             boolean includeDevices = config.mTargetMode != TargetMode.ALL_EMULATORS;
             boolean includeAvds = config.mTargetMode != TargetMode.ALL_DEVICES;
             Collection<IDevice> compatibleDevices = findCompatibleDevices(devices,
-                    requiredApiVersionNumber, includeDevices, includeAvds);
+                    minApiVersion, includeDevices, includeAvds);
             if (compatibleDevices.size() == 0) {
                 AdtPlugin.printErrorToConsole(project,
                       "No active compatible AVD's or devices found. "
@@ -601,7 +606,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     // or the AVD to launch.
                     DeviceChooserDialog dialog = new DeviceChooserDialog(
                             AdtPlugin.getDisplay().getActiveShell(),
-                            response, launchInfo.getPackageName(), desiredProjectTarget);
+                            response, launchInfo.getPackageName(),
+                            desiredProjectTarget, minApiVersion);
                     if (dialog.open() == Dialog.OK) {
                         DeviceChoiceCache.put(launch.getLaunchConfiguration().getName(), response);
                         continueLaunch.set(true);
@@ -634,22 +640,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /**
      * Returns devices that can run a app of provided API level.
      * @param devices list of devices to filter from
-     * @param requiredApiVersionNumber minimum required API level that should be supported
+     * @param requiredVersion minimum required API that should be supported
      * @param includeDevices include physical devices in the filtered list
      * @param includeAvds include emulators in the filtered list
      * @return set of compatible devices, may be an empty set
      */
     private Collection<IDevice> findCompatibleDevices(IDevice[] devices,
-            String requiredApiVersionNumber, boolean includeDevices, boolean includeAvds) {
+            AndroidVersion requiredVersion, boolean includeDevices, boolean includeAvds) {
         Set<IDevice> compatibleDevices = new HashSet<IDevice>(devices.length);
-        int minApi;
-        try {
-            minApi = Integer.parseInt(requiredApiVersionNumber);
-        } catch (NumberFormatException e) {
-            minApi = 1;
-        }
-        AndroidVersion requiredVersion = new AndroidVersion(minApi, null);
-
         AvdManager avdManager = Sdk.getCurrent().getAvdManager();
         for (IDevice d: devices) {
             boolean isEmulator = d.isEmulator();
