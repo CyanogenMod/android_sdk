@@ -25,4 +25,11 @@ public class StringFormatActivity extends Activity {
         getResources().getString(hello2, target, "How are you");
         getResources().getString(R.string.hello2, target, "How are you");
     }
+
+    // Test constructor handling (issue 35588)
+    public StringFormatActivity() {
+        String target = "World";
+        String hello = getResources().getString(R.string.hello);
+        String output1 = String.format(hello, target);
+    }
 }

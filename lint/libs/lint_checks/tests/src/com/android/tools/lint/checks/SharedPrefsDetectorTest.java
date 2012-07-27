@@ -27,8 +27,8 @@ public class SharedPrefsDetectorTest  extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "SharedPrefsTest.java:54: Warning: SharedPreferences.edit() without a " +
-            "corresponding commit() or apply() call",
+            "SharedPrefsTest.java:54: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call\n" +
+            "SharedPrefsTest.java:62: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call",
 
             lintProject("src/test/pkg/SharedPrefsTest.java.txt=>" +
                     "src/test/pkg/SharedPrefsTest.java"));

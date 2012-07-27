@@ -15,4 +15,14 @@ public class HelloWebApp extends Activity {
         webView.getSettings().setJavaScriptEnabled(false); // good
         webView.loadUrl("file:///android_asset/www/index.html");
     }
+
+    // Test Suppress
+    // Constructor: See issue 35588
+    @SuppressLint("SetJavaScriptEnabled")
+    public HelloWebApp() {
+        WebView webView = (WebView)findViewById(R.id.webView);
+        webView.getSettings().setJavaScriptEnabled(true); // bad
+        webView.getSettings().setJavaScriptEnabled(false); // good
+        webView.loadUrl("file:///android_asset/www/index.html");
+    }
 }
