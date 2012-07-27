@@ -55,6 +55,7 @@ import java.util.Set;
  * Wizard for creating new projects
  */
 public class NewProjectWizard extends TemplateWizard {
+    private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
@@ -153,6 +154,7 @@ public class NewProjectWizard extends TemplateWizard {
                 hidden.add(ATTR_MIN_API_LEVEL);
                 hidden.add(ATTR_TARGET_API);
                 hidden.add(ATTR_BUILD_API);
+                hidden.add(IS_LAUNCHER);
 
                 mTemplatePage = new NewTemplatePage(activityValues, false);
                 addPage(mTemplatePage);
@@ -350,6 +352,10 @@ public class NewProjectWizard extends TemplateWizard {
         Map<String, Object> parameters = activityValues.parameters;
 
         addProjectInfo(parameters);
+
+        // Ensure that activities created as part of a new project are marked as
+        // launcher activities
+        parameters.put(IS_LAUNCHER, true);
 
         TemplateHandler activityTemplate = activityValues.getTemplateHandler();
         activityTemplate.setBackupMergedFiles(false);
