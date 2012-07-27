@@ -21,6 +21,9 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectW
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.sdklib.IAndroidTarget;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Value object which holds the current state of the wizard pages for the
  * {@link NewProjectWizard}
@@ -95,6 +98,9 @@ public class NewProjectWizardState {
 
     /** Folder where the project should be created. */
     public String projectLocation;
+
+    /** Configured parameters, by id */
+    public final Map<String, Object> parameters = new HashMap<String, Object>();
 
     /**
      * Returns the build target API level

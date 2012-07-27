@@ -406,4 +406,21 @@ class TemplateMetadata {
     List<Parameter> getParameters() {
         return mParameters;
     }
+
+    /**
+     * Returns the parameter of the given id, or null if not found
+     *
+     * @param id the id of the target parameter
+     * @return the corresponding parameter, or null if not found
+     */
+    @Nullable
+    public Parameter getParameter(@NonNull String id) {
+        for (Parameter parameter : mParameters) {
+            if (id.equals(parameter.id)) {
+                return parameter;
+            }
+        }
+
+        return null;
+    }
 }

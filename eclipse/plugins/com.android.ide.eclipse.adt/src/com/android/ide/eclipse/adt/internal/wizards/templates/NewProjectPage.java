@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplatePage.WIZARD_PAGE_WIDTH;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -82,6 +83,7 @@ public class NewProjectPage extends WizardPage
 
     private final NewProjectWizardState mValues;
     private Map<String, Integer> mMinNameToApi;
+    private Parameter mThemeParameter;
 
     private Text mProjectText;
     private Text mPackageText;
@@ -108,6 +110,7 @@ public class NewProjectPage extends WizardPage
     private ControlDecoration mPackageDec;
     private ControlDecoration mBuildTargetDec;
     private ControlDecoration mMinSdkDec;
+    private Combo mThemeCombo;
 
     NewProjectPage(NewProjectWizardState values) {
         super("newAndroidApp"); //$NON-NLS-1$
@@ -262,6 +265,22 @@ public class NewProjectPage extends WizardPage
 
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
+
+        TemplateMetadata metadata = mValues.template.getTemplate();
+        if (metadata != null) {
+            mThemeParameter = metadata.getParameter("baseTheme"); //$NON-NLS-1$
+            if (mThemeParameter != null && mThemeParameter.element != null) {
+                Label themeLabel = new Label(container, SWT.NONE);
+                themeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+                themeLabel.setText("Theme:");
+
+                mThemeCombo = NewTemplatePage.createOptionCombo(mThemeParameter, container,
+                        mValues.parameters, this, this);
+                mThemeCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+                new Label(container, SWT.NONE);
+                new Label(container, SWT.NONE);
+            }
+        }
 
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
@@ -569,6 +588,18 @@ public class NewProjectPage extends WizardPage
                 mLocationText.setText(dir);
                 mValues.projectLocation = dir;
             }
+        } else if (source == mThemeCombo) {
+            String[] optionIds = (String[]) mThemeCombo.getData(ATTR_ID);
+            int index = mThemeCombo.getSelectionIndex();
+            if (index != -1 && index < optionIds.length) {
+                String optionId = optionIds[index];
+                Parameter parameter = NewTemplatePage.getParameter(mThemeCombo);
+                if (parameter != null) {
+                    parameter.value = optionId;
+                    parameter.edited = optionId != null && !optionId.toString().isEmpty();
+                    mValues.parameters.put(parameter.id, optionId);
+                }
+            }
         }
 
         validatePage();
@@ -754,6 +785,12 @@ public class NewProjectPage extends WizardPage
                             "The minimum SDK version is higher than the build target version");
                     }
                 }
+            }
+
+            if (mThemeParameter != null
+                    && (status == null || status.getSeverity() != IStatus.ERROR)) {
+                status = NewTemplatePage.validateCombo(status, mThemeParameter,
+                        mValues.minSdkLevel, mValues.getBuildApi());
             }
         }
 
