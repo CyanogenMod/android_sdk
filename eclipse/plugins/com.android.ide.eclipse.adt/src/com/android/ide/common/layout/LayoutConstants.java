@@ -86,6 +86,7 @@ public class LayoutConstants {
     public static final String ATTR_DRAWABLE_LEFT = "drawableLeft";                //$NON-NLS-1$
     public static final String ATTR_DRAWABLE_BOTTOM = "drawableBottom";            //$NON-NLS-1$
     public static final String ATTR_DRAWABLE_TOP = "drawableTop";                  //$NON-NLS-1$
+    public static final String ATTR_DRAWABLE_PADDING = "drawablePadding";          //$NON-NLS-1$
 
     // RelativeLayout layout params:
     public static final String ATTR_LAYOUT_ALIGN_LEFT = "layout_alignLeft";        //$NON-NLS-1$

@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UseCompoundDrawableRefactoring.combine;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -24,6 +26,22 @@ import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class UseCompoundDrawableRefactoringTest extends RefactoringTest {
+    public void testCombine() throws Exception {
+        assertNull(combine(null, null));
+        assertNull(combine("@dimen/foo", "@dimen/bar"));
+        assertNull(combine("@dimen/foo", "@dimen/bar"));
+        assertNull(combine("1sp", "@dimen/bar"));
+        assertNull(combine("1sp", "2dp"));
+        assertNull(combine(null, ""));
+        assertNull(combine("", null));
+
+        assertEquals("@dimen/foo", combine(null, "@dimen/foo"));
+        assertEquals("@dimen/foo", combine("@dimen/foo", null));
+        assertEquals("5sp", combine("5sp", null));
+
+        assertEquals("10sp", combine("8sp", "2sp"));
+        assertEquals("50dp", combine("30dp", "20dp"));
+    }
 
     public void test1() throws Exception {
         // Test converting an image above a text view
@@ -60,6 +78,16 @@ public class UseCompoundDrawableRefactoringTest extends RefactoringTest {
     public void test7() throws Exception {
         // Test converting where a namespace needs to be migrated
         checkRefactoring("refactoring/usecompound/compound5.xml", "@+id/layout");
+    }
+
+    public void test8() throws Exception {
+        // Test padding handling
+        checkRefactoring("refactoring/usecompound/compound6.xml", "@+id/layout1");
+    }
+
+    public void test9() throws Exception {
+        // Test margin combination
+        checkRefactoring("refactoring/usecompound/compound7.xml", "@+id/layout1");
     }
 
     private void checkRefactoring(String basename, String id) throws Exception {

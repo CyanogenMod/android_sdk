@@ -79,6 +79,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 
 /** Utility methods for ADT */
@@ -1057,6 +1058,23 @@ public class AdtUtils {
                 ensureExists((IFolder) parent);
             }
             folder.create(false, false, null);
+        }
+    }
+
+    /**
+     * Format the given floating value into an XML string, omitting decimals if
+     * 0
+     *
+     * @param value the value to be formatted
+     * @return the corresponding XML string for the value
+     */
+    public static String formatFloatAttribute(float value) {
+        if (value != (int) value) {
+            // Run String.format without a locale, because we don't want locale-specific
+            // conversions here like separating the decimal part with a comma instead of a dot!
+            return String.format((Locale) null, "%.2f", value); //$NON-NLS-1$
+        } else {
+            return Integer.toString((int) value);
         }
     }
 }

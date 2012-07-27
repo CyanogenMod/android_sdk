@@ -28,11 +28,11 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
+import static com.android.ide.eclipse.adt.AdtUtils.formatFloatAttribute;
 import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
@@ -59,7 +59,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -1086,16 +1085,5 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         return sum;
-    }
-
-    @VisibleForTesting
-    static String formatFloatAttribute(float value) {
-        if (value != (int) value) {
-            // Run String.format without a locale, because we don't want locale-specific
-            // conversions here like separating the decimal part with a comma instead of a dot!
-            return String.format((Locale) null, "%.2f", value); //$NON-NLS-1$
-        } else {
-            return Integer.toString((int) value);
-        }
     }
 }
