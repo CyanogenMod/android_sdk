@@ -24,6 +24,7 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 import static com.android.sdklib.SdkConstants.CLASS_ACTIVITY;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -344,80 +345,16 @@ public class NewTemplatePage extends WizardPage
                                 1, 1));
                         label.setText(name);
 
-                        Combo combo = new Combo(container, SWT.READ_ONLY);
+                        Combo combo = createOptionCombo(parameter, container, mValues.parameters,
+                                this, this);
                         combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
                                 2, 1));
-
-                        List<Element> options = parameter.getOptions();
-                        assert options.size() > 0;
-                        int selected = 0;
-                        List<String> ids = Lists.newArrayList();
-                        List<Integer> minSdks = Lists.newArrayList();
-                        List<Integer> minBuildApis = Lists.newArrayList();
-                        List<String> labels = Lists.newArrayList();
-                        for (int i = 0, n = options.size(); i < n; i++) {
-                            Element option = options.get(i);
-                            String optionId = option.getAttribute(ATTR_ID);
-                            assert optionId != null && !optionId.isEmpty() : ATTR_ID;
-                            String isDefault = option.getAttribute(ATTR_DEFAULT);
-                            if (isDefault != null && !isDefault.isEmpty() &&
-                                    Boolean.valueOf(isDefault)) {
-                                selected = i;
-                            }
-                            NodeList childNodes = option.getChildNodes();
-                            assert childNodes.getLength() == 1 &&
-                                    childNodes.item(0).getNodeType() == Node.TEXT_NODE;
-                            String optionLabel = childNodes.item(0).getNodeValue().trim();
-
-                            String minApiString = option.getAttribute(ATTR_MIN_API);
-                            int minSdk = 1;
-                            if (minApiString != null && !minApiString.isEmpty()) {
-                                try {
-                                    minSdk = Integer.parseInt(minApiString);
-                                } catch (NumberFormatException nufe) {
-                                    // Templates aren't allowed to contain codenames, should
-                                    // always be an integer
-                                    AdtPlugin.log(nufe, null);
-                                    minSdk = 1;
-                                }
-                            }
-                            String minBuildApiString = option.getAttribute(ATTR_MIN_BUILD_API);
-                            int minBuildApi = 1;
-                            if (minBuildApiString != null && !minBuildApiString.isEmpty()) {
-                                try {
-                                    minBuildApi = Integer.parseInt(minBuildApiString);
-                                } catch (NumberFormatException nufe) {
-                                    // Templates aren't allowed to contain codenames, should
-                                    // always be an integer
-                                    AdtPlugin.log(nufe, null);
-                                    minBuildApi = 1;
-                                }
-                            }
-                            minSdks.add(minSdk);
-                            minBuildApis.add(minBuildApi);
-                            ids.add(optionId);
-                            labels.add(optionLabel);
-                        }
-                        combo.setData(parameter);
-                        parameter.control = combo;
-                        combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
-                        combo.setData(ATTR_MIN_API, minSdks.toArray(new Integer[minSdks.size()]));
-                        combo.setData(ATTR_MIN_BUILD_API, minBuildApis.toArray(
-                                new Integer[minBuildApis.size()]));
-                        assert labels.size() > 0;
-                        combo.setItems(labels.toArray(new String[labels.size()]));
-                        combo.select(selected);
-                        mValues.parameters.put(id, ids.get(selected));
-
-                        combo.addSelectionListener(this);
-                        combo.addFocusListener(this);
 
                         if (mFirst == null) {
                             mFirst = combo;
                         }
 
                         if (help != null && !help.isEmpty()) {
-                            combo.setToolTipText(help);
                             ControlDecoration decoration = createFieldDecoration(id, combo, help);
                         }
                         break;
@@ -464,6 +401,87 @@ public class NewTemplatePage extends WizardPage
         // delay creation of the control decorations until layout has been performed.
         // Let's do that soon.
         parent.getParent().redraw();
+    }
+
+    @NonNull
+    static Combo createOptionCombo(
+            @NonNull Parameter parameter,
+            @NonNull Composite container,
+            @NonNull Map<String, Object> valueMap,
+            @NonNull SelectionListener selectionListener,
+            @NonNull FocusListener focusListener) {
+        Combo combo = new Combo(container, SWT.READ_ONLY);
+
+        List<Element> options = parameter.getOptions();
+        assert options.size() > 0;
+        int selected = 0;
+        List<String> ids = Lists.newArrayList();
+        List<Integer> minSdks = Lists.newArrayList();
+        List<Integer> minBuildApis = Lists.newArrayList();
+        List<String> labels = Lists.newArrayList();
+        for (int i = 0, n = options.size(); i < n; i++) {
+            Element option = options.get(i);
+            String optionId = option.getAttribute(ATTR_ID);
+            assert optionId != null && !optionId.isEmpty() : ATTR_ID;
+            String isDefault = option.getAttribute(ATTR_DEFAULT);
+            if (isDefault != null && !isDefault.isEmpty() &&
+                    Boolean.valueOf(isDefault)) {
+                selected = i;
+            }
+            NodeList childNodes = option.getChildNodes();
+            assert childNodes.getLength() == 1 &&
+                    childNodes.item(0).getNodeType() == Node.TEXT_NODE;
+            String optionLabel = childNodes.item(0).getNodeValue().trim();
+
+            String minApiString = option.getAttribute(ATTR_MIN_API);
+            int minSdk = 1;
+            if (minApiString != null && !minApiString.isEmpty()) {
+                try {
+                    minSdk = Integer.parseInt(minApiString);
+                } catch (NumberFormatException nufe) {
+                    // Templates aren't allowed to contain codenames, should
+                    // always be an integer
+                    AdtPlugin.log(nufe, null);
+                    minSdk = 1;
+                }
+            }
+            String minBuildApiString = option.getAttribute(ATTR_MIN_BUILD_API);
+            int minBuildApi = 1;
+            if (minBuildApiString != null && !minBuildApiString.isEmpty()) {
+                try {
+                    minBuildApi = Integer.parseInt(minBuildApiString);
+                } catch (NumberFormatException nufe) {
+                    // Templates aren't allowed to contain codenames, should
+                    // always be an integer
+                    AdtPlugin.log(nufe, null);
+                    minBuildApi = 1;
+                }
+            }
+            minSdks.add(minSdk);
+            minBuildApis.add(minBuildApi);
+            ids.add(optionId);
+            labels.add(optionLabel);
+        }
+        combo.setData(parameter);
+        parameter.control = combo;
+        combo.setData(ATTR_ID, ids.toArray(new String[ids.size()]));
+        combo.setData(ATTR_MIN_API, minSdks.toArray(new Integer[minSdks.size()]));
+        combo.setData(ATTR_MIN_BUILD_API, minBuildApis.toArray(
+                new Integer[minBuildApis.size()]));
+        assert labels.size() > 0;
+        combo.setItems(labels.toArray(new String[labels.size()]));
+        combo.select(selected);
+
+        combo.addSelectionListener(selectionListener);
+        combo.addFocusListener(focusListener);
+
+        valueMap.put(parameter.id, ids.get(selected));
+
+        if (parameter.help != null && !parameter.help.isEmpty()) {
+            combo.setToolTipText(parameter.help);
+        }
+
+        return  combo;
     }
 
     private void setPreview(String thumb) {
@@ -543,7 +561,7 @@ public class NewTemplatePage extends WizardPage
 
     /** Returns the parameter associated with the given control */
     @Nullable
-    private Parameter getParameter(Control control) {
+    static Parameter getParameter(Control control) {
         return (Parameter) control.getData();
     }
 
@@ -595,34 +613,7 @@ public class NewTemplatePage extends WizardPage
 
             if (status == null || status.isOK()) {
                 if (parameter.control instanceof Combo) {
-                    Combo combo = (Combo) parameter.control;
-                    Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
-                    int index = combo.getSelectionIndex();
-
-                    // Check minSdk
-                    if (index != -1 && index < optionIds.length) {
-                        Integer requiredMinSdk = optionIds[index];
-                        if (requiredMinSdk > minSdk) {
-                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                                String.format(
-                                        "This template requires a minimum SDK version of at " +
-                                        "least %1$d, and the current min version is %2$d",
-                                        requiredMinSdk, minSdk));
-                        }
-                    }
-
-                    // Check minimum build target
-                    optionIds = (Integer[]) combo.getData(ATTR_MIN_BUILD_API);
-                    if (index != -1 && index < optionIds.length) {
-                        Integer requiredBuildApi = optionIds[index];
-                        if (requiredBuildApi > buildApi) {
-                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                                String.format(
-                                    "This template requires a build target API version of at " +
-                                    "least %1$d, and the current min version is %2$d",
-                                    requiredBuildApi, buildApi));
-                        }
-                    }
+                    status = validateCombo(status, parameter, minSdk, buildApi);
                 }
             }
         }
@@ -636,6 +627,39 @@ public class NewTemplatePage extends WizardPage
             setErrorMessage(null);
             setMessage(null);
         }
+    }
+
+    /** Validates the given combo */
+    static IStatus validateCombo(IStatus status, Parameter parameter, int minSdk, int buildApi) {
+        Combo combo = (Combo) parameter.control;
+        Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
+        int index = combo.getSelectionIndex();
+
+        // Check minSdk
+        if (index != -1 && index < optionIds.length) {
+            Integer requiredMinSdk = optionIds[index];
+            if (requiredMinSdk > minSdk) {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    String.format(
+                            "%1$s \"%2$s\" requires a minimum SDK version of at " +
+                            "least %3$d, and the current min version is %4$d",
+                            parameter.name, combo.getItems()[index], requiredMinSdk, minSdk));
+            }
+        }
+
+        // Check minimum build target
+        optionIds = (Integer[]) combo.getData(ATTR_MIN_BUILD_API);
+        if (index != -1 && index < optionIds.length) {
+            Integer requiredBuildApi = optionIds[index];
+            if (requiredBuildApi > buildApi) {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    String.format(
+                        "%1$s \"%2$s\"  requires a build target API version of at " +
+                        "least %3$d, and the current min version is %4$d",
+                        parameter.name, combo.getItems()[index], requiredBuildApi, buildApi));
+            }
+        }
+        return status;
     }
 
     private int getMinSdk() {

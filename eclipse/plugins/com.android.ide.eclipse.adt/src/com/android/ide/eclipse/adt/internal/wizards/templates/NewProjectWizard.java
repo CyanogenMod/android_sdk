@@ -386,5 +386,6 @@ public class NewProjectWizard extends TemplateWizard {
         parameters.put(ATTR_TARGET_API, 15);
         parameters.put(ATTR_BUILD_API, mValues.target.getVersion().getApiLevel());
         parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
+        parameters.putAll(mValues.parameters);
     }
 }
