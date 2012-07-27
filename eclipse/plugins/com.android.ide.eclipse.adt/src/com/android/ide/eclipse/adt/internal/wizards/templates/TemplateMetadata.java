@@ -18,17 +18,36 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_REVISION;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_BACKGROUND;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_CLIPART_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FOREGROUND;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FORMAT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_PADDING;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_SHAPE;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_SOURCE_TYPE;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_TEXT;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_TRIM;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_TYPE;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.CURRENT_FORMAT;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_DEPENDENCY;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_ICONS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_PARAMETER;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_THUMB;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
+import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
+import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState.SourceType;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.swt.graphics.RGB;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import lombok.ast.libs.org.parboiled.google.collect.Lists;
@@ -53,6 +73,8 @@ class TemplateMetadata {
     private Integer mMinApi;
     private Integer mMinBuildApi;
     private Integer mRevision;
+    private boolean mNoIcons;
+    private CreateAssetSetWizardState mIconState;
 
     TemplateMetadata(@NonNull Document document) {
         mDocument = document;
@@ -75,7 +97,7 @@ class TemplateMetadata {
         if (versionString != null && !versionString.isEmpty()) {
             try {
                 int version = Integer.parseInt(versionString);
-                return version <= TemplateHandler.CURRENT_FORMAT;
+                return version <= CURRENT_FORMAT;
             } catch (NumberFormatException nufe) {
                 return false;
             }
@@ -158,6 +180,140 @@ class TemplateMetadata {
         return mRevision.intValue();
     }
 
+    /**
+     * Returns a suitable icon wizard state instance if this wizard requests
+     * icons to be created, and null otherwise
+     *
+     * @return icon wizard state or null
+     */
+    @Nullable
+    public CreateAssetSetWizardState getIconState(IProject project) {
+        if (mIconState == null && !mNoIcons) {
+            NodeList icons = mDocument.getElementsByTagName(TAG_ICONS);
+            if (icons.getLength() < 1) {
+                mNoIcons = true;
+                return null;
+            }
+            Element icon = (Element) icons.item(0);
+
+            mIconState = new CreateAssetSetWizardState();
+            mIconState.project = project;
+
+            String typeString = getAttributeOrNull(icon, ATTR_TYPE);
+            if (typeString != null) {
+                typeString = typeString.toUpperCase(Locale.US);
+                boolean found = false;
+                for (AssetType type : AssetType.values()) {
+                    if (typeString.equals(type.name())) {
+                        mIconState.type = type;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    AdtPlugin.log(null, "Unknown asset type %1$s", typeString);
+                }
+            }
+
+            mIconState.outputName = getAttributeOrNull(icon, ATTR_NAME);
+            if (mIconState.outputName != null) {
+                // Register parameter such that if it is referencing other values, it gets
+                // updated when other values are edited
+                Parameter outputParameter = new Parameter(
+                        Parameter.Type.STRING, "_iconname", mIconState.outputName); //$NON-NLS-1$
+                getParameters().add(outputParameter);
+            }
+
+            RGB background = getRgb(icon, ATTR_BACKGROUND);
+            if (background != null) {
+                mIconState.background = background;
+            }
+            RGB foreground = getRgb(icon, ATTR_FOREGROUND);
+            if (foreground != null) {
+                mIconState.foreground = foreground;
+            }
+            String shapeString = getAttributeOrNull(icon, ATTR_SHAPE);
+            if (shapeString != null) {
+                shapeString = shapeString.toUpperCase(Locale.US);
+                boolean found = false;
+                for (GraphicGenerator.Shape shape : GraphicGenerator.Shape.values()) {
+                    if (shapeString.equals(shape.name())) {
+                        mIconState.shape = shape;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    AdtPlugin.log(null, "Unknown shape %1$s", shapeString);
+                }
+            }
+            String trimString = getAttributeOrNull(icon, ATTR_TRIM);
+            if (trimString != null) {
+                mIconState.trim = Boolean.valueOf(trimString);
+            }
+            String paddingString = getAttributeOrNull(icon, ATTR_PADDING);
+            if (paddingString != null) {
+                mIconState.padding = Integer.parseInt(paddingString);
+            }
+            String sourceTypeString = getAttributeOrNull(icon, ATTR_SOURCE_TYPE);
+            if (sourceTypeString != null) {
+                sourceTypeString = sourceTypeString.toUpperCase(Locale.US);
+                boolean found = false;
+                for (SourceType type : SourceType.values()) {
+                    if (sourceTypeString.equals(type.name())) {
+                        mIconState.sourceType = type;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    AdtPlugin.log(null, "Unknown source type %1$s", sourceTypeString);
+                }
+            }
+            mIconState.clipartName = getAttributeOrNull(icon, ATTR_CLIPART_NAME);
+
+            String textString = getAttributeOrNull(icon, ATTR_TEXT);
+            if (textString != null) {
+                mIconState.text = textString;
+            }
+        }
+
+        return mIconState;
+    }
+
+    void updateIconName(List<Parameter> parameters, StringEvaluator evaluator) {
+        if (mIconState != null) {
+            NodeList icons = mDocument.getElementsByTagName(TAG_ICONS);
+            if (icons.getLength() < 1) {
+                return;
+            }
+            Element icon = (Element) icons.item(0);
+            String name = getAttributeOrNull(icon, ATTR_NAME);
+            if (name != null) {
+                mIconState.outputName = evaluator.evaluate(name, parameters);
+            }
+        }
+    }
+
+    private static RGB getRgb(@NonNull Element element, @NonNull String name) {
+        String colorString = getAttributeOrNull(element, name);
+        if (colorString != null) {
+            int rgb = ImageUtils.getColor(colorString.trim());
+            return ImageUtils.intToRgb(rgb);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static String getAttributeOrNull(@NonNull Element element, @NonNull String name) {
+        String value = element.getAttribute(name);
+        if (value != null && value.isEmpty()) {
+            return null;
+        }
+        return value;
+    }
+
     @Nullable
     String getThumbnailPath() {
         // Apply selector logic. Pick the thumb first thumb that satisfies the largest number
@@ -223,7 +379,7 @@ class TemplateMetadata {
      */
     List<Pair<String, Integer>> getDependencies() {
         if (mDependencies == null) {
-            NodeList elements = mDocument.getElementsByTagName(TemplateHandler.TAG_DEPENDENCY);
+            NodeList elements = mDocument.getElementsByTagName(TAG_DEPENDENCY);
             if (elements.getLength() == 0) {
                 return Collections.emptyList();
             }
@@ -231,9 +387,9 @@ class TemplateMetadata {
             List<Pair<String, Integer>> dependencies = Lists.newArrayList();
             for (int i = 0, n = elements.getLength(); i < n; i++) {
                 Element element = (Element) elements.item(i);
-                String name = element.getAttribute(TemplateHandler.ATTR_NAME);
+                String name = element.getAttribute(ATTR_NAME);
                 int revision = -1;
-                String revisionString = element.getAttribute(TemplateHandler.ATTR_REVISION);
+                String revisionString = element.getAttribute(ATTR_REVISION);
                 if (!revisionString.isEmpty()) {
                     revision = Integer.parseInt(revisionString);
                 }

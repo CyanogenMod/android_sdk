@@ -77,11 +77,7 @@ public abstract class GraphicGenerator {
     /** Foreground effects styles */
     public static enum Style {
         /** No effects */
-        SIMPLE("fore1"),
-        /** "Fancy" effects */
-        FANCY("fore2"),
-        /** A glossy look */
-        GLOSSY("fore3");
+        SIMPLE("fore1");
 
         /** Id, used in filenames to identify associated stencils */
         public final String id;

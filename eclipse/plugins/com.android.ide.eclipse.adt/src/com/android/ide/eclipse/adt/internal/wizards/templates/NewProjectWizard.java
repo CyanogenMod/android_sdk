@@ -27,45 +27,35 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
-import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.IWorkbench;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
-
 /**
  * Wizard for creating new projects
  */
 public class NewProjectWizard extends TemplateWizard {
-    private static final String ATTR_COPY_ICONS = "copyIcons";     //$NON-NLS-1$
+    static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
     static final String ATTR_MIN_BUILD_API = "minBuildApi";        //$NON-NLS-1$
@@ -77,11 +67,16 @@ public class NewProjectWizard extends TemplateWizard {
     static final String CATEGORY_PROJECTS = "projects";            //$NON-NLS-1$
     static final String CATEGORY_ACTIVITIES = "activities";        //$NON-NLS-1$
     static final String CATEGORY_OTHER = "other";                  //$NON-NLS-1$
+    /**
+     * Reserved file name for the launcher icon, resolves to the xhdpi version
+     *
+     * @see CreateAssetSetWizardState#getImage
+     */
+    public static final String DEFAULT_LAUNCHER_ICON = "launcher_icon";   //$NON-NLS-1$
 
     private NewProjectPage mMainPage;
     private ActivityPage mActivityPage;
     private NewTemplatePage mTemplatePage;
-    private ConfigureAssetSetPage mIconPage;
     private NewProjectWizardState mValues;
     /** The project being created */
     private IProject mProject;
@@ -108,23 +103,29 @@ public class NewProjectWizard extends TemplateWizard {
     public IWizardPage getNextPage(IWizardPage page) {
         if (page == mMainPage) {
             if (mValues.createIcon) {
-                if (mIconPage == null) {
-                    // Bundle asset studio wizard to create the launcher icon
-                    CreateAssetSetWizardState iconState = mValues.iconState;
-                    iconState.type = AssetType.LAUNCHER;
-                    iconState.outputName = "ic_launcher"; //$NON-NLS-1$
-                    iconState.background = new RGB(0xff, 0xff, 0xff);
-                    iconState.foreground = new RGB(0x33, 0xb6, 0xea);
-                    iconState.shape = GraphicGenerator.Shape.CIRCLE;
-                    iconState.trim = true;
-                    iconState.padding = 10;
-                    iconState.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
-                    iconState.clipartName = "user.png"; //$NON-NLS-1$
-                    mIconPage = new ConfigureAssetSetPage(iconState);
-                    mIconPage.setTitle("Configure Launcher Icon");
-                    addPage(mIconPage);
-                }
-                return mIconPage;
+                // Bundle asset studio wizard to create the launcher icon
+                CreateAssetSetWizardState iconState = mValues.iconState;
+                iconState.type = AssetType.LAUNCHER;
+                iconState.outputName = "ic_launcher"; //$NON-NLS-1$
+                iconState.background = new RGB(0xff, 0xff, 0xff);
+                iconState.foreground = new RGB(0x33, 0xb6, 0xea);
+                iconState.trim = true;
+
+                // ADT 20: White icon with blue shape
+                //iconState.shape = GraphicGenerator.Shape.CIRCLE;
+                //iconState.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
+                //iconState.clipartName = "user.png"; //$NON-NLS-1$
+                //iconState.padding = 10;
+
+                // ADT 21: Use the platform packaging icon, but allow user to customize it
+                iconState.sourceType = CreateAssetSetWizardState.SourceType.IMAGE;
+                iconState.imagePath = new File(DEFAULT_LAUNCHER_ICON);
+                iconState.shape = GraphicGenerator.Shape.NONE;
+                iconState.padding = 0;
+
+                WizardPage p = getIconPage(mValues.iconState);
+                p.setTitle("Configure Launcher Icon");
+                return p;
             } else {
                 return mActivityPage;
             }
@@ -334,45 +335,7 @@ public class NewProjectWizard extends TemplateWizard {
     private void generateIcons(final IProject newProject) {
         // Generate the custom icons
         assert mValues.createIcon;
-        Map<String, Map<String, BufferedImage>> categories =
-                mIconPage.generateImages(false);
-        for (Map<String, BufferedImage> previews : categories.values()) {
-            for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
-                String relativePath = entry.getKey();
-                IPath dest = new Path(relativePath);
-                IFile file = newProject.getFile(dest);
-
-                // In case template already created icons (should remove that)
-                // remove them first
-                if (file.exists()) {
-                    try {
-                        file.delete(true, new NullProgressMonitor());
-                    } catch (CoreException e) {
-                        AdtPlugin.log(e, null);
-                    }
-                }
-                NewXmlFileWizard.createWsParentDirectory(file.getParent());
-                BufferedImage image = entry.getValue();
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                try {
-                    ImageIO.write(image, "PNG", stream); //$NON-NLS-1$
-                    byte[] bytes = stream.toByteArray();
-                    InputStream is = new ByteArrayInputStream(bytes);
-                    file.create(is, true /*force*/, null /*progress*/);
-                } catch (IOException e) {
-                    AdtPlugin.log(e, null);
-                } catch (CoreException e) {
-                    AdtPlugin.log(e, null);
-                }
-
-                try {
-                    file.getParent().refreshLocal(1, new NullProgressMonitor());
-                } catch (CoreException e) {
-                    AdtPlugin.log(e, null);
-                }
-            }
-        }
+        ConfigureAssetSetPage.generateIcons(newProject, mValues.iconState, false, mIconPage);
     }
 
     /**

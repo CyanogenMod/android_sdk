@@ -40,10 +40,11 @@ import java.util.List;
 import java.util.Map;
 
 /** Handles locating templates and providing template metadata */
-class TemplateManager {
+public class TemplateManager {
     TemplateManager() {
     }
 
+    /** @return the root folder containing templates */
     @Nullable
     public static File getTemplateRootFolder() {
         String location = AdtPrefs.getPrefs().getOsSdkFolder();
@@ -57,6 +58,7 @@ class TemplateManager {
         return null;
     }
 
+    /** @return the root folder containing extra templates */
     @Nullable
     public static File getExtraTemplateRootFolder() {
         String location = AdtPrefs.getPrefs().getOsSdkFolder();
@@ -70,6 +72,13 @@ class TemplateManager {
         return null;
     }
 
+    /**
+     * Returns a template file under the given root, if it exists
+     *
+     * @param root the root folder
+     * @param relativePath the relative path
+     * @return a template file under the given root, if it exists
+     */
     @Nullable
     public static File getTemplateLocation(@NonNull File root, @NonNull String relativePath) {
         File templateRoot = getTemplateRootFolder();
@@ -86,6 +95,12 @@ class TemplateManager {
         return null;
     }
 
+    /**
+     * Returns a template file under one of the available roots, if it exists
+     *
+     * @param relativePath the relative path
+     * @return a template file under one of the available roots, if it exists
+     */
     @Nullable
     public static File getTemplateLocation(@NonNull String relativePath) {
         File templateRoot = getTemplateRootFolder();
@@ -188,7 +203,7 @@ class TemplateManager {
     private Map<File, TemplateMetadata> mTemplateMap;
 
     @Nullable
-    public TemplateMetadata getTemplate(File templateDir) {
+    TemplateMetadata getTemplate(File templateDir) {
         if (mTemplateMap != null) {
             TemplateMetadata metadata = mTemplateMap.get(templateDir);
             if (metadata != null) {

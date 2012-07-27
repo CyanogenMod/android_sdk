@@ -25,6 +25,7 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPage;
 import com.android.resources.ResourceFolderType;
@@ -38,7 +39,9 @@ import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.swt.widgets.Control;
 import org.w3c.dom.Element;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -235,6 +238,26 @@ class Parameter {
         }
 
         value = initial;
+    }
+
+    Parameter(@NonNull Type type, @NonNull String id, @NonNull String initialValue) {
+        this.type = type;
+        this.id = id;
+        this.value = initialValue;
+        element = null;
+        initial = null;
+        suggest = null;
+        name = id;
+        help = null;
+        constraints = EnumSet.noneOf(Constraint.class);
+    }
+
+    List<Element> getOptions() {
+        if (element != null) {
+            return DomUtilities.getChildren(element);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Nullable

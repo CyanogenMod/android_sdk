@@ -30,6 +30,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
@@ -76,6 +77,11 @@ public class NewTemplateWizard extends TemplateWizard {
         mMainPage = new NewTemplatePage(mValues, true);
     }
 
+    @Override
+    protected boolean shouldAddIconPage() {
+        return mValues.getIconState() != null;
+    }
+
     /**
      * Hide those parameters that the template requires but that we don't want
      * to ask the users about, since we can derive it from the target project
@@ -99,7 +105,13 @@ public class NewTemplateWizard extends TemplateWizard {
     @Override
     public IWizardPage getNextPage(IWizardPage page) {
         TemplateMetadata template = mValues.getTemplateHandler().getTemplate();
-        if (page == mMainPage) {
+
+        if (page == mMainPage && shouldAddIconPage()) {
+            WizardPage iconPage = getIconPage(mValues.getIconState());
+            mValues.updateIconState(mMainPage.getEvaluator());
+            return iconPage;
+        } else if (page == mMainPage
+                || shouldAddIconPage() && page == getIconPage(mValues.getIconState())) {
             if (template != null) {
                 if (InstallDependencyPage.isInstalled(template.getDependencies())) {
                     return getPreviewPage(mValues);

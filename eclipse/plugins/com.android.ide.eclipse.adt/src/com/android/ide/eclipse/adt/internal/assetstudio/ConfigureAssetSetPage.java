@@ -16,12 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.DEFAULT_LAUNCHER_ICON;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.assetstudiolib.ActionBarIconGenerator;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.assetstudiolib.GraphicGenerator.Shape;
-import com.android.assetstudiolib.GraphicGeneratorContext;
 import com.android.assetstudiolib.LauncherIconGenerator;
 import com.android.assetstudiolib.MenuIconGenerator;
 import com.android.assetstudiolib.NotificationIconGenerator;
@@ -29,6 +31,7 @@ import com.android.assetstudiolib.TabIconGenerator;
 import com.android.assetstudiolib.TextRenderUtil;
 import com.android.assetstudiolib.Util;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState.SourceType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
@@ -36,12 +39,16 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
@@ -76,10 +83,12 @@ import org.eclipse.swt.widgets.Text;
 
 import java.awt.Paint;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -93,17 +102,10 @@ import javax.imageio.ImageIO;
  * gets to configure the parameters of the asset, and see a preview.
  */
 public class ConfigureAssetSetPage extends WizardPage implements SelectionListener,
-        GraphicGeneratorContext, ModifyListener {
+        ModifyListener {
     private final CreateAssetSetWizardState mValues;
 
     private static final int PREVIEW_AREA_WIDTH = 120;
-
-    /** Whether the alternative launcher icon styles are supported. Right now
-     * the generator and stencils produce icons that don't fit within the overall
-     * icon guidelines, so until that's fixed disable these from the UI to avoid
-     * creating icons that don't fit in.
-     */
-    private static boolean SUPPORT_LAUNCHER_ICON_TYPES = false;
 
     private boolean mShown;
 
@@ -122,9 +124,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private Button mCircleButton;
     private Button mBgButton;
     private Button mFgButton;
-    private Button mSimpleRadio;
-    private Button mFancyRadio;
-    private Button mGlossyRadio;
     private Composite mPreviewArea;
     private Button mFontButton;
     private Composite mForegroundArea;
@@ -134,7 +133,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private Text mImagePathText;
 
     private boolean mTimerPending;
-    private Map<String, BufferedImage> mImageCache = new HashMap<String, BufferedImage>();
     private RGB mBgColor;
     private RGB mFgColor;
     private Text mText;
@@ -153,10 +151,9 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private Composite mShapeComposite;
     private Label mBgColorLabel;
     private Label mFgColorLabel;
-    private Label mEffectsLabel;
-    private Composite mEffectsComposite;
 
     private boolean mIgnore;
+    private SourceType mShowingType;
 
     /**
      * Create the wizard.
@@ -388,32 +385,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mFgButton.setAlignment(SWT.CENTER);
         mFgButton.addSelectionListener(this);
 
-        if (SUPPORT_LAUNCHER_ICON_TYPES) {
-            mEffectsLabel = new Label(mConfigurationArea, SWT.NONE);
-            mEffectsLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-            mEffectsLabel.setText("Foreground Effects:");
-
-            mEffectsComposite = new Composite(mConfigurationArea, SWT.NONE);
-            mEffectsComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-            GridLayout gl_mEffectsComposite = new GridLayout(5, false);
-            gl_mEffectsComposite.horizontalSpacing = 0;
-            mEffectsComposite.setLayout(gl_mEffectsComposite);
-
-            mSimpleRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-            mSimpleRadio.setSelection(true);
-            mSimpleRadio.setText("Simple");
-            mSimpleRadio.addSelectionListener(this);
-
-            mFancyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-            mFancyRadio.setText("Fancy");
-            mFancyRadio.addSelectionListener(this);
-
-            mGlossyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-            mGlossyRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-            mGlossyRadio.setText("Glossy");
-            mGlossyRadio.addSelectionListener(this);
-        }
-
         configurationScrollArea.setContent(mConfigurationArea);
         configurationScrollArea.setMinSize(mConfigurationArea.computeSize(SWT.DEFAULT,
                 SWT.DEFAULT));
@@ -453,18 +424,19 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     }
 
     void configureAssetType(AssetType type) {
-        showGroup(type.needsForegroundScaling(), mScalingLabel, mScalingComposite);
-        showGroup(type.needsShape(), mShapeLabel, mShapeComposite);
-        showGroup(type.needsTheme(), mThemeLabel, mThemeComposite);
-        showGroup(type.needsColors(), mBgColorLabel, mBgButton);
-        showGroup(type.needsColors(), mFgColorLabel, mFgButton);
-        if (SUPPORT_LAUNCHER_ICON_TYPES) {
-            showGroup(type.needsEffects(), mEffectsLabel, mEffectsComposite);
-        }
+        if (mValues.sourceType != mShowingType) {
+            mShowingType = mValues.sourceType;
+            showGroup(type.needsForegroundScaling(), mScalingLabel, mScalingComposite);
+            showGroup(type.needsShape(), mShapeLabel, mShapeComposite);
+            showGroup(type.needsTheme(), mThemeLabel, mThemeComposite);
+            showGroup(type.needsColors(), mBgColorLabel, mBgButton);
+            showGroup(type.needsColors() && mValues.sourceType != SourceType.IMAGE,
+                    mFgColorLabel, mFgButton);
 
-        Composite parent = mScalingLabel.getParent();
-        parent.pack();
-        parent.layout();
+            Composite parent = mScalingLabel.getParent();
+            parent.pack();
+            parent.layout();
+        }
     }
 
     private static void showGroup(boolean show, Control control1, Control control2) {
@@ -601,6 +573,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             String path = mValues.imagePath != null ? mValues.imagePath.getPath() : null;
             if (path == null || path.length() == 0) {
                 error = "Select an image";
+            } else if (path.equals(DEFAULT_LAUNCHER_ICON)) {
+                // Silent
             } else if (!(new File(path).exists())) {
                 error = String.format("%1$s does not exist", path);
             } else {
@@ -676,19 +650,28 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         if (source == mImageRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.IMAGE;
             chooseForegroundTab((Button) source, mImageForm);
+            configureAssetType(mValues.type);
         } else if (source == mClipartRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
             chooseForegroundTab((Button) source, mClipartForm);
+            configureAssetType(mValues.type);
         } else if (source == mTextRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.TEXT;
             updateFontLabel();
             chooseForegroundTab((Button) source, mTextForm);
+            configureAssetType(mValues.type);
             mText.setFocus();
         }
 
         // Choose image file
         if (source == mPickImageButton) {
             FileDialog dialog = new FileDialog(mPickImageButton.getShell(), SWT.OPEN);
+
+            String curLocation = mImagePathText.getText().trim();
+            if (!curLocation.isEmpty()) {
+                dialog.setFilterPath(curLocation);
+            }
+
             String file = dialog.open();
             if (file != null) {
                 mValues.imagePath = new File(file);
@@ -717,22 +700,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             setShape(mValues.shape);
         }
 
-        if (SUPPORT_LAUNCHER_ICON_TYPES) {
-            if (source == mSimpleRadio) {
-                mSimpleRadio.setSelection(true);
-                mGlossyRadio.setSelection(false);
-                mFancyRadio.setSelection(false);
-            } else if (source == mFancyRadio) {
-                mFancyRadio.setSelection(true);
-                mSimpleRadio.setSelection(false);
-                mGlossyRadio.setSelection(false);
-            } else if (source == mGlossyRadio) {
-                mGlossyRadio.setSelection(true);
-                mSimpleRadio.setSelection(false);
-                mFancyRadio.setSelection(false);
-            }
-        }
-
         if (source == mTrimCheckBox) {
             mValues.trim = mTrimCheckBox.getSelection();
         }
@@ -740,9 +707,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         if (source == mHoloDarkRadio) {
             mHoloDarkRadio.setSelection(true);
             mHoloLightRadio.setSelection(false);
+            mValues.holoDark = true;
         } else if (source == mHoloLightRadio) {
             mHoloLightRadio.setSelection(true);
             mHoloDarkRadio.setSelection(false);
+            mValues.holoDark = false;
         }
 
         if (source == mChooseClipart) {
@@ -881,6 +850,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         requestUpdatePreview(updateQuickly);
     }
 
+    @SuppressWarnings("unused") // SWT constructors have side effects and are not unused
     private void updateClipartPreview() {
         for (Control c : mClipartPreviewPanel.getChildren()) {
             c.dispose();
@@ -981,7 +951,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             return;
         }
 
-        Map<String, Map<String, BufferedImage>> map = generateImages(true /*previewOnly*/);
+        Map<String, Map<String, BufferedImage>> map = generateImages(mValues,
+                true /*previewOnly*/, this);
         for (Entry<String, Map<String, BufferedImage>> categoryEntry : map.entrySet()) {
             String category = categoryEntry.getKey();
             if (category.length() > 0) {
@@ -1007,7 +978,18 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mPreviewArea.layout(true);
     }
 
-    public Map<String, Map<String, BufferedImage>> generateImages(boolean previewOnly) {
+    /**
+     * Generate images using the given wizard state
+     *
+     * @param mValues the state to use
+     * @param previewOnly whether we are only generating previews
+     * @param page if non null, a wizard page to write error messages to
+     * @return a map of image objects
+     */
+    public static Map<String, Map<String, BufferedImage>> generateImages(
+            @NonNull CreateAssetSetWizardState mValues,
+            boolean previewOnly,
+            @Nullable WizardPage page) {
         // Map of ids to images: Preserve insertion order (the densities)
         Map<String, Map<String, BufferedImage>> categoryMap =
                 new LinkedHashMap<String, Map<String, BufferedImage>>();
@@ -1022,23 +1004,37 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 // TODO: Only do this when the source image type is image
                 String path = mValues.imagePath != null ? mValues.imagePath.getPath() : "";
                 if (path.length() == 0) {
-                    setErrorMessage("Enter a filename");
+                    if (page != null) {
+                        page.setErrorMessage("Enter a filename");
+                    }
                     return Collections.emptyMap();
                 }
-                File file = new File(path);
-                if (!file.exists()) {
-                    setErrorMessage(String.format("%1$s does not exist", file.getPath()));
-                    return Collections.emptyMap();
+                if (!path.equals(DEFAULT_LAUNCHER_ICON)) {
+                    File file = new File(path);
+                    if (!file.isFile()) {
+                        if (page != null) {
+                            page.setErrorMessage(String.format("%1$s does not exist", file.getPath()));
+                        }
+                        return Collections.emptyMap();
+                    }
                 }
 
-                setErrorMessage(null);
-                sourceImage = getImage(path, false);
-                if (sourceImage != null) {
-                    if (trim) {
-                        sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                if (page != null) {
+                    page.setErrorMessage(null);
+                }
+                try {
+                    sourceImage = mValues.getCachedImage(path, false);
+                    if (sourceImage != null) {
+                        if (trim) {
+                            sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
+                        }
+                        if (mValues.padding != 0) {
+                            sourceImage = Util.paddedImage(sourceImage, mValues.padding);
+                        }
                     }
-                    if (mValues.padding != 0) {
-                        sourceImage = Util.paddedImage(sourceImage, mValues.padding);
+                } catch (IOException ioe) {
+                    if (page != null) {
+                        page.setErrorMessage(ioe.getLocalizedMessage());
                     }
                 }
                 break;
@@ -1052,8 +1048,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                     }
 
                     if (type.needsColors()) {
-                        int color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8)
-                                | mFgColor.blue;
+                        RGB fg = mValues.foreground;
+                        int color = 0xFF000000 | (fg.red << 16) | (fg.green << 8) | fg.blue;
                         Paint paint = new java.awt.Color(color);
                         sourceImage = Util.filledImage(sourceImage, paint);
                     }
@@ -1074,8 +1070,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 options.font = mValues.getTextFont();
                 int color;
                 if (type.needsColors()) {
-                    color = 0xFF000000
-                            | (mFgColor.red << 16) | (mFgColor.green << 8) | mFgColor.blue;
+                    RGB fg = mValues.foreground;
+                    color = 0xFF000000 | (fg.red << 16) | (fg.green << 8) | fg.blue;
                 } else {
                     color = 0xFFFFFFFF;
                 }
@@ -1103,16 +1099,10 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                         new LauncherIconGenerator.LauncherOptions();
                 launcherOptions.shape = mValues.shape;
                 launcherOptions.crop = mValues.crop;
+                launcherOptions.style = GraphicGenerator.Style.SIMPLE;
 
-                if (SUPPORT_LAUNCHER_ICON_TYPES) {
-                    launcherOptions.style = mFancyRadio.getSelection() ?
-                        GraphicGenerator.Style.FANCY : mGlossyRadio.getSelection()
-                                ? GraphicGenerator.Style.GLOSSY : GraphicGenerator.Style.SIMPLE;
-                } else {
-                    launcherOptions.style = GraphicGenerator.Style.SIMPLE;
-                }
-
-                int color = (mBgColor.red << 16) | (mBgColor.green << 8) | mBgColor.blue;
+                RGB bg = mValues.background;
+                int color = (bg.red << 16) | (bg.green << 8) | bg.blue;
                 launcherOptions.backgroundColor = color;
                 // Flag which tells the generator iterator to include a web graphic
                 launcherOptions.isWebGraphic = !previewOnly;
@@ -1128,7 +1118,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 generator = new ActionBarIconGenerator();
                 ActionBarIconGenerator.ActionBarOptions actionBarOptions =
                         new ActionBarIconGenerator.ActionBarOptions();
-                actionBarOptions.theme = mHoloDarkRadio.getSelection()
+                actionBarOptions.theme = mValues.holoDark
                         ? ActionBarIconGenerator.Theme.HOLO_DARK
                                 : ActionBarIconGenerator.Theme.HOLO_LIGHT;
 
@@ -1163,9 +1153,66 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         String baseName = mValues.outputName;
-        generator.generate(null, categoryMap, this, options, baseName);
+        generator.generate(null, categoryMap, mValues, options, baseName);
 
         return categoryMap;
+    }
+
+    /**
+     * Generate custom icons into the project based on the asset studio wizard
+     * state
+     *
+     * @param newProject the project to write into
+     * @param values the wizard state to read configuration settings from
+     * @param previewOnly whether we are only generating a preview. For example,
+     *            the launcher icons won't generate a huge 512x512 web graphic
+     *            in preview mode
+     * @param page a wizard page to write error messages to, or null
+     */
+    public static void generateIcons(final IProject newProject,
+            @NonNull CreateAssetSetWizardState values,
+            boolean previewOnly,
+            @Nullable WizardPage page) {
+        // Generate the custom icons
+        Map<String, Map<String, BufferedImage>> categories = generateImages(values,
+                false /*previewOnly*/, page);
+        for (Map<String, BufferedImage> previews : categories.values()) {
+            for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
+                String relativePath = entry.getKey();
+                IPath dest = new Path(relativePath);
+                IFile file = newProject.getFile(dest);
+
+                // In case template already created icons (should remove that)
+                // remove them first
+                if (file.exists()) {
+                    try {
+                        file.delete(true, new NullProgressMonitor());
+                    } catch (CoreException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                }
+                AdtUtils.createWsParentDirectory(file.getParent());
+                BufferedImage image = entry.getValue();
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                try {
+                    ImageIO.write(image, "PNG", stream); //$NON-NLS-1$
+                    byte[] bytes = stream.toByteArray();
+                    InputStream is = new ByteArrayInputStream(bytes);
+                    file.create(is, true /*force*/, null /*progress*/);
+                } catch (IOException e) {
+                    AdtPlugin.log(e, null);
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+
+                try {
+                    file.getParent().refreshLocal(1, new NullProgressMonitor());
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+        }
     }
 
     private void updateColor(Display display, RGB color, boolean isBackground) {
@@ -1183,78 +1230,4 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             mFgButton.setImage(image);
         }
     }
-
-    @Override
-    public BufferedImage loadImageResource(String relativeName) {
-        return getImage(relativeName, true);
-    }
-
-    private BufferedImage getImage(String path, boolean isPluginRelative) {
-        BufferedImage image = mImageCache.get(path);
-        if (image == null) {
-            try {
-                if (isPluginRelative) {
-                    image = GraphicGenerator.getStencilImage(path);
-                } else {
-                    File file = new File(path);
-
-                    // Requires Batik
-                    //if (file.getName().endsWith(DOT_SVG)) {
-                    //    image = loadSvgImage(file);
-                    //}
-
-                    if (image == null) {
-                        image = ImageIO.read(file);
-                    }
-                }
-            } catch (IOException e) {
-                setErrorMessage(e.getLocalizedMessage());
-            }
-
-            if (image == null) {
-                image = new BufferedImage(1,1, BufferedImage.TYPE_INT_ARGB);
-            }
-
-            mImageCache.put(path, image);
-        }
-
-        return image;
-    }
-
-    // This requires Batik for SVG rendering
-    //
-    //public static BufferedImage loadSvgImage(File file) {
-    //    BufferedImageTranscoder transcoder = new BufferedImageTranscoder();
-    //
-    //    String svgURI = file.toURI().toString();
-    //    TranscoderInput input = new TranscoderInput(svgURI);
-    //
-    //    try {
-    //        transcoder.transcode(input, null);
-    //    } catch (TranscoderException e) {
-    //        e.printStackTrace();
-    //        return null;
-    //    }
-    //
-    //    return transcoder.decodedImage;
-    //}
-    //
-    ///**
-    // * A dummy implementation of an {@link ImageTranscoder} that simply stores the {@link
-    // * BufferedImage} generated by the SVG library.
-    // */
-    //private static class BufferedImageTranscoder extends ImageTranscoder {
-    //    public BufferedImage decodedImage;
-    //
-    //    @Override
-    //    public BufferedImage createImage(int w, int h) {
-    //        return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-    //    }
-    //
-    //    @Override
-    //    public void writeImage(BufferedImage image, TranscoderOutput output)
-    //            throws TranscoderException {
-    //        this.decodedImage = image;
-    //    }
-    //}
 }

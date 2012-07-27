@@ -20,7 +20,6 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IContainer;
@@ -92,7 +91,7 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
     @Override
     public boolean performFinish() {
         Map<String, Map<String, BufferedImage>> categories =
-                mConfigureAssetPage.generateImages(false);
+                ConfigureAssetSetPage.generateImages(mValues, false, null);
 
         IProject project = mValues.project;
 
@@ -142,7 +141,7 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
                     }
                 }
 
-                NewXmlFileWizard.createWsParentDirectory(file.getParent());
+                AdtUtils.createWsParentDirectory(file.getParent());
                 BufferedImage image = entry.getValue();
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();

@@ -19,6 +19,8 @@ import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
+import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 
 import org.eclipse.core.resources.IProject;
@@ -46,8 +48,14 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
     private UpdateToolsPage mUpdatePage;
     private InstallDependencyPage mDependencyPage;
     private TemplatePreviewPage mPreviewPage;
+    protected ConfigureAssetSetPage mIconPage;
 
     protected TemplateWizard() {
+    }
+
+    /** Should this wizard add an icon page? */
+    protected boolean shouldAddIconPage() {
+        return false;
     }
 
     @Override
@@ -89,6 +97,16 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
         }
 
         return mPreviewPage;
+    }
+
+    protected WizardPage getIconPage(CreateAssetSetWizardState iconState) {
+        if (mIconPage == null) {
+            mIconPage = new ConfigureAssetSetPage(iconState);
+            mIconPage.setTitle("Configure Icon");
+            addPage(mIconPage);
+        }
+
+        return mIconPage;
     }
 
     protected WizardPage getDependencyPage(TemplateMetadata template, boolean create) {

@@ -137,6 +137,7 @@ class TemplateHandler {
     static final String TAG_THUMB = "thumb";             //$NON-NLS-1$
     static final String TAG_THUMBS = "thumbs";           //$NON-NLS-1$
     static final String TAG_DEPENDENCY = "dependency";   //$NON-NLS-1$
+    static final String TAG_ICONS = "icons";             //$NON-NLS-1$
     static final String ATTR_FORMAT = "format";          //$NON-NLS-1$
     static final String ATTR_REVISION = "revision";      //$NON-NLS-1$
     static final String ATTR_VALUE = "value";            //$NON-NLS-1$
@@ -151,6 +152,14 @@ class TemplateHandler {
     static final String ATTR_TO = "to";                  //$NON-NLS-1$
     static final String ATTR_FROM = "from";              //$NON-NLS-1$
     static final String ATTR_CONSTRAINTS = "constraints";//$NON-NLS-1$
+    static final String ATTR_BACKGROUND = "background";  //$NON-NLS-1$
+    static final String ATTR_FOREGROUND = "foreground";  //$NON-NLS-1$
+    static final String ATTR_SHAPE = "shape";            //$NON-NLS-1$
+    static final String ATTR_TRIM = "trim";              //$NON-NLS-1$
+    static final String ATTR_PADDING = "padding";        //$NON-NLS-1$
+    static final String ATTR_SOURCE_TYPE = "source";     //$NON-NLS-1$
+    static final String ATTR_CLIPART_NAME = "clipartName";//$NON-NLS-1$
+    static final String ATTR_TEXT = "text";              //$NON-NLS-1$
 
     static final String CATEGORY_ACTIVITIES = "activities";//$NON-NLS-1$
     static final String CATEGORY_PROJECTS = "projects";    //$NON-NLS-1$
@@ -423,7 +432,7 @@ class TemplateHandler {
                         }
                     } else if (!name.equals("template") && !name.equals("category")
                             && !name.equals("option") && !name.equals(TAG_THUMBS) &&
-                            !name.equals(TAG_THUMB) && !name.equals(TAG_DEPENDENCY)) {
+                            !name.equals(TAG_THUMB) && !name.equals(TAG_ICONS)) {
                         System.err.println("WARNING: Unknown template directive " + name);
                     }
                 }
