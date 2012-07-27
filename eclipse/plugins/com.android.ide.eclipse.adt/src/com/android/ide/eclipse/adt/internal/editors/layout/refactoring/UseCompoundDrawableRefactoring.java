@@ -15,26 +15,34 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_BOTTOM;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_LEFT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_PADDING;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_RIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_TOP;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_LEFT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_RIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_TOP;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
@@ -67,6 +75,8 @@ import org.w3c.dom.NamedNodeMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Converts a LinearLayout with exactly a TextView child and an ImageView child into
@@ -234,14 +244,19 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         // Luckily we just need to clone a single element, not a nested structure, so it's
         // easy enough to do this manually:
         Document tempDocument = DomUtilities.createEmptyDocument();
+        if (tempDocument == null) {
+            return changes;
+        }
         Element newTextElement = tempDocument.createElement(text.getTagName());
         tempDocument.appendChild(newTextElement);
 
         NamedNodeMap attributes =  text.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Attr attribute = (Attr) attributes.item(i);
-            if (attribute.getLocalName().startsWith(LAYOUT_PREFIX)
-                    && ANDROID_URI.equals(attribute.getNamespaceURI())) {
+            String name = attribute.getLocalName();
+            if (name.startsWith(ATTR_LAYOUT_PREFIX)
+                    && ANDROID_URI.equals(attribute.getNamespaceURI())
+                    && !(name.equals(ATTR_LAYOUT_WIDTH) || name.equals(ATTR_LAYOUT_HEIGHT))) {
                 // Ignore layout params: the parent layout is going away
             } else {
                 newTextElement.setAttribute(attribute.getName(), attribute.getValue());
@@ -269,21 +284,39 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
 
         // Set the drawable
         String drawableAttribute;
+        // The space between the image and the text can have margins/padding, both
+        // from the text's perspective and from the image's perspective. We need to
+        // combine these.
+        String padding1 = null;
+        String padding2 = null;
         if (isVertical) {
             if (first == image) {
                 drawableAttribute = ATTR_DRAWABLE_TOP;
+                padding1 = getPadding(image, ATTR_LAYOUT_MARGIN_BOTTOM);
+                padding2 = getPadding(text, ATTR_LAYOUT_MARGIN_TOP);
             } else {
                 drawableAttribute = ATTR_DRAWABLE_BOTTOM;
+                padding1 = getPadding(text, ATTR_LAYOUT_MARGIN_BOTTOM);
+                padding2 = getPadding(image, ATTR_LAYOUT_MARGIN_TOP);
             }
         } else {
             if (first == image) {
                 drawableAttribute = ATTR_DRAWABLE_LEFT;
+                padding1 = getPadding(image, ATTR_LAYOUT_MARGIN_RIGHT);
+                padding2 = getPadding(text, ATTR_LAYOUT_MARGIN_LEFT);
             } else {
                 drawableAttribute = ATTR_DRAWABLE_RIGHT;
+                padding1 = getPadding(text, ATTR_LAYOUT_MARGIN_RIGHT);
+                padding2 = getPadding(image, ATTR_LAYOUT_MARGIN_LEFT);
             }
         }
 
         setAndroidAttribute(newTextElement, androidNsPrefix, drawableAttribute, src);
+
+        String padding = combine(padding1, padding2);
+        if (padding != null) {
+            setAndroidAttribute(newTextElement, androidNsPrefix, ATTR_DRAWABLE_PADDING, padding);
+        }
 
         // If the removed LinearLayout is the root container, transfer its namespace
         // declaration to the TextView
@@ -341,6 +374,53 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         change.setEdit(rootEdit);
         changes.add(change);
         return changes;
+    }
+
+    @Nullable
+    private static String getPadding(@NonNull Element element, @NonNull String attribute) {
+        String padding = element.getAttributeNS(ANDROID_URI, attribute);
+        if (padding != null && padding.isEmpty()) {
+            padding = null;
+        }
+        return padding;
+    }
+
+    @VisibleForTesting
+    @Nullable
+    static String combine(@Nullable String dimension1, @Nullable String dimension2) {
+        if (dimension1 == null || dimension1.isEmpty()) {
+            if (dimension2 != null && dimension2.isEmpty()) {
+                return null;
+            }
+            return dimension2;
+        } else if (dimension2 == null || dimension2.isEmpty()) {
+            if (dimension1 != null && dimension1.isEmpty()) {
+                return null;
+            }
+            return dimension1;
+        } else {
+            // Two dimensions are specified (e.g. marginRight for the left one and marginLeft
+            // for the right one); we have to add these together. We can only do that if
+            // they use the same units, and do not use resources.
+            if (dimension1.startsWith(PREFIX_RESOURCE_REF)
+                    || dimension2.startsWith(PREFIX_RESOURCE_REF)) {
+                return null;
+            }
+
+            Pattern p = Pattern.compile("([\\d\\.]+)(.+)"); //$NON-NLS-1$
+            Matcher matcher1 = p.matcher(dimension1);
+            Matcher matcher2 = p.matcher(dimension2);
+            if (matcher1.matches() && matcher2.matches()) {
+                String unit = matcher1.group(2);
+                if (unit.equals(matcher2.group(2))) {
+                    float value1 = Float.parseFloat(matcher1.group(1));
+                    float value2 = Float.parseFloat(matcher2.group(1));
+                    return AdtUtils.formatFloatAttribute(value1 + value2) + unit;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

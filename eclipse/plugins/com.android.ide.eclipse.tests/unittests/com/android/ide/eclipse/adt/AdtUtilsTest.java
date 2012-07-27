@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt;
 import com.google.common.collect.Iterables;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import junit.framework.TestCase;
 
@@ -170,5 +171,35 @@ public class AdtUtilsTest extends TestCase {
 
         assertTrue(Arrays.equals(new String[] { "C:\\foo", "/bar" },
                 Iterables.toArray(AdtUtils.splitPath("C:\\foo:/bar"), String.class)));
+    }
+
+    public void testFormatFloatValue() throws Exception {
+        assertEquals("1", AdtUtils.formatFloatAttribute(1.0f));
+        assertEquals("2", AdtUtils.formatFloatAttribute(2.0f));
+        assertEquals("1.50", AdtUtils.formatFloatAttribute(1.5f));
+        assertEquals("1.50", AdtUtils.formatFloatAttribute(1.50f));
+        assertEquals("1.51", AdtUtils.formatFloatAttribute(1.51f));
+        assertEquals("1.51", AdtUtils.formatFloatAttribute(1.514542f));
+        assertEquals("1.52", AdtUtils.formatFloatAttribute(1.516542f));
+        assertEquals("-1.51", AdtUtils.formatFloatAttribute(-1.51f));
+        assertEquals("-1", AdtUtils.formatFloatAttribute(-1f));
+    }
+
+    public void testFormatFloatValueLocale() throws Exception {
+        // Ensure that the layout float values aren't affected by
+        // locale settings, like using commas instead of of periods
+        Locale originalDefaultLocale = Locale.getDefault();
+
+        try {
+            Locale.setDefault(Locale.FRENCH);
+
+            // Ensure that this is a locale which uses a comma instead of a period:
+            assertEquals("5,24", String.format("%.2f", 5.236f));
+
+            // Ensure that the formatFloatAttribute is immune
+            assertEquals("1.50", AdtUtils.formatFloatAttribute(1.5f));
+        } finally {
+            Locale.setDefault(originalDefaultLocale);
+        }
     }
 }
