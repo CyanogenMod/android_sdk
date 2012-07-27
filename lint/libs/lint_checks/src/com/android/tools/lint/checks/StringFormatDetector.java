@@ -62,6 +62,7 @@ import java.util.regex.Pattern;
 
 import lombok.ast.AstVisitor;
 import lombok.ast.CharLiteral;
+import lombok.ast.ConstructorDeclaration;
 import lombok.ast.Expression;
 import lombok.ast.FloatingPointLiteral;
 import lombok.ast.ForwardingAstVisitor;
@@ -790,28 +791,27 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     // Found a String.format call
                     // Look inside to see if we can find an R string
                     // Find surrounding method
-                    lombok.ast.Node current = node.getParent();
-                    while (current != null && !(current instanceof MethodDeclaration)) {
-                        current = current.getParent();
-                    }
-                    if (current instanceof MethodDeclaration) {
-                        checkStringFormatCall(context, (MethodDeclaration) current, node);
-                    }
+                    checkFormatCall(context, node);
                 }
             }
         } else {
             // getResources().getString(R.string.foo, arg1, arg2, ...)
             // Check that the arguments in R.string.foo match arg1, arg2, ...
             if (node.astArguments().size() > 1 && node.astOperand() != null ) {
-                // Multiple arguments: formatted form of the String.format list
-                lombok.ast.Node current = node.getParent();
-                while (current != null && !(current instanceof MethodDeclaration)) {
-                    current = current.getParent();
-                }
-                if (current instanceof MethodDeclaration) {
-                    checkStringFormatCall(context, (MethodDeclaration) current, node);
-                }
+                checkFormatCall(context, node);
             }
+        }
+    }
+
+    private void checkFormatCall(JavaContext context, MethodInvocation node) {
+        lombok.ast.Node current = node.getParent();
+        while (current != null
+                && !(current instanceof MethodDeclaration)
+                && !(current instanceof ConstructorDeclaration)) {
+            current = current.getParent();
+        }
+        if (current != null) {
+            checkStringFormatCall(context, current, node);
         }
     }
 
@@ -825,7 +825,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      */
     private void checkStringFormatCall(
             JavaContext context,
-            MethodDeclaration method,
+            lombok.ast.Node method,
             MethodInvocation call) {
 
         StrictListAccessor<Expression, MethodInvocation> args = call.astArguments();
@@ -974,7 +974,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      */
     private static class StringTracker extends ForwardingAstVisitor {
         /** Method we're searching within */
-        private final MethodDeclaration mTop;
+        private final lombok.ast.Node mTop;
         /** Map from variable name to corresponding string resource name */
         private final Map<String, String> mMap = new HashMap<String, String>();
         /** Map from variable name to corresponding type */
@@ -988,7 +988,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
          */
         private String mName;
 
-        public StringTracker(MethodDeclaration top, MethodInvocation targetNode) {
+        public StringTracker(lombok.ast.Node top, MethodInvocation targetNode) {
             mTop = top;
             mTargetNode = targetNode;
         }

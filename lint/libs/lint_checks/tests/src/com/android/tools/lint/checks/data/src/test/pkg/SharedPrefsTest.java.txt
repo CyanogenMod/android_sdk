@@ -55,5 +55,12 @@ public class SharedPrefsText {
         editor.putString("foo", "bar");
         editor.putInt("bar", 42);
     }
+
+    // Constructor test
+    public SharedPrefsText(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("foo", "bar");
+    }
  }
 

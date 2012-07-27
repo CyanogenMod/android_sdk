@@ -41,6 +41,8 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
             "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
             "pkg/StringFormatActivity.java:26: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
             "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
+            "pkg/StringFormatActivity.java:33: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String\n" +
+            "=> values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
             "values-es/formatstrings.xml:3: Error: Inconsistent formatting types for argument #1 in format string hello ('%1$d'): Found both 's' and 'd' (in values/formatstrings.xml)\n" +
             "=> values/formatstrings.xml:3: Conflicting argument type here\n" +
             "values-es/formatstrings.xml:4: Warning: Inconsistent number of arguments in formatting string hello2; found both 2 and 3\n" +

@@ -91,6 +91,7 @@ import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationValue;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.ClassDeclaration;
+import lombok.ast.ConstructorDeclaration;
 import lombok.ast.Expression;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.Modifiers;
@@ -1777,6 +1778,13 @@ public class LintDriver {
                 // Method
                 // Look for annotations on the method
                 MethodDeclaration declaration = (MethodDeclaration) scope;
+                if (isSuppressed(issue, declaration.astModifiers())) {
+                    return true;
+                }
+            } else if (type == ConstructorDeclaration.class) {
+                // Constructor
+                // Look for annotations on the method
+                ConstructorDeclaration declaration = (ConstructorDeclaration) scope;
                 if (isSuppressed(issue, declaration.astModifiers())) {
                     return true;
                 }

@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 import lombok.ast.AstVisitor;
+import lombok.ast.ConstructorDeclaration;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
@@ -75,13 +76,13 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         return Collections.singletonList("edit"); //$NON-NLS-1$
     }
 
-    private MethodDeclaration findSurroundingMethod(Node scope) {
+    private Node findSurroundingMethod(Node scope) {
         while (scope != null) {
             Class<? extends Node> type = scope.getClass();
             // The Lombok AST uses a flat hierarchy of node type implementation classes
             // so no need to do instanceof stuff here.
-            if (type == MethodDeclaration.class) {
-                return (MethodDeclaration) scope;
+            if (type == MethodDeclaration.class || type == ConstructorDeclaration.class) {
+                return scope;
             }
 
             scope = scope.getParent();
@@ -112,7 +113,7 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
             return;
         }
 
-        MethodDeclaration method = findSurroundingMethod(node.getParent());
+        Node method = findSurroundingMethod(node.getParent());
         if (method == null) {
             return;
         }

@@ -29,7 +29,8 @@ public class ToastDetectorTest extends AbstractCheckTest {
         assertEquals(
             "ToastTest.java:31: Warning: Toast created but not shown: did you forget to call show() ?\n" +
             "ToastTest.java:32: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported\n" +
-            "ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ?",
+            "ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ?\n" +
+            "ToastTest.java:38: Warning: Toast created but not shown: did you forget to call show() ?",
 
             lintProject("src/test/pkg/ToastTest.java.txt=>src/test/pkg/ToastTest.java"));
     }
