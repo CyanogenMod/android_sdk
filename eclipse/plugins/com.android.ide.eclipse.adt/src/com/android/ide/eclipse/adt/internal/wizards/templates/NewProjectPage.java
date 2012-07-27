@@ -698,7 +698,8 @@ public class NewProjectPage extends WizardPage
     // Validation
 
     private void validatePage() {
-        IStatus status = mValues.template.validateTemplate(mValues.minSdkLevel);
+        IStatus status = mValues.template.validateTemplate(mValues.minSdkLevel,
+                mValues.getBuildApi());
         if (status != null && !status.isOK()) {
             updateDecorator(mApplicationDec, null, true);
             updateDecorator(mPackageDec, null, true);

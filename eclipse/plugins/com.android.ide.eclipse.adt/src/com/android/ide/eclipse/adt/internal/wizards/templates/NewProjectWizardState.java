@@ -95,4 +95,13 @@ public class NewProjectWizardState {
 
     /** Folder where the project should be created. */
     public String projectLocation;
+
+    /**
+     * Returns the build target API level
+     *
+     * @return the build target API level
+     */
+    public int getBuildApi() {
+        return target != null ? target.getVersion().getApiLevel() : minSdkLevel;
+    }
 }

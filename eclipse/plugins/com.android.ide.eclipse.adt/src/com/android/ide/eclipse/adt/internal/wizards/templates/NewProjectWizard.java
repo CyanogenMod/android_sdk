@@ -68,6 +68,7 @@ public class NewProjectWizard extends TemplateWizard {
     private static final String ATTR_COPY_ICONS = "copyIcons";     //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
+    static final String ATTR_MIN_BUILD_API = "minBuildApi";        //$NON-NLS-1$
     static final String ATTR_BUILD_API = "buildApi";               //$NON-NLS-1$
     static final String ATTR_REVISION = "revision";                //$NON-NLS-1$
     static final String ATTR_MIN_API_LEVEL = "minApiLevel";        //$NON-NLS-1$
@@ -155,7 +156,7 @@ public class NewProjectWizard extends TemplateWizard {
                 mTemplatePage = new NewTemplatePage(activityValues, false);
                 addPage(mTemplatePage);
             }
-            mTemplatePage.setCustomMinSdk(mValues.minSdkLevel);
+            mTemplatePage.setCustomMinSdk(mValues.minSdkLevel, mValues.getBuildApi());
             return mTemplatePage;
         }
 
