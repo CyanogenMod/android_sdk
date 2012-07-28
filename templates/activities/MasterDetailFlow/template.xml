@@ -30,20 +30,27 @@
         help="Other examples are 'People', 'Books', etc." />
 
     <parameter
-        id="parentActivityClass"
-        name="Hierarchical Parent"
-        type="string"
-        constraints="activity|exists|empty"
-        default=""
-        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
-
-    <parameter
         id="activityTitle"
         name="Title"
         type="string"
         constraints="nonempty"
         suggest="${objectKindPlural}"
         default="Items" />
+
+    <parameter
+        id="isLauncher"
+        name="Launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, the primary activity in the flow will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
+
+    <parameter
+        id="parentActivityClass"
+        name="Hierarchical Parent"
+        type="string"
+        constraints="activity|exists|empty"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
 
     <parameter
         id="packageName"
