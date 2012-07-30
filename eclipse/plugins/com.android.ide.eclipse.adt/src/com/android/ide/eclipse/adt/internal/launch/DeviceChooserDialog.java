@@ -57,6 +57,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A dialog that lets the user choose a device to deploy an application.
  * The user can either choose an exiting running device (including running emulators)
@@ -80,6 +83,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     private final DeviceChooserResponse mResponse;
     private final String mPackageName;
     private final IAndroidTarget mProjectTarget;
+    private final AndroidVersion mMinApiVersion;
     private final Sdk mSdk;
 
     private Button mDeviceRadioButton;
@@ -92,14 +96,30 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
      * Basic Content Provider for a table full of {@link IDevice} objects. The input is
      * a {@link AndroidDebugBridge}.
      */
-    private static class ContentProvider implements IStructuredContentProvider {
+    private class ContentProvider implements IStructuredContentProvider {
         @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof AndroidDebugBridge) {
-                return ((AndroidDebugBridge)inputElement).getDevices();
+                return findCompatibleDevices(((AndroidDebugBridge)inputElement).getDevices());
             }
 
             return new Object[0];
+        }
+
+        private Object[] findCompatibleDevices(IDevice[] devices) {
+            if (devices == null) {
+                return null;
+            }
+
+            List<IDevice> compatibleDevices = new ArrayList<IDevice>(devices.length);
+            for (IDevice device : devices) {
+                AndroidVersion deviceVersion = Sdk.getDeviceVersion(device);
+                if (deviceVersion == null || deviceVersion.canRun(mMinApiVersion)) {
+                    compatibleDevices.add(device);
+                }
+            }
+
+            return compatibleDevices.toArray();
         }
 
         @Override
@@ -112,7 +132,6 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
             // pass
         }
     }
-
 
     /**
      * A Label Provider for the {@link TableViewer} in {@link DeviceChooserDialog}.
@@ -136,7 +155,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             if (deviceVersion == null) {
                                 return mWarningImage;
                             } else {
-                                if (deviceVersion.canRun(mProjectTarget.getVersion()) == false) {
+                                if (!deviceVersion.canRun(mMinApiVersion)) {
                                     return mNoMatchImage;
                                 }
 
@@ -152,6 +171,17 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             if (info == null) {
                                 return mWarningImage;
                             }
+                            IAndroidTarget avdTarget = info.getTarget();
+                            if (avdTarget == null) {
+                                return mWarningImage;
+                            }
+
+                            // for platform targets, we only need to check the min api level
+                            if (mProjectTarget.isPlatform()
+                                    && avdTarget.getVersion().canRun(mMinApiVersion))
+                                return mMatchImage;
+
+                            // for add on targets, check if required libraries are available
                             return mProjectTarget.canRunOn(info.getTarget()) ?
                                     mMatchImage : mNoMatchImage;
                         }
@@ -259,12 +289,13 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     }
 
     public DeviceChooserDialog(Shell parent, DeviceChooserResponse response, String packageName,
-            IAndroidTarget projectTarget) {
+            IAndroidTarget projectTarget, AndroidVersion minApiVersion) {
         super(parent);
 
         mResponse = response;
         mPackageName = packageName;
         mProjectTarget = projectTarget;
+        mMinApiVersion = minApiVersion;
         mSdk = Sdk.getCurrent();
 
         AndroidDebugBridge.addDeviceChangeListener(this);
@@ -340,9 +371,16 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         Composite top = new Composite(parent, SWT.NONE);
         top.setLayout(new GridLayout(1, true));
 
+        String msg;
+        if (mProjectTarget.isPlatform()) {
+            msg = String.format("Select a device with min API level %s.",
+                    mMinApiVersion.getApiString());
+        } else {
+            msg = String.format("Select a device compatible with target %s.",
+                    mProjectTarget.getFullName());
+        }
         Label label = new Label(top, SWT.NONE);
-        label.setText(String.format("Select a device compatible with target %s.",
-                mProjectTarget.getFullName()));
+        label.setText(msg);
 
         mDeviceRadioButton = new Button(top, SWT.RADIO);
         mDeviceRadioButton.setText("Choose a running Android device");
@@ -736,12 +774,23 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
         @Override
         public boolean accept(AvdInfo avd) {
+            IAndroidTarget avdTarget = avd.getTarget();
+
             if (mDevices != null) {
                 for (IDevice d : mDevices) {
-                    if (mProjectTarget.canRunOn(avd.getTarget()) == false ||
-                            avd.getName().equals(d.getAvdName())) {
+                    if (avd.getName().equals(d.getAvdName())) {
                         return false;
                     }
+
+                    if (avdTarget == null) {
+                        return true;
+                    }
+
+                    if (mProjectTarget.isPlatform()) {
+                        return avdTarget.getVersion().canRun(mMinApiVersion);
+                    }
+
+                    return mProjectTarget.canRunOn(avd.getTarget());
                 }
             }
 
