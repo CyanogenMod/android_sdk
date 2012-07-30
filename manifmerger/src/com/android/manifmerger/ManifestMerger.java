@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -742,8 +742,8 @@ public class ManifestMerger {
         Element destUsesSdk = findFirstElement(mMainDoc, "/manifest/uses-sdk");  //$NON-NLS-1$
         Element srcUsesSdk  = findFirstElement(libDoc,   "/manifest/uses-sdk");  //$NON-NLS-1$
 
-        AtomicInteger destValue = new AtomicInteger(1);
-        AtomicInteger srcValue  = new AtomicInteger(1);
+        AtomicReference<Object> destValue = new AtomicReference<Object>(1); // String or Integer
+        AtomicReference<Object> srcValue  = new AtomicReference<Object>(1);
         AtomicBoolean destImplied = new AtomicBoolean(true);
         AtomicBoolean srcImplied = new AtomicBoolean(true);
 
@@ -756,16 +756,17 @@ public class ManifestMerger {
                     destValue, srcValue,
                     destImplied, srcImplied);
 
-        if (result) {
+        if (result && destValue.get() instanceof Integer && srcValue.get() instanceof Integer) {
             // Make it an error for an application to use a library with a greater
             // minSdkVersion. This means the library code may crash unexpectedly.
             // TODO it would be nice to be able to work around this in case the
             // user think s/he knows what s/he's doing.
             // We could define a simple XML comment flag: <!-- @NoMinSdkVersionMergeError -->
 
-            destMinSdk = destValue.get();
+            destMinSdk = (Integer) destValue.get();
 
-            if (destMinSdk < srcValue.get()) {
+            int srcMinSdk = (Integer) srcValue.get();
+            if (destMinSdk < srcMinSdk) {
                 mLog.conflict(Severity.ERROR,
                         xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
                         xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
@@ -794,13 +795,14 @@ public class ManifestMerger {
                     destImplied, srcImplied);
 
         result &= result2;
-        if (result2) {
+        if (result2 && destValue.get() instanceof Integer && srcValue.get() instanceof Integer) {
             // Make it a warning for an application to use a library with a greater
             // targetSdkVersion.
 
-            int destTargetSdk = destImplied.get() ? destMinSdk : destValue.get();
+            int destTargetSdk = destImplied.get() ? destMinSdk : (Integer) destValue.get();
 
-            if (destTargetSdk < srcValue.get()) {
+            int srcMinSdk = (Integer) srcValue.get();
+            if (destTargetSdk < srcMinSdk) {
                 mLog.conflict(Severity.WARNING,
                         xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
                         xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
@@ -831,8 +833,8 @@ public class ManifestMerger {
             Element destUsesSdk,
             Element srcUsesSdk,
             String attr,
-            AtomicInteger destValue,
-            AtomicInteger srcValue,
+            AtomicReference<Object> destValue,
+            AtomicReference<Object> srcValue,
             AtomicBoolean destImplied,
             AtomicBoolean srcImplied) {
         String s = destUsesSdk == null ? ""                                      //$NON-NLS-1$
@@ -846,14 +848,9 @@ public class ManifestMerger {
                 destImplied.set(false);
             }
         } catch (NumberFormatException e) {
-            // Note: NumberFormatException.toString() has no interesting information
-            // so we don't output it.
-            mLog.error(Severity.ERROR,
-                    xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
-                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
-                    attr,
-                    s);
-            return false;
+            // Versions can contain codenames such as "JellyBean"
+            destValue.set(s);
+            destImplied.set(false);
         }
 
         s = srcUsesSdk == null ? ""                                      //$NON-NLS-1$
@@ -866,12 +863,9 @@ public class ManifestMerger {
                 srcImplied.set(false);
             }
         } catch (NumberFormatException e) {
-            mLog.error(Severity.ERROR,
-                    xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
-                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
-                    attr,
-                    s);
-            return false;
+            // Versions can contain codenames such as "JellyBean"
+            destValue.set(s);
+            destImplied.set(false);
         }
 
         return true;
