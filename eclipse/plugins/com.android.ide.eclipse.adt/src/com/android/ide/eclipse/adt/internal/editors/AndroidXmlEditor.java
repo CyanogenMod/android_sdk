@@ -1581,7 +1581,9 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
 
     /** Called when this editor is activated */
     public void activated() {
-        updateActionBindings();
+        if (getActivePage() == mTextPageIndex) {
+            updateActionBindings();
+        }
     }
 
     /** Called when this editor is deactivated */
