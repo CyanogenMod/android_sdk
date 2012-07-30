@@ -1189,6 +1189,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     /**
      * Returns the {@link IProject} for the edited file.
      */
+    @Nullable
     public IProject getProject() {
         IFile file = getInputFile();
         if (file != null) {
@@ -1201,6 +1202,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     /**
      * Returns the {@link AndroidTargetData} for the edited file.
      */
+    @Nullable
     public AndroidTargetData getTargetData() {
         IProject project = getProject();
         if (project != null) {

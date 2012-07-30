@@ -41,6 +41,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.graphics.Rectangle;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -267,7 +268,10 @@ public class NodeProxy implements INode {
         if (editor != null) {
             // Possibly replace the tag with a compatibility version if the
             // minimum SDK requires it
-            viewFqcn = SupportLibraryHelper.getTagFor(editor.getProject(), viewFqcn);
+            IProject project = editor.getProject();
+            if (project != null) {
+                viewFqcn = SupportLibraryHelper.getTagFor(project, viewFqcn);
+            }
         }
 
         // Find the descriptor for this FQCN

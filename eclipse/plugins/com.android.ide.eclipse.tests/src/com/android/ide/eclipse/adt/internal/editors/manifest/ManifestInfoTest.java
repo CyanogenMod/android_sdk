@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
+@SuppressWarnings("javadoc")
 public class ManifestInfoTest extends AdtProjectTest {
     @Override
     protected boolean testCaseNeedsUniqueProject() {
@@ -114,10 +115,10 @@ public class ManifestInfoTest extends AdtProjectTest {
     public void testGetActivityThemes5() throws Exception {
         ManifestInfo info = getManifestInfo(
                 "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
-                "    package='com.android.unittest'" +
-                "    android:theme='@style/NoBackground'>\n" +
+                "    package='com.android.unittest'>\n" +
                 "    <application\n" +
                 "        android:label='@string/app_name'\n" +
+                "        android:theme='@style/NoBackground'\n" +
                 "        android:name='.app.TestApp' android:icon='@drawable/app_icon'>\n" +
                 "\n" +
                 "        <activity\n" +
@@ -212,7 +213,41 @@ public class ManifestInfoTest extends AdtProjectTest {
         } else {
             file.create(bstream, false /* force */, new NullProgressMonitor());
         }
-        return ManifestInfo.get(getProject());
+        ManifestInfo info = ManifestInfo.get(getProject());
+        info.clear();
+        return info;
+    }
+
+    public void testGetMinSdkVersionName() throws Exception {
+        ManifestInfo info;
+
+        info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <uses-sdk android:minSdkVersion='3' android:targetSdkVersion='4'/>\n" +
+                "</manifest>\n");
+        assertEquals(3, info.getMinSdkVersion());
+        assertEquals("3", info.getMinSdkName());
+        assertEquals(4, info.getTargetSdkVersion());
+        assertNull(info.getMinSdkCodeName());
+
+        info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <uses-sdk android:targetSdkVersion='4'/>\n" +
+                "</manifest>\n");
+        assertEquals("1", info.getMinSdkName());
+        assertEquals(1, info.getMinSdkVersion());
+        assertEquals(4, info.getTargetSdkVersion());
+        assertNull(info.getMinSdkCodeName());
+
+        info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <uses-sdk android:minSdkVersion='JellyBean' />\n" +
+                "</manifest>\n");
+        assertEquals("JellyBean", info.getMinSdkName());
+        assertEquals("JellyBean", info.getMinSdkCodeName());
     }
 
     private static class TestAndroidTarget implements IAndroidTarget {

@@ -135,6 +135,14 @@ public class ManifestInfo {
     }
 
     /**
+     * Clears the cached manifest information. The next get call on one of the
+     * properties will cause the information to be refreshed.
+     */
+    public void clear() {
+        mLastChecked = 0;
+    }
+
+    /**
      * Returns the {@link ManifestInfo} for the given project
      *
      * @param project the project the finder is associated with
@@ -194,7 +202,7 @@ public class ManifestInfo {
         mManifestTheme = null;
         mTargetSdk = 1; // Default when not specified
         mMinSdk = 1; // Default when not specified
-        mMinSdkName = ""; // Default when not specified
+        mMinSdkName = "1"; // Default when not specified
         mPackage = ""; //$NON-NLS-1$
         mApplicationIcon = null;
         mApplicationLabel = null;
@@ -263,6 +271,9 @@ public class ManifestInfo {
         String valueString = null;
         if (usesSdk.hasAttributeNS(NS_RESOURCES, attribute)) {
             valueString = usesSdk.getAttributeNS(NS_RESOURCES, attribute);
+            if (attribute.equals(ATTRIBUTE_MIN_SDK_VERSION)) {
+                mMinSdkName = valueString;
+            }
         }
 
         if (valueString != null) {
@@ -278,10 +289,6 @@ public class ManifestInfo {
                         // codename future API level is current api + 1
                         apiLevel = target.getVersion().getApiLevel() + 1;
                     }
-                }
-
-                if (usesSdk.getTagName().equals(ATTRIBUTE_MIN_SDK_VERSION)) {
-                    mMinSdkName = valueString;
                 }
             }
 
@@ -400,13 +407,35 @@ public class ManifestInfo {
 
     /**
      * Returns the minimum SDK version name (which may not be a numeric string, e.g.
-     * it could be a codename)
+     * it could be a codename). It will never be null or empty; if no min sdk version
+     * was specified in the manifest, the return value will be "1". Use
+     * {@link #getCodeName()} instead if you want to look up whether there is a code name.
      *
      * @return the minimum SDK version
      */
+    @NonNull
     public String getMinSdkName() {
         sync();
+        if (mMinSdkName == null || mMinSdkName.isEmpty()) {
+            mMinSdkName = "1"; //$NON-NLS-1$
+        }
+
         return mMinSdkName;
+    }
+
+    /**
+     * Returns the code name used for the minimum SDK version, if any.
+     *
+     * @return the minSdkVersion codename or null
+     */
+    @Nullable
+    public String getMinSdkCodeName() {
+        String minSdkName = getMinSdkName();
+        if (!Character.isDigit(minSdkName.charAt(0))) {
+            return minSdkName;
+        }
+
+        return null;
     }
 
     /**
