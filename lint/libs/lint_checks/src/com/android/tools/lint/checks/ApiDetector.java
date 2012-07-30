@@ -78,6 +78,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             "warns about any calls that are not available on *all* versions targeted " +
             "by this application (according to its minimum SDK attribute in the manifest).\n" +
             "\n" +
+            "If you really want to use this API and don't need to support older devices just " +
+            "set the minSdkVersion in your AndroidManifest.xml file." +
+            "\n" +
             "If your code is *deliberately* accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +

@@ -204,5 +204,12 @@ public class SecurityDetectorTest extends AbstractCheckTest {
           lintProject(
               "exportreceiver5.xml=>AndroidManifest.xml",
               "res/values/strings.xml"));
-  }
+    }
+
+    public void testStandard() throws Exception {
+        // Various regression tests for http://code.google.com/p/android/issues/detail?id=33976
+        assertEquals(
+            "No warnings.",
+            lintProject("exportreceiver6.xml=>AndroidManifest.xml"));
+    }
 }
