@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors.USES_PERMISSION;
+import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -32,6 +32,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.pages.OverviewPage;
 import com.android.ide.eclipse.adt.internal.editors.manifest.pages.PermissionPage;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -39,9 +40,11 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IMarkerDelta;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.ui.IEditorInput;
@@ -129,6 +132,49 @@ public final class ManifestEditor extends AndroidXmlEditor {
     @Override
     public boolean isSaveAsAllowed() {
         return true;
+    }
+
+    @Override
+    public void doSave(IProgressMonitor monitor) {
+        // Look up the current (pre-save) values of minSdkVersion and targetSdkVersion
+        int prevMinSdkVersion = -1;
+        int prevTargetSdkVersion = -1;
+        IProject project = null;
+        ManifestInfo info = null;
+        try {
+            project = getProject();
+            if (project != null) {
+                info = ManifestInfo.get(project);
+                prevMinSdkVersion = info.getMinSdkVersion();
+                prevTargetSdkVersion = info.getTargetSdkVersion();
+                info.clear();
+            }
+        } catch (Throwable t) {
+            // We don't expect exceptions from the above calls, but we *really*
+            // need to make sure that nothing can prevent the save function from
+            // getting called!
+            AdtPlugin.log(t, null);
+        }
+
+        // Actually save
+        super.doSave(monitor);
+
+        // If the target/minSdkVersion has changed, clear all lint warnings (since many
+        // of them are tied to the min/target sdk levels), in order to avoid showing stale
+        // results
+        try {
+            if (info != null) {
+                int newMinSdkVersion = info.getMinSdkVersion();
+                int newTargetSdkVersion = info.getTargetSdkVersion();
+                if (newMinSdkVersion != prevMinSdkVersion
+                        || newTargetSdkVersion != prevTargetSdkVersion) {
+                    assert project != null;
+                    EclipseLintClient.clearMarkers(project);
+                }
+            }
+        } catch (Throwable t) {
+            AdtPlugin.log(t, null);
+        }
     }
 
     /**

@@ -142,8 +142,8 @@ public class NewTemplateWizardState {
 
         ManifestInfo manifest = ManifestInfo.get(project);
         parameters.put(ATTR_PACKAGE_NAME, manifest.getPackage());
-        parameters.put(ATTR_MIN_API, manifest.getMinSdkVersion());
-        parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkName());
+        parameters.put(ATTR_MIN_API, manifest.getMinSdkName());
+        parameters.put(ATTR_MIN_API_LEVEL, manifest.getMinSdkVersion());
         parameters.put(ATTR_TARGET_API, manifest.getTargetSdkVersion());
         parameters.put(ATTR_BUILD_API, getBuildApi());
         parameters.put(ATTR_COPY_ICONS, mIconState == null);
