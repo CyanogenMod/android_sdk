@@ -71,6 +71,7 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -237,6 +238,8 @@ public class LayoutCanvas extends Canvas {
     /** Tooltip manager for lint warnings */
     private LintTooltipManager mLintTooltipManager;
 
+    private Color mBackgroundColor;
+
     public LayoutCanvas(LayoutEditorDelegate editorDelegate,
             RulesEngine rulesEngine,
             Composite parent,
@@ -244,6 +247,9 @@ public class LayoutCanvas extends Canvas {
         super(parent, style | SWT.DOUBLE_BUFFERED | SWT.V_SCROLL | SWT.H_SCROLL);
         mEditorDelegate = editorDelegate;
         mRulesEngine = rulesEngine;
+
+        mBackgroundColor = new Color(parent.getDisplay(), 150, 150, 150);
+        setBackground(mBackgroundColor);
 
         mClipboardSupport = new ClipboardSupport(this, parent);
         mHScale = new CanvasTransform(this, getHorizontalBar());
@@ -478,6 +484,11 @@ public class LayoutCanvas extends Canvas {
         if (mLintOverlay != null) {
             mLintOverlay.dispose();
             mLintOverlay = null;
+        }
+
+        if (mBackgroundColor != null) {
+            mBackgroundColor.dispose();
+            mBackgroundColor = null;
         }
 
         mViewHierarchy.dispose();
@@ -736,6 +747,11 @@ public class LayoutCanvas extends Canvas {
             int sceneHeight = imageData.height;
             if (sceneWidth == 0.0 || sceneHeight == 0.0) {
                 return;
+            }
+
+            if (imageOverlay.getShowDropShadow()) {
+                sceneWidth += 2 * ImageUtils.SHADOW_SIZE;
+                sceneHeight += 2 * ImageUtils.SHADOW_SIZE;
             }
 
             // Reduce the margins if necessary
