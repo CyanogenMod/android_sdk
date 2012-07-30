@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ADT CDT Integration
 Bundle-SymbolicName: com.android.ide.eclipse.ndk;singleton:=true
-Bundle-Version: 20.0.0.qualifier
+Bundle-Version: 21.0.0.qualifier
 Bundle-Activator: com.android.ide.eclipse.ndk.internal.Activator
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: org.eclipse.core.runtime,
