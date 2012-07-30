@@ -1,3 +1,22 @@
+21.0.0
+* Bug fixes.
+* JUnit test runner allows a test to be run on all devices
+* XML code completion can now complete (and show documentation for)
+  theme references, such as ?android:attr/dividerHeight
+* Improved flag and locale data in the configuration chooser
+* New lint checks:
+  * Find misspellings in English string files
+  * Detect certain types of wakelock mistakes leading to unnecessary
+    battery usage
+  * Find private key files placed in directories where they end up
+    getting bundled with the .apk
+  * Find usages of "dp" units with the font property textSize
+  * Find invalid selector files where a later state is fully covered
+    by an earlier state and is therefore unreachable
+  * Find incorrect use of the SecureRandom object (where it is
+    initialized with a fixed seed)
+  Various lint infrastructure improvements.
+
 20.0.0
 * A lot of bug fixes, performance fixes and memory fixes.
 * Support for Eclipse 4.x.
