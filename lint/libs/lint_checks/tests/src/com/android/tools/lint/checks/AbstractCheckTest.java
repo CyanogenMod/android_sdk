@@ -397,7 +397,8 @@ public abstract class AbstractCheckTest extends TestCase {
                         fail(e.getLocalizedMessage());
                     }
                 }
-            } else if (relativePath.equals("tools/support/typos-en.txt")) {
+            } else if (relativePath.startsWith("tools/support/")) {
+                String base = relativePath.substring("tools/support/".length());
                 CodeSource source = getClass().getProtectionDomain().getCodeSource();
                 if (source != null) {
                     URL location = source.getLocation();
@@ -407,7 +408,7 @@ public abstract class AbstractCheckTest extends TestCase {
                         File sdkDir = dir.getParentFile().getParentFile().getParentFile()
                                 .getParentFile().getParentFile().getParentFile();
                         File file = new File(sdkDir, "sdk" + File.separator + "files"
-                                + File.separator + "typos-en.txt");
+                                + File.separator + base);
                         return file;
                     } catch (URISyntaxException e) {
                         fail(e.getLocalizedMessage());

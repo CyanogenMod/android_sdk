@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
+import static com.google.common.base.Objects.equal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -29,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 
 import org.w3c.dom.Element;
@@ -47,12 +49,35 @@ import java.util.List;
  * TODO:
  * <ul>
  * <li> Add check of Java String literals too!
- * <li> Add support for other languages
+ * <li> Add support for <b>additional</b> languages. The typo detector is now
+ *      multilingual and looks for typos-*locale*.txt files to use. However,
+ *      we need to seed it with additional typo databases. I did some searching
+ *      and came up with some alternatives. Here's the strategy I used:
+ *      Used Google Translate to translate "Wikipedia Common Misspellings", and
+ *      then I went to google.no, google.fr etc searching with that translation, and
+ *      came up with what looks like wikipedia language local lists of typos.
+ *      This is how I found the Norwegian one for example:
+ *      <br>
+ *         http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform
+ *      <br>
+ *     Here are some additional possibilities not yet processed:
+ *      <ul>
+ *        <li> French: http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
+ *            (couldn't find a machine-readable version there?)
+ *         <li> Swedish:
+ *              http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
+ *              (couldn't find a machine-readable version there?)
+ *        <li> German
+ *              http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
+ *       </ul>
+ * <li> Consider also digesting files like
+ *       http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos
+ *       See http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
  * </ul>
  */
 public class TypoDetector extends ResourceXmlDetector {
     private TypoLookup mLookup;
-    private boolean mInitialized;
+    private String mLastLanguage;
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -67,8 +92,6 @@ public class TypoDetector extends ResourceXmlDetector {
             TypoDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
-    private boolean mIgnore;
-
     /** Constructs a new detector */
     public TypoDetector() {
     }
@@ -78,29 +101,36 @@ public class TypoDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.VALUES;
     }
 
-    @Override
-    public void beforeCheckFile(@NonNull Context context) {
-        if (!mInitialized) {
-            mInitialized = true;
-            mLookup = TypoLookup.get(context.getClient());
+    /** Look up the locale from the given parent folder name, or null if there isn't one */
+    @Nullable
+    private String getLocale(@NonNull String parent) {
+        if (parent.equals("values")) { //$NON-NLS-1$
+            return null;
         }
 
-        if (mLookup == null) {
-            mIgnore = true;
-        } else {
-            String parent = context.file.getParentFile().getName();
-            if (parent.equals("values")) { //$NON-NLS-1$
-                mIgnore = false;
-            } else {
-                mIgnore = true;
-                // Is this an English language file?
-                for (String qualifier : Splitter.on('-').split(parent)) {
-                    if ("en".equals(qualifier)) { //$NON-NLS-1$
-                        mIgnore = false;
-                        break;
-                    }
+        for (String qualifier : Splitter.on('-').split(parent)) {
+            if (qualifier.length() == 2) {
+                char first = qualifier.charAt(0);
+                char second = qualifier.charAt(0);
+                if (first >= 'a' && first <= 'z' && second >= 'a' && second <= 'z') {
+                    return qualifier;
                 }
             }
+        }
+
+        return null;
+    }
+
+    @Override
+    public void beforeCheckFile(@NonNull Context context) {
+        String language = getLocale(context.file.getParentFile().getName());
+        if (language == null) {
+            language = "en"; //$NON-NLS-1$
+        }
+
+        if (!equal(mLastLanguage, language)) {
+            mLastLanguage = language;
+            mLookup = TypoLookup.get(context.getClient(), language);
         }
     }
 
@@ -116,7 +146,7 @@ public class TypoDetector extends ResourceXmlDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (mIgnore) {
+        if (mLookup == null) {
             return;
         }
 
@@ -138,6 +168,7 @@ public class TypoDetector extends ResourceXmlDetector {
     private void check(XmlContext context, Node node, String text) {
         int max = text.length();
         int index = 0;
+        boolean checkedTypos = false;
         while (index < max) {
             while (index < max && !Character.isLetter(text.charAt(index))) {
                 index++;
@@ -148,54 +179,126 @@ public class TypoDetector extends ResourceXmlDetector {
             int begin = index;
             index++;
             while (index < max && Character.isLetter(text.charAt(index))) {
+                if (text.charAt(index) >= 0x80) {
+                    // Switch to UTF-8 handling for this string
+                    if (checkedTypos) {
+                        // If we've already checked words we may have reported typos
+                        // so create a substring from the current word and on.
+                        byte[] utf8Text = text.substring(begin).getBytes(Charsets.UTF_8);
+                        check(context, node, utf8Text, 0, utf8Text.length, text, begin);
+                    } else {
+                        // If all we've done so far is skip whitespace (common scenario)
+                        // then no need to substring the text, just re-search with the
+                        // UTF-8 routines
+                        byte[] utf8Text = text.getBytes(Charsets.UTF_8);
+                        check(context, node, utf8Text, 0, utf8Text.length, text, 0);
+                    }
+                    return;
+                }
                 index++;
             }
+
             int end = index;
+            checkedTypos = true;
             Iterable<String> replacements = mLookup.getTypos(text, begin, end);
             if (replacements != null) {
                 String word = text.substring(begin, end);
-
-                String first = null;
-                String message;
-                Iterator<String> iterator = replacements.iterator();
-                if (iterator.hasNext()) {
-                    boolean isCapitalized = Character.isUpperCase(word.charAt(0));
-                    StringBuilder sb = new StringBuilder();
-                    for (String replacement : replacements) {
-                        if (first == null) {
-                            first = replacement;
-                        }
-                        if (sb.length() > 0) {
-                            sb.append(" or ");
-                        }
-                        sb.append('"');
-                        if (isCapitalized) {
-                            sb.append(Character.toUpperCase(replacement.charAt(0))
-                                    + replacement.substring(1));
-                        } else {
-                            sb.append(replacement);
-                        }
-                        sb.append('"');
-                    }
-
-                    if (first != null && first.equalsIgnoreCase(word)) {
-                        message = String.format(
-                                "\"%1$s\" is usually capitalized as \"%2$s\"",
-                                word, first);
-                    } else {
-                        message = String.format(
-                                "\"%1$s\" is a common misspelling; did you mean %2$s ?",
-                                word, sb.toString());
-                    }
-                } else {
-                    message = String.format("\"%1$s\" is a common misspelling", word);
-                }
-
-                context.report(ISSUE, node, context.getLocation(node, begin, end), message, null);
+                reportTypo(context, node, word, begin, end, replacements);
             }
 
             index = end + 1;
         }
+    }
+
+    private void check(XmlContext context, Node node, byte[] utf8Text,
+            int byteStart, int byteEnd, String text, int charStart) {
+        int index = byteStart;
+        while (index < byteEnd) {
+            byte b = utf8Text[index];
+            // Find beginning of word
+            while (index < byteEnd) {
+                if (b != ' ' && b != '\t' && b != '\n' && b != '\r') {
+                    break;
+                }
+                index++;
+                if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
+                    // First characters in UTF-8 are always ASCII (0 high bit) or 11XXXXXX
+                    charStart++;
+                }
+            }
+
+            if (index == byteEnd) {
+                return;
+            }
+            int charEnd = charStart;
+            int begin = index;
+            index++;
+
+            // Find end of word. Unicode has the nice property that even 2nd, 3rd and 4th
+            // bytes won't match these ASCII characters (because the high bit must be set there)
+            while (index < byteEnd) {
+                if (b == ' ' || b == '\t' || b == '\n' || b == '\r') {
+                    break;
+                }
+                index++;
+                if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
+                    // First characters in UTF-8 are always ASCII (0 high bit) or 11XXXXXX
+                    charEnd++;
+                }
+            }
+
+            int end = index;
+            Iterable<String> replacements = mLookup.getTypos(utf8Text, begin, end);
+            if (replacements != null) {
+                String word = text.substring(charStart, charEnd);
+                reportTypo(context, node, word, charStart, end, replacements);
+            }
+
+            index = end + 1;
+        }
+    }
+
+
+    /** Report the typo found at the given offset and suggest the given replacements */
+    private void reportTypo(XmlContext context, Node node,
+            String word, int begin, int end, Iterable<String> replacements) {
+        String first = null;
+        String message;
+        Iterator<String> iterator = replacements.iterator();
+        if (iterator.hasNext()) {
+            boolean isCapitalized = Character.isUpperCase(word.charAt(0));
+            StringBuilder sb = new StringBuilder();
+            for (String replacement : replacements) {
+                if (first == null) {
+                    first = replacement;
+                }
+                if (sb.length() > 0) {
+                    sb.append(" or ");
+                }
+                sb.append('"');
+                if (isCapitalized) {
+                    sb.append(Character.toUpperCase(replacement.charAt(0))
+                            + replacement.substring(1));
+                } else {
+                    sb.append(replacement);
+                }
+                sb.append('"');
+            }
+
+            if (first != null && first.equalsIgnoreCase(word)) {
+                message = String.format(
+                        "\"%1$s\" is usually capitalized as \"%2$s\"",
+                        word, first);
+            } else {
+                message = String.format(
+                        "\"%1$s\" is a common misspelling; did you mean %2$s ?",
+                        word, sb.toString());
+            }
+        } else {
+            message = String.format("\"%1$s\" is a common misspelling", word);
+        }
+
+        context.report(ISSUE, node, context.getLocation(node, begin, end), message, null);
     }
 
     /** Returns the suggested replacements, if any, for the given typo. The error

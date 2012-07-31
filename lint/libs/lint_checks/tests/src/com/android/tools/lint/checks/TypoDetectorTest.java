@@ -51,6 +51,18 @@ public class TypoDetectorTest extends AbstractCheckTest {
             lintProject("res/values/typos.xml=>res/values-en-rUS/strings-en.xml"));
     }
 
+    public void testNorwegian() throws Exception {
+        // UTF-8 handling
+        assertEquals(
+            "typos.xml:10: Warning: \"altid\" is a common misspelling; did you mean \"alltid\" ?\n" +
+            "typos.xml:12: Warning: \"Altid\" is a common misspelling; did you mean \"Alltid\" ?\n" +
+            "typos.xml:18: Warning: \"karriære\" is a common misspelling; did you mean \"karrière\" ?\n" +
+            "typos.xml:6: Warning: \"Andriod\" is a common misspelling; did you mean \"Android\" ?\n" +
+            "typos.xml:6: Warning: \"morro\" is a common misspelling; did you mean \"moro\" ?\n" +
+            "typos.xml:8: Warning: \"Parallel\" is a common misspelling; did you mean \"Parallell\" ?",
+            lintProject("res/values-nb/typos.xml"));
+    }
+
     public void testOk() throws Exception {
         assertEquals(
             "No warnings.",

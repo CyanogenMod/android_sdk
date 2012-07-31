@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,32 +31,29 @@ import com.google.common.primitives.UnsignedBytes;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * Database of common typos / misspellings.
- * <p>
- * TODO:
- * <ul>
- * <li>Add support for other languages (one typo-file per language, and one
- *     database per language)
- * </ul>
  */
 public class TypoLookup {
+    private static final TypoLookup NONE = new TypoLookup();
+
     /** String separating misspellings and suggested replacements in the text file */
     private static final String WORD_SEPARATOR = "->";  //$NON-NLS-1$
 
     /** Relative path to the typos database file within the Lint installation */
-    private static final String XML_FILE_PATH = "tools/support/typos-en.txt"; //$NON-NLS-1$
+    private static final String XML_FILE_PATH = "tools/support/typos-%1$s.txt"; //$NON-NLS-1$
     private static final String FILE_HEADER = "Typo database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 1;
+    private static final int BINARY_FORMAT_VERSION = 2;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
@@ -69,44 +67,52 @@ public class TypoLookup {
     private int[] mIndices;
     private int mWordCount;
 
-    private static WeakReference<TypoLookup> sInstance =
-            new WeakReference<TypoLookup>(null);
+    private static WeakHashMap<String, TypoLookup> sInstanceMap =
+            new WeakHashMap<String, TypoLookup>();
 
     /**
-     * Returns an instance of the Typo database
+     * Returns an instance of the Typo database for the given locale
      *
      * @param client the client to associate with this database - used only for
-     *            logging. The database object may be shared among repeated invocations,
-     *            and in that case client used will be the one originally passed in.
-     *            In other words, this parameter may be ignored if the client created
-     *            is not new.
-     * @return a (possibly shared) instance of the typo database, or null
-     *         if its data can't be found
+     *            logging. The database object may be shared among repeated
+     *            invocations, and in that case client used will be the one
+     *            originally passed in. In other words, this parameter may be
+     *            ignored if the client created is not new.
+     * @param locale the locale to look up a typo database for (should be a
+     *         language code (ISO 639-1, two lowercase character names)
+     * @return a (possibly shared) instance of the typo database, or null if its
+     *         data can't be found
      */
-    public static TypoLookup get(LintClient client) {
+    @Nullable
+    public static TypoLookup get(@NonNull LintClient client, @NonNull String locale) {
         synchronized (TypoLookup.class) {
-            TypoLookup db = sInstance.get();
+            TypoLookup db = sInstanceMap.get(locale);
             if (db == null) {
-                File file = client.findResource(XML_FILE_PATH);
+                String path = String.format(XML_FILE_PATH, locale);
+                File file = client.findResource(path);
                 if (file == null) {
                     // AOSP build environment?
                     String build = System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
                     if (build != null) {
-                        file = new File(build, "sdk/files/typos-en.txt" //$NON-NLS-1$
-                                .replace('/', File.separatorChar));
+                        file = new File(build, ("sdk/files/" //$NON-NLS-1$
+                                    + path.substring(path.lastIndexOf('/') + 1))
+                                      .replace('/', File.separatorChar));
                     }
                 }
 
                 if (file == null || !file.exists()) {
-                    client.log(null, "Fatal error: No typo database found at %1$s", file);
-                    return null;
+                    db = NONE;
                 } else {
                     db = get(client, file);
                 }
-                sInstance = new WeakReference<TypoLookup>(db);
+                sInstanceMap.put(locale, db);
             }
 
-            return db;
+            if (db == NONE) {
+                return null;
+            } else {
+                return db;
+            }
         }
     }
 
@@ -169,7 +175,7 @@ public class TypoLookup {
         // Read in data
         List<String> lines;
         try {
-            lines = Files.readLines(xmlFile, Charsets.US_ASCII);
+            lines = Files.readLines(xmlFile, Charsets.UTF_8);
         } catch (IOException e) {
             client.log(e, "Can't read typo database file");
             return false;
@@ -202,6 +208,12 @@ public class TypoLookup {
         if (binaryFile != null) {
             readData();
         }
+    }
+
+    private TypoLookup() {
+        mClient = null;
+        mXmlFile = null;
+        mBinaryFile = null;
     }
 
     private void readData() {
@@ -287,12 +299,34 @@ public class TypoLookup {
         List<String> words = new ArrayList<String>(lines.size());
         for (String line : lines) {
             if (!line.isEmpty() && Character.isLetter(line.charAt(0))) {
-                words.add(line);
+                int end = line.indexOf(WORD_SEPARATOR);
+                if (end == -1) {
+                    end = line.trim().length();
+                }
+                String typo = line.substring(0, end);
+                String replacements = line.substring(end + WORD_SEPARATOR.length()).trim();
+                String combined = typo + (char) 0 + replacements;
+
+                words.add(combined);
             }
         }
-        Collections.sort(words, String.CASE_INSENSITIVE_ORDER);
 
-        int entryCount = words.size();
+        byte[][] wordArrays = new byte[words.size()][];
+        for (int i = 0, n = words.size(); i < n; i++) {
+            String word = words.get(i);
+            wordArrays[i] = word.getBytes(Charsets.UTF_8);
+        }
+        // Sort words, using our own comparator to ensure that it matches the
+        // binary search in getTypos()
+        Comparator<byte[]> comparator = new Comparator<byte[]>() {
+            @Override
+            public int compare(byte[] o1, byte[] o2) {
+                return TypoLookup.compare(o1, 0, (byte) 0, o2, 0, o2.length);
+            }
+        };
+        Arrays.sort(wordArrays, comparator);
+
+        int entryCount = wordArrays.length;
         int capacity = entryCount * BYTES_PER_ENTRY;
         ByteBuffer buffer = ByteBuffer.allocate(capacity);
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -306,7 +340,7 @@ public class TypoLookup {
         buffer.put((byte) BINARY_FORMAT_VERSION);
 
         //  3. The number of words [1 int]
-        buffer.putInt(words.size());
+        buffer.putInt(entryCount);
 
         //  4. Word offset table (one integer per word, pointing to the byte offset in the
         //       file (relative to the beginning of the file) where each word begins.
@@ -315,7 +349,7 @@ public class TypoLookup {
 
         // Reserve enough room for the offset table here: we will backfill it with pointers
         // as we're writing out the data structures below
-        for (int i = 0, n = words.size(); i < n; i++) {
+        for (int i = 0, n = entryCount; i < n; i++) {
             buffer.putInt(0);
         }
 
@@ -325,21 +359,14 @@ public class TypoLookup {
         // 7. Word entry table. Each word entry consists of the word, followed by the byte 0
         //      as a terminator, followed by a comma separated list of suggestions (which
         //      may be empty), or a final 0.
-        for (String word : words) {
+        for (int i = 0; i < entryCount; i++) {
+            byte[] word = wordArrays[i];
             buffer.position(nextOffset);
             buffer.putInt(nextEntry);
             nextOffset = buffer.position();
             buffer.position(nextEntry);
-            int end = word.indexOf(WORD_SEPARATOR);
-            if (end == -1) {
-                end = word.trim().length();
-            }
-            String typo = word.substring(0, end);
-            String replacements = word.substring(end + WORD_SEPARATOR.length()).trim();
 
-            buffer.put(typo.getBytes(Charsets.UTF_8));
-            buffer.put((byte) 0);
-            buffer.put(replacements.getBytes(Charsets.UTF_8));
+            buffer.put(word); // already embeds 0 to separate typo from words
             buffer.put((byte) 0);
 
             nextEntry = buffer.position();
@@ -386,6 +413,7 @@ public class TypoLookup {
         }
     }
 
+    /** Comparison function: *only* used for ASCII strings */
     private static int compare(byte[] data, int offset, byte terminator, CharSequence s,
             int begin, int end) {
         int i = offset;
@@ -407,6 +435,35 @@ public class TypoLookup {
         return data[i] - terminator;
     }
 
+    /** Comparison function used for general UTF-8 encoded strings */
+    private static int compare(byte[] data, int offset, byte terminator, byte[] s,
+            int begin, int end) {
+        int i = offset;
+        int j = begin;
+        for (; j < end; i++, j++) {
+            byte b = data[i];
+            byte cb = s[j];
+            int delta = b - cb;
+            if (delta != 0) {
+                if (cb >= 'A' && cb <= 'Z') { // TODO: Generalize lower-casing here
+                    cb -= 'A' - 'a';
+                    delta = b - cb;
+                    if (delta != 0) {
+                        return delta;
+                    }
+                } else {
+                    return delta;
+                }
+            }
+
+            if (b == terminator || cb == terminator) {
+                return delta;
+            }
+        }
+
+        return data[i] - terminator;
+    }
+
     /**
      * Look up whether this word is a typo, and if so, return one or more likely
      * meanings
@@ -420,6 +477,16 @@ public class TypoLookup {
     @Nullable
     public Iterable<String> getTypos(@NonNull CharSequence text, int begin, int end) {
         assert end <= text.length();
+
+        if (assertionsEnabled()) {
+            for (int i = begin; i < end; i++) {
+                char c = text.charAt(i);
+                if (c >= 128) {
+                    assert false : "Call the UTF-8 version of this method instead";
+                    return null;
+                }
+            }
+        }
 
         int low = 0;
         int high = mWordCount - 1;
@@ -442,7 +509,7 @@ public class TypoLookup {
                 //  (e.g. "Teh" and "teh" to "the"), but not uncapitalized words to capitalized
                 // typos (e.g. "enlish" to "Enlish").
                 for (int i = begin; i < end; i++) {
-                    int b = mData[offset++];
+                    byte b = mData[offset++];
                     char c = text.charAt(i);
                     byte cb = (byte) c;
                     if (b != cb && i > begin) {
@@ -452,12 +519,79 @@ public class TypoLookup {
 
                 assert mData[offset] == 0;
                 offset++;
-                StringBuilder sb = new StringBuilder();
-                while (mData[offset] != 0) {
-                    sb.append((char) mData[offset]);
-                    offset++;
+                int replacementEnd = offset;
+                while (mData[replacementEnd] != 0) {
+                    replacementEnd++;
                 }
-                return Splitter.on(',').omitEmptyStrings().trimResults().split(sb.toString());
+                String replacements = new String(mData, offset, replacementEnd - offset,
+                        Charsets.UTF_8);
+                return Splitter.on(',').omitEmptyStrings().trimResults().split(replacements);
+            }
+
+            if (compare < 0) {
+                low = middle + 1;
+            } else if (compare > 0) {
+                high = middle - 1;
+            } else {
+                assert false; // compare == 0 already handled above
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Look up whether this word is a typo, and if so, return one or more likely
+     * meanings
+     *
+     * @param utf8Text the string containing the word, encoded as UTF-8
+     * @param begin the index of the first character in the word
+     * @param end the index of the first character after the word
+     * @return an iterable of replacement strings if the word represents a typo,
+     *         and null otherwise
+     */
+    @Nullable
+    public Iterable<String> getTypos(@NonNull byte[] utf8Text, int begin, int end) {
+        assert end <= utf8Text.length;
+
+        int low = 0;
+        int high = mWordCount - 1;
+        while (low <= high) {
+            int middle = (low + high) >>> 1;
+            int offset = mIndices[middle];
+
+            if (DEBUG_SEARCH) {
+                System.out.println("Comparing string " + utf8Text +" with entry at " + offset
+                        + ": " + dumpEntry(offset));
+            }
+
+            // Compare the word at the given index.
+            int compare = compare(mData, offset, (byte) 0, utf8Text, begin, end);
+            if (compare == 0) {
+                offset = mIndices[middle];
+
+                // Make sure there is a case match; we only want to allow
+                // matching capitalized words to capitalized typos or uncapitalized typos
+                //  (e.g. "Teh" and "teh" to "the"), but not uncapitalized words to capitalized
+                // typos (e.g. "enlish" to "Enlish").
+                for (int i = begin; i < end; i++) {
+                    byte b = mData[offset++];
+                    byte cb = utf8Text[i];
+                    if (b != cb && i > begin) {
+                        return null;
+                    }
+                }
+
+                assert mData[offset] == 0;
+                offset++;
+                int replacementEnd = offset;
+                while (mData[replacementEnd] != 0) {
+                    replacementEnd++;
+                }
+                String replacements = new String(mData, offset, replacementEnd - offset,
+                        Charsets.UTF_8);
+                return Splitter.on(',').omitEmptyStrings().trimResults().split(replacements);
             }
 
             if (compare < 0) {
