@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
+
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.ScrollBar;
@@ -133,6 +135,17 @@ public class CanvasTransform {
             mMargin = 0;
         } else if (delta < 2 * DEFAULT_MARGIN) {
             mMargin = delta / 2;
+
+            ImageOverlay imageOverlay = mCanvas.getImageOverlay();
+            if (imageOverlay != null && imageOverlay.getShowDropShadow()
+                    && delta >= SHADOW_SIZE / 2) {
+                mMargin -= SHADOW_SIZE / 2;
+                // Add a little padding on the top too, if there's room. The shadow assets
+                // include enough padding on the bottom to not make this look clipped.
+                if (mMargin < 4) {
+                    mMargin += 4;
+                }
+            }
         } else {
             mMargin = DEFAULT_MARGIN;
         }

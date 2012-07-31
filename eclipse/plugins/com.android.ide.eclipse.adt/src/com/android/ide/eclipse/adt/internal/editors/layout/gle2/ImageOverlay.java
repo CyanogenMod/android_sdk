@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
+
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.IImageFactory;
@@ -54,6 +56,9 @@ public class ImageOverlay extends Overlay implements IImageFactory {
 
     /** A pre-scaled version of the image */
     private Image mPreScaledImage;
+
+    /** Whether the rendered image should have a drop shadow */
+    private boolean mShowDropShadow;
 
     /** Current background AWT image. This is created by {@link #getImage()}, which is called
      * by the LayoutLib. */
@@ -120,6 +125,8 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      * @return The corresponding SWT image, or null.
      */
     public synchronized Image setImage(BufferedImage awtImage, boolean isAlphaChannelImage) {
+        mShowDropShadow = !isAlphaChannelImage;
+
         BufferedImage oldAwtImage = mAwtImage.get();
         if (awtImage != oldAwtImage || awtImage == null) {
             mAwtImage.clear();
@@ -186,6 +193,17 @@ public class ImageOverlay extends Overlay implements IImageFactory {
         return awtImage;
     }
 
+    /**
+     * Returns whether this image overlay should be painted with a drop shadow.
+     * This is usually the case, but not for transparent themes like the dialog
+     * theme (Theme.*Dialog), which already provides its own shadow.
+     *
+     * @return true if the image overlay should be shown with a drop shadow.
+     */
+    public boolean getShowDropShadow() {
+        return mShowDropShadow;
+    }
+
     @Override
     public synchronized void paint(GC gc) {
         if (mImage != null) {
@@ -205,8 +223,10 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             // independently from when the image changes.
             BufferedImage awtImage = mAwtImage.get();
             if (PRESCALE && awtImage != null) {
-                if (mPreScaledImage == null ||
-                        mPreScaledImage.getImageData().width != hi.getScaledImgSize()) {
+                int imageWidth = (mPreScaledImage == null) ? 0
+                        : mPreScaledImage.getImageData().width
+                            - (mShowDropShadow ? SHADOW_SIZE : 0);
+                if (mPreScaledImage == null || imageWidth != hi.getScaledImgSize()) {
                     double xScale = hi.getScaledImgSize() / (double) awtImage.getWidth();
                     double yScale = vi.getScaledImgSize() / (double) awtImage.getHeight();
                     BufferedImage scaledAwtImage;
@@ -219,10 +239,23 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     if (xScale == 1.0 && yScale == 1.0) {
                         // Scaling to 100% is easy!
                         scaledAwtImage = awtImage;
+
+                        if (mShowDropShadow) {
+                            // Just need to draw drop shadows
+                            scaledAwtImage = ImageUtils.createRectangularDropShadow(awtImage);
+                        }
                     } else {
-                        scaledAwtImage = ImageUtils.scale(awtImage, xScale, yScale);
+                        if (mShowDropShadow) {
+                            scaledAwtImage = ImageUtils.scale(awtImage, xScale, yScale,
+                                    SHADOW_SIZE, SHADOW_SIZE);
+                            ImageUtils.drawRectangleShadow(scaledAwtImage, 0, 0,
+                                    scaledAwtImage.getWidth() - SHADOW_SIZE,
+                                    scaledAwtImage.getHeight() - SHADOW_SIZE);
+                        } else {
+                            scaledAwtImage = ImageUtils.scale(awtImage, xScale, yScale);
+                        }
                     }
-                    assert scaledAwtImage.getWidth() == hi.getScaledImgSize();
+
                     if (mPreScaledImage != null && !mPreScaledImage.isDisposed()) {
                         mPreScaledImage.dispose();
                     }
@@ -244,16 +277,22 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                 oldAlias = gc_setAntialias(gc, SWT.ON);
             }
 
-            gc.drawImage(
-                    mImage,
-                    0,                      // srcX
-                    0,                      // srcY
-                    hi.getImgSize(),        // srcWidth
-                    vi.getImgSize(),        // srcHeight
-                    hi.translate(0),        // destX
-                    vi.translate(0),        // destY
-                    hi.getScaledImgSize(), // destWidth
-                    vi.getScaledImgSize());  // destHeight
+            int srcX = 0;
+            int srcY = 0;
+            int srcWidth = hi.getImgSize();
+            int srcHeight = vi.getImgSize();
+            int destX = hi.translate(0);
+            int destY = vi.translate(0);
+            int destWidth = hi.getScaledImgSize();
+            int destHeight = vi.getScaledImgSize();
+
+            gc.drawImage(mImage,
+                    srcX, srcY, srcWidth, srcHeight,
+                    destX, destY, destWidth, destHeight);
+
+            if (mShowDropShadow) {
+                SwtUtils.drawRectangleShadow(gc, destX, destY, destWidth, destHeight);
+            }
 
             if (oldAlias != -2) {
                 gc_setAntialias(gc, oldAlias);
@@ -356,6 +395,13 @@ public class ImageOverlay extends Overlay implements IImageFactory {
          * @return a new {@link SwtReadyBufferedImage} object
          */
         private static SwtReadyBufferedImage createImage(int w, int h, Device device) {
+            // NOTE: We can't make this image bigger to accommodate the drop shadow directly
+            // (such that we could paint one into the image after a layoutlib render)
+            // since this image is in the full resolution of the device, and gets scaled
+            // to fit in the layout editor. This would have the net effect of causing
+            // the drop shadow to get zoomed/scaled along with the scene, making a tiny
+            // drop shadow for tablet layouts, a huge drop shadow for tiny QVGA screens, etc.
+
             ImageData imageData = new ImageData(w, h, 32,
                     new PaletteData(0x00FF0000, 0x0000FF00, 0x000000FF));
 

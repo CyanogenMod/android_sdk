@@ -15,7 +15,10 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
+
 import com.android.ide.common.api.Rect;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Device;
@@ -386,4 +389,69 @@ public class SwtUtils {
         gc.dispose();
         return width;
     }
+
+    /**
+     * Draws a drop shadow for the given rectangle into the given context. It
+     * will not draw anything if the rectangle is smaller than a minimum
+     * determined by the assets used to draw the shadow graphics.
+     * <p>
+     * This corresponds to {@link ImageUtils#drawRectangleShadow(Graphics, int, int, int, int)},
+     * but applied directly to an SWT graphics context instead, such that no image conversion
+     * has to be performed.
+     * <p>
+     * Make sure to keep changes in the visual appearance here in sync with the
+     * AWT version in {@link ImageUtils#drawRectangleShadow(Graphics, int, int, int, int)}.
+     *
+     * @param gc the graphics context to draw into
+     * @param x the left coordinate of the left hand side of the rectangle
+     * @param y the top coordinate of the top of the rectangle
+     * @param width the width of the rectangle
+     * @param height the height of the rectangle
+     */
+    public static final void drawRectangleShadow(GC gc, int x, int y, int width, int height) {
+        if (sShadowBottomLeft == null) {
+            IconFactory icons = IconFactory.getInstance();
+            // See ImageUtils.drawRectangleShadow for an explanation of the assets.
+            sShadowBottomLeft  = icons.getIcon("shadow-bl"); //$NON-NLS-1$
+            sShadowBottom      = icons.getIcon("shadow-b");  //$NON-NLS-1$
+            sShadowBottomRight = icons.getIcon("shadow-br"); //$NON-NLS-1$
+            sShadowRight       = icons.getIcon("shadow-r");  //$NON-NLS-1$
+            sShadowTopRight    = icons.getIcon("shadow-tr"); //$NON-NLS-1$
+            assert sShadowBottomRight.getImageData().width == SHADOW_SIZE;
+            assert sShadowBottomRight.getImageData().height == SHADOW_SIZE;
+        }
+
+        ImageData bottomLeftData = sShadowBottomLeft.getImageData();
+        ImageData topRightData = sShadowTopRight.getImageData();
+        ImageData bottomData = sShadowBottom.getImageData();
+        ImageData rightData = sShadowRight.getImageData();
+        int blWidth = bottomLeftData.width;
+        int trHeight = topRightData.height;
+        if (width < blWidth) {
+            return;
+        }
+        if (height < trHeight) {
+            return;
+        }
+
+        gc.drawImage(sShadowBottomLeft, x, y + height);
+        gc.drawImage(sShadowBottomRight, x + width, y + height);
+        gc.drawImage(sShadowTopRight, x + width, y);
+        gc.drawImage(sShadowBottom,
+                0, 0,
+                bottomData.width, bottomData.height,
+                x + bottomLeftData.width, y + height,
+                width - bottomLeftData.width, bottomData.height);
+        gc.drawImage(sShadowRight,
+                0, 0,
+                rightData.width, rightData.height,
+                x + width, y + topRightData.height,
+                rightData.width, height - topRightData.height);
+    }
+
+    private static Image sShadowBottomLeft;
+    private static Image sShadowBottom;
+    private static Image sShadowBottomRight;
+    private static Image sShadowRight;
+    private static Image sShadowTopRight;
 }
