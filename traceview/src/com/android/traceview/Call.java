@@ -118,7 +118,7 @@ class Call implements TimeLineView.Block {
 
     @Override
     public boolean isContextSwitch() {
-        return mMethodData.getId() < 0;
+        return mMethodData.getId() == -1;
     }
 
     @Override
