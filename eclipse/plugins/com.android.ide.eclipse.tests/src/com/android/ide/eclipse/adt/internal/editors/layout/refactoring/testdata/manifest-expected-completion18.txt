@@ -1,5 +1,5 @@
 Code completion in manifest.xml for <activity android:^name=".TestActivity":
-android:name : Required name of the class implementing the activity, deriving  from android.app.Activity.  [string]
+android:name : Required name of the class implementing the activity, deriving  from android.app.Activity.  [string]. * Required.
 android:theme : The overall theme to use for an activity.  [reference]
 android:label : A user-legible name for the given item.  [string, reference]
 android:description : Descriptive text for the associated data.  [reference]

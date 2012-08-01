@@ -17,6 +17,7 @@
 package com.android.ide.common.resources.platform;
 
 import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
+import static com.android.ide.eclipse.adt.AdtConstants.DOC_HIDE;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.log.ILogger;
@@ -291,7 +292,12 @@ public final class AttrsXmlParser {
                             mStyleMap.put(name, style);
                             unknownParents.remove(name);
                             if (lastComment != null) {
-                                style.setJavaDoc(parseJavadoc(lastComment.getNodeValue()));
+                                String nodeValue = lastComment.getNodeValue();
+                                if (nodeValue.contains(DOC_HIDE)) {
+                                    mStyleMap.remove(name);
+                                } else {
+                                    style.setJavaDoc(parseJavadoc(nodeValue));
+                                }
                             }
                         }
                     }
@@ -416,8 +422,12 @@ public final class AttrsXmlParser {
                 }
                 if (info != null) {
                     if (lastComment != null) {
-                        info.setJavaDoc(parseJavadoc(lastComment.getNodeValue()));
-                        info.setDeprecatedDoc(parseDeprecatedDoc(lastComment.getNodeValue()));
+                        String nodeValue = lastComment.getNodeValue();
+                        if (nodeValue.contains(DOC_HIDE)) {
+                            return null;
+                        }
+                        info.setJavaDoc(parseJavadoc(nodeValue));
+                        info.setDeprecatedDoc(parseDeprecatedDoc(nodeValue));
                     }
                 }
             }
