@@ -73,7 +73,7 @@ public class SdkToolsLocator {
     }
 
     public SdkInstallStatus isValidInstallation() {
-        List<String> executables = Arrays.asList(getAdbLocation(),
+        List<String> executables = Arrays.asList(
                 getTraceViewLocation(),
                 getHprofConvLocation());
 
