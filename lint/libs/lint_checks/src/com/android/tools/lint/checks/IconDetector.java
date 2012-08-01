@@ -45,7 +45,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.io.Files;
 
 import org.w3c.dom.Element;
 
@@ -422,7 +421,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     byte[] bits = fileContents.get(file);
                     if (bits == null) {
                         try {
-                            bits = Files.toByteArray(file);
+                            bits = context.getClient().readBytes(file);
                             fileContents.put(file, bits);
                         } catch (IOException e) {
                             context.log(e, null);

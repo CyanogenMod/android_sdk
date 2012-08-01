@@ -1112,7 +1112,7 @@ public class Main extends LintClient {
     @Override
     public @NonNull String readFile(@NonNull File file) {
         try {
-            return LintUtils.getEncodedString(file);
+            return LintUtils.getEncodedString(this, file);
         } catch (IOException e) {
             return ""; //$NON-NLS-1$
         }

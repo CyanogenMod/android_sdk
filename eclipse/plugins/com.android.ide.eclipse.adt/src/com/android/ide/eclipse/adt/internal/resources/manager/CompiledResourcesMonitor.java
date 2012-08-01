@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.resources.IntArrayWrapper;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -80,7 +82,13 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      * @see IFileListener#fileChanged
      */
     @Override
-    public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+    public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+            int kind, @Nullable String extension, int flags) {
+        if (flags == IResourceDelta.MARKERS) {
+            // Only the markers changed: not relevant
+            return;
+        }
+
         IProject project = file.getProject();
 
         if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)) {

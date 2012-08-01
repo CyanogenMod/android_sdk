@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.RenderScriptProcessor;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
-import com.android.ide.eclipse.adt.internal.lint.LintDeltaProcessor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -309,11 +308,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                 } else {
                     dv = new PreCompilerDeltaVisitor(this, sourceFolderPathList, mProcessors);
                     delta.accept(dv);
-
-                    // Check for errors on save/build, if enabled
-                    if (AdtPrefs.getPrefs().isLintOnSave()) {
-                        LintDeltaProcessor.create().process(delta);
-                    }
 
                     // Check to see if Manifest.xml, Manifest.java, or R.java have changed:
                     mMustCompileResources |= dv.getCompileResources();

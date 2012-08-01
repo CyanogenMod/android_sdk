@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -175,6 +176,22 @@ public abstract class LintClient {
      */
     @NonNull
     public abstract String readFile(@NonNull File file);
+
+    /**
+     * Reads the given binary file and returns the content as a byte array.
+     * By default this method will read the bytes from the file directly,
+     * but this can be customized by a client if for example I/O could be
+     * held in memory and not flushed to disk yet.
+     *
+     * @param file the file to read
+     * @return the bytes in the file, never null
+     * @throws IOException if the file does not exist, or if the file cannot be
+     *             read for some reason
+     */
+    @NonNull
+    public byte[] readBytes(@NonNull File file) throws IOException {
+        return Files.toByteArray(file);
+    }
 
     /**
      * Returns the list of source folders for Java source files

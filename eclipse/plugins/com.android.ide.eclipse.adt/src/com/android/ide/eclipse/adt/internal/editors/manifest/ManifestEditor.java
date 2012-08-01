@@ -21,6 +21,7 @@ import static com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.
 import static com.android.util.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -292,7 +293,8 @@ public final class ManifestEditor extends AndroidXmlEditor {
 
             mMarkerMonitor = new IFileListener() {
                 @Override
-                public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+                public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+                        int kind, @Nullable String extension, int flags) {
                     if (file.equals(inputFile)) {
                         processMarkerChanges(markerDeltas);
                     }
