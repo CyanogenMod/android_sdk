@@ -34,6 +34,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
+import com.android.ide.eclipse.adt.internal.lint.LintDeltaProcessor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
@@ -1479,6 +1480,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
             try {
                 setupDefaultEditor(mResourceMonitor);
                 ResourceManager.setup(mResourceMonitor);
+                LintDeltaProcessor.startListening(mResourceMonitor);
             } catch (Throwable t) {
                 log(t, "ResourceManager.setup failed"); //$NON-NLS-1$
             }
@@ -1499,6 +1501,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
         sAndroidLogo.dispose();
 
         IconFactory.getInstance().dispose();
+
+        LintDeltaProcessor.stopListening(mResourceMonitor);
 
         // Remove the resource listener that handles compiled resources.
         IWorkspace ws = ResourcesPlugin.getWorkspace();
@@ -1555,8 +1559,14 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
              * @see IFileListener#fileChanged
              */
             @Override
-            public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
-                if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
+            public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+                    int kind, @Nullable String extension, int flags) {
+                if (flags == IResourceDelta.MARKERS) {
+                    // ONLY the markers changed: not relevant to this listener
+                    return;
+                }
+
+                if (AdtConstants.EXT_XML.equals(extension)) {
                     // The resources files must have a file path similar to
                     //    project/res/.../*.xml
                     // There is no support for sub folders, so the segment count must be 4

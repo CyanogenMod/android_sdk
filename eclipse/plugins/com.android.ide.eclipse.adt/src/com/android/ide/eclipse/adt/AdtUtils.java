@@ -449,7 +449,8 @@ public class AdtUtils {
      * @param resource the resource to look up a path for
      * @return an absolute file system path to the resource
      */
-    public static IPath getAbsolutePath(IResource resource) {
+    @NonNull
+    public static IPath getAbsolutePath(@NonNull IResource resource) {
         IPath location = resource.getRawLocation();
         if (location != null) {
             return location.makeAbsolute();

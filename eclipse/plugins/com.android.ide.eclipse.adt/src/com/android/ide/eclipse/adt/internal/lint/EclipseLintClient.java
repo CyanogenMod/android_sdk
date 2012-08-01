@@ -690,7 +690,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     private String readPlainFile(File file) {
         try {
-            return LintUtils.getEncodedString(file);
+            return LintUtils.getEncodedString(this, file);
         } catch (IOException e) {
             return ""; //$NON-NLS-1$
         }

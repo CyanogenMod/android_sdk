@@ -17,9 +17,11 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_JAR;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ddmlib.IDevice;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
@@ -1014,7 +1016,8 @@ public final class Sdk  {
      */
     private IFileListener mFileListener = new IFileListener() {
         @Override
-        public void fileChanged(final IFile file, IMarkerDelta[] markerDeltas, int kind) {
+        public void fileChanged(final @NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+                int kind, @Nullable String extension, int flags) {
             if (SdkConstants.FN_PROJECT_PROPERTIES.equals(file.getName()) &&
                     file.getParent() == file.getProject()) {
                 try {
@@ -1075,7 +1078,8 @@ public final class Sdk  {
                 }
             } else if (kind == IResourceDelta.ADDED || kind == IResourceDelta.REMOVED) {
                 // check if it's an add/remove on a jar files inside libs
-                if (file.getProjectRelativePath().segmentCount() == 2 &&
+                if (EXT_JAR.equals(extension) &&
+                        file.getProjectRelativePath().segmentCount() == 2 &&
                         file.getParent().getName().equals(SdkConstants.FD_NATIVE_LIBS)) {
                     // need to update the project and whatever depend on it.
 

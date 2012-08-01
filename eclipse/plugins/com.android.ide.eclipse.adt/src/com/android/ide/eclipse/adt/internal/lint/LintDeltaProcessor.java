@@ -17,17 +17,25 @@ package com.android.ide.eclipse.adt.internal.lint;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_CLASS;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_JAVA;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.swt.widgets.Display;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,6 +47,16 @@ public class LintDeltaProcessor implements Runnable {
     private IFile mActiveFile;
 
     private LintDeltaProcessor() {
+        // Get the active editor file, if any
+        Display display = AdtPlugin.getDisplay();
+        if (display == null || display.isDisposed()) {
+            return;
+        }
+        if (display.getThread() != Thread.currentThread()) {
+            display.syncExec(this);
+        } else {
+            run();
+        }
     }
 
     /**
@@ -57,17 +75,6 @@ public class LintDeltaProcessor implements Runnable {
      * @param delta the delta describing recently changed files
      */
     public void process(@NonNull IResourceDelta delta)  {
-        // Get the active editor file, if any
-        Display display = AdtPlugin.getDisplay();
-        if (display == null || display.isDisposed()) {
-            return;
-        }
-        if (display.getThread() != Thread.currentThread()) {
-            display.syncExec(this);
-        } else {
-            run();
-        }
-
         if (mActiveFile == null || !mActiveFile.getName().endsWith(DOT_JAVA)) {
             return;
         }
@@ -76,6 +83,24 @@ public class LintDeltaProcessor implements Runnable {
         gatherFiles(delta);
 
         if (!mFiles.isEmpty()) {
+            EclipseLintRunner.startLint(mFiles, mActiveFile, null,
+                    false /*fatalOnly*/, false /*show*/);
+        }
+    }
+
+    /**
+     * Process edits in the given file: update lint on the Java source provided
+     * it's the active file.
+     *
+     * @param file the file that was changed
+     */
+    public void process(@NonNull IFile file)  {
+        if (mActiveFile == null || !mActiveFile.getName().endsWith(DOT_JAVA)) {
+            return;
+        }
+
+        if (file.equals(mActiveFile)) {
+            mFiles = Collections.<IResource>singletonList(file);
             EclipseLintRunner.startLint(mFiles, mActiveFile, null,
                     false /*fatalOnly*/, false /*show*/);
         }
@@ -122,4 +147,54 @@ public class LintDeltaProcessor implements Runnable {
         // Get the active file: this must be run on the GUI thread
         mActiveFile = AdtUtils.getActiveFile();
     }
+
+    /**
+     * Start listening to the resource monitor
+     *
+     * @param resourceMonitor the resource monitor
+     */
+    public static void startListening(@NonNull GlobalProjectMonitor resourceMonitor) {
+        // Add a file listener which finds out when files have changed. This is listening
+        // specifically for saves of Java files, in order to run incremental lint on them.
+        // Note that the {@link PostCompilerBuilder} already handles incremental lint files
+        // on Java files - and runs it for both the .java and .class files.
+        //
+        // However, if Project > Build Automatically is turned off, then the PostCompilerBuilder
+        // isn't run after a save. THAT's what the below is for: it will run and *only*
+        // run lint incrementally if build automatically is off.
+        assert sListener == null; // Should only be called once on plugin activation
+        sListener = new IFileListener() {
+            @Override
+            public void fileChanged(@NonNull IFile file,
+                    @NonNull IMarkerDelta[] markerDeltas,
+                    int kind, @Nullable String extension, int flags) {
+                if (flags == IResourceDelta.MARKERS) {
+                    // ONLY the markers changed. Ignore these since they happen
+                    // when we add markers for lint errors found in the current file,
+                    // which would cause us to repeatedly enter this method over and over
+                    // again.
+                    return;
+                }
+                if (EXT_JAVA.equals(extension)
+                        && !ResourceManager.isAutoBuilding()
+                        && AdtPrefs.getPrefs().isLintOnSave()) {
+                    LintDeltaProcessor.create().process(file);
+                }
+            }
+        };
+        resourceMonitor.addFileListener(sListener, IResourceDelta.ADDED | IResourceDelta.CHANGED);
+    }
+
+    /**
+     * Stop listening to the resource monitor
+     *
+     * @param resourceMonitor the resource monitor
+     */
+    public static void stopListening(@NonNull GlobalProjectMonitor resourceMonitor) {
+        assert sListener != null;
+        resourceMonitor.removeFileListener(sListener);
+        sListener = null;
+    }
+
+    private static IFileListener sListener;
 }

@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -172,7 +174,15 @@ public final class LayoutReloadMonitor {
          * This records the changes for each project, but does not notify listeners.
          */
         @Override
-        public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+        public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+                int kind, @Nullable String extension, int flags) {
+            // This listener only cares about .class files and AndroidManifest.xml files
+            if (!(AdtConstants.EXT_CLASS.equals(extension)
+                    || AdtConstants.EXT_XML.equals(extension)
+                        && SdkConstants.FN_ANDROID_MANIFEST_XML.equals(file.getName()))) {
+                return;
+            }
+
             // get the file's project
             IProject project = file.getProject();
 
@@ -187,7 +197,7 @@ public final class LayoutReloadMonitor {
             if (hasAndroidNature) {
                 // project is an Android project, it's the one being affected
                 // directly by its own file change.
-                processFileChanged(file, project);
+                processFileChanged(file, project, extension);
             } else {
                 // check the projects depending on it, if they are Android project, update them.
                 IProject[] referencingProjects = project.getReferencingProjects();
@@ -203,7 +213,7 @@ public final class LayoutReloadMonitor {
                     if (hasAndroidNature) {
                         // the changed project is a dependency on an Android project,
                         // update the main project.
-                        processFileChanged(file, p);
+                        processFileChanged(file, p, extension);
                     }
                 }
             }
@@ -214,7 +224,7 @@ public final class LayoutReloadMonitor {
          * @param file the changed file
          * @param project the project impacted by the file change.
          */
-        private void processFileChanged(IFile file, IProject project) {
+        private void processFileChanged(IFile file, IProject project, String extension) {
             // if this project has already been marked as modified, we do nothing.
             ChangeFlags changeFlags = mProjectFlags.get(project);
             if (changeFlags != null && changeFlags.isAllTrue()) {
@@ -223,7 +233,7 @@ public final class LayoutReloadMonitor {
 
             // here we only care about code change (so change for .class files).
             // Resource changes is handled by the IResourceListener.
-            if (AdtConstants.EXT_CLASS.equals(file.getFileExtension())) {
+            if (AdtConstants.EXT_CLASS.equals(extension)) {
                 if (file.getName().matches("R[\\$\\.](.*)")) {
                     // this is a R change!
                     if (changeFlags == null) {

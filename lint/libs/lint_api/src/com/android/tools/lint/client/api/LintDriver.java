@@ -55,7 +55,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -1023,7 +1022,7 @@ public class LintDriver {
                 String path = file.getPath();
                 if (file.isFile() && path.endsWith(DOT_CLASS)) {
                     try {
-                        byte[] bytes = Files.toByteArray(file);
+                        byte[] bytes = mClient.readBytes(file);
                         if (bytes != null) {
                             for (File dir : classFolders) {
                                 if (path.startsWith(dir.getPath())) {
@@ -1068,6 +1067,8 @@ public class LintDriver {
             if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
                 AsmVisitor visitor = new AsmVisitor(mClient, classDetectors);
 
+                String sourceContents = null;
+                String sourceName = "";
                 mOuterClasses = new ArrayDeque<ClassNode>();
                 for (ClassEntry entry : entries) {
                     ClassReader reader;
@@ -1097,9 +1098,31 @@ public class LintDriver {
                         continue;
                     }
 
+                    if (sourceContents != null) {
+                        // Attempt to reuse the source buffer if initialized
+                        // This means making sure that the source files
+                        //    foo/bar/MyClass and foo/bar/MyClass$Bar
+                        //    and foo/bar/MyClass$3 and foo/bar/MyClass$3$1 have the same prefix.
+                        String newName = classNode.name;
+                        int newRootLength = newName.indexOf('$');
+                        if (newRootLength == -1) {
+                            newRootLength = newName.length();
+                        }
+                        int oldRootLength = sourceName.indexOf('$');
+                        if (oldRootLength == -1) {
+                            oldRootLength = sourceName.length();
+                        }
+                        if (newRootLength != oldRootLength ||
+                                !sourceName.regionMatches(0, newName, 0, newRootLength)) {
+                            sourceContents = null;
+                        }
+                    }
+
                     ClassContext context = new ClassContext(this, project, main,
                             entry.file, entry.jarFile, entry.binDir, entry.bytes,
-                            classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/);
+                            classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/,
+                            sourceContents);
+
                     try {
                         visitor.runClassDetectors(context);
                     } catch (Exception e) {
@@ -1109,6 +1132,9 @@ public class LintDriver {
                     if (mCanceled) {
                         return;
                     }
+
+                    sourceContents = context.getSourceContents(false/*read*/);
+                    sourceName = classNode.name;
                 }
 
                 mOuterClasses = null;
@@ -1229,7 +1255,7 @@ public class LintDriver {
 
                 for (File file : classFiles) {
                     try {
-                        byte[] bytes = Files.toByteArray(file);
+                        byte[] bytes = mClient.readBytes(file);
                         if (bytes != null) {
                             entries.add(new ClassEntry(file, null /* jarFile*/, binDir, bytes));
                         }
@@ -1564,6 +1590,12 @@ public class LintDriver {
         @NonNull
         public String readFile(@NonNull File file) {
             return mDelegate.readFile(file);
+        }
+
+        @Override
+        @NonNull
+        public byte[] readBytes(@NonNull File file) throws IOException {
+            return mDelegate.readBytes(file);
         }
 
         @Override

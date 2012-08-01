@@ -27,9 +27,9 @@ import com.android.annotations.Nullable;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.util.PositionXmlParser;
 import com.google.common.annotations.Beta;
-import com.google.common.io.Files;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -394,13 +394,16 @@ public class LintUtils {
      * same as {@code Files.toString(file, Charsets.UTF8}, but if there's a UTF byte order mark
      * (for UTF8, UTF_16 or UTF_16LE), use that instead.
      *
+     * @param client the client to use for I/O operations
      * @param file the file to read from
      * @return the string
      * @throws IOException if the file cannot be read properly
      */
     @NonNull
-    public static String getEncodedString(@NonNull File file) throws IOException {
-        byte[] bytes = Files.toByteArray(file);
+    public static String getEncodedString(
+            @NonNull LintClient client,
+            @NonNull File file) throws IOException {
+        byte[] bytes = client.readBytes(file);
         if (endsWith(file.getName(), DOT_XML)) {
             return PositionXmlParser.getXmlString(bytes);
         }

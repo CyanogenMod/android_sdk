@@ -82,6 +82,8 @@ public class ClassContext extends Context {
      * @param classNode the bytecode object model
      * @param fromLibrary whether this class is from a library rather than part
      *            of this project
+     * @param sourceContents initial contents of the Java source, if known, or
+     *            null
      */
     public ClassContext(
             @NonNull LintDriver driver,
@@ -92,13 +94,15 @@ public class ClassContext extends Context {
             @NonNull File binDir,
             @NonNull byte[] bytes,
             @NonNull ClassNode classNode,
-            boolean fromLibrary) {
+            boolean fromLibrary,
+            @Nullable String sourceContents) {
         super(driver, project, main, file);
         mJarFile = jarFile;
         mBinDir = binDir;
         mBytes = bytes;
         mClassNode = classNode;
         mFromLibrary = fromLibrary;
+        mSourceContents = sourceContents;
     }
 
     /**
@@ -214,6 +218,28 @@ public class ClassContext extends Context {
         }
 
         return mSourceContents;
+    }
+
+    /**
+     * Returns the contents of the source file for this class file, if found. If
+     * {@code read} is false, do not read the source contents if it has not
+     * already been read. (This is primarily intended for the lint
+     * infrastructure; most client code would call {@link #getSourceContents()}
+     * .)
+     *
+     * @param read whether to read the source contents if it has not already
+     *            been initialized
+     * @return the source contents, which will never be null if {@code read} is
+     *         true, or null if {@code read} is false and the source contents
+     *         hasn't already been read.
+     */
+    @Nullable
+    public String getSourceContents(boolean read) {
+        if (read) {
+            return getSourceContents();
+        } else {
+            return mSourceContents;
+        }
     }
 
     /**

@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -65,12 +67,18 @@ public final class GlobalProjectMonitor {
     public interface IFileListener {
         /**
          * Sent when a file changed.
+         *
          * @param file The file that changed.
          * @param markerDeltas The marker deltas for the file.
          * @param kind The change kind. This is equivalent to
-         * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
+         *            {@link IResourceDelta#accept(IResourceDeltaVisitor)}
+         * @param extension the extension of the file or null if the file does
+         *            not have an extension
+         * @param flags the {@link IResourceDelta#getFlags()} value with details
+         *            on what changed in the file
          */
-        public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind);
+        public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
+                int kind, @Nullable String extension, int flags);
     }
 
     /**
@@ -217,7 +225,8 @@ public final class GlobalProjectMonitor {
                     if (bundle.kindMask == ListenerBundle.MASK_NONE
                             || (bundle.kindMask & kind) != 0) {
                         try {
-                            bundle.listener.fileChanged((IFile)r, delta.getMarkerDeltas(), kind);
+                            bundle.listener.fileChanged((IFile)r, delta.getMarkerDeltas(), kind,
+                                    r.getFileExtension(), delta.getFlags());
                         } catch (Throwable t) {
                             AdtPlugin.log(t,"Failed to call IFileListener.fileChanged");
                         }

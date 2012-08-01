@@ -27,12 +27,14 @@ import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
+import com.android.ide.eclipse.adt.internal.lint.LintDeltaProcessor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -248,6 +250,12 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
                 } else {
+
+                    if (ResourceManager.isAutoBuilding() && AdtPrefs.getPrefs().isLintOnSave()) {
+                        // Check for errors on save/build, if enabled
+                        LintDeltaProcessor.create().process(delta);
+                    }
+
                     PatternBasedDeltaVisitor dv = new PatternBasedDeltaVisitor(
                             project, project,
                             "POST:Main");
