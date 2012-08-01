@@ -35,6 +35,7 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
+import com.android.sdkuilib.ui.GridDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -872,7 +873,7 @@ public final class AvdSelector {
     }
 
     private void onNew() {
-        LegacyAvdEditDialog dlg = new LegacyAvdEditDialog(mTable.getShell(),
+        AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(),
                 mAvdManager,
                 mImageFactory,
                 mSdkLog,
@@ -885,12 +886,21 @@ public final class AvdSelector {
 
     private void onEdit() {
         AvdInfo avdInfo = getTableSelection();
+        GridDialog dlg;
+        if(!avdInfo.getDeviceName().isEmpty()) {
+            dlg = new AvdCreationDialog(mTable.getShell(),
+                    mAvdManager,
+                    mImageFactory,
+                    mSdkLog,
+                    avdInfo);
+        } else {
+            dlg = new LegacyAvdEditDialog(mTable.getShell(),
+                    mAvdManager,
+                    mImageFactory,
+                    mSdkLog,
+                    avdInfo);
+        }
 
-        LegacyAvdEditDialog dlg = new LegacyAvdEditDialog(mTable.getShell(),
-                mAvdManager,
-                mImageFactory,
-                mSdkLog,
-                avdInfo);
 
         if (dlg.open() == Window.OK) {
             refresh(false /*reload*/);

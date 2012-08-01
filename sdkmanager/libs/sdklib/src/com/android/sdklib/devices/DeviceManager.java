@@ -305,17 +305,6 @@ public class DeviceManager {
                 Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
         props.put("hw.sensors.proximity",
                 getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
-
-        for (Camera c : hw.getCameras()) {
-            String prop;
-            if (c.getLocation().equals(CameraLocation.FRONT)) {
-                prop = "hw.camera.front";
-            } else {
-                prop = "hw.camera.back";
-            }
-            props.put(prop, "emulated");
-        }
-
         return props;
     }
 
@@ -333,7 +322,7 @@ public class DeviceManager {
                 props.put("hw.keyboard.lid", getBooleanVal(true));
             }
         }
-        return getHardwareProperties(d.getDefaultState());
+        return props;
     }
 
     /**

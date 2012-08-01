@@ -23,10 +23,6 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.devices.Abi;
-import com.android.sdklib.devices.Device;
-import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.Hardware;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
@@ -78,10 +74,8 @@ import org.eclipse.swt.widgets.Text;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 
@@ -105,8 +99,6 @@ final class LegacyAvdEditDialog extends GridDialog {
     private final ArrayList<String> mEditedProperties = new ArrayList<String>();
     private final ImageFactory mImageFactory;
     private final ISdkLog mSdkLog;
-    private final DeviceManager mDeviceManager;
-    private final List<Device> mDeviceList = new ArrayList<Device>();
     /**
      * The original AvdInfo if we're editing an existing AVD.
      * Null when we're creating a new AVD.
@@ -118,8 +110,6 @@ final class LegacyAvdEditDialog extends GridDialog {
 
     private Combo mAbiTypeCombo;
     private String mAbiType;
-
-    private Combo mDeviceCombo;
 
     private Button mSdCardSizeRadio;
     private Text mSdCardSize;
@@ -240,9 +230,6 @@ final class LegacyAvdEditDialog extends GridDialog {
         mEditAvdInfo = editAvdInfo;
 
         File hardwareDefs = null;
-        mDeviceManager = new DeviceManager(log);
-        mDeviceList.addAll(mDeviceManager.getUserDevices());
-        mDeviceList.addAll(mDeviceManager.getDefaultDevices());
 
         SdkManager sdkMan = avdManager.getSdkManager();
         if (sdkMan != null) {
@@ -250,7 +237,6 @@ final class LegacyAvdEditDialog extends GridDialog {
             if (sdkPath != null) {
                 hardwareDefs = new File (sdkPath + File.separator +
                         SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
-                mDeviceList.addAll(mDeviceManager.getVendorDevices(sdkPath));
             }
         }
 
@@ -317,30 +303,8 @@ final class LegacyAvdEditDialog extends GridDialog {
                 super.widgetSelected(e);
                 reloadSkinCombo();
                 reloadAbiTypeCombo();
-                reloadDeviceCombo();
                 validatePage();
             }
-        });
-
-        // Device Selection
-        label = new Label(parent, SWT.NONE);
-        label.setText("Device:");
-        tooltip = "The device to base the AVD on. This is an optional setting and will merely " +
-                "prefill the settings so they match the selected device as closely as possible.";
-        label.setToolTipText(tooltip);
-        mDeviceCombo = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
-        mDeviceCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mDeviceCombo.setToolTipText(tooltip);
-        mDeviceCombo.setEnabled(false);
-        mDeviceCombo.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                super.widgetSelected(e);
-                prefillWithDeviceConfig();
-                validatePage();
-            }
-
-
         });
 
         //ABI group
@@ -573,7 +537,6 @@ final class LegacyAvdEditDialog extends GridDialog {
         mStatusLabel.setText(" \n "); //$NON-NLS-1$
 
         reloadTargetCombo();
-        reloadDeviceCombo();
     }
 
     /**
@@ -766,21 +729,6 @@ final class LegacyAvdEditDialog extends GridDialog {
 
         Map<String, String> props = mEditAvdInfo.getProperties();
 
-        if (props != null) {
-            // Try to match it to a device
-
-            // The device has to be set before everything else because
-            // selecting a device will modify other options
-            for (int i = 0; i < mDeviceList.size(); i++){
-                Device d = mDeviceList.get(i);
-                if(d.getManufacturer().equals(props.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER))
-                        && d.getName().equals(props.get(AvdManager.AVD_INI_DEVICE_NAME))) {
-                    mDeviceCombo.select(i);
-                    break;
-                }
-            }
-        }
-
         IAndroidTarget target = mEditAvdInfo.getTarget();
         if (target != null && !mCurrentTargets.isEmpty()) {
             // Try to select the target in the target combo.
@@ -793,7 +741,6 @@ final class LegacyAvdEditDialog extends GridDialog {
                 if (target.equals(mCurrentTargets.get(mTargetCombo.getItem(i)))) {
                     mTargetCombo.select(i);
                     reloadAbiTypeCombo();
-                    reloadDeviceCombo();
                     reloadSkinCombo();
                     break;
                 }
@@ -903,45 +850,8 @@ final class LegacyAvdEditDialog extends GridDialog {
         mProperties.remove(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_1);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_2);
-        mProperties.remove(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
-        mProperties.remove(AvdManager.AVD_INI_DEVICE_NAME);
 
         mHardwareViewer.refresh();
-    }
-
-    // Sets all of the other options based on the device currently selected in mDeviceCombo
-    private void prefillWithDeviceConfig() {
-        Device d = getSelectedDevice();
-        if (d != null) {
-            Hardware hw = d.getDefaultHardware();
-
-            // Try setting the CPU/ABI
-            if (mAbiTypeCombo.isEnabled()) {
-                Set<Abi> abis = hw.getSupportedAbis();
-                // This is O(n*m), but the two lists should be sufficiently small.
-                for (Abi abi : abis) {
-                    for (int i = 0; i < mAbiTypeCombo.getItemCount(); i++) {
-                        if (mAbiTypeCombo.getItem(i)
-                                .equals(AvdInfo.getPrettyAbiType(abi.toString()))){
-                            mAbiTypeCombo.select(i);
-                        }
-                    }
-                }
-            }
-
-            // Set the screen resolution
-            mSkinListRadio.setSelection(false);
-            mSkinSizeRadio.setSelection(true);
-            mSkinCombo.setEnabled(false);
-            mSkinSizeWidth.setEnabled(true);
-            mSkinSizeWidth.setText(Integer.toString(hw.getScreen().getXDimension()));
-            mSkinSizeHeight.setEnabled(true);
-            mSkinSizeHeight.setText(Integer.toString(hw.getScreen().getYDimension()));
-
-            mProperties.putAll(DeviceManager.getHardwareProperties(d));
-            mHardwareViewer.refresh();
-
-        }
     }
 
     @Override
@@ -1032,26 +942,6 @@ final class LegacyAvdEditDialog extends GridDialog {
         }
 
         reloadSkinCombo();
-    }
-
-
-    private void reloadDeviceCombo() {
-        Device selectedDevice = getSelectedDevice();
-
-        mDeviceCombo.removeAll();
-        for (Device d : mDeviceList) {
-            mDeviceCombo.add(d.getManufacturer() + " " + d.getName());
-        }
-
-        // Try to select the previously selected device if it still exists
-        if (selectedDevice != null) {
-            int index = mDeviceList.indexOf(selectedDevice);
-            if (index >= 0) {
-                mDeviceCombo.select(index);
-            }
-        }
-
-        mDeviceCombo.setEnabled(mTargetCombo.getSelectionIndex() >= 0);
     }
 
     private void reloadSkinCombo() {
@@ -1405,14 +1295,6 @@ final class LegacyAvdEditDialog extends GridDialog {
             return false;
         }
 
-        index = mDeviceCombo.getSelectionIndex();
-        if (index >= 0 && index < mDeviceList.size()) {
-            Device d = mDeviceList.get(index);
-            // Set the properties so it gets saved to the avd's ini
-            mProperties.put(AvdManager.AVD_INI_DEVICE_MANUFACTURER, d.getManufacturer());
-            mProperties.put(AvdManager.AVD_INI_DEVICE_NAME, d.getName());
-        }
-
         // get the abi type
         mAbiType = SdkConstants.ABI_ARMEABI;
         ISystemImage[] systemImages = getSystemImages(target);
@@ -1506,10 +1388,6 @@ final class LegacyAvdEditDialog extends GridDialog {
 
         success = avdInfo != null;
 
-        // Remove the device name and manufacturer properties so they don't show up in the hardware list
-        mProperties.remove(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
-        mProperties.remove(AvdManager.AVD_INI_DEVICE_NAME);
-
         if (log instanceof MessageBoxLog) {
             ((MessageBoxLog) log).displayResult(success);
         }
@@ -1540,15 +1418,6 @@ final class LegacyAvdEditDialog extends GridDialog {
         }
 
         return new ISystemImage[0];
-    }
-
-    private Device getSelectedDevice() {
-        int targetIndex = mDeviceCombo.getSelectionIndex();
-        if (targetIndex >= 0 && mDeviceList.size() > targetIndex){
-            return mDeviceList.get(targetIndex);
-        } else {
-            return null;
-        }
     }
 
     // End of hiding from SWT Designer

@@ -152,6 +152,21 @@ public class AvdManager {
     public final static String AVD_INI_SNAPSHOT_PRESENT = "snapshot.present"; //$NON-NLS-1$
 
     /**
+     * AVD/config.ini key name representing whether hardware OpenGLES emulation is enabled
+     */
+    public final static String AVD_INI_GPU_EMULATION = "hw.gpu.enabled"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing how to emulate the front facing camera
+     */
+    public final static String AVD_INI_CAMERA_FRONT = "hw.camera.front"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing how to emulate the rear facing camera
+     */
+    public final static String AVD_INI_CAMERA_BACK = "hw.camera.back"; //$NON-NLS-1$
+
+    /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
     public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
