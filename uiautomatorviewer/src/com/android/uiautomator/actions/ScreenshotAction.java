@@ -16,6 +16,11 @@
 
 package com.android.uiautomator.actions;
 
+import com.android.ddmlib.CollectingOutputReceiver;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.RawImage;
+import com.android.ddmlib.SyncService;
+import com.android.uiautomator.DebugBridge;
 import com.android.uiautomator.UiAutomatorModel;
 import com.android.uiautomator.UiAutomatorViewer;
 
@@ -23,20 +28,39 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.PaletteData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ScreenshotAction extends Action {
+    private static final String UIAUTOMATOR = "/system/bin/uiautomator";    //$NON-NLS-1$
+    private static final String UIAUTOMATOR_DUMP_COMMAND = "dump";          //$NON-NLS-1$
+    private static final String UIDUMP_DEVICE_PATH = "/sdcard/uidump.xml";  //$NON-NLS-1$
+
+    private static final int MIN_API_LEVEL = 16;
 
     UiAutomatorViewer mViewer;
 
@@ -52,6 +76,18 @@ public class ScreenshotAction extends Action {
 
     @Override
     public void run() {
+        if (!DebugBridge.isInitialized()) {
+            MessageDialog.openError(mViewer.getShell(),
+                    "Error obtaining Device Screenshot",
+                    "Unable to connect to adb. Check if adb is installed correctly.");
+            return;
+        }
+
+        final IDevice device = pickDevice();
+        if (device == null) {
+            return;
+        }
+
         ProgressMonitorDialog dialog = new ProgressMonitorDialog(mViewer.getShell());
         try {
             dialog.run(true, false, new IRunnableWithProgress() {
@@ -63,7 +99,7 @@ public class ScreenshotAction extends Action {
                         public void run() {
                             Status s = new Status(IStatus.ERROR, "Screenshot", msg, t);
                             ErrorDialog.openError(
-                                    mViewer.getShell(), "Error", "Cannot take screenshot", s);
+                                    mViewer.getShell(), "Error", "Error obtaining UI hierarchy", s);
                         }
                     });
                 }
@@ -71,12 +107,9 @@ public class ScreenshotAction extends Action {
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
                 InterruptedException {
-                    ProcRunner procRunner = null;
-                    String serial = System.getenv("ANDROID_SERIAL");
                     File tmpDir = null;
                     File xmlDumpFile = null;
                     File screenshotFile = null;
-                    int retCode = -1;
                     try {
                         tmpDir = File.createTempFile("uiautomatorviewer_", "");
                         tmpDir.delete();
@@ -91,115 +124,72 @@ public class ScreenshotAction extends Action {
                     }
                     UiAutomatorModel.getModel().registerTempDirectory(tmpDir);
 
-                    // boiler plates to do a bunch of adb stuff to take XML snapshot and screenshot
-                    monitor.beginTask("Getting UI status dump from device...",
-                            IProgressMonitor.UNKNOWN);
-                    monitor.subTask("Detecting device...");
-                    procRunner = getAdbRunner(serial, "shell", "ls", "/system/bin/uiautomator");
+                    String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
+                    int apiLevel;
                     try {
-                        retCode = procRunner.run(30000);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to detect device", e, monitor);
+                        apiLevel = Integer.parseInt(apiLevelString);
+                    } catch (NumberFormatException e) {
+                        apiLevel = MIN_API_LEVEL;
+                    }
+                    if (apiLevel < MIN_API_LEVEL) {
+                        showError("uiautomator requires a device with API Level " + MIN_API_LEVEL,
+                                null, monitor);
                         return;
                     }
-                    if (retCode != 0) {
-                        showError("No device or multiple devices connected. "
-                                + "Use ANDROID_SERIAL environment variable "
-                                + "if you have multiple devices", null, monitor);
-                        return;
-                    }
-                    if (procRunner.getOutputBlob().indexOf("No such file or directory") != -1) {
-                        showError("/system/bin/uiautomator not found on device", null, monitor);
-                        return;
-                    }
+
                     monitor.subTask("Deleting old UI XML snapshot ...");
-                    procRunner = getAdbRunner(serial,
-                            "shell", "rm", "/sdcard/uidump.xml");
+                    String command = "rm " + UIDUMP_DEVICE_PATH;
                     try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException(
-                                    "Non-zero return code from \"rm\" xml dump command:\n"
-                                            + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to execute \"rm\" xml dump command.", e, monitor);
-                        return;
+                        CountDownLatch commandCompleteLatch = new CountDownLatch(1);
+                        device.executeShellCommand(command,
+                                new CollectingOutputReceiver(commandCompleteLatch));
+                        commandCompleteLatch.await(5, TimeUnit.SECONDS);
+                    } catch (Exception e1) {
+                        // ignore exceptions while deleting stale files
                     }
 
                     monitor.subTask("Taking UI XML snapshot...");
-                    procRunner = getAdbRunner(serial,
-                            "shell", "/system/bin/uiautomator", "dump", "/sdcard/uidump.xml");
+                    command = String.format("%s %s %s", UIAUTOMATOR,
+                                                        UIAUTOMATOR_DUMP_COMMAND,
+                                                        UIDUMP_DEVICE_PATH);
                     try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException("Non-zero return code from dump command:\n"
-                                    + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to execute dump command.", e, monitor);
-                        return;
-                    }
-                    procRunner = getAdbRunner(serial,
-                            "pull", "/sdcard/uidump.xml", xmlDumpFile.getAbsolutePath());
-                    try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException("Non-zero return code from pull command:\n"
-                                    + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to pull dump file.", e, monitor);
+                        CountDownLatch commandCompleteLatch = new CountDownLatch(1);
+                        device.executeShellCommand(command,
+                                new CollectingOutputReceiver(commandCompleteLatch));
+                        commandCompleteLatch.await(5, TimeUnit.SECONDS);
+                    } catch (Exception e1) {
+                        showError("", e1, monitor);
                         return;
                     }
 
-                    monitor.subTask("Deleting old device screenshot...");
-                    procRunner = getAdbRunner(serial,
-                            "shell", "rm", "/sdcard/screenshot.png");
+                    monitor.subTask("Pull UI XML snapshot from device...");
                     try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException(
-                                    "Non-zero return code from \"rm\" screenshot command:\n"
-                                            + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to execute \"rm\" screenshot command.", e, monitor);
+                        device.getSyncService().pullFile(UIDUMP_DEVICE_PATH,
+                                xmlDumpFile.getAbsolutePath(), SyncService.getNullProgressMonitor());
+                    } catch (Exception e1) {
+                        showError("Error copying UI XML file from device", e1, monitor);
                         return;
                     }
 
-                    monitor.subTask("Taking device screenshot...");
-                    procRunner = getAdbRunner(serial,
-                            "shell", "screencap", "-p", "/sdcard/screenshot.png");
+                    monitor.subTask("Taking screenshot...");
+                    RawImage rawImage;
                     try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException("Non-zero return code from screenshot command:\n"
-                                    + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to execute screenshot command.", e, monitor);
+                        rawImage = device.getScreenshot();
+                    } catch (Exception e1) {
+                        showError("Error taking device screenshot", e1, monitor);
                         return;
                     }
-                    procRunner = getAdbRunner(serial,
-                            "pull", "/sdcard/screenshot.png", screenshotFile.getAbsolutePath());
-                    try {
-                        retCode = procRunner.run(30000);
-                        if (retCode != 0) {
-                            throw new IOException("Non-zero return code from pull command:\n"
-                                    + procRunner.getOutputBlob());
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Failed to pull dump file.", e, monitor);
-                        return;
-                    }
+
+                    PaletteData palette = new PaletteData(
+                            rawImage.getRedMask(),
+                            rawImage.getGreenMask(),
+                            rawImage.getBlueMask());
+                    ImageData imageData = new ImageData(rawImage.width, rawImage.height,
+                            rawImage.bpp, palette, 1, rawImage.data);
+                    ImageLoader loader = new ImageLoader();
+                    loader.data = new ImageData[] { imageData };
+                    loader.save(screenshotFile.getAbsolutePath(), SWT.IMAGE_PNG);
+
                     final File png = screenshotFile, xml = xmlDumpFile;
                     if(png.length() == 0) {
                         showError("Screenshot file size is 0", null, monitor);
@@ -222,81 +212,68 @@ public class ScreenshotAction extends Action {
         }
     }
 
-    /*
-     * Convenience function to construct an 'adb' command, e.g. use 'adb' or 'adb -s NNN'
-     */
-    private ProcRunner getAdbRunner(String serial, String... command) {
-        List<String> cmd = new ArrayList<String>();
-        cmd.add("adb");
-        if (serial != null) {
-            cmd.add("-s");
-            cmd.add(serial);
+    private IDevice pickDevice() {
+        List<IDevice> devices = DebugBridge.getDevices();
+        if (devices.size() == 0) {
+            MessageDialog.openError(mViewer.getShell(),
+                    "Error obtaining Device Screenshot",
+                    "No Android devices were detected by adb.");
+            return null;
+        } else if (devices.size() == 1) {
+            return devices.get(0);
+        } else {
+            DevicePickerDialog dlg = new DevicePickerDialog(mViewer.getShell(), devices);
+            if (dlg.open() != Window.OK) {
+                return null;
+            }
+            return dlg.getSelectedDevice();
         }
-        for (String s : command) {
-            cmd.add(s);
-        }
-        return new ProcRunner(cmd);
     }
 
-    /**
-     * Convenience class to run external process.
-     *
-     * Always redirects stderr into stdout, has timeout control
-     *
-     */
-    private static class ProcRunner {
+    private static class DevicePickerDialog extends Dialog {
+        private final List<IDevice> mDevices;
+        private final String[] mDeviceNames;
+        private static int sSelectedDeviceIndex;
 
-        ProcessBuilder mProcessBuilder;
+        public DevicePickerDialog(Shell parentShell, List<IDevice> devices) {
+            super(parentShell);
 
-        List<String> mOutput = new ArrayList<String>();
-
-        public ProcRunner(List<String> command) {
-            mProcessBuilder = new ProcessBuilder(command).redirectErrorStream(true);
+            mDevices = devices;
+            mDeviceNames = new String[mDevices.size()];
+            for (int i = 0; i < devices.size(); i++) {
+                mDeviceNames[i] = devices.get(i).getName();
+            }
         }
 
-        public int run(long timeout) throws IOException {
-            final Process p = mProcessBuilder.start();
-            Thread t = new Thread() {
+        @Override
+        protected Control createDialogArea(Composite parentShell) {
+            Composite parent = (Composite) super.createDialogArea(parentShell);
+            Composite c = new Composite(parent, SWT.NONE);
+
+            c.setLayout(new GridLayout(2, false));
+
+            Label l = new Label(c, SWT.NONE);
+            l.setText("Select device: ");
+
+            final Combo combo = new Combo(c, SWT.BORDER | SWT.READ_ONLY);
+            combo.setItems(mDeviceNames);
+            int defaultSelection =
+                    sSelectedDeviceIndex < mDevices.size() ? sSelectedDeviceIndex : 0;
+            combo.select(defaultSelection);
+            sSelectedDeviceIndex = defaultSelection;
+
+            combo.addSelectionListener(new SelectionAdapter() {
                 @Override
-                public void run() {
-                    String line;
-                    mOutput.clear();
-                    try {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(
-                                p.getInputStream()));
-                        while ((line = br.readLine()) != null) {
-                            mOutput.add(line);
-                        }
-                        br.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                };
-            };
-            t.start();
-            try {
-                t.join(timeout);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (t.isAlive()) {
-                throw new IOException("external process not terminating.");
-            }
-            try {
-                return p.waitFor();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                throw new IOException(e);
-            }
+                public void widgetSelected(SelectionEvent arg0) {
+                    sSelectedDeviceIndex = combo.getSelectionIndex();
+                }
+            });
+
+            return parent;
         }
 
-        public String getOutputBlob() {
-            StringBuilder sb = new StringBuilder();
-            for (String line : mOutput) {
-                sb.append(line);
-                sb.append(System.getProperty("line.separator"));
-            }
-            return sb.toString();
+        public IDevice getSelectedDevice() {
+            return mDevices.get(sSelectedDeviceIndex);
         }
     }
 }
