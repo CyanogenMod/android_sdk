@@ -130,6 +130,34 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     }
 
     /**
+     * Displays the update dialog and triggers installation of platform-tools package.
+     * <p/>
+     * Callers must not try to reuse this dialog after this call.
+     *
+     * @return A boolean indicating whether the installation was successful (meaning the package
+     *   was either already present, or got installed or updated properly) and a {@link File}
+     *   with the path to the root folder of the package. The file is null when the boolean
+     *   is false, otherwise it should point to an existing valid folder.
+     * @wbp.parser.entryPoint
+     */
+    public Pair<Boolean, File> installPlatformTools() {
+        mPackageFilter = createPlatformToolsFilter();
+        open();
+
+        File installPath = null;
+        if (mResultPaths != null) {
+            for (Entry<Package, File> entry : mResultPaths.entrySet()) {
+                if (entry.getKey() instanceof ExtraPackage) {
+                    installPath = entry.getValue();
+                    break;
+                }
+            }
+        }
+
+        return Pair.of(mResultCode, installPath);
+    }
+
+    /**
      * Displays the update dialog and triggers installation of the requested platform
      * package with the specified API  level.
      * <p/>
@@ -323,6 +351,25 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                     }
                 }
                 return false;
+            }
+
+            @Override
+            void visit(Package pkg) {
+                // nop
+            }
+
+            @Override
+            int installFlags() {
+                return UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT;
+            }
+        };
+    }
+
+    private PackageFilter createPlatformToolsFilter() {
+        return new PackageFilter() {
+            @Override
+            boolean accept(Package pkg) {
+                return pkg instanceof PlatformToolPackage;
             }
 
             @Override
