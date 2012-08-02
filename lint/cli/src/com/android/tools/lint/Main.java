@@ -41,6 +41,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 import java.io.BufferedWriter;
@@ -85,6 +86,8 @@ public class Main extends LintClient {
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
     private static final String ARG_EXITCODE   = "--exitcode";     //$NON-NLS-1$
+    private static final String ARG_CLASSES    = "--classes";      //$NON-NLS-1$
+    private static final String ARG_SOURCES    = "--sources";      //$NON-NLS-1$
 
     private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
     // GCC style flag names for options
@@ -118,6 +121,8 @@ public class Main extends LintClient {
     private boolean mWarnAll;
     private boolean mNoWarnings;
     private boolean mAllErrors;
+    private List<File> mSources;
+    private List<File> mClasses;
 
     private Configuration mDefaultConfiguration;
     private IssueRegistry mRegistry;
@@ -456,6 +461,34 @@ public class Main extends LintClient {
                 mWarnAll = true;
             } else if (arg.equals(ARG_ALLERROR)) {
                 mAllErrors = true;
+            } else if (arg.equals(ARG_CLASSES)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing class folder name");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                File input = getInArgumentPath(args[++index]);
+                if (!input.exists()) {
+                    System.err.println("Source folder " + input + " does not exist.");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                if (mClasses == null) {
+                    mClasses = new ArrayList<File>();
+                }
+                mClasses.add(input);
+            } else if (arg.equals(ARG_SOURCES)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing source folder name");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                File input = getInArgumentPath(args[++index]);
+                if (!input.exists()) {
+                    System.err.println("Source folder " + input + " does not exist.");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                if (mSources == null) {
+                    mSources = new ArrayList<File>();
+                }
+                mSources.add(input);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -474,6 +507,10 @@ public class Main extends LintClient {
 
         if (files.size() == 0) {
             System.err.println("No files to analyze.");
+            System.exit(ERRNO_INVALIDARGS);
+        } else if (files.size() > 1 && (mClasses != null || mSources != null)) {
+            System.err.println("The " + ARG_SOURCES + " and " + ARG_CLASSES
+                    + " can only be used with a single project");
             System.exit(ERRNO_INVALIDARGS);
         }
 
@@ -896,6 +933,12 @@ public class Main extends LintClient {
             ARG_SIMPLEHTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
 
+            "", "\nProject Options:",
+            ARG_SOURCES + " <dir>", "Add the given folder as a source directory for the " +
+                "project. Only valid when running lint on a single project.",
+            ARG_CLASSES + " <dir>", "Add the given folder (or jar file) as a class directory " +
+                "for the project. Only valid when running lint on a single project.",
+
             "", "\nExit Status:",
             "0",                                 "Success.",
             Integer.toString(ERRNO_ERRORS),      "Lint errors detected.",
@@ -1120,6 +1163,45 @@ public class Main extends LintClient {
 
     boolean isCheckingSpecificIssues() {
         return mCheck != null;
+    }
+
+    private Map<Project, ClassPathInfo> mProjectInfo;
+
+    @Override
+    @NonNull
+    protected ClassPathInfo getClassPath(@NonNull Project project) {
+        ClassPathInfo classPath = super.getClassPath(project);
+
+        if (mClasses == null && mSources == null) {
+            return classPath;
+        }
+
+        ClassPathInfo info;
+        if (mProjectInfo == null) {
+            mProjectInfo = Maps.newHashMap();
+            info = null;
+        } else {
+            info = mProjectInfo.get(project);
+        }
+
+        if (info == null) {
+            List<File> sources;
+            if (mSources != null) {
+                sources = mSources;
+            } else {
+                sources = classPath.getSourceFolders();
+            }
+            List<File> classes;
+            if (mClasses != null) {
+                classes = mClasses;
+            } else {
+                classes = classPath.getClassFolders();
+            }
+            info = new ClassPathInfo(sources, classes, classPath.getLibraries());
+            mProjectInfo.put(project, info);
+        }
+
+        return info;
     }
 
     /**
