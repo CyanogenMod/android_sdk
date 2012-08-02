@@ -11,6 +11,7 @@ Require-Bundle: org.eclipse.ui,
  com.android.ide.eclipse.base
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ libs/sdkuilib.jar
 Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
