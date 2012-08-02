@@ -63,7 +63,7 @@ final class TypoFix extends DocumentFix {
             return;
         }
         List<String> replacements = TypoDetector.getSuggestions(message);
-        if (replacements.size() == 0) {
+        if (replacements == null || replacements.isEmpty()) {
             return;
         }
 

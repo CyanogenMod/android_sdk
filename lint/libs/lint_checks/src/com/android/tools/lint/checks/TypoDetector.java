@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 import static com.google.common.base.Objects.equal;
 
@@ -40,7 +41,6 @@ import org.w3c.dom.NodeList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -76,8 +76,11 @@ import java.util.List;
  * </ul>
  */
 public class TypoDetector extends ResourceXmlDetector {
-    private TypoLookup mLookup;
-    private String mLastLanguage;
+    private @Nullable TypoLookup mLookup;
+    private @Nullable String mLastLanguage;
+    private @Nullable String mLastRegion;
+    private @Nullable String mLanguage;
+    private @Nullable String mRegion;
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -101,36 +104,46 @@ public class TypoDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.VALUES;
     }
 
-    /** Look up the locale from the given parent folder name, or null if there isn't one */
-    @Nullable
-    private String getLocale(@NonNull String parent) {
+    /** Look up the locale and region from the given parent folder name and store it
+     * in {@link #mLanguage} and {@link #mRegion} */
+    private void initLocale(@NonNull String parent) {
+        mLanguage = null;
+        mRegion = null;
+
         if (parent.equals("values")) { //$NON-NLS-1$
-            return null;
+            return;
         }
 
         for (String qualifier : Splitter.on('-').split(parent)) {
-            if (qualifier.length() == 2) {
+            int qualifierLength = qualifier.length();
+            if (qualifierLength == 2) {
                 char first = qualifier.charAt(0);
-                char second = qualifier.charAt(0);
+                char second = qualifier.charAt(1);
                 if (first >= 'a' && first <= 'z' && second >= 'a' && second <= 'z') {
-                    return qualifier;
+                    mLanguage = qualifier;
                 }
+            } else if (qualifierLength == 3 && qualifier.charAt(0) == 'r') {
+                char first = qualifier.charAt(1);
+                char second = qualifier.charAt(2);
+                if (first >= 'A' && first <= 'Z' && second >= 'A' && second <= 'Z') {
+                    mRegion = new String(new char[] { first, second }); // Don't include the "r"
+                }
+                break;
             }
         }
-
-        return null;
     }
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
-        String language = getLocale(context.file.getParentFile().getName());
-        if (language == null) {
-            language = "en"; //$NON-NLS-1$
+        initLocale(context.file.getParentFile().getName());
+        if (mLanguage == null) {
+            mLanguage = "en"; //$NON-NLS-1$
         }
 
-        if (!equal(mLastLanguage, language)) {
-            mLastLanguage = language;
-            mLookup = TypoLookup.get(context.getClient(), language);
+        if (!equal(mLastLanguage, mLanguage) || !equal(mLastRegion, mRegion)) {
+            mLookup = TypoLookup.get(context.getClient(), mLanguage, mRegion);
+            mLastLanguage = mLanguage;
+            mLastRegion = mRegion;
         }
     }
 
@@ -177,7 +190,6 @@ public class TypoDetector extends ResourceXmlDetector {
                 return;
             }
             int begin = index;
-            index++;
             while (index < max && Character.isLetter(text.charAt(index))) {
                 if (text.charAt(index) >= 0x80) {
                     // Switch to UTF-8 handling for this string
@@ -200,10 +212,9 @@ public class TypoDetector extends ResourceXmlDetector {
 
             int end = index;
             checkedTypos = true;
-            Iterable<String> replacements = mLookup.getTypos(text, begin, end);
+            List<String> replacements = mLookup.getTypos(text, begin, end);
             if (replacements != null) {
-                String word = text.substring(begin, end);
-                reportTypo(context, node, word, begin, end, replacements);
+                reportTypo(context, node, text, begin, replacements);
             }
 
             index = end + 1;
@@ -214,10 +225,10 @@ public class TypoDetector extends ResourceXmlDetector {
             int byteStart, int byteEnd, String text, int charStart) {
         int index = byteStart;
         while (index < byteEnd) {
-            byte b = utf8Text[index];
             // Find beginning of word
             while (index < byteEnd) {
-                if (b != ' ' && b != '\t' && b != '\n' && b != '\r') {
+                byte b = utf8Text[index];
+                if (isLetter(b)) {
                     break;
                 }
                 index++;
@@ -232,12 +243,12 @@ public class TypoDetector extends ResourceXmlDetector {
             }
             int charEnd = charStart;
             int begin = index;
-            index++;
 
             // Find end of word. Unicode has the nice property that even 2nd, 3rd and 4th
             // bytes won't match these ASCII characters (because the high bit must be set there)
             while (index < byteEnd) {
-                if (b == ' ' || b == '\t' || b == '\n' || b == '\r') {
+                byte b = utf8Text[index];
+                if (!isLetter(b)) {
                     break;
                 }
                 index++;
@@ -248,56 +259,62 @@ public class TypoDetector extends ResourceXmlDetector {
             }
 
             int end = index;
-            Iterable<String> replacements = mLookup.getTypos(utf8Text, begin, end);
+            List<String> replacements = mLookup.getTypos(utf8Text, begin, end);
             if (replacements != null) {
-                String word = text.substring(charStart, charEnd);
-                reportTypo(context, node, word, charStart, end, replacements);
+                reportTypo(context, node, text, charStart, replacements);
             }
 
-            index = end + 1;
+            charStart = charEnd;
         }
     }
 
-
     /** Report the typo found at the given offset and suggest the given replacements */
-    private void reportTypo(XmlContext context, Node node,
-            String word, int begin, int end, Iterable<String> replacements) {
-        String first = null;
-        String message;
-        Iterator<String> iterator = replacements.iterator();
-        if (iterator.hasNext()) {
-            boolean isCapitalized = Character.isUpperCase(word.charAt(0));
-            StringBuilder sb = new StringBuilder();
-            for (String replacement : replacements) {
-                if (first == null) {
-                    first = replacement;
-                }
-                if (sb.length() > 0) {
-                    sb.append(" or ");
-                }
-                sb.append('"');
-                if (isCapitalized) {
-                    sb.append(Character.toUpperCase(replacement.charAt(0))
-                            + replacement.substring(1));
-                } else {
-                    sb.append(replacement);
-                }
-                sb.append('"');
-            }
-
-            if (first != null && first.equalsIgnoreCase(word)) {
-                message = String.format(
-                        "\"%1$s\" is usually capitalized as \"%2$s\"",
-                        word, first);
-            } else {
-                message = String.format(
-                        "\"%1$s\" is a common misspelling; did you mean %2$s ?",
-                        word, sb.toString());
-            }
-        } else {
-            message = String.format("\"%1$s\" is a common misspelling", word);
+    private void reportTypo(XmlContext context, Node node, String text, int begin,
+            List<String> replacements) {
+        if (replacements.size() < 2) {
+            return;
         }
 
+        String typo = replacements.get(0);
+        String word = text.substring(begin, begin + typo.length());
+
+        String first = null;
+        String message;
+
+        boolean isCapitalized = Character.isUpperCase(word.charAt(0));
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1, n = replacements.size(); i < n; i++) {
+            String replacement = replacements.get(i);
+            if (first == null) {
+                first = replacement;
+            }
+            if (sb.length() > 0) {
+                sb.append(" or ");
+            }
+            sb.append('"');
+            if (isCapitalized) {
+                sb.append(Character.toUpperCase(replacement.charAt(0))
+                        + replacement.substring(1));
+            } else {
+                sb.append(replacement);
+            }
+            sb.append('"');
+        }
+
+        if (first != null && first.equalsIgnoreCase(word)) {
+            if (first.equals(word)) {
+                return;
+            }
+            message = String.format(
+                    "\"%1$s\" is usually capitalized as \"%2$s\"",
+                    word, first);
+        } else {
+            message = String.format(
+                    "\"%1$s\" is a common misspelling; did you mean %2$s ?",
+                    word, sb.toString());
+        }
+
+        int end = begin + word.length();
         context.report(ISSUE, node, context.getLocation(node, begin, end), message, null);
     }
 

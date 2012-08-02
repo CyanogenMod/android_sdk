@@ -107,6 +107,8 @@ froyo
 gen
 gif
 git
+glob
+globbing
 groovy
 guava
 guillemets

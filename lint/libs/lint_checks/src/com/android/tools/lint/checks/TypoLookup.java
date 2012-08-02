@@ -21,12 +21,12 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.Files;
-import com.google.common.primitives.UnsignedBytes;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -79,16 +79,32 @@ public class TypoLookup {
      *            originally passed in. In other words, this parameter may be
      *            ignored if the client created is not new.
      * @param locale the locale to look up a typo database for (should be a
-     *         language code (ISO 639-1, two lowercase character names)
+     *            language code (ISO 639-1, two lowercase character names)
+     * @param region the region to look up a typo database for (should be a two
+     *            letter ISO 3166-1 alpha-2 country code in upper case) language
+     *            code
      * @return a (possibly shared) instance of the typo database, or null if its
      *         data can't be found
      */
     @Nullable
-    public static TypoLookup get(@NonNull LintClient client, @NonNull String locale) {
+    public static TypoLookup get(@NonNull LintClient client, @NonNull String locale,
+            @Nullable String region) {
         synchronized (TypoLookup.class) {
-            TypoLookup db = sInstanceMap.get(locale);
+            String key = locale;
+
+            if (region != null) {
+                // Allow for region-specific dictionaries. See for example
+                // http://en.wikipedia.org/wiki/American_and_British_English_spelling_differences
+                assert region.length() == 2
+                        && Character.isUpperCase(region.charAt(0))
+                        && Character.isUpperCase(region.charAt(1)) : region;
+                // Look for typos-en-rUS.txt etc
+                key = locale + 'r' + region;
+            }
+
+            TypoLookup db = sInstanceMap.get(key);
             if (db == null) {
-                String path = String.format(XML_FILE_PATH, locale);
+                String path = String.format(XML_FILE_PATH, key);
                 File file = client.findResource(path);
                 if (file == null) {
                     // AOSP build environment?
@@ -101,11 +117,16 @@ public class TypoLookup {
                 }
 
                 if (file == null || !file.exists()) {
+                    if (region != null) {
+                        // Fall back to the generic locale (non-region-specific) database
+                        return get(client, locale, null);
+                    }
                     db = NONE;
                 } else {
                     db = get(client, file);
+                    assert db != null : file;
                 }
-                sInstanceMap.put(locale, db);
+                sInstanceMap.put(key, db);
             }
 
             if (db == NONE) {
@@ -126,7 +147,8 @@ public class TypoLookup {
      * @return a (possibly shared) instance of the typo database, or null
      *         if its data can't be found
      */
-    public static TypoLookup get(LintClient client, File xmlFile) {
+    @Nullable
+    private static TypoLookup get(LintClient client, File xmlFile) {
         if (!xmlFile.exists()) {
             client.log(null, "The typo database file %1$s does not exist", xmlFile);
             return null;
@@ -303,8 +325,12 @@ public class TypoLookup {
                 if (end == -1) {
                     end = line.trim().length();
                 }
-                String typo = line.substring(0, end);
+                String typo = line.substring(0, end).trim();
                 String replacements = line.substring(end + WORD_SEPARATOR.length()).trim();
+                if (replacements.isEmpty()) {
+                    // We don't support empty replacements
+                    continue;
+                }
                 String combined = typo + (char) 0 + replacements;
 
                 words.add(combined);
@@ -398,36 +424,65 @@ public class TypoLookup {
     // For debugging only
     private String dumpEntry(int offset) {
         if (DEBUG_SEARCH) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = offset; i < mData.length; i++) {
-                if (mData[i] == 0) {
-                    break;
-                }
-                char c = (char) UnsignedBytes.toInt(mData[i]);
-                sb.append(c);
+            int end = offset;
+            while (mData[end] != 0) {
+                end++;
             }
-
-            return sb.toString();
+            return new String(mData, offset, end - offset, Charsets.UTF_8);
         } else {
             return "<disabled>"; //$NON-NLS-1$
         }
     }
 
     /** Comparison function: *only* used for ASCII strings */
-    private static int compare(byte[] data, int offset, byte terminator, CharSequence s,
+    @VisibleForTesting
+    static int compare(byte[] data, int offset, byte terminator, CharSequence s,
             int begin, int end) {
         int i = offset;
         int j = begin;
-        for (; j < end; i++, j++) {
+        for (; ; i++, j++) {
             byte b = data[i];
+            if (b == ' ') {
+                // We've matched up to the space in a split-word typo, such as
+                // in German all zu=>allzu; here we've matched just past "all".
+                // Rather than terminating, attempt to continue in the buffer.
+                if (j == end) {
+                    int max = s.length();
+                    if (end < max && s.charAt(end) == ' ') {
+                        // Find next word
+                        for (; end < max; end++) {
+                            char c = s.charAt(end);
+                            if (!Character.isLetter(c)) {
+                                if (c == ' ' && end == j) {
+                                    continue;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (j == end) {
+                break;
+            }
+
+            if (b == '*') {
+                // Glob match (only supported at the end)
+                return 0;
+            }
             char c = s.charAt(j);
             byte cb = (byte) c;
             int delta = b - cb;
             if (delta != 0) {
                 cb = (byte) Character.toLowerCase(c);
-                delta = b - cb;
-                if (delta != 0) {
-                    return delta;
+                if (b != cb) {
+                    // Ensure that it has the right sign
+                    b = (byte) Character.toLowerCase(b);
+                    delta = b - cb;
+                    if (delta != 0) {
+                        return delta;
+                    }
                 }
             }
         }
@@ -436,22 +491,51 @@ public class TypoLookup {
     }
 
     /** Comparison function used for general UTF-8 encoded strings */
-    private static int compare(byte[] data, int offset, byte terminator, byte[] s,
+    @VisibleForTesting
+    static int compare(byte[] data, int offset, byte terminator, byte[] s,
             int begin, int end) {
         int i = offset;
         int j = begin;
-        for (; j < end; i++, j++) {
+        for (; ; i++, j++) {
             byte b = data[i];
+            if (b == ' ') {
+                // We've matched up to the space in a split-word typo, such as
+                // in German all zu=>allzu; here we've matched just past "all".
+                // Rather than terminating, attempt to continue in the buffer.
+                // We've matched up to the space in a split-word typo, such as
+                // in German all zu=>allzu; here we've matched just past "all".
+                // Rather than terminating, attempt to continue in the buffer.
+                if (j == end) {
+                    int max = s.length;
+                    if (end < max && s[end] == ' ') {
+                        // Find next word
+                        for (; end < max; end++) {
+                            byte cb = s[end];
+                            if (!isLetter(cb)) {
+                                if (cb == ' ' && end == j) {
+                                    continue;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (j == end) {
+                break;
+            }
+            if (b == '*') {
+                // Glob match (only supported at the end)
+                return 0;
+            }
             byte cb = s[j];
             int delta = b - cb;
             if (delta != 0) {
-                if (cb >= 'A' && cb <= 'Z') { // TODO: Generalize lower-casing here
-                    cb -= 'A' - 'a';
-                    delta = b - cb;
-                    if (delta != 0) {
-                        return delta;
-                    }
-                } else {
+                cb = toLowerCase(cb);
+                b = toLowerCase(b);
+                delta = b - cb;
+                if (delta != 0) {
                     return delta;
                 }
             }
@@ -465,17 +549,19 @@ public class TypoLookup {
     }
 
     /**
-     * Look up whether this word is a typo, and if so, return one or more likely
-     * meanings
+     * Look up whether this word is a typo, and if so, return the typo itself
+     * and one or more likely meanings
      *
      * @param text the string containing the word
      * @param begin the index of the first character in the word
-     * @param end the index of the first character after the word
-     * @return an iterable of replacement strings if the word represents a typo,
-     *         and null otherwise
+     * @param end the index of the first character after the word. Note that the
+     *            search may extend <b>beyond</b> this index, if for example the
+     *            word matches a multi-word typo in the dictionary
+     * @return a list of the typo itself followed by the replacement strings if
+     *         the word represents a typo, and null otherwise
      */
     @Nullable
-    public Iterable<String> getTypos(@NonNull CharSequence text, int begin, int end) {
+    public List<String> getTypos(@NonNull CharSequence text, int begin, int end) {
         assert end <= text.length();
 
         if (assertionsEnabled()) {
@@ -501,15 +587,36 @@ public class TypoLookup {
 
             // Compare the word at the given index.
             int compare = compare(mData, offset, (byte) 0, text, begin, end);
+
             if (compare == 0) {
                 offset = mIndices[middle];
+
+                // Don't allow matching uncapitalized words, such as "enlish", when
+                // the dictionary word is capitalized, "Enlish".
+                if (mData[offset] != text.charAt(begin)
+                        && Character.isLowerCase(text.charAt(begin))) {
+                    return null;
+                }
 
                 // Make sure there is a case match; we only want to allow
                 // matching capitalized words to capitalized typos or uncapitalized typos
                 //  (e.g. "Teh" and "teh" to "the"), but not uncapitalized words to capitalized
                 // typos (e.g. "enlish" to "Enlish").
-                for (int i = begin; i < end; i++) {
+                String glob = null;
+                for (int i = begin; ; i++) {
                     byte b = mData[offset++];
+                    if (b == 0) {
+                        offset--;
+                        break;
+                    } else if (b == '*') {
+                        int globEnd = i;
+                        while (globEnd < text.length()
+                                && Character.isLetter(text.charAt(globEnd))) {
+                            globEnd++;
+                        }
+                        glob = text.subSequence(i, globEnd).toString();
+                        break;
+                    }
                     char c = text.charAt(i);
                     byte cb = (byte) c;
                     if (b != cb && i > begin) {
@@ -517,15 +624,7 @@ public class TypoLookup {
                     }
                 }
 
-                assert mData[offset] == 0;
-                offset++;
-                int replacementEnd = offset;
-                while (mData[replacementEnd] != 0) {
-                    replacementEnd++;
-                }
-                String replacements = new String(mData, offset, replacementEnd - offset,
-                        Charsets.UTF_8);
-                return Splitter.on(',').omitEmptyStrings().trimResults().split(replacements);
+                return computeSuggestions(mIndices[middle], offset, glob);
             }
 
             if (compare < 0) {
@@ -542,17 +641,19 @@ public class TypoLookup {
     }
 
     /**
-     * Look up whether this word is a typo, and if so, return one or more likely
-     * meanings
+     * Look up whether this word is a typo, and if so, return the typo itself
+     * and one or more likely meanings
      *
      * @param utf8Text the string containing the word, encoded as UTF-8
      * @param begin the index of the first character in the word
-     * @param end the index of the first character after the word
-     * @return an iterable of replacement strings if the word represents a typo,
-     *         and null otherwise
+     * @param end the index of the first character after the word. Note that the
+     *            search may extend <b>beyond</b> this index, if for example the
+     *            word matches a multi-word typo in the dictionary
+     * @return a list of the typo itself followed by the replacement strings if
+     *         the word represents a typo, and null otherwise
      */
     @Nullable
-    public Iterable<String> getTypos(@NonNull byte[] utf8Text, int begin, int end) {
+    public List<String> getTypos(@NonNull byte[] utf8Text, int begin, int end) {
         assert end <= utf8Text.length;
 
         int low = 0;
@@ -562,36 +663,53 @@ public class TypoLookup {
             int offset = mIndices[middle];
 
             if (DEBUG_SEARCH) {
-                System.out.println("Comparing string " + utf8Text +" with entry at " + offset
+                String s = new String(Arrays.copyOfRange(utf8Text, begin, end), Charsets.UTF_8);
+                System.out.println("Comparing string " + s +" with entry at " + offset
                         + ": " + dumpEntry(offset));
+                System.out.println("   middle=" + middle + ", low=" + low + ", high=" + high);
             }
 
             // Compare the word at the given index.
             int compare = compare(mData, offset, (byte) 0, utf8Text, begin, end);
+
+            if (DEBUG_SEARCH) {
+                System.out.println(" signum=" + (int)Math.signum(compare) + ", delta=" + compare);
+            }
+
             if (compare == 0) {
                 offset = mIndices[middle];
+
+                // Don't allow matching uncapitalized words, such as "enlish", when
+                // the dictionary word is capitalized, "Enlish".
+                if (mData[offset] != utf8Text[begin] && isUpperCase(mData[offset])) {
+                    return null;
+                }
 
                 // Make sure there is a case match; we only want to allow
                 // matching capitalized words to capitalized typos or uncapitalized typos
                 //  (e.g. "Teh" and "teh" to "the"), but not uncapitalized words to capitalized
                 // typos (e.g. "enlish" to "Enlish").
-                for (int i = begin; i < end; i++) {
+                String glob = null;
+                for (int i = begin; ; i++) {
                     byte b = mData[offset++];
+                    if (b == 0) {
+                        offset--;
+                        break;
+                    } else if (b == '*') {
+                        int globEnd = i;
+                        while (globEnd < utf8Text.length && isLetter(utf8Text[globEnd])) {
+                            globEnd++;
+                        }
+                        glob = new String(utf8Text, i, globEnd - i, Charsets.UTF_8);
+                        break;
+                    }
                     byte cb = utf8Text[i];
                     if (b != cb && i > begin) {
                         return null;
                     }
                 }
 
-                assert mData[offset] == 0;
-                offset++;
-                int replacementEnd = offset;
-                while (mData[replacementEnd] != 0) {
-                    replacementEnd++;
-                }
-                String replacements = new String(mData, offset, replacementEnd - offset,
-                        Charsets.UTF_8);
-                return Splitter.on(',').omitEmptyStrings().trimResults().split(replacements);
+                return computeSuggestions(mIndices[middle], offset, glob);
             }
 
             if (compare < 0) {
@@ -605,5 +723,63 @@ public class TypoLookup {
         }
 
         return null;
+    }
+
+    private List<String> computeSuggestions(int begin, int offset, String glob) {
+        String typo = new String(mData, begin, offset - begin, Charsets.UTF_8);
+
+        if (glob != null) {
+            typo = typo.replaceAll("\\*", glob); //$NON-NLS-1$
+        }
+
+        assert mData[offset] == 0;
+        offset++;
+        int replacementEnd = offset;
+        while (mData[replacementEnd] != 0) {
+            replacementEnd++;
+        }
+        String replacements = new String(mData, offset, replacementEnd - offset, Charsets.UTF_8);
+        List<String> words = new ArrayList<String>();
+        words.add(typo);
+
+        // The first entry should be the typo itself. We need to pass this back since due
+        // to multi-match words and globbing it could extend beyond the initial word range
+
+        for (String s : Splitter.on(',').omitEmptyStrings().trimResults().split(replacements)) {
+            if (glob != null) {
+                // Need to append the glob string to each result
+                words.add(s.replaceAll("\\*", glob)); //$NON-NLS-1$
+            } else {
+                words.add(s);
+            }
+        }
+
+        return words;
+    }
+
+    // "Character" handling for bytes. This assumes that the bytes correspond to Unicode
+    // characters in the ISO 8859-1 range, which is are encoded the same way in UTF-8.
+    // This obviously won't work to for example uppercase to lowercase conversions for
+    // multi byte characters, which means we simply won't catch typos if the dictionaries
+    // contain these. None of the currently included dictionaries do. However, it does
+    // help us properly deal with punctuation and spacing characters.
+
+    static final boolean isUpperCase(byte b) {
+        return Character.isUpperCase((char) b);
+    }
+
+    static final byte toLowerCase(byte b) {
+        return (byte) Character.toLowerCase((char) b);
+    }
+
+    static final boolean isSpace(byte b) {
+        return Character.isWhitespace((char) b);
+    }
+
+    static final boolean isLetter(byte b) {
+        // Assume that multi byte characters represent letters in other languages.
+        // Obviously, it could be unusual punctuation etc but letters are more likely
+        // in this context.
+        return Character.isLetter((char) b) || (b & 0x80) != 0;
     }
 }

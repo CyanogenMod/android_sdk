@@ -3,9 +3,9 @@
     <!-- No typos -->
     <string name="s1">Home Sample</string>
     <!-- Plain typos -->
-    <string name="s2">Andriod activites</string>
+    <string name="s2">Andriod activites!</string>
     <!-- Make capitalization match typo -->
-    <string name="s3"> Cmoputer </string>
+    <string name="s3"> (Cmoputer </string>
     <!-- Markup indirection -->
     <string name="s4"><b>throught</b></string>
     <!-- Typo, match capitalized -->
