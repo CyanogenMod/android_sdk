@@ -17,15 +17,23 @@ package com.android.ddmlib;
 
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * A {@link IShellOutputReceiver} which collects the whole shell output into one
  * {@link String}.
  */
 public class CollectingOutputReceiver implements IShellOutputReceiver {
-
+    private CountDownLatch mCompletionLatch;
     private StringBuffer mOutputBuffer = new StringBuffer();
     private boolean mIsCanceled = false;
+
+    public CollectingOutputReceiver() {
+    }
+
+    public CollectingOutputReceiver(CountDownLatch commandCompleteLatch) {
+        mCompletionLatch = commandCompleteLatch;
+    }
 
     public String getOutput() {
         return mOutputBuffer.toString();
@@ -68,6 +76,8 @@ public class CollectingOutputReceiver implements IShellOutputReceiver {
      */
     @Override
     public void flush() {
-        // ignore
+        if (mCompletionLatch != null) {
+            mCompletionLatch.countDown();
+        }
     }
 }

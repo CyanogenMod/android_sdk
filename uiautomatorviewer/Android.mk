@@ -24,6 +24,8 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_JAVA_LIBRARIES := \
     swt \
+    sdklib \
+    ddmlib \
     org.eclipse.jface_3.6.2.M20110210-1200 \
     org.eclipse.core.commands_3.6.0.I20100512-1500 \
     org.eclipse.equinox.common_3.6.0.v20100503
