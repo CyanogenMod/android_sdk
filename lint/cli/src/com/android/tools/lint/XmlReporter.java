@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.google.common.annotations.Beta;
@@ -52,18 +54,53 @@ public class XmlReporter extends Reporter {
 
     @Override
     public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
-        mWriter.write(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +     //$NON-NLS-1$
-                "<issues>\n");                                       //$NON-NLS-1$
+        mWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");      //$NON-NLS-1$
+        mWriter.write("<issues format=\"3\"");                              //$NON-NLS-1$
+        String revision = mClient.getRevision();
+        if (revision != null) {
+            mWriter.write(String.format(" by=\"lint %1$s\"", revision));    //$NON-NLS-1$
+        }
+        mWriter.write(">\n");                                               //$NON-NLS-1$
 
         if (issues.size() > 0) {
             for (Warning warning : issues) {
                 mWriter.write('\n');
                 indent(mWriter, 1);
                 mWriter.write("<issue"); //$NON-NLS-1$
-                writeAttribute(mWriter, 2, "id", warning.issue.getId());   //$NON-NLS-1$
-                writeAttribute(mWriter, 2, "severity", warning.severity.getDescription()); //$NON-NLS-1$
-                writeAttribute(mWriter, 2, "message", warning.message);  //$NON-NLS-1$
+                Issue issue = warning.issue;
+                writeAttribute(mWriter, 2, "id", issue.getId());                      //$NON-NLS-1$
+                writeAttribute(mWriter, 2, "severity",
+                        warning.severity.getDescription());
+                writeAttribute(mWriter, 2, "message", warning.message);               //$NON-NLS-1$
+
+                writeAttribute(mWriter, 2, "category",                                //$NON-NLS-1$
+                        issue.getCategory().getFullName());
+                writeAttribute(mWriter, 2, "priority",                                //$NON-NLS-1$
+                        Integer.toString(issue.getPriority()));
+                writeAttribute(mWriter, 2, "summary", issue.getDescription());        //$NON-NLS-1$
+                writeAttribute(mWriter, 2, "explanation", issue.getExplanation());    //$NON-NLS-1$
+                if (issue.getMoreInfo() != null) {
+                    writeAttribute(mWriter, 2, "url", issue.getMoreInfo());           //$NON-NLS-1$
+                }
+                if (warning.errorLine != null && !warning.errorLine.isEmpty()) {
+                    String line = warning.errorLine;
+                    int index1 = line.indexOf('\n');
+                    if (index1 != -1) {
+                        int index2 = line.indexOf('\n', index1 + 1);
+                        if (index2 != -1) {
+                            String line1 = line.substring(0, index1);
+                            String line2 = line.substring(index1 + 1, index2);
+                            writeAttribute(mWriter, 2, "errorLine1", line1);          //$NON-NLS-1$
+                            writeAttribute(mWriter, 2, "errorLine2", line2);       //$NON-NLS-1$
+                        }
+                    }
+                }
+                if (mClient.getRegistry() instanceof BuiltinIssueRegistry &&
+                        ((BuiltinIssueRegistry) mClient.getRegistry()).hasAutoFix(
+                                "adt", issue)) { //$NON-NLS-1$
+                    writeAttribute(mWriter, 2, "quickfix", "adt");      //$NON-NLS-1$ //$NON-NLS-2$
+                }
+
                 assert (warning.file != null) == (warning.location != null);
 
                 if (warning.file != null) {
