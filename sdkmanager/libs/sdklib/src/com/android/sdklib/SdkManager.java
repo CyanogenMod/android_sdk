@@ -17,6 +17,7 @@
 package com.android.sdklib;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.FileWrapper;
@@ -30,6 +31,7 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
+import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.repository.PkgProps;
 import com.android.util.Pair;
 
@@ -362,6 +364,21 @@ public class SdkManager {
         }
 
         return extraVersions;
+    }
+
+    /** Returns the platform tools version if installed, null otherwise. */
+    public @Nullable String getPlatformToolsVersion() {
+        LocalSdkParser parser = new LocalSdkParser();
+        Package[] packages = parser.parseSdk(mOsSdkPath, this, LocalSdkParser.PARSE_PLATFORM_TOOLS,
+                new NullTaskMonitor(new NullSdkLog()));
+
+        for (Package pkg : packages) {
+            if (pkg instanceof PlatformToolPackage && pkg.isLocal()) {
+                return pkg.getRevision().toShortString();
+            }
+        }
+
+        return null;
     }
 
 

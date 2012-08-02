@@ -18,7 +18,11 @@ package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
 import com.android.prefs.AndroidLocation;
+import com.android.sdklib.ISdkLog;
+import com.android.sdklib.NullSdkLog;
+import com.android.sdklib.SdkManager;
 import com.android.sdkstats.SdkStatsService;
+import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -54,6 +58,14 @@ public class MonitorApplication implements IApplication {
             return Integer.valueOf(-1);
         }
         MonitorPlugin.getDefault().setSdkPath(sdkPath);
+
+        // install platform tools if necessary
+        ISdkLog sdkLog = new NullSdkLog();
+        SdkManager manager = SdkManager.createManager(sdkPath, sdkLog);
+        if (manager.getPlatformToolsVersion() == null) {
+            AdtUpdateDialog window = new AdtUpdateDialog(new Shell(display), sdkLog, sdkPath);
+            window.installPlatformTools();
+        }
 
         // If this is the first time using ddms or adt, open up the stats service
         // opt out dialog, and request user for permissions.

@@ -188,6 +188,13 @@ TV_LIBS="traceview"
 LIBS="$LIBS $TV_LIBS"
 CP_FILES="$CP_FILES @:$TV_DEST $TV_LIBS"
 
+### MONITOR ###
+
+MONITOR_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.monitor/libs"
+MONITOR_LIBS="sdkuilib"
+
+LIBS="$LIBS $MONITOR_LIBS"
+CP_FILES="$CP_FILES @:$MONITOR_DEST $MONITOR_LIBS"
 
 ### SDKMANAGER ###
 
