@@ -683,8 +683,18 @@ public class Main extends LintClient {
             "\"lint --ignore UnusedResources,UselessLeaf /my/project/path\"\n";
     }
 
-    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
     private void printVersion() {
+        String revision = getRevision();
+        if (revision != null) {
+            System.out.println(String.format("lint: version %1$s", revision));
+        } else {
+            System.out.println("lint: unknown version");
+        }
+    }
+
+    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables.closeQuietly
+    @Nullable
+    String getRevision() {
         File file = findResource("tools" + File.separator +     //$NON-NLS-1$
                                  "source.properties");          //$NON-NLS-1$
         if (file != null && file.exists()) {
@@ -696,8 +706,7 @@ public class Main extends LintClient {
 
                 String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
                 if (revision != null && revision.length() > 0) {
-                    System.out.println(String.format("lint: version %1$s", revision));
-                    return;
+                    return revision;
                 }
             } catch (IOException e) {
                 // Couldn't find or read the version info: just print out unknown below
@@ -706,7 +715,7 @@ public class Main extends LintClient {
             }
         }
 
-        System.out.println("lint: unknown version");
+        return null;
     }
 
     private void displayValidIds(IssueRegistry registry, PrintStream out) {
