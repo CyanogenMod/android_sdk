@@ -438,6 +438,13 @@ public abstract class LintClient {
                 File folder = new File(projectDir, CLASS_FOLDER);
                 if (folder.exists()) {
                     classes.add(folder);
+                } else {
+                    // Maven perhaps?
+                    folder = new File(projectDir,
+                            "target" + File.separator + "classes"); //$NON-NLS-1$ //$NON-NLS-2$
+                    if (folder.exists()) {
+                        classes.add(folder);
+                    }
                 }
             }
 
