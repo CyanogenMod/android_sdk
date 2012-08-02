@@ -66,7 +66,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
 
 public class UiAutomatorViewer extends ApplicationWindow {
-
     private static final int IMG_BORDER = 2;
 
     private Canvas mScreenshotCanvas;
@@ -280,6 +279,8 @@ public class UiAutomatorViewer extends ApplicationWindow {
      * @param args
      */
     public static void main(String args[]) {
+        DebugBridge.init();
+
         try {
             UiAutomatorViewer window = new UiAutomatorViewer();
             window.setBlockOnOpen(true);
@@ -287,6 +288,8 @@ public class UiAutomatorViewer extends ApplicationWindow {
             UiAutomatorModel.getModel().cleanUp();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            DebugBridge.terminate();
         }
     }
 
