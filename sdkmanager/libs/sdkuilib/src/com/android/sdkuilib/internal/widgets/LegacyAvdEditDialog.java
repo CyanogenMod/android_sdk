@@ -93,7 +93,7 @@ import java.util.regex.Matcher;
  * - tooltips on widgets.
  *
  */
-final class AvdCreationDialog extends GridDialog {
+final class LegacyAvdEditDialog extends GridDialog {
 
     private final AvdManager mAvdManager;
     private final TreeMap<String, IAndroidTarget> mCurrentTargets =
@@ -228,7 +228,7 @@ final class AvdCreationDialog extends GridDialog {
      * @param editAvdInfo An optional {@link AvdInfo}. When null, the dialog is used
      *   to create a new AVD. When non-null, the dialog is used to <em>edit</em> this AVD.
      */
-    protected AvdCreationDialog(Shell parentShell,
+    protected LegacyAvdEditDialog(Shell parentShell,
             AvdManager avdManager,
             ImageFactory imageFactory,
             ISdkLog log,
