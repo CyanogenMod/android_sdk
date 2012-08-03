@@ -362,7 +362,9 @@ public class AvdManagerWindowImpl1 {
             public void widgetSelected(SelectionEvent e) {
                 DeviceCreationDialog dlg = new DeviceCreationDialog(
                         mShell, manager, mUpdaterData.getImageFactory(), null);
-                dlg.open();
+                if (dlg.open() == Window.OK) {
+                    setupDevices(menuBarDevices);
+                }
             }
         });
         new MenuItem(menuDevices, SWT.SEPARATOR);
