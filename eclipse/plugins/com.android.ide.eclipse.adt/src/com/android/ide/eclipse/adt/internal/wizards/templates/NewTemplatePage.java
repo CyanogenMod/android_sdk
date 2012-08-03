@@ -239,9 +239,9 @@ public class NewTemplatePage extends WizardPage
 
                 String id = parameter.id;
                 assert id != null && !id.isEmpty() : ATTR_ID;
-                String value = defaults.get(id);
+                Object value = defaults.get(id);
                 if (value == null) {
-                    value = parameter.initial;
+                    value = parameter.value;
                 }
 
                 String name = parameter.name;
@@ -289,8 +289,8 @@ public class NewTemplatePage extends WizardPage
                                     2, 1));
                         }
 
-                        if (value != null && !value.isEmpty()){
-                            text.setText(value);
+                        if (value instanceof String) {
+                            text.setText((String) value);
                             mValues.parameters.put(id, value);
                         }
 
@@ -319,8 +319,8 @@ public class NewTemplatePage extends WizardPage
                         checkBox.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
                                 2, 1));
 
-                        if (value != null && !value.isEmpty()){
-                            Boolean selected = Boolean.valueOf(value);
+                        if (value instanceof Boolean) {
+                            Boolean selected = (Boolean) value;
                             checkBox.setSelection(selected);
                             mValues.parameters.put(id, value);
                         }

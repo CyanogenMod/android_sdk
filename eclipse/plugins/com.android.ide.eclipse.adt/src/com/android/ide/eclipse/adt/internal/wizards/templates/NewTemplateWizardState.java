@@ -29,6 +29,8 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -124,13 +126,17 @@ public class NewTemplateWizardState {
         return manifest.getMinSdkVersion();
     }
 
-    /** Returns the min SDK version to use */
+    /** Returns the build API version to use */
     int getBuildApi() {
         if (project == null) {
             return -1;
         }
-        ManifestInfo manifest = ManifestInfo.get(project);
-        return manifest.getMinSdkVersion();
+        IAndroidTarget target = Sdk.getCurrent().getTarget(project);
+        if (target != null) {
+            return target.getVersion().getApiLevel();
+        }
+
+        return getMinSdk();
     }
 
     /** Computes the changes this wizard will make */
