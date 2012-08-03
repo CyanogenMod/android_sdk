@@ -67,6 +67,7 @@ import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
@@ -203,6 +204,9 @@ public class ConfigurationComposite extends Composite implements SelectionListen
 
     /** The config listener given to the constructor. Never null. */
     private final IConfigListener mListener;
+
+    /** The device menu listener, so we can remove it when the device lists are updated */
+    private Listener mDeviceListener;
 
     /** The {@link FolderConfiguration} representing the state of the UI controls */
     private final FolderConfiguration mCurrentConfig = new FolderConfiguration();
@@ -1906,6 +1910,11 @@ public class ConfigurationComposite extends Composite implements SelectionListen
                 menu.setVisible(true);
             }
         };
+
+        if (mDeviceListener != null) {
+            combo.removeListener(SWT.Selection, mDeviceListener);
+        }
+        mDeviceListener = menuListener;
         combo.addListener(SWT.Selection, menuListener);
     }
 
@@ -2656,9 +2665,17 @@ public class ConfigurationComposite extends Composite implements SelectionListen
      * Loads the list of {@link Device}s and inits the UI with it.
      */
     private void initDevices() {
-        Sdk sdk = Sdk.getCurrent();
+        final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
             mDeviceList = sdk.getDevices();
+            DeviceManager manager = sdk.getDeviceManager();
+            manager.registerListener(new DeviceManager.DevicesChangeListener() {
+                @Override
+                public void onDevicesChange() {
+                    mDeviceList = sdk.getDevices();
+                    addDeviceMenuListener(mDeviceCombo);
+                }
+            });
         } else {
             mDeviceList = new ArrayList<Device>();
         }
