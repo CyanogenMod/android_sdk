@@ -1,5 +1,5 @@
 Code completion in completion11.xml for ?android:attr/Textapp^:
-?android:attr/textAppearance
+?android:attr/textAppearance : Base text color, typeface, size, and style.
 ?android:attr/textAppearanceButton
 ?android:attr/textAppearanceInverse
 ?android:attr/textAppearanceLarge

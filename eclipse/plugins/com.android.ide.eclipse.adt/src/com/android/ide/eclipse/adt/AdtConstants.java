@@ -289,4 +289,7 @@ public class AdtConstants {
     public static final String CODESITE_BASE_URL = "http://code.google.com/android";  //$NON-NLS-1$
 
     public static final String LIBRARY_TEST_RUNNER = "android.test.runner"; //$NON-NLS-1$
+
+    /** Documentation marker for elements, attributes etc that should be hidden */
+    public static final String DOC_HIDE = "@hide"; //$NON-NLS-1$
 }

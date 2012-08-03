@@ -860,7 +860,7 @@ public class AdtUtils {
      * @return the highest known API number
      */
     public static int getHighestKnownApiLevel() {
-        return 15;
+        return 16;
     }
 
     /**
