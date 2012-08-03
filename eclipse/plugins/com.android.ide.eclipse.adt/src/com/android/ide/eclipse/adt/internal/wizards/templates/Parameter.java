@@ -237,7 +237,11 @@ class Parameter {
             constraints = EnumSet.noneOf(Constraint.class);
         }
 
-        value = initial;
+        if (initial != null && !initial.isEmpty() && type == Type.BOOLEAN) {
+            value = Boolean.valueOf(initial);
+        } else {
+            value = initial;
+        }
     }
 
     Parameter(@NonNull Type type, @NonNull String id, @NonNull String initialValue) {

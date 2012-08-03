@@ -98,8 +98,16 @@ import javax.xml.parsers.SAXParserFactory;
  * and merging into existing files
  */
 class TemplateHandler {
-    /** Highest supported format; templates with a higher number will be skipped */
-    static final int CURRENT_FORMAT = 1;
+    /** Highest supported format; templates with a higher number will be skipped
+     * <p>
+     * <ul>
+     * <li> 1: Initial format, supported by ADT 20 and up.
+     * <li> 2: ADT 21 and up. Boolean variables that have a default value and are not
+     *    edited by the user would end up as strings in ADT 20; now they are always
+     *    proper Booleans. Templates which rely on this should specify format >= 2.
+     * </ul>
+     */
+    static final int CURRENT_FORMAT = 2;
 
     /**
      * Special marker indicating that this path refers to the special shared
@@ -396,7 +404,14 @@ class TemplateHandler {
                         String id = attributes.getValue(ATTR_ID);
                         if (!paramMap.containsKey(id)) {
                             String value = attributes.getValue(ATTR_DEFAULT);
-                            paramMap.put(id, value);
+                            Object mapValue = value;
+                            if (value != null && !value.isEmpty()) {
+                                String type = attributes.getValue(ATTR_TYPE);
+                                if ("boolean".equals(type)) { //$NON-NLS-1$
+                                    mapValue = Boolean.valueOf(value);
+                                }
+                            }
+                            paramMap.put(id, mapValue);
                         }
                     } else if (TAG_GLOBAL.equals(name)) {
                         String id = attributes.getValue(ATTR_ID);
