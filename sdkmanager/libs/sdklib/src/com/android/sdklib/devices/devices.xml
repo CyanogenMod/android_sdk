@@ -75,6 +75,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -163,6 +164,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -257,6 +259,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -351,6 +354,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -439,6 +443,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -526,6 +531,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -614,6 +620,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -702,6 +709,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -796,6 +804,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -934,6 +943,7 @@
                 GL_OES_vertex_array_object
                 GL_OES_vertex_half_float
             </d:gl-extensions>
+            <d:status-bar>true</d:status-bar>
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
@@ -1021,6 +1031,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -1109,6 +1120,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -1197,6 +1209,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -1285,6 +1298,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
@@ -1379,6 +1393,7 @@
             <d:bluetooth-profiles />
             <d:gl-version>2.1</d:gl-version>
             <d:gl-extensions />
+            <d:status-bar>true</d:status-bar>
         </d:software>
 
         <d:state name="Portrait" default="true">
