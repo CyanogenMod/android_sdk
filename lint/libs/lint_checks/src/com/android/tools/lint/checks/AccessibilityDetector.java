@@ -18,8 +18,10 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_IMPORTANT_FOR_ACCESSIBILITY;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_BUTTON;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_NO;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -78,6 +80,11 @@ public class AccessibilityDetector extends LayoutDetector {
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
+            // Ignore views that are explicitly not important for accessibility
+            if (VALUE_NO.equals(element.getAttributeNS(ANDROID_URI,
+                    ATTR_IMPORTANT_FOR_ACCESSIBILITY))) {
+                return;
+            }
             context.report(ISSUE, element, context.getLocation(element),
                     "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
