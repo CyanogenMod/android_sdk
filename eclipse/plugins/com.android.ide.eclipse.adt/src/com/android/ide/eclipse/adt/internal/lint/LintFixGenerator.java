@@ -98,6 +98,7 @@ import java.util.List;
  * in the Problems view; perhaps we should use a custom view for these. That would also
  * make marker management more obvious.
  */
+@SuppressWarnings("restriction") // DOM model
 public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssistProcessor {
     /** Constructs a new {@link LintFixGenerator} */
     public LintFixGenerator() {
@@ -248,7 +249,6 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
      *
      * @param marker the marker pointing to the error to be suppressed
      */
-    @SuppressWarnings("restriction") // XML model
     public static void addSuppressAnnotation(IMarker marker) {
         String id = EclipseLintClient.getId(marker);
         if (id != null) {

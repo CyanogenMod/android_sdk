@@ -670,4 +670,41 @@ public class LintUtils {
 
         return hasManifest;
     }
+
+    /**
+     * Look up the locale and region from the given parent folder name and
+     * return it as a combined string, such as "en", "en-rUS", etc, or null if
+     * no language is specified.
+     *
+     * @param folderName the folder name
+     * @return the locale+region string or null
+     */
+    @Nullable
+    public static String getLocaleAndRegion(@NonNull String folderName) {
+         if (folderName.equals("values")) { //$NON-NLS-1$
+            return null;
+         }
+
+         String locale = null;
+
+         for (String qualifier : Splitter.on('-').split(folderName)) {
+            int qualifierLength = qualifier.length();
+            if (qualifierLength == 2) {
+                 char first = qualifier.charAt(0);
+                char second = qualifier.charAt(1);
+                 if (first >= 'a' && first <= 'z' && second >= 'a' && second <= 'z') {
+                    locale = qualifier;
+                }
+            } else if (qualifierLength == 3 && qualifier.charAt(0) == 'r' && locale != null) {
+                char first = qualifier.charAt(1);
+                char second = qualifier.charAt(2);
+                if (first >= 'A' && first <= 'Z' && second >= 'A' && second <= 'Z') {
+                    return locale + '-' + qualifier;
+                }
+                break;
+             }
+         }
+
+         return locale;
+     }
 }

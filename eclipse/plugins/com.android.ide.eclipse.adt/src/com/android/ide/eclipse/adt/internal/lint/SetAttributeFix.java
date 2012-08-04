@@ -18,17 +18,18 @@ package com.android.ide.eclipse.adt.internal.lint;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CONTENT_DESCRIPTION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_INPUT_TYPE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TRANSLATABLE;
 
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
+import com.android.tools.lint.checks.TranslationDetector;
 import com.android.tools.lint.detector.api.LintConstants;
 
 import org.eclipse.core.resources.IMarker;
 
 /** Shared fix class for various builtin attributes */
-@SuppressWarnings("restriction") // DOM model
 final class SetAttributeFix extends SetPropertyFix {
     private SetAttributeFix(String id, IMarker marker) {
         super(id, marker);
@@ -44,10 +45,21 @@ final class SetAttributeFix extends SetPropertyFix {
             return LintConstants.ATTR_PERMISSION;
         } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
             return ATTR_INPUT_TYPE;
+        } else if (mId.equals(TranslationDetector.MISSING.getId())) {
+            return ATTR_TRANSLATABLE;
         } else {
             assert false : mId;
             return "";
         }
+    }
+
+    @Override
+    protected boolean isAndroidAttribute() {
+        if (mId.equals(TranslationDetector.MISSING.getId())) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -60,10 +72,23 @@ final class SetAttributeFix extends SetPropertyFix {
             return "Set input type";
         } else if (mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())) {
             return "Add permission attribute";
+        } else if (mId.equals(TranslationDetector.MISSING.getId())) {
+            return "Mark this as a non-translatable resource";
         } else {
             assert false : mId;
             return "";
         }
+    }
+
+    @Override
+    public String getAdditionalProposalInfo() {
+        String help = super.getAdditionalProposalInfo();
+
+        if (mId.equals(TranslationDetector.MISSING.getId())) {
+            help = "<b>Adds translatable=\"false\" to this &lt;string&gt;.</b><br><br>" + help;
+        }
+
+        return help;
     }
 
     @Override
@@ -73,8 +98,19 @@ final class SetAttributeFix extends SetPropertyFix {
     }
 
     @Override
+    public boolean selectValue() {
+        if (mId.equals(TranslationDetector.MISSING.getId())) {
+            return false;
+        } else {
+            return super.selectValue();
+        }
+    }
+
+    @Override
     protected String getProposal() {
         if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
+            return VALUE_FALSE;
+        } else if (mId.equals(TranslationDetector.MISSING.getId())) {
             return VALUE_FALSE;
         }
 
