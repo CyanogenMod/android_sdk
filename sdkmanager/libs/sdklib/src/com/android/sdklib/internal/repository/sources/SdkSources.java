@@ -287,7 +287,21 @@ public class SdkSources {
                     for (int i = 0; i < count; i++) {
                         String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));  //$NON-NLS-1$
                         if (url != null) {
-                            SdkSource s = new SdkAddonSource(url, null/*uiName*/);
+                            // FIXME: this code originally only dealt with add-on XML sources.
+                            // Now we'd like it to deal with system-image sources too, but we
+                            // don't know which kind of object it is (at least not without
+                            // trying to fetch it.) As a temporary workaround, just take a
+                            // guess based on the leaf URI name. However ideally what we can
+                            // simply do is add a checkbox "is system-image XML" in the user
+                            // dialog and pass this info down here. Another alternative is to
+                            // make a "dynamic" source object that tries to guess its type once
+                            // the URI has been fetched.
+                            SdkSource s;
+                            if (url.endsWith("sys-img.xml")) {
+                                s = new SdkSysImgSource(url, null/*uiName*/);
+                            } else {
+                                s = new SdkAddonSource(url, null/*uiName*/);
+                            }
                             if (!hasSourceUrl(s)) {
                                 add(SdkSourceCategory.USER_ADDONS, s);
                             }
