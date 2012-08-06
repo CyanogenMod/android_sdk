@@ -423,6 +423,45 @@ public abstract class LintClient {
                 }
             }
 
+            if (classes.size() == 0) {
+                File folder = new File(projectDir, CLASS_FOLDER);
+                if (folder.exists()) {
+                    classes.add(folder);
+                } else {
+                    // Maven checks
+                    folder = new File(projectDir,
+                            "target" + File.separator + "classes"); //$NON-NLS-1$ //$NON-NLS-2$
+                    if (folder.exists()) {
+                        classes.add(folder);
+
+                        // If it's maven, also correct the source path, "src" works but
+                        // it's in a more specific subfolder
+                        if (sources.size() == 0) {
+                            File src = new File(projectDir,
+                                    "src" + File.separator     //$NON-NLS-1$
+                                    + "main" + File.separator  //$NON-NLS-1$
+                                    + "java");                 //$NON-NLS-1$
+                            if (src.exists()) {
+                                sources.add(src);
+                            } else {
+                                src = new File(projectDir, SRC_FOLDER);
+                                if (src.exists()) {
+                                    sources.add(src);
+                                }
+                            }
+
+                            File gen = new File(projectDir,
+                                    "target" + File.separator                  //$NON-NLS-1$
+                                    + "generated-sources" + File.separator     //$NON-NLS-1$
+                                    + "r");                                    //$NON-NLS-1$
+                            if (gen.exists()) {
+                                sources.add(gen);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Fallback, in case there is no Eclipse project metadata here
             if (sources.size() == 0) {
                 File src = new File(projectDir, SRC_FOLDER);
@@ -432,19 +471,6 @@ public abstract class LintClient {
                 File gen = new File(projectDir, GEN_FOLDER);
                 if (gen.exists()) {
                     sources.add(gen);
-                }
-            }
-            if (classes.size() == 0) {
-                File folder = new File(projectDir, CLASS_FOLDER);
-                if (folder.exists()) {
-                    classes.add(folder);
-                } else {
-                    // Maven perhaps?
-                    folder = new File(projectDir,
-                            "target" + File.separator + "classes"); //$NON-NLS-1$ //$NON-NLS-2$
-                    if (folder.exists()) {
-                        classes.add(folder);
-                    }
                 }
             }
 
