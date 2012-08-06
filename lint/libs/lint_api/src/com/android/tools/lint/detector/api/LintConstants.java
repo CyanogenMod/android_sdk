@@ -175,6 +175,7 @@ public class LintConstants {
     public static final String ATTR_IME_ACTION_LABEL = "imeActionLabel";        //$NON-NLS-1$
     public static final String ATTR_PRIVATE_IME_OPTIONS = "privateImeOptions";  //$NON-NLS-1$
     public static final String VALUE_NONE = "none";                    //$NON-NLS-1$
+    public static final String VALUE_NO = "no";                        //$NON-NLS-1$
     public static final String ATTR_NUMERIC = "numeric";               //$NON-NLS-1$
     public static final String ATTR_IME_ACTION_ID = "imeActionId";     //$NON-NLS-1$
     public static final String ATTR_IME_OPTIONS = "imeOptions";        //$NON-NLS-1$
@@ -190,7 +191,9 @@ public class LintConstants {
     public static final String ATTR_AUTO_TEXT = "autoText";            //$NON-NLS-1$
     public static final String ATTR_ENABLED = "enabled";               //$NON-NLS-1$
     public static final String ATTR_SINGLE_LINE = "singleLine";        //$NON-NLS-1$
-    public static final String ATTR_SCALE_TYPE = "scaleType";        //$NON-NLS-1$
+    public static final String ATTR_SCALE_TYPE = "scaleType";          //$NON-NLS-1$
+    public static final String ATTR_IMPORTANT_FOR_ACCESSIBILITY =
+            "importantForAccessibility";                               //$NON-NLS-1$
 
     // AbsoluteLayout layout params
     public static final String ATTR_LAYOUT_Y = "layout_y";             //$NON-NLS-1$
