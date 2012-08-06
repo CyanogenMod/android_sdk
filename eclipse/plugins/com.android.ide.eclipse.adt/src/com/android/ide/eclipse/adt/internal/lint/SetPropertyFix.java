@@ -48,6 +48,9 @@ abstract class SetPropertyFix extends DocumentFix {
     /** Attribute to be added */
     protected abstract String getAttribute();
 
+    /** Whether it's in the android: namespace */
+    protected abstract boolean isAndroidAttribute();
+
     protected String getProposal() {
         return invokeCodeCompletion() ? "" : "TODO"; //$NON-NLS-1$
     }
@@ -70,7 +73,10 @@ abstract class SetPropertyFix extends DocumentFix {
             Element element = (Element) node;
             String proposal = getProposal();
             String localAttribute = getAttribute();
-            String prefix = XmlUtils.lookupNamespacePrefix(node, ANDROID_URI);
+            String prefix = null;
+            if (isAndroidAttribute()) {
+                prefix = XmlUtils.lookupNamespacePrefix(node, ANDROID_URI);
+            }
             String attribute = prefix != null ? prefix + ':' + localAttribute : localAttribute;
 
             // This does not work even though it should: it does not include the prefix
@@ -78,16 +84,27 @@ abstract class SetPropertyFix extends DocumentFix {
             // So workaround instead:
             element.setAttribute(attribute, proposal);
 
-            Attr attr = element.getAttributeNodeNS(ANDROID_URI, localAttribute);
+            Attr attr = null;
+            if (isAndroidAttribute()) {
+                attr = element.getAttributeNodeNS(ANDROID_URI, localAttribute);
+            } else {
+                attr = element.getAttributeNode(localAttribute);
+            }
             if (attr instanceof IndexedRegion) {
                 IndexedRegion region = (IndexedRegion) attr;
                 int offset = region.getStartOffset();
                 // We only want to select the value part inside the quotes,
                 // so skip the attribute and =" parts added by WST:
                 offset += attribute.length() + 2;
-                mSelect = new Region(offset, proposal.length());
+                if (selectValue()) {
+                    mSelect = new Region(offset, proposal.length());
+                }
             }
         }
+    }
+
+    protected boolean selectValue() {
+        return true;
     }
 
     @Override

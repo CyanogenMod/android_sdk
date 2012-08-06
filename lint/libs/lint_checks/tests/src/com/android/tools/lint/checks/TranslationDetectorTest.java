@@ -34,9 +34,9 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         TranslationDetector.COMPLETE_REGIONS = false;
         assertEquals(
             // Sample files from the Home app
-            "values-cs/arrays.xml:3: Warning: \"security_questions\" is translated here but not found in default locale\n" +
+            "values-cs/arrays.xml:3: Error: \"security_questions\" is translated here but not found in default locale\n" +
             "=> values-es/strings.xml:12: Also translated here\n" +
-            "values-de-rDE/strings.xml:11: Warning: \"continue_skip_label\" is translated here but not found in default locale\n" +
+            "values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale\n" +
             "values/strings.xml:20: Error: \"show_all_apps\" is not translated in nl-rNL\n" +
             "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in nl-rNL\n" +
             "values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es, es-rUS, nl-rNL",
@@ -57,7 +57,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         TranslationDetector.COMPLETE_REGIONS = true;
         assertEquals(
             // Sample files from the Home app
-            "values-de-rDE/strings.xml:11: Warning: \"continue_skip_label\" is translated here but not found in default locale\n" +
+            "values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale\n" +
             "values/strings.xml:19: Error: \"home_title\" is not translated in es-rUS\n" +
             "values/strings.xml:20: Error: \"show_all_apps\" is not translated in es-rUS, nl-rNL\n" +
             "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in es-rUS, nl-rNL\n" +
@@ -136,5 +136,26 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-cs/strings.xml=>../LibraryProject/res/values-de/strings.xml",
                  "res/values-cs/strings.xml=>../LibraryProject/res/values-nl/strings.xml"
              ));
+    }
+
+    public void testNonTranslatable1() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = true;
+        assertEquals(
+            // Sample files from the Home app
+            "values-nb/nontranslatable.xml:3: Error: The resource string \"dummy\" has been " +
+                "marked as translatable=\"false\"",
+
+            lintProject("res/values/nontranslatable.xml",
+                    "res/values/nontranslatable2.xml=>res/values-nb/nontranslatable.xml"));
+    }
+
+    public void testNonTranslatable2() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = true;
+        assertEquals(
+            // Sample files from the Home app
+            "values-nb/nontranslatable.xml:3: Error: Non-translatable resources should only " +
+            "be defined in the base values/ folder",
+
+            lintProject("res/values/nontranslatable.xml=>res/values-nb/nontranslatable.xml"));
     }
 }

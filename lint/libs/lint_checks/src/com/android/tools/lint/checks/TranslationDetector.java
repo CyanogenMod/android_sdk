@@ -30,6 +30,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -73,6 +74,12 @@ public class TranslationDetector extends ResourceXmlDetector {
             "If an application has more than one locale, then all the strings declared in " +
             "one language should also be translated in all other languages.\n" +
             "\n" +
+            "If the string should *not* be translated, you can add the attribute\n" +
+            "translatable=\"false\" on the <string> element, or you can define all " +
+            "your non-translatable strings in a resource file called \"donottranslate.xml\". " +
+            "Or, you can ignore the issue with a tools:ignore=\"MissingTranslation\" " +
+            "attribute.\n" +
+            "\n" +
             "By default this detector allows regions of a language to just provide a " +
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
@@ -90,15 +97,19 @@ public class TranslationDetector extends ResourceXmlDetector {
             "If a string appears in a specific language translation file, but there is " +
             "no corresponding string in the default locale, then this string is probably " +
             "unused. (It's technically possible that your application is only intended to " +
-            "run in a specific locale, but it's still a good idea to provide a fallback.)",
+            "run in a specific locale, but it's still a good idea to provide a fallback.).\n" +
+            "\n" +
+            "Note that these strings can lead to crashes if the string is looked up on any " +
+            "locale not providing a translation, so it's important to clean them up.",
             Category.MESSAGES,
             6,
-            Severity.WARNING,
+            Severity.FATAL,
             TranslationDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
     private Set<String> mNames;
     private Set<String> mTranslatedArrays;
+    private Set<String> mNonTranslatable;
     private boolean mIgnoreFile;
     private Map<File, Set<String>> mFileToNames;
 
@@ -457,6 +468,17 @@ public class TranslationDetector extends ResourceXmlDetector {
 
             Attr translatable = element.getAttributeNode(ATTR_TRANSLATABLE);
             if (translatable != null && !Boolean.valueOf(translatable.getValue())) {
+                String l = LintUtils.getLocaleAndRegion(context.file.getParentFile().getName());
+                if (l != null) {
+                    context.report(EXTRA, context.getLocation(translatable),
+                        "Non-translatable resources should only be defined in the base " +
+                        "values/ folder", null);
+                } else {
+                    if (mNonTranslatable == null) {
+                        mNonTranslatable = new HashSet<String>();
+                    }
+                    mNonTranslatable.add(name);
+                }
                 return;
             }
 
@@ -488,6 +510,12 @@ public class TranslationDetector extends ResourceXmlDetector {
             //}
 
             mNames.add(name);
+
+            if (mNonTranslatable != null && mNonTranslatable.contains(name)) {
+                String message = String.format("The resource string \"%1$s\" has been marked as " +
+                        "translatable=\"false\"", name);
+                context.report(EXTRA, context.getLocation(attribute), message, null);
+            }
 
             // TBD: Also make sure that the strings are not empty or placeholders?
         }

@@ -28,6 +28,7 @@ import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
+import com.android.tools.lint.checks.TranslationDetector;
 import com.android.tools.lint.checks.TypoDetector;
 import com.android.tools.lint.checks.TypographyDetector;
 import com.android.tools.lint.checks.UseCompoundDrawableDetector;
@@ -153,6 +154,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(PxUsageDetector.PX_ISSUE.getId(), ConvertToDpFix.class);
         sFixes.put(TextFieldDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(SecurityDetector.EXPORTED_SERVICE.getId(), SetAttributeFix.class);
+        sFixes.put(TranslationDetector.MISSING.getId(), SetAttributeFix.class);
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
         sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
         sFixes.put(ObsoleteLayoutParamsDetector.ISSUE.getId(), ObsoleteLayoutParamsFix.class);

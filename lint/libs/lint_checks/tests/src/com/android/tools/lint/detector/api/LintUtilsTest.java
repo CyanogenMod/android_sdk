@@ -17,6 +17,7 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
+import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 
 import com.android.tools.lint.Main;
 import com.google.common.collect.Iterables;
@@ -273,5 +274,15 @@ public class LintUtilsTest extends TestCase {
         checkEncoding("UTF_16LE", true /*bom*/, "\r\n");
         checkEncoding("UTF_32", true /*bom*/, "\r\n");
         checkEncoding("UTF_32LE", true /*bom*/, "\r\n");
+    }
+
+    public void testGetLocaleAndRegion() throws Exception {
+        assertNull(getLocaleAndRegion(""));
+        assertNull(getLocaleAndRegion("values"));
+        assertNull(getLocaleAndRegion("values-xlarge-port"));
+        assertEquals("en", getLocaleAndRegion("values-en"));
+        assertEquals("pt-rPT", getLocaleAndRegion("values-pt-rPT-nokeys"));
+        assertEquals("zh-rCN", getLocaleAndRegion("values-zh-rCN-keyshidden"));
+        assertEquals("ms", getLocaleAndRegion("values-ms-keyshidden"));
     }
 }
