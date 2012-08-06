@@ -43,7 +43,7 @@ public class DebugBridge {
         }
 
         // check if adb is present in the tools directory
-        adb = new File(sdk, SdkConstants.FN_ADB);
+        adb = new File(toolsDir, SdkConstants.FN_ADB);
         if (adb.exists()) {
             return adb.getAbsolutePath();
         }
