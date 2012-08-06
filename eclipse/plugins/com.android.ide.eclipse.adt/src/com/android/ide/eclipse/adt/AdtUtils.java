@@ -30,8 +30,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.PkgProps;
 import com.android.util.XmlUtils;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 
@@ -978,41 +976,6 @@ public class AdtUtils {
         }
 
         return sEclipse4;
-    }
-
-    /**
-     * Splits the given path into its individual parts, attempting to be
-     * tolerant about path separators (: or ;). It can handle possibly ambiguous
-     * paths, such as {@code c:\foo\bar:\other}, though of course these are to
-     * be avoided if possible.
-     *
-     * @param path the path variable to split, which can use both : and ; as
-     *            path separators.
-     * @return the individual path components as an iterable of strings
-     */
-    public static Iterable<String> splitPath(String path) {
-        if (path.indexOf(';') != -1) {
-            return Splitter.on(';').omitEmptyStrings().trimResults().split(path);
-        }
-
-        List<String> combined = new ArrayList<String>();
-        Iterables.addAll(combined, Splitter.on(':').omitEmptyStrings().trimResults().split(path));
-        for (int i = 0, n = combined.size(); i < n; i++) {
-            String p = combined.get(i);
-            if (p.length() == 1 && i < n - 1 && Character.isLetter(p.charAt(0))
-                    // Technically, Windows paths do not have to have a \ after the :,
-                    // which means it would be using the current directory on that drive,
-                    // but that's unlikely to be the case in a path since it would have
-                    // unpredictable results
-                    && !combined.get(i+1).isEmpty() && combined.get(i+1).charAt(0) == '\\') {
-                combined.set(i, p + ':' + combined.get(i+1));
-                combined.remove(i+1);
-                n--;
-                continue;
-            }
-        }
-
-        return combined;
     }
 
     /**

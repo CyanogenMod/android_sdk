@@ -16,7 +16,10 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintUtils.splitPath;
+
 import com.android.tools.lint.Main;
+import com.google.common.collect.Iterables;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -90,6 +93,31 @@ public class LintUtilsTest extends TestCase {
         assertEquals(3, LintUtils.editDistance("saturday", "sunday"));
         assertEquals(1, LintUtils.editDistance("button", "bitton"));
         assertEquals(6, LintUtils.editDistance("radiobutton", "bitton"));
+    }
+
+    public void testSplitPath() throws Exception {
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar", "/baz" },
+                Iterables.toArray(splitPath("/foo:/bar:/baz"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar" },
+                Iterables.toArray(splitPath("/foo;/bar"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "/foo", "/bar:baz" },
+                Iterables.toArray(splitPath("/foo;/bar:baz"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "\\foo\\bar", "\\bar\\foo" },
+                Iterables.toArray(splitPath("\\foo\\bar;\\bar\\foo"), String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "${sdk.dir}\\foo\\bar", "\\bar\\foo" },
+                Iterables.toArray(splitPath("${sdk.dir}\\foo\\bar;\\bar\\foo"),
+                        String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "${sdk.dir}/foo/bar", "/bar/foo" },
+                Iterables.toArray(splitPath("${sdk.dir}/foo/bar:/bar/foo"),
+                        String.class)));
+
+        assertTrue(Arrays.equals(new String[] { "C:\\foo", "/bar" },
+                Iterables.toArray(splitPath("C:\\foo:/bar"), String.class)));
     }
 
     public void testCommonParen1() {
