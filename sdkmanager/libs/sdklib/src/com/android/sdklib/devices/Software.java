@@ -27,6 +27,7 @@ public class Software {
     private Set<BluetoothProfile> mBluetoothProfiles = new HashSet<BluetoothProfile>();
     private String mGlVersion;
     private Set<String> mGlExtensions = new HashSet<String>();
+    private boolean mStatusBar;
 
     public int getMinSdkLevel() {
         return mMinSdkLevel;
@@ -84,6 +85,14 @@ public class Software {
         mGlExtensions.addAll(extensions);
     }
 
+    public void setStatusBar(boolean hasBar) {
+        mStatusBar = hasBar;
+    }
+
+    public boolean hasStatusBar() {
+        return mStatusBar;
+    }
+
     public Software deepCopy() {
         Software s = new Software();
         s.setMinSdkLevel(getMinSdkLevel());
@@ -92,6 +101,7 @@ public class Software {
         s.addAllBluetoothProfiles(getBluetoothProfiles());
         s.setGlVersion(getGlVersion());
         s.addAllGlExtensions(getGlExtensions());
+        s.setStatusBar(hasStatusBar());
         return s;
     }
 
@@ -110,7 +120,8 @@ public class Software {
                 && mLiveWallpaperSupport == sw.hasLiveWallpaperSupport()
                 && mBluetoothProfiles.equals(sw.getBluetoothProfiles())
                 && mGlVersion.equals(sw.getGlVersion())
-                && mGlExtensions.equals(sw.getGlExtensions());
+                && mGlExtensions.equals(sw.getGlExtensions())
+                && mStatusBar == sw.hasStatusBar();
     }
 
     @Override
@@ -122,6 +133,7 @@ public class Software {
         hash = 31 * hash + mBluetoothProfiles.hashCode();
         hash = 31 * hash + mGlVersion.hashCode();
         hash = 31 * hash + mGlExtensions.hashCode();
+        hash = 31 * hash + (mStatusBar ? 1 : 0);
         return hash;
     }
 }

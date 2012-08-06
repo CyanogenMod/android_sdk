@@ -16,11 +16,11 @@
 
 package com.android.validator;
 
+import com.android.dvlib.DeviceSchema;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-
-import com.android.dvlib.DeviceSchema;
 
 public class DeviceValidator {
 

@@ -304,6 +304,8 @@ public class DeviceParser {
                 } else {
                     mState.setNavState(NavigationState.getEnum(getString(mStringAccumulator)));
                 }
+            } else if (DeviceSchema.NODE_STATUS_BAR.equals(localName)) {
+                mSoftware.setStatusBar(getBool(mStringAccumulator));
             }
         }
 

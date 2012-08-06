@@ -90,6 +90,8 @@ public class DeviceSchema {
 
     public static final String NODE_LIVE_WALLPAPER_SUPPORT = "live-wallpaper-support";
 
+    public static final String NODE_STATUS_BAR = "status-bar";
+
     public static final String NODE_BUTTONS = "buttons";
 
     public static final String NODE_CAMERA = "camera";

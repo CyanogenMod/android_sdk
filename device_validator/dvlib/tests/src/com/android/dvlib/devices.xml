@@ -123,6 +123,7 @@
                 GL_OES_vertex_array_object
                 GL_OES_vertex_half_float
             </d:gl-extensions>
+            <d:status-bar>true</d:status-bar>
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>
@@ -248,6 +249,7 @@
                 GL_IMG_texture_stream
                 GL_IMG_vertex_program
             </d:gl-extensions>
+            <d:status-bar>true</d:status-bar>
         </d:software>
         <d:state name="Portrait" default="true">
             <d:description>The phone in portrait view</d:description>

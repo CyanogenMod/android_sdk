@@ -206,6 +206,14 @@
                     <xsd:list itemType="xsd:NMTOKEN" />
                 </xsd:simpleType>
             </xsd:element>
+            <xsd:element name="status-bar" type="xsd:boolean">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        Specifies whether the device has a status bar in this
+                        software configuration.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
         </xsd:sequence>
     </xsd:complexType>
 
