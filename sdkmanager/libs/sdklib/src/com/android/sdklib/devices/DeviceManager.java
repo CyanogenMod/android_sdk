@@ -198,7 +198,7 @@ public class DeviceManager {
                     File renamedConfig = new File(base);
                     int i = 0;
                     while (renamedConfig.exists()) {
-                        renamedConfig = new File(base+"."+i);
+                        renamedConfig = new File(base + "." + (i++));
                     }
                     mLog.error(null, "Error parsing %1$s, backing up to %2$s",
                             userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
