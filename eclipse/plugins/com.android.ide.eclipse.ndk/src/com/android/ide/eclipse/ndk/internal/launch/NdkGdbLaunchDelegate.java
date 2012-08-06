@@ -19,9 +19,9 @@ package com.android.ide.eclipse.ndk.internal.launch;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
-import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
@@ -233,7 +233,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
                 activityName);
         try {
             CountDownLatch launchedLatch = new CountDownLatch(1);
-            ShellOutputReceiver receiver = new ShellOutputReceiver(launchedLatch);
+            CollectingOutputReceiver receiver = new CollectingOutputReceiver(launchedLatch);
             device.executeShellCommand(command, receiver);
             launchedLatch.await(5, TimeUnit.SECONDS);
             String shellOutput = receiver.getOutput();
@@ -479,39 +479,9 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         String command = String.format("run-as %s /system/bin/sh -c pwd", app); //$NON-NLS-1$
 
         CountDownLatch commandCompleteLatch = new CountDownLatch(1);
-        ShellOutputReceiver receiver = new ShellOutputReceiver(commandCompleteLatch);
+        CollectingOutputReceiver receiver = new CollectingOutputReceiver(commandCompleteLatch);
         device.executeShellCommand(command, receiver);
         commandCompleteLatch.await(timeout, timeoutUnit);
         return receiver.getOutput().trim();
-    }
-
-    private static class ShellOutputReceiver implements IShellOutputReceiver {
-        private StringBuffer sb = new StringBuffer();
-        private CountDownLatch mCompleteLatch;
-
-        public ShellOutputReceiver(CountDownLatch commandCompleteLatch) {
-            mCompleteLatch = commandCompleteLatch;
-        }
-
-        @Override
-        public void addOutput(byte[] data, int offset, int length) {
-            sb.append(new String(data, offset, length));
-        }
-
-        @Override
-        public void flush() {
-            if (mCompleteLatch != null) {
-                mCompleteLatch.countDown();
-            }
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        public String getOutput() {
-            return sb.toString();
-        }
     }
 }
