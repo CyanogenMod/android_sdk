@@ -33,10 +33,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -86,7 +86,7 @@ public class HtmlReporter extends Reporter {
      */
     public HtmlReporter(Main client, File output) throws IOException {
         super(client, output);
-        mWriter = new BufferedWriter(new FileWriter(output));
+        mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
     }
 
     @Override
@@ -96,6 +96,7 @@ public class HtmlReporter extends Reporter {
         mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
+                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>" + //$NON-NLS-1$
                 "<title>" + mTitle + "</title>\n");                      //$NON-NLS-1$//$NON-NLS-2$
 
         writeStyleSheet();

@@ -3,6 +3,7 @@ andriod->android
 
 # The remainder of this file contains misspellings from
 # http://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines
+# plus some post-processing to fix invalid entries, remove duplicates, etc.
 #
 # The content is available under the
 # "Creative Commons Attribution-ShareAlike License"
@@ -2774,8 +2775,7 @@ modle->model
 moent->moment
 moeny->money
 mohammedans->muslims
-moil->mohel
-moil->soil
+moil->mohel,soil
 moleclues->molecules
 momento->memento
 monestaries->monasteries
@@ -3543,8 +3543,7 @@ refereneced->referenced
 refereneces->references
 referiang->referring
 refering->referring
-refernce->reference
-refernce->references
+refernce->reference,references
 refernces->references
 referrence->reference
 referrences->references

@@ -63,10 +63,19 @@ public class TypoDetectorTest extends AbstractCheckTest {
             lintProject("res/values-nb/typos.xml"));
     }
 
+    public void testGerman() throws Exception {
+        // Test globbing and multiple word matching
+        assertEquals(
+            "typos.xml:10: Warning: \"zurŸck gefoobaren\" is a common misspelling; did you mean \"zurŸckgefoobaren\" ?\n" +
+            "typos.xml:6: Warning: \"befindet eine\" is a common misspelling; did you mean \"befindet sich eine\" ?\n" +
+            "typos.xml:9: Warning: \"Authorisierungscode\" is a common misspelling; did you mean \"Autorisierungscode\" ?",
+            lintProject("res/values-de/typos.xml"));
+    }
+
     public void testOk() throws Exception {
         assertEquals(
             "No warnings.",
-            lintProject("res/values/typos.xml=>res/values-de/strings.xml"));
+            lintProject("res/values/typos.xml=>res/values-xy/strings.xml"));
     }
 
     public void testGetReplacements() {
@@ -75,6 +84,5 @@ public class TypoDetectorTest extends AbstractCheckTest {
         assertEquals("throught", TypoDetector.getTypo(s));
         assertEquals(Arrays.asList("thought", "through", "throughout"),
                 TypoDetector.getSuggestions(s));
-
     }
 }

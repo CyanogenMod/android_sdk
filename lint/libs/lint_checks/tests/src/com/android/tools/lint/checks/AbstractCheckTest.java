@@ -408,6 +408,7 @@ public abstract class AbstractCheckTest extends TestCase {
                         File sdkDir = dir.getParentFile().getParentFile().getParentFile()
                                 .getParentFile().getParentFile().getParentFile();
                         File file = new File(sdkDir, "sdk" + File.separator + "files"
+                                + File.separator + "typos"
                                 + File.separator + base);
                         return file;
                     } catch (URISyntaxException e) {

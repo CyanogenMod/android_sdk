@@ -3,6 +3,7 @@ andriod->android
 
 # The remainder of this file contains misspellings from
 # http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform
+# plus some post-processing to fix invalid entries, remove duplicates, etc.
 #
 # The content is available under the
 # "Creative Commons Attribution-ShareAlike License"

@@ -16,5 +16,7 @@
     <string name="s7">Midt-Østen midt-østen</string>
     <!-- Non-ASCII UTF-8 string -->
     <string name="s7">Koding er en spennende karriære</string>
+    <string name="internet">"Koble til Internett.</string>
+
 </resources>
 
