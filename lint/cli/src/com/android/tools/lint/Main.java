@@ -86,7 +86,7 @@ public class Main extends LintClient {
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
     private static final String ARG_EXITCODE   = "--exitcode";     //$NON-NLS-1$
-    private static final String ARG_CLASSES    = "--classes";      //$NON-NLS-1$
+    private static final String ARG_CLASSES    = "--classpath";    //$NON-NLS-1$
     private static final String ARG_SOURCES    = "--sources";      //$NON-NLS-1$
 
     private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
@@ -466,29 +466,35 @@ public class Main extends LintClient {
                     System.err.println("Missing class folder name");
                     System.exit(ERRNO_INVALIDARGS);
                 }
-                File input = getInArgumentPath(args[++index]);
-                if (!input.exists()) {
-                    System.err.println("Source folder " + input + " does not exist.");
-                    System.exit(ERRNO_INVALIDARGS);
+                String paths = args[++index];
+                for (String path : LintUtils.splitPath(paths)) {
+                    File input = getInArgumentPath(path);
+                    if (!input.exists()) {
+                        System.err.println("Class path entry " + input + " does not exist.");
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    if (mClasses == null) {
+                        mClasses = new ArrayList<File>();
+                    }
+                    mClasses.add(input);
                 }
-                if (mClasses == null) {
-                    mClasses = new ArrayList<File>();
-                }
-                mClasses.add(input);
             } else if (arg.equals(ARG_SOURCES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing source folder name");
                     System.exit(ERRNO_INVALIDARGS);
                 }
-                File input = getInArgumentPath(args[++index]);
-                if (!input.exists()) {
-                    System.err.println("Source folder " + input + " does not exist.");
-                    System.exit(ERRNO_INVALIDARGS);
+                String paths = args[++index];
+                for (String path : LintUtils.splitPath(paths)) {
+                    File input = getInArgumentPath(path);
+                    if (!input.exists()) {
+                        System.err.println("Source folder " + input + " does not exist.");
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    if (mSources == null) {
+                        mSources = new ArrayList<File>();
+                    }
+                    mSources.add(input);
                 }
-                if (mSources == null) {
-                    mSources = new ArrayList<File>();
-                }
-                mSources.add(input);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -943,10 +949,10 @@ public class Main extends LintClient {
             ARG_XML + " <filename>", "Create an XML report instead.",
 
             "", "\nProject Options:",
-            ARG_SOURCES + " <dir>", "Add the given folder as a source directory for the " +
-                "project. Only valid when running lint on a single project.",
-            ARG_CLASSES + " <dir>", "Add the given folder (or jar file) as a class directory " +
-                "for the project. Only valid when running lint on a single project.",
+            ARG_SOURCES + " <dir>", "Add the given folder (or path) as a source directory for " +
+                "the project. Only valid when running lint on a single project.",
+            ARG_CLASSES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
+                "directory for the project. Only valid when running lint on a single project.",
 
             "", "\nExit Status:",
             "0",                                 "Success.",

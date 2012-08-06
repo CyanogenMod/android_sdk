@@ -28,6 +28,8 @@ public class LintExecTask extends ExecTask {
     private String mExecutable;
     private String mHtml;
     private String mXml;
+    private Path mSourcePath;
+    private Path mClassPath;
 
     /**
      * Sets the value of the "executable" attribute.
@@ -35,6 +37,16 @@ public class LintExecTask extends ExecTask {
      */
     public void setExecutable(Path executable) {
         mExecutable = TaskHelper.checkSinglePath("executable", executable);
+    }
+
+    /** Sets the path where Java source code should be found */
+    public void setSrc(Path path) {
+        mSourcePath = path;
+    }
+
+    /** Sets the path where class files should be found */
+    public void setClasspath(Path path) {
+        mClassPath = path;
     }
 
     /**
@@ -78,6 +90,16 @@ public class LintExecTask extends ExecTask {
         if (mXml != null) {
             task.createArg().setValue("--xml");
             task.createArg().setValue(mXml);
+        }
+
+        if (mSourcePath != null) {
+            task.createArg().setValue("--sources");
+            task.createArg().setValue(mSourcePath.toString());
+        }
+
+        if (mClassPath != null) {
+            task.createArg().setValue("--classpath");
+            task.createArg().setValue(mClassPath.toString());
         }
 
         task.createArg().setValue(getProject().getBaseDir().getAbsolutePath());

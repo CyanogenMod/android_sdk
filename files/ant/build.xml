@@ -1295,7 +1295,9 @@
             description="Runs lint on the project to look for potential bugs" >
         <lint executable="${lint}"
               html="${lint.out.html}"
-              xml="${lint.out.xml}" />
+              xml="${lint.out.xml}"
+              src="${source.absolute.dir}:${gen.absolute.dir}"
+              classpath="${out.classes.absolute.dir}" />
     </target>
 
     <!-- ******************************************************* -->
