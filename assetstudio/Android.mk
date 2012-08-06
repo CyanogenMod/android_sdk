@@ -21,7 +21,8 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 
 # TODO: Replace common with the batik stuff
 LOCAL_JAVA_LIBRARIES := \
-	common
+	common \
+	guava-tools
 
 LOCAL_MODULE := assetstudio
 

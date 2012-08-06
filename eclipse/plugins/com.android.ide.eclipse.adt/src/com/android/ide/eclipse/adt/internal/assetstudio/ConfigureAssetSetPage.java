@@ -538,6 +538,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 //updateColor(display, new RGB(0xa4, 0xc6, 0x39), true /*background*/);
                 updateColor(display, mValues.background, true /*background*/);
                 updateColor(display, mValues.foreground, false /*background*/);
+
+                updateTrimOptions();
             } finally {
                 mIgnore = false;
             }
@@ -562,6 +564,20 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             updateFontLabel();
             chooseForegroundTab(mTextRadio, mTextForm);
             mText.setFocus();
+        }
+    }
+
+    private void updateTrimOptions() {
+        // Trimming and padding is not available for clipart images; padding etc is
+        // predefined to work well with action bar icons
+        if (mValues.sourceType == SourceType.CLIPART
+                && mValues.type == AssetType.ACTIONBAR) {
+            mTrimCheckBox.setEnabled(false);
+            mPaddingSlider.setEnabled(false);
+            mValues.trim = false;
+        } else if (!mTrimCheckBox.isEnabled()) {
+            mTrimCheckBox.setEnabled(true);
+            mPaddingSlider.setEnabled(true);
         }
     }
 
@@ -651,16 +667,19 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             mValues.sourceType = CreateAssetSetWizardState.SourceType.IMAGE;
             chooseForegroundTab((Button) source, mImageForm);
             configureAssetType(mValues.type);
+            updateTrimOptions();
         } else if (source == mClipartRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
             chooseForegroundTab((Button) source, mClipartForm);
             configureAssetType(mValues.type);
+            updateTrimOptions();
         } else if (source == mTextRadio) {
             mValues.sourceType = CreateAssetSetWizardState.SourceType.TEXT;
             updateFontLabel();
             chooseForegroundTab((Button) source, mTextForm);
             configureAssetType(mValues.type);
             mText.setFocus();
+            updateTrimOptions();
         }
 
         // Choose image file
@@ -1043,7 +1062,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 try {
                     sourceImage = GraphicGenerator.getClipartImage(mValues.clipartName);
 
-                    if (trim) {
+                    boolean isActionBar = mValues.type == AssetType.ACTIONBAR;
+                    if (trim && !isActionBar) {
                         sourceImage = ImageUtils.cropBlank(sourceImage, null, TYPE_INT_ARGB);
                     }
 
@@ -1055,7 +1075,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                     }
 
                     int padding = mValues.padding;
-                    if (padding != 0) {
+                    if (padding != 0 && !isActionBar) {
                         sourceImage = Util.paddedImage(sourceImage, padding);
                     }
                 } catch (IOException e) {

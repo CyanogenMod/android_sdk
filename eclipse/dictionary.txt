@@ -46,6 +46,7 @@ clickable
 clipart
 clipboard
 clipboards
+closeables
 clueless
 codebase
 codename
