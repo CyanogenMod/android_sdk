@@ -27,15 +27,21 @@ public class Utf8DetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "encoding.xml:1: Warning: iso-latin-1: Not using UTF-8 as the file encoding. " +
-            "This can lead to subtle bugs with non-ascii characters",
+            "res/layout/encoding.xml:1: Warning: iso-latin-1: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n" +
+            "<?xml version=\"1.0\" encoding=\"iso-latin-1\"?>\n" +
+            "                              ~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject("res/layout/encoding.xml"));
     }
 
     public void testWithR() throws Exception {
         assertEquals(
-            "encoding2.xml:1: Warning: iso-latin-1: Not using UTF-8 as the file encoding. " +
-            "This can lead to subtle bugs with non-ascii characters",
+            "res/layout/encoding2.xml:1: Warning: iso-latin-1: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n" +
+            "<?xml version=\"1.0\" encoding=\"iso-latin-1\"?>\n" +
+            "                              ~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             // encoding2.xml = encoding.xml but with \n => \r
             lintProject("res/layout/encoding2.xml"));
     }

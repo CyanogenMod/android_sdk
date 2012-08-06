@@ -105,29 +105,29 @@ public class Main extends LintClient {
     private static final int ERRNO_HELP = 4;
     private static final int ERRNO_INVALIDARGS = 5;
 
-    private List<Warning> mWarnings = new ArrayList<Warning>();
-    private Set<String> mSuppress = new HashSet<String>();
-    private Set<String> mEnabled = new HashSet<String>();
+    protected List<Warning> mWarnings = new ArrayList<Warning>();
+    protected Set<String> mSuppress = new HashSet<String>();
+    protected Set<String> mEnabled = new HashSet<String>();
     /** If non-null, only run the specified checks (possibly modified by enable/disables) */
-    private Set<String> mCheck = null;
-    private boolean mHasErrors;
-    private boolean mSetExitCode;
-    private boolean mFullPath;
-    private int mErrorCount;
-    private int mWarningCount;
-    private boolean mShowLines = true;
-    private List<Reporter> mReporters = Lists.newArrayList();
-    private boolean mQuiet;
-    private boolean mWarnAll;
-    private boolean mNoWarnings;
-    private boolean mAllErrors;
-    private List<File> mSources;
-    private List<File> mClasses;
+    protected Set<String> mCheck = null;
+    protected boolean mHasErrors;
+    protected boolean mSetExitCode;
+    protected boolean mFullPath;
+    protected int mErrorCount;
+    protected int mWarningCount;
+    protected boolean mShowLines = true;
+    protected List<Reporter> mReporters = Lists.newArrayList();
+    protected boolean mQuiet;
+    protected boolean mWarnAll;
+    protected boolean mNoWarnings;
+    protected boolean mAllErrors;
+    protected List<File> mSources;
+    protected List<File> mClasses;
 
-    private Configuration mDefaultConfiguration;
-    private IssueRegistry mRegistry;
-    private LintDriver mDriver;
-    private boolean mShowAll;
+    protected Configuration mDefaultConfiguration;
+    protected IssueRegistry mRegistry;
+    protected LintDriver mDriver;
+    protected boolean mShowAll;
 
     /** Creates a CLI driver */
     public Main() {
@@ -1149,6 +1149,9 @@ public class Main extends LintClient {
 
     static String getLineOfOffset(String contents, int offset) {
         int end = contents.indexOf('\n', offset);
+        if (end == -1) {
+            end = contents.indexOf('\r', offset);
+        }
         return contents.substring(offset, end != -1 ? end : contents.length());
     }
 

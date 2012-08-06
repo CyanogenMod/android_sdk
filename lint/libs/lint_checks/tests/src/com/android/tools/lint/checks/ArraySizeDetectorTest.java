@@ -26,12 +26,18 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
     }
     public void testArraySizes() throws Exception {
         assertEquals(
-            "values/arrays.xml:10: Warning: Array signal_strength has an inconsistent number of items (5 in values/arrays.xml, 6 in values-land/arrays.xml)\n" +
-            "=> values-land/arrays.xml:2: Declaration with array size (6)\n" +
-            "values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml)\n" +
-            "=> values-cs/arrays.xml:3: Declaration with array size (4)\n" +
-            "=> values-es/strings.xml:12: Declaration with array size (4)\n" +
-            "=> values-nl-rNL/arrays.xml:3: Declaration with array size (3)",
+            "res/values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml) [InconsistentArrays]\n" +
+            "    <string-array name=\"security_questions\">\n" +
+            "    ^\n" +
+            "    res/values-cs/arrays.xml:3: Declaration with array size (4)\n" +
+            "    res/values-es/strings.xml:12: Declaration with array size (4)\n" +
+            "    res/values-nl-rNL/arrays.xml:3: Declaration with array size (3)\n" +
+            "res/values/arrays.xml:10: Warning: Array signal_strength has an inconsistent number of items (5 in values/arrays.xml, 6 in values-land/arrays.xml) [InconsistentArrays]\n" +
+            "    <array name=\"signal_strength\">\n" +
+            "    ^\n" +
+            "    res/values-land/arrays.xml:2: Declaration with array size (6)\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                  "res/values/arrays.xml",

@@ -27,8 +27,11 @@ public class ScrollViewChildDetectorTest extends AbstractCheckTest {
 
     public void testScrollView() throws Exception {
         assertEquals(
-                "wrong_dimension.xml:10: Warning: This LinearLayout should use " +
-                        "android:layout_width=\"wrap_content\"",
+                "res/layout/wrong_dimension.xml:10: Warning: This LinearLayout should use android:layout_width=\"wrap_content\" [ScrollViewSize]\n" +
+                "     android:layout_width=\"match_parent\"\n" +
+                "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n" +
+                "",
                 lintFiles("res/layout/wrong_dimension.xml"));
     }
 }

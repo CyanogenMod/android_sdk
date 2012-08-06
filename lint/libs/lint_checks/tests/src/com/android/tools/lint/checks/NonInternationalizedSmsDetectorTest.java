@@ -27,7 +27,11 @@ public class NonInternationalizedSmsDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "NonInternationalizedSmsDetectorTest.java:18: Warning: To make sure the SMS can be sent by all users, please start the SMS numberwith a + and a country code or restrict the code invocation to people in the country you are targeting.",
+                "src/test/pkg/NonInternationalizedSmsDetectorTest.java:18: Warning: To make sure the SMS can be sent by all users, please start the SMS numberwith a + and a country code or restrict the code invocation to people in the country you are targeting. [UnlocalizedSms]\n" +
+                "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n" +
+                "                               ~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n" +
+                "",
 
             lintProject("src/test/pkg/NonInternationalizedSmsDetectorTest.java.txt=>src/test/pkg/NonInternationalizedSmsDetectorTest.java"));
     }

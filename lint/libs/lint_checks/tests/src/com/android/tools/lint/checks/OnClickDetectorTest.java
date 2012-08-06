@@ -27,15 +27,35 @@ public class OnClickDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "OnClickActivity.java:27: Error: On click handler wrong5(View) must be public\n" +
-            "OnClickActivity.java:31: Error: On click handler wrong6(View) should not be static\n" +
-            "OnClickActivity.java:45: Error: On click handler wrong7(View) must be public\n" +
-            "onclick.xml:10: Error: Corresponding method handler 'public void nonexistent(android.view.View)' not found\n" +
-            "onclick.xml:16: Error: Corresponding method handler 'public void wrong1(android.view.View)' not found\n" +
-            "onclick.xml:22: Error: Corresponding method handler 'public void wrong2(android.view.View)' not found\n" +
-            "onclick.xml:28: Error: Corresponding method handler 'public void wrong3(android.view.View)' not found\n" +
-            "onclick.xml:34: Error: Corresponding method handler 'public void wrong4(android.view.View)' not found\n" +
-            "onclick.xml:58: Error: Corresponding method handler 'public void simple_typo(android.view.View)' not found (did you mean void test.pkg.OnClickActivity#simple_tyop(android.view.View) ?)",
+            "src/test/pkg/OnClickActivity.java:27: Error: On click handler wrong5(View) must be public [OnClick]\n" +
+            "    void wrong5(View view) {\n" +
+            "         ~~~~~~\n" +
+            "src/test/pkg/OnClickActivity.java:31: Error: On click handler wrong6(View) should not be static [OnClick]\n" +
+            "    public static void wrong6(View view) {\n" +
+            "                       ~~~~~~\n" +
+            "src/test/pkg/OnClickActivity.java:45: Error: On click handler wrong7(View) must be public [OnClick]\n" +
+            "    void wrong7(View view) {\n" +
+            "         ~~~~~~\n" +
+            "res/layout/onclick.xml:10: Error: Corresponding method handler 'public void nonexistent(android.view.View)' not found [OnClick]\n" +
+            "        android:onClick=\"nonexistent\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/onclick.xml:16: Error: Corresponding method handler 'public void wrong1(android.view.View)' not found [OnClick]\n" +
+            "        android:onClick=\"wrong1\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/onclick.xml:22: Error: Corresponding method handler 'public void wrong2(android.view.View)' not found [OnClick]\n" +
+            "        android:onClick=\"wrong2\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/onclick.xml:28: Error: Corresponding method handler 'public void wrong3(android.view.View)' not found [OnClick]\n" +
+            "        android:onClick=\"wrong3\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/onclick.xml:34: Error: Corresponding method handler 'public void wrong4(android.view.View)' not found [OnClick]\n" +
+            "        android:onClick=\"wrong4\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/onclick.xml:58: Error: Corresponding method handler 'public void simple_typo(android.view.View)' not found (did you mean void test.pkg.OnClickActivity#simple_tyop(android.view.View) ?) [OnClick]\n" +
+            "        android:onClick=\"simple_typo\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "9 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",

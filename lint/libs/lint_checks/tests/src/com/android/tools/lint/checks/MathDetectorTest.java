@@ -27,15 +27,23 @@ public class MathDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "MathTest.java:12: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion\n" +
-                "MathTest.java:18: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid double to float return value conversion\n" +
-                "MathTest.java:23: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion",
+            "src/test/bytecode/MathTest.java:12: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion [FloatMath]\n" +
+            "  floatResult = (float) Math.sqrt(x);\n" +
+            "                             ~~~~\n" +
+            "src/test/bytecode/MathTest.java:18: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid double to float return value conversion [FloatMath]\n" +
+            "  floatResult = (float) Math.sqrt(x);\n" +
+            "                             ~~~~\n" +
+            "src/test/bytecode/MathTest.java:23: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion [FloatMath]\n" +
+            "  doubleResult = Math.sqrt(x);\n" +
+            "                      ~~~~\n" +
+            "0 errors, 3 warnings\n" +
+            "",
 
-                lintProject(
-                        "bytecode/.classpath=>.classpath",
-                        "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
-                        "bytecode/MathTest.java.txt=>src/test/bytecode/MathTest.java",
-                        "bytecode/MathTest.class.data=>bin/classes/test/bytecode/MathTest.class"
-                        ));
+            lintProject(
+                    "bytecode/.classpath=>.classpath",
+                    "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                    "bytecode/MathTest.java.txt=>src/test/bytecode/MathTest.java",
+                    "bytecode/MathTest.class.data=>bin/classes/test/bytecode/MathTest.class"
+                    ));
     }
 }

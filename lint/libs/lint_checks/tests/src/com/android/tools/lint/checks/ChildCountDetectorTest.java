@@ -27,9 +27,12 @@ public class ChildCountDetectorTest extends AbstractCheckTest {
 
     public void testChildCount() throws Exception {
         assertEquals(
-                "has_children.xml:3: Warning: A list/grid should have no children declared " +
-                        "in XML",
-                lintFiles("res/layout/has_children.xml"));
+            "res/layout/has_children.xml:3: Warning: A list/grid should have no children declared in XML [AdapterViewChildren]\n" +
+            "<ListView\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintFiles("res/layout/has_children.xml"));
     }
 
     public void testChildCount2() throws Exception {

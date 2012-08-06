@@ -27,21 +27,29 @@ public class StateListDetectorTest extends AbstractCheckTest {
 
     public void testStates() throws Exception {
         assertEquals(
-                "drawable/states.xml:3: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one\n" +
-                "=> drawable/states.xml:2: Earlier item which masks item",
-                lintProject("res/drawable/states.xml"));
+            "res/drawable/states.xml:3: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one [StateListReachable]\n" +
+            "    <item android:state_pressed=\"true\"\n" +
+            "    ^\n" +
+            "    res/drawable/states.xml:2: Earlier item which masks item\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject("res/drawable/states.xml"));
     }
 
     public void testCustomStates() throws Exception {
         assertEquals(
-                "No warnings.",
-                lintProject("res/drawable/states2.xml"));
+            "No warnings.",
+            lintProject("res/drawable/states2.xml"));
     }
 
     public void testStates3() throws Exception {
         assertEquals(
-                "drawable/states3.xml:24: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one\n" +
-                "=> drawable/states3.xml:18: Earlier item which masks item",
-                lintProject("res/drawable/states3.xml"));
+            "res/drawable/states3.xml:24: Warning: This item is unreachable because a previous item (item #1) is a more general match than this one [StateListReachable]\n" +
+            "    <item android:state_checked=\"false\" android:state_window_focused=\"false\"\n" +
+            "    ^\n" +
+            "    res/drawable/states3.xml:18: Earlier item which masks item\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject("res/drawable/states3.xml"));
     }
 }

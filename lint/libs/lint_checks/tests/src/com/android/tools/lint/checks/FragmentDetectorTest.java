@@ -27,12 +27,26 @@ public class FragmentDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "FragmentTest.java:10: Warning: This fragment class should be public (test.pkg.FragmentTest.Fragment1)\n" +
-            "FragmentTest.java:15: Warning: This fragment inner class should be static (test.pkg.FragmentTest.Fragment2)\n" +
-            "FragmentTest.java:21: Warning: The default constructor must be public\n" +
-            "FragmentTest.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment4)\n" +
-            "FragmentTest.java:27: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead\n" +
-            "FragmentTest.java:36: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead",
+            "src/test/pkg/FragmentTest.java:10: Warning: This fragment class should be public (test.pkg.FragmentTest.Fragment1) [ValidFragment]\n" +
+            " private static class Fragment1 extends Fragment {\n" +
+            " ^\n" +
+            "src/test/pkg/FragmentTest.java:15: Warning: This fragment inner class should be static (test.pkg.FragmentTest.Fragment2) [ValidFragment]\n" +
+            " public class Fragment2 extends Fragment {\n" +
+            " ^\n" +
+            "src/test/pkg/FragmentTest.java:21: Warning: The default constructor must be public [ValidFragment]\n" +
+            "  private Fragment3() {\n" +
+            "          ~~~~~~~~~\n" +
+            "src/test/pkg/FragmentTest.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment4) [ValidFragment]\n" +
+            " public static class Fragment4 extends Fragment {\n" +
+            "                     ~~~~~~~~~\n" +
+            "src/test/pkg/FragmentTest.java:27: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]\n" +
+            "  private Fragment4(int dummy) {\n" +
+            "          ~~~~~~~~~\n" +
+            "src/test/pkg/FragmentTest.java:36: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]\n" +
+            "  public Fragment5(int dummy) {\n" +
+            "         ~~~~~~~~~\n" +
+            "0 errors, 6 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/FragmentTest$Fragment1.class.data=>bin/classes/test/pkg/FragmentTest$Fragment1.class",

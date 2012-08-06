@@ -27,14 +27,20 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
 
     public void testUseless() throws Exception {
         assertEquals(
-            "useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent " +
-                    "is useless\n" +
-            "useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent " +
-                "is useless; transfer the background attribute to the other view\n" +
-            "useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent " +
-                "is useless; transfer the background attribute to the other view\n" +
-            "useless.xml:85: Warning: This FrameLayout view is useless (no children, " +
-                "no background, no id, no style)",
+            "res/layout/useless.xml:85: Warning: This FrameLayout view is useless (no children, no background, no id, no style) [UselessLeaf]\n" +
+            "    <FrameLayout\n" +
+            "    ^\n" +
+            "res/layout/useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent is useless [UselessParent]\n" +
+            "        <LinearLayout\n" +
+            "        ^\n" +
+            "res/layout/useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n" +
+            "        <LinearLayout\n" +
+            "        ^\n" +
+            "res/layout/useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n" +
+            "        <LinearLayout\n" +
+            "        ^\n" +
+            "0 errors, 4 warnings\n" +
+            "",
             lintFiles("res/layout/useless.xml"));
     }
 

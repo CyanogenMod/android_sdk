@@ -27,30 +27,37 @@ public class ProguardDetectorTest extends AbstractCheckTest {
 
     public void testProguard() throws Exception {
         assertEquals(
-                "proguard.cfg:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers " +
-                    "instead of -keepclasseswithmembernames",
-                lintFiles("proguard.cfg"));
+            "proguard.cfg:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames [Proguard]\n" +
+            "-keepclasseswithmembernames class * {\n" +
+            "^\n" +
+            "1 errors, 0 warnings\n" +
+            "",
+            lintFiles("proguard.cfg"));
     }
 
     public void testProguardNewPath() throws Exception {
         assertEquals(
-                "proguard-project.txt:21: Error: Obsolete ProGuard file; use " +
-                        "-keepclasseswithmembers instead of -keepclasseswithmembernames",
-                lintFiles("proguard.cfg=>proguard-project.txt"));
+            "proguard-project.txt:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames [Proguard]\n" +
+            "-keepclasseswithmembernames class * {\n" +
+            "^\n" +
+            "1 errors, 0 warnings\n" +
+            "",
+            lintFiles("proguard.cfg=>proguard-project.txt"));
     }
 
     public void testProguardRandomName() throws Exception {
         assertEquals(
-                "myfile.txt:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers " +
-                "instead of -keepclasseswithmembernames\n" +
-                "myfile.txt:8: Warning: Local ProGuard configuration contains general " +
-                "Android configuration: Inherit these settings instead? Modify " +
-                "project.properties to define proguard.config=${sdk.dir}/tools/proguard/" +
-                "proguard-android.txt:myfile.txt and then keep only project-specific " +
-                "configuration here",
-                lintProject(
-                        "proguard.cfg=>myfile.txt",
-                        "proguard.properties=>project.properties"));
+            "myfile.txt:21: Error: Obsolete ProGuard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames [Proguard]\n" +
+            "-keepclasseswithmembernames class * {\n" +
+            "^\n" +
+            "myfile.txt:8: Warning: Local ProGuard configuration contains general Android configuration: Inherit these settings instead? Modify project.properties to define proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:myfile.txt and then keep only project-specific configuration here [ProguardSplit]\n" +
+            "-keep public class * extends android.app.Activity\n" +
+            "^\n" +
+            "1 errors, 1 warnings\n" +
+            "",
+            lintProject(
+                    "proguard.cfg=>myfile.txt",
+                    "proguard.properties=>project.properties"));
     }
 
     public void testSilent() throws Exception {
@@ -73,14 +80,14 @@ public class ProguardDetectorTest extends AbstractCheckTest {
 
     public void testSplit() throws Exception {
         assertEquals(
-                "proguard.cfg:14: Warning: Local ProGuard configuration contains general " +
-                "Android configuration: Inherit these settings instead? Modify " +
-                "project.properties to define " +
-                "proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard.cfg " +
-                "and then keep only project-specific configuration here",
+            "proguard.cfg:14: Warning: Local ProGuard configuration contains general Android configuration: Inherit these settings instead? Modify project.properties to define proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard.cfg and then keep only project-specific configuration here [ProguardSplit]\n" +
+            "-keep public class * extends android.app.Activity\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
-                lintFiles(
-                        "proguard.pro=>proguard.cfg",
-                        "project.properties2=>project.properties"));
+            lintFiles(
+                    "proguard.pro=>proguard.cfg",
+                    "project.properties2=>project.properties"));
     }
 }

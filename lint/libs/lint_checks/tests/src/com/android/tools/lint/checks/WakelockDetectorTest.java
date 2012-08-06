@@ -27,7 +27,11 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test1() throws Exception {
         assertEquals(
-            "WakelockActivity1.java:15: Warning: Found a wakelock acquire() but no release() calls anywhere",
+            "src/test/pkg/WakelockActivity1.java:15: Warning: Found a wakelock acquire() but no release() calls anywhere [Wakelock]\n" +
+            "        mWakeLock.acquire(); // Never released\n" +
+            "                  ~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -40,7 +44,11 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test2() throws Exception {
         assertEquals(
-            "WakelockActivity2.java:13: Warning: Wakelocks should be released in onPause, not onDestroy",
+            "src/test/pkg/WakelockActivity2.java:13: Warning: Wakelocks should be released in onPause, not onDestroy [Wakelock]\n" +
+            "            mWakeLock.release(); // Should be done in onPause instead\n" +
+            "                      ~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -53,7 +61,11 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test3() throws Exception {
         assertEquals(
-            "WakelockActivity3.java:13: Warning: The release() call is not always reached",
+            "src/test/pkg/WakelockActivity3.java:13: Warning: The release() call is not always reached [Wakelock]\n" +
+            "        lock.release(); // Should be in finally block\n" +
+            "             ~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -66,7 +78,11 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test4() throws Exception {
         assertEquals(
-            "WakelockActivity4.java:10: Warning: The release() call is not always reached",
+            "src/test/pkg/WakelockActivity4.java:10: Warning: The release() call is not always reached [Wakelock]\n" +
+            "        getLock().release(); // Should be in finally block\n" +
+            "                  ~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -79,8 +95,11 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test5() throws Exception {
         assertEquals(
-            // Missing 13
-            "WakelockActivity5.java:13: Warning: The release() call is not always reached",
+            "src/test/pkg/WakelockActivity5.java:13: Warning: The release() call is not always reached [Wakelock]\n" +
+            "        lock.release(); // Should be in finally block\n" +
+            "             ~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -93,9 +112,17 @@ public class WakelockDetectorTest extends AbstractCheckTest {
 
     public void test6() throws Exception {
         assertEquals(
-            "WakelockActivity6.java:19: Warning: The release() call is not always reached\n" +
-            "WakelockActivity6.java:28: Warning: The release() call is not always reached\n" +
-            "WakelockActivity6.java:65: Warning: The release() call is not always reached",
+            "src/test/pkg/WakelockActivity6.java:19: Warning: The release() call is not always reached [Wakelock]\n" +
+            "            lock.release(); // Wrong\n" +
+            "                 ~~~~~~~\n" +
+            "src/test/pkg/WakelockActivity6.java:28: Warning: The release() call is not always reached [Wakelock]\n" +
+            "            lock.release(); // Wrong\n" +
+            "                 ~~~~~~~\n" +
+            "src/test/pkg/WakelockActivity6.java:65: Warning: The release() call is not always reached [Wakelock]\n" +
+            "        lock.release(); // Wrong\n" +
+            "             ~~~~~~~\n" +
+            "0 errors, 3 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",

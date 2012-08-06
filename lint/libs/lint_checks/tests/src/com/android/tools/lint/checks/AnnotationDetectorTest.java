@@ -25,10 +25,20 @@ import java.util.List;
 public class AnnotationDetectorTest extends AbstractCheckTest {
     public void test() throws Exception {
         assertEquals(
-            "WrongAnnotation.java:11: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method\n" +
-            "WrongAnnotation.java:13: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method\n" +
-            "WrongAnnotation.java:8: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method\n" +
-            "WrongAnnotation.java:9: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method",
+            "src/test/pkg/WrongAnnotation.java:8: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n" +
+            "    public static void foobar(View view, @SuppressLint(\"NewApi\") int foo) { // Invalid: class-file check\n" +
+            "                                         ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WrongAnnotation.java:9: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n" +
+            "        @SuppressLint(\"NewApi\") // Invalid\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WrongAnnotation.java:11: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n" +
+            "        @SuppressLint({\"SdCardPath\", \"NewApi\"}) // Invalid: class-file based check on local variable\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WrongAnnotation.java:13: Error: The @SuppresLint annotation cannot be used on a local variable  with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n" +
+            "        @android.annotation.SuppressLint({\"SdCardPath\", \"NewApi\"}) // Invalid (FQN)\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "4 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "src/test/pkg/WrongAnnotation.java.txt=>src/test/pkg/WrongAnnotation.java"

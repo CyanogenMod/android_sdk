@@ -19,6 +19,8 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.LombokParser;
 import com.android.tools.lint.Main;
+import com.android.tools.lint.Reporter;
+import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
@@ -28,7 +30,6 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.io.Files;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
@@ -92,23 +94,7 @@ public abstract class AbstractCheckTest extends TestCase {
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
         TestLintClient lintClient = new TestLintClient();
-        LintDriver driver = new LintDriver(new CustomIssueRegistry(), lintClient);
-        driver.analyze(files, null /* scope */);
-
-        List<String> errors = lintClient.getErrors();
-        Collections.sort(errors);
-        for (String error : errors) {
-            if (mOutput.length() > 0) {
-                mOutput.append('\n');
-            }
-            mOutput.append(error);
-        }
-
-        if (mOutput.length() == 0) {
-            mOutput.append("No warnings.");
-        }
-
-        String result = mOutput.toString();
+        String result = lintClient.analyze(files);
 
         // The output typically contains a few directory/filenames.
         // On Windows we need to change the separators to the unix-style
@@ -269,84 +255,71 @@ public abstract class AbstractCheckTest extends TestCase {
     }
 
     public class TestLintClient extends Main {
-        private List<String> mErrors = new ArrayList<String>();
+        private StringWriter mWriter = new StringWriter();
 
-        public List<String> getErrors() {
-            return mErrors;
+        TestLintClient() {
+            mReporters.add(new TextReporter(this, mWriter, false));
+        }
+
+        public String analyze(List<File> files) throws Exception {
+            mDriver = new LintDriver(new CustomIssueRegistry(), this);
+            mDriver.analyze(files, null /* scope */);
+
+            Collections.sort(mWarnings);
+
+            for (Reporter reporter : mReporters) {
+                reporter.write(mErrorCount, mWarningCount, mWarnings);
+            }
+
+            mOutput.append(mWriter.toString());
+
+            if (mOutput.length() == 0) {
+                mOutput.append("No warnings.");
+            }
+
+            String result = mOutput.toString();
+            if (result.equals("\nNo issues found.\n")) {
+                result = "No warnings.";
+            }
+
+            if (sTempDir != null && result.contains(sTempDir.getPath())) {
+                result = result.replace(sTempDir.getCanonicalFile().getPath(), "/TESTROOT");
+                result = result.replace(sTempDir.getAbsoluteFile().getPath(), "/TESTROOT");
+                result = result.replace(sTempDir.getPath(), "/TESTROOT");
+            }
+
+            return result;
+        }
+
+        public String getErrors() throws Exception {
+            return mWriter.toString();
         }
 
         @Override
         public void report(Context context, Issue issue, Severity severity, Location location,
                 String message, Object data) {
-            StringBuilder sb = new StringBuilder();
-
             if (issue == IssueRegistry.LINT_ERROR) {
                 return;
-            }
-
-            if (location != null && location.getFile() != null) {
-                // Include parent directory for locations that have alternates, since
-                // frequently the file name is the same across different resource folders
-                // and we want to make sure in the tests that we're indeed passing the
-                // right files in as secondary locations
-                if (location.getSecondary() != null || includeParentPath()) {
-                    sb.append(location.getFile().getParentFile().getName() + "/"
-                            + location.getFile().getName());
-                } else {
-                    sb.append(location.getFile().getName());
-                }
-
-                sb.append(':');
-
-                Position startPosition = location.getStart();
-                if (startPosition != null) {
-                    int line = startPosition.getLine();
-                    if (line >= 0) {
-                        // line is 0-based, should display 1-based
-                        sb.append(Integer.toString(line + 1));
-                        sb.append(':');
-                    }
-                }
-
-                sb.append(' ');
             }
 
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.
                 severity = Severity.ERROR;
             }
-            sb.append(severity.getDescription());
-            sb.append(": ");
 
-            sb.append(message);
-
+            // For messages into all secondary locations to ensure they get
+            // specifically included in the text report
             if (location != null && location.getSecondary() != null) {
-                location = location.getSecondary();
-                while (location != null) {
-                    if (location.getMessage() != null) {
-                        sb.append('\n');
-                        sb.append("=> ");
-                        sb.append(location.getFile().getParentFile().getName() + "/"
-                                + location.getFile().getName());
-                        sb.append(':');
-                        Position startPosition = location.getStart();
-                        if (startPosition != null) {
-                            int line = startPosition.getLine();
-                            if (line >= 0) {
-                                // line is 0-based, should display 1-based
-                                sb.append(Integer.toString(line + 1));
-                                sb.append(':');
-                            }
-                        }
-                        sb.append(' ');
-                        if (location.getMessage() != null) {
-                            sb.append(location.getMessage());
-                        }
+                Location l = location.getSecondary();
+                while (l != null) {
+                    if (l.getMessage() == null) {
+                        l.setMessage("<No location-specific message");
                     }
-                    location = location.getSecondary();
+                    l = l.getSecondary();
                 }
             }
-            mErrors.add(sb.toString());
+
+            super.report(context, issue, severity, location, message, data);
         }
 
         @Override

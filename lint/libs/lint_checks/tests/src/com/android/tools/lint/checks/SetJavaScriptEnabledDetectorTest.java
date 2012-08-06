@@ -25,12 +25,14 @@ public class SetJavaScriptEnabledDetectorTest extends AbstractCheckTest {
         return new SetJavaScriptEnabledDetector();
     }
 
-    public void testAccessibility() throws Exception {
+    public void test() throws Exception {
         assertEquals(
-                "SetJavaScriptEnabled.java:14: Warning: Using setJavaScriptEnabled " +
-                        "can introduce XSS vulnerabilities into you application, review " +
-                        "carefully.",
-                lintProject(
-                        "src/test/pkg/SetJavaScriptEnabled.java.txt=>src/test/pkg/SetJavaScriptEnabled.java"));
+            "src/test/pkg/SetJavaScriptEnabled.java:14: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]\n" +
+            "        webView.getSettings().setJavaScriptEnabled(true); // bad\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject(
+                    "src/test/pkg/SetJavaScriptEnabled.java.txt=>src/test/pkg/SetJavaScriptEnabled.java"));
     }
 }

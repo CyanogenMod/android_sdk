@@ -34,12 +34,24 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         TranslationDetector.COMPLETE_REGIONS = false;
         assertEquals(
             // Sample files from the Home app
-            "values-cs/arrays.xml:3: Error: \"security_questions\" is translated here but not found in default locale\n" +
-            "=> values-es/strings.xml:12: Also translated here\n" +
-            "values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale\n" +
-            "values/strings.xml:20: Error: \"show_all_apps\" is not translated in nl-rNL\n" +
-            "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in nl-rNL\n" +
-            "values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es, es-rUS, nl-rNL",
+            "res/values/strings.xml:20: Error: \"show_all_apps\" is not translated in nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"show_all_apps\">All</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es, es-rUS, nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"menu_settings\">Settings</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values-cs/arrays.xml:3: Error: \"security_questions\" is translated here but not found in default locale [ExtraTranslation]\n" +
+            "  <string-array name=\"security_questions\">\n" +
+            "                ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-es/strings.xml:12: Also translated here\n" +
+            "res/values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale [ExtraTranslation]\n" +
+            "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "5 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                  "res/values/strings.xml",
@@ -57,12 +69,27 @@ public class TranslationDetectorTest extends AbstractCheckTest {
         TranslationDetector.COMPLETE_REGIONS = true;
         assertEquals(
             // Sample files from the Home app
-            "values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale\n" +
-            "values/strings.xml:19: Error: \"home_title\" is not translated in es-rUS\n" +
-            "values/strings.xml:20: Error: \"show_all_apps\" is not translated in es-rUS, nl-rNL\n" +
-            "values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in es-rUS, nl-rNL\n" +
-            "values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es-rUS, nl-rNL\n" +
-            "values/strings.xml:29: Error: \"wallpaper_instructions\" is not translated in es-rUS",
+            "res/values/strings.xml:19: Error: \"home_title\" is not translated in es-rUS [MissingTranslation]\n" +
+            "    <string name=\"home_title\">Home Sample</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:20: Error: \"show_all_apps\" is not translated in es-rUS, nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"show_all_apps\">All</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:23: Error: \"menu_wallpaper\" is not translated in es-rUS, nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:25: Error: \"menu_settings\" is not translated in cs, de-rDE, es-rUS, nl-rNL [MissingTranslation]\n" +
+            "    <string name=\"menu_settings\">Settings</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/strings.xml:29: Error: \"wallpaper_instructions\" is not translated in es-rUS [MissingTranslation]\n" +
+            "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-land/strings.xml:19: <No location-specific message\n" +
+            "res/values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale [ExtraTranslation]\n" +
+            "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "6 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                  "res/values/strings.xml",
@@ -141,9 +168,11 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     public void testNonTranslatable1() throws Exception {
         TranslationDetector.COMPLETE_REGIONS = true;
         assertEquals(
-            // Sample files from the Home app
-            "values-nb/nontranslatable.xml:3: Error: The resource string \"dummy\" has been " +
-                "marked as translatable=\"false\"",
+            "res/values-nb/nontranslatable.xml:3: Error: The resource string \"dummy\" has been marked as translatable=\"false\" [ExtraTranslation]\n" +
+            "    <string name=\"dummy\">Ignore Me</string>\n" +
+            "            ~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject("res/values/nontranslatable.xml",
                     "res/values/nontranslatable2.xml=>res/values-nb/nontranslatable.xml"));
@@ -152,9 +181,11 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     public void testNonTranslatable2() throws Exception {
         TranslationDetector.COMPLETE_REGIONS = true;
         assertEquals(
-            // Sample files from the Home app
-            "values-nb/nontranslatable.xml:3: Error: Non-translatable resources should only " +
-            "be defined in the base values/ folder",
+            "res/values-nb/nontranslatable.xml:3: Error: Non-translatable resources should only be defined in the base values/ folder [ExtraTranslation]\n" +
+            "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+            "                         ~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject("res/values/nontranslatable.xml=>res/values-nb/nontranslatable.xml"));
     }

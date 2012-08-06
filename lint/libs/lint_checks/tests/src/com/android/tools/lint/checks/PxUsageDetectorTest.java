@@ -27,24 +27,46 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
 
     public void testPx() throws Exception {
         assertEquals(
-            "now_playing_after.xml:41: Warning: Avoid using \"px\" as units; use \"dp\" instead",
+            "res/layout/now_playing_after.xml:41: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
+            "        android:layout_width=\"1px\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintFiles("res/layout/now_playing_after.xml"));
     }
 
     public void testSp() throws Exception {
         assertEquals(
-            "textsize.xml:11: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
-            "textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes",
+            "res/layout/textsize.xml:11: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        android:textSize=\"14dp\" />\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        android:textSize=\"14dip\" />\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
             lintFiles("res/layout/textsize.xml"));
     }
 
     public void testStyles() throws Exception {
         assertEquals(
-            "pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
-            "pxsp.xml:17: Warning: Avoid using \"px\" as units; use \"dp\" instead\n" +
-            "pxsp.xml:18: Warning: Avoid using \"px\" as units; use \"dp\" instead\n" +
-            "pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes\n" +
-            "pxsp.xml:9: Warning: Avoid using \"px\" as units; use \"dp\" instead",
+            "res/values/pxsp.xml:9: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
+            "        <item name=\"android:textSize\">50px</item>\n" +
+            "                                      ^\n" +
+            "res/values/pxsp.xml:17: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
+            "        <item name=\"android:paddingRight\"> 50px </item>\n" +
+            "                                           ^\n" +
+            "res/values/pxsp.xml:18: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
+            "        <item name=\"android:paddingTop\">50px</item>\n" +
+            "                                        ^\n" +
+            "res/values/pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        <item name=\"android:textSize\">50dp</item>\n" +
+            "                                      ^\n" +
+            "res/values/pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        <item name=\"android:textSize\"> 50dip </item>\n" +
+            "                                       ^\n" +
+            "0 errors, 5 warnings\n" +
+            "",
 
             lintFiles("res/values/pxsp.xml"));
     }
