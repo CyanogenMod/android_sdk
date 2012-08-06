@@ -62,7 +62,8 @@ subdirs += \
 	sdk/sdkstats \
 	sdk/sdkmanager \
 	sdk/swtmenubar \
-	sdk/traceview
+	sdk/traceview \
+	sdk/uiautomatorviewer
 
 else
 $(warning SDK_ONLY: javac not available.)

@@ -85,6 +85,9 @@ bin/sqlite3.exe                             strip tools/sqlite3.exe
 rm tools/traceview
 sdk/traceview/etc/traceview.bat                   tools/traceview.bat
 
+rm tools/uiautomatorviewer
+sdk/uiautomatorviewer/etc/uiautomatorviewer.bat   tools/uiautomatorviewer.bat
+
 rm tools/zipalign
 bin/zipalign.exe                            strip tools/zipalign.exe
 
