@@ -43,15 +43,15 @@ import java.io.File;
  *
  */
 public class OpenDialog extends Dialog {
-
     private static final int FIXED_TEXT_FIELD_WIDTH = 300;
     private static final int DEFAULT_LAYOUT_SPACING = 10;
     private Text mScreenshotText;
     private Text mXmlText;
-    private File mScreenshotFile;
-    private File mXmlDumpFile;
     private boolean mFileChanged = false;
     private Button mOkButton;
+
+    private static File sScreenshotFile;
+    private static File sXmlDumpFile;
 
     /**
      * Create the dialog.
@@ -68,8 +68,6 @@ public class OpenDialog extends Dialog {
      */
     @Override
     protected Control createDialogArea(Composite parent) {
-        loadDataFromModel();
-
         Composite container = (Composite) super.createDialogArea(parent);
         GridLayout gl_container = new GridLayout(1, false);
         gl_container.verticalSpacing = DEFAULT_LAYOUT_SPACING;
@@ -84,8 +82,8 @@ public class OpenDialog extends Dialog {
         openScreenshotGroup.setText("Screenshot");
 
         mScreenshotText = new Text(openScreenshotGroup, SWT.BORDER | SWT.READ_ONLY);
-        if (mScreenshotFile != null) {
-            mScreenshotText.setText(mScreenshotFile.getAbsolutePath());
+        if (sScreenshotFile != null) {
+            mScreenshotText.setText(sScreenshotFile.getAbsolutePath());
         }
         GridData gd_screenShotText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
         gd_screenShotText.minimumWidth = FIXED_TEXT_FIELD_WIDTH;
@@ -108,8 +106,8 @@ public class OpenDialog extends Dialog {
 
         mXmlText = new Text(openXmlGroup, SWT.BORDER | SWT.READ_ONLY);
         mXmlText.setEditable(false);
-        if (mXmlDumpFile != null) {
-            mXmlText.setText(mXmlDumpFile.getAbsolutePath());
+        if (sXmlDumpFile != null) {
+            mXmlText.setText(sXmlDumpFile.getAbsolutePath());
         }
         GridData gd_xmlText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
         gd_xmlText.minimumWidth = FIXED_TEXT_FIELD_WIDTH;
@@ -153,18 +151,13 @@ public class OpenDialog extends Dialog {
         newShell.setText("Open UI Dump Files");
     }
 
-    private void loadDataFromModel() {
-        mScreenshotFile = UiAutomatorModel.getModel().getScreenshotFile();
-        mXmlDumpFile = UiAutomatorModel.getModel().getXmlDumpFile();
-    }
-
     private void handleOpenScreenshotFile() {
         FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
         fd.setText("Open Screenshot File");
-        File initialFile = mScreenshotFile;
+        File initialFile = sScreenshotFile;
         // if file has never been selected before, try to base initial path on the mXmlDumpFile
-        if (initialFile == null && mXmlDumpFile != null && mXmlDumpFile.isFile()) {
-            initialFile = mXmlDumpFile.getParentFile();
+        if (initialFile == null && sXmlDumpFile != null && sXmlDumpFile.isFile()) {
+            initialFile = sXmlDumpFile.getParentFile();
         }
         if (initialFile != null) {
             if (initialFile.isFile()) {
@@ -177,7 +170,7 @@ public class OpenDialog extends Dialog {
         fd.setFilterExtensions(filter);
         String selected = fd.open();
         if (selected != null) {
-            mScreenshotFile = new File(selected);
+            sScreenshotFile = new File(selected);
             mScreenshotText.setText(selected);
             mFileChanged = true;
         }
@@ -187,10 +180,10 @@ public class OpenDialog extends Dialog {
     private void handleOpenXmlDumpFile() {
         FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
         fd.setText("Open UI Dump XML File");
-        File initialFile = mXmlDumpFile;
+        File initialFile = sXmlDumpFile;
         // if file has never been selected before, try to base initial path on the mScreenshotFile
-        if (initialFile == null && mScreenshotFile != null && mScreenshotFile.isFile()) {
-            initialFile = mScreenshotFile.getParentFile();
+        if (initialFile == null && sScreenshotFile != null && sScreenshotFile.isFile()) {
+            initialFile = sScreenshotFile.getParentFile();
         }
         if (initialFile != null) {
             if (initialFile.isFile()) {
@@ -200,14 +193,14 @@ public class OpenDialog extends Dialog {
             }
         }
         String initialPath = mXmlText.getText();
-        if (initialPath.isEmpty() && mScreenshotFile != null && mScreenshotFile.isFile()) {
-            initialPath = mScreenshotFile.getParentFile().getAbsolutePath();
+        if (initialPath.isEmpty() && sScreenshotFile != null && sScreenshotFile.isFile()) {
+            initialPath = sScreenshotFile.getParentFile().getAbsolutePath();
         }
         String[] filter = {"*.xml"};
         fd.setFilterExtensions(filter);
         String selected = fd.open();
         if (selected != null) {
-            mXmlDumpFile = new File(selected);
+            sXmlDumpFile = new File(selected);
             mXmlText.setText(selected);
             mFileChanged = true;
         }
@@ -215,8 +208,8 @@ public class OpenDialog extends Dialog {
     }
 
     private void updateButtonState() {
-        mOkButton.setEnabled(mScreenshotFile != null && mXmlDumpFile != null
-                && mScreenshotFile.isFile() && mXmlDumpFile.isFile());
+        mOkButton.setEnabled(sScreenshotFile != null && sXmlDumpFile != null
+                && sScreenshotFile.isFile() && sXmlDumpFile.isFile());
     }
 
     public boolean hasFileChanged() {
@@ -224,10 +217,10 @@ public class OpenDialog extends Dialog {
     }
 
     public File getScreenshotFile() {
-        return mScreenshotFile;
+        return sScreenshotFile;
     }
 
     public File getXmlDumpFile() {
-        return mXmlDumpFile;
+        return sXmlDumpFile;
     }
 }

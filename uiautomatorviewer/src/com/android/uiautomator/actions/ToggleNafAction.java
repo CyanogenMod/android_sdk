@@ -16,17 +16,20 @@
 
 package com.android.uiautomator.actions;
 
-import com.android.uiautomator.UiAutomatorModel;
+import com.android.uiautomator.UiAutomatorView;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
 
 public class ToggleNafAction extends Action {
+    private UiAutomatorView mView;
 
-    public ToggleNafAction() {
+    public ToggleNafAction(UiAutomatorView view) {
         super("&Toggle NAF Nodes", IAction.AS_CHECK_BOX);
-        setChecked(UiAutomatorModel.getModel().shouldShowNafNodes());
+        setChecked(view.shouldShowNafNodes());
+
+        mView = view;
     }
 
     @Override
@@ -36,7 +39,8 @@ public class ToggleNafAction extends Action {
 
     @Override
     public void run() {
-        UiAutomatorModel.getModel().toggleShowNaf();
-        setChecked(UiAutomatorModel.getModel().shouldShowNafNodes());
+        mView.toggleShowNaf();
+        mView.redrawScreenshot();
+        setChecked(mView.shouldShowNafNodes());
     }
 }

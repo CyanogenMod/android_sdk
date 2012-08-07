@@ -18,18 +18,24 @@ package com.android.uiautomator.actions;
 
 import com.android.uiautomator.OpenDialog;
 import com.android.uiautomator.UiAutomatorModel;
+import com.android.uiautomator.UiAutomatorViewer;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.window.ApplicationWindow;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.widgets.Display;
+
+import java.io.File;
 
 public class OpenFilesAction extends Action {
+    private UiAutomatorViewer mViewer;
 
-    ApplicationWindow mWindow;
-
-    public OpenFilesAction(ApplicationWindow window) {
+    public OpenFilesAction(UiAutomatorViewer viewer) {
         super("&Open");
-        mWindow = window;
+
+        mViewer = viewer;
     }
 
     @Override
@@ -39,10 +45,37 @@ public class OpenFilesAction extends Action {
 
     @Override
     public void run() {
-        OpenDialog d = new OpenDialog(mWindow.getShell());
-        if (d.open() == OpenDialog.OK) {
-            UiAutomatorModel.getModel().loadScreenshotAndXmlDump(
-                    d.getScreenshotFile(), d.getXmlDumpFile());
+        OpenDialog d = new OpenDialog(Display.getDefault().getActiveShell());
+        if (d.open() != OpenDialog.OK) {
+            return;
         }
+
+        UiAutomatorModel model;
+        try {
+            model = new UiAutomatorModel(d.getXmlDumpFile());
+        } catch (Exception e) {
+            // FIXME: show error
+            return;
+        }
+
+        Image img = null;
+        try {
+            File screenshot = d.getScreenshotFile();
+            ImageData[] data = new ImageLoader().load(screenshot.getAbsolutePath());
+
+            // "data" is an array, probably used to handle images that has multiple frames
+            // i.e. gifs or icons, we just care if it has at least one here
+            if (data.length < 1) {
+                throw new RuntimeException("Unable to load image: "
+                                + screenshot.getAbsolutePath());
+            }
+
+            img = new Image(Display.getDefault(), data[0]);
+        } catch (Exception e) {
+            // FIXME: show error
+            return;
+        }
+
+        mViewer.setModel(model, img);
     }
 }
