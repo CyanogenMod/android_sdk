@@ -40,6 +40,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_V
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.SegmentType;
 
 import java.util.HashMap;
@@ -138,7 +140,8 @@ enum ConstraintType {
      * @param attribute the name of the attribute to look up
      * @return the corresponding {@link ConstraintType}
      */
-    public static ConstraintType fromAttribute(String attribute) {
+    @Nullable
+    public static ConstraintType fromAttribute(@NonNull String attribute) {
         if (sNameToType == null) {
             ConstraintType[] types = ConstraintType.values();
             Map<String, ConstraintType> map = new HashMap<String, ConstraintType>(types.length);
@@ -169,6 +172,7 @@ enum ConstraintType {
      * @param to the target edge
      * @return a {@link ConstraintType}, or null
      */
+    @Nullable
     public static ConstraintType forMatch(boolean withParent, SegmentType from, SegmentType to) {
         // Attached to parent edge?
         if (withParent) {

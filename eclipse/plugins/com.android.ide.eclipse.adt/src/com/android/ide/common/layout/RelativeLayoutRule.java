@@ -17,7 +17,6 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
@@ -36,8 +35,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_V
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
@@ -48,7 +45,6 @@ import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
-import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -57,6 +53,7 @@ import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.relative.ConstraintPainter;
+import com.android.ide.common.layout.relative.DeletionHandler;
 import com.android.ide.common.layout.relative.GuidelinePainter;
 import com.android.ide.common.layout.relative.MoveHandler;
 import com.android.ide.common.layout.relative.ResizeHandler;
@@ -66,10 +63,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An {@link IViewRule} for android.widget.RelativeLayout and all its derived
@@ -161,7 +156,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     @Override
     public DropFeedback onDropMove(@NonNull INode targetNode, @NonNull IDragElement[] elements,
             @Nullable DropFeedback feedback, @NonNull Point p) {
-        if (elements == null || elements.length == 0) {
+        if (elements == null || elements.length == 0 || feedback == null) {
             return null;
         }
 
@@ -184,6 +179,10 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     @Override
     public void onDropped(final @NonNull INode targetNode, final @NonNull IDragElement[] elements,
             final @Nullable DropFeedback feedback, final @NonNull Point p) {
+        if (feedback == null) {
+            return;
+        }
+
         final MoveHandler state = (MoveHandler) feedback.userData;
 
         final Map<String, Pair<String, String>> idMap = getDropIdMap(targetNode, elements,
@@ -251,40 +250,14 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent) {
-        super.onRemovingChildren(deleted, parent);
+    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent,
+            boolean moved) {
+        super.onRemovingChildren(deleted, parent, moved);
 
-        // Remove any attachments pointing to the deleted nodes.
-
-        // Produce set of attribute values that we want to delete if
-        // present in a layout attribute
-        Set<String> removeValues = new HashSet<String>(deleted.size() * 2);
-        for (INode node : deleted) {
-            String id = node.getStringAttr(ANDROID_URI, ATTR_ID);
-            if (id != null) {
-                removeValues.add(id);
-                if (id.startsWith(NEW_ID_PREFIX)) {
-                    removeValues.add(ID_PREFIX + stripIdPrefix(id));
-                } else {
-                    removeValues.add(NEW_ID_PREFIX + stripIdPrefix(id));
-                }
-            }
-        }
-
-        for (INode child : parent.getChildren()) {
-            if (deleted.contains(child)) {
-                continue;
-            }
-            for (IAttribute attribute : child.getLiveAttributes()) {
-                if (attribute.getName().startsWith(ATTR_LAYOUT_PREFIX) &&
-                        ANDROID_URI.equals(attribute.getUri())) {
-                    String value = attribute.getValue();
-                    if (removeValues.contains(value)) {
-                        // Unset this reference to a deleted widget.
-                        child.setAttribute(ANDROID_URI, attribute.getName(), null);
-                    }
-                }
-            }
+        if (!moved) {
+            DeletionHandler handler = new DeletionHandler(deleted, Collections.<INode>emptyList(),
+                    parent);
+            handler.updateConstraints();
         }
     }
 
@@ -303,6 +276,10 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     public void onResizeUpdate(@Nullable DropFeedback feedback, @NonNull INode child,
             @NonNull INode parent, @NonNull Rect newBounds,
             int modifierMask) {
+        if (feedback == null) {
+            return;
+        }
+
         ResizeHandler state = (ResizeHandler) feedback.userData;
         state.updateResize(feedback, child, newBounds, modifierMask);
     }
@@ -310,6 +287,9 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     @Override
     public void onResizeEnd(@Nullable DropFeedback feedback, @NonNull INode child,
             @NonNull INode parent, final @NonNull Rect newBounds) {
+        if (feedback == null) {
+            return;
+        }
         final ResizeHandler state = (ResizeHandler) feedback.userData;
 
         child.editXml("Resize", new INodeHandler() {

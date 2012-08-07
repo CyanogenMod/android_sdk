@@ -404,6 +404,7 @@ public class MoveGesture extends DropGesture {
                     if (event.detail == DND.DROP_MOVE) {
                         GlobalCanvasDragInfo.getInstance().removeSource();
                     }
+                    mTargetNode.applyPendingChanges();
                 }
             });
         } finally {

@@ -142,9 +142,7 @@ public class ClipboardSupport {
      */
     public void cutSelectionToClipboard(List<SelectionItem> selection) {
         copySelectionToClipboard(selection);
-        deleteSelection(
-                mCanvas.getCutLabel(),
-                selection);
+        deleteSelection(mCanvas.getCutLabel(), selection);
     }
 
     /**
@@ -170,9 +168,11 @@ public class ClipboardSupport {
         for (SelectionItem cs : selection) {
             CanvasViewInfo vi = cs.getViewInfo();
             if (vi != null && vi.getParent() != null) {
+                CanvasViewInfo parent = vi.getParent();
+                assert parent != null;
                 if (title == null) {
-                    title = vi.getParent().getName();
-                } else if (!title.equals(vi.getParent().getName())) {
+                    title = parent.getName();
+                } else if (!title.equals(parent.getName())) {
                     // More than one kind of parent selected.
                     title = null;
                     break;
@@ -210,6 +210,9 @@ public class ClipboardSupport {
                         new HashMap<NodeProxy, List<INode>>();
                 for (SelectionItem cs : selection) {
                     NodeProxy node = cs.getNode();
+                    if (node == null) {
+                        continue;
+                    }
                     INode parent = node.getParent();
                     if (parent != null) {
                         List<INode> children = clusters.get(parent);

@@ -51,7 +51,6 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.relative.ConstraintType.ALIGN_BASELINE;
 import static com.android.utils.XmlUtils.ANDROID_URI;
-
 import static java.lang.Math.abs;
 
 import com.android.ide.common.api.DropFeedback;
@@ -292,6 +291,11 @@ public class GuidelineHandler {
         return false;
     }
 
+    /**
+     * Checks for any cycles in the dependencies
+     *
+     * @param feedback the drop feedback state
+     */
     public void checkCycles(DropFeedback feedback) {
         // Deliberate short circuit evaluation -- only list the first cycle
         feedback.errorMessage = null;
@@ -658,6 +662,7 @@ public class GuidelineHandler {
         }
     }
 
+    /** Breaks any cycles detected by the handler */
     public void removeCycles() {
         if (mHorizontalCycle != null) {
             removeCycles(mHorizontalDeps);

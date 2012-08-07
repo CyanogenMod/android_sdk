@@ -47,8 +47,6 @@ public class AbstractViewRule implements IViewRule {
         return null;
     }
 
-    // ==== Selection ====
-
     @Override
     @Nullable
     public List<String> getSelectionHint(@NonNull INode parentNode, @NonNull INode childNode) {
@@ -69,12 +67,10 @@ public class AbstractViewRule implements IViewRule {
             @NonNull List<? extends INode> childNodes, @Nullable Object view) {
     }
 
-    // ==== Drag & drop support ====
-
-    // By default Views do not accept drag'n'drop.
     @Override
     @Nullable
-    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView, @Nullable IDragElement[] elements) {
+    public DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements) {
         return null;
     }
 
@@ -86,7 +82,8 @@ public class AbstractViewRule implements IViewRule {
     }
 
     @Override
-    public void onDropLeave(@NonNull INode targetNode, @NonNull IDragElement[] elements, @Nullable DropFeedback feedback) {
+    public void onDropLeave(@NonNull INode targetNode, @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback) {
         // ignore
     }
 
@@ -101,39 +98,42 @@ public class AbstractViewRule implements IViewRule {
 
 
     @Override
-    public void onPaste(@NonNull INode targetNode, @Nullable Object targetView, @NonNull IDragElement[] pastedElements) {
-    }
-
-    // ==== Create/Remove hooks ====
-
-    @Override
-    public void onCreate(@NonNull INode node, @NonNull INode parent, @NonNull InsertType insertType) {
+    public void onPaste(@NonNull INode targetNode, @Nullable Object targetView,
+            @NonNull IDragElement[] pastedElements) {
     }
 
     @Override
-    public void onChildInserted(@NonNull INode child, @NonNull INode parent, @NonNull InsertType insertType) {
+    public void onCreate(@NonNull INode node, @NonNull INode parent,
+            @NonNull InsertType insertType) {
     }
 
     @Override
-    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent) {
+    public void onChildInserted(@NonNull INode child, @NonNull INode parent,
+            @NonNull InsertType insertType) {
     }
 
-    // ==== Resizing ====
+    @Override
+    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent,
+            boolean moved) {
+    }
 
     @Override
     @Nullable
-    public DropFeedback onResizeBegin(@NonNull INode child, @NonNull INode parent, @Nullable SegmentType horizontalEdge,
-            @Nullable SegmentType verticalEdge, @Nullable Object childView, @Nullable Object parentView) {
+    public DropFeedback onResizeBegin(@NonNull INode child, @NonNull INode parent,
+            @Nullable SegmentType horizontalEdge,
+            @Nullable SegmentType verticalEdge, @Nullable Object childView,
+            @Nullable Object parentView) {
         return null;
     }
 
     @Override
-    public void onResizeUpdate(@Nullable DropFeedback feedback, @NonNull INode child, @NonNull INode parent, @NonNull Rect newBounds,
+    public void onResizeUpdate(@Nullable DropFeedback feedback, @NonNull INode child,
+            @NonNull INode parent, @NonNull Rect newBounds,
             int modifierMask) {
     }
 
     @Override
-    public void onResizeEnd(@Nullable DropFeedback feedback, @NonNull INode child, final @NonNull INode parent,
-            final @NonNull Rect newBounds) {
+    public void onResizeEnd(@Nullable DropFeedback feedback, @NonNull INode child,
+            @NonNull INode parent, @NonNull Rect newBounds) {
     }
 }
