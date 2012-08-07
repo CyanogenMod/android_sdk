@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferen
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
@@ -54,11 +55,17 @@ import freemarker.template.TemplateException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.NullChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
@@ -66,6 +73,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.w3c.dom.Document;
@@ -835,12 +843,7 @@ class TemplateHandler {
             out.flush();
             String contents = out.toString();
 
-            if (relativeFrom.endsWith(DOT_XML)) {
-                XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(to);
-                XmlFormatPreferences prefs = XmlFormatPreferences.create();
-                contents = XmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
-            }
-
+            contents = format(mProject, contents, to);
             IFile targetFile = getTargetFile(to);
             TextFileChange change = createTextChange(targetFile);
             MultiTextEdit rootEdit = new MultiTextEdit();
@@ -848,6 +851,50 @@ class TemplateHandler {
             change.setEdit(rootEdit);
             mTextChanges.add(change);
         }
+    }
+
+    private static String format(IProject project, String contents, IPath to) {
+        String name = to.lastSegment();
+        if (name.endsWith(DOT_XML)) {
+            XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(to);
+            XmlFormatPreferences prefs = XmlFormatPreferences.create();
+            return XmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
+        } else if (name.endsWith(DOT_JAVA)) {
+            Map<?, ?> options = null;
+            if (project != null && project.isAccessible()) {
+                try {
+                    IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+                    if (javaProject != null) {
+                        options = javaProject.getOptions(true);
+                    }
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+            if (options == null) {
+                options = JavaCore.getOptions();
+            }
+
+            CodeFormatter formatter = ToolFactory.createCodeFormatter(options);
+
+            try {
+                IDocument doc = new org.eclipse.jface.text.Document();
+                // format the file (the meat and potatoes)
+                doc.set(contents);
+                TextEdit edit = formatter.format(
+                        CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.F_INCLUDE_COMMENTS,
+                        contents, 0, contents.length(), 0, null);
+                if (edit != null) {
+                    edit.apply(doc);
+                }
+
+                return doc.get();
+            } catch (Exception e) {
+                AdtPlugin.log(e, null);
+            }
+        }
+
+        return contents;
     }
 
     private static TextFileChange createTextChange(IFile targetFile) {
@@ -929,11 +976,7 @@ class TemplateHandler {
                     || targetName.endsWith(DOT_SVG)) {
 
                 String newFile = Files.toString(src, Charsets.UTF_8);
-                if (targetName.endsWith(DOT_XML)) {
-                    newFile = XmlPrettyPrinter.prettyPrint(newFile,
-                            XmlFormatPreferences.create(), XmlFormatStyle.getForFile(path),
-                            null /*lineSeparator*/);
-                }
+                newFile = format(mProject, newFile, path);
 
                 TextFileChange addFile = createTextChange(file);
                 addFile.setEdit(new InsertEdit(0, newFile));

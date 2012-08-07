@@ -22,6 +22,8 @@ import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.Va
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 import static com.android.util.XmlUtils.XMLNS;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.util.XmlUtils;
@@ -112,8 +114,12 @@ public class XmlPrettyPrinter {
      * @return the formatted document (or if a parsing error occurred, returns the
      *     unformatted document)
      */
-    public static String prettyPrint(String xml, XmlFormatPreferences prefs, XmlFormatStyle style,
-            String lineSeparator) {
+    @NonNull
+    public static String prettyPrint(
+            @NonNull String xml,
+            @NonNull XmlFormatPreferences prefs,
+            @NonNull XmlFormatStyle style,
+            @Nullable String lineSeparator) {
         Document document = DomUtilities.parseStructuredDocument(xml);
         if (document != null) {
             XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, lineSeparator);
