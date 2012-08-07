@@ -27,13 +27,29 @@ public class SecureRandomDetectorTest extends AbstractCheckTest {
 
     public void test1() throws Exception {
         assertEquals(
-            "SecureRandomTest.java:12: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed.\n" +
-            "SecureRandomTest.java:14: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:15: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:16: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:17: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:18: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().\n" +
-            "SecureRandomTest.java:28: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed().",
+            "src/test/pkg/SecureRandomTest.java:12: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed. [SecureRandom]\n" +
+            "        random1.setSeed(System.currentTimeMillis()); // OK\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:14: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random1.setSeed(0); // Wrong\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:15: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random1.setSeed(1); // Wrong\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:16: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random1.setSeed((int)1023); // Wrong\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:17: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random1.setSeed(1023L); // Wrong\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:18: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random1.setSeed(FIXED_SEED); // Wrong\n" +
+            "                ~~~~~~~\n" +
+            "src/test/pkg/SecureRandomTest.java:28: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]\n" +
+            "        random3.setSeed(0); // Wrong: owner is java/util/Random, but applied to SecureRandom object\n" +
+            "                ~~~~~~~\n" +
+            "0 errors, 7 warnings\n" +
+            "",
             // Missing error on line 40, using flow analysis to determine that the seed byte
             // array passed into the SecureRandom constructor is static.
 

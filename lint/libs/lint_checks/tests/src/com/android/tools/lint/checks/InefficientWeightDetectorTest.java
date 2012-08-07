@@ -27,20 +27,34 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
 
     public void testWeights() throws Exception {
         assertEquals(
-            "inefficient_weight.xml:10: Warning: Use a layout_width of 0dip instead of match_parent for better performance\n" +
-            "inefficient_weight.xml:24: Warning: Use a layout_height of 0dip instead of wrap_content for better performance",
+            "res/layout/inefficient_weight.xml:10: Warning: Use a layout_width of 0dip instead of match_parent for better performance [InefficientWeight]\n" +
+            "     android:layout_width=\"match_parent\"\n" +
+            "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/inefficient_weight.xml:24: Warning: Use a layout_height of 0dip instead of wrap_content for better performance [InefficientWeight]\n" +
+            "      android:layout_height=\"wrap_content\"\n" +
+            "      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
             lintFiles("res/layout/inefficient_weight.xml"));
     }
 
     public void testWeights2() throws Exception {
         assertEquals(
-            "nested_weights.xml:23: Warning: Nested weights are bad for performance",
+            "res/layout/nested_weights.xml:23: Warning: Nested weights are bad for performance [NestedWeights]\n" +
+            "            android:layout_weight=\"1\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintFiles("res/layout/nested_weights.xml"));
     }
 
     public void testWeights3() throws Exception {
         assertEquals(
-            "baseline_weights.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance",
+            "res/layout/baseline_weights.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintFiles("res/layout/baseline_weights.xml"));
     }
 
@@ -54,7 +68,11 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     public void testNoVerticalWeights4() throws Exception {
         // Orientation not specified ==> horizontal
         assertEquals(
-            "baseline_weights3.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance",
+            "res/layout/baseline_weights3.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintFiles("res/layout/baseline_weights3.xml"));
     }
 

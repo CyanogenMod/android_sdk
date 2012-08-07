@@ -27,15 +27,22 @@ public class StyleCycleDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "styles.xml:9: Error: Style DetailsPage_EditorialBuyButton should not extend itself",
+            "res/values/styles.xml:9: Error: Style DetailsPage_EditorialBuyButton should not extend itself [StyleCycle]\n" +
+            "<style name=\"DetailsPage_EditorialBuyButton\" parent=\"@style/DetailsPage_EditorialBuyButton\" />\n" +
+            "                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject("res/values/styles.xml"));
     }
 
     public void test2() throws Exception {
         assertEquals(
-            "stylecycle.xml:3: Error: Potential cycle: PropertyToggle is the implied parent " +
-            "of PropertyToggle.Base and this defines the opposite",
+            "res/values/stylecycle.xml:3: Error: Potential cycle: PropertyToggle is the implied parent of PropertyToggle.Base and this defines the opposite [StyleCycle]\n" +
+            "  <style name=\"PropertyToggle\" parent=\"@style/PropertyToggle.Base\"></style>\n" +
+            "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject("res/values/stylecycle.xml"));
     }

@@ -27,8 +27,11 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
 
     public void testCustom() throws Exception {
         assertEquals(
-            "customview.xml:16: Error: When using a custom namespace attribute in a library " +
-            "project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead.",
+            "res/layout/customview.xml:16: Error: When using a custom namespace attribute in a library project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead. [LibraryCustomView]\n" +
+            "        foo:misc=\"Custom attribute\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                     "multiproject/library-manifest.xml=>AndroidManifest.xml",
@@ -66,29 +69,35 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
 
     public void testTypo() throws Exception {
         assertEquals(
-                "wrong_namespace.xml:2: Warning: Unexpected namespace URI bound to the " +
-                "\"android\" prefix, was http://schemas.android.com/apk/res/andriod, " +
-                "expected http://schemas.android.com/apk/res/android",
+            "res/layout/wrong_namespace.xml:2: Warning: Unexpected namespace URI bound to the \"android\" prefix, was http://schemas.android.com/apk/res/andriod, expected http://schemas.android.com/apk/res/android [NamespaceTypo]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/andriod\"\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
-                lintProject("res/layout/wrong_namespace.xml"));
+            lintProject("res/layout/wrong_namespace.xml"));
     }
 
     public void testTypo2() throws Exception {
         assertEquals(
-                "wrong_namespace2.xml:2: Warning: URI is case sensitive: was " +
-                "\"http://schemas.android.com/apk/res/Android\", expected " +
-                "\"http://schemas.android.com/apk/res/android\"",
+            "res/layout/wrong_namespace2.xml:2: Warning: URI is case sensitive: was \"http://schemas.android.com/apk/res/Android\", expected \"http://schemas.android.com/apk/res/android\" [NamespaceTypo]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/Android\"\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
-                lintProject("res/layout/wrong_namespace2.xml"));
+            lintProject("res/layout/wrong_namespace2.xml"));
     }
 
     public void testTypo3() throws Exception {
         assertEquals(
-                "wrong_namespace3.xml:2: Warning: Unexpected namespace URI bound to the " +
-                "\"android\" prefix, was http://schemas.android.com/apk/res/androi, " +
-                "expected http://schemas.android.com/apk/res/android",
+            "res/layout/wrong_namespace3.xml:2: Warning: Unexpected namespace URI bound to the \"android\" prefix, was http://schemas.android.com/apk/res/androi, expected http://schemas.android.com/apk/res/android [NamespaceTypo]\n" +
+            "<LinearLayout xmlns:a=\"http://schemas.android.com/apk/res/androi\"\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
-                lintProject("res/layout/wrong_namespace3.xml"));
+            lintProject("res/layout/wrong_namespace3.xml"));
     }
 
     public void testTypoOk() throws Exception {
@@ -100,10 +109,16 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
 
     public void testUnused() throws Exception {
         assertEquals(
-                "unused_namespace.xml:3: Warning: Unused namespace unused1\n" +
-                "unused_namespace.xml:4: Warning: Unused namespace unused2",
+            "res/layout/unused_namespace.xml:3: Warning: Unused namespace unused1 [UnusedNamespace]\n" +
+            "    xmlns:unused1=\"http://schemas.android.com/apk/res/unused1\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/unused_namespace.xml:4: Warning: Unused namespace unused2 [UnusedNamespace]\n" +
+            "    xmlns:unused2=\"http://schemas.android.com/apk/res/unused1\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
-                lintProject("res/layout/unused_namespace.xml"));
+            lintProject("res/layout/unused_namespace.xml"));
     }
 
     public void testUnusedOk() throws Exception {

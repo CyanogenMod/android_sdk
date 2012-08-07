@@ -27,23 +27,47 @@ public class SdCardDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "SdCardTest.java:13: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:14: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:15: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:16: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:20: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:22: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:24: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:30: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead\n" +
-                "SdCardTest.java:31: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+            "src/test/pkg/SdCardTest.java:13: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            " private static final String SDCARD_TEST_HTML = \"/sdcard/test.html\";\n" +
+            "                                                ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:14: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            " public static final String SDCARD_ROOT = \"/sdcard\";\n" +
+            "                                          ~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:15: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            " public static final String PACKAGES_PATH = \"/sdcard/o/packages/\";\n" +
+            "                                            ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:16: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            " File deviceDir = new File(\"/sdcard/vr\");\n" +
+            "                           ~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:20: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "   android.os.Debug.startMethodTracing(\"/sdcard/launcher\");\n" +
+            "                                       ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:22: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  if (new File(\"/sdcard\").exists()) {\n" +
+            "               ~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:24: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  String FilePath = \"/sdcard/\" + new File(\"test\");\n" +
+            "                    ~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:30: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  intent.putExtra(\"path-filter\", \"/sdcard(/.+)*\");\n" +
+            "                                 ~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:31: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  intent.putExtra(\"start-dir\", \"/sdcard\");\n" +
+            "                               ~~~~~~~~~\n" +
+            "0 errors, 9 warnings\n" +
+            "",
 
-                lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
+            lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
     }
 
     public void testSuppress() throws Exception {
         assertEquals(
             // The only reference in the file not covered by an annotation
-            "SuppressTest5.java:40: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+            "src/test/pkg/SuppressTest5.java:40: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  String notAnnotated = \"/sdcard/mypath\";\n" +
+            "                        ~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             // File with lots of /sdcard references, but with @SuppressLint warnings
             // on fields, methods, variable declarations etc
@@ -52,7 +76,11 @@ public class SdCardDetectorTest extends AbstractCheckTest {
 
     public void testUtf8Bom() throws Exception {
         assertEquals(
-            "Utf8BomTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead",
+            "src/test/pkg/Utf8BomTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "    String s = \"/sdcard/mydir\";\n" +
+            "               ~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject("src/test/pkg/Utf8BomTest.java.data=>src/test/pkg/Utf8BomTest.java"));
     }

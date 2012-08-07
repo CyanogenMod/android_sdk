@@ -27,17 +27,27 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-                "namespace.xml:2: Warning: Attribute is missing the Android namespace prefix\n" +
-                "namespace.xml:3: Warning: Attribute is missing the Android namespace prefix",
+            "res/layout/namespace.xml:2: Warning: Attribute is missing the Android namespace prefix [MissingPrefix]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" orientation=\"true\">\n" +
+            "                                                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/namespace.xml:3: Warning: Attribute is missing the Android namespace prefix [MissingPrefix]\n" +
+            "    <Button style=\"@style/setupWizardOuterFrame\" android.text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n" +
+            "                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
-                lintFiles("res/layout/namespace.xml"));
+            lintFiles("res/layout/namespace.xml"));
     }
 
     public void testCustomNamespace() throws Exception {
         assertEquals(
-                "namespace2.xml:8: Warning: Attribute is missing the Android namespace prefix",
+            "res/layout/namespace2.xml:8: Warning: Attribute is missing the Android namespace prefix [MissingPrefix]\n" +
+            "    customprefix:orientation=\"vertical\"\n" +
+            "                 ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
-                lintFiles("res/layout/namespace2.xml"));
+            lintFiles("res/layout/namespace2.xml"));
     }
 
 }

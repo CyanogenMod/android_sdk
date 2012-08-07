@@ -27,20 +27,36 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testXmlApi1() throws Exception {
         assertEquals(
-                "colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
-                "layout.xml:15: Error: View requires API level 11 (current min is 1): <CalendarView>\n" +
-                "layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout>\n" +
-                "layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1)\n" +
-                "layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
-                "layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge>\n" +
-                "themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)",
+            "res/color/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+            "                                                ^\n" +
+            "res/layout/layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n" +
+            "    <QuickContactBadge\n" +
+            "    ^\n" +
+            "res/layout/layout.xml:15: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n" +
+            "    <CalendarView\n" +
+            "    ^\n" +
+            "res/layout/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n" +
+            "    <GridLayout\n" +
+            "    ^\n" +
+            "res/layout/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n" +
+            "        foo=\"@android:attr/actionBarSplitStyle\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        bar=\"@android:color/holo_red_light\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+            "                                                ^\n" +
+            "7 errors, 0 warnings\n" +
+            "",
 
-                lintProject(
-                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                    "apicheck/layout.xml=>res/layout/layout.xml",
-                    "apicheck/themes.xml=>res/values/themes.xml",
-                    "apicheck/themes.xml=>res/color/colors.xml"
-                    ));
+            lintProject(
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/layout.xml=>res/layout/layout.xml",
+                "apicheck/themes.xml=>res/values/themes.xml",
+                "apicheck/themes.xml=>res/color/colors.xml"
+                ));
     }
 
     public void testXmlApi14() throws Exception {
@@ -57,18 +73,30 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testXmlApiFolderVersion11() throws Exception {
         assertEquals(
-                "colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
-                "layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout>\n" +
-                "layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1)\n" +
-                "layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1)\n" +
-                "themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1)",
+            "res/color-v11/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+            "                                                ^\n" +
+            "res/layout-v11/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n" +
+            "    <GridLayout\n" +
+            "    ^\n" +
+            "res/layout-v11/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n" +
+            "        foo=\"@android:attr/actionBarSplitStyle\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout-v11/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        bar=\"@android:color/holo_red_light\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/values-v11/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+            "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+            "                                                ^\n" +
+            "5 errors, 0 warnings\n" +
+            "",
 
-                lintProject(
-                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                    "apicheck/layout.xml=>res/layout-v11/layout.xml",
-                    "apicheck/themes.xml=>res/values-v11/themes.xml",
-                    "apicheck/themes.xml=>res/color-v11/colors.xml"
-                    ));
+            lintProject(
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/layout.xml=>res/layout-v11/layout.xml",
+                "apicheck/themes.xml=>res/values-v11/themes.xml",
+                "apicheck/themes.xml=>res/color-v11/colors.xml"
+                ));
     }
 
     public void testXmlApiFolderVersion14() throws Exception {
@@ -85,18 +113,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi1() throws Exception {
         assertEquals(
-            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
-            "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError\n" +
-            "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
-            "ApiCallTest.java:27: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener\n" +
-            "ApiCallTest.java:30: Error: Call requires API level 11 (current min is 1): android.widget.Chronometer#setTextIsSelectable\n" +
-            "ApiCallTest.java:33: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE\n" +
-            "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo\n" +
-            "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout\n" +
-            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport",
+            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator [NewApi]\n" +
+            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
+            "                                             ~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
+            "  DOMError error = null; // API 8\n" +
+            "  ~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:27: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener [NewApi]\n" +
+            "  chronometer.getOnChronometerTickListener(); // API 3 \n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:30: Error: Call requires API level 11 (current min is 1): android.widget.Chronometer#setTextIsSelectable [NewApi]\n" +
+            "  chronometer.setTextIsSelectable(true); // API 11\n" +
+            "              ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
+            "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
+            "                         ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
+            "                              ~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout [NewApi]\n" +
+            " GridLayout getGridLayout() { // API 14\n" +
+            "            ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
+            " private ApplicationErrorReport getReport() {\n" +
+            "                                ~~~~~~~~~\n" +
+            "12 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -108,18 +162,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi2() throws Exception {
         assertEquals(
-            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMLocator\n" +
-            "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 2): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMError\n" +
-            "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMErrorHandler\n" +
-            "ApiCallTest.java:27: Error: Call requires API level 3 (current min is 2): android.widget.Chronometer#getOnChronometerTickListener\n" +
-            "ApiCallTest.java:30: Error: Call requires API level 11 (current min is 2): android.widget.Chronometer#setTextIsSelectable\n" +
-            "ApiCallTest.java:33: Error: Field requires API level 11 (current min is 2): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE\n" +
-            "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo\n" +
-            "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout\n" +
-            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport",
+            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMLocator [NewApi]\n" +
+            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
+            "                                             ~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 2): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMError [NewApi]\n" +
+            "  DOMError error = null; // API 8\n" +
+            "  ~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:27: Error: Call requires API level 3 (current min is 2): android.widget.Chronometer#getOnChronometerTickListener [NewApi]\n" +
+            "  chronometer.getOnChronometerTickListener(); // API 3 \n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:30: Error: Call requires API level 11 (current min is 2): android.widget.Chronometer#setTextIsSelectable [NewApi]\n" +
+            "  chronometer.setTextIsSelectable(true); // API 11\n" +
+            "              ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 2): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
+            "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
+            "                         ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
+            "                              ~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout [NewApi]\n" +
+            " GridLayout getGridLayout() { // API 14\n" +
+            "            ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport [NewApi]\n" +
+            " private ApplicationErrorReport getReport() {\n" +
+            "                                ~~~~~~~~~\n" +
+            "12 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -131,17 +211,41 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi4() throws Exception {
         assertEquals(
-            "ApiCallTest.java:18: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMLocator\n" +
-            "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 4): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:23: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMError\n" +
-            "ApiCallTest.java:24: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler\n" +
-            "ApiCallTest.java:30: Error: Call requires API level 11 (current min is 4): android.widget.Chronometer#setTextIsSelectable\n" +
-            "ApiCallTest.java:33: Error: Field requires API level 11 (current min is 4): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE\n" +
-            "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo\n" +
-            "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout\n" +
-            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport",
+            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMLocator [NewApi]\n" +
+            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
+            "                                             ~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 4): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMError [NewApi]\n" +
+            "  DOMError error = null; // API 8\n" +
+            "  ~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:30: Error: Call requires API level 11 (current min is 4): android.widget.Chronometer#setTextIsSelectable [NewApi]\n" +
+            "  chronometer.setTextIsSelectable(true); // API 11\n" +
+            "              ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 4): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
+            "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
+            "                         ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
+            "                              ~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout [NewApi]\n" +
+            " GridLayout getGridLayout() { // API 14\n" +
+            "            ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport [NewApi]\n" +
+            " private ApplicationErrorReport getReport() {\n" +
+            "                                ~~~~~~~~~\n" +
+            "11 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -153,14 +257,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi10() throws Exception {
         assertEquals(
-            "ApiCallTest.java:20: Error: Call requires API level 11 (current min is 10): android.app.Activity#getActionBar\n" +
-            "ApiCallTest.java:30: Error: Call requires API level 11 (current min is 10): android.widget.Chronometer#setTextIsSelectable\n" +
-            "ApiCallTest.java:33: Error: Field requires API level 11 (current min is 10): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE\n" +
-            "ApiCallTest.java:38: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo\n" +
-            "ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff$Mode#OVERLAY\n" +
-            "ApiCallTest.java:45: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout\n" +
-            "ApiCallTest.java:49: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport",
+            "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 10): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:30: Error: Call requires API level 11 (current min is 10): android.widget.Chronometer#setTextIsSelectable [NewApi]\n" +
+            "  chronometer.setTextIsSelectable(true); // API 11\n" +
+            "              ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 10): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
+            "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
+            "                         ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
+            "                              ~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout [NewApi]\n" +
+            " GridLayout getGridLayout() { // API 14\n" +
+            "            ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport [NewApi]\n" +
+            " private ApplicationErrorReport getReport() {\n" +
+            "                                ~~~~~~~~~\n" +
+            "8 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -184,10 +306,20 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testInheritStatic() throws Exception {
         assertEquals(
-            "ApiCallTest5.java:16: Error: Call requires API level 11 (current min is 2): android.view.View#resolveSizeAndState\n" +
-            "ApiCallTest5.java:18: Error: Call requires API level 11 (current min is 2): android.view.View#resolveSizeAndState\n" +
-            "ApiCallTest5.java:20: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates\n" +
-            "ApiCallTest5.java:21: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates",
+            "src/foo/bar/ApiCallTest5.java:16: Error: Call requires API level 11 (current min is 2): android.view.View#resolveSizeAndState [NewApi]\n" +
+            "        int measuredWidth = View.resolveSizeAndState(widthMeasureSpec,\n" +
+            "                                 ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest5.java:18: Error: Call requires API level 11 (current min is 2): android.view.View#resolveSizeAndState [NewApi]\n" +
+            "        int measuredHeight = resolveSizeAndState(heightMeasureSpec,\n" +
+            "                             ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest5.java:20: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates [NewApi]\n" +
+            "        View.combineMeasuredStates(0, 0);\n" +
+            "             ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiCallTest5.java:21: Error: Call requires API level 11 (current min is 2): android.view.View#combineMeasuredStates [NewApi]\n" +
+            "        ApiCallTest5.combineMeasuredStates(0, 0);\n" +
+            "                     ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "4 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -201,7 +333,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // Test virtual dispatch in a local class which extends some other local class (which
         // in turn extends an Android API)
         assertEquals(
-            "ApiCallTest3.java:10: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar",
+            "src/test/pkg/ApiCallTest3.java:10: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -215,10 +351,20 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testViewClassLayoutReference() throws Exception {
         assertEquals(
-            "view.xml:16: Error: View requires API level 11 (current min is 1): <CalendarView>\n" +
-            "view.xml:24: Error: ?android:attr/dividerHorizontal requires API level 11 (current min is 1)\n" +
-            "view.xml:25: Error: ?android:attr/textColorLinkInverse requires API level 11 (current min is 1)\n" +
-            "view.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge>",
+            "res/layout/view.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n" +
+            "    <view\n" +
+            "    ^\n" +
+            "res/layout/view.xml:16: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n" +
+            "    <view\n" +
+            "    ^\n" +
+            "res/layout/view.xml:24: Error: ?android:attr/dividerHorizontal requires API level 11 (current min is 1) [NewApi]\n" +
+            "        unknown=\"?android:attr/dividerHorizontal\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/view.xml:25: Error: ?android:attr/textColorLinkInverse requires API level 11 (current min is 1) [NewApi]\n" +
+            "        android:textColor=\"?android:attr/textColorLinkInverse\" />\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "4 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                     "apicheck/minsdk1.xml=>AndroidManifest.xml",
@@ -229,7 +375,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testIOException() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=35190
         assertEquals(
-            "ApiCallTest6.java:8: Error: Call requires API level 9 (current min is 1): java.io.IOException#<init>",
+            "src/test/pkg/ApiCallTest6.java:8: Error: Call requires API level 9 (current min is 1): java.io.IOException#<init> [NewApi]\n" +
+            "        IOException ioException = new IOException(throwable);\n" +
+            "        ~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                     "apicheck/classpath=>.classpath",
@@ -248,22 +398,50 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // These errors are correctly -not- suppressed because they
             // appear in method3 (line 74-98) which is annotated with a
             // @SuppressLint annotation specifying only an unrelated issue id
-            "SuppressTest1.java:74: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator\n" +
-            "SuppressTest1.java:76: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar\n" +
-            "SuppressTest1.java:79: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError\n" +
-            "SuppressTest1.java:80: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
-            "SuppressTest1.java:83: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener\n" +
-            "SuppressTest1.java:86: Error: Call requires API level 11 (current min is 1): android.widget.Chronometer#setTextIsSelectable\n" +
-            "SuppressTest1.java:89: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE\n" +
-            "SuppressTest1.java:94: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "SuppressTest1.java:94: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo\n" +
-            "SuppressTest1.java:97: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY\n" +
+            "src/foo/bar/SuppressTest1.java:74: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator [NewApi]\n" +
+            " public void method3(Chronometer chronometer, DOMLocator locator) {\n" +
+            "                                              ~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:76: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar [NewApi]\n" +
+            "  getActionBar(); // API 11\n" +
+            "  ~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:79: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
+            "  DOMError error = null; // API 8\n" +
+            "  ~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:80: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:83: Error: Call requires API level 3 (current min is 1): android.widget.Chronometer#getOnChronometerTickListener [NewApi]\n" +
+            "  chronometer.getOnChronometerTickListener(); // API 3\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:86: Error: Call requires API level 11 (current min is 1): android.widget.Chronometer#setTextIsSelectable [NewApi]\n" +
+            "  chronometer.setTextIsSelectable(true); // API 11\n" +
+            "              ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:89: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
+            "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
+            "                         ~~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:94: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/SuppressTest1.java:94: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest1.java:97: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
+            "                              ~~~~~~~\n" +
 
             // Note: These annotations are within the methods, not ON the methods, so they have
             // no effect (because they don't end up in the bytecode)
-            "SuppressTest4.java:16: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport\n" +
-            "SuppressTest4.java:19: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo\n" +
-            "SuppressTest4.java:19: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo",
+
+            "src/foo/bar/SuppressTest4.java:16: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
+            "  ApplicationErrorReport report = null;\n" +
+            "  ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/SuppressTest4.java:19: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
+            "  ^\n" +
+            "src/foo/bar/SuppressTest4.java:19: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
+            "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
+            "              ~~~~~~~~~~~\n" +
+            "13 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -284,8 +462,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // These errors are correctly -not- suppressed because they
             // appear outside the middle inner class suppressing its own errors
             // and its child's errors
-            "ApiCallTest4.java:38: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init>\n" +
-            "ApiCallTest4.java:9: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init>",
+            "src/test/pkg/ApiCallTest4.java:9: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init> [NewApi]\n" +
+            "        new GridLayout(null, null, 0);\n" +
+            "            ~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest4.java:38: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init> [NewApi]\n" +
+            "            new GridLayout(null, null, 0);\n" +
+            "                ~~~~~~~~~~\n" +
+            "2 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -301,9 +485,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApiTargetAnnotation() throws Exception {
         assertEquals(
-            "ApiTargetTest.java:13: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler\n" +
-            "ApiTargetTest.java:25: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler\n" +
-            "ApiTargetTest.java:39: Error: Class requires API level 8 (current min is 7): org.w3c.dom.DOMErrorHandler",
+            "src/foo/bar/ApiTargetTest.java:13: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiTargetTest.java:25: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                 ~~~~~~~~~~~~~~~\n" +
+            "src/foo/bar/ApiTargetTest.java:39: Error: Class requires API level 8 (current min is 7): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
+            "   Class<?> clz = DOMErrorHandler.class; // API 8\n" +
+            "                  ~~~~~~~~~~~~~~~\n" +
+            "3 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -316,7 +508,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testTargetAnnotationInner() throws Exception {
         assertEquals(
-            "ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): android.widget.GridLayout#<init>",
+            "src/test/pkg/ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): android.widget.GridLayout#<init> [NewApi]\n" +
+            "                        new GridLayout(null, null, 0);\n" +
+            "                            ~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                 "apicheck/classpath=>.classpath",

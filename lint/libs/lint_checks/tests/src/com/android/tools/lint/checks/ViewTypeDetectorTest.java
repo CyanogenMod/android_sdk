@@ -27,7 +27,11 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button",
+            "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]\n" +
+            "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
+            "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
             lintProject(
                     "res/layout/casts.xml",

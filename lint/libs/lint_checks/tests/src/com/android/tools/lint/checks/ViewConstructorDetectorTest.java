@@ -27,13 +27,10 @@ public class ViewConstructorDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "CustomView1.java: Warning: Custom view test/pkg/CustomView1 is missing" +
-            " constructor used by tools: (Context) or (Context,AttributeSet) or " +
-            "(Context,AttributeSet,int)\n" +
-
-            "CustomView2.java: Warning: Custom view test/pkg/CustomView2 is missing " +
-            "constructor used by tools: (Context) or (Context,AttributeSet) or " +
-            "(Context,AttributeSet,int)",
+            "src/test/bytecode/CustomView1.java: Warning: Custom view test/pkg/CustomView1 is missing constructor used by tools: (Context) or (Context,AttributeSet) or (Context,AttributeSet,int) [ViewConstructor]\n" +
+            "src/test/bytecode/CustomView2.java: Warning: Custom view test/pkg/CustomView2 is missing constructor used by tools: (Context) or (Context,AttributeSet) or (Context,AttributeSet,int) [ViewConstructor]\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -49,9 +46,9 @@ public class ViewConstructorDetectorTest extends AbstractCheckTest {
 
     public void testInheritLocal() throws Exception {
         assertEquals(
-            "CustomViewTest.java: Warning: Custom view test/pkg/CustomViewTest is missing " +
-            "constructor used by tools: (Context) or (Context,AttributeSet) or " +
-            "(Context,AttributeSet,int)",
+            "src/test/pkg/CustomViewTest.java: Warning: Custom view test/pkg/CustomViewTest is missing constructor used by tools: (Context) or (Context,AttributeSet) or (Context,AttributeSet,int) [ViewConstructor]\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",

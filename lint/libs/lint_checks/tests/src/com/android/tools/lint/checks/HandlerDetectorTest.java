@@ -27,8 +27,14 @@ public class HandlerDetectorTest extends AbstractCheckTest {
 
     public void testRegistered() throws Exception {
         assertEquals(
-            "HandlerTest.java:12: Warning: This Handler class should be static or leaks might occur (test.pkg.HandlerTest.Inner)\n" +
-            "HandlerTest.java:18: Warning: This Handler class should be static or leaks might occur (test.pkg.HandlerTest.1)",
+            "src/test/pkg/HandlerTest.java:12: Warning: This Handler class should be static or leaks might occur (test.pkg.HandlerTest.Inner) [HandlerLeak]\n" +
+            "    public class Inner extends Handler { // ERROR\n" +
+            "                 ~~~~~\n" +
+            "src/test/pkg/HandlerTest.java:18: Warning: This Handler class should be static or leaks might occur (test.pkg.HandlerTest.1) [HandlerLeak]\n" +
+            "        Handler anonymous = new Handler() { // ERROR\n" +
+            "                                ~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                 "bytecode/HandlerTest.java.txt=>src/test/pkg/HandlerTest.java",

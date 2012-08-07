@@ -27,9 +27,17 @@ public class ColorUsageDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "WrongColor.java:11: Error: Should pass resolved color instead of resource id here: getResources().getColor(R.color.red)\n" +
-            "WrongColor.java:12: Error: Should pass resolved color instead of resource id here: getResources().getColor(android.R.color.red)\n" +
-            "WrongColor.java:9: Error: Should pass resolved color instead of resource id here: getResources().getColor(R.color.blue)",
+            "src/test/pkg/WrongColor.java:9: Error: Should pass resolved color instead of resource id here: getResources().getColor(R.color.blue) [ResourceAsColor]\n" +
+            "        paint2.setColor(R.color.blue);\n" +
+            "                        ~~~~~~~~~~~~\n" +
+            "src/test/pkg/WrongColor.java:11: Error: Should pass resolved color instead of resource id here: getResources().getColor(R.color.red) [ResourceAsColor]\n" +
+            "        textView.setTextColor(R.color.red);\n" +
+            "                              ~~~~~~~~~~~\n" +
+            "src/test/pkg/WrongColor.java:12: Error: Should pass resolved color instead of resource id here: getResources().getColor(android.R.color.red) [ResourceAsColor]\n" +
+            "        textView.setTextColor(android.R.color.red);\n" +
+            "                              ~~~~~~~~~~~~~~~~~~~\n" +
+            "3 errors, 0 warnings\n" +
+            "",
 
             lintProject("src/test/pkg/WrongColor.java.txt=>src/test/pkg/WrongColor.java"));
     }

@@ -28,20 +28,28 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
 
     public void testMergeRefFromJava() throws Exception {
         assertEquals(
-                "simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag",
-                lintProject(
-                        "res/layout/simple.xml",
-                        "src/test/pkg/ImportFrameActivity.java.txt=>src/test/pkg/ImportFrameActivity.java"
-                        ));
+            "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n" +
+            "<FrameLayout\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject(
+                    "res/layout/simple.xml",
+                    "src/test/pkg/ImportFrameActivity.java.txt=>src/test/pkg/ImportFrameActivity.java"
+                    ));
     }
 
     public void testMergeRefFromInclude() throws Exception {
         assertEquals(
-                "simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag",
-                lintProject(
-                        "res/layout/simple.xml",
-                        "res/layout/simpleinclude.xml"
-                        ));
+            "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n" +
+            "<FrameLayout\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject(
+                    "res/layout/simple.xml",
+                    "res/layout/simpleinclude.xml"
+                    ));
     }
 
     public void testMergeRefFromIncludeSuppressed() throws Exception {

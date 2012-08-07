@@ -30,23 +30,43 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
 
     public void testAll() throws Exception {
         assertEquals(
-            "formatstrings.xml:5: Warning: Formatting string 'missing' is not referencing numbered arguments [1, 2]\n" +
-            "pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String\n" +
-            "=> values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
-            "pkg/StringFormatActivity.java:15: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
-            "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
-            "pkg/StringFormatActivity.java:24: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
-            "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
-            "pkg/StringFormatActivity.java:25: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
-            "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
-            "pkg/StringFormatActivity.java:26: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2\n" +
-            "=> values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
-            "pkg/StringFormatActivity.java:33: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String\n" +
-            "=> values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
-            "values-es/formatstrings.xml:3: Error: Inconsistent formatting types for argument #1 in format string hello ('%1$d'): Found both 's' and 'd' (in values/formatstrings.xml)\n" +
-            "=> values/formatstrings.xml:3: Conflicting argument type here\n" +
-            "values-es/formatstrings.xml:4: Warning: Inconsistent number of arguments in formatting string hello2; found both 2 and 3\n" +
-            "=> values/formatstrings.xml:4: Conflicting number of arguments here",
+            "src/test/pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String [StringFormatMatches]\n" +
+            "        String output1 = String.format(hello, target);\n" +
+            "                                              ~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
+            "src/test/pkg/StringFormatActivity.java:15: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2 [StringFormatMatches]\n" +
+            "        String output2 = String.format(hello2, target, \"How are you\");\n" +
+            "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
+            "src/test/pkg/StringFormatActivity.java:24: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2 [StringFormatMatches]\n" +
+            "        String.format(getResources().getString(R.string.hello2), target, \"How are you\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
+            "src/test/pkg/StringFormatActivity.java:25: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2 [StringFormatMatches]\n" +
+            "        getResources().getString(hello2, target, \"How are you\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
+            "src/test/pkg/StringFormatActivity.java:26: Error: Wrong argument count, format string hello2 requires 3 but format call supplies 2 [StringFormatMatches]\n" +
+            "        getResources().getString(R.string.hello2, target, \"How are you\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:4: This definition requires 3 arguments\n" +
+            "src/test/pkg/StringFormatActivity.java:33: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String [StringFormatMatches]\n" +
+            "        String output1 = String.format(hello, target);\n" +
+            "                                              ~~~~~~\n" +
+            "    res/values-es/formatstrings.xml:3: Conflicting argument declaration here\n" +
+            "res/values-es/formatstrings.xml:3: Error: Inconsistent formatting types for argument #1 in format string hello ('%1$d'): Found both 's' and 'd' (in values/formatstrings.xml) [StringFormatMatches]\n" +
+            "    <string name=\"hello\">%1$d</string>\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values/formatstrings.xml:3: Conflicting argument type here\n" +
+            "res/values-es/formatstrings.xml:4: Warning: Inconsistent number of arguments in formatting string hello2; found both 2 and 3 [StringFormatCount]\n" +
+            "    <string name=\"hello2\">%3$d: %1$s, %2$s?</string>\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    res/values/formatstrings.xml:4: Conflicting number of arguments here\n" +
+            "res/values/formatstrings.xml:5: Warning: Formatting string 'missing' is not referencing numbered arguments [1, 2] [StringFormatCount]\n" +
+            "    <string name=\"missing\">Hello %3$s World</string>\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "7 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                     "res/values/formatstrings.xml",

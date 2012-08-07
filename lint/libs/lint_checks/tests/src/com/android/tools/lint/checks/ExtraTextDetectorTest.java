@@ -27,9 +27,11 @@ public class ExtraTextDetectorTest extends AbstractCheckTest {
 
     public void testBroken() throws Exception {
         assertEquals(
-                "broken.xml:6: Warning: Unexpected text found in layout file: \"ImageButton " +
-                "android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\"" +
-                " android:layout_heigh...\"",
-                lintProject("res/layout/broken.xml"));
+            "res/layout/broken.xml:6: Warning: Unexpected text found in layout file: \"ImageButton android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_heigh...\" [ExtraText]\n" +
+            "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n" +
+            "    ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject("res/layout/broken.xml"));
     }
 }

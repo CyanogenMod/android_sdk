@@ -35,78 +35,129 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
 
     public void testBrokenOrder() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> " +
-                "tag\n" +
-                "AndroidManifest.xml:16: Warning: <uses-sdk> tag should specify a target API " +
-                "level (the highest verified version; when running on later versions, " +
-                "compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"",
+            "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]\n" +
+            "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+            "   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:16: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+            "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+            "   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
-                lintProject(
-                        "broken-manifest.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            lintProject(
+                    "broken-manifest.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 
     public void testMissingUsesSdk() throws Exception {
         assertEquals(
-                "AndroidManifest.xml: Warning: Manifest should specify a minimum API level " +
-                "with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all " +
-                "versions of Android set it to 1.",
-                lintProject(
-                        "missingusessdk.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            "AndroidManifest.xml: Warning: Manifest should specify a minimum API level with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all versions of Android set it to 1. [UsesMinSdkAttributes]\n" +
+            "0 errors, 1 warnings\n",
+            lintProject(
+                    "missingusessdk.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 
     public void testMissingMinSdk() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API " +
-                "level with android:minSdkVersion=\"?\"",
-                lintProject(
-                        "missingmin.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+            "    <uses-sdk android:targetSdkVersion=\"10\" />\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
+            lintProject(
+                    "missingmin.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 
     public void testMultipleSdk() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"\n" +
-                "AndroidManifest.xml:9: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\"\n" +
-                "ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together\n" +
-                "=> ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:7: Also appears here\n" +
-                "=> ManifestOrderDetectorTest_testMultipleSdk/AndroidManifest.xml:9: Also appears here",
+            "AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together [MultipleUsesSdk]\n" +
+            "    <uses-sdk android:targetSdkVersion=\"14\" />\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    AndroidManifest.xml:7: Also appears here\n" +
+            "    AndroidManifest.xml:9: Also appears here\n" +
+            "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+            "    <uses-sdk android:minSdkVersion=\"5\" />\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:9: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+            "    <uses-sdk android:maxSdkVersion=\"15\" />\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 2 warnings\n" +
+            "",
 
-                lintProject(
-                        "multiplesdk.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            lintProject(
+                    "multiplesdk.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 
     public void testWrongLocation() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:10: Error: The <permission> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:11: Error: The <permission-tree> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:12: Error: The <permission-group> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:14: Error: The <uses-sdk> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:15: Error: The <uses-configuration> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:16: Error: The <uses-feature> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:17: Error: The <supports-screens> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:18: Error: The <compatible-screens> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:19: Error: The <supports-gl-texture> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:24: Error: The <uses-library> element must be a direct child of the <application> element\n" +
-                "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element\n" +
-                "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element\n" +
-                "AndroidManifest.xml:8: Warning: <uses-sdk> tag appears after <application> tag\n" +
-                "AndroidManifest.xml:8: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"\n" +
-                "AndroidManifest.xml:9: Error: The <uses-permission> element must be a direct child of the <manifest> root element\n" +
-                "ManifestOrderDetectorTest_testWrongLocation/AndroidManifest.xml:14: Error: There should only be a single <uses-sdk> element in the manifest: merge these together\n" +
-                "=> ManifestOrderDetectorTest_testWrongLocation/AndroidManifest.xml:8: Also appears here",
+            "AndroidManifest.xml:14: Error: There should only be a single <uses-sdk> element in the manifest: merge these together [MultipleUsesSdk]\n" +
+            "       <uses-sdk />\n" +
+            "       ~~~~~~~~~~~~\n" +
+            "    AndroidManifest.xml:8: Also appears here\n" +
+            "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:9: Error: The <uses-permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <uses-permission />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:10: Error: The <permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <permission />\n" +
+            "       ~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:11: Error: The <permission-tree> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <permission-tree />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:12: Error: The <permission-group> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <permission-group />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:14: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <uses-sdk />\n" +
+            "       ~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:15: Error: The <uses-configuration> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <uses-configuration />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:16: Error: The <uses-feature> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <uses-feature />\n" +
+            "       ~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:17: Error: The <supports-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <supports-screens />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:18: Error: The <compatible-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <compatible-screens />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:19: Error: The <supports-gl-texture> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+            "       <supports-gl-texture />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:24: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]\n" +
+            "   <uses-library />\n" +
+            "   ~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element [WrongManifestParent]\n" +
+            "   <activity android:name=\".HelloWorld\"\n" +
+            "   ^\n" +
+            "AndroidManifest.xml:8: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]\n" +
+            "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:8: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+            "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+            "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "14 errors, 2 warnings\n" +
+            "",
 
-                lintProject("broken-manifest2.xml=>AndroidManifest.xml"));
+            lintProject("broken-manifest2.xml=>AndroidManifest.xml"));
     }
 
     public void testDuplicateActivity() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:16: Error: Duplicate registration for activity com.example.helloworld.HelloWorld",
+            "AndroidManifest.xml:16: Error: Duplicate registration for activity com.example.helloworld.HelloWorld [DuplicateActivity]\n" +
+            "       <activity android:name=\"com.example.helloworld.HelloWorld\"\n" +
+            "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
 
-                lintProject(
-                        "duplicate-manifest.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            lintProject(
+                    "duplicate-manifest.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 }

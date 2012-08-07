@@ -27,7 +27,11 @@ public class GridLayoutDetectorTest extends AbstractCheckTest {
 
     public void testGridLayout1() throws Exception {
         assertEquals(
-            "gridlayout.xml:36: Error: Column attribute (3) exceeds declared grid column count (2)",
+            "res/layout/gridlayout.xml:36: Error: Column attribute (3) exceeds declared grid column count (2) [GridLayout]\n" +
+            "            android:layout_column=\"3\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n" +
+            "",
             lintFiles("res/layout/gridlayout.xml"));
     }
 }

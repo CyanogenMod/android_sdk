@@ -27,10 +27,20 @@ public class ToastDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "ToastTest.java:31: Warning: Toast created but not shown: did you forget to call show() ?\n" +
-            "ToastTest.java:32: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported\n" +
-            "ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ?\n" +
-            "ToastTest.java:38: Warning: Toast created but not shown: did you forget to call show() ?",
+            "src/test/pkg/ToastTest.java:31: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]\n" +
+            "        Toast.makeText(context, \"foo\", Toast.LENGTH_LONG);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/ToastTest.java:32: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported [ShowToast]\n" +
+            "        Toast toast = Toast.makeText(context, R.string.app_name, 5000);\n" +
+            "                                                                 ~~~~\n" +
+            "src/test/pkg/ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]\n" +
+            "        Toast toast = Toast.makeText(context, R.string.app_name, 5000);\n" +
+            "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/ToastTest.java:38: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]\n" +
+            "        Toast.makeText(context, \"foo\", Toast.LENGTH_LONG);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n" +
+            "",
 
             lintProject("src/test/pkg/ToastTest.java.txt=>src/test/pkg/ToastTest.java"));
     }

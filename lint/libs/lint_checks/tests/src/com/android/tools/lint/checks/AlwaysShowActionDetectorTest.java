@@ -27,22 +27,39 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
 
     public void testXmlMenus() throws Exception {
         assertEquals(
-                "menu-land/actions.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\"",
+                "res/menu-land/actions.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n" +
+                "        android:showAsAction=\"always|collapseActionView\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/menu-land/actions.xml:13: <No location-specific message\n" +
+                "    res/menu-land/actions.xml:18: <No location-specific message\n" +
+                "    res/menu-land/actions.xml:54: <No location-specific message\n" +
+                "0 errors, 1 warnings\n" +
+                "",
 
                 lintProject("res/menu-land/actions.xml"));
     }
 
     public void testXmlMenusWithFlags() throws Exception {
         assertEquals(
-                "menu-land/actions2.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\"",
+                "res/menu-land/actions2.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n" +
+                "        android:showAsAction=\"always|collapseActionView\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/menu-land/actions2.xml:13: <No location-specific message\n" +
+                "    res/menu-land/actions2.xml:18: <No location-specific message\n" +
+                "    res/menu-land/actions2.xml:54: <No location-specific message\n" +
+                "0 errors, 1 warnings\n" +
+                "",
 
                 lintProject("res/menu-land/actions2.xml"));
     }
 
     public void testJavaFail() throws Exception {
         assertEquals(
-                "ActionTest1.java:7: Warning: Prefer \"SHOW_AS_ACTION_IF_ROOM\" instead of " +
-                "\"SHOW_AS_ACTION_ALWAYS\"",
+                "src/test/pkg/ActionTest1.java:7: Warning: Prefer \"SHOW_AS_ACTION_IF_ROOM\" instead of \"SHOW_AS_ACTION_ALWAYS\" [AlwaysShowAction]\n" +
+                "        System.out.println(MenuItem.SHOW_AS_ACTION_ALWAYS);\n" +
+                "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n" +
+                "",
 
                 // Only references to ALWAYS
                 lintProject("src/test/pkg/ActionTest1.java.txt=>src/test/pkg/ActionTest1.java"));

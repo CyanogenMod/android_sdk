@@ -27,10 +27,20 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_First)\n" +
-            "second.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme)\n" +
-            "sixth.xml:4: Warning: Possible overdraw: Root element paints background @drawable/custombg with a theme that also paints a background (inferred theme is @style/MyTheme)\n" +
-            "third.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_Third)",
+            "res/layout/main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_First) [Overdraw]\n" +
+            "    android:background=\"@drawable/ic_launcher\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/second.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme) [Overdraw]\n" +
+            "    android:background=\"@drawable/ic_launcher\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/sixth.xml:4: Warning: Possible overdraw: Root element paints background @drawable/custombg with a theme that also paints a background (inferred theme is @style/MyTheme) [Overdraw]\n" +
+            "    android:background=\"@drawable/custombg\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/third.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_Third) [Overdraw]\n" +
+            "    android:background=\"@drawable/ic_launcher\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n" +
+            "",
 
             lintProject(
                 "overdraw/.classpath=>.classpath",

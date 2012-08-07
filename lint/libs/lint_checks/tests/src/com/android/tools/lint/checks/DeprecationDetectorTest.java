@@ -27,9 +27,14 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
 
     public void testApi1() throws Exception {
         assertEquals(
-            "deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable\n" +
-            //"deprecation.xml:19: Warning: android:enabled is deprecated: Use state_enabled instead\n" +
-            "deprecation.xml:2: Warning: AbsoluteLayout is deprecated",
+            "res/layout/deprecation.xml:2: Warning: AbsoluteLayout is deprecated [Deprecated]\n" +
+            "<AbsoluteLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "^\n" +
+            "res/layout/deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable [Deprecated]\n" +
+            "        android:editable=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                     "apicheck/minsdk1.xml=>AndroidManifest.xml",
@@ -38,15 +43,32 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
 
     public void testApi4() throws Exception {
         assertEquals(
-            "deprecation.xml:16: Warning: android:autoText is deprecated: Use inputType instead\n" +
-            "deprecation.xml:17: Warning: android:capitalize is deprecated: Use inputType instead\n" +
-            "deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable\n" +
-            //"deprecation.xml:19: Warning: android:enabled is deprecated: Use state_enabled instead\n" +
-            "deprecation.xml:20: Warning: android:inputMethod is deprecated: Use inputType instead\n" +
-            "deprecation.xml:21: Warning: android:numeric is deprecated: Use inputType instead\n" +
-            "deprecation.xml:22: Warning: android:password is deprecated: Use inputType instead\n" +
-            "deprecation.xml:23: Warning: android:phoneNumber is deprecated: Use inputType instead\n" +
-            "deprecation.xml:2: Warning: AbsoluteLayout is deprecated",
+            "res/layout/deprecation.xml:2: Warning: AbsoluteLayout is deprecated [Deprecated]\n" +
+            "<AbsoluteLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "^\n" +
+            "res/layout/deprecation.xml:16: Warning: android:autoText is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:autoText=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:17: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:capitalize=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable [Deprecated]\n" +
+            "        android:editable=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:20: Warning: android:inputMethod is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:inputMethod=\"@+id/foo\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:21: Warning: android:numeric is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:numeric=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:22: Warning: android:password is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:password=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:23: Warning: android:phoneNumber is deprecated: Use inputType instead [Deprecated]\n" +
+            "        android:phoneNumber=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 8 warnings\n" +
+            "",
 
             lintProject(
                     "apicheck/minsdk4.xml=>AndroidManifest.xml",

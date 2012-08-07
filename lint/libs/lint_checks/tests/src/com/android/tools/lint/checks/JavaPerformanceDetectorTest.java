@@ -27,25 +27,65 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "JavaPerformanceTest.java:103: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:109: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:112: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:113: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect\n" +
-            "JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:145: Warning: Use Integer.valueOf(42) instead\n" +
-            "JavaPerformanceTest.java:146: Warning: Use Long.valueOf(42L) instead\n" +
-            "JavaPerformanceTest.java:147: Warning: Use Boolean.valueOf(true) instead\n" +
-            "JavaPerformanceTest.java:148: Warning: Use Character.valueOf('c') instead\n" +
-            "JavaPerformanceTest.java:149: Warning: Use Float.valueOf(1.0f) instead\n" +
-            "JavaPerformanceTest.java:150: Warning: Use Double.valueOf(1.0) instead\n" +
-            "JavaPerformanceTest.java:28: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:29: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead)\n" +
-            "JavaPerformanceTest.java:33: Warning: Use Integer.valueOf(5) instead\n" +
-            "JavaPerformanceTest.java:70: Warning: Use new SparseArray<String>(...) instead for better performance\n" +
-            "JavaPerformanceTest.java:72: Warning: Use new SparseBooleanArray(...) instead for better performance\n" +
-            "JavaPerformanceTest.java:74: Warning: Use new SparseIntArray(...) instead for better performance",
+            "src/test/pkg/JavaPerformanceTest.java:28: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        new String(\"foo\");\n" +
+            "        ~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:29: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        String s = new String(\"bar\");\n" +
+            "                   ~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:103: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        new String(\"flag me\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:109: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        new String(\"flag me\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:112: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        Bitmap.createBitmap(100, 100, null);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:113: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        android.graphics.Bitmap.createScaledBitmap(null, 100, 100, false);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "        BitmapFactory.decodeFile(null);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect [DrawAllocation]\n" +
+            "        canvas.getClipBounds(); // allocates on your behalf\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n" +
+            "            new String(\"foo\");\n" +
+            "            ~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:70: Warning: Use new SparseArray<String>(...) instead for better performance [UseSparseArrays]\n" +
+            "        Map<Integer, String> myMap = new HashMap<Integer, String>();\n" +
+            "                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:72: Warning: Use new SparseBooleanArray(...) instead for better performance [UseSparseArrays]\n" +
+            "        Map<Integer, Boolean> myBoolMap = new HashMap<Integer, Boolean>();\n" +
+            "                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:74: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n" +
+            "        Map<Integer, Integer> myIntMap = new java.util.HashMap<Integer, Integer>();\n" +
+            "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:33: Warning: Use Integer.valueOf(5) instead [UseValueOf]\n" +
+            "        Integer i = new Integer(5);\n" +
+            "                    ~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:145: Warning: Use Integer.valueOf(42) instead [UseValueOf]\n" +
+            "        Integer i1 = new Integer(42);\n" +
+            "                     ~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:146: Warning: Use Long.valueOf(42L) instead [UseValueOf]\n" +
+            "        Long l1 = new Long(42L);\n" +
+            "                  ~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:147: Warning: Use Boolean.valueOf(true) instead [UseValueOf]\n" +
+            "        Boolean b1 = new Boolean(true);\n" +
+            "                     ~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:148: Warning: Use Character.valueOf('c') instead [UseValueOf]\n" +
+            "        Character c1 = new Character('c');\n" +
+            "                       ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:149: Warning: Use Float.valueOf(1.0f) instead [UseValueOf]\n" +
+            "        Float f1 = new Float(1.0f);\n" +
+            "                   ~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:150: Warning: Use Double.valueOf(1.0) instead [UseValueOf]\n" +
+            "        Double d1 = new Double(1.0);\n" +
+            "                    ~~~~~~~~~~~~~~~\n" +
+            "0 errors, 19 warnings\n" +
+            "",
 
             lintProject("src/test/pkg/JavaPerformanceTest.java.txt=>" +
                     "src/test/pkg/JavaPerformanceTest.java"));

@@ -27,7 +27,11 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
 
     public void testField() throws Exception {
         assertEquals(
-            "note_edit.xml:50: Warning: This text field does not specify an inputType or a hint",
+            "res/layout/note_edit.xml:50: Warning: This text field does not specify an inputType or a hint [TextFields]\n" +
+            "        <EditText\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintFiles("res/layout/note_edit.xml"));
     }
 }

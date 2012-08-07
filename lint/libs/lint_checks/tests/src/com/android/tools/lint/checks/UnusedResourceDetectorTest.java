@@ -43,10 +43,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testUnused() throws Exception {
         mEnableIds = false;
         assertEquals(
-           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused\n" +
-           "main.xml: Warning: The resource R.layout.main appears to be unused\n" +
-           "other.xml: Warning: The resource R.layout.other appears to be unused\n" +
-           "strings2.xml:3: Warning: The resource R.string.hello appears to be unused",
+           "res/layout/accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n" +
+           "res/layout/main.xml: Warning: The resource R.layout.main appears to be unused [UnusedResources]\n" +
+           "res/layout/other.xml: Warning: The resource R.layout.other appears to be unused [UnusedResources]\n" +
+           "res/values/strings2.xml:3: Warning: The resource R.string.hello appears to be unused [UnusedResources]\n" +
+           "    <string name=\"hello\">Hello</string>\n" +
+           "            ~~~~~~~~~~~~\n" +
+           "0 errors, 4 warnings\n" +
+           "",
 
             lintProject(
                 "res/values/strings2.xml",
@@ -64,17 +68,27 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         mEnableIds = true;
 
         assertEquals(
-           "Warning: The resource R.id.imageView1 appears to be unused\n" +
-           "Warning: The resource R.id.include1 appears to be unused\n" +
-           "Warning: The resource R.id.linearLayout2 appears to be unused\n" +
-           "Warning: The resource R.layout.main appears to be unused\n" +
-           "Warning: The resource R.layout.other appears to be unused\n" +
-           "Warning: The resource R.string.hello appears to be unused\n" +
-           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused\n" +
-           "accessibility.xml:2: Warning: The resource R.id.newlinear appears to be unused\n" +
-           "accessibility.xml:3: Warning: The resource R.id.button1 appears to be unused\n" +
-           "accessibility.xml:4: Warning: The resource R.id.android_logo appears to be unused\n" +
-           "accessibility.xml:5: Warning: The resource R.id.android_logo2 appears to be unused",
+           "res/layout/accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n" +
+           "Warning: The resource R.layout.main appears to be unused [UnusedResources]\n" +
+           "Warning: The resource R.layout.other appears to be unused [UnusedResources]\n" +
+           "Warning: The resource R.string.hello appears to be unused [UnusedResources]\n" +
+           "Warning: The resource R.id.imageView1 appears to be unused [UnusedIds]\n" +
+           "Warning: The resource R.id.include1 appears to be unused [UnusedIds]\n" +
+           "Warning: The resource R.id.linearLayout2 appears to be unused [UnusedIds]\n" +
+           "res/layout/accessibility.xml:2: Warning: The resource R.id.newlinear appears to be unused [UnusedIds]\n" +
+           "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n" +
+           "                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+           "res/layout/accessibility.xml:3: Warning: The resource R.id.button1 appears to be unused [UnusedIds]\n" +
+           "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n" +
+           "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+           "res/layout/accessibility.xml:4: Warning: The resource R.id.android_logo appears to be unused [UnusedIds]\n" +
+           "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n" +
+           "               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+           "res/layout/accessibility.xml:5: Warning: The resource R.id.android_logo2 appears to be unused [UnusedIds]\n" +
+           "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n" +
+           "                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+           "0 errors, 11 warnings\n" +
+           "",
 
             lintProject(
                 // Rename .txt files to .java
@@ -86,7 +100,11 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testArrayReference() throws Exception {
         assertEquals(
-           "arrayusage.xml:3: Warning: The resource R.array.my_array appears to be unused",
+           "res/values/arrayusage.xml:3: Warning: The resource R.array.my_array appears to be unused [UnusedResources]\n" +
+           "<string-array name=\"my_array\">\n" +
+           "              ~~~~~~~~~~~~~~~\n" +
+           "0 errors, 1 warnings\n" +
+           "",
 
             lintProject(
                 "AndroidManifest.xml",
@@ -95,7 +113,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testAttrs() throws Exception {
         assertEquals(
-           "customattrlayout.xml: Warning: The resource R.layout.customattrlayout appears to be unused",
+           "res/layout/customattrlayout.xml: Warning: The resource R.layout.customattrlayout appears to be unused [UnusedResources]\n" +
+           "0 errors, 1 warnings\n" +
+           "",
 
             lintProject(
                 "res/values/customattr.xml",
@@ -140,7 +160,11 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
            // string1 is defined and used in the library project
            // string2 is defined in the library project and used in the master project
            // string3 is defined in the library project and not used anywhere
-           "strings.xml:7: Warning: The resource R.string.string3 appears to be unused",
+           "/TESTROOT/UnusedResourceDetectorTest_testMultiProject/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
+           "    <string name=\"string3\">String 3</string>\n" +
+           "            ~~~~~~~~~~~~~~\n" +
+           "0 errors, 1 warnings\n" +
+           "",
 
            checkLint(Arrays.asList(master, library)));
     }
@@ -167,7 +191,11 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testPlurals() throws Exception {
         assertEquals(
-           "plurals.xml:3: Warning: The resource R.plurals.my_plural appears to be unused",
+           "res/values/plurals.xml:3: Warning: The resource R.plurals.my_plural appears to be unused [UnusedResources]\n" +
+           "    <plurals name=\"my_plural\">\n" +
+           "             ~~~~~~~~~~~~~~~~\n" +
+           "0 errors, 1 warnings\n" +
+           "",
 
             lintProject(
                 "res/values/strings4.xml",

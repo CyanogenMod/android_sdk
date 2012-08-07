@@ -27,7 +27,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testBroken() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n" +
+            "        <service\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                     "exportservice1.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
@@ -35,7 +39,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testBroken2() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n" +
+            "        <service\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                     "exportservice2.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
@@ -44,7 +52,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     public void testBroken3() throws Exception {
         // Not defining exported, but have intent-filters
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n" +
+            "        <service\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                     "exportservice5.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
@@ -70,8 +82,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testUri() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous.\n" +
-            "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous.",
+            "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous. [GrantAllUris]\n" +
+            "        <grant-uri-permission android:path=\"/\"/>\n" +
+            "                              ~~~~~~~~~~~~~~~~\n" +
+            "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous. [GrantAllUris]\n" +
+            "        <grant-uri-permission android:pathPrefix=\"/\"/>\n" +
+            "                              ~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject(
                     "grantpermission.xml=>AndroidManifest.xml",
@@ -81,11 +99,17 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     // exportprovider1.xml has two exported content providers with no permissions
     public void testContentProvider1() throws Exception {
         assertEquals(
-                "AndroidManifest.xml:14: Warning: Exported content providers can provide access to potentially sensitive data\n" +
-                "AndroidManifest.xml:20: Warning: Exported content providers can provide access to potentially sensitive data",
-                 lintProject(
-                        "exportprovider1.xml=>AndroidManifest.xml",
-                        "res/values/strings.xml"));
+            "AndroidManifest.xml:14: Warning: Exported content providers can provide access to potentially sensitive data [ExportedContentProvider]\n" +
+            "        <provider\n" +
+            "        ^\n" +
+            "AndroidManifest.xml:20: Warning: Exported content providers can provide access to potentially sensitive data [ExportedContentProvider]\n" +
+            "        <provider\n" +
+            "        ^\n" +
+            "0 errors, 2 warnings\n" +
+            "",
+             lintProject(
+                    "exportprovider1.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
     }
 
     // exportprovider2.xml has no un-permissioned exported content providers
@@ -99,10 +123,20 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testWorldWriteable() throws Exception {
         assertEquals(
-            "WorldWriteableFile.java:25: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully\n" +
-            "WorldWriteableFile.java:26: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully\n" +
-            "WorldWriteableFile.java:30: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully\n" +
-            "WorldWriteableFile.java:31: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully",
+            "src/test/pkg/WorldWriteableFile.java:26: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully [WorldReadableFiles]\n" +
+            "            out = openFileOutput(mFile.getName(), MODE_WORLD_READABLE);\n" +
+            "                                                  ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WorldWriteableFile.java:31: Warning: Using MODE_WORLD_READABLE when creating files can be risky, review carefully [WorldReadableFiles]\n" +
+            "            prefs = getSharedPreferences(mContext, MODE_WORLD_READABLE);\n" +
+            "                                                   ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WorldWriteableFile.java:25: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully [WorldWriteableFiles]\n" +
+            "            out = openFileOutput(mFile.getName(), MODE_WORLD_WRITEABLE);\n" +
+            "                                                  ~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/WorldWriteableFile.java:30: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully [WorldWriteableFiles]\n" +
+            "            prefs = getSharedPreferences(mContext, MODE_WORLD_WRITEABLE);\n" +
+            "                                                   ~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n" +
+            "",
 
             lintProject(
                 // Java files must be renamed in source tree
@@ -120,7 +154,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testActivity1() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported activity does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported activity does not require permission [ExportedActivity]\n" +
+            "        <activity\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                 "exportactivity1.xml=>AndroidManifest.xml",
                 "res/values/strings.xml"));
@@ -147,7 +185,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     public void testActivity4() throws Exception {
         // Not defining exported, but have intent-filters
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported activity does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported activity does not require permission [ExportedActivity]\n" +
+            "        <activity\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                 "exportactivity4.xml=>AndroidManifest.xml",
                 "res/values/strings.xml"));
@@ -164,7 +206,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
 
     public void testReceiver1() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission [ExportedReceiver]\n" +
+            "        <receiver\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                 "exportreceiver1.xml=>AndroidManifest.xml",
                 "res/values/strings.xml"));
@@ -191,7 +237,11 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     public void testReceiver4() throws Exception {
         // Not defining exported, but have intent-filters
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported receiver does not require permission [ExportedReceiver]\n" +
+            "        <receiver\n" +
+            "        ^\n" +
+            "0 errors, 1 warnings\n" +
+            "",
             lintProject(
                 "exportreceiver4.xml=>AndroidManifest.xml",
                 "res/values/strings.xml"));

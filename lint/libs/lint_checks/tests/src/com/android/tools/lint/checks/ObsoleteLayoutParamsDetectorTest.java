@@ -27,13 +27,29 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "wrongparams.xml:11: Warning: Invalid layout param in a FrameLayout: layout_weight\n" +
-            "wrongparams.xml:23: Warning: Invalid layout param in a LinearLayout: layout_alignParentLeft\n" +
-            "wrongparams.xml:24: Warning: Invalid layout param in a LinearLayout: layout_alignParentTop\n" +
-            "wrongparams.xml:33: Warning: Invalid layout param in a LinearLayout: layout_alignBottom\n" +
-            "wrongparams.xml:34: Warning: Invalid layout param in a LinearLayout: layout_toRightOf\n" +
-            "wrongparams.xml:42: Warning: Invalid layout param in a LinearLayout: layout_alignLeft\n" +
-            "wrongparams.xml:43: Warning: Invalid layout param in a LinearLayout: layout_below",
+            "res/layout/wrongparams.xml:11: Warning: Invalid layout param in a FrameLayout: layout_weight [ObsoleteLayoutParam]\n" +
+            "        android:layout_weight=\"1\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:23: Warning: Invalid layout param in a LinearLayout: layout_alignParentLeft [ObsoleteLayoutParam]\n" +
+            "            android:layout_alignParentLeft=\"true\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:24: Warning: Invalid layout param in a LinearLayout: layout_alignParentTop [ObsoleteLayoutParam]\n" +
+            "            android:layout_alignParentTop=\"true\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:33: Warning: Invalid layout param in a LinearLayout: layout_alignBottom [ObsoleteLayoutParam]\n" +
+            "            android:layout_alignBottom=\"@+id/button1\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:34: Warning: Invalid layout param in a LinearLayout: layout_toRightOf [ObsoleteLayoutParam]\n" +
+            "            android:layout_toRightOf=\"@+id/button1\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:42: Warning: Invalid layout param in a LinearLayout: layout_alignLeft [ObsoleteLayoutParam]\n" +
+            "            android:layout_alignLeft=\"@+id/button1\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams.xml:43: Warning: Invalid layout param in a LinearLayout: layout_below [ObsoleteLayoutParam]\n" +
+            "            android:layout_below=\"@+id/button1\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 7 warnings\n" +
+            "",
 
             lintProject("res/layout/wrongparams.xml"));
     }
@@ -50,7 +66,11 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
     public void test3() throws Exception {
         // Test includes across files (wrong layout param on root element)
         assertEquals(
-            "wrongparams3.xml:5: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams4.xml)",
+            "res/layout/wrongparams3.xml:5: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams4.xml) [ObsoleteLayoutParam]\n" +
+            "    android:layout_alignParentTop=\"true\" >\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject("res/layout/wrongparams4.xml", "res/layout/wrongparams3.xml"));
     }
@@ -58,8 +78,14 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
     public void test4() throws Exception {
         // Test includes with a <merge> (wrong layout param on child of root merge element)
         assertEquals(
-            "wrongparams5.xml:15: Warning: Invalid layout param 'layout_alignParentLeft' (included from within a LinearLayout in layout/wrongparams6.xml)\n" +
-            "wrongparams5.xml:8: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams6.xml)",
+            "res/layout/wrongparams5.xml:8: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams6.xml) [ObsoleteLayoutParam]\n" +
+            "        android:layout_alignParentTop=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrongparams5.xml:15: Warning: Invalid layout param 'layout_alignParentLeft' (included from within a LinearLayout in layout/wrongparams6.xml) [ObsoleteLayoutParam]\n" +
+            "        android:layout_alignParentLeft=\"true\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n" +
+            "",
 
             lintProject("res/layout/wrongparams5.xml", "res/layout/wrongparams6.xml"));
     }
@@ -67,7 +93,11 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
     public void testIgnore() throws Exception {
         assertEquals(
              // Ignoring all but one of the warnings
-            "wrongparams.xml:12: Warning: Invalid layout param in a FrameLayout: layout_weight",
+            "res/layout/wrongparams.xml:12: Warning: Invalid layout param in a FrameLayout: layout_weight [ObsoleteLayoutParam]\n" +
+            "        android:layout_weight=\"1\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n" +
+            "",
 
             lintProject("res/layout/wrongparams_ignore.xml=>res/layout/wrongparams.xml"));
     }
