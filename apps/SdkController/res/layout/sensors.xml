@@ -40,7 +40,7 @@
                 android:text="@string/sensors_sample_rate"
                 android:gravity="right"
                 android:layout_marginRight="8dp"
-                />
+                />
             <EditText
                 android:id="@+id/textSampleRate"
                 android:layout_width="wrap_content"
