@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+#
 # Copyright 2012, The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +16,6 @@
 
 # Set up prog to be the path of this script, including following symlinks,
 # and set up progdir to be the fully-qualified pathname of its directory.
-
 prog="$0"
 while [ -h "${prog}" ]; do
     newProg=`/bin/ls -ld "${prog}"`
@@ -29,15 +29,15 @@ while [ -h "${prog}" ]; do
 done
 oldwd=`pwd`
 progdir=`dirname "${prog}"`
+progname=`basename "${prog}"`
 cd "${progdir}"
 progdir=`pwd`
-prog="${progdir}"/`basename "${prog}"`
+prog="${progdir}"/"${progname}"
 cd "${oldwd}"
 
 jarfile=uiautomatorviewer.jar
 frameworkdir="$progdir"
 libdir="$progdir"
-
 if [ ! -r "$frameworkdir/$jarfile" ]
 then
     frameworkdir=`dirname "$progdir"`/tools/lib
@@ -50,22 +50,28 @@ then
 fi
 if [ ! -r "$frameworkdir/$jarfile" ]
 then
-    echo `basename "$prog"`": can't find $jarfile"
+    echo "${progname}: can't find $jarfile"
     exit 1
 fi
 
 javaCmd="java"
 
-# Mac OS X needs an additional arg, or you get an "illegal thread" complaint.
-if [ `uname` = "Darwin" ]; then
-    os_opts="-XstartOnFirstThread"
+os=`uname`
+if [ $os == 'Darwin' ]; then
+  javaOpts="-Xmx1600M -XstartOnFirstThread"
 else
-    os_opts=
+  javaOpts="-Xmx1600M"
 fi
 
 if [ `uname` = "Linux" ]; then
     export GDK_NATIVE_WINDOWS=true
 fi
+
+while expr "x$1" : 'x-J' >/dev/null; do
+    opt=`expr "x$1" : 'x-J\(.*\)'`
+    javaOpts="${javaOpts} -${opt}"
+    shift
+done
 
 jarpath="$frameworkdir/$jarfile"
 
@@ -86,15 +92,13 @@ else
     fi
 fi
 
-if [ ! -d "$swtpath" ]; then
+# Combine the swtpath and the framework dir path.
+if [ -d "$swtpath" ]; then
+    frameworkdir="${swtpath}:${frameworkdir}"
+else
     echo "SWT folder '${swtpath}' does not exist."
     echo "Please export ANDROID_SWT to point to the folder containing swt.jar for your platform."
     exit 1
 fi
 
-# need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
-# might need more memory, e.g. -Xmx128M
-exec "$javaCmd" \
-    -Xmx512M $os_opts $java_debug \
-    -classpath "$jarpath:$swtpath/swt.jar" \
-    com.android.uiautomator.UiAutomatorViewer "$@"
+exec "${javaCmd}" $javaOpts -Djava.ext.dirs="$frameworkdir" -Dcom.android.uiautomator.bindir="$progdir" -jar "$jarpath" "$@"
