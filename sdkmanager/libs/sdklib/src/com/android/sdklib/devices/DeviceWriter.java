@@ -217,6 +217,8 @@ public class DeviceWriter {
         addElement(doc, software, DeviceSchema.NODE_BLUETOOTH_PROFILES, sw.getBluetoothProfiles());
         addElement(doc, software, DeviceSchema.NODE_GL_VERSION, sw.getGlVersion());
         addElement(doc, software, DeviceSchema.NODE_GL_EXTENSIONS, sw.getGlExtensions());
+        addElement(doc, software, DeviceSchema.NODE_STATUS_BAR,
+                Boolean.toString(sw.hasStatusBar()));
 
         return software;
     }
