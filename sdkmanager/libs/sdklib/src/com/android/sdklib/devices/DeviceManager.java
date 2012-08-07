@@ -203,6 +203,8 @@ public class DeviceManager {
                     mLog.error(null, "Error parsing %1$s, backing up to %2$s",
                             userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
                     userDevicesFile.renameTo(renamedConfig);
+                } catch (FileNotFoundException e) {
+                    mLog.warning("No user devices found");
                 } catch (ParserConfigurationException e) {
                     mLog.error(null, "Error parsing %1$s", userDevicesFile.getAbsolutePath());
                 } catch (IOException e) {
