@@ -33,7 +33,7 @@ import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;

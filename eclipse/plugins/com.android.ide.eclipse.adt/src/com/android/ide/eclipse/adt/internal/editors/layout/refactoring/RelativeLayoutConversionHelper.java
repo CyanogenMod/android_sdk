@@ -24,7 +24,6 @@ import static com.android.ide.common.layout.GravityHelper.GRAVITY_LEFT;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_TOP;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
@@ -59,6 +58,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -66,7 +66,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.graphics.Rectangle;

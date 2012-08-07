@@ -22,7 +22,7 @@ import static com.android.sdklib.SdkConstants.CLASS_FRAGMENT;
 import static com.android.sdklib.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

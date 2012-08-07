@@ -12,6 +12,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 # If the dependency list is changed, etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	common \
+	layoutlib_api \
 	lombok-ast-0.2 \
 	androidprefs \
 	lint_api \

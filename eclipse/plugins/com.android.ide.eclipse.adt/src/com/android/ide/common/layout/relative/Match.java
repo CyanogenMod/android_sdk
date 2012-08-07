@@ -15,9 +15,9 @@
  */
 package com.android.ide.common.layout.relative;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.Segment;
 

@@ -22,9 +22,10 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
 	common \
-        asm-tools \
-        asm-tree-tools \
-        guava-tools
+	layoutlib_api \
+	asm-tools \
+	asm-tree-tools \
+	guava-tools
 
 LOCAL_MODULE := lint_api
 LOCAL_MODULE_TAGS := optional

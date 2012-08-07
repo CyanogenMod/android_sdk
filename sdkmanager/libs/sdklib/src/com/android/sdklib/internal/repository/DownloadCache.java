@@ -23,7 +23,7 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;

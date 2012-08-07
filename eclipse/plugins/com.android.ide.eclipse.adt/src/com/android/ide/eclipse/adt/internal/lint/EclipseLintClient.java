@@ -47,7 +47,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IFile;

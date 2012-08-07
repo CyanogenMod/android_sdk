@@ -24,7 +24,7 @@ import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.Va
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.DESCRIPTOR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TYPE;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;

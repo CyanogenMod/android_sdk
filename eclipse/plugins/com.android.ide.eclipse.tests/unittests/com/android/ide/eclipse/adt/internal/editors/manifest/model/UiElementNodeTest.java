@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.editors.mock.MockXmlNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

@@ -22,7 +22,7 @@ import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_S
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
 import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.AndroidConstants;
 import com.android.annotations.NonNull;
@@ -73,7 +73,7 @@ import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.util.SparseIntArray;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IContainer;

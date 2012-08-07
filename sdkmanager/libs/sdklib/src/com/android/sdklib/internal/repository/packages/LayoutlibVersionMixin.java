@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository.packages;
 
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.w3c.dom.Node;
 

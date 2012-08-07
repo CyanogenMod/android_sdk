@@ -20,9 +20,9 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.util.XmlUtils.XMLNS_ANDROID;
-import static com.android.util.XmlUtils.XMLNS_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.XMLNS_ANDROID;
+import static com.android.utils.XmlUtils.XMLNS_URI;
 
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Rect;
@@ -53,7 +53,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;

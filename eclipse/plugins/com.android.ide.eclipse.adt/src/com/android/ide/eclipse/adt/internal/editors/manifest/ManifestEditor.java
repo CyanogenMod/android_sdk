@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.manifest;
 
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors.USES_PERMISSION;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

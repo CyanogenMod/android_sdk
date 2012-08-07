@@ -49,7 +49,7 @@ import com.android.sdkuilib.repository.AvdManagerWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.swt.widgets.Display;
 import org.xml.sax.InputSource;

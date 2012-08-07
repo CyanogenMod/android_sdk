@@ -15,13 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 

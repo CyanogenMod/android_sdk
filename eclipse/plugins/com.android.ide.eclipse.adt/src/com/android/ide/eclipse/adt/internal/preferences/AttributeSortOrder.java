@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.preferences;
 
-import static com.android.util.XmlUtils.XMLNS;
+import static com.android.utils.XmlUtils.XMLNS;
 
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 

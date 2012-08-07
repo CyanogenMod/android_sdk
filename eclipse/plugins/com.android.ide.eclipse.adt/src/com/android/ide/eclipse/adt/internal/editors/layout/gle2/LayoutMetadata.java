@@ -21,7 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

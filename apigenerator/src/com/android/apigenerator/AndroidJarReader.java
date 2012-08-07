@@ -16,7 +16,7 @@
 
 package com.android.apigenerator;
 
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;

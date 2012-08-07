@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.util.XmlUtils.XMLNS_COLON;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.XMLNS_COLON;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;

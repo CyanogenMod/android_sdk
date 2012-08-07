@@ -35,7 +35,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;

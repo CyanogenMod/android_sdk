@@ -16,7 +16,7 @@
 
 package com.android.apigenerator;
 
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

@@ -33,7 +33,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttribu
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 

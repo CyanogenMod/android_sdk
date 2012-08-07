@@ -23,7 +23,7 @@ import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.File;
 import java.util.ArrayList;

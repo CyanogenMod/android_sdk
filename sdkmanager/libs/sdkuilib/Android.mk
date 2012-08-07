@@ -25,7 +25,7 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 # (Note: there is no manifest.txt for sdkuilib.)
 LOCAL_JAVA_LIBRARIES := \
 	sdklib \
-	common \
+	layoutlib_api \
 	androidprefs \
 	swtmenubar \
 	swt \
@@ -34,6 +34,8 @@ LOCAL_JAVA_LIBRARIES := \
 	org.eclipse.core.commands_3.6.0.I20100512-1500
 
 LOCAL_MODULE := sdkuilib
+
+LOCAL_JAR_MANIFEST := etc/manifest.txt
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 

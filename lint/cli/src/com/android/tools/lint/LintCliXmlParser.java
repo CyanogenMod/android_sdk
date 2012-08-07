@@ -23,7 +23,7 @@ import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.util.PositionXmlParser;
+import com.android.utils.PositionXmlParser;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -119,7 +119,7 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
          * Linked position: for a begin offset this will point to the end
          * offset, and for an end offset this will be null
          */
-        private com.android.util.PositionXmlParser.Position mEnd;
+        private com.android.utils.PositionXmlParser.Position mEnd;
 
         /**
          * Creates a new {@link OffsetPosition}
@@ -150,12 +150,12 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         }
 
         @Override
-        public com.android.util.PositionXmlParser.Position getEnd() {
+        public com.android.utils.PositionXmlParser.Position getEnd() {
             return mEnd;
         }
 
         @Override
-        public void setEnd(@NonNull com.android.util.PositionXmlParser.Position end) {
+        public void setEnd(@NonNull com.android.utils.PositionXmlParser.Position end) {
             mEnd = end;
         }
 

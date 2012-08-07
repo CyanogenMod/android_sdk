@@ -24,7 +24,7 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;

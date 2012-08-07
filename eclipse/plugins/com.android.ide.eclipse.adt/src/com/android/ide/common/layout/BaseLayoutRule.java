@@ -51,7 +51,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -75,7 +75,7 @@ import com.android.ide.common.api.RuleAction.ChoiceProvider;
 import com.android.ide.common.api.Segment;
 import com.android.ide.common.api.SegmentType;
 import com.android.sdklib.SdkConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.net.URL;
 import java.util.Arrays;

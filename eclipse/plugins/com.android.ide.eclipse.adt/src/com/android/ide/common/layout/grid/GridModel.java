@@ -41,7 +41,8 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_CENTER_VERTICA
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TOP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -55,7 +56,7 @@ import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.common.layout.GridLayoutRule;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 

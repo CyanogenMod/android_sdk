@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu.descriptors;
 
-import static com.android.util.XmlUtils.ANDROID_NS_NAME;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.eclipse.adt.AdtUtils;

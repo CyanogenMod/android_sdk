@@ -29,7 +29,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.GridLayoutRule;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 /**
  * Painter which paints feedback during drag, drop and resizing operations, as well as

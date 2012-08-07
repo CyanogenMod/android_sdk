@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.util;
+package com.android.utils;
 
-import com.android.util.PositionXmlParser.Position;
+import com.android.utils.PositionXmlParser;
+import com.android.utils.PositionXmlParser.Position;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;

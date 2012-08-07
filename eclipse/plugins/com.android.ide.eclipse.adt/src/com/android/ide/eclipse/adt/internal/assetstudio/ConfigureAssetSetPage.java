@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.DEFAULT_LAUNCHER_ICON;
+
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.annotations.NonNull;
@@ -37,7 +38,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

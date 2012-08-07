@@ -23,7 +23,7 @@ import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.Position;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.GC;

@@ -29,7 +29,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.PkgProps;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 

@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.sdklib.IAndroidTarget;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;

@@ -21,7 +21,7 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdkuilib.ui.AuthenticationDialog;
 import com.android.sdkuilib.ui.GridDialog;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;

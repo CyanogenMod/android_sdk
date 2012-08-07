@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_PADDING;
@@ -26,6 +25,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;

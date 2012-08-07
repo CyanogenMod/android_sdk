@@ -21,6 +21,7 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 
 LOCAL_JAVA_LIBRARIES := \
 	common \
+	layoutlib_api \
 	guava-tools
 
 LOCAL_MODULE := rule_api

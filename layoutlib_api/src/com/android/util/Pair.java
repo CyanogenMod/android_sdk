@@ -24,9 +24,18 @@ package com.android.util;
  * to pass around generic signatures as is currently done, though at least the
  * construction is helped a bit by the {@link #of} factory method.
  *
+ * =================================================================================================
+ * WARNING
+ * This copy of the class is to be used only by layoutlib and is not to be changed, EVER.
+ * To use Pair outside of layoutlib, use com.android.utils.Pair, found in common.jar instead.
+ * =================================================================================================
+ *
  * @param <S> The type of the first value
  * @param <T> The type of the second value
+ *
+ * @Deprecated This is used for backward compatibility with layoutlib_api. Use com.android.utils.Pair instead
  */
+@Deprecated
 public class Pair<S,T> {
     private final S mFirst;
     private final T mSecond;

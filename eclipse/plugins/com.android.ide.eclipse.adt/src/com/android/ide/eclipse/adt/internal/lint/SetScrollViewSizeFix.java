@@ -15,11 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.text.IDocument;

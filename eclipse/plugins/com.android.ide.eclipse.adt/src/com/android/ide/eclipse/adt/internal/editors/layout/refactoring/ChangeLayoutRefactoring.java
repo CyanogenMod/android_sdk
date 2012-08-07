@@ -15,7 +15,6 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
@@ -37,7 +36,8 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.util;
+package com.android.utils;
+
+import com.android.utils.XmlUtils;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
