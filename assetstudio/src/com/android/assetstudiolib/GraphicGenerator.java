@@ -17,6 +17,7 @@
 package com.android.assetstudiolib;
 
 import com.android.resources.Density;
+import com.google.common.io.Closeables;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -199,9 +200,14 @@ public abstract class GraphicGenerator {
      * @return the image, or null
      * @throws IOException if an unexpected I/O error occurs
      */
+    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables#closeQuietly yet
     public static BufferedImage getStencilImage(String relativePath) throws IOException {
         InputStream is = GraphicGenerator.class.getResourceAsStream(relativePath);
-        return ImageIO.read(is);
+        try {
+            return ImageIO.read(is);
+        } finally {
+            Closeables.closeQuietly(is);
+        }
     }
 
     /**
@@ -212,10 +218,15 @@ public abstract class GraphicGenerator {
      * @return the icon image
      * @throws IOException if the image cannot be loaded
      */
+    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables#closeQuietly yet
     public static BufferedImage getClipartIcon(String name) throws IOException {
         InputStream is = GraphicGenerator.class.getResourceAsStream(
                 "/images/clipart/small/" + name);
-        return ImageIO.read(is);
+        try {
+            return ImageIO.read(is);
+        } finally {
+            Closeables.closeQuietly(is);
+        }
     }
 
     /**
@@ -226,10 +237,15 @@ public abstract class GraphicGenerator {
      * @return the clip art image
      * @throws IOException if the image cannot be loaded
      */
+    @SuppressWarnings("resource") // Eclipse doesn't know about Closeables#closeQuietly yet
     public static BufferedImage getClipartImage(String name) throws IOException {
         InputStream is = GraphicGenerator.class.getResourceAsStream(
                 "/images/clipart/big/" + name);
-        return ImageIO.read(is);
+        try {
+            return ImageIO.read(is);
+        } finally {
+            Closeables.closeQuietly(is);
+        }
     }
 
     /**

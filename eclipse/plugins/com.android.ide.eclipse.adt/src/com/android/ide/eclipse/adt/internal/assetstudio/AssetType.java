@@ -21,19 +21,19 @@ package com.android.ide.eclipse.adt.internal.assetstudio;
  */
 public enum AssetType {
     /** Launcher icon to be shown in the application list */
-    LAUNCHER("Launcher Icons", "ic_launcher"),                     //$NON-NLS-2$
-
-    /** Icons shown in menus */
-    MENU("Menu Icons", "ic_menu_%s"),                              //$NON-NLS-2$
+    LAUNCHER("Launcher Icons", "ic_launcher"),                             //$NON-NLS-2$
 
     /** Icons shown in the action bar */
-    ACTIONBAR("Action Bar Icons (Android 3.0+)", "ic_action_%s"),  //$NON-NLS-2$
-
-    /** Icons shown as part of tabs */
-    TAB("Tab Icons", "ic_tab_%s"),                                 //$NON-NLS-2$
+    ACTIONBAR("Action Bar and Tab Icons (Android 3.0+)", "ic_action_%s"),  //$NON-NLS-2$
 
     /** Icons shown in a notification message */
-    NOTIFICATION("Notification Icons", "ic_stat_%s");              //$NON-NLS-2$
+    NOTIFICATION("Notification Icons", "ic_stat_%s"),                      //$NON-NLS-2$
+
+    /** Icons shown as part of tabs */
+    TAB("Pre-Android 3.0 Tab Icons", "ic_tab_%s"),                         //$NON-NLS-2$
+
+    /** Icons shown in menus */
+    MENU("Pre-Android 3.0 Menu Icons", "ic_menu_%s");                      //$NON-NLS-2$
 
     /** Display name to show to the user in the asset type selection list */
     private final String mDisplayName;

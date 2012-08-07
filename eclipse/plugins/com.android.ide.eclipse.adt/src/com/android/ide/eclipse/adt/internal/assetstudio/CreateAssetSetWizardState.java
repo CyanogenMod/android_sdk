@@ -64,7 +64,7 @@ public class CreateAssetSetWizardState implements GraphicGeneratorContext {
     public IProject project;
 
     /** Whether empty space around the source image should be trimmed */
-    public boolean trim;
+    public boolean trim = true;
 
     /** The type of source the icon is being created from */
     public SourceType sourceType = SourceType.TEXT;
