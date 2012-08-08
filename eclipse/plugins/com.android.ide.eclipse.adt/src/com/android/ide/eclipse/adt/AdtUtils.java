@@ -1067,4 +1067,24 @@ public class AdtUtils {
 
         return false;
     }
+
+    /**
+     * Lists the files of the given directory and returns them as an array which
+     * is never null. This simplifies processing file listings from for each
+     * loops since {@link File#listFiles} can return null. This method simply
+     * wraps it and makes sure it returns an empty array instead if necessary.
+     *
+     * @param dir the directory to list
+     * @return the children, or empty if it has no children, is not a directory,
+     *         etc.
+     */
+    @NonNull
+    public static File[] listFiles(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            return files;
+        } else {
+            return new File[0];
+        }
+    }
 }

@@ -23,6 +23,7 @@ import static com.android.sdklib.SdkConstants.FD_TOOLS;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.google.common.base.Charsets;
@@ -59,17 +60,36 @@ public class TemplateManager {
     }
 
     /** @return the root folder containing extra templates */
-    @Nullable
-    public static File getExtraTemplateRootFolder() {
+    @NonNull
+    public static List<File> getExtraTemplateRootFolders() {
+        List<File> folders = new ArrayList<File>();
         String location = AdtPrefs.getPrefs().getOsSdkFolder();
         if (location != null) {
-            File folder = new File(location, FD_EXTRAS + File.separator + FD_TEMPLATES);
-            if (folder.isDirectory()) {
-                return folder;
+            File extras = new File(location, FD_EXTRAS);
+            if (extras.isDirectory()) {
+                for (File vendor : AdtUtils.listFiles(extras)) {
+                    if (!vendor.isDirectory()) {
+                        continue;
+                    }
+                    for (File pkg : AdtUtils.listFiles(vendor)) {
+                        if (pkg.isDirectory()) {
+                            File folder = new File(pkg, FD_TEMPLATES);
+                            if (folder.isDirectory()) {
+                                folders.add(folder);
+                            }
+                        }
+                    }
+                }
+
+                // Legacy
+                File folder = new File(extras, FD_TEMPLATES);
+                if (folder.isDirectory()) {
+                    folders.add(folder);
+                }
             }
         }
 
-        return null;
+        return folders;
     }
 
     /**
@@ -140,9 +160,8 @@ public class TemplateManager {
         }
 
         // Add in templates from extras/ as well.
-        root = getExtraTemplateRootFolder();
-        if (root != null) {
-            File[] files = new File(root, folder).listFiles();
+        for (File extra : getExtraTemplateRootFolders()) {
+            File[] files = new File(extra, folder).listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (file.isDirectory()) {
