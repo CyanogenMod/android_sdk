@@ -381,9 +381,11 @@ public class AvdCreationDialog extends GridDialog {
         mSnapshot = new Button(optionsGroup, SWT.CHECK);
         mSnapshot.setText("Snapshot");
         mSnapshot.setToolTipText("Emulator's state will be persisted between emulator executions");
+        mSnapshot.addSelectionListener(validateListener);
         mGpuEmulation = new Button(optionsGroup, SWT.CHECK);
         mGpuEmulation.setText("GPU Emulation");
         mGpuEmulation.setToolTipText("Enable hardware OpenGLES emulation");
+        mGpuEmulation.addSelectionListener(validateListener);
 
         // --- force creation group
         mForceCreation = new Button(parent, SWT.CHECK);
@@ -756,6 +758,11 @@ public class AvdCreationDialog extends GridDialog {
             warning = String.format("The AVD '%1$s' will be duplicated into '%2$s'.",
                     mAvdInfo.getName(),
                     mAvdName.getText());
+        }
+
+        if (mGpuEmulation.getSelection() && mSnapshot.getSelection()) {
+            valid = false;
+            error = "GPU Emulation and Snapshot cannot be used simultaneously";
         }
 
         mOkButton.setEnabled(valid);
