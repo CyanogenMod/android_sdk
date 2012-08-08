@@ -22,7 +22,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE := lint_checks-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := common lint_api lint_checks lint junit easymock asm-tools asm-tree-tools guava-tools
+LOCAL_JAVA_LIBRARIES := common lint_api lint_checks lint junit easymock asm-tools asm-tree-tools guava-tools layoutlib_api
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
