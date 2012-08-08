@@ -18,7 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 
-import com.android.util.Pair;
+import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 
 import java.util.HashMap;

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-
-
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
@@ -35,7 +33,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.resources.ResourceFolderType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

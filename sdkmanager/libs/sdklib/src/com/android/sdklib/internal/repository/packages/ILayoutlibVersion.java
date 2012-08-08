@@ -16,7 +16,7 @@
 
 package com.android.sdklib.internal.repository.packages;
 
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 /**
  * Interface used to decorate a {@link Package} that provides a version for layout lib.

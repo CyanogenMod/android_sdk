@@ -39,7 +39,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -60,7 +60,7 @@ import com.android.ide.common.layout.relative.ConstraintPainter;
 import com.android.ide.common.layout.relative.GuidelinePainter;
 import com.android.ide.common.layout.relative.MoveHandler;
 import com.android.ide.common.layout.relative.ResizeHandler;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.net.URL;
 import java.util.ArrayList;

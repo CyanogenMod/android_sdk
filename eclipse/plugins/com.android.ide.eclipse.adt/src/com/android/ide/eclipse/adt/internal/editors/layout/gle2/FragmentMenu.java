@@ -20,7 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_FRAGMENT_LAYOUT;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -34,7 +34,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;

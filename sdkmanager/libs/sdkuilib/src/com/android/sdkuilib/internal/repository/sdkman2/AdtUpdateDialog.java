@@ -33,7 +33,7 @@ import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;

@@ -118,6 +118,7 @@ framework/lint_api.jar           tools/lib/lint_api.jar
 framework/lint_checks.jar        tools/lib/lint_checks.jar
 framework/manifmerger.jar        tools/lib/manifmerger.jar
 framework/dvlib.jar              tools/lib/dvlib.jar
+framework/layoutlib_api.jar      tools/lib/layoutlib_api.jar
 
 
 # 3rd Party java libraries

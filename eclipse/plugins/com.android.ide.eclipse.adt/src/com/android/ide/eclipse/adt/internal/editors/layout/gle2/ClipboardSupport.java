@@ -28,7 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.custom.StyledText;

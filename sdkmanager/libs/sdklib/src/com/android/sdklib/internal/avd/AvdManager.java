@@ -30,7 +30,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;

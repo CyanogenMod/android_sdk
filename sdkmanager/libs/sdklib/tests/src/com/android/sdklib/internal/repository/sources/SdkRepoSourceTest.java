@@ -31,7 +31,7 @@ import com.android.sdklib.internal.repository.packages.SystemImagePackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.w3c.dom.Document;
 import org.xml.sax.ErrorHandler;

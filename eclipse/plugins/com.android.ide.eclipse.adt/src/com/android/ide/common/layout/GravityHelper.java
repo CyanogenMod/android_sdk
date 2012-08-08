@@ -26,7 +26,7 @@ import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_V
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_RIGHT;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_TOP;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import org.w3c.dom.Element;
 

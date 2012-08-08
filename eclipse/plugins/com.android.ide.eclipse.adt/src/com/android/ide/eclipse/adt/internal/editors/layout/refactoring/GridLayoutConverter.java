@@ -17,7 +17,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_HORIZ_MASK;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
@@ -52,6 +51,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.layout.BaseLayoutRule;

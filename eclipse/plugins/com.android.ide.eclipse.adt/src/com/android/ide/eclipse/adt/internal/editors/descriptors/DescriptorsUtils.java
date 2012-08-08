@@ -38,9 +38,9 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.util.XmlUtils.GT_ENTITY;
-import static com.android.util.XmlUtils.LT_ENTITY;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.GT_ENTITY;
+import static com.android.utils.XmlUtils.LT_ENTITY;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;

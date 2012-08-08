@@ -31,7 +31,7 @@ import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.CellEditor;

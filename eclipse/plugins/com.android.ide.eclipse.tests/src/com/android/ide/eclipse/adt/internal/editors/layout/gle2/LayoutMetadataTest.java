@@ -27,8 +27,8 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.util.Pair;
-import com.android.util.XmlUtils;
+import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;

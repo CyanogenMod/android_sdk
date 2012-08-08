@@ -37,7 +37,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.LintEditAction;
 import com.android.resources.Density;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;

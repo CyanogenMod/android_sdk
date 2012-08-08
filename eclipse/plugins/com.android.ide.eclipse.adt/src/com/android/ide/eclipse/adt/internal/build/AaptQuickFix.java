@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.util.XmlUtils.XMLNS_ANDROID;
-import static com.android.util.XmlUtils.XMLNS_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.XMLNS_ANDROID;
+import static com.android.utils.XmlUtils.XMLNS_URI;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -26,7 +26,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;

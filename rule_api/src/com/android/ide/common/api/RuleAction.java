@@ -18,7 +18,7 @@ package com.android.ide.common.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 import com.google.common.annotations.Beta;
 
 import java.net.URL;

@@ -34,8 +34,8 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiFlagAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.util.Pair;
-import com.android.util.XmlUtils;
+import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.text.BadLocationException;

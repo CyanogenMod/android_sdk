@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TAG;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -32,7 +32,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ClassAttributeDescriptor;
 import com.android.sdklib.IAndroidTarget;

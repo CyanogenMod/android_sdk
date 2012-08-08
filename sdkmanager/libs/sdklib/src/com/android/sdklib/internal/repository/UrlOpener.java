@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;

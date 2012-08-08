@@ -33,7 +33,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -51,7 +51,7 @@ import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.RuleAction.ActionProvider;
 import com.android.ide.common.api.RuleAction.ChoiceProvider;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.net.URL;
 import java.util.ArrayList;

@@ -42,7 +42,7 @@ import static com.android.sdklib.xml.AndroidManifest.NODE_SERVICE;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -72,7 +72,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.apache.xerces.xni.Augmentations;

@@ -28,10 +28,10 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.resources.ResourceType.LAYOUT;
 import static com.android.sdklib.SdkConstants.FD_RES;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME;
-import static com.android.util.XmlUtils.ANDROID_URI;
-import static com.android.util.XmlUtils.XMLNS;
-import static com.android.util.XmlUtils.XMLNS_COLON;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.XMLNS;
+import static com.android.utils.XmlUtils.XMLNS_COLON;
 
 import com.android.AndroidConstants;
 import com.android.annotations.NonNull;
@@ -49,7 +49,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

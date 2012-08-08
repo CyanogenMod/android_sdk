@@ -33,7 +33,7 @@ import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.repository.PkgProps;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;

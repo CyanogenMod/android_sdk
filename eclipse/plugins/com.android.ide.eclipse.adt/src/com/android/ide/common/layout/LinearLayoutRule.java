@@ -29,7 +29,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
 import static com.android.ide.eclipse.adt.AdtUtils.formatFloatAttribute;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

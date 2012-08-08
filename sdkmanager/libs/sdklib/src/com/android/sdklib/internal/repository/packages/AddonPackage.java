@@ -31,7 +31,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.w3c.dom.Node;
 

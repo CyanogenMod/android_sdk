@@ -26,7 +26,6 @@ import static com.android.ide.common.api.SegmentType.LEFT;
 import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
 import static com.android.ide.common.layout.BaseLayoutRule.getMaxMatchDistance;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
@@ -51,6 +50,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.relative.ConstraintType.ALIGN_BASELINE;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+
 import static java.lang.Math.abs;
 
 import com.android.ide.common.api.DropFeedback;

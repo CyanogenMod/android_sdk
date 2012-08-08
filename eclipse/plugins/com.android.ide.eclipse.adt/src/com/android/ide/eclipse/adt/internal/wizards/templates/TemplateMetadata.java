@@ -44,7 +44,7 @@ import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState.SourceType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.graphics.RGB;

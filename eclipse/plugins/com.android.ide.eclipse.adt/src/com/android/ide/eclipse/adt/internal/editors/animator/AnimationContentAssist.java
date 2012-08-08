@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.animator;
 
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -32,7 +32,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttribu
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.w3c.dom.Node;

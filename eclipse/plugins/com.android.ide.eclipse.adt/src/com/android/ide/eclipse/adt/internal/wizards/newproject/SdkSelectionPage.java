@@ -30,7 +30,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.xml.AndroidManifestParser;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;

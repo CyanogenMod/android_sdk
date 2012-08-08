@@ -35,7 +35,7 @@ import com.android.sdklib.internal.repository.packages.SamplePackage;
 import com.android.sdklib.internal.repository.packages.SourcePackage;
 import com.android.sdklib.internal.repository.packages.SystemImagePackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;

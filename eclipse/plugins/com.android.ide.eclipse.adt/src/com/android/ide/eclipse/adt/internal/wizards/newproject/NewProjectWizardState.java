@@ -27,7 +27,7 @@ import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;

@@ -44,7 +44,7 @@ import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDes
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.viewers.StyledString;

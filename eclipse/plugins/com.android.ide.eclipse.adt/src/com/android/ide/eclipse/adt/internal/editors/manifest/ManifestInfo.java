@@ -27,6 +27,7 @@ import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSIO
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_THEME;
 import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.sdklib.xml.AndroidManifest.NODE_USES_SDK;
+
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
 import com.android.annotations.NonNull;
@@ -41,7 +42,7 @@ import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidManifest;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

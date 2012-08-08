@@ -27,7 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepos
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;

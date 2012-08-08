@@ -20,13 +20,13 @@ import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.Va
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STRING_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
-import static com.android.util.XmlUtils.XMLNS;
+import static com.android.utils.XmlUtils.XMLNS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;

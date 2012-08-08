@@ -19,7 +19,7 @@ package com.android.ide.common.layout;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,7 +37,7 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.RuleAction;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.util.List;
 import java.util.Map;

@@ -72,6 +72,7 @@ public interface IProjectCallback {
      * @return a Pair of {@link ResourceType} and resource name, or null if the id
      *     does not match any resource.
      */
+    @SuppressWarnings("deprecation")
     Pair<ResourceType, String> resolveResourceId(int id);
 
     /**

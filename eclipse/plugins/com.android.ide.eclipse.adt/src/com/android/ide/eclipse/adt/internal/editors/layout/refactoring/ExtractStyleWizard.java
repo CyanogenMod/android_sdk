@@ -22,7 +22,7 @@ import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;

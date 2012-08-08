@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 
@@ -38,7 +37,7 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceType;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

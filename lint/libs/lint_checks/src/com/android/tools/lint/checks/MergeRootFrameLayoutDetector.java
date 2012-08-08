@@ -42,7 +42,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

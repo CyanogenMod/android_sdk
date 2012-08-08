@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_AAPT_COMPILE;
+
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
@@ -23,7 +24,7 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ScanningContext;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;

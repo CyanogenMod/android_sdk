@@ -16,14 +16,14 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseLayoutRule.AttributeFilter;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import java.util.Arrays;
 import java.util.HashMap;

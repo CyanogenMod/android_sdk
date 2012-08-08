@@ -27,6 +27,7 @@ LOCAL_JAR_MANIFEST := manifest.txt
 #   sdkmanager/app/etc/android.bat
 LOCAL_JAVA_LIBRARIES := \
         androidprefs \
+        layoutlib_api \
         common \
         mkidentity-prebuilt \
         commons-compress-1.0 \

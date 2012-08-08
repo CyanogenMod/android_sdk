@@ -23,8 +23,9 @@ import static com.android.ide.common.api.SegmentType.CENTER_VERTICAL;
 import static com.android.ide.common.api.SegmentType.LEFT;
 import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+
 import static java.lang.Math.abs;
 
 import com.android.ide.common.api.DropFeedback;

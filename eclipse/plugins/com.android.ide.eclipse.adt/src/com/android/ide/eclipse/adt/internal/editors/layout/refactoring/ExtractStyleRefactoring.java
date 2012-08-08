@@ -16,7 +16,6 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
-import static com.android.util.XmlUtils.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
@@ -32,9 +31,10 @@ import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.Va
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.PARENT_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ROOT_ELEMENT;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME;
-import static com.android.util.XmlUtils.ANDROID_NS_NAME_PREFIX;
-import static com.android.util.XmlUtils.XMLNS_COLON;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
+import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.XMLNS_COLON;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -47,7 +47,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

@@ -37,7 +37,7 @@ import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -25,7 +25,7 @@ import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentCommand;

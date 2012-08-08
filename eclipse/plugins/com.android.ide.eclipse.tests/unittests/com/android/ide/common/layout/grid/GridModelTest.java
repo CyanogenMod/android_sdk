@@ -20,7 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;

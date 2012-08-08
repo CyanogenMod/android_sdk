@@ -29,7 +29,8 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
+
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
@@ -87,7 +88,7 @@ import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.detector.api.LintUtils;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

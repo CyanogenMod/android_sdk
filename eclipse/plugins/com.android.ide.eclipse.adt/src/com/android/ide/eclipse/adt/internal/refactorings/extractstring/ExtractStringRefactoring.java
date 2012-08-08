@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
-import static com.android.util.XmlUtils.AMP_ENTITY;
-import static com.android.util.XmlUtils.LT_ENTITY;
-import static com.android.util.XmlUtils.QUOT_ENTITY;
+import static com.android.utils.XmlUtils.AMP_ENTITY;
+import static com.android.utils.XmlUtils.LT_ENTITY;
+import static com.android.utils.XmlUtils.QUOT_ENTITY;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;

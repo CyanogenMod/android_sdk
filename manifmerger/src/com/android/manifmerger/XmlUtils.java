@@ -255,7 +255,7 @@ class XmlUtils {
      * @return The namespace prefix if found or null.
      */
     static String lookupNsPrefix(Document doc, String nsUri) {
-        return com.android.util.XmlUtils.lookupNamespacePrefix(doc, nsUri);
+        return com.android.utils.XmlUtils.lookupNamespacePrefix(doc, nsUri);
     }
 
     /**

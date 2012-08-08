@@ -22,7 +22,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo.Format;

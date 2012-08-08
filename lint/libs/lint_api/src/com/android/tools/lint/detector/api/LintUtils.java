@@ -28,7 +28,7 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.util.PositionXmlParser;
+import com.android.utils.PositionXmlParser;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;

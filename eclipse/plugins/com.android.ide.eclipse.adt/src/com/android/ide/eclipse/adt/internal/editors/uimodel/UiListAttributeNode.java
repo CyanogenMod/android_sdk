@@ -25,7 +25,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
-import com.android.util.XmlUtils;
+import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.SWT;

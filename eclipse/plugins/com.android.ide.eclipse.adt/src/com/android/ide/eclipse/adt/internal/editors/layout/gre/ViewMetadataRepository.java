@@ -24,7 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.util.XmlUtils.ANDROID_URI;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
@@ -36,7 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.Density;
-import com.android.util.Pair;
+import com.android.utils.Pair;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
