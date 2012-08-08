@@ -167,6 +167,21 @@ public class AvdManager {
     public final static String AVD_INI_CAMERA_BACK = "hw.camera.back"; //$NON-NLS-1$
 
     /**
+     * AVD/config.ini key name representing the amount of RAM the emulated device should have
+     */
+    public final static String AVD_INI_RAM_SIZE = "hw.ramSize";
+
+    /**
+     * AVD/config.ini key name representing the amount of memory available to applications by default
+     */
+    public final static String AVD_INI_VM_HEAP_SIZE = "vm.heapSize";
+
+    /**
+     * AVD/config.ini key name representing the size of the data partition
+     */
+    public final static String AVD_INI_DATA_PARTITION_SIZE = "disk.dataPartition.size";
+
+    /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
     public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$

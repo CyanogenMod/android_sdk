@@ -17,6 +17,8 @@
 package com.android.sdkuilib.internal.widgets;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.resources.Density;
+import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
@@ -26,7 +28,9 @@ import com.android.sdklib.devices.Camera;
 import com.android.sdklib.devices.CameraLocation;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.Hardware;
 import com.android.sdklib.devices.Screen;
+import com.android.sdklib.devices.Storage;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
@@ -88,6 +92,12 @@ public class AvdCreationDialog extends GridDialog {
 
     private Button mSnapshot;
     private Button mGpuEmulation;
+
+    private Text mRam;
+    private Text mVmHeap;
+
+    private Text mDataPartition;
+    private Combo mDataPartitionSize;
 
     private Button mSdCardSizeRadio;
     private Text mSdCardSize;
@@ -258,20 +268,51 @@ public class AvdCreationDialog extends GridDialog {
 
         toggleCameras();
 
-        // --- avd options group
+        // --- memory options group
         label = new Label(parent, SWT.NONE);
-        label.setText("Options:");
-        label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING,
-                false, false));
-        Group optionsGroup = new Group(parent, SWT.NONE);
-        optionsGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        optionsGroup.setLayout(new GridLayout(2, true));
-        mSnapshot = new Button(optionsGroup, SWT.CHECK);
-        mSnapshot.setText("Snapshot");
-        mSnapshot.setToolTipText("Emulator's state will be persisted between emulator executions");
-        mGpuEmulation = new Button(optionsGroup, SWT.CHECK);
-        mGpuEmulation.setText("GPU Emulation");
-        mGpuEmulation.setToolTipText("Enable hardware OpenGLES emulation");
+        label.setText("Memory Options:");
+
+
+        Group memoryGroup = new Group(parent, SWT.BORDER);
+        memoryGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        memoryGroup.setLayout(new GridLayout(4, false));
+
+        label = new Label(memoryGroup, SWT.NONE);
+        label.setText("RAM:");
+        tooltip = "The amount of RAM the emulated device should have in MiB";
+        label.setToolTipText(tooltip);
+        mRam = new Text(memoryGroup, SWT.BORDER);
+        mRam.addVerifyListener(mDigitVerifier);
+        mRam.addModifyListener(validateListener);
+        mRam.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        label = new Label(memoryGroup, SWT.NONE);
+        label.setText("VM Heap:");
+        tooltip = "The amount of memory, in MiB, available to typical Android applications";
+        label.setToolTipText(tooltip);
+        mVmHeap = new Text(memoryGroup, SWT.BORDER);
+        mVmHeap.addVerifyListener(mDigitVerifier);
+        mVmHeap.addModifyListener(validateListener);
+        mVmHeap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mVmHeap.setToolTipText(tooltip);
+
+        // --- Data partition group
+        label = new Label(parent, SWT.NONE);
+        label.setText("Internal Storage:");
+        tooltip = "The size of the data partition on the device.";
+        Group storageGroup = new Group(parent, SWT.NONE);
+        storageGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        storageGroup.setLayout(new GridLayout(2, false));
+        mDataPartition = new Text(storageGroup, SWT.BORDER);
+        mDataPartition.setText("200");
+        mDataPartition.addVerifyListener(mDigitVerifier);
+        mDataPartition.addModifyListener(validateListener);
+        mDataPartition.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mDataPartitionSize = new Combo(storageGroup, SWT.READ_ONLY | SWT.DROP_DOWN);
+        mDataPartitionSize.add("MiB");
+        mDataPartitionSize.add("GiB");
+        mDataPartitionSize.select(0);
+        mDataPartitionSize.addModifyListener(validateListener);
 
         // --- sd card group
         label = new Label(parent, SWT.NONE);
@@ -330,6 +371,19 @@ public class AvdCreationDialog extends GridDialog {
 
         mSdCardSizeRadio.setSelection(true);
         enableSdCardWidgets(true);
+
+        // --- avd options group
+        label = new Label(parent, SWT.NONE);
+        label.setText("Emulation Options:");
+        Group optionsGroup = new Group(parent, SWT.NONE);
+        optionsGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        optionsGroup.setLayout(new GridLayout(2, true));
+        mSnapshot = new Button(optionsGroup, SWT.CHECK);
+        mSnapshot.setText("Snapshot");
+        mSnapshot.setToolTipText("Emulator's state will be persisted between emulator executions");
+        mGpuEmulation = new Button(optionsGroup, SWT.CHECK);
+        mGpuEmulation.setText("GPU Emulation");
+        mGpuEmulation.setToolTipText("Enable hardware OpenGLES emulation");
 
         // --- force creation group
         mForceCreation = new Button(parent, SWT.CHECK);
@@ -425,6 +479,58 @@ public class AvdCreationDialog extends GridDialog {
 
         @Override
         public void widgetSelected(SelectionEvent arg0) {
+            Device currentDevice = null;
+            for (Device d : mDeviceMap.get(mDeviceManufacturer.getText())) {
+                if (d.getName().equals(mDeviceName.getText())) {
+                    currentDevice = d;
+                    break;
+                }
+            }
+
+            if (currentDevice != null) {
+                Hardware hw = currentDevice.getDefaultHardware();
+                Long ram = hw.getRam().getSizeAsUnit(Storage.Unit.MiB);
+                mRam.setText(Long.toString(ram));
+
+                // Set the default VM heap size. This is based on the Android CDD minimums for each
+                // screen size and density.
+                Screen s = hw.getScreen();
+                ScreenSize size = s.getSize();
+                Density density = s.getPixelDensity();
+                int vmHeapSize = 32;
+                if (size.equals(ScreenSize.XLARGE)) {
+                    switch (density) {
+                        case LOW:
+                        case MEDIUM:
+                            vmHeapSize = 32;
+                            break;
+                        case TV:
+                        case HIGH:
+                            vmHeapSize = 64;
+                            break;
+                        case XHIGH:
+                        case XXHIGH:
+                            vmHeapSize = 128;
+                    }
+                } else {
+                    switch (density) {
+                        case LOW:
+                        case MEDIUM:
+                            vmHeapSize = 16;
+                            break;
+                        case TV:
+                        case HIGH:
+                            vmHeapSize = 32;
+                            break;
+                        case XHIGH:
+                        case XXHIGH:
+                            vmHeapSize = 64;
+
+                    }
+                }
+                mVmHeap.setText(Integer.toString(vmHeapSize));
+            }
+
             toggleCameras();
             validatePage();
         }
@@ -596,6 +702,19 @@ public class AvdCreationDialog extends GridDialog {
             valid = false;
         }
 
+        if (mRam.getText().isEmpty()) {
+            valid = false;
+        }
+
+        if (mVmHeap.getText().isEmpty()) {
+            valid = false;
+        }
+
+        if (mDataPartition.getText().isEmpty() || mDataPartitionSize.getSelectionIndex() < 0) {
+            valid = false;
+            error = "Data partition must be a valid file size.";
+        }
+
         // validate sdcard size or file
         if (mSdCardSizeRadio.getSelection()) {
             if (!mSdCardSize.getText().isEmpty() && mSdCardSizeCombo.getSelectionIndex() >= 0) {
@@ -755,6 +874,24 @@ public class AvdCreationDialog extends GridDialog {
         hwProps.put(AvdManager.AVD_INI_DEVICE_MANUFACTURER, mDeviceManufacturer.getText());
         hwProps.put(AvdManager.AVD_INI_DEVICE_NAME, mDeviceName.getText());
 
+        // Although the device has this information, some devices have more RAM than we'd want to
+        // allocate to an emulator.
+        hwProps.put(AvdManager.AVD_INI_RAM_SIZE, mRam.getText());
+        hwProps.put(AvdManager.AVD_INI_VM_HEAP_SIZE, mVmHeap.getText());
+
+        String suffix;
+        switch (mDataPartitionSize.getSelectionIndex()) {
+            case 0:
+                suffix = "M";
+                break;
+            case 1:
+                suffix = "G";
+                break;
+            default:
+                suffix = "K";
+        }
+        hwProps.put(AvdManager.AVD_INI_DATA_PARTITION_SIZE, mDataPartition.getText()+suffix);
+
         if (mFrontCamera.isEnabled()) {
             hwProps.put(AvdManager.AVD_INI_CAMERA_FRONT,
                     mFrontCamera.getText().toLowerCase());
@@ -854,6 +991,32 @@ public class AvdCreationDialog extends GridDialog {
                 mSdCardSizeRadio.setSelection(false);
                 mSdCardFileRadio.setSelection(true);
                 mSdCardFile.setText(sdcard);
+            }
+
+            String ramSize = props.get(AvdManager.AVD_INI_RAM_SIZE);
+            if (ramSize != null) {
+                mRam.setText(ramSize);
+            }
+
+            String vmHeapSize = props.get(AvdManager.AVD_INI_VM_HEAP_SIZE);
+            if (vmHeapSize != null) {
+                mVmHeap.setText(vmHeapSize);
+            }
+
+            String dataPartitionSize = props.get(AvdManager.AVD_INI_DATA_PARTITION_SIZE);
+            if (dataPartitionSize != null) {
+                mDataPartition.setText(
+                        dataPartitionSize.substring(0, dataPartitionSize.length() - 1));
+                switch (dataPartitionSize.charAt(dataPartitionSize.length() - 1)) {
+                    case 'M':
+                        mDataPartitionSize.select(0);
+                        break;
+                    case 'G':
+                        mDataPartitionSize.select(1);
+                        break;
+                    default:
+                        mDataPartitionSize.select(-1);
+                }
             }
 
             String cameraFront = props.get(AvdManager.AVD_INI_CAMERA_FRONT);
