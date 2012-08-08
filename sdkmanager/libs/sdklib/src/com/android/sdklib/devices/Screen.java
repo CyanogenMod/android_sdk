@@ -170,20 +170,20 @@ public class Screen {
     @Override
     public int hashCode() {
         int hash = 17;
-        hash = 31 * hash + mScreenSize.hashCode();
+        hash = 31 * hash + mScreenSize.ordinal();
         long f = Double.doubleToLongBits(mDiagonalLength);
         hash = 31 * hash + (int) (f ^ (f >>> 32));
-        hash = 31 * hash + mPixelDensity.hashCode();
-        hash = 31 * hash + mScreenRatio.hashCode();
+        hash = 31 * hash + mPixelDensity.ordinal();
+        hash = 31 * hash + mScreenRatio.ordinal();
         hash = 31 * hash + mXDimension;
         hash = 31 * hash + mYDimension;
         f = Double.doubleToLongBits(mXdpi);
         hash = 31 * hash + (int) (f ^ (f >>> 32));
         f = Double.doubleToLongBits(mYdpi);
         hash = 31 * hash + (int) (f ^ (f >>> 32));
-        hash = 31 * hash + mMultitouch.hashCode();
-        hash = 31 * hash + mMechanism.hashCode();
-        hash = 31 * hash + mScreenType.hashCode();
+        hash = 31 * hash + mMultitouch.ordinal();
+        hash = 31 * hash + mMechanism.ordinal();
+        hash = 31 * hash + mScreenType.ordinal();
         return hash;
     }
 }

@@ -69,6 +69,8 @@ public class AvdManagerWindowImpl1 {
     private final UpdaterData mUpdaterData;
     /** True if this window created the UpdaterData, in which case it needs to dispose it. */
     private final boolean mOwnUpdaterData;
+    private final DeviceManager mDeviceManager;
+
 
     // --- UI members ---
 
@@ -94,6 +96,7 @@ public class AvdManagerWindowImpl1 {
         mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
         mOwnUpdaterData = true;
+        mDeviceManager = new DeviceManager(sdkLog);
     }
 
     /**
@@ -115,6 +118,7 @@ public class AvdManagerWindowImpl1 {
         mContext = context;
         mUpdaterData = updaterData;
         mOwnUpdaterData = false;
+        mDeviceManager = new DeviceManager(mUpdaterData.getSdkLog());
     }
 
     /**
@@ -161,6 +165,7 @@ public class AvdManagerWindowImpl1 {
             public void widgetDisposed(DisposeEvent e) {
                 ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);    //$hide$
                 onAndroidSdkUpdaterDispose();                               //$hide$
+                mAvdPage.dispose();                                         //$hide$
             }
         });
 
@@ -180,7 +185,7 @@ public class AvdManagerWindowImpl1 {
 
     private void createContents() {
 
-        mAvdPage = new AvdManagerPage(mShell, SWT.NONE, mUpdaterData);
+        mAvdPage = new AvdManagerPage(mShell, SWT.NONE, mUpdaterData, mDeviceManager);
         mAvdPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
 
@@ -353,15 +358,13 @@ public class AvdManagerWindowImpl1 {
         Menu menuDevices = new Menu(menuBarDevices);
         menuBarDevices.setMenu(menuDevices);
 
-        final DeviceManager manager = new DeviceManager(mUpdaterData.getSdkLog());
-
         MenuItem createDevice = new MenuItem(menuDevices, SWT.NONE);
         createDevice.setText("Create New Device");
         createDevice.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 DeviceCreationDialog dlg = new DeviceCreationDialog(
-                        mShell, manager, mUpdaterData.getImageFactory(), null);
+                        mShell, mDeviceManager, mUpdaterData.getImageFactory(), null);
                 if (dlg.open() == Window.OK) {
                     setupDevices(menuBarDevices);
                 }
@@ -370,7 +373,7 @@ public class AvdManagerWindowImpl1 {
         new MenuItem(menuDevices, SWT.SEPARATOR);
 
         Map<String, List<Device>> devices = new HashMap<String, List<Device>>();
-        for (Device d : manager.getDevices(mUpdaterData.getOsSdkRoot())) {
+        for (Device d : mDeviceManager.getDevices(mUpdaterData.getOsSdkRoot())) {
             List<Device> l;
             if (devices.containsKey(d.getManufacturer())) {
                 l = devices.get(d.getManufacturer());
@@ -393,7 +396,7 @@ public class AvdManagerWindowImpl1 {
                     @Override
                     public void widgetSelected(SelectionEvent e) {
                         DeviceCreationDialog dlg = new DeviceCreationDialog(
-                                mShell, manager, mUpdaterData.getImageFactory(), d);
+                                mShell, mDeviceManager, mUpdaterData.getImageFactory(), d);
                         if(dlg.open() == Window.OK) {
                             setupDevices(menuBarDevices);
                         }

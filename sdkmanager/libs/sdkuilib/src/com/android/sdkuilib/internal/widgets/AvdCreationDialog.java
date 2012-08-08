@@ -878,9 +878,6 @@ public class AvdCreationDialog extends GridDialog {
             return false;
         }
 
-        hwProps.put(AvdManager.AVD_INI_DEVICE_MANUFACTURER, mDeviceManufacturer.getText());
-        hwProps.put(AvdManager.AVD_INI_DEVICE_NAME, mDeviceName.getText());
-
         // Although the device has this information, some devices have more RAM than we'd want to
         // allocate to an emulator.
         hwProps.put(AvdManager.AVD_INI_RAM_SIZE, mRam.getText());

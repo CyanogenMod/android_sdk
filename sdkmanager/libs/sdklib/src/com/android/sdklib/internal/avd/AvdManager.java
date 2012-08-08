@@ -25,6 +25,8 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.DeviceManager.DeviceStatus;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.util.GrabProcessOutput;
@@ -180,6 +182,11 @@ public class AvdManager {
      * AVD/config.ini key name representing the size of the data partition
      */
     public final static String AVD_INI_DATA_PARTITION_SIZE = "disk.dataPartition.size";
+
+    /**
+     * AVD/config.ini key name representing the hash of the device this AVD is based on
+     */
+    public final static String AVD_INI_DEVICE_HASH = "hw.device.hash";
 
     /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
@@ -1389,6 +1396,20 @@ public class AvdManager {
             }
         }
 
+        // Get the device status if this AVD is associated with a device
+        DeviceStatus deviceStatus = null;
+        if (properties != null) {
+            String deviceName = properties.get(AVD_INI_DEVICE_NAME);
+            String deviceMfctr = properties.get(AVD_INI_DEVICE_MANUFACTURER);
+            String hash = properties.get(AVD_INI_DEVICE_HASH);
+            if (deviceName != null && deviceMfctr != null && hash != null) {
+                int deviceHash = Integer.parseInt(hash);
+                deviceStatus = (new DeviceManager(log)).getDeviceStatus(
+                        mSdkManager.getLocation(), deviceName, deviceMfctr, deviceHash);
+            }
+        }
+
+
         // TODO: What about missing sdcard, skins, etc?
 
         AvdStatus status;
@@ -1405,6 +1426,10 @@ public class AvdManager {
             status = AvdStatus.ERROR_PROPERTIES;
         } else if (validImageSysdir == false) {
             status = AvdStatus.ERROR_IMAGE_DIR;
+        } else if (deviceStatus == DeviceStatus.CHANGED) {
+            status = AvdStatus.ERROR_DEVICE_CHANGED;
+        } else if (deviceStatus == DeviceStatus.MISSING) {
+            status = AvdStatus.ERROR_DEVICE_MISSING;
         } else {
             status = AvdStatus.OK;
         }
@@ -1579,10 +1604,16 @@ public class AvdManager {
             //FIXME: display paths to empty image folders?
             status = AvdStatus.ERROR_IMAGE_DIR;
         }
+        updateAvd(avd, properties, status, log);
+    }
 
+    public void updateAvd(AvdInfo avd,
+            Map<String, String> newProperties,
+            AvdStatus status,
+            ISdkLog log) throws IOException {
         // now write the config file
         File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
-        writeIniFile(configIniFile, properties);
+        writeIniFile(configIniFile, newProperties);
 
         // finally create a new AvdInfo for this unbroken avd and add it to the list.
         // instead of creating the AvdInfo object directly we reparse it, to detect other possible
@@ -1595,8 +1626,7 @@ public class AvdManager {
                 avd.getTargetHash(),
                 avd.getTarget(),
                 avd.getAbiType(),
-                properties,
-                status);
+                newProperties);
 
         replaceAvd(avd, newAvd);
     }

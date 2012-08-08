@@ -46,7 +46,11 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         /** Unable to parse config.ini */
         ERROR_PROPERTIES,
         /** System Image folder in config.ini doesn't exist */
-        ERROR_IMAGE_DIR;
+        ERROR_IMAGE_DIR,
+        /** The {@link Device} this AVD is based on has changed from its original configuration*/
+        ERROR_DEVICE_CHANGED,
+        /** The {@link Device} this AVD is based on is no longer available */
+        ERROR_DEVICE_MISSING;
     }
 
     private final String mName;
@@ -284,6 +288,14 @@ public final class AvdInfo implements Comparable<AvdInfo> {
                 return String.format(
                         "Invalid value in image.sysdir. Run 'android update avd -n %1$s'",
                         mName);
+            case ERROR_DEVICE_CHANGED:
+                return String.format("%1$s %2$s configuration has changed since AVD creation",
+                        mProperties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER),
+                        mProperties.get(AvdManager.AVD_INI_DEVICE_NAME));
+            case ERROR_DEVICE_MISSING:
+                return String.format("%1$s %2$s no longer exists as a device",
+                        mProperties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER),
+                        mProperties.get(AvdManager.AVD_INI_DEVICE_NAME));
             case OK:
                 assert false;
                 return null;

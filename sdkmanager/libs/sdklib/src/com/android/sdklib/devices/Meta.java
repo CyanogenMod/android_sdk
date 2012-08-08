@@ -143,19 +143,27 @@ public class Meta {
     public int hashCode() {
         int hash = 17;
         if(mIconSixteen != null){
-            hash = 31 * hash + mIconSixteen.hashCode();
+            for (Character c : mIconSixteen.getAbsolutePath().toCharArray()) {
+                hash = 31 * hash + c;
+            }
         }
         if(mIconSixtyFour != null){
-            hash = 31 * hash + mIconSixtyFour.hashCode();
+            for (Character c : mIconSixtyFour.getAbsolutePath().toCharArray()) {
+                hash = 31 * hash + c;
+            }
         }
         if(mFrame != null){
-            hash = 31 * hash + mFrame.hashCode();
+            for (Character c : mFrame.getAbsolutePath().toCharArray()) {
+                hash = 31 * hash + c;
+            }
         }
         if(mFrameOffsetLandscape != null){
-            hash = 31 * hash + mFrameOffsetLandscape.hashCode();
+            hash = 31 * hash + mFrameOffsetLandscape.x;
+            hash = 31 * hash + mFrameOffsetLandscape.y;
         }
         if(mFrameOffsetPortrait != null){
-            hash = 31 * hash + mFrameOffsetPortrait.hashCode();
+            hash = 31 * hash + mFrameOffsetPortrait.x;
+            hash = 31 * hash + mFrameOffsetPortrait.y;
         }
         return hash;
     }

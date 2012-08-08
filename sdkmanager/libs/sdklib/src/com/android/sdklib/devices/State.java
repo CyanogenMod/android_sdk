@@ -125,12 +125,17 @@ public class State {
     public int hashCode() {
         int hash = 17;
         hash = 31 * hash + (mDefaultState ? 1 : 0);
-        hash = 31 * hash + mName.hashCode();
-        hash = 31 * hash + mDescription.hashCode();
-        hash = 31 * hash + mOrientation.hashCode();
-        hash = 31 * hash + mKeyState.hashCode();
-        hash = 31 * hash + mNavState.hashCode();
+        for (Character c : mName.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+        for (Character c : mDescription.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+        hash = 31 * hash + mOrientation.ordinal();
+        hash = 31 * hash + mKeyState.ordinal();
+        hash = 31 * hash + mNavState.ordinal();
         hash = 31 * hash + mHardwareOverride.hashCode();
         return hash;
     }
+
 }

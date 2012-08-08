@@ -282,21 +282,50 @@ public class Hardware {
     public int hashCode() {
         int hash = 17;
         hash = 31 * hash + mScreen.hashCode();
-        hash = 31 * hash + mNetworking.hashCode();
-        hash = 31 * hash + mSensors.hashCode();
+
+        // Since sets have no defined order, we need to hash them in such a way that order doesn't
+        // matter.
+        int temp = 0;
+        for (Network n : mNetworking) {
+            temp |= 1 << n.ordinal();
+        }
+        hash = 31 * hash + temp;
+
+        temp = 0;
+        for (Sensor s : mSensors) {
+            temp |= 1 << s.ordinal();
+        }
+
+        hash = 31 * hash + temp;
         hash = 31 * hash + (mMic ? 1 : 0);
-        hash = 31 * hash + mCameras.hashCode();
-        hash = 31 * hash + mKeyboard.hashCode();
-        hash = 31 * hash + mNav.hashCode();
+        hash = mCameras.hashCode();
+        hash = 31 * hash + mKeyboard.ordinal();
+        hash = 31 * hash + mNav.ordinal();
         hash = 31 * hash + mRam.hashCode();
-        hash = 31 * hash + mButtons.hashCode();
+        hash = 31 * hash + mButtons.ordinal();
         hash = 31 * hash + mInternalStorage.hashCode();
         hash = 31 * hash + mRemovableStorage.hashCode();
-        hash = 31 * hash + mCpu.hashCode();
-        hash = 31 * hash + mGpu.hashCode();
-        hash = 31 * hash + mAbis.hashCode();
-        hash = 31 * hash + mUiModes.hashCode();
-        hash = 31 * hash + mPluggedIn.hashCode();
+
+        for (Character c : mCpu.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+
+        for (Character c : mGpu.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+
+        temp = 0;
+        for (Abi a : mAbis) {
+            temp |= 1 << a.ordinal();
+        }
+        hash = 31 * hash + temp;
+
+        temp = 0;
+        for (UiMode ui : mUiModes) {
+            temp |= 1 << ui.ordinal();
+        }
+        hash = 31 * hash + temp;
+
         return hash;
     }
 }
