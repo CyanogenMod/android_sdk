@@ -23,7 +23,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.util.PositionXmlParser;
+import com.android.utils.PositionXmlParser;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
