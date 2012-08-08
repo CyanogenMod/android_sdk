@@ -25,7 +25,8 @@
         android:name="${packageName}.${CollectionName}Fragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        tools:layout="@android:layout/list_content" />
 
     <FrameLayout
         android:id="@+id/${detail_name}_container"

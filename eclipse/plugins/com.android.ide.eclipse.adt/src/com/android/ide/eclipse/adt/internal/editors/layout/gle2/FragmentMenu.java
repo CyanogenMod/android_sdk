@@ -59,7 +59,7 @@ import java.util.List;
  */
 public class FragmentMenu extends SubmenuAction {
     private static final String R_LAYOUT_PREFIX = "R.layout."; //$NON-NLS-1$
-    private static final String ANDROID_R_PREFIX = "android.R"; //$NON-NLS-1$
+    private static final String ANDROID_R_PREFIX = "android.R.layout"; //$NON-NLS-1$
 
     /** Associated canvas */
     private final LayoutCanvas mCanvas;
@@ -121,6 +121,12 @@ public class FragmentMenu extends SubmenuAction {
                 String self = mCanvas.getLayoutResourceName();
                 // Pair of <title,layout> to be displayed to the user
                 List<Pair<String, String>> layouts = new ArrayList<Pair<String, String>>();
+
+                if (source.contains("extends ListFragment")) { //$NON-NLS-1$
+                    layouts.add(Pair.of("list_content", //$NON-NLS-1$
+                            "@android:layout/list_content")); //$NON-NLS-1$
+                }
+
                 int index = 0;
                 while (true) {
                     index = source.indexOf(R_LAYOUT_PREFIX, index);

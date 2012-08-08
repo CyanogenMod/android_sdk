@@ -24,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
@@ -154,7 +155,7 @@ public final class ProjectCallback extends LegacyCallback {
         } catch (Exception e) {
             // Add the missing class to the list so that the renderer can print them later.
             // no need to log this.
-            if (!className.equals(VIEW_FRAGMENT)) {
+            if (!className.equals(VIEW_FRAGMENT) && !className.equals(VIEW_INCLUDE)) {
                 mMissingClasses.add(className);
             }
         }
@@ -193,6 +194,8 @@ public final class ProjectCallback extends LegacyCallback {
             if (label.equals(VIEW_FRAGMENT)) {
                 label = "<fragment>\n"
                         + "Pick preview layout from the \"Fragment Layout\" context menu";
+            } else if (label.equals(VIEW_INCLUDE)) {
+                label = "Text";
             }
 
             m.invoke(view, label);
