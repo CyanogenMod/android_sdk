@@ -34,8 +34,11 @@ public class ActionBarIconGenerator extends GraphicGenerator {
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+        ActionBarOptions actionBarOptions = (ActionBarOptions) options;
         Rectangle iconSizeMdpi = new Rectangle(0, 0, 32, 32);
-        Rectangle targetRectMdpi = new Rectangle(4, 4, 24, 24);
+        Rectangle targetRectMdpi = actionBarOptions.sourceIsClipart
+                ? new Rectangle(0, 0, 32, 32)
+                : new Rectangle(4, 4, 24, 24);
         final float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
         Rectangle imageRect = Util.scaleRectangle(iconSizeMdpi, scaleFactor);
         Rectangle targetRect = Util.scaleRectangle(targetRectMdpi, scaleFactor);
@@ -47,7 +50,6 @@ public class ActionBarIconGenerator extends GraphicGenerator {
         Graphics2D g2 = (Graphics2D) tempImage.getGraphics();
         Util.drawCenterInside(g2, options.sourceImage, targetRect);
 
-        ActionBarOptions actionBarOptions = (ActionBarOptions) options;
         if (actionBarOptions.theme == Theme.HOLO_LIGHT) {
             Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
                     new FillEffect(new Color(0x333333), 0.6),
@@ -69,6 +71,9 @@ public class ActionBarIconGenerator extends GraphicGenerator {
     public static class ActionBarOptions extends GraphicGenerator.Options {
         /** The theme to generate icons for */
         public Theme theme = Theme.HOLO_LIGHT;
+
+        /** Whether or not the source image is a clipart source */
+        public boolean sourceIsClipart = false;
     }
 
     /** The themes to generate action bar icons for */

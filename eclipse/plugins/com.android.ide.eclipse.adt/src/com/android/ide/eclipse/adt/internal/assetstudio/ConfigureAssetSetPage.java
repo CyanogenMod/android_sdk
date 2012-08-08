@@ -1141,6 +1141,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 actionBarOptions.theme = mValues.holoDark
                         ? ActionBarIconGenerator.Theme.HOLO_DARK
                                 : ActionBarIconGenerator.Theme.HOLO_LIGHT;
+                actionBarOptions.sourceIsClipart = (mValues.sourceType == CLIPART);
 
                 options = actionBarOptions;
                 break;
