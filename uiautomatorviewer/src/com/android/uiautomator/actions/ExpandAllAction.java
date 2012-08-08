@@ -16,18 +16,18 @@
 
 package com.android.uiautomator.actions;
 
-import com.android.uiautomator.UiAutomatorViewer;
+import com.android.uiautomator.UiAutomatorView;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 
 public class ExpandAllAction extends Action {
 
-    UiAutomatorViewer mWindow;
+    UiAutomatorView mView;
 
-    public ExpandAllAction(UiAutomatorViewer window) {
+    public ExpandAllAction(UiAutomatorView view) {
         super("&Expand All");
-        mWindow = window;
+        mView = view;;
     }
 
     @Override
@@ -37,7 +37,6 @@ public class ExpandAllAction extends Action {
 
     @Override
     public void run() {
-        mWindow.expandAll();
+        mView.expandAll();
     }
-
 }

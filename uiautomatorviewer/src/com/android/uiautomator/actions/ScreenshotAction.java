@@ -38,6 +38,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
@@ -45,6 +46,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
@@ -122,7 +124,10 @@ public class ScreenshotAction extends Action {
                         showError("Cannot get temp directory", e, monitor);
                         return;
                     }
-                    UiAutomatorModel.getModel().registerTempDirectory(tmpDir);
+
+                    tmpDir.deleteOnExit();
+                    xmlDumpFile.deleteOnExit();
+                    screenshotFile.deleteOnExit();
 
                     String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
                     int apiLevel;
@@ -180,6 +185,14 @@ public class ScreenshotAction extends Action {
                         return;
                     }
 
+                    UiAutomatorModel model;
+                    try {
+                        model = new UiAutomatorModel(xmlDumpFile);
+                    } catch (Exception e) {
+                        showError("Error while parsing UI hierarchy XML file", e, monitor);
+                        return;
+                    }
+
                     PaletteData palette = new PaletteData(
                             rawImage.getRedMask(),
                             rawImage.getGreenMask(),
@@ -189,19 +202,9 @@ public class ScreenshotAction extends Action {
                     ImageLoader loader = new ImageLoader();
                     loader.data = new ImageData[] { imageData };
                     loader.save(screenshotFile.getAbsolutePath(), SWT.IMAGE_PNG);
+                    Image screenshot = new Image(Display.getDefault(), imageData);
 
-                    final File png = screenshotFile, xml = xmlDumpFile;
-                    if(png.length() == 0) {
-                        showError("Screenshot file size is 0", null, monitor);
-                        return;
-                    } else {
-                        mViewer.getShell().getDisplay().syncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                UiAutomatorModel.getModel().loadScreenshotAndXmlDump(png, xml);
-                            }
-                        });
-                    }
+                    mViewer.setModel(model, screenshot);
                     monitor.done();
                 }
             });
