@@ -558,7 +558,8 @@ public class RulesEngine {
             IViewRule parentRule = loadRule(parentUiNode);
             if (parentRule != null) {
                 try {
-                    parentRule.onRemovingChildren(children, parentNode);
+                    parentRule.onRemovingChildren(children, parentNode,
+                            mInsertType == InsertType.MOVE_WITHIN);
                 } catch (Exception e) {
                     AdtPlugin.log(e, "%s.onDispose() failed: %s",
                             parentRule.getClass().getSimpleName(),

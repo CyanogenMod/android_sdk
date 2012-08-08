@@ -403,8 +403,9 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent) {
-        super.onRemovingChildren(deleted, parent);
+    public void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent,
+            boolean moved) {
+        super.onRemovingChildren(deleted, parent, moved);
 
         // Attempt to clean up spacer objects for any newly-empty rows or columns
         // as the result of this deletion

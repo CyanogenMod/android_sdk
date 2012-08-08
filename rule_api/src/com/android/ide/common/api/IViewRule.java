@@ -298,19 +298,32 @@ public interface IViewRule {
             @NonNull InsertType insertType);
 
     /**
-     * Called when one or more children are about to be deleted by the user. Note that
-     * children deleted programmatically from view rules (via
+     * Called when one or more children are about to be deleted by the user.
+     * Note that children deleted programmatically from view rules (via
      * {@link INode#removeChild(INode)}) will not notify about deletion.
      * <p>
-     * Note that this method will be called under an edit lock, so rules can directly
-     * add/remove nodes and attributes as part of the deletion handling (and their
-     * actions will be part of the same undo-unit.)
+     * Note that this method will be called under an edit lock, so rules can
+     * directly add/remove nodes and attributes as part of the deletion handling
+     * (and their actions will be part of the same undo-unit.)
+     * <p>
+     * Note that when children are moved (such as when you drag a child within a
+     * LinearLayout to move it from one position among the children to another),
+     * that will also result in a
+     * {@link #onChildInserted(INode, INode, InsertType)} (with the
+     * {@code InsertType} set to {@link InsertType#MOVE_WITHIN}) and a remove
+     * via this {@link #onRemovingChildren(List, INode, boolean)} method. When
+     * the deletion is occurring as part of a local move (insert + delete), the
+     * {@code moved} parameter to this method is set to true.
      *
      * @param deleted a nonempty list of children about to be deleted
-     * @param parent the parent of the deleted children (which still contains the children
-     *            since this method is called before the deletion is performed)
+     * @param parent the parent of the deleted children (which still contains
+     *            the children since this method is called before the deletion
+     *            is performed)
+     * @param moved when true, the nodes are being deleted as part of a local
+     *            move (where copies are inserted elsewhere)
      */
-    void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent);
+    void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent,
+            boolean moved);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This

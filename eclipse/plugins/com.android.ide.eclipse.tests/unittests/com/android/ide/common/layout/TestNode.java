@@ -36,8 +36,10 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.google.common.base.Splitter;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -336,8 +338,24 @@ public class TestNode implements INode {
         }
 
         @Override
+        public @NonNull IAttribute[] getLiveAttributes() {
+            List<IAttribute> result = new ArrayList<IAttribute>();
+
+            NamedNodeMap attributes = mElement.getAttributes();
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attribute = (Attr) attributes.item(i);
+                result.add(new TestXmlAttribute(attribute));
+            }
+            return result.toArray(new IAttribute[result.size()]);
+        }
+
+        @Override
         public boolean setAttribute(String uri, String localName, String value) {
-            mElement.setAttributeNS(uri, localName, value);
+            if (value == null) {
+                mElement.removeAttributeNS(uri, localName);
+            } else {
+                mElement.setAttributeNS(uri, localName, value);
+            }
             return super.setAttribute(uri, localName, value);
         }
 
@@ -392,6 +410,33 @@ public class TestNode implements INode {
             assertTrue(index < children.size());
             Element oldChild = children.get(index);
             mElement.removeChild(oldChild);
+        }
+    }
+
+    public static class TestXmlAttribute implements IAttribute {
+        private Attr mAttribute;
+
+        public TestXmlAttribute(Attr attribute) {
+            this.mAttribute = attribute;
+        }
+
+        @Override
+        public String getUri() {
+            return mAttribute.getNamespaceURI();
+        }
+
+        @Override
+        public String getName() {
+            String name = mAttribute.getLocalName();
+            if (name == null) {
+                name = mAttribute.getName();
+            }
+            return name;
+        }
+
+        @Override
+        public String getValue() {
+            return mAttribute.getValue();
         }
     }
 

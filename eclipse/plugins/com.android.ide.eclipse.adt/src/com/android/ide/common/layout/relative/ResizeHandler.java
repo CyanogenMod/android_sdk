@@ -25,7 +25,6 @@ import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.utils.XmlUtils.ANDROID_URI;
-
 import static java.lang.Math.abs;
 
 import com.android.ide.common.api.DropFeedback;
@@ -44,10 +43,18 @@ import java.util.Set;
  * edges in a RelativeLayout.
  */
 public class ResizeHandler extends GuidelineHandler {
-    public final INode mResized;
-    public final SegmentType mHorizontalEdgeType;
-    public final SegmentType mVerticalEdgeType;
+    private final SegmentType mHorizontalEdgeType;
+    private final SegmentType mVerticalEdgeType;
 
+    /**
+     * Creates a new {@link ResizeHandler}
+     *
+     * @param layout the layout containing the resized node
+     * @param resized the node being resized
+     * @param rulesEngine the applicable {@link IClientRulesEngine}
+     * @param horizontalEdgeType the type of horizontal edge being resized, or null
+     * @param verticalEdgeType the type of vertical edge being resized, or null
+     */
     public ResizeHandler(INode layout, INode resized,
             IClientRulesEngine rulesEngine,
             SegmentType horizontalEdgeType, SegmentType verticalEdgeType) {
@@ -58,7 +65,6 @@ public class ResizeHandler extends GuidelineHandler {
         assert horizontalEdgeType != CENTER_HORIZONTAL && verticalEdgeType != CENTER_HORIZONTAL;
         assert horizontalEdgeType != CENTER_VERTICAL && verticalEdgeType != CENTER_VERTICAL;
 
-        mResized = resized;
         mHorizontalEdgeType = horizontalEdgeType;
         mVerticalEdgeType = verticalEdgeType;
 
@@ -162,6 +168,14 @@ public class ResizeHandler extends GuidelineHandler {
         return compatible;
     }
 
+    /**
+     * Updates the handler for the given mouse resize
+     *
+     * @param feedback the feedback handler
+     * @param child the node being resized
+     * @param newBounds the new bounds of the resize rectangle
+     * @param modifierMask the keyboard modifiers pressed during the drag
+     */
     public void updateResize(DropFeedback feedback, INode child, Rect newBounds,
             int modifierMask) {
         mSnap = (modifierMask & DropFeedback.MODIFIER2) == 0;
