@@ -27,17 +27,22 @@ public class MathDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "src/test/bytecode/MathTest.java:12: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion [FloatMath]\n" +
-            "  floatResult = (float) Math.sqrt(x);\n" +
-            "                             ~~~~\n" +
-            "src/test/bytecode/MathTest.java:18: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid double to float return value conversion [FloatMath]\n" +
-            "  floatResult = (float) Math.sqrt(x);\n" +
-            "                             ~~~~\n" +
-            "src/test/bytecode/MathTest.java:23: Warning: Use android.util.FloatMath#sqrt() instead of java.lang.Math#sqrt to avoid argument float to double conversion [FloatMath]\n" +
-            "  doubleResult = Math.sqrt(x);\n" +
-            "                      ~~~~\n" +
-            "0 errors, 3 warnings\n" +
-            "",
+            "src/test/bytecode/MathTest.java:11: Warning: Use java.lang.Math#cos instead of android.util.FloatMath#cos() since it is faster as of API 8 [FloatMath]\n" +
+            "        floatResult = FloatMath.cos(x);\n" +
+            "                                ~~~\n" +
+            "src/test/bytecode/MathTest.java:12: Warning: Use java.lang.Math#sin instead of android.util.FloatMath#sin() since it is faster as of API 8 [FloatMath]\n" +
+            "        floatResult = FloatMath.sin((float) y);\n" +
+            "                                ~~~\n" +
+            "src/test/bytecode/MathTest.java:13: Warning: Use java.lang.Math#ceil instead of android.util.FloatMath#ceil() since it is faster as of API 8 [FloatMath]\n" +
+            "        floatResult = android.util.FloatMath.ceil((float) y);\n" +
+            "                                             ~~~~\n" +
+            "src/test/bytecode/MathTest.java:14: Warning: Use java.lang.Math#floor instead of android.util.FloatMath#floor() since it is faster as of API 8 [FloatMath]\n" +
+            "        System.out.println(FloatMath.floor(x));\n" +
+            "                                     ~~~~~\n" +
+            "src/test/bytecode/MathTest.java:15: Warning: Use java.lang.Math#sqrt instead of android.util.FloatMath#sqrt() since it is faster as of API 8 [FloatMath]\n" +
+            "        System.out.println(FloatMath.sqrt(z));\n" +
+            "                                     ~~~~\n" +
+            "0 errors, 5 warnings\n",
 
             lintProject(
                     "bytecode/.classpath=>.classpath",
@@ -46,4 +51,17 @@ public class MathDetectorTest extends AbstractCheckTest {
                     "bytecode/MathTest.class.data=>bin/classes/test/bytecode/MathTest.class"
                     ));
     }
+
+    public void testNoWarningsPreFroyo() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "bytecode/.classpath=>.classpath",
+                    "apicheck/minsdk2.xml=>AndroidManifest.xml",
+                    "bytecode/MathTest.java.txt=>src/test/bytecode/MathTest.java",
+                    "bytecode/MathTest.class.data=>bin/classes/test/bytecode/MathTest.class"
+                    ));
+    }
+
 }

@@ -1,30 +1,21 @@
 package test.bytecode;
 
+import android.util.FloatMath;
+
 //Test data for the MathDetector
 public class MathTest {
-	public float floatResult;
-	public double doubleResult;
+    public float floatResult;
+    public double doubleResult;
 
-	public void floatToFloatTest(float x) {
-		// This forces a cast of the argument
-		// from a float to a double, as well
-		// as a cast of the return code back to a float
-		floatResult = (float) Math.sqrt(x);
-	}
+    public void floatToFloatTest(float x, double y, int z) {
+        floatResult = FloatMath.cos(x);
+        floatResult = FloatMath.sin((float) y);
+        floatResult = android.util.FloatMath.ceil((float) y);
+        System.out.println(FloatMath.floor(x));
+        System.out.println(FloatMath.sqrt(z));
 
-	public void doubleToFloat(double x) {
-		// This forces a cast of the return value
-		// to a float
-		floatResult = (float) Math.sqrt(x);
-	}
-
-	public void floatToDouble(float x) {
-		// This causes a cast of the float argument to a double
-		doubleResult = Math.sqrt(x);
-	}
-
-	public void doubleToDouble(double x) {
-		// No casting
-		doubleResult = Math.sqrt(x);
-	}
+        // No warnings for plain math
+        floatResult = (float) Math.cos(x);
+        floatResult = (float) java.lang.Math.sin(x);
+    }
 }

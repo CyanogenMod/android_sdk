@@ -16,9 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintUtils.getNextOpcode;
-import static com.android.tools.lint.detector.api.LintUtils.getPrevOpcode;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
@@ -29,7 +26,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -45,21 +41,20 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "FloatMath", //$NON-NLS-1$
-            "Suggests replacing java.lang.Math calls with android.util.FloatMath to " +
-            "avoid conversions",
+            "Suggests replacing android.util.FloatMath calls with java.lang.Math",
 
-            "On modern hardware, \"double\" is just as fast as \"float\" though of course " +
-            "it takes more memory. However, if you are using floats and you need to compute " +
-            "the sine, cosine or square root, then it is better to use the " +
-            "android.util.FloatMath class instead of java.lang.Math since you can call methods " +
-            "written to operate on floats, so you avoid conversions back and forth to double.",
+            "In older versions of Android, using android.util.FloatMath was recommended " +
+            "for performance reasons when operating on floats. However, on modern hardware " +
+            "doubles are just as fast as float (though they take more memory), and in " +
+            "recent versions of Android, FloatMath is actually slower than using java.lang.Math " +
+            "due to the way the JIT optimizes java.lang.Math. Therefore, you should use " +
+            "Math instead of FloatMath if you are only targeting Froyo and above.",
 
             Category.PERFORMANCE,
             3,
             Severity.WARNING,
             MathDetector.class,
             Scope.CLASS_FILE_SCOPE).setMoreInfo(
-               //"http://developer.android.com/reference/android/util/FloatMath.html"); //$NON-NLS-1$
                "http://developer.android.com/guide/practices/design/performance.html#avoidfloat"); //$NON-NLS-1$
 
     /** Constructs a new {@link MathDetector} check */
@@ -90,25 +85,12 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
             @NonNull MethodNode method, @NonNull MethodInsnNode call) {
         String owner = call.owner;
 
-        if (owner.equals("java/lang/Math")) { //$NON-NLS-1$
-            String name = call.name;
-            boolean paramFromFloat = getPrevOpcode(call) == Opcodes.F2D;
-            boolean returnToFloat = getNextOpcode(call) == Opcodes.D2F;
-            if (paramFromFloat || returnToFloat) {
-                String message;
-                if (paramFromFloat) {
-                    message = String.format(
-                            "Use android.util.FloatMath#%1$s() instead of " +
-                            "java.lang.Math#%1$s to avoid argument float to " +
-                            "double conversion", name);
-                } else {
-                    message = String.format(
-                            "Use android.util.FloatMath#%1$s() instead of " +
-                            "java.lang.Math#%1$s to avoid double to float return " +
-                            "value conversion", name);
-                }
-                context.report(ISSUE, method, context.getLocation(call), message, null /*data*/);
-            }
+        if (owner.equals("android/util/FloatMath")  //$NON-NLS-1$
+                && context.getProject().getMinSdk() >= 8) {
+            String message = String.format(
+                    "Use java.lang.Math#%1$s instead of android.util.FloatMath#%1$s() " +
+                    "since it is faster as of API 8", call.name);
+            context.report(ISSUE, method, context.getLocation(call), message, null /*data*/);
         }
     }
 }
