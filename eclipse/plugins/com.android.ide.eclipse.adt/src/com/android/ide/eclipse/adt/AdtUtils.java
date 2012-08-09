@@ -798,6 +798,39 @@ public class AdtUtils {
     }
 
     /**
+     * Returns the applicable build code (for
+     * {@code android.os.Build.VERSION_CODES}) for the corresponding API level,
+     * or null if it's unknown.
+     *
+     * @param api the API level to look up a version code for
+     * @return the corresponding build code field name, or null
+     */
+    @Nullable
+    public static String getBuildCodes(int api) {
+        // See http://developer.android.com/reference/android/os/Build.VERSION_CODES.html
+        switch (api) {
+            case 1:  return "BASE"; //$NON-NLS-1$
+            case 2:  return "BASE_1_1"; //$NON-NLS-1$
+            case 3:  return "CUPCAKE"; //$NON-NLS-1$
+            case 4:  return "DONUT"; //$NON-NLS-1$
+            case 5:  return "ECLAIR"; //$NON-NLS-1$
+            case 6:  return "ECLAIR_0_1"; //$NON-NLS-1$
+            case 7:  return "ECLAIR_MR1"; //$NON-NLS-1$
+            case 8:  return "FROYO"; //$NON-NLS-1$
+            case 9:  return "GINGERBREAD"; //$NON-NLS-1$
+            case 10: return "GINGERBREAD_MR1"; //$NON-NLS-1$
+            case 11: return "HONEYCOMB"; //$NON-NLS-1$
+            case 12: return "HONEYCOMB_MR1"; //$NON-NLS-1$
+            case 13: return "HONEYCOMB_MR2"; //$NON-NLS-1$
+            case 14: return "ICE_CREAM_SANDWICH"; //$NON-NLS-1$
+            case 15: return "ICE_CREAM_SANDWICH_MR1"; //$NON-NLS-1$
+            case 16: return "JELLY_BEAN"; //$NON-NLS-1$
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the Android version and code name of the given API level
      *
      * @param api the api level
