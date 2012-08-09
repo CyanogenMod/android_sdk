@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.base.Charsets;
@@ -130,6 +131,17 @@ public class ApiLookup {
         }
     }
 
+    @VisibleForTesting
+    static String getCacheFileName(String xmlFileName) {
+        if (LintUtils.endsWith(xmlFileName, DOT_XML)) {
+            xmlFileName = xmlFileName.substring(0, xmlFileName.length() - DOT_XML.length());
+        }
+
+        // Incorporate version number in the filename to avoid upgrade filename
+        // conflicts on Windows (such as issue #26663)
+        return xmlFileName + '-' + BINARY_FORMAT_VERSION + ".bin"; //$NON-NLS-1$
+    }
+
     /**
      * Returns an instance of the API database
      *
@@ -146,19 +158,12 @@ public class ApiLookup {
             return null;
         }
 
-        String name = xmlFile.getName();
-        if (LintUtils.endsWith(name, DOT_XML)) {
-            name = name.substring(0, name.length() - DOT_XML.length());
-        }
         File cacheDir = client.getCacheDir(true/*create*/);
         if (cacheDir == null) {
             cacheDir = xmlFile.getParentFile();
         }
 
-        File binaryData = new File(cacheDir, name
-                // Incorporate version number in the filename to avoid upgrade filename
-                // conflicts on Windows (such as issue #26663)
-                + "-" + BINARY_FORMAT_VERSION + ".bin"); //$NON-NLS-1$ //$NON-NLS-2$
+        File binaryData = new File(cacheDir, getCacheFileName(xmlFile.getName()));
 
         if (DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("\nTemporarily regenerating binary data unconditionally \nfrom "
@@ -166,7 +171,8 @@ public class ApiLookup {
             if (!createCache(client, xmlFile, binaryData)) {
                 return null;
             }
-        } else if (!binaryData.exists() || binaryData.lastModified() < xmlFile.lastModified()) {
+        } else if (!binaryData.exists() || binaryData.lastModified() < xmlFile.lastModified()
+               || binaryData.length() == 0) {
             if (!createCache(client, xmlFile, binaryData)) {
                 return null;
             }
@@ -308,7 +314,10 @@ public class ApiLookup {
             // the offset array separately.
             // TODO: Investigate (profile) accessing the byte buffer directly instead of
             // accessing a byte array.
-        } catch (IOException e) {
+        } catch (Throwable e) {
+            mClient.log(null, "Failure reading binary cache file %1$s", mBinaryFile.getPath());
+            mClient.log(null, "Please delete the file and restart the IDE/lint: %1$s",
+                    mBinaryFile.getPath());
             mClient.log(e, null);
         }
         if (WRITE_STATS) {
@@ -523,6 +532,9 @@ public class ApiLookup {
         byte[] b = new byte[size];
         buffer.rewind();
         buffer.get(b);
+        if (file.exists()) {
+            file.delete();
+        }
         FileOutputStream output = Files.newOutputStreamSupplier(file).getOutput();
         output.write(b);
         output.close();
@@ -802,5 +814,11 @@ public class ApiLookup {
         }
 
         return -1;
+    }
+
+    /** Clears out any existing lookup instances */
+    @VisibleForTesting
+    static void dispose() {
+        sInstance.clear();
     }
 }
