@@ -69,6 +69,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.State;
+import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.repository.PkgProps;
@@ -97,6 +98,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -145,7 +147,8 @@ import java.util.TreeMap;
  * - Target reload. This is when the target used by the project is the edited file has finished<br>
  *   loading.<br>
  */
-public class ConfigurationComposite extends Composite implements SelectionListener {
+public class ConfigurationComposite extends Composite 
+        implements SelectionListener, DevicesChangeListener {
     public static final String ATTR_CONTEXT = "context";          //$NON-NLS-1$
     private static final String ICON_SQUARE = "square";           //$NON-NLS-1$
     private static final String ICON_LANDSCAPE = "landscape";     //$NON-NLS-1$
@@ -2669,13 +2672,7 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         if (sdk != null) {
             mDeviceList = sdk.getDevices();
             DeviceManager manager = sdk.getDeviceManager();
-            manager.registerListener(new DeviceManager.DevicesChangeListener() {
-                @Override
-                public void onDevicesChange() {
-                    mDeviceList = sdk.getDevices();
-                    addDeviceMenuListener(mDeviceCombo);
-                }
-            });
+            manager.registerListener(this);
         } else {
             mDeviceList = new ArrayList<Device>();
         }
@@ -2689,6 +2686,18 @@ public class ConfigurationComposite extends Composite implements SelectionListen
         } else {
             selectDevice(null);
         }
+    }
+    
+    @Override
+    public void onDevicesChange() {
+        final Sdk sdk = Sdk.getCurrent();
+        mDeviceList = sdk.getDevices();
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                addDeviceMenuListener(mDeviceCombo);
+            }
+        });
     }
 
     Image getOrientationIcon(ScreenOrientation orientation, boolean flip) {
