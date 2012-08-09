@@ -468,6 +468,7 @@ public class DeviceBridge {
         } catch (Exception e) {
             Log.e(TAG, "Unable to load window data for window " + window.getTitle() + " on device "
                     + window.getDevice());
+            Log.e(TAG, e.getMessage());
         } finally {
             if (connection != null) {
                 connection.close();

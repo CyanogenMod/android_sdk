@@ -125,6 +125,9 @@ public class ViewNode {
             this.parent.children.add(this);
         }
         int delimIndex = data.indexOf('@');
+        if (delimIndex < 0) {
+            throw new IllegalArgumentException("Invalid format for ViewNode, missing @: " + data);
+        }
         name = data.substring(0, delimIndex);
         data = data.substring(delimIndex + 1);
         delimIndex = data.indexOf(' ');
