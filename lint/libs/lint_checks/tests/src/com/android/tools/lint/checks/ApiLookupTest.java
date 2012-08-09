@@ -17,6 +17,12 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Severity;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
+import java.io.StringWriter;
 
 @SuppressWarnings("javadoc")
 public class ApiLookupTest extends AbstractCheckTest {
@@ -85,5 +91,108 @@ public class ApiLookupTest extends AbstractCheckTest {
     protected Detector getDetector() {
         fail("This is not used in the ApiDatabase test");
         return null;
+    }
+
+    private File mCacheDir;
+    private StringBuilder mLogBuffer = new StringBuilder();
+
+    public void testCorruptedCacheHandling() throws Exception {
+        ApiLookup lookup;
+
+        // Real cache:
+        mCacheDir = new TestLintClient().getCacheDir(true);
+        mLogBuffer.setLength(0);
+        lookup = ApiLookup.get(new LookupTestClient());
+        assertEquals(11, lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
+        assertNotNull(lookup);
+        assertEquals("", mLogBuffer.toString()); // No warnings
+        ApiLookup.dispose();
+
+        // Custom cache dir: should also work
+        mCacheDir = new File(getTempDir(), "test-cache");
+        mCacheDir.mkdirs();
+        mLogBuffer.setLength(0);
+        lookup = ApiLookup.get(new LookupTestClient());
+        assertEquals(11, lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
+        assertNotNull(lookup);
+        assertEquals("", mLogBuffer.toString()); // No warnings
+        ApiLookup.dispose();
+
+        // Now truncate cache file
+        File cacheFile = new File(mCacheDir,
+                ApiLookup.getCacheFileName("api-versions.xml")); //$NON-NLS-1$
+        mLogBuffer.setLength(0);
+        assertTrue(cacheFile.exists());
+        RandomAccessFile raf = new RandomAccessFile(cacheFile, "rw");
+        // Truncate file in half
+        raf.setLength(100);  // Broken header
+        raf.close();
+        lookup = ApiLookup.get(new LookupTestClient());
+        String message = mLogBuffer.toString();
+        assertTrue(message.contains("Please delete the file and restart the IDE/lint:"));
+        assertTrue(message.contains(mCacheDir.getPath()));
+        ApiLookup.dispose();
+
+        mLogBuffer.setLength(0);
+        assertTrue(cacheFile.exists());
+        raf = new RandomAccessFile(cacheFile, "rw");
+        // Truncate file in half in the data portion
+        raf.setLength(raf.length() / 2);
+        raf.close();
+        lookup = ApiLookup.get(new LookupTestClient());
+        // This data is now truncated: lookup returns the wrong size.
+        try {
+            assertNotNull(lookup);
+            lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance");
+            fail("Can't look up bogus data");
+        } catch (Throwable t) {
+            // Expected this: the database is corrupted.
+        }
+        assertTrue(message.contains("Please delete the file and restart the IDE/lint:"));
+        assertTrue(message.contains(mCacheDir.getPath()));
+        ApiLookup.dispose();
+
+        mLogBuffer.setLength(0);
+        assertTrue(cacheFile.exists());
+        raf = new RandomAccessFile(cacheFile, "rw");
+        // Truncate file to 0 bytes
+        raf.setLength(0);
+        raf.close();
+        lookup = ApiLookup.get(new LookupTestClient());
+        assertEquals(11, lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
+        assertNotNull(lookup);
+        assertEquals("", mLogBuffer.toString()); // No warnings
+        ApiLookup.dispose();
+    }
+
+    private final class LookupTestClient extends TestLintClient {
+        @Override
+        public File getCacheDir(boolean create) {
+            assertNotNull(mCacheDir);
+            if (create && !mCacheDir.exists()) {
+                mCacheDir.mkdirs();
+            }
+            return mCacheDir;
+        }
+
+        @Override
+        public void log(Severity severity, Throwable exception, String format,
+                Object... args) {
+            if (format != null) {
+                mLogBuffer.append(String.format(format, args));
+                mLogBuffer.append('\n');
+            }
+            if (exception != null) {
+                StringWriter writer = new StringWriter();
+                exception.printStackTrace(new PrintWriter(writer));
+                mLogBuffer.append(writer.toString());
+                mLogBuffer.append('\n');
+            }
+        }
+
+        @Override
+        public void log(Throwable exception, String format, Object... args) {
+            log(Severity.WARNING, exception, format, args);
+        }
     }
 }
