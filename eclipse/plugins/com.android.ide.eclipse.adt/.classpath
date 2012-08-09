@@ -3,8 +3,6 @@
 	<classpathentry excluding="Makefile|resources/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="lib" path="libs/kxml2-2.3.0.jar"/>
-	<classpathentry kind="lib" path="libs/layoutlib_api.jar"/>
 	<classpathentry kind="lib" path="libs/ide_common.jar" sourcepath="/ide_common"/>
 	<classpathentry kind="lib" path="libs/ninepatch.jar" sourcepath="/ninepatch"/>
 	<classpathentry kind="lib" path="libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
