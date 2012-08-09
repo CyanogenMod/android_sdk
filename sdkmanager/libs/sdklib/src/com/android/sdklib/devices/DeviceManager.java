@@ -125,6 +125,15 @@ public class DeviceManager {
 
     public DeviceStatus getDeviceStatus(
             @Nullable String sdkLocation, String name, String manufacturer, int hashCode) {
+        Device d = getDevice(sdkLocation, name, manufacturer);
+        if (d == null) {
+            return DeviceStatus.MISSING;
+        } else {
+            return d.hashCode() == hashCode ? DeviceStatus.EXISTS : DeviceStatus.CHANGED;
+        }
+    }
+
+    public Device getDevice(@Nullable String sdkLocation, String name, String manufacturer) {
         List<Device> devices;
         if (sdkLocation != null) {
             devices = getDevices(sdkLocation);
@@ -134,10 +143,10 @@ public class DeviceManager {
         }
         for (Device d : devices) {
             if (d.getName().equals(name) && d.getManufacturer().equals(manufacturer)) {
-                return d.hashCode() == hashCode ? DeviceStatus.EXISTS : DeviceStatus.CHANGED;
+                return d;
             }
         }
-        return DeviceStatus.MISSING;
+        return null;
     }
 
     /**

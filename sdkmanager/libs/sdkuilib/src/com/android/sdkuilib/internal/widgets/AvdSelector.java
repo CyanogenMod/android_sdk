@@ -1089,7 +1089,7 @@ public final class AvdSelector {
         }
 
         AvdStartDialog dialog = new AvdStartDialog(mTable.getShell(), avdInfo, mOsSdkPath,
-                mController);
+                mController, mSdkLog);
         if (dialog.open() == Window.OK) {
             String path = mOsSdkPath + File.separator
                     + SdkConstants.OS_SDK_TOOLS_FOLDER
