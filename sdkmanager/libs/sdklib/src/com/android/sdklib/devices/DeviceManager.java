@@ -199,6 +199,15 @@ public class DeviceManager {
             if (mVendorDevices == null || !mVendorDevicesLocation.equals(sdkLocation)) {
                 mVendorDevicesLocation = sdkLocation;
                 List<Device> devices = new ArrayList<Device>();
+
+                // Load devices from tools folder
+                File toolsDevices = new File(sdkLocation, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER +
+                        File.separator + SdkConstants.FN_DEVICES_XML);
+                if (toolsDevices.isFile()) {
+                    devices.addAll(loadDevices(toolsDevices));
+                }
+
+                // Load devices from vendor extras
                 File extrasFolder = new File(sdkLocation, SdkConstants.FD_EXTRAS);
                 List<File> deviceDirs = getExtraDirs(extrasFolder);
                 for (File deviceDir : deviceDirs) {
