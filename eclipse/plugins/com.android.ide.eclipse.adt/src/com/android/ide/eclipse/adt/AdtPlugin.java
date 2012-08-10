@@ -160,7 +160,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     private Color mRed;
 
     /** Load status of the SDK. Any access MUST be in a synchronized(mPostLoadProjects) block */
-    private LoadStatus mSdkIsLoaded = LoadStatus.LOADING;
+    private LoadStatus mSdkLoadedStatus = LoadStatus.LOADING;
     /** Project to update once the SDK is loaded.
      * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
     private final ArrayList<IJavaProject> mPostLoadProjectsToResolve =
@@ -173,7 +173,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     private ArrayList<ITargetChangeListener> mTargetChangeListeners =
             new ArrayList<ITargetChangeListener>();
 
-    protected boolean mSdkIsLoading;
+    /**
+     * This variable indicates that the job inside parseSdkContent() is currently
+     * trying to load the SDK, to avoid re-entrance.
+     * To check whether this succeeds or not, please see {@link #getSdkLoadStatus()}.
+     */
+    private volatile boolean mParseSdkContentIsRunning;
 
     /**
      * An error handler for checkSdkLocationAndId() that will handle the generated error
@@ -189,12 +194,14 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
             OPEN_P2_UPDATE
         }
 
-        /** Handle an error message during sdk location check. Returns whatever
+        /**
+         * Handle an error message during sdk location check. Returns whatever
          * checkSdkLocationAndId() should returns.
          */
         public abstract boolean handleError(Solution solution, String message);
 
-        /** Handle a warning message during sdk location check. Returns whatever
+        /**
+         * Handle a warning message during sdk location check. Returns whatever
          * checkSdkLocationAndId() should returns.
          */
         public abstract boolean handleWarning(Solution solution, String message);
@@ -1079,7 +1086,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
      */
     public final LoadStatus getSdkLoadStatus() {
         synchronized (Sdk.getLock()) {
-            return mSdkIsLoaded;
+            return mSdkLoadedStatus;
         }
     }
 
@@ -1106,24 +1113,36 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     }
 
     /**
-     * Checks the location of the SDK is valid and if it is, grab the SDK API version
-     * from the SDK.
-     * @return false if the location is not correct.
+     * Checks the location of the SDK in the prefs is valid.
+     * If it is not, display a warning dialog to the user and try to display
+     * some useful link to fix the situation (setup the preferences, perform an
+     * update, etc.)
+     *
+     * @return True if the SDK location points to an SDK.
+     *  If false, the user has already been presented with a modal dialog explaining that.
      */
-    private boolean checkSdkLocationAndId() {
+    public boolean checkSdkLocationAndId() {
         String sdkLocation = AdtPrefs.getPrefs().getOsSdkFolder();
-        if (sdkLocation == null || sdkLocation.length() == 0) {
-            return false;
-        }
 
         return checkSdkLocationAndId(sdkLocation, new CheckSdkErrorHandler() {
-            private String mTitle = "Android SDK Verification";
+            private String mTitle = "Android SDK";
+
+            /**
+             * Handle an error, which is the case where the check did not find any SDK.
+             * This returns false to {@link AdtPlugin#checkSdkLocationAndId()}.
+             */
             @Override
             public boolean handleError(Solution solution, String message) {
                 displayMessage(solution, message, MessageDialog.ERROR);
                 return false;
             }
 
+            /**
+             * Handle an warning, which is the case where the check found an SDK
+             * but it might need to be repaired or is missing an expected component.
+             *
+             * This returns true to {@link AdtPlugin#checkSdkLocationAndId()}.
+             */
             @Override
             public boolean handleWarning(Solution solution, String message) {
                 displayMessage(solution, message, MessageDialog.WARNING);
@@ -1190,6 +1209,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
             private void openSdkManager() {
                 // Windows only: open the standalone external SDK Manager since we know
                 // that ADT on Windows is bound to be locking some SDK folders.
+                // Also when this is invoked becasue SdkManagerAction.run() fails, this
+                // test will fail and we'll fallback on using the internal one.
                 if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
                     if (SdkManagerAction.openExternalSdkManager()) {
                         return;
@@ -1249,13 +1270,24 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
 
     /**
      * Internal helper to perform the actual sdk location and id check.
+     * <p/>
+     * This is useful for callers who want to override what happens when the check
+     * fails. Otherwise consider calling {@link #checkSdkLocationAndId()} that will
+     * present a modal dialog to the user in case of failure.
      *
-     * @param osSdkLocation The sdk directory, an OS path.
+     * @param osSdkLocation The sdk directory, an OS path. Can be null.
      * @param errorHandler An checkSdkErrorHandler that can display a warning or an error.
      * @return False if there was an error or the result from the errorHandler invocation.
      */
-    public boolean checkSdkLocationAndId(String osSdkLocation, CheckSdkErrorHandler errorHandler) {
-        if (osSdkLocation.endsWith(File.separator) == false) {
+    public boolean checkSdkLocationAndId(@Nullable String osSdkLocation,
+                                         @NonNull CheckSdkErrorHandler errorHandler) {
+        if (osSdkLocation == null || osSdkLocation.trim().length() == 0) {
+            return errorHandler.handleError(
+                    Solution.OPEN_ANDROID_PREFS,
+                    "Location of the Android SDK has not been setup in the preferences.");
+        }
+
+        if (!osSdkLocation.endsWith(File.separator)) {
             osSdkLocation = osSdkLocation + File.separator;
         }
 
@@ -1355,12 +1387,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
             protected IStatus run(IProgressMonitor monitor) {
                 try {
 
-                    if (mSdkIsLoading) {
+                    if (mParseSdkContentIsRunning) {
                         return new Status(IStatus.WARNING, PLUGIN_ID,
                                 "An Android SDK is already being loaded. Please try again later.");
                     }
 
-                    mSdkIsLoading = true;
+                    mParseSdkContentIsRunning = true;
 
                     SubMonitor progress = SubMonitor.convert(monitor,
                             "Initialize SDK Manager", 100);
@@ -1368,10 +1400,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
                     Sdk sdk = Sdk.loadSdk(AdtPrefs.getPrefs().getOsSdkFolder());
 
                     if (sdk != null) {
-
                         ArrayList<IJavaProject> list = new ArrayList<IJavaProject>();
                         synchronized (Sdk.getLock()) {
-                            mSdkIsLoaded = LoadStatus.LOADED;
+                            mSdkLoadedStatus = LoadStatus.LOADED;
 
                             progress.setTaskName("Check Projects");
 
@@ -1410,7 +1441,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
                         // SDK failed to Load!
                         // Sdk#loadSdk() has already displayed an error.
                         synchronized (Sdk.getLock()) {
-                            mSdkIsLoaded = LoadStatus.FAILED;
+                            mSdkLoadedStatus = LoadStatus.FAILED;
                         }
                     }
 
@@ -1443,7 +1474,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
                             "parseSdkContent failed", t);               //$NON-NLS-1$
 
                 } finally {
-                    mSdkIsLoading = false;
+                    mParseSdkContentIsRunning = false;
                     if (monitor != null) {
                         monitor.done();
                     }
