@@ -99,7 +99,7 @@ public class Camera {
     @Override
     public int hashCode() {
         int hash = 17;
-        hash = 31 * hash + mLocation.hashCode();
+        hash = 31 * hash + mLocation.ordinal();
         hash = 31 * hash + (mAutofocus ? 1 : 0);
         hash = 31 * hash + (mFlash ? 1 : 0);
         return hash;

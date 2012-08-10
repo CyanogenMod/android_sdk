@@ -16,12 +16,12 @@
 
 package com.android.sdklib.devices;
 
+import com.android.dvlib.DeviceSchema;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import com.android.dvlib.DeviceSchema;
 
 /**
  * Instances of this class contain the specifications for a device. Use the
@@ -272,10 +272,15 @@ public final class Device {
     }
 
     @Override
+    /** A hash that's stable across JVM instances */
     public int hashCode() {
         int hash = 17;
-        hash = 31 * hash + mName.hashCode();
-        hash = 31 * hash + mManufacturer.hashCode();
+        for (Character c : mName.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+        for (Character c : mManufacturer.toCharArray()) {
+            hash = 31 * hash + c;
+        }
         hash = 31 * hash + mSoftware.hashCode();
         hash = 31 * hash + mState.hashCode();
         hash = 31 * hash + mMeta.hashCode();

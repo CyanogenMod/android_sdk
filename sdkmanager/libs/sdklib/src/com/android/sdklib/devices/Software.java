@@ -125,14 +125,23 @@ public class Software {
     }
 
     @Override
+    /** A stable hash across JVM instances */
     public int hashCode() {
         int hash = 17;
         hash = 31 * hash + mMinSdkLevel;
         hash = 31 * hash + mMaxSdkLevel;
         hash = 31 * hash + (mLiveWallpaperSupport ? 1 : 0);
-        hash = 31 * hash + mBluetoothProfiles.hashCode();
-        hash = 31 * hash + mGlVersion.hashCode();
-        hash = 31 * hash + mGlExtensions.hashCode();
+        for (BluetoothProfile bp : mBluetoothProfiles) {
+            hash = 31 * hash + bp.ordinal();
+        }
+        for (Character c : mGlVersion.toCharArray()) {
+            hash = 31 * hash + c;
+        }
+        for (String glExtension : mGlExtensions) {
+            for (Character c : glExtension.toCharArray()) {
+                hash = 31 * hash + c;
+            }
+        }
         hash = 31 * hash + (mStatusBar ? 1 : 0);
         return hash;
     }

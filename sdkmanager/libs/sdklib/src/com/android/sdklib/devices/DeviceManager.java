@@ -16,6 +16,7 @@
 
 package com.android.sdklib.devices;
 
+import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.resources.Keyboard;
@@ -23,7 +24,6 @@ import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.devices.Storage.Unit;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.PkgProps;
@@ -71,6 +71,21 @@ public class DeviceManager {
     private static final List<DevicesChangeListener> listeners =
         Collections.synchronizedList(new ArrayList<DevicesChangeListener>());
 
+    public static enum DeviceStatus {
+        /**
+         * The device exists unchanged from the given configuration
+         */
+        EXISTS,
+        /**
+         * A device exists with the given name and manufacturer, but has a different configuration
+         */
+        CHANGED,
+        /**
+         * There is no device with the given name and manufacturer
+         */
+        MISSING;
+    }
+
     // TODO: Refactor this to look more like AvdManager so that we don't have
     // multiple instances
     // in the same application, which forces us to parse the XML multiple times
@@ -104,8 +119,25 @@ public class DeviceManager {
      * notifications when modifications to the {@link Device} list occur.
      * @param listener The listener to remove.
      */
-    public void unregisterListener(DevicesChangeListener listener) {
-        listeners.remove(listener);
+    public boolean unregisterListener(DevicesChangeListener listener) {
+        return listeners.remove(listener);
+    }
+
+    public DeviceStatus getDeviceStatus(
+            @Nullable String sdkLocation, String name, String manufacturer, int hashCode) {
+        List<Device> devices;
+        if (sdkLocation != null) {
+            devices = getDevices(sdkLocation);
+        } else {
+            devices = new ArrayList<Device>(getDefaultDevices());
+            devices.addAll(getUserDevices());
+        }
+        for (Device d : devices) {
+            if (d.getName().equals(name) && d.getManufacturer().equals(manufacturer)) {
+                return d.hashCode() == hashCode ? DeviceStatus.EXISTS : DeviceStatus.CHANGED;
+            }
+        }
+        return DeviceStatus.MISSING;
     }
 
     /**
@@ -290,7 +322,6 @@ public class DeviceManager {
     public static Map<String, String> getHardwareProperties(State s) {
         Hardware hw = s.getHardware();
         Map<String, String> props = new HashMap<String, String>();
-        props.put("hw.ramSize", Long.toString(hw.getRam().getSizeAsUnit(Unit.MiB)));
         props.put("hw.mainKeys", getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
         props.put("hw.trackBall", getBooleanVal(hw.getNav().equals(Navigation.TRACKBALL)));
         props.put("hw.keyboard", getBooleanVal(hw.getKeyboard().equals(Keyboard.QWERTY)));
@@ -301,7 +332,6 @@ public class DeviceManager {
         props.put("hw.accelerometer", getBooleanVal(sensors.contains(Sensor.ACCELEROMETER)));
         props.put("hw.sensors.orientation", getBooleanVal(sensors.contains(Sensor.GYROSCOPE)));
         props.put("hw.audioInput", getBooleanVal(hw.hasMic()));
-        props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
         props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
         props.put("hw.lcd.density",
                 Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
@@ -324,6 +354,9 @@ public class DeviceManager {
                 props.put("hw.keyboard.lid", getBooleanVal(true));
             }
         }
+        props.put(AvdManager.AVD_INI_DEVICE_HASH, Integer.toString(d.hashCode()));
+        props.put(AvdManager.AVD_INI_DEVICE_NAME, d.getName());
+        props.put(AvdManager.AVD_INI_DEVICE_MANUFACTURER, d.getManufacturer());
         return props;
     }
 

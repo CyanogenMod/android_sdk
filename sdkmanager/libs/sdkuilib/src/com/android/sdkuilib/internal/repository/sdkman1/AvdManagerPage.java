@@ -17,6 +17,8 @@
 package com.android.sdkuilib.internal.repository.sdkman1;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
@@ -29,22 +31,28 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
+public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener, DevicesChangeListener {
 
     private AvdSelector mAvdSelector;
 
     private final UpdaterData mUpdaterData;
-
+    private final DeviceManager mDeviceManager;
     /**
      * Create the composite.
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}.
      */
-    public AvdManagerPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+    public AvdManagerPage(Composite parent,
+            int swtStyle,
+            UpdaterData updaterData,
+            DeviceManager deviceManager) {
         super(parent, swtStyle);
 
         mUpdaterData = updaterData;
         mUpdaterData.addListeners(this);
+
+        mDeviceManager = deviceManager;
+        mDeviceManager.registerListener(this);
 
         createContents(this);
         postCreate();  //$hide$
@@ -79,6 +87,7 @@ public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
     @Override
     public void dispose() {
         mUpdaterData.removeListener(this);
+        mDeviceManager.unregisterListener(this);
         super.dispose();
     }
 
@@ -119,6 +128,14 @@ public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
     public void postInstallHook() {
         // nothing to be done for now.
     }
+
+    // --- Implementation of DevicesChangeListener
+
+    @Override
+    public void onDevicesChange() {
+        mAvdSelector.refresh(false /*reload*/);
+    }
+
 
     // End of hiding from SWT Designer
     //$hide<<$
