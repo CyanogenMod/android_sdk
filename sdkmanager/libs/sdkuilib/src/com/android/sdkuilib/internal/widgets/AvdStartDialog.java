@@ -16,6 +16,9 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.sdklib.ISdkLog;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.repository.SettingsController;
@@ -72,6 +75,7 @@ final class AvdStartDialog extends GridDialog {
     private final AvdInfo mAvd;
     private final String mSdkLocation;
     private final SettingsController mSettingsController;
+    private final DeviceManager mDeviceManager;
 
     private Text mScreenSize;
     private Text mMonitorDpi;
@@ -91,11 +95,12 @@ final class AvdStartDialog extends GridDialog {
     private Button mSnapshotLaunchCheckbox;
 
     AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
-            SettingsController settingsController) {
+            SettingsController settingsController, ISdkLog sdkLog) {
         super(parentShell, 2, false);
         mAvd = avd;
         mSdkLocation = sdkLocation;
         mSettingsController = settingsController;
+        mDeviceManager = new DeviceManager(sdkLog);
         if (mAvd == null) {
             throw new IllegalArgumentException("avd cannot be null");
         }
@@ -430,12 +435,27 @@ final class AvdStartDialog extends GridDialog {
     /**
      * Returns the screen size to start with.
      * <p/>If an emulator with the same skin was already launched, scaled, the size used is reused.
-     * <p/>Otherwise the default is returned (3)
+     * <p/>If one hasn't been launched and the AVD is based on a device, use the device's screen
+     * size. Otherwise, use the default (3).
      */
     private String getScreenSize() {
         String size = sSkinScaling.get(mAvd.getName());
         if (size != null) {
             return size;
+        }
+
+        Map<String, String> properties = mAvd.getProperties();
+        if (properties != null) {
+            String name = properties.get(AvdManager.AVD_INI_DEVICE_NAME);
+            String mfctr = properties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
+            if (name != null && mfctr != null) {
+                Device d = mDeviceManager.getDevice(mSdkLocation, name, mfctr);
+                if (d != null) {
+                    double screenSize =
+                        d.getDefaultHardware().getScreen().getDiagonalLength();
+                    return String.format("%.1f", screenSize);
+                }
+            }
         }
 
         return "3";
@@ -607,5 +627,4 @@ final class AvdStartDialog extends GridDialog {
         mSnapshotLaunch = enabled && sSnapshotLaunch;
         mSnapshotLaunchCheckbox.setSelection(mSnapshotLaunch);
     }
-
 }
