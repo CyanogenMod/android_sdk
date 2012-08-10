@@ -36,7 +36,7 @@
             <EditText
                 android:id="@+id/email"
                 android:singleLine="true"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
@@ -45,7 +45,7 @@
             <EditText
                 android:id="@+id/password"
                 android:singleLine="true"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/prompt_password"

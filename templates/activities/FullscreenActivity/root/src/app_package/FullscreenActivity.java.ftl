@@ -118,7 +118,6 @@ public class ${activityClass} extends Activity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.button1).setOnTouchListener(mDelayHideTouchListener);
-        findViewById(R.id.button2).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
