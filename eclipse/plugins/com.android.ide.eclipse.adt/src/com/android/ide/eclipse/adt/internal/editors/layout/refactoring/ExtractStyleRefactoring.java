@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.FD_RESOURCES;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
@@ -30,7 +31,6 @@ import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.Va
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.PARENT_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ROOT_ELEMENT;
-import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
 import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
 import static com.android.utils.XmlUtils.ANDROID_URI;

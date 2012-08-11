@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
@@ -39,14 +40,13 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

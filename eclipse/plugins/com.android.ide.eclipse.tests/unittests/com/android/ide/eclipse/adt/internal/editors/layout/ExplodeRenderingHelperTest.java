@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.editors.mock.MockXmlNode;
-import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Node;
 

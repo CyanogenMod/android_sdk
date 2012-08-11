@@ -22,6 +22,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TAG;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -35,7 +36,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ClassAttributeDescriptor;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;

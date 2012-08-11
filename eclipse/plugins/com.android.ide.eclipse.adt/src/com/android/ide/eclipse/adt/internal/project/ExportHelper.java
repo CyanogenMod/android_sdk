@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
@@ -30,12 +31,11 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.xml.AndroidManifest;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

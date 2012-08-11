@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.SdkConstants;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
 import com.android.sdklib.util.SparseArray;
 

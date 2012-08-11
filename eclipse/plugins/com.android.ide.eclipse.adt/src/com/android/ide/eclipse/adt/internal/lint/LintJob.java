@@ -19,11 +19,11 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_CLASS;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Issue;

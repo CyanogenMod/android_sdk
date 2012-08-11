@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors;
 import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.common.resources.platform.ViewClassInfo;
@@ -30,7 +31,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
-import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
 import java.util.Map;

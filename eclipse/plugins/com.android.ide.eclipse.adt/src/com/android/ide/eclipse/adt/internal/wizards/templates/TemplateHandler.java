@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_AIDL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
@@ -25,8 +26,8 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
-import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -41,7 +42,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
-import com.android.sdklib.SdkConstants;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;

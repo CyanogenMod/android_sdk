@@ -16,10 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import static com.android.SdkConstants.FD_RES;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_JAR;
-import static com.android.sdklib.SdkConstants.FD_RES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.IDevice;
@@ -44,7 +45,6 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;

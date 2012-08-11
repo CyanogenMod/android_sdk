@@ -16,13 +16,13 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.archives.Archive.Arch;

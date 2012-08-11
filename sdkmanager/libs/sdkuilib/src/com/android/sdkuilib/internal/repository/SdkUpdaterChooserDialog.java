@@ -16,12 +16,12 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.SdkConstants;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.Messages;
@@ -25,7 +26,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFolder;

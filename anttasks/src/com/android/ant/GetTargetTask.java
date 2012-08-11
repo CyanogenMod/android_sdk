@@ -16,15 +16,15 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidManifest;
+import com.android.xml.AndroidXPathFactory;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;

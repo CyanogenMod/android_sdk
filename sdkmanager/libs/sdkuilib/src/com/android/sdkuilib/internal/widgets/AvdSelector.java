@@ -16,12 +16,12 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdInfo;

@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.welcome;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutWindowCoordinator;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;

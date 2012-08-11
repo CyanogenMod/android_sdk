@@ -16,9 +16,9 @@
 
 package com.android.sdklib.devices;
 
+import com.android.SdkConstants;
 import com.android.dvlib.DeviceSchema;
 import com.android.resources.UiMode;
-import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

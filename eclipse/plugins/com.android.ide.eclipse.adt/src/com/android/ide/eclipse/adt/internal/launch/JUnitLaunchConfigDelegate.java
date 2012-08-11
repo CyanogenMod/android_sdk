@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.launch;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
-import com.android.sdklib.SdkConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate;
 import org.osgi.framework.Bundle;
+
 import java.io.IOException;
 import java.net.URL;
 

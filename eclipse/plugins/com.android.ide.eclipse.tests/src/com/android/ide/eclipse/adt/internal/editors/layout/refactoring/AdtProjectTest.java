@@ -17,8 +17,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.AndroidConstants.FD_RES_VALUES;
-import static com.android.sdklib.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -33,7 +34,6 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardS
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

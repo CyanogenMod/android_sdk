@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.xml;
 
+import com.android.SdkConstants;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
-import com.android.sdklib.SdkConstants;
 
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;

@@ -16,6 +16,7 @@
 
 package com.android.sdkmanager;
 
+import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.FileWrapper;
@@ -25,7 +26,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
@@ -42,7 +42,6 @@ import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
@@ -50,6 +49,7 @@ import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.utils.Pair;
+import com.android.xml.AndroidXPathFactory;
 
 import org.eclipse.swt.widgets.Display;
 import org.xml.sax.InputSource;

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Margins;
@@ -36,7 +37,6 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.LintEditAction;
 import com.android.resources.Density;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.filesystem.EFS;

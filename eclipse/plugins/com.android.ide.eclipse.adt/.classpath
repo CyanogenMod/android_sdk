@@ -3,15 +3,12 @@
 	<classpathentry excluding="Makefile|resources/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="lib" path="libs/ide_common.jar" sourcepath="/ide_common"/>
-	<classpathentry kind="lib" path="libs/ninepatch.jar" sourcepath="/ninepatch"/>
-	<classpathentry kind="lib" path="libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
-	<classpathentry kind="lib" path="libs/rule_api.jar" sourcepath="/rule_api"/>
-	<classpathentry kind="lib" path="libs/lint_api.jar" sourcepath="/lint-api"/>
-	<classpathentry kind="lib" path="libs/lint_checks.jar" sourcepath="/lint-checks"/>
-	<classpathentry kind="lib" path="libs/assetstudio.jar" sourcepath="/assetstudio"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ddmuilib"/>
+	<classpathentry exported="true" kind="lib" path="libs/ninepatch.jar" sourcepath="/ninepatch"/>
+	<classpathentry exported="true" kind="lib" path="libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
+	<classpathentry exported="true" kind="lib" path="libs/rule_api.jar" sourcepath="/rule_api"/>
+	<classpathentry exported="true" kind="lib" path="libs/lint_api.jar" sourcepath="/lint-api"/>
+	<classpathentry exported="true" kind="lib" path="libs/lint_checks.jar" sourcepath="/lint-checks"/>
+	<classpathentry exported="true" kind="lib" path="libs/assetstudio.jar" sourcepath="/assetstudio"/>
 	<classpathentry exported="true" kind="lib" path="libs/ant-glob.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/manifmerger.jar" sourcepath="/ManifestMerger"/>
 	<classpathentry kind="var" path="ANDROID_SRC/sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs/propertysheet.jar" sourcepath="/ANDROID_SRC/external/eclipse-windowbuilder/propertysheet/src"/>

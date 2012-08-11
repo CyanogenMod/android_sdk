@@ -16,7 +16,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 #  it is dynamically added by android.bat/.sh based on whether the
 #  current VM is 32 or 64 bit.)
 LOCAL_JAVA_LIBRARIES := \
-	androidprefs \
+	common \
 	sdklib \
 	sdkuilib \
 	swt \

@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;

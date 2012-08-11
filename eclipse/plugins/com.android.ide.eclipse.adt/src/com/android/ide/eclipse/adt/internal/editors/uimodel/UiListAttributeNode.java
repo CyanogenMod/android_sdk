@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -24,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ListAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;

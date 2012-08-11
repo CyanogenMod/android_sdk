@@ -18,12 +18,12 @@ package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.SelectorMode;
 import com.android.resources.ResourceFolderType;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.ide.common.xml;
 
-import com.android.sdklib.xml.ManifestData.SupportsScreens;
+import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.SupportsScreens;
 
 import java.io.InputStream;
 

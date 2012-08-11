@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.ResourceManagerBuilder;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jdt.core.JavaCore;
 

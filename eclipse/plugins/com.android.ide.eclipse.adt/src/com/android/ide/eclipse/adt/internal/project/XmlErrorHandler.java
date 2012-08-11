@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import com.android.ide.common.xml.AndroidManifestParser.ManifestErrorHandler;
 import com.android.ide.eclipse.adt.AdtConstants;
-import com.android.sdklib.xml.AndroidManifestParser.ManifestErrorHandler;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;

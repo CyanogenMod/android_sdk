@@ -42,6 +42,7 @@ import static com.android.utils.XmlUtils.ANDROID_URI;
 import static com.android.utils.XmlUtils.GT_ENTITY;
 import static com.android.utils.XmlUtils.LT_ENTITY;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -49,7 +50,6 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.ResourceType;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.graphics.Image;
 

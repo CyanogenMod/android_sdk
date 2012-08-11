@@ -19,6 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
 LOCAL_JAVA_LIBRARIES := \
+	common \
 	ddmlib \
 	hierarchyviewerlib \
 	guavalib \

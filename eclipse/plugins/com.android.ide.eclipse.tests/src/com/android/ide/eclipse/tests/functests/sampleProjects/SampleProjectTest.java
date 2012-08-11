@@ -15,13 +15,13 @@
  */
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;

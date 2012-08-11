@@ -4,7 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmuilib"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/AndroidPrefs"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SdkStatsService"/>
 	<classpathentry kind="var" path="ANDROID_OUT_FRAMEWORK/swt.jar"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/eclipse/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
@@ -12,5 +11,6 @@
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/eclipse/org.eclipse.jface_3.6.2.M20110210-1200.jar"/>
 	<classpathentry kind="var" path="ANDROID_OUT_FRAMEWORK/swtmenubar.jar" sourcepath="/ANDROID_SRC/sdk/swtmenubar/src"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/osgi/osgi.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

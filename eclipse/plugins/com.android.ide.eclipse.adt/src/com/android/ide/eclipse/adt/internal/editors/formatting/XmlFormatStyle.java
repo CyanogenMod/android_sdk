@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.SdkConstants;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IPath;
 

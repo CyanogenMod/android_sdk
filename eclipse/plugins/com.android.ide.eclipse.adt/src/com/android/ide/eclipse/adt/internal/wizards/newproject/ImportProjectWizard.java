@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
-import static com.android.sdklib.SdkConstants.FN_PROJECT_PROGUARD_FILE;
-import static com.android.sdklib.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
+import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
+import static com.android.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;

@@ -29,6 +29,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AvdManagerAction;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
@@ -48,7 +49,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

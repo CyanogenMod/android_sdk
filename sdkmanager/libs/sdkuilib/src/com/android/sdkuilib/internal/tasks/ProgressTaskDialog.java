@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.internal.tasks;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdkuilib.ui.AuthenticationDialog;

@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.changes;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErrorListener;
 import com.android.ide.eclipse.adt.internal.refactoring.core.RefactoringUtil;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.resources.IFile;

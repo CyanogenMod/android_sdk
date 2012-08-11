@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.tests.functests.layoutRendering;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
@@ -59,7 +60,6 @@ import com.android.resources.ScreenRatio;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
 import org.kxml2.io.KXmlParser;

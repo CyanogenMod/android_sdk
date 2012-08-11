@@ -16,11 +16,7 @@
 
 package com.android.sdklib.internal.project;
 
-import static com.android.sdklib.SdkConstants.FD_PROGUARD;
-import static com.android.sdklib.SdkConstants.FD_TOOLS;
-import static com.android.sdklib.SdkConstants.FN_ANDROID_PROGUARD_FILE;
-import static com.android.sdklib.SdkConstants.FN_PROJECT_PROGUARD_FILE;
-
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.FolderWrapper;
@@ -28,7 +24,6 @@ import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -200,8 +195,9 @@ public class ProjectProperties implements IPropertySource {
            // Note: always use / separators in the properties paths. Both Ant and
            // our ExportHelper will convert them properly according to the platform.
            "#" + PROPERTY_PROGUARD_CONFIG + "=${" + PROPERTY_SDK +"}/"
-               + FD_TOOLS + '/' + FD_PROGUARD + '/'
-               + FN_ANDROID_PROGUARD_FILE + ':' + FN_PROJECT_PROGUARD_FILE +'\n' +
+               + SdkConstants.FD_TOOLS + '/' + SdkConstants.FD_PROGUARD + '/'
+               + SdkConstants.FN_ANDROID_PROGUARD_FILE + ':'
+               + SdkConstants.FN_PROJECT_PROGUARD_FILE +'\n' +
            "\n";
 
     private final static String BUILD_HEADER =

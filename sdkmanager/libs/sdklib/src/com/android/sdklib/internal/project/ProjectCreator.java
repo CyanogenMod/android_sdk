@@ -17,15 +17,15 @@
 package com.android.sdklib.internal.project;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.io.FileWrapper;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidManifest;
+import com.android.xml.AndroidXPathFactory;
 
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;

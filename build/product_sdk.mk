@@ -29,7 +29,6 @@
 PRODUCT_PACKAGES += \
 	ant-glob \
 	android \
-	androidprefs \
 	annotations \
 	anttasks \
 	archquery \
@@ -45,6 +44,7 @@ PRODUCT_PACKAGES += \
 	emulator \
 	hierarchyviewer \
 	ide_common \
+	layoutlib_api \
 	lint \
 	manifmerger \
 	mksdcard \

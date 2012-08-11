@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.JarListSanitizer;
 import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
 import com.android.sdklib.build.JarListSanitizer.Sha1Exception;

@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.export;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper.ManifestSectionPart;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.IntArrayWrapper;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -26,7 +27,6 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
 import com.android.resources.ResourceType;
-import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;

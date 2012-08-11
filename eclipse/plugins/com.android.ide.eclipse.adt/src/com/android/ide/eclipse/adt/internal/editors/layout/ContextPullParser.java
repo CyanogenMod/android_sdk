@@ -25,10 +25,10 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_FRAGMENT_LAYOUT;
 
+import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
-import com.android.sdklib.SdkConstants;
 
 import org.kxml2.io.KXmlParser;
 

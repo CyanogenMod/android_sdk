@@ -16,8 +16,8 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
 import com.android.ant.DependencyHelper.JarProcessor;
-import com.android.sdklib.SdkConstants;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;

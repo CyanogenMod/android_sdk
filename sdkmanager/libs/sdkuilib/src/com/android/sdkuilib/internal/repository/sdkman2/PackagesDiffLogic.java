@@ -16,9 +16,9 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.SdkConstants;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.IAndroidVersionProvider;
 import com.android.sdklib.internal.repository.packages.IFullRevisionProvider;

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.SdkConstants.FD_GEN_SOURCES;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -28,7 +29,6 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
-import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
@@ -36,6 +36,7 @@ import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_OPEN;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseLayoutRule;
@@ -86,7 +87,6 @@ import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.Pair;
 

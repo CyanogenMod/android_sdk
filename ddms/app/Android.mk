@@ -12,7 +12,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 # MUST be updated as well (Except for swt.jar which is dynamically
 # added based on whether the VM is 32 or 64 bit)
 LOCAL_JAVA_LIBRARIES := \
-	androidprefs \
+	common \
 	sdkstats \
 	ddmlib \
 	ddmuilib \

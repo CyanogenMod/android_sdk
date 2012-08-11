@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.sdklib.repository.PkgProps;
 

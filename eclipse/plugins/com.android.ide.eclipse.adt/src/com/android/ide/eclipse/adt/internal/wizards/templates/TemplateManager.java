@@ -15,10 +15,10 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.SdkConstants.FD_EXTRAS;
+import static com.android.SdkConstants.FD_TEMPLATES;
+import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TEMPLATE_XML;
-import static com.android.sdklib.SdkConstants.FD_EXTRAS;
-import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
-import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

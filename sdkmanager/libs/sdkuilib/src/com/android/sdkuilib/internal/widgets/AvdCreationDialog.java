@@ -16,13 +16,13 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.SdkConstants;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.devices.Camera;
 import com.android.sdklib.devices.CameraLocation;

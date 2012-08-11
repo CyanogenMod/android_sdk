@@ -108,7 +108,7 @@ CP_FILES=""
 ### BASE ###
 
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
-BASE_PLUGIN_LIBS="common sdkstats androidprefs sdklib dvlib layoutlib_api"
+BASE_PLUGIN_LIBS="common sdkstats sdklib dvlib layoutlib_api ide_common"
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \
@@ -125,7 +125,7 @@ CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS
 ### ADT ###
 
 ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
-ADT_LIBS="ant-glob assetstudio ide_common lint_api lint_checks ninepatch propertysheet rule_api sdkuilib swtmenubar manifmerger"
+ADT_LIBS="ant-glob assetstudio lint_api lint_checks ninepatch propertysheet rule_api sdkuilib swtmenubar manifmerger"
 ADT_PREBUILTS="\
     prebuilts/tools/common/freemarker/freemarker-2.3.19.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.ide.common.xml;
 
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;

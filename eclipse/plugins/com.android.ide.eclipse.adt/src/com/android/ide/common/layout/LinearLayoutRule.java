@@ -31,6 +31,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
 import static com.android.ide.eclipse.adt.AdtUtils.formatFloatAttribute;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.DrawingStyle;
@@ -52,7 +53,6 @@ import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.SdkConstants;
 
 import java.net.URL;
 import java.util.ArrayList;

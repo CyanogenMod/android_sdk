@@ -16,7 +16,7 @@
 
 package com.android.sdklib.build;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;

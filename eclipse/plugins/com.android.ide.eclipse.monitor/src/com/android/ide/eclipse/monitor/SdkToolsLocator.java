@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.monitor;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.ddms.IToolsLocator;
-import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.util.Arrays;

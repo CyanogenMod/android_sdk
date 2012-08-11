@@ -26,7 +26,6 @@ LOCAL_JAR_MANIFEST := manifest.txt
 #   sdkmanager/sdklib/manifest.txt
 #   sdkmanager/app/etc/android.bat
 LOCAL_JAVA_LIBRARIES := \
-        androidprefs \
         layoutlib_api \
         common \
         mkidentity-prebuilt \

@@ -21,7 +21,7 @@ import static com.android.AndroidConstants.FD_RES_ANIM;
 import static com.android.AndroidConstants.FD_RES_ANIMATOR;
 import static com.android.AndroidConstants.FD_RES_COLOR;
 import static com.android.AndroidConstants.FD_RES_DRAWABLE;
-import static com.android.sdklib.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationContentAssist;

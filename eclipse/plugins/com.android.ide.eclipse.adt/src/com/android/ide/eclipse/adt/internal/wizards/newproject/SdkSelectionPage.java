@@ -15,8 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.ide.common.sdk.LoadStatus;
+import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -25,10 +28,7 @@ import com.android.io.FileWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.NullSdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.xml.AndroidManifestParser;
-import com.android.sdklib.xml.ManifestData;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 import com.android.utils.Pair;
 

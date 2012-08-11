@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.launch;
 
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.IProjectChooserFilter;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.NonLibraryProjectOnlyFilter;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Activity;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
@@ -24,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.editors.ui.TextValueCellEditor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiTextAttributeNode;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ILabelProvider;

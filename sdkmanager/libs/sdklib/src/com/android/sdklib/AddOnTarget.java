@@ -16,6 +16,8 @@
 
 package com.android.sdklib;
 
+import com.android.SdkConstants;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;

@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 import junit.framework.TestCase;
 

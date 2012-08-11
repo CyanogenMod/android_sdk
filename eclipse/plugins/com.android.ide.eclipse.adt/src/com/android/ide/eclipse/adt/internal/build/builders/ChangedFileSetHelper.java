@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;

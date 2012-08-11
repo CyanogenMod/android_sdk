@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -26,7 +27,6 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkBuilder.JarStatus;
 import com.android.sdklib.build.ApkBuilder.SigningInfo;

@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.xml.AndroidManifest;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;

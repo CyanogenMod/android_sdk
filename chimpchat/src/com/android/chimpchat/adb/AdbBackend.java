@@ -17,11 +17,11 @@ package com.android.chimpchat.adb;
 
 import com.google.common.collect.Lists;
 
+import com.android.SdkConstants;
 import com.android.chimpchat.core.IChimpBackend;
 import com.android.chimpchat.core.IChimpDevice;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.util.List;

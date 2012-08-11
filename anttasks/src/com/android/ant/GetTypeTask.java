@@ -16,10 +16,10 @@
 
 package com.android.ant;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidManifest;
+import com.android.xml.AndroidXPathFactory;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;

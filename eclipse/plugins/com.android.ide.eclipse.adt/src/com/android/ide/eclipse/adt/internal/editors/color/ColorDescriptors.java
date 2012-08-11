@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.color;
 import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -28,7 +29,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.resources.ResourceType;
-import com.android.sdklib.SdkConstants;
 
 import java.util.Map;
 

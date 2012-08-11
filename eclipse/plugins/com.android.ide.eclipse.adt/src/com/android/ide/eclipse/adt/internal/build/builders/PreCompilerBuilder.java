@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
+import com.android.SdkConstants;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
@@ -44,12 +46,10 @@ import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.io.FileOp;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.ManifestData;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

@@ -43,7 +43,6 @@ subdirs += \
 	external/eclipse-windowbuilder/propertysheet \
 	external/ant-glob \
 	sdk/archquery \
-	sdk/androidprefs \
 	sdk/annotations \
 	sdk/apkbuilder \
 	sdk/assetstudio \

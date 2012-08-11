@@ -15,19 +15,19 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
+import static com.android.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 import static com.android.ide.eclipse.adt.AdtUtils.capitalize;
 import static com.android.ide.eclipse.adt.AdtUtils.stripWhitespace;
 import static com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPage.ACTIVITY_NAME_SUFFIX;
-import static com.android.sdklib.SdkConstants.FN_PROJECT_PROGUARD_FILE;
-import static com.android.sdklib.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 
+import com.android.SdkConstants;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Activity;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IProject;

@@ -17,6 +17,7 @@
 package com.android.sdklib;
 
 
+import com.android.SdkConstants;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkManager.LayoutlibVersion;
 

@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.Pair;
 
 import org.eclipse.jface.action.IStatusLineManager;
