@@ -9,9 +9,13 @@ LOCAL_SDL_CFLAGS := $(shell $(LOCAL_SDL_CONFIG) --cflags)
 LOCAL_SDL_LDLIBS := $(filter-out %.a %.lib,$(shell $(LOCAL_SDL_CONFIG) --static-libs))
 
 ifeq ($(HOST_OS),darwin)
-  # OS X 10.6+ needs to be forced to link dylib to avoid problems
-  # with the dynamic function lookups in SDL 1.2
-  LOCAL_SDL_LDLIBS += /usr/lib/dylib1.o
+  # SDK 10.6+ deprecates __dyld_func_lookup required by dlcompat_init_func
+  # in SDL_dlcompat.o this module depends.  Instruct linker to resolved it at runtime.
+  OSX_VERSION_MAJOR := $(shell echo $(mac_sdk_version) | cut -d . -f 2)
+  OSX_VERSION_MAJOR_GREATER_THAN_OR_EQUAL_TO_6 := $(shell [ $(OSX_VERSION_MAJOR) -ge 6 ] && echo true)
+  ifeq ($(OSX_VERSION_MAJOR_GREATER_THAN_OR_EQUAL_TO_6),true)
+    LOCAL_SDL_LDLIBS += -Wl,-undefined,dynamic_lookup
+  endif
 endif
 
 LOCAL_SRC_FILES:= \
