@@ -16,9 +16,9 @@
 
 package com.android.uiautomator;
 
+import com.android.SdkConstants;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.util.Arrays;
