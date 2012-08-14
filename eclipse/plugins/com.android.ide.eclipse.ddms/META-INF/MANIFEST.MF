@@ -38,5 +38,6 @@ Bundle-ClassPath: .,
  libs/ddmuilib.jar,
  libs/jcommon-1.0.12.jar,
  libs/jfreechart-1.0.9.jar,
- libs/jfreechart-1.0.9-swt.jar
+ libs/jfreechart-1.0.9-swt.jar,
+ libs/uiautomatorviewer.jar
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

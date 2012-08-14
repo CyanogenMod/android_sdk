@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWTException;
@@ -815,5 +816,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         }
 
         mLogCatMonitor.monitorDevice(device);
+    }
+
+    /** Returns an image descriptor for the image file at the given plug-in relative path */
+    public static ImageDescriptor getImageDescriptor(String path) {
+        return imageDescriptorFromPlugin(PLUGIN_ID, path);
     }
 }

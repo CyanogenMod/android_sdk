@@ -38,20 +38,29 @@ import com.android.ddmuilib.handler.BaseFileHandler;
 import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.IDebuggerConnector;
+import com.android.ide.eclipse.ddms.editors.UiAutomatorViewer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
+import com.android.uiautomator.UiAutomatorHelper;
+import com.android.uiautomator.UiAutomatorHelper.UiAutomatorException;
+import com.android.uiautomator.UiAutomatorHelper.UiAutomatorResult;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Composite;
@@ -70,6 +79,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public class DeviceView extends ViewPart implements IUiSelectionListener, IClientChangeListener {
 
@@ -84,6 +94,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
     private Action mResetAdbAction;
     private Action mCaptureAction;
+    private Action mViewUiAutomatorHierarchyAction;
     private Action mUpdateThreadAction;
     private Action mUpdateHeapAction;
     private Action mGcAction;
@@ -255,12 +266,13 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                 IWorkbench workbench = PlatformUI.getWorkbench();
                 IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
                 IWorkbenchPage page = window.getActivePage();
+                if (page == null) {
+                    return;
+                }
+
                 if (page.isEditorAreaVisible() == false) {
                     IAdaptable input;
-                    if (page != null)
-                        input = page.getInput();
-                    else
-                        input = ResourcesPlugin.getWorkspace().getRoot();
+                    input = page.getInput();
                     try {
                         workbench.showPerspective("org.eclipse.debug.ui.DebugPerspective", //$NON-NLS-1$
                                 window, input);
@@ -307,6 +319,17 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         };
         mCaptureAction.setToolTipText(Messages.DeviceView_Screen_Capture_Tooltip);
         mCaptureAction.setImageDescriptor(loader.loadDescriptor("capture.png")); //$NON-NLS-1$
+
+        mViewUiAutomatorHierarchyAction = new Action("Dump View Hierarchy for UI Automator") {
+            @Override
+            public void run() {
+                takeUiAutomatorSnapshot(mDeviceList.getSelectedDevice(),
+                        DdmsPlugin.getDisplay().getActiveShell());
+            }
+        };
+        mViewUiAutomatorHierarchyAction.setToolTipText("Dump View Hierarchy for UI Automator");
+        mViewUiAutomatorHierarchyAction.setImageDescriptor(
+                DdmsPlugin.getImageDescriptor("icons/uiautomator.png")); //$NON-NLS-1$
 
         mResetAdbAction = new Action(Messages.DeviceView_Reset_ADB) {
             @Override
@@ -486,6 +509,34 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         });
     }
 
+    private void takeUiAutomatorSnapshot(final IDevice device, final Shell shell) {
+        ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+        try {
+            dialog.run(true, false, new IRunnableWithProgress() {
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException,
+                                                                        InterruptedException {
+                    UiAutomatorResult result = null;
+                    try {
+                        result = UiAutomatorHelper.takeSnapshot(device, monitor);
+                    } catch (UiAutomatorException e) {
+                        throw new InvocationTargetException(e);
+                    } finally {
+                        monitor.done();
+                    }
+
+                    UiAutomatorViewer.openEditor(result);
+                }
+            });
+        } catch (Exception e) {
+            Status s = new Status(IStatus.ERROR, DdmsPlugin.PLUGIN_ID,
+                                            "Error obtaining UI hierarchy", e);
+            ErrorDialog.openError(shell, "UI Automator",
+                    "Unexpected error while obtaining UI hierarchy", s);
+        }
+    };
+
+
     @Override
     public void setFocus() {
         mDeviceList.setFocus();
@@ -585,6 +636,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
     private void doSelectionChanged(IDevice selectedDevice) {
         mCaptureAction.setEnabled(selectedDevice != null);
+        mViewUiAutomatorHierarchyAction.setEnabled(selectedDevice != null);
     }
 
     /**
@@ -609,6 +661,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         menuManager.add(new Separator());
         menuManager.add(mCaptureAction);
         menuManager.add(new Separator());
+        menuManager.add(mViewUiAutomatorHierarchyAction);
+        menuManager.add(new Separator());
         menuManager.add(mResetAdbAction);
 
         // and then in the toolbar
@@ -626,6 +680,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         toolBarManager.add(mKillAppAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mCaptureAction);
+        toolBarManager.add(new Separator());
+        toolBarManager.add(mViewUiAutomatorHierarchyAction);
     }
 
     @Override

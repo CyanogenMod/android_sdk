@@ -16,12 +16,11 @@
 
 package com.android.uiautomator.actions;
 
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.RawImage;
-import com.android.ddmlib.SyncService;
 import com.android.uiautomator.DebugBridge;
-import com.android.uiautomator.UiAutomatorModel;
+import com.android.uiautomator.UiAutomatorHelper;
+import com.android.uiautomator.UiAutomatorHelper.UiAutomatorException;
+import com.android.uiautomator.UiAutomatorHelper.UiAutomatorResult;
 import com.android.uiautomator.UiAutomatorViewer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -38,32 +37,17 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
-import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class ScreenshotAction extends Action {
-    private static final String UIAUTOMATOR = "/system/bin/uiautomator";    //$NON-NLS-1$
-    private static final String UIAUTOMATOR_DUMP_COMMAND = "dump";          //$NON-NLS-1$
-    private static final String UIDUMP_DEVICE_PATH = "/sdcard/uidump.xml";  //$NON-NLS-1$
-
-    private static final int MIN_API_LEVEL = 16;
-
     UiAutomatorViewer mViewer;
 
     public ScreenshotAction(UiAutomatorViewer viewer) {
@@ -93,126 +77,36 @@ public class ScreenshotAction extends Action {
         ProgressMonitorDialog dialog = new ProgressMonitorDialog(mViewer.getShell());
         try {
             dialog.run(true, false, new IRunnableWithProgress() {
-                private void showError(final String msg, final Throwable t,
-                        IProgressMonitor monitor) {
-                    monitor.done();
-                    mViewer.getShell().getDisplay().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            Status s = new Status(IStatus.ERROR, "Screenshot", msg, t);
-                            ErrorDialog.openError(
-                                    mViewer.getShell(), "Error", "Error obtaining UI hierarchy", s);
-                        }
-                    });
-                }
-
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
-                InterruptedException {
-                    File tmpDir = null;
-                    File xmlDumpFile = null;
-                    File screenshotFile = null;
+                                                                        InterruptedException {
+                    UiAutomatorResult result = null;
                     try {
-                        tmpDir = File.createTempFile("uiautomatorviewer_", "");
-                        tmpDir.delete();
-                        if (!tmpDir.mkdirs())
-                            throw new IOException("Failed to mkdir");
-                        xmlDumpFile = File.createTempFile("dump_", ".xml", tmpDir);
-                        screenshotFile = File.createTempFile("screenshot_", ".png", tmpDir);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        showError("Cannot get temp directory", e, monitor);
+                        result = UiAutomatorHelper.takeSnapshot(device, monitor);
+                    } catch (UiAutomatorException e) {
+                        monitor.done();
+                        showError(e.getMessage(), e);
                         return;
                     }
 
-                    tmpDir.deleteOnExit();
-                    xmlDumpFile.deleteOnExit();
-                    screenshotFile.deleteOnExit();
-
-                    String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
-                    int apiLevel;
-                    try {
-                        apiLevel = Integer.parseInt(apiLevelString);
-                    } catch (NumberFormatException e) {
-                        apiLevel = MIN_API_LEVEL;
-                    }
-                    if (apiLevel < MIN_API_LEVEL) {
-                        showError("uiautomator requires a device with API Level " + MIN_API_LEVEL,
-                                null, monitor);
-                        return;
-                    }
-
-                    monitor.subTask("Deleting old UI XML snapshot ...");
-                    String command = "rm " + UIDUMP_DEVICE_PATH;
-                    try {
-                        CountDownLatch commandCompleteLatch = new CountDownLatch(1);
-                        device.executeShellCommand(command,
-                                new CollectingOutputReceiver(commandCompleteLatch));
-                        commandCompleteLatch.await(5, TimeUnit.SECONDS);
-                    } catch (Exception e1) {
-                        // ignore exceptions while deleting stale files
-                    }
-
-                    monitor.subTask("Taking UI XML snapshot...");
-                    command = String.format("%s %s %s", UIAUTOMATOR,
-                                                        UIAUTOMATOR_DUMP_COMMAND,
-                                                        UIDUMP_DEVICE_PATH);
-                    try {
-                        CountDownLatch commandCompleteLatch = new CountDownLatch(1);
-                        device.executeShellCommand(command,
-                                new CollectingOutputReceiver(commandCompleteLatch));
-                        commandCompleteLatch.await(5, TimeUnit.SECONDS);
-                    } catch (Exception e1) {
-                        showError("", e1, monitor);
-                        return;
-                    }
-
-                    monitor.subTask("Pull UI XML snapshot from device...");
-                    try {
-                        device.getSyncService().pullFile(UIDUMP_DEVICE_PATH,
-                                xmlDumpFile.getAbsolutePath(), SyncService.getNullProgressMonitor());
-                    } catch (Exception e1) {
-                        showError("Error copying UI XML file from device", e1, monitor);
-                        return;
-                    }
-
-                    monitor.subTask("Taking screenshot...");
-                    RawImage rawImage;
-                    try {
-                        rawImage = device.getScreenshot();
-                    } catch (Exception e1) {
-                        showError("Error taking device screenshot", e1, monitor);
-                        return;
-                    }
-
-                    UiAutomatorModel model;
-                    try {
-                        model = new UiAutomatorModel(xmlDumpFile);
-                    } catch (Exception e) {
-                        showError("Error while parsing UI hierarchy XML file", e, monitor);
-                        return;
-                    }
-
-                    PaletteData palette = new PaletteData(
-                            rawImage.getRedMask(),
-                            rawImage.getGreenMask(),
-                            rawImage.getBlueMask());
-                    ImageData imageData = new ImageData(rawImage.width, rawImage.height,
-                            rawImage.bpp, palette, 1, rawImage.data);
-                    ImageLoader loader = new ImageLoader();
-                    loader.data = new ImageData[] { imageData };
-                    loader.save(screenshotFile.getAbsolutePath(), SWT.IMAGE_PNG);
-                    Image screenshot = new Image(Display.getDefault(), imageData);
-
-                    mViewer.setModel(model, screenshot);
+                    mViewer.setModel(result.model, result.uiHierarchy, result.screenshot);
                     monitor.done();
                 }
             });
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError("Unexpected error while obtaining UI hierarchy", e);
         }
+    }
+
+    private void showError(final String msg, final Throwable t) {
+        mViewer.getShell().getDisplay().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                Status s = new Status(IStatus.ERROR, "Screenshot", msg, t);
+                ErrorDialog.openError(
+                        mViewer.getShell(), "Error", "Error obtaining UI hierarchy", s);
+            }
+        });
     }
 
     private IDevice pickDevice() {

@@ -32,6 +32,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 
+import java.io.File;
+
 public class UiAutomatorViewer extends ApplicationWindow {
     private UiAutomatorView mUiAutomatorView;
 
@@ -90,16 +92,17 @@ public class UiAutomatorViewer extends ApplicationWindow {
         return new Point(800, 600);
     }
 
-    public void setModel(final UiAutomatorModel model, final Image screenshot) {
+    public void setModel(final UiAutomatorModel model, final File modelFile,
+                                                                final Image screenshot) {
         if (Display.getDefault().getThread() != Thread.currentThread()) {
             Display.getDefault().syncExec(new Runnable() {
                 @Override
                 public void run() {
-                    mUiAutomatorView.setModel(model, screenshot);
+                    mUiAutomatorView.setModel(model, modelFile, screenshot);
                 }
             });
         } else {
-            mUiAutomatorView.setModel(model, screenshot);
+            mUiAutomatorView.setModel(model, modelFile, screenshot);
         }
     }
 }

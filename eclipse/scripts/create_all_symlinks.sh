@@ -139,7 +139,7 @@ CP_FILES="$CP_FILES @:$ADT_DEST $ADT_LIBS $ADT_PREBUILTS"
 ### DDMS ###
 
 DDMS_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.ddms/libs"
-DDMS_LIBS="ddmlib ddmuilib swtmenubar"
+DDMS_LIBS="ddmlib ddmuilib swtmenubar uiautomatorviewer"
 
 DDMS_PREBUILTS="\
     prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar \

@@ -59,23 +59,25 @@ public class OpenFilesAction extends Action {
         }
 
         Image img = null;
-        try {
-            File screenshot = d.getScreenshotFile();
-            ImageData[] data = new ImageLoader().load(screenshot.getAbsolutePath());
+        File screenshot = d.getScreenshotFile();
+        if (screenshot != null) {
+            try {
+                ImageData[] data = new ImageLoader().load(screenshot.getAbsolutePath());
 
-            // "data" is an array, probably used to handle images that has multiple frames
-            // i.e. gifs or icons, we just care if it has at least one here
-            if (data.length < 1) {
-                throw new RuntimeException("Unable to load image: "
-                                + screenshot.getAbsolutePath());
+                // "data" is an array, probably used to handle images that has multiple frames
+                // i.e. gifs or icons, we just care if it has at least one here
+                if (data.length < 1) {
+                    throw new RuntimeException("Unable to load image: "
+                            + screenshot.getAbsolutePath());
+                }
+
+                img = new Image(Display.getDefault(), data[0]);
+            } catch (Exception e) {
+                // FIXME: show error
+                return;
             }
-
-            img = new Image(Display.getDefault(), data[0]);
-        } catch (Exception e) {
-            // FIXME: show error
-            return;
         }
 
-        mViewer.setModel(model, img);
+        mViewer.setModel(model, d.getXmlDumpFile(), img);
     }
 }

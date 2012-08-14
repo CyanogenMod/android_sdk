@@ -40,28 +40,45 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
 
+import java.io.File;
+
 public class UiAutomatorView extends Composite {
     private static final int IMG_BORDER = 2;
 
+    // The screenshot area is made of a stack layout of two components: screenshot canvas and
+    // a "specify screenshot" button. If a screenshot is already available, then that is displayed
+    // on the canvas. If it is not availble, then the "specify screenshot" button is displayed.
+    private Composite mScreenshotComposite;
+    private StackLayout mStackLayout;
+    private Composite mSetScreenshotComposite;
     private Canvas mScreenshotCanvas;
+
     private TreeViewer mTreeViewer;
     private TableViewer mTableViewer;
 
@@ -69,6 +86,7 @@ public class UiAutomatorView extends Composite {
     private int mDx, mDy;
 
     private UiAutomatorModel mModel;
+    private File mModelFile;
     private Image mScreenshot;
 
     public UiAutomatorView(Composite parent, int style) {
@@ -76,8 +94,16 @@ public class UiAutomatorView extends Composite {
         setLayout(new FillLayout());
 
         SashForm baseSash = new SashForm(this, SWT.HORIZONTAL);
+
+        mScreenshotComposite = new Composite(baseSash, SWT.BORDER);
+        mStackLayout = new StackLayout();
+        mScreenshotComposite.setLayout(mStackLayout);
+
         // draw the canvas with border, so the divider area for sash form can be highlighted
-        mScreenshotCanvas = new Canvas(baseSash, SWT.BORDER);
+        mScreenshotCanvas = new Canvas(mScreenshotComposite, SWT.BORDER);
+        mStackLayout.topControl = mScreenshotCanvas;
+        mScreenshotComposite.layout();
+
         mScreenshotCanvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e) {
@@ -154,6 +180,43 @@ public class UiAutomatorView extends Composite {
                 }
             }
         });
+
+        mSetScreenshotComposite = new Composite(mScreenshotComposite, SWT.NONE);
+        mSetScreenshotComposite.setLayout(new GridLayout());
+
+        final Button setScreenshotButton = new Button(mSetScreenshotComposite, SWT.PUSH);
+        setScreenshotButton.setText("Specify Screenshot...");
+        setScreenshotButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                FileDialog fd = new FileDialog(setScreenshotButton.getShell());
+                fd.setFilterExtensions(new String[] { "*.png" });
+                if (mModelFile != null) {
+                    fd.setFilterPath(mModelFile.getParent());
+                }
+                String screenshotPath = fd.open();
+                if (screenshotPath == null) {
+                    return;
+                }
+
+                ImageData[] data;
+                try {
+                    data = new ImageLoader().load(screenshotPath);
+                } catch (Exception e) {
+                    return;
+                }
+
+                // "data" is an array, probably used to handle images that has multiple frames
+                // i.e. gifs or icons, we just care if it has at least one here
+                if (data.length < 1) {
+                    return;
+                }
+
+                mScreenshot = new Image(Display.getDefault(), data[0]);
+                redrawScreenshot();
+            }
+        });
+
 
         // right sash is split into 2 parts: upper-right and lower-right
         // both are composites with borders, so that the horizontal divider can be highlighted by
@@ -314,6 +377,13 @@ public class UiAutomatorView extends Composite {
      * retrieved from Model
      */
     public void redrawScreenshot() {
+        if (mScreenshot == null) {
+            mStackLayout.topControl = mSetScreenshotComposite;
+        } else {
+            mStackLayout.topControl = mScreenshotCanvas;
+        }
+        mScreenshotComposite.layout();
+
         mScreenshotCanvas.redraw();
     }
 
@@ -334,8 +404,9 @@ public class UiAutomatorView extends Composite {
         mTreeViewer.setSelection(new StructuredSelection(node), true);
     }
 
-    public void setModel(UiAutomatorModel model, Image screenshot) {
+    public void setModel(UiAutomatorModel model, File modelBackingFile, Image screenshot) {
         mModel = model;
+        mModelFile = modelBackingFile;
 
         if (mScreenshot != null) {
             mScreenshot.dispose();

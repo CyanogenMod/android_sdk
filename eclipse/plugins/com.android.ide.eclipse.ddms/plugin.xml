@@ -89,6 +89,17 @@
       </view>
    </extension>
    <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.android.ide.eclipse.ddms.editors.UiAutomatorViewer"
+            default="true"
+            extensions="uix"
+            icon="icons/uiautomator.png"
+            id="com.android.ide.eclipse.ddms.editors.UiAutomatorViewer"
+            name="UI Automator Hierarchy Viewer">
+      </editor>
+   </extension>
+   <extension
          point="org.eclipse.ui.perspectives">
       <perspective
             class="com.android.ide.eclipse.ddms.Perspective"

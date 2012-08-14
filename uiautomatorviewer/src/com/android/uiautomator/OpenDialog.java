@@ -196,7 +196,7 @@ public class OpenDialog extends Dialog {
         if (initialPath.isEmpty() && sScreenshotFile != null && sScreenshotFile.isFile()) {
             initialPath = sScreenshotFile.getParentFile().getAbsolutePath();
         }
-        String[] filter = {"*.xml"};
+        String[] filter = {"*.uix"};
         fd.setFilterExtensions(filter);
         String selected = fd.open();
         if (selected != null) {
@@ -208,8 +208,7 @@ public class OpenDialog extends Dialog {
     }
 
     private void updateButtonState() {
-        mOkButton.setEnabled(sScreenshotFile != null && sXmlDumpFile != null
-                && sScreenshotFile.isFile() && sXmlDumpFile.isFile());
+        mOkButton.setEnabled(sXmlDumpFile != null && sXmlDumpFile.isFile());
     }
 
     public boolean hasFileChanged() {
