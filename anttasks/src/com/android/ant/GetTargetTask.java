@@ -163,7 +163,7 @@ public class GetTargetTask extends Task {
         }
         System.out.println(    "API level:        " + androidTarget.getVersion().getApiString());
 
-        antProject.setProperty(mMinSdkVersionOut,
+        antProject.setProperty(mTargetApiOut,
                 Integer.toString(androidTarget.getVersion().getApiLevel()));
 
         // always check the manifest minSdkVersion.
@@ -195,7 +195,7 @@ public class GetTargetTask extends Task {
                     visitedJars.add(jarPath);
 
                     element = bootclasspath.createPathElement();
-                    element.setPath(library.getJarPath());
+                    element.setPath(jarPath);
                 }
             }
         }
@@ -247,9 +247,9 @@ public class GetTargetTask extends Task {
                             codeName, value));
                 }
 
-                // set the API level to the previous API level (which is actually the value in
+                // set the minSdkVersion to the previous API level (which is actually the value in
                 // androidVersion.)
-                antProject.setProperty(mTargetApiOut,
+                antProject.setProperty(mMinSdkVersionOut,
                         Integer.toString(androidVersion.getApiLevel()));
 
             } else if (value.length() > 0) {
@@ -266,8 +266,8 @@ public class GetTargetTask extends Task {
                             AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION));
                 }
 
-                // set the target api to the value
-                antProject.setProperty(mTargetApiOut, value);
+                // set the minSdkVersion to the value
+                antProject.setProperty(mMinSdkVersionOut, value);
 
                 int projectApiLevel = androidVersion.getApiLevel();
                 if (minSdkValue > androidVersion.getApiLevel()) {
@@ -282,7 +282,7 @@ public class GetTargetTask extends Task {
                         "WARNING: No minSdkVersion value set. Application will install on all Android versions.");
 
                 // set the target api to 1
-                antProject.setProperty(mTargetApiOut, "1");
+                antProject.setProperty(mMinSdkVersionOut, "1");
             }
 
         } catch (XPathExpressionException e) {

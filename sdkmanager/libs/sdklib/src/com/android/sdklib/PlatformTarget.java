@@ -91,6 +91,7 @@ final class PlatformTarget implements IAndroidTarget {
 
         // pre-build the path to the platform components
         mPaths.put(ANDROID_JAR, mRootFolderOsPath + SdkConstants.FN_FRAMEWORK_LIBRARY);
+        mPaths.put(UI_AUTOMATOR_JAR, mRootFolderOsPath + SdkConstants.FN_UI_AUTOMATOR_LIBRARY);
         mPaths.put(SOURCES, mRootFolderOsPath + SdkConstants.FD_ANDROID_SOURCES);
         mPaths.put(ANDROID_AIDL, mRootFolderOsPath + SdkConstants.FN_FRAMEWORK_AIDL);
         mPaths.put(SAMPLES, mRootFolderOsPath + SdkConstants.OS_PLATFORM_SAMPLES_FOLDER);
