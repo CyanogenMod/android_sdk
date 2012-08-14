@@ -72,9 +72,9 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private String mActivityToTrace = "";
     private String mTraceFilePath = "";
 
-    private boolean mCollectFbOnEglSwap = true;
-    private boolean mCollectFbOnGlDraw = false;
-    private boolean mCollectTextureData = false;
+    private static boolean sCollectFbOnEglSwap = true;
+    private static boolean sCollectFbOnGlDraw = false;
+    private static boolean sCollectTextureData = false;
     private IDevice[] mDevices;
 
     public GLTraceOptionsDialog(Shell parentShell) {
@@ -188,22 +188,22 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
         final Button readFbOnEglSwapCheckBox = new Button(c, SWT.CHECK);
         readFbOnEglSwapCheckBox.setText("Read back framebuffer 0 on eglSwapBuffers()");
-        readFbOnEglSwapCheckBox.setSelection(mCollectFbOnEglSwap);
+        readFbOnEglSwapCheckBox.setSelection(sCollectFbOnEglSwap);
 
         final Button readFbOnGlDrawCheckBox = new Button(c, SWT.CHECK);
         readFbOnGlDrawCheckBox.setText("Read back currently bound framebuffer On glDraw*()");
-        readFbOnGlDrawCheckBox.setSelection(mCollectFbOnGlDraw);
+        readFbOnGlDrawCheckBox.setSelection(sCollectFbOnGlDraw);
 
         final Button readTextureDataCheckBox = new Button(c, SWT.CHECK);
         readTextureDataCheckBox.setText("Collect texture data submitted using glTexImage*()");
-        readTextureDataCheckBox.setSelection(mCollectTextureData);
+        readTextureDataCheckBox.setSelection(sCollectTextureData);
 
         SelectionListener l = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                mCollectFbOnEglSwap = readFbOnEglSwapCheckBox.getSelection();
-                mCollectFbOnGlDraw = readFbOnGlDrawCheckBox.getSelection();
-                mCollectTextureData = readTextureDataCheckBox.getSelection();
+                sCollectFbOnEglSwap = readFbOnEglSwapCheckBox.getSelection();
+                sCollectFbOnGlDraw = readFbOnGlDrawCheckBox.getSelection();
+                sCollectTextureData = readTextureDataCheckBox.getSelection();
             }
         };
 
@@ -356,6 +356,6 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     public TraceOptions getTraceOptions() {
         return new TraceOptions(mSelectedDevice, mAppPackageToTrace, mActivityToTrace,
-                mTraceFilePath, mCollectFbOnEglSwap, mCollectFbOnGlDraw, mCollectTextureData);
+                mTraceFilePath, sCollectFbOnEglSwap, sCollectFbOnGlDraw, sCollectTextureData);
     }
 }
