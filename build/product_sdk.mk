@@ -59,4 +59,5 @@ PRODUCT_PACKAGES += \
 	sdkuilib \
 	sdkuilib-tests \
 	swtmenubar \
-	traceview
+	traceview \
+	uiautomatorviewer

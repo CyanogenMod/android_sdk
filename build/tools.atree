@@ -62,13 +62,14 @@ lib/lib64GLES_V2_translator${DLL_EXTENSION} strip tools/lib/lib64GLES_V2_transla
 lib/lib64EGL_translator${DLL_EXTENSION}     strip tools/lib/lib64EGL_translator${DLL_EXTENSION}
 
 # Java-Based SDK Tools
-bin/ddms            tools/ddms
-bin/hierarchyviewer tools/hierarchyviewer
-bin/draw9patch      tools/draw9patch
-bin/traceview       tools/traceview
-bin/android         tools/android
-bin/monkeyrunner    tools/monkeyrunner
-bin/lint            tools/lint
+bin/ddms                tools/ddms
+bin/hierarchyviewer     tools/hierarchyviewer
+bin/draw9patch          tools/draw9patch
+bin/traceview           tools/traceview
+bin/android             tools/android
+bin/monkeyrunner        tools/monkeyrunner
+bin/lint                tools/lint
+bin/uiautomatorviewer   tools/uiautomatorviewer
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
@@ -118,6 +119,7 @@ framework/lint_checks.jar        tools/lib/lint_checks.jar
 framework/manifmerger.jar        tools/lib/manifmerger.jar
 framework/dvlib.jar              tools/lib/dvlib.jar
 framework/layoutlib_api.jar      tools/lib/layoutlib_api.jar
+framework/uiautomatorviewer.jar  tools/lib/uiautomatorviewer.jar
 
 
 # 3rd Party java libraries
