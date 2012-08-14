@@ -21,6 +21,8 @@ import static com.android.utils.XmlUtils.AMP_ENTITY;
 import static com.android.utils.XmlUtils.LT_ENTITY;
 import static com.android.utils.XmlUtils.QUOT_ENTITY;
 
+import com.android.SdkConstants;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -31,8 +33,6 @@ import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDes
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

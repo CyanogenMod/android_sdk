@@ -16,15 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ManifestElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.sdklib.SdkConstants;
 
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 
 /**

@@ -16,7 +16,7 @@
 
 package com.android.sdklib.devices;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 public enum Abi {
     ARMEABI(SdkConstants.ABI_ARMEABI),

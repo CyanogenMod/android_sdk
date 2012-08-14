@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.ide.common.xml;
 
+import com.android.ide.common.xml.ManifestData.UsesFeature;
+import com.android.ide.common.xml.ManifestData.UsesLibrary;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
-import com.android.sdklib.xml.ManifestData.UsesFeature;
-import com.android.sdklib.xml.ManifestData.UsesLibrary;
 
 import java.io.InputStream;
 

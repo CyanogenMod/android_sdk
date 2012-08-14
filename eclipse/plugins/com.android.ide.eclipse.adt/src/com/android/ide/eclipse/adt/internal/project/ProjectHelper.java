@@ -18,7 +18,9 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import static com.android.ide.eclipse.adt.AdtConstants.COMPILER_COMPLIANCE_PREFERRED;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
@@ -26,8 +28,6 @@ import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.ICommand;

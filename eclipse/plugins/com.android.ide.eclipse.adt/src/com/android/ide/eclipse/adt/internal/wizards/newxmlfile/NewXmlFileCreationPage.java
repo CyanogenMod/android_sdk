@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
@@ -27,6 +26,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP_CHAR;
 import static com.android.ide.eclipse.adt.internal.wizards.newxmlfile.ChooseConfigurationPage.RES_FOLDER_ABS;
 
+import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -47,7 +47,6 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;

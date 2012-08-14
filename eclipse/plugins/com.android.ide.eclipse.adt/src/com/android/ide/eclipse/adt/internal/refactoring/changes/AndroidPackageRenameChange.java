@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.refactoring.changes;
 
 import com.android.ide.eclipse.adt.internal.refactoring.core.FixImportsJob;
 import com.android.ide.eclipse.adt.internal.refactoring.core.RefactoringUtil;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;

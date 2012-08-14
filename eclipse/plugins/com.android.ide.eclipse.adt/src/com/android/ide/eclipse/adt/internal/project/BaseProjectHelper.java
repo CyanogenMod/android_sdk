@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;

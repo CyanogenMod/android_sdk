@@ -18,10 +18,10 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.IImageFactory;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;

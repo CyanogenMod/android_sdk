@@ -3,13 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Common Android Utilities
 Bundle-SymbolicName: com.android.ide.eclipse.base;singleton:=true
 Bundle-Version: 21.0.0.qualifier
-Bundle-Activator: com.android.ide.eclipse.base.BasePlugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: The Android Open Source Project
 Bundle-ClassPath: .,
- libs/androidprefs.jar,
  libs/common.jar,
  libs/commons-codec-1.4.jar,
  libs/commons-compress-1.0.jar,
@@ -22,12 +20,21 @@ Bundle-ClassPath: .,
  libs/layoutlib_api.jar,
  libs/sdklib.jar,
  libs/sdkstats.jar,
- libs/dvlib.jar
+ libs/dvlib.jar,
+ libs/ide_common.jar
 Export-Package: com.android,
  com.android.annotations,
  com.android.dvlib,
+ com.android.ide.common.log,
+ com.android.ide.common.rendering,
  com.android.ide.common.rendering.api,
+ com.android.ide.common.rendering.legacy,
+ com.android.ide.common.resources,
+ com.android.ide.common.resources.configuration,
+ com.android.ide.common.sdk,
+ com.android.ide.common.xml,
  com.android.ide.eclipse.base,
+ com.android.ide.eclipse.base.internal.preferences,
  com.android.io,
  com.android.layoutlib.api,
  com.android.prefs,
@@ -45,10 +52,10 @@ Export-Package: com.android,
  com.android.sdklib.io,
  com.android.sdklib.repository,
  com.android.sdklib.util,
- com.android.sdklib.xml,
  com.android.sdkstats,
  com.android.util,
  com.android.utils,
+ com.android.xml,
  com.google.common.annotations,
  com.google.common.base,
  com.google.common.base.internal,

@@ -14,7 +14,6 @@ LOCAL_JAVA_LIBRARIES := \
 	common \
 	layoutlib_api \
 	lombok-ast-0.2 \
-	androidprefs \
 	lint_api \
 	asm-tools \
 	asm-tree-tools \

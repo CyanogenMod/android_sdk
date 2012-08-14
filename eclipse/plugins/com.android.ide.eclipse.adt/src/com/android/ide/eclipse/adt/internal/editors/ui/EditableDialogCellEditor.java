@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.ui;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.DialogCellEditor;

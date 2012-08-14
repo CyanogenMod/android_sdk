@@ -16,12 +16,12 @@
 
 package com.android.manifmerger;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.manifmerger.IMergerLog.FileAndLine;
 import com.android.manifmerger.IMergerLog.Severity;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidXPathFactory;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;

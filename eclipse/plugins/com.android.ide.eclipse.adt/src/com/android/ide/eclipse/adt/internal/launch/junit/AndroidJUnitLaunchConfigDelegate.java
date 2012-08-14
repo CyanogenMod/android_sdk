@@ -16,7 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
+import com.android.SdkConstants;
 import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.TestSize;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Instrumentation;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunch;
@@ -27,9 +30,6 @@ import com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.launch.junit.runtime.AndroidJUnitLaunchInfo;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Instrumentation;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

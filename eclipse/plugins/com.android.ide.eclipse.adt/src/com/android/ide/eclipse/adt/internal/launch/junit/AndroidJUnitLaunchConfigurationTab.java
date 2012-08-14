@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -22,7 +23,6 @@ import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.launch.MainLaunchConfigTab;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

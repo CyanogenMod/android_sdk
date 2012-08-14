@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.sdklib.SdkConstants.CLASS_VIEW;
-import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
-import static com.android.sdklib.SdkConstants.FN_FRAMEWORK_LIBRARY;
+import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.SdkConstants.CLASS_VIEWGROUP;
+import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;

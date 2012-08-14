@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;

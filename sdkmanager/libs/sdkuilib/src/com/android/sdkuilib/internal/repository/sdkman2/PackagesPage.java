@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.DownloadCache.Strategy;
 import com.android.sdklib.internal.repository.IDescription;

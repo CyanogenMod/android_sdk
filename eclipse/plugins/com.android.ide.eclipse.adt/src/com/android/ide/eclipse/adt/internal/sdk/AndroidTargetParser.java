@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.platform.AttrsXmlParser;
@@ -32,7 +33,6 @@ import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescrip
 import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;

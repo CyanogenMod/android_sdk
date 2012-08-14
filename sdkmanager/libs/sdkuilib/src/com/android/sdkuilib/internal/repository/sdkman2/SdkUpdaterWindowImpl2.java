@@ -17,8 +17,8 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 
+import com.android.SdkConstants;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.sources.SdkSourceProperties;
 import com.android.sdkuilib.internal.repository.AboutDialog;

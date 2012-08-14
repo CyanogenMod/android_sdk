@@ -16,12 +16,13 @@
 
 package com.android.ide.eclipse.adt;
 
-import static com.android.sdklib.SdkConstants.CURRENT_PLATFORM;
-import static com.android.sdklib.SdkConstants.PLATFORM_DARWIN;
-import static com.android.sdklib.SdkConstants.PLATFORM_LINUX;
-import static com.android.sdklib.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.SdkConstants.CURRENT_PLATFORM;
+import static com.android.SdkConstants.PLATFORM_DARWIN;
+import static com.android.SdkConstants.PLATFORM_LINUX;
+import static com.android.SdkConstants.PLATFORM_WINDOWS;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.log.ILogger;
@@ -51,7 +52,6 @@ import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
 import com.google.common.io.Closeables;
 
 import org.eclipse.core.commands.Command;

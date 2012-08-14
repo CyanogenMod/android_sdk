@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-
 package com.android.ide.eclipse.adt.internal.editors;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.ui.ErrorImageComposite;
-import com.android.sdklib.SdkConstants;
 import com.google.common.collect.Maps;
 
 import org.eclipse.jface.resource.ImageDescriptor;

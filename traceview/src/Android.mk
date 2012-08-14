@@ -8,7 +8,7 @@ LOCAL_JAVA_RESOURCE_DIRS := resources
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
-	androidprefs \
+	common \
 	sdkstats \
 	swt \
 	org.eclipse.jface_3.6.2.M20110210-1200 \

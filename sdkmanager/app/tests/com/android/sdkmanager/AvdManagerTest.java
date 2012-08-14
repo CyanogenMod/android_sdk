@@ -16,9 +16,9 @@
 
 package com.android.sdkmanager;
 
+import com.android.SdkConstants;
 import com.android.io.FileWrapper;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.project.ProjectProperties;

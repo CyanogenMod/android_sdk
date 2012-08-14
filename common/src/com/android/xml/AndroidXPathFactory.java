@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.xml;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 import java.util.Collections;
 import java.util.Iterator;

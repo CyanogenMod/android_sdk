@@ -19,10 +19,10 @@ package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 import static com.android.utils.XmlUtils.XMLNS_COLON;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;

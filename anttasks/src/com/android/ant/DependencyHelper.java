@@ -16,9 +16,9 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.io.FolderWrapper;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.JarListSanitizer;
 import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
 import com.android.sdklib.build.JarListSanitizer.Sha1Exception;

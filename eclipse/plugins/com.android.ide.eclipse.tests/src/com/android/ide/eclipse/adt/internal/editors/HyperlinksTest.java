@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.sdklib.SdkConstants.FD_SOURCES;
+import static com.android.SdkConstants.FD_SOURCES;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.eclipse.adt.AdtUtils;

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.FD_RESOURCES;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
@@ -24,7 +25,6 @@ import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.rendering.api.ResourceValue;

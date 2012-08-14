@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdklib.internal.repository.packages.BrokenPackage;
 import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.packages.MockAddonPackage;

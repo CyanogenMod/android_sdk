@@ -16,20 +16,21 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
+import static com.android.SdkConstants.NS_RESOURCES;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
-import static com.android.sdklib.SdkConstants.NS_RESOURCES;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_ICON;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_LABEL;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_THEME;
-import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
-import static com.android.sdklib.xml.AndroidManifest.NODE_USES_SDK;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_ICON;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_LABEL;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_THEME;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_USES_SDK;
 
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -40,9 +41,8 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
 import com.android.utils.Pair;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

@@ -16,8 +16,8 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.SdkConstants;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;

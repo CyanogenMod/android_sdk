@@ -17,11 +17,9 @@
 package com.android.sdklib;
 
 
+import com.android.SdkConstants;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.mock.MockLog;

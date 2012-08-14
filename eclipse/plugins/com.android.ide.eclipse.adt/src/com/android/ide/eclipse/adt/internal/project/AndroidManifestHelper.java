@@ -16,14 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.XmlErrorListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.FileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
-import com.android.sdklib.xml.AndroidManifestParser;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

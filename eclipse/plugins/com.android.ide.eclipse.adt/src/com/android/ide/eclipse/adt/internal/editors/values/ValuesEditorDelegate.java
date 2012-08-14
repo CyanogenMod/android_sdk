@@ -25,7 +25,7 @@ import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.resources.ResourceFolderType;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidXPathFactory;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.ui.PartInitException;

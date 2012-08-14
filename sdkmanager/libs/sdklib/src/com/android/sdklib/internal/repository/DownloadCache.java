@@ -16,12 +16,12 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
 import com.android.utils.Pair;
 

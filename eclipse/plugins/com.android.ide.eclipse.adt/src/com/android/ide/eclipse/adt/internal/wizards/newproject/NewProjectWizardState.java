@@ -16,18 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Activity;
 import com.android.utils.Pair;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;

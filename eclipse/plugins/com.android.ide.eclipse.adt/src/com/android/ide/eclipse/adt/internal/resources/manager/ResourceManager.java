@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.SdkConstants;
 import com.android.ide.common.resources.FrameworkResources;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
@@ -33,7 +34,6 @@ import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.FolderWrapper;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

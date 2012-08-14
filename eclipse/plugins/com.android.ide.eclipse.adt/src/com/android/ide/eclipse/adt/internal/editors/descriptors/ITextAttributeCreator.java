@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo;
-import com.android.sdklib.SdkConstants;
 
 
 /**

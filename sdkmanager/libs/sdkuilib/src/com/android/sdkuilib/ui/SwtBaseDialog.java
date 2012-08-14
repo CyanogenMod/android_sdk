@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.ui;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;

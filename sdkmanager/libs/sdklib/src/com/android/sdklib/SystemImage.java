@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.SdkConstants;
 import com.android.sdklib.io.FileOp;
 
 import java.io.File;

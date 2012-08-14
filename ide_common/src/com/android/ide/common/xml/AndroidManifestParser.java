@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.xml;
+package com.android.ide.common.xml;
 
+import com.android.SdkConstants;
+import com.android.ide.common.xml.ManifestData.Activity;
+import com.android.ide.common.xml.ManifestData.Instrumentation;
+import com.android.ide.common.xml.ManifestData.SupportsScreens;
+import com.android.ide.common.xml.ManifestData.UsesConfiguration;
+import com.android.ide.common.xml.ManifestData.UsesFeature;
+import com.android.ide.common.xml.ManifestData.UsesLibrary;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData.Activity;
-import com.android.sdklib.xml.ManifestData.Instrumentation;
-import com.android.sdklib.xml.ManifestData.SupportsScreens;
-import com.android.sdklib.xml.ManifestData.UsesConfiguration;
-import com.android.sdklib.xml.ManifestData.UsesFeature;
-import com.android.sdklib.xml.ManifestData.UsesLibrary;
+import com.android.xml.AndroidManifest;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;

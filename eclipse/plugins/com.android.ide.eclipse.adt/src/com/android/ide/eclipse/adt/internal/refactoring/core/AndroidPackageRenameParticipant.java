@@ -17,16 +17,16 @@
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.common.layout.LayoutConstants;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChange;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChangeDescription;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutFileChanges;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidPackageRenameChange;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
-import com.android.sdklib.xml.ManifestData;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;

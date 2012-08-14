@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := \
-	androidprefs \
+	common \
 	swt \
 	org.eclipse.jface_3.6.2.M20110210-1200 \
 	org.eclipse.equinox.common_3.6.0.v20100503 \

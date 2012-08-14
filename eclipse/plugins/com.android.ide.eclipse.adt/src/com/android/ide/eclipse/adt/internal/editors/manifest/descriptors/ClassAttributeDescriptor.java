@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.descriptors;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.model.UiClassAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.manifest.model.UiClassAttributeNode.IPostTypeCreationAction;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.sdklib.SdkConstants;
 
 /**
  * Describes an XML attribute representing a class name.

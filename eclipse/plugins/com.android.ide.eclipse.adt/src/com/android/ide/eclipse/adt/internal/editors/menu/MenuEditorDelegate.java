@@ -26,7 +26,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
-import com.android.sdklib.xml.AndroidXPathFactory;
+import com.android.xml.AndroidXPathFactory;
 
 import org.eclipse.ui.PartInitException;
 import org.w3c.dom.Document;

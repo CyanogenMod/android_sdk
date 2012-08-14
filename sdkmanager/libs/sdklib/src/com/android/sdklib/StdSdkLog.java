@@ -16,6 +16,8 @@
 
 package com.android.sdklib;
 
+import com.android.SdkConstants;
+
 
 /**
  * An implementation of {@link ISdkLog} that prints to {@link System#out} and {@link System#err}.

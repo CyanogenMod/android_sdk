@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.monitor;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.runtime.IProgressMonitor;

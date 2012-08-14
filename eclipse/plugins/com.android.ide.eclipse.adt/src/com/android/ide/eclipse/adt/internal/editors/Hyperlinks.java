@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.SdkConstants.FD_DOCS;
+import static com.android.SdkConstants.FD_DOCS_REFERENCE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
@@ -33,17 +35,16 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ROOT_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
-import static com.android.sdklib.SdkConstants.FD_DOCS;
-import static com.android.sdklib.SdkConstants.FD_DOCS_REFERENCE;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
-import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
-import static com.android.sdklib.xml.AndroidManifest.NODE_SERVICE;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_SERVICE;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -71,7 +72,6 @@ import com.android.io.IAbstractFolder;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.Pair;
 
 import org.apache.xerces.parsers.DOMParser;

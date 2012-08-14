@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -27,7 +28,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator.ProjectPopulator;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;

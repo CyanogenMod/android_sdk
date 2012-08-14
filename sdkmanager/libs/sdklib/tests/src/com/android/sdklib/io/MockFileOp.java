@@ -16,7 +16,7 @@
 
 package com.android.sdklib.io;
 
-import com.android.sdklib.SdkConstants;
+import com.android.SdkConstants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

@@ -8,7 +8,6 @@
 	<classpathentry kind="lib" path="easymock.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmuilib"/>
-	<classpathentry kind="lib" path="/plugin-adt/libs/ide_common.jar" sourcepath="/ide_common"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/ninepatch.jar" sourcepath="/ninepatch"/>
 	<classpathentry kind="lib" path="/plugin-base/libs/sdklib.jar" sourcepath="/SdkLib"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
@@ -16,5 +15,6 @@
 	<classpathentry kind="lib" path="/plugin-base/libs/common.jar" sourcepath="/common"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/lint_api.jar" sourcepath="/lint-api"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/lint_checks.jar" sourcepath="/lint-checks"/>
+	<classpathentry kind="lib" path="/plugin-base/libs/ide_common.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

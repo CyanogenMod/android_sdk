@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_BUILD_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
@@ -22,7 +23,6 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
-import static com.android.sdklib.SdkConstants.CLASS_ACTIVITY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

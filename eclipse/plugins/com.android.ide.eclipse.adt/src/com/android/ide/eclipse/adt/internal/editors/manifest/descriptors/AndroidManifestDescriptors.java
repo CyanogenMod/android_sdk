@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.descriptors;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -32,7 +33,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ListAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
-import com.android.sdklib.SdkConstants;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib;
+package com.android;
 
 import com.android.AndroidConstants;
 

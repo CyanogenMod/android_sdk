@@ -16,12 +16,12 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.SdkConstants;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
+import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.SystemImage;
-import com.android.sdklib.ISystemImage.LocationType;
 
 import java.util.Arrays;
 

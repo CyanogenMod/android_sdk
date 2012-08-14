@@ -16,8 +16,8 @@
 
 package com.android.hierarchyviewer;
 
+import com.android.SdkConstants;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
-import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;

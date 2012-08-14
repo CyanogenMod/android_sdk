@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
-import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtUtils;

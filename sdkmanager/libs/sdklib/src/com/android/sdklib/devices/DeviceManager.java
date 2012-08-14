@@ -17,13 +17,14 @@
 package com.android.sdklib.devices;
 
 import com.android.annotations.Nullable;
+import com.android.SdkConstants;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.SdkConstants;
+import com.android.sdklib.devices.Storage.Unit;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.PkgProps;

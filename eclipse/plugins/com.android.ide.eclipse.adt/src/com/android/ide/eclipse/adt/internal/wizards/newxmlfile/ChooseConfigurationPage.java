@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
@@ -23,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.Configurati
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.SelectorMode;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard.Values;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.dialogs.IMessageProvider;

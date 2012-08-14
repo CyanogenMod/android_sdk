@@ -26,6 +26,8 @@ import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChoiceCache;
@@ -40,8 +42,6 @@ import com.android.ide.eclipse.ndk.internal.NdkHelper;
 import com.android.ide.eclipse.ndk.internal.NdkVariables;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Activity;
 import com.google.common.base.Joiner;
 
 import org.eclipse.cdt.core.model.ICProject;

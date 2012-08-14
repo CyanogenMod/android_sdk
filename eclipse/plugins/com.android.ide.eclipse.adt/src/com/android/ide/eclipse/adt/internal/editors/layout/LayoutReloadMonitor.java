@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceFile;
@@ -30,7 +31,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager.IR
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;

@@ -16,13 +16,12 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import com.android.SdkConstants;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.ISystemImage.LocationType;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SystemImage;
-import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.repository.PkgProps;

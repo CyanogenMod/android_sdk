@@ -16,12 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
-import static com.android.sdklib.SdkConstants.FN_PROJECT_PROPERTIES;
+import static com.android.SdkConstants.FN_PROJECT_PROPERTIES;
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
+
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.ide.common.layout.LayoutConstants;
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -38,9 +41,7 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardS
 import com.android.io.StreamException;
 import com.android.resources.Density;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;

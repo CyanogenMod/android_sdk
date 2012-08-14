@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.export;
 
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -24,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.NonLibraryProjectOnlyFilter;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard.ExportWizardPage;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;

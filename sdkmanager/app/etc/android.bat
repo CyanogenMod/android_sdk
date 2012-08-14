@@ -48,7 +48,6 @@ for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set swt_path=lib\%%a
 
     set tmp_dir=%TEMP%\temp-android-tool
     xcopy %swt_path% %tmp_dir%\%swt_path% /I /E /C /G /R /Y /Q > nul
-    copy /B /D /Y lib\androidprefs.jar   %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\org.eclipse.*      %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\sdk*               %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\common.jar         %tmp_dir%\lib\        > nul

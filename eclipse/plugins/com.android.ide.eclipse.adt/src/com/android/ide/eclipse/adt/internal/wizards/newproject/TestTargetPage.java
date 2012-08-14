@@ -15,11 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.xml.ManifestData;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;

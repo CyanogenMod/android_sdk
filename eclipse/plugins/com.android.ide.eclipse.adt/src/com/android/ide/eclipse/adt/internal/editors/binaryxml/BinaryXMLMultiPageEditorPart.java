@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.binaryxml;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.IPath;

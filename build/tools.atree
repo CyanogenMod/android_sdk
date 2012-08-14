@@ -90,7 +90,6 @@ external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.
 sdk/files/android.el tools/lib/android.el
 
 # Java Libraries for the tools
-framework/androidprefs.jar       tools/lib/androidprefs.jar
 framework/common.jar             tools/lib/common.jar
 framework/swtmenubar.jar         tools/lib/swtmenubar.jar
 sdk/apkbuilder/etc/apkbuilder    tools/apkbuilder

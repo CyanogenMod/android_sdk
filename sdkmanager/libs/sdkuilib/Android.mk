@@ -24,9 +24,9 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 #   sdkmanager/app/etc/android.bat
 # (Note: there is no manifest.txt for sdkuilib.)
 LOCAL_JAVA_LIBRARIES := \
+	common \
 	sdklib \
 	layoutlib_api \
-	androidprefs \
 	swtmenubar \
 	swt \
 	org.eclipse.jface_3.6.2.M20110210-1200 \

@@ -15,14 +15,14 @@
  */
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
+import com.android.SdkConstants;
+import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.ManifestData.Instrumentation;
+import com.android.ide.common.xml.ManifestData.UsesLibrary;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.ManifestData;
-import com.android.sdklib.xml.ManifestData.Instrumentation;
-import com.android.sdklib.xml.ManifestData.UsesLibrary;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;

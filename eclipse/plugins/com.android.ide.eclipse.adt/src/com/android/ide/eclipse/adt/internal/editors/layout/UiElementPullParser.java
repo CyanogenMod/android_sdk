@@ -27,6 +27,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -38,7 +39,6 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IProject;
 import org.w3c.dom.Document;
