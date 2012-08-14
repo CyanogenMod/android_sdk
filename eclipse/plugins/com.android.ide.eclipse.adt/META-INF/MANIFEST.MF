@@ -123,7 +123,6 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.layoutlib.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.manifmerger;x-friends:="com.android.ide.eclipse.tests",
  com.android.menubar;x-friends:="com.android.ide.eclipse.tests",
- com.android.menubar.internal;x-friends:="com.android.ide.eclipse.tests",
  com.android.ninepatch;x-friends:="com.android.ide.eclipse.tests",
  com.android.resources;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
