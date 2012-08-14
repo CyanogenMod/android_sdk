@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.views;
 
-import com.android.ide.eclipse.gldebugger.GlTracePlugin;
+import com.android.ide.eclipse.gltrace.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
 import org.eclipse.jface.action.Action;

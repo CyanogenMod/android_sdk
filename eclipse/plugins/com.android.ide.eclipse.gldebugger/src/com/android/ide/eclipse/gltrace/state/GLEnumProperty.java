@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.state;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 
 /** Properties that hold a {@link GLEnum}. */
 public final class GLEnumProperty extends GLAbstractAtomicProperty {

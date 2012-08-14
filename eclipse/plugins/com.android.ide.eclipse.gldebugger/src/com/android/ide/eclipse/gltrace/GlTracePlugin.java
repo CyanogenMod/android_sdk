@@ -14,7 +14,7 @@
  ** limitations under the License.
  */
 
-package com.android.ide.eclipse.gldebugger;
+package com.android.ide.eclipse.gltrace;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;

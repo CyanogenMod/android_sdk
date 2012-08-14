@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
-import com.android.ide.eclipse.gldebugger.GlTracePlugin;
+import com.android.ide.eclipse.gltrace.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.editors.GLCallGroups.GLCallNode;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;

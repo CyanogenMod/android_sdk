@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.views.detail;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.GLUtils;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.model.GLCall;
