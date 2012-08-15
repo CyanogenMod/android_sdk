@@ -20,12 +20,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
@@ -176,7 +178,7 @@ public class ImageCanvas extends Canvas {
     }
 
     private void paintCanvas(GC gc) {
-        gc.fillRectangle(getClientArea());
+        gc.fillRectangle(getClientArea()); // clear entire client area
         if (mImage == null) {
             return;
         }
@@ -194,15 +196,25 @@ public class ImageCanvas extends Canvas {
                 gc.drawImage(mImage,
                         0, 0, rect.width, rect.height,
                         0, 0, client.width, (int)(rect.height * sx));
+                drawBorder(gc, 0, 0, client.width, (int)(rect.height * sx));
             } else {
                 // scale client width to maintain aspect ratio
                 gc.drawImage(mImage,
                         0, 0, rect.width, rect.height,
                         0, 0, (int)(rect.width * sy), client.height);
+                drawBorder(gc, 0, 0, (int)(rect.width * sy), client.height);
             }
         } else {
             gc.drawImage(mImage, mOrigin.x, mOrigin.y);
+            drawBorder(gc, mOrigin.x, mOrigin.y, rect.width, rect.height);
         }
+    }
+
+    private void drawBorder(GC gc, int x, int y, int width, int height) {
+        Color origFg = gc.getForeground();
+        gc.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+        gc.drawRectangle(x, y, width, height);
+        gc.setForeground(origFg);
     }
 
     @Override
