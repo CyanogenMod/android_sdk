@@ -73,6 +73,7 @@ bin/uiautomatorviewer   tools/uiautomatorviewer
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
+sdk/templates/uibuild.template      tools/lib/uibuild.template
 sdk/files/proguard-project.txt      tools/lib/proguard-project.txt
 sdk/files/proguard-android.txt      tools/proguard/proguard-android.txt
 sdk/files/proguard-android-optimize.txt      tools/proguard/proguard-android-optimize.txt

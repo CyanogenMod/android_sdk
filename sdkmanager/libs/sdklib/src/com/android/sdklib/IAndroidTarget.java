@@ -87,6 +87,8 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
       * This is deprecated as this is now in the platform tools and not in the platform. */
     @Deprecated
     public final static int ANDROID_RS_CLANG    = 26;
+    /** OS Path to the "uiautomator.jar" file. */
+    public final static int UI_AUTOMATOR_JAR    = 27;
 
     /**
      * Return value for {@link #getUsbVendorId()} meaning no USB vendor IDs are defined by the
