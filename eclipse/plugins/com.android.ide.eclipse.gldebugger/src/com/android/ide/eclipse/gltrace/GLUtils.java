@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -9,13 +9,6 @@
             name="Tracer for OpenGL ES">
       </category>
       <view
-            name="OpenGL Trace"
-            icon="icons/sample.gif"
-            category="com.android.ide.eclipse.gltrace"
-            class="com.android.ide.eclipse.gldebugger.GLFramesView"
-            id="glesv2debuggerclient.views.SampleView">
-      </view>
-      <view
             category="com.android.ide.eclipse.gltrace"
             class="com.android.ide.eclipse.gltrace.views.FrameSummaryView"
             icon="icons/opengl.png"

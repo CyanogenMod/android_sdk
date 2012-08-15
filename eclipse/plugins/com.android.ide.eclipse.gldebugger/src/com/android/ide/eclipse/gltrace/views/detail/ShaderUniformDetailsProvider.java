@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.views.detail;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;

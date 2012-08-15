@@ -18,7 +18,6 @@ package com.android.ide.eclipse.gltrace;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;

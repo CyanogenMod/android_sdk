@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.format;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type;

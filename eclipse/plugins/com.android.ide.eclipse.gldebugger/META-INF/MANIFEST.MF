@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Tracer for OpenGL ES
 Bundle-SymbolicName: com.android.ide.eclipse.gldebugger;singleton:=true
 Bundle-Version: 21.0.0.qualifier
-Bundle-Activator: com.android.ide.eclipse.gldebugger.GlTracePlugin
+Bundle-Activator: com.android.ide.eclipse.gltrace.GlTracePlugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.ide,
@@ -17,8 +17,7 @@ Bundle-ClassPath: libs/host-libprotobuf-java-2.3.0-lite.jar,
  libs/liblzf.jar,
  .
 Bundle-Vendor: The Android Open Source Project
-Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.eclipse.gldebugger.tests",
- com.android.ide.eclipse.gltrace;x-friends:="com.android.ide.eclipse.gldebugger.tests",
+Export-Package: com.android.ide.eclipse.gltrace;x-friends:="com.android.ide.eclipse.gldebugger.tests",
  com.android.ide.eclipse.gltrace.format;x-friends:="com.android.ide.eclipse.gldebugger.tests",
  com.android.ide.eclipse.gltrace.model;x-friends:="com.android.ide.eclipse.gldebugger.tests"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

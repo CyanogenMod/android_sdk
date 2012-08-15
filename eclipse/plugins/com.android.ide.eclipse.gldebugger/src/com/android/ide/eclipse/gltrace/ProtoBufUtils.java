@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 
 import org.eclipse.swt.graphics.Image;

@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.gltrace.state.transforms;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.FileUtils;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLStringProperty;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 import com.google.common.io.Files;

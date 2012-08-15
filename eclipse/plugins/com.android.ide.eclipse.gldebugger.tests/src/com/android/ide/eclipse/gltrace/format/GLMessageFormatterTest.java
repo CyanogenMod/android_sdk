@@ -18,7 +18,7 @@ package com.android.ide.eclipse.gltrace.format;
 
 import static org.junit.Assert.*;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Builder;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;

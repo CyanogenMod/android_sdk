@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.state.transforms;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLIntegerProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;

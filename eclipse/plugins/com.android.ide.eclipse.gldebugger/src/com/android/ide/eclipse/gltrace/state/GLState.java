@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.state;
 
-import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLIntegerProperty.DisplayRadix;
 
 import java.util.Collections;
