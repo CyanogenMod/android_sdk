@@ -61,7 +61,7 @@ import java.util.Map;
  * OpenGL Calls present in the frame.
  */
 public class FrameSummaryViewPage extends Page {
-    private final GLTrace mTrace;
+    private GLTrace mTrace;
 
     private int mCurrentFrame;
 
@@ -89,6 +89,10 @@ public class FrameSummaryViewPage extends Page {
     };
 
     public FrameSummaryViewPage(GLTrace trace) {
+        mTrace = trace;
+    }
+
+    public void setInput(GLTrace trace) {
         mTrace = trace;
     }
 
@@ -207,6 +211,9 @@ public class FrameSummaryViewPage extends Page {
 
     public void setSelectedFrame(int frame) {
         mCurrentFrame = frame;
+        if (mTrace == null) {
+            return;
+        }
 
         updateImageCanvas();
         updateFrameStats();

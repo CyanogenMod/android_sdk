@@ -24,16 +24,28 @@ import com.android.ddmlib.IDevice.DeviceUnixSocketNamespace;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IURIEditorInput;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -128,6 +140,76 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
         // once tracing is complete, remove port forwarding
         disablePortForwarding(device, LOCAL_FORWARDED_PORT);
+
+        // and finally open the editor to view the file
+        openInEditor(shell, traceOptions.traceDestination);
+    }
+
+    private void openInEditor(Shell shell, String traceFilePath) {
+        final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(traceFilePath));
+        if (!fileStore.fetchInfo().exists()) {
+            return;
+        }
+
+        final IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+        if (window == null) {
+            return;
+        }
+
+        IWorkbenchPage page = window.getActivePage();
+        if (page == null) {
+            return;
+        }
+
+        // if there is a editor already open, then refresh its model
+        GLFunctionTraceViewer viewer = getOpenTraceViewer(page, traceFilePath);
+        if (viewer != null) {
+            viewer.setInput(shell, traceFilePath);
+        }
+
+        // open the editor (if not open), or bring it to foreground if it is already open
+        try {
+            IDE.openEditorOnFileStore(page, fileStore);
+        } catch (PartInitException e) {
+            GlTracePlugin.getDefault().logMessage(
+                    "Unexpected error while opening gltrace file in editor: " + e);
+            return;
+        }
+    }
+
+    /**
+     * Returns the editor part that has the provided file path open.
+     * @param page page containing editors
+     * @param traceFilePath file that should be open in an editor
+     * @return if given trace file is already open, then a reference to that editor part,
+     *         null otherwise
+     */
+    private GLFunctionTraceViewer getOpenTraceViewer(IWorkbenchPage page, String traceFilePath) {
+        IEditorReference[] editorRefs = page.getEditorReferences();
+        for (IEditorReference ref : editorRefs) {
+            String id = ref.getId();
+            if (!GLFunctionTraceViewer.ID.equals(id)) {
+                continue;
+            }
+
+            IEditorInput input = null;
+            try {
+                input = ref.getEditorInput();
+            } catch (PartInitException e) {
+                continue;
+            }
+
+            if (!(input instanceof IURIEditorInput)) {
+                continue;
+            }
+
+            if (traceFilePath.equals(((IURIEditorInput) input).getURI().getPath())) {
+                return (GLFunctionTraceViewer) ref.getEditor(true);
+            }
+        }
+
+        return null;
     }
 
     private void startTracing(Shell shell, TraceOptions traceOptions, int port) {
