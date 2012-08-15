@@ -47,7 +47,7 @@ public class StdSdkLog implements ISdkLog {
             }
         }
         if (t != null) {
-            System.err.println(String.format("Error: %1$s%2$s", t.getMessage()));
+            System.err.println(String.format("Error: %1$s", t.getMessage()));
         }
     }
 

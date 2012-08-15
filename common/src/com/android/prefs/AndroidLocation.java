@@ -16,6 +16,8 @@
 
 package com.android.prefs;
 
+import com.android.annotations.NonNull;
+
 import java.io.File;
 
 /**
@@ -45,7 +47,7 @@ public final class AndroidLocation {
      * @return an OS specific path, terminated by a separator.
      * @throws AndroidLocationException
      */
-    public final static String getFolder() throws AndroidLocationException {
+    @NonNull public final static String getFolder() throws AndroidLocationException {
         if (sPrefsLocation == null) {
             String home = findValidPath("ANDROID_SDK_HOME", "user.home", "HOME");
 
