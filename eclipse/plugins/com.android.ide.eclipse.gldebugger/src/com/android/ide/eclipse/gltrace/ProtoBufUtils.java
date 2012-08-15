@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace;
 
+import com.android.ide.eclipse.gldebugger.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 
 import org.eclipse.swt.graphics.Image;
@@ -63,7 +64,15 @@ public class ProtoBufUtils {
             return null;
         }
 
-        ImageData imageData = getImageData(glMsg);
+        ImageData imageData = null;
+        try {
+            imageData = getImageData(glMsg);
+        } catch (Exception e) {
+            GlTracePlugin.getDefault().logMessage(
+                    "Unexpected error while retrieving framebuffer image: " + e);
+            return null;
+        }
+
         if (imageData == null) {
             return null;
         }
@@ -80,7 +89,15 @@ public class ProtoBufUtils {
             return null;
         }
 
-        ImageData imageData = getImageData(glMsg);
+        ImageData imageData = null;
+        try {
+            imageData = getImageData(glMsg);
+        } catch (Exception e) {
+            GlTracePlugin.getDefault().logMessage(
+                    "Unexpected error while retrieving framebuffer image: " + e);
+            return null;
+        }
+
         if (imageData == null) {
             return null;
         }
