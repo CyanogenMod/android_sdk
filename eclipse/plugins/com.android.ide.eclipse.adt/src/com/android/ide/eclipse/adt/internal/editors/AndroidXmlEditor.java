@@ -57,6 +57,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
@@ -173,9 +174,17 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
     }
 
+    @Override
+    public void init(IEditorSite site, IEditorInput input) throws PartInitException {
+        super.init(site, input);
+        // Trigger a check to see if the SDK needs to be reloaded (which will
+        // invoke onSdkLoaded or ITargetChangeListener asynchronously as needed).
+        AdtPlugin.getDefault().refreshSdk();
+    }
+
     /**
      * Setups a default {@link ITargetChangeListener} that will call
-     * {@link #initUiRootNode(boolean)} when the SDK or the target changes..
+     * {@link #initUiRootNode(boolean)} when the SDK or the target changes.
      */
     public void addDefaultTargetListener() {
         if (mTargetListener == null) {

@@ -86,7 +86,7 @@ public class NewProjectWizard extends TemplateWizard {
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         super.init(workbench, selection);
 
-        setWindowTitle("New Android App");
+        setWindowTitle("New Android Application");
 
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);

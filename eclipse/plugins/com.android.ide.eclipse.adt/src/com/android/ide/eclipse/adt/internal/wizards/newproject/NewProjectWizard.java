@@ -106,6 +106,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         setHelpAvailable(false); // TODO have help
         ImageDescriptor desc = AdtPlugin.getImageDescriptor(PROJECT_LOGO_LARGE);
         setDefaultPageImageDescriptor(desc);
+
+        // Trigger a check to see if the SDK needs to be reloaded (which will
+        // invoke onSdkLoaded asynchronously as needed).
+        AdtPlugin.getDefault().refreshSdk();
     }
 
     @Override

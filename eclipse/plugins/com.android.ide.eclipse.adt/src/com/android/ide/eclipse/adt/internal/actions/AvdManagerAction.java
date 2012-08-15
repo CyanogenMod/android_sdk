@@ -49,9 +49,11 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
     public void run(IAction action) {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
+            // Although orthogonal to the avd manager action, this is a good time
+            // to check whether the SDK has changed on disk.
+            AdtPlugin.getDefault().refreshSdk();
 
             // Runs the updater window, directing all logs to the ADT console.
-
             AvdManagerWindow window = new AvdManagerWindow(
                     AdtPlugin.getDisplay().getActiveShell(),
                     new AdtConsoleSdkLog(),

@@ -1799,7 +1799,48 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     }
 
     /**
+     * Conditionally reparses the content of the SDK if it has changed on-disk
+     * and updates opened projects.
+     * <p/>
+     * The operation is asynchronous and happens in a background eclipse job.
+     */
+    public void refreshSdk() {
+        // SDK can't have changed if we haven't loaded it yet.
+        final Sdk sdk = Sdk.getCurrent();
+        if (sdk == null) {
+            return;
+        }
+
+        Job job = new Job("Check Android SDK") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                // SDK has changed if its location path is different.
+                boolean changed = sdk.getSdkLocation() == null ||
+                                 !sdk.getSdkLocation().equals(AdtPrefs.getPrefs().getOsSdkFolder());
+                if (!changed) {
+                    // Check whether the target directories has potentially changed.
+                    changed = sdk.haveTargetsChanged();
+                }
+
+                if (changed) {
+                    monitor.setTaskName("Reload Android SDK");
+                    reparseSdk();
+                }
+
+                monitor.done();
+                return Status.OK_STATUS;
+            }
+        };
+        job.setPriority(Job.SHORT); // a short background job, not interactive.
+        job.schedule();
+    }
+
+    /**
      * Reparses the content of the SDK and updates opened projects.
+     * The operation is asynchronous and happens in a background eclipse job.
+     * <p/>
+     * This reloads the SDK all the time. To only perform this when it has potentially
+     * changed, call {@link #refreshSdk()} instead.
      */
     public void reparseSdk() {
         // add all the opened Android projects to the list of projects to be updated

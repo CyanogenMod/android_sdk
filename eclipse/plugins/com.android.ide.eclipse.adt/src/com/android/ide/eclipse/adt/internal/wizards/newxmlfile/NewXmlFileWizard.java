@@ -88,6 +88,10 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         mMainPage.setInitialSelection(selection);
 
         mConfigPage = new ChooseConfigurationPage(mValues);
+
+        // Trigger a check to see if the SDK needs to be reloaded (which will
+        // invoke onSdkLoaded asynchronously as needed).
+        AdtPlugin.getDefault().refreshSdk();
     }
 
     /**

@@ -207,6 +207,10 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
                 if (mTargetChangeListener == null) {
                     mTargetChangeListener = new TargetChangedListener();
                     AdtPlugin.getDefault().addTargetListener(mTargetChangeListener);
+
+                    // Trigger a check to see if the SDK needs to be reloaded (which will
+                    // invoke onSdkLoaded asynchronously as needed).
+                    AdtPlugin.getDefault().refreshSdk();
                 }
             } catch (Exception e) {
                 // We need to catch *any* exception that arises here, otherwise it disables
