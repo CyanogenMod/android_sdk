@@ -268,7 +268,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionSpinner = new Spinner(c, SWT.BORDER);
         gd = new GridData();
         // width to hold atleast 6 digits
-        gd.widthHint = SwtUtils.getFontWidth(mFrameSelectionSpinner) * 6;
+        gd.widthHint = SwtUtils.getApproximateFontWidth(mFrameSelectionSpinner) * 6;
         mFrameSelectionSpinner.setLayoutData(gd);
 
         mFrameSelectionSpinner.setMinimum(1);
