@@ -256,7 +256,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
         Log.i(LOG_TAG, String.format("Running %1$s on %2$s", runCaseCommandStr,
                 mRemoteDevice.getSerialNumber()));
         String runName = mRunName == null ? mPackageName : mRunName;
-        mParser = new InstrumentationResultParser(runName, listeners, mRemoteDevice.getName());
+        mParser = new InstrumentationResultParser(runName, listeners);
 
         try {
             mRemoteDevice.executeShellCommand(runCaseCommandStr, mParser, mMaxTimeToOutputResponse);

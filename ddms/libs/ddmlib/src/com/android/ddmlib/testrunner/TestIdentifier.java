@@ -23,24 +23,6 @@ public class TestIdentifier {
 
     private final String mClassName;
     private final String mTestName;
-    private final String mDeviceName;
-
-    /**
-     * Creates a test identifier.
-     *
-     * @param className fully qualified class name of the test. Cannot be null.
-     * @param testName name of the test. Cannot be null.
-     * @param deviceName device on which the test was run.
-     */
-    public TestIdentifier(String className, String testName, String deviceName) {
-        if (className == null || testName == null) {
-            throw new IllegalArgumentException("className and testName must " +
-                    "be non-null");
-        }
-        mClassName = className;
-        mTestName = testName;
-        mDeviceName = deviceName;
-    }
 
     /**
      * Creates a test identifier.
@@ -49,7 +31,12 @@ public class TestIdentifier {
      * @param testName name of the test. Cannot be null.
      */
     public TestIdentifier(String className, String testName) {
-        this(className, testName, null);
+        if (className == null || testName == null) {
+            throw new IllegalArgumentException("className and testName must " +
+                    "be non-null");
+        }
+        mClassName = className;
+        mTestName = testName;
     }
 
     /**
@@ -66,19 +53,11 @@ public class TestIdentifier {
         return mTestName;
     }
 
-    /**
-     * Returns the name of the device on which the test was run if available, null otherwise.
-     */
-    public String getDeviceName() {
-        return mDeviceName;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((mClassName == null) ? 0 : mClassName.hashCode());
-        result = prime * result + ((mDeviceName == null) ? 0 : mDeviceName.hashCode());
         result = prime * result + ((mTestName == null) ? 0 : mTestName.hashCode());
         return result;
     }
@@ -97,11 +76,6 @@ public class TestIdentifier {
                 return false;
         } else if (!mClassName.equals(other.mClassName))
             return false;
-        if (mDeviceName == null) {
-            if (other.mDeviceName != null)
-                return false;
-        } else if (!mDeviceName.equals(other.mDeviceName))
-            return false;
         if (mTestName == null) {
             if (other.mTestName != null)
                 return false;
@@ -112,12 +86,6 @@ public class TestIdentifier {
 
     @Override
     public String toString() {
-        String deviceName = getDeviceName();
-        String name = String.format("%s#%s", getClassName(), getTestName());
-        if (deviceName != null) {
-            name += String.format(" (%s)", deviceName);
-        }
-
-        return name;
+        return String.format("%s#%s", getClassName(), getTestName());
     }
 }

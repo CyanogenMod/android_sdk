@@ -146,9 +146,6 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         }
     }
 
-    /** Device on which this test was run. */
-    private final String mDeviceName;
-
     /** the name to provide to {@link ITestRunListener#testRunStarted(String, int)} */
     private final String mTestRunName;
 
@@ -218,24 +215,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      * @param runName the test run name to provide to
      *            {@link ITestRunListener#testRunStarted(String, int)}
      * @param listeners informed of test results as the tests are executing
-     * @param deviceName name of the device on which this test is running, null if unknown
-     */
-    public InstrumentationResultParser(String runName, Collection<ITestRunListener> listeners,
-            String deviceName) {
-        mTestRunName = runName;
-        mTestListeners = new ArrayList<ITestRunListener>(listeners);
-        mDeviceName = deviceName;
-    }
-
-    /**
-     * Creates the InstrumentationResultParser.
-     *
-     * @param runName the test run name to provide to
-     *            {@link ITestRunListener#testRunStarted(String, int)}
-     * @param listeners informed of test results as the tests are executing
      */
     public InstrumentationResultParser(String runName, Collection<ITestRunListener> listeners) {
-        this(runName, listeners, null);
+        mTestRunName = runName;
+        mTestListeners = new ArrayList<ITestRunListener>(listeners);
     }
 
     /**
@@ -246,7 +229,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      * @param listener informed of test results as the tests are executing
      */
     public InstrumentationResultParser(String runName, ITestRunListener listener) {
-        this(runName, Collections.singletonList(listener), null);
+        this(runName, Collections.singletonList(listener));
     }
 
     /**
@@ -459,8 +442,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             return;
         }
         reportTestRunStarted(testInfo);
-        TestIdentifier testId = new TestIdentifier(testInfo.mTestClass, testInfo.mTestName,
-                mDeviceName);
+        TestIdentifier testId = new TestIdentifier(testInfo.mTestClass, testInfo.mTestName);
         Map<String, String> metrics;
 
         switch (testInfo.mCode) {
@@ -570,7 +552,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             // received test start msg, but not test complete
             // assume test caused this, report as test failure
             TestIdentifier testId = new TestIdentifier(mLastTestResult.mTestClass,
-                    mLastTestResult.mTestName, mDeviceName);
+                    mLastTestResult.mTestName);
             for (ITestRunListener listener : mTestListeners) {
                 listener.testFailed(ITestRunListener.TestFailure.ERROR, testId,
                     String.format("%1$s. Reason: '%2$s'. %3$s", INCOMPLETE_TEST_ERR_MSG_PREFIX,

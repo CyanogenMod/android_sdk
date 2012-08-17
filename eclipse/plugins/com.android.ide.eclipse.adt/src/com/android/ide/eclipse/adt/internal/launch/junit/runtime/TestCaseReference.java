@@ -25,26 +25,18 @@ import org.eclipse.jdt.internal.junit.runner.IVisitsTestTrees;
  */
 @SuppressWarnings("restriction")
 class TestCaseReference extends AndroidTestReference {
-
     private final String mClassName;
     private final String mTestName;
     private final String mDeviceName;
 
     /**
-     * Creates a TestCaseReference from a class and method name
-     */
-    TestCaseReference(String className, String testName, String deviceName) {
-        mClassName = className;
-        mTestName = testName;
-        mDeviceName = deviceName == null ? "?" : deviceName;        //$NON-NLS-1$
-    }
-
-    /**
      * Creates a TestCaseReference from a {@link TestIdentifier}
      * @param test
      */
-    TestCaseReference(TestIdentifier test) {
-        this(test.getClassName(), test.getTestName(), test.getDeviceName());
+    TestCaseReference(String deviceName, TestIdentifier test) {
+        mDeviceName = deviceName;
+        mClassName = test.getClassName();
+        mTestName = test.getTestName();
     }
 
     /**
