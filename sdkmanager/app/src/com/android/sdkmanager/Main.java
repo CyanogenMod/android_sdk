@@ -24,7 +24,6 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo;
@@ -48,6 +47,7 @@ import com.android.sdkuilib.repository.AvdManagerWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.xml.AndroidXPathFactory;
 
@@ -89,7 +89,7 @@ public class Main {
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
     private String mOsSdkFolder;
     /** Logger object. Use this to print normal output, warnings or errors. */
-    private ISdkLog mSdkLog;
+    private ILogger mSdkLog;
     /** The SDK manager parses the SDK folder and gives access to the content. */
     private SdkManager mSdkManager;
     /** Command-line processor with options specific to SdkManager. */
@@ -124,7 +124,7 @@ public class Main {
      * This logger prints to the attached console.
      */
     private void createLogger() {
-        mSdkLog = new ISdkLog() {
+        mSdkLog = new ILogger() {
             @Override
             public void error(Throwable t, String errorFormat, Object... args) {
                 if (errorFormat != null) {
@@ -149,14 +149,19 @@ public class Main {
             }
 
             @Override
-            public void printf(String msgFormat, Object... args) {
+            public void info(String msgFormat, Object... args) {
+                System.out.printf(msgFormat, args);
+            }
+
+            @Override
+            public void verbose(String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
             }
         };
     }
 
     /** For testing */
-    public void setLogger(ISdkLog logger) {
+    public void setLogger(ILogger logger) {
         mSdkLog = logger;
     }
 
@@ -235,7 +240,7 @@ public class Main {
         if (mSdkCommandLine.hasClearCache()) {
             DownloadCache d = new DownloadCache(Strategy.SERVE_CACHE);
             d.clearCache();
-            mSdkLog.printf("SDK Manager repository: manifest cache cleared.\n");
+            mSdkLog.info("SDK Manager repository: manifest cache cleared.\n");
         }
 
         String verb = mSdkCommandLine.getVerb();
@@ -391,7 +396,7 @@ public class Main {
         upd.listRemotePackages(all, extended);
 
         if (obsolete) {
-            mSdkLog.printf("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
+            mSdkLog.info("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
         }
     }
 
@@ -428,7 +433,7 @@ public class Main {
         upd.updateAll(filterResult.getSecond(), all, dryMode);
 
         if (obsolete) {
-            mSdkLog.printf("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
+            mSdkLog.info("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
         }
     }
 
@@ -618,7 +623,7 @@ public class Main {
             packageName = xpath.evaluate("/manifest/@package",
                     new InputSource(new FileInputStream(manifest)));
 
-            mSdkLog.printf("Found main project package: %1$s\n", packageName);
+            mSdkLog.info("Found main project package: %1$s\n", packageName);
 
             // now get the name of the first activity we find
             activityName = xpath.evaluate("/manifest/application/activity[1]/@android:name",
@@ -627,7 +632,7 @@ public class Main {
             if (activityName == null || activityName.length() == 0) {
                 activityName = null;
             } else {
-                mSdkLog.printf("Found main project activity: %1$s\n", activityName);
+                mSdkLog.info("Found main project activity: %1$s\n", activityName);
             }
         } catch (FileNotFoundException e) {
             // this shouldn't happen as we test it above.
@@ -665,7 +670,7 @@ public class Main {
             return;
         }
 
-        mSdkLog.printf("Found main project target: %1$s\n", target.getFullName());
+        mSdkLog.info("Found main project target: %1$s\n", target.getFullName());
 
         ProjectCreator creator = getProjectCreator();
 
@@ -746,7 +751,7 @@ public class Main {
             }
 
             if (couldHaveDone) {
-                mSdkLog.printf(
+                mSdkLog.info(
                         "It seems that there are sub-projects. If you want to update them\nplease use the --%1$s parameter.\n",
                         SdkCommandLine.KEY_SUBPROJECTS);
             }
@@ -810,41 +815,41 @@ public class Main {
             char eol = mSdkCommandLine.getFlagEolNull() ? '\0' : '\n';
 
             for (IAndroidTarget target : mSdkManager.getTargets()) {
-                mSdkLog.printf("%1$s%2$c", target.hashString(), eol);
+                mSdkLog.info("%1$s%2$c", target.hashString(), eol);
             }
 
             return;
         }
 
-        mSdkLog.printf("Available Android targets:\n");
+        mSdkLog.info("Available Android targets:\n");
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
-            mSdkLog.printf("----------\n");
-            mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, target.hashString());
-            mSdkLog.printf("     Name: %s\n", target.getName());
+            mSdkLog.info("----------\n");
+            mSdkLog.info("id: %1$d or \"%2$s\"\n", index, target.hashString());
+            mSdkLog.info("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
-                mSdkLog.printf("     Type: Platform\n");
-                mSdkLog.printf("     API level: %s\n", target.getVersion().getApiString());
-                mSdkLog.printf("     Revision: %d\n", target.getRevision());
+                mSdkLog.info("     Type: Platform\n");
+                mSdkLog.info("     API level: %s\n", target.getVersion().getApiString());
+                mSdkLog.info("     Revision: %d\n", target.getRevision());
             } else {
-                mSdkLog.printf("     Type: Add-On\n");
-                mSdkLog.printf("     Vendor: %s\n", target.getVendor());
-                mSdkLog.printf("     Revision: %d\n", target.getRevision());
+                mSdkLog.info("     Type: Add-On\n");
+                mSdkLog.info("     Vendor: %s\n", target.getVendor());
+                mSdkLog.info("     Revision: %d\n", target.getRevision());
                 if (target.getDescription() != null) {
-                    mSdkLog.printf("     Description: %s\n", target.getDescription());
+                    mSdkLog.info("     Description: %s\n", target.getDescription());
                 }
-                mSdkLog.printf("     Based on Android %s (API level %s)\n",
+                mSdkLog.info("     Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
 
                 // display the optional libraries.
                 IOptionalLibrary[] libraries = target.getOptionalLibraries();
                 if (libraries != null) {
-                    mSdkLog.printf("     Libraries:\n");
+                    mSdkLog.info("     Libraries:\n");
                     for (IOptionalLibrary library : libraries) {
-                        mSdkLog.printf("      * %1$s (%2$s)\n",
+                        mSdkLog.info("      * %1$s (%2$s)\n",
                                 library.getName(), library.getJarName());
-                        mSdkLog.printf("          %1$s\n", library.getDescription());
+                        mSdkLog.info("          %1$s\n", library.getDescription());
                     }
                 }
             }
@@ -854,7 +859,7 @@ public class Main {
             displayAbiList (target, "     ABIs : ");
 
             if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
-                mSdkLog.printf("     Adds USB support for devices (Vendor: 0x%04X)\n",
+                mSdkLog.info("     Adds USB support for devices (Vendor: 0x%04X)\n",
                         target.getUsbVendorId());
             }
 
@@ -869,24 +874,24 @@ public class Main {
     void displaySkinList(IAndroidTarget target, String message) {
         String[] skins = target.getSkins();
         String defaultSkin = target.getDefaultSkin();
-        mSdkLog.printf(message);
+        mSdkLog.info(message);
         if (skins != null) {
             boolean first = true;
             for (String skin : skins) {
                 if (first == false) {
-                    mSdkLog.printf(", ");
+                    mSdkLog.info(", ");
                 } else {
                     first = false;
                 }
-                mSdkLog.printf(skin);
+                mSdkLog.info(skin);
 
                 if (skin.equals(defaultSkin)) {
-                    mSdkLog.printf(" (default)");
+                    mSdkLog.info(" (default)");
                 }
             }
-            mSdkLog.printf("\n");
+            mSdkLog.info("\n");
         } else {
-            mSdkLog.printf("no skins.\n");
+            mSdkLog.info("no skins.\n");
         }
     }
 
@@ -896,20 +901,20 @@ public class Main {
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     void displayAbiList(IAndroidTarget target, String message) {
         ISystemImage[] systemImages = target.getSystemImages();
-        mSdkLog.printf(message);
+        mSdkLog.info(message);
         if (systemImages.length > 0) {
             boolean first = true;
             for (ISystemImage si : systemImages) {
                 if (first == false) {
-                    mSdkLog.printf(", ");
+                    mSdkLog.info(", ");
                 } else {
                     first = false;
                 }
-                mSdkLog.printf(si.getAbiType());
+                mSdkLog.info(si.getAbiType());
             }
-            mSdkLog.printf("\n");
+            mSdkLog.info("\n");
         } else {
-            mSdkLog.printf("no ABIs.\n");
+            mSdkLog.info("no ABIs.\n");
         }
     }
 
@@ -929,52 +934,52 @@ public class Main {
 
             for (int index = 0 ; index < avds.length ; index++) {
                 AvdInfo info = avds[index];
-                mSdkLog.printf("%1$s%2$c", info.getName(), eol);
+                mSdkLog.info("%1$s%2$c", info.getName(), eol);
             }
 
             return;
         }
 
-        mSdkLog.printf("Available Android Virtual Devices:\n");
+        mSdkLog.info("Available Android Virtual Devices:\n");
 
         for (int index = 0 ; index < avds.length ; index++) {
             AvdInfo info = avds[index];
             if (index > 0) {
-                mSdkLog.printf("---------\n");
+                mSdkLog.info("---------\n");
             }
-            mSdkLog.printf("    Name: %s\n", info.getName());
-            mSdkLog.printf("    Path: %s\n", info.getDataFolderPath());
+            mSdkLog.info("    Name: %s\n", info.getName());
+            mSdkLog.info("    Path: %s\n", info.getDataFolderPath());
 
             // get the target of the AVD
             IAndroidTarget target = info.getTarget();
             if (target.isPlatform()) {
-                mSdkLog.printf("  Target: %s (API level %s)\n", target.getName(),
+                mSdkLog.info("  Target: %s (API level %s)\n", target.getName(),
                         target.getVersion().getApiString());
             } else {
-                mSdkLog.printf("  Target: %s (%s)\n", target.getName(), target
+                mSdkLog.info("  Target: %s (%s)\n", target.getName(), target
                         .getVendor());
-                mSdkLog.printf("          Based on Android %s (API level %s)\n",
+                mSdkLog.info("          Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
             }
-            mSdkLog.printf("     ABI: %s\n", info.getAbiType());
+            mSdkLog.info("     ABI: %s\n", info.getAbiType());
 
             // display some extra values.
             Map<String, String> properties = info.getProperties();
             if (properties != null) {
                 String skin = properties.get(AvdManager.AVD_INI_SKIN_NAME);
                 if (skin != null) {
-                    mSdkLog.printf("    Skin: %s\n", skin);
+                    mSdkLog.info("    Skin: %s\n", skin);
                 }
                 String sdcard = properties.get(AvdManager.AVD_INI_SDCARD_SIZE);
                 if (sdcard == null) {
                     sdcard = properties.get(AvdManager.AVD_INI_SDCARD_PATH);
                 }
                 if (sdcard != null) {
-                    mSdkLog.printf("  Sdcard: %s\n", sdcard);
+                    mSdkLog.info("  Sdcard: %s\n", sdcard);
                 }
                 String snapshot = properties.get(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
                 if (snapshot != null) {
-                    mSdkLog.printf("Snapshot: %s\n", snapshot);
+                    mSdkLog.info("Snapshot: %s\n", snapshot);
                 }
             }
         }
@@ -986,18 +991,18 @@ public class Main {
             return;
         }
 
-        mSdkLog.printf("\nThe following Android Virtual Devices could not be loaded:\n");
+        mSdkLog.info("\nThe following Android Virtual Devices could not be loaded:\n");
         boolean needSeparator = false;
         for (AvdInfo info : badAvds) {
             if (needSeparator) {
-                mSdkLog.printf("---------\n");
+                mSdkLog.info("---------\n");
             }
-            mSdkLog.printf("    Name: %s\n", info.getName() == null ? "--" : info.getName());
-            mSdkLog.printf("    Path: %s\n",
+            mSdkLog.info("    Name: %s\n", info.getName() == null ? "--" : info.getName());
+            mSdkLog.info("    Path: %s\n",
                     info.getDataFolderPath() == null ? "--" : info.getDataFolderPath());
 
             String error = info.getErrorMessage();
-            mSdkLog.printf("   Error: %s\n", error == null ? "Uknown error" : error);
+            mSdkLog.info("   Error: %s\n", error == null ? "Uknown error" : error);
             needSeparator = true;
         }
     }
@@ -1109,7 +1114,7 @@ public class Main {
                 if (systemImages != null && systemImages.length == 1) {
                     // Auto-select the single ABI available
                     abiType = systemImages[0].getAbiType();
-                    mSdkLog.printf("Auto-selecting single ABI %1$s\n", abiType);
+                    mSdkLog.info("Auto-selecting single ABI %1$s\n", abiType);
                 } else {
                     displayAbiList(target, "Valid ABIs: ");
                     errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
@@ -1289,7 +1294,7 @@ public class Main {
         try {
             mSdkManager.updateAdb();
 
-            mSdkLog.printf(
+            mSdkLog.info(
                     "adb has been updated. You must restart adb with the following commands\n" +
                     "\tadb kill-server\n" +
                     "\tadb start-server\n");
@@ -1356,8 +1361,8 @@ public class Main {
         String result;
         String defaultAnswer = "no";
 
-        mSdkLog.printf("%s is a basic Android platform.\n", createTarget.getName());
-        mSdkLog.printf("Do you wish to create a custom hardware profile [%s]",
+        mSdkLog.info("%s is a basic Android platform.\n", createTarget.getName());
+        mSdkLog.info("Do you wish to create a custom hardware profile [%s]",
                 defaultAnswer);
 
         result = readLine(readLineBuffer).trim();
@@ -1371,7 +1376,7 @@ public class Main {
             return skinHardwareConfig;
         }
 
-        mSdkLog.printf("\n"); // empty line
+        mSdkLog.info("\n"); // empty line
 
         // get the list of possible hardware properties
         File hardwareDefs = new File (mOsSdkFolder + File.separator +
@@ -1389,9 +1394,9 @@ public class Main {
 
             String description = property.getDescription();
             if (description != null) {
-                mSdkLog.printf("%s: %s\n", property.getAbstract(), description);
+                mSdkLog.info("%s: %s\n", property.getAbstract(), description);
             } else {
-                mSdkLog.printf("%s\n", property.getAbstract());
+                mSdkLog.info("%s\n", property.getAbstract());
             }
 
             String defaultValue = property.getDefault();
@@ -1399,11 +1404,11 @@ public class Main {
                     property.getName()) : null;
 
             if (defaultFromSkin != null) {
-                mSdkLog.printf("%s [%s (from skin)]:", property.getName(), defaultFromSkin);
+                mSdkLog.info("%s [%s (from skin)]:", property.getName(), defaultFromSkin);
             } else if (defaultValue != null) {
-                mSdkLog.printf("%s [%s]:", property.getName(), defaultValue);
+                mSdkLog.info("%s [%s]:", property.getName(), defaultValue);
             } else {
-                mSdkLog.printf("%s (%s):", property.getName(), property.getType());
+                mSdkLog.info("%s (%s):", property.getName(), property.getType());
             }
 
             result = readLine(readLineBuffer);
@@ -1414,7 +1419,7 @@ public class Main {
                         map.put(property.getName(), defaultFromSkin);
                     }
 
-                    mSdkLog.printf("\n"); // empty line
+                    mSdkLog.info("\n"); // empty line
                     i++; // go to the next property if we have a valid default value.
                          // if there's no default, we'll redo this property
                 }
@@ -1433,7 +1438,7 @@ public class Main {
                         }
                     } catch (IOException e) {
                         // display error, and do not increment i to redo this property
-                        mSdkLog.printf("\n%s\n", e.getMessage());
+                        mSdkLog.info("\n%s\n", e.getMessage());
                     }
                     break;
                 case INTEGER:
@@ -1443,7 +1448,7 @@ public class Main {
                         i++; // valid reply, move to next property
                     } catch (NumberFormatException e) {
                         // display error, and do not increment i to redo this property
-                        mSdkLog.printf("\n%s\n", e.getMessage());
+                        mSdkLog.info("\n%s\n", e.getMessage());
                     }
                     break;
                 case DISKSIZE:
@@ -1453,7 +1458,7 @@ public class Main {
                     break;
             }
 
-            mSdkLog.printf("\n"); // empty line
+            mSdkLog.info("\n"); // empty line
         }
 
         return map;

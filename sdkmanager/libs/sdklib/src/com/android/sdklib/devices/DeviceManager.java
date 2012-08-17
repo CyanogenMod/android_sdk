@@ -23,10 +23,10 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.PkgProps;
+import com.android.utils.ILogger;
 
 import org.xml.sax.SAXException;
 
@@ -59,7 +59,7 @@ public class DeviceManager {
     private final static String sDeviceProfilesProp = "DeviceProfiles";
     private final static Pattern sPathPropertyPattern = Pattern.compile("^" + PkgProps.EXTRA_PATH
             + "=" + sDeviceProfilesProp + "$");
-    private ISdkLog mLog;
+    private ILogger mLog;
     // Vendor devices can't be a static list since they change based on the SDK
     // Location
     private List<Device> mVendorDevices;
@@ -91,7 +91,7 @@ public class DeviceManager {
     // in the same application, which forces us to parse the XML multiple times
     // when we don't
     // to.
-    public DeviceManager(ISdkLog log) {
+    public DeviceManager(ILogger log) {
         mLog = log;
     }
 

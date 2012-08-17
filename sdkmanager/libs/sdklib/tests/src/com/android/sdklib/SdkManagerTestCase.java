@@ -24,6 +24,7 @@ import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.io.FileOp;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdklib.repository.PkgProps;
+import com.android.utils.ILogger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -108,7 +109,7 @@ public class SdkManagerTestCase extends TestCase {
          */
         private File mTmpAvdRoot;
 
-        public TmpAvdManager(SdkManager sdkManager, ISdkLog log) throws AndroidLocationException {
+        public TmpAvdManager(SdkManager sdkManager, ILogger log) throws AndroidLocationException {
             super(sdkManager, log);
         }
 

@@ -16,7 +16,6 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
@@ -24,6 +23,7 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import java.io.IOException;
@@ -37,8 +37,8 @@ public class SdkUpdaterNoWindow {
 
     /** The {@link UpdaterData} to use. */
     private final UpdaterData mUpdaterData;
-    /** The {@link ISdkLog} logger to use. */
-    private final ISdkLog mSdkLog;
+    /** The {@link ILogger} logger to use. */
+    private final ILogger mSdkLog;
     /** The reply to any question asked by the update process. Currently this will
      *   be yes/no for ability to replace modified samples or restart ADB. */
     private final boolean mForce;
@@ -58,7 +58,7 @@ public class SdkUpdaterNoWindow {
      */
     public SdkUpdaterNoWindow(String osSdkRoot,
             SdkManager sdkManager,
-            ISdkLog sdkLog,
+            ILogger sdkLog,
             boolean force,
             boolean useHttp,
             String proxyHost,
@@ -77,7 +77,7 @@ public class SdkUpdaterNoWindow {
         // Change the in-memory settings to force the http/https mode
         settingsController.setSetting(ISettingsPage.KEY_FORCE_HTTP, useHttp);
 
-        // Use a factory that only outputs to the given ISdkLog.
+        // Use a factory that only outputs to the given ILogger.
         mUpdaterData.setTaskFactory(new ConsoleTaskFactory());
 
         // Check that the AVD Manager has been correctly initialized. This is done separately
@@ -201,7 +201,7 @@ public class SdkUpdaterNoWindow {
          * Creates a new {@link ConsoleTaskMonitor} with the given title.
          */
         public ConsoleTaskMonitor(String title, ITask task) {
-            mSdkLog.printf("%s:\n", title);
+            mSdkLog.info("%s:\n", title);
         }
 
         /**
@@ -241,7 +241,7 @@ public class SdkUpdaterNoWindow {
                 line = '\n' + line;
             }
 
-            mSdkLog.printf("%s", line);                                             //$NON-NLS-1$
+            mSdkLog.info("%s", line);                                             //$NON-NLS-1$
         }
 
         @Override
@@ -259,7 +259,7 @@ public class SdkUpdaterNoWindow {
             // The ConsoleTask does not display verbose log messages.
         }
 
-        // --- ISdkLog ---
+        // --- ILogger ---
 
         @Override
         public void error(Throwable t, String errorFormat, Object... args) {
@@ -272,8 +272,13 @@ public class SdkUpdaterNoWindow {
         }
 
         @Override
-        public void printf(String msgFormat, Object... args) {
-            mSdkLog.printf(msgFormat, args);
+        public void info(String msgFormat, Object... args) {
+            mSdkLog.info(msgFormat, args);
+        }
+
+        @Override
+        public void verbose(String msgFormat, Object... args) {
+            mSdkLog.verbose(msgFormat, args);
         }
 
         /**
@@ -347,7 +352,7 @@ public class SdkUpdaterNoWindow {
         @Override
         public boolean displayPrompt(final String title, final String message) {
             // TODO Make it interactive if mForce==false
-            mSdkLog.printf("\n%1$s\n%2$s\n%3$s",        //$NON-NLS-1$
+            mSdkLog.info("\n%1$s\n%2$s\n%3$s",        //$NON-NLS-1$
                     title,
                     message,
                     mForce ? "--force used, will reply yes\n" :
@@ -357,11 +362,11 @@ public class SdkUpdaterNoWindow {
             }
 
             while (true) {
-                mSdkLog.printf("%1$s", "[y/n] =>");     //$NON-NLS-1$
+                mSdkLog.info("%1$s", "[y/n] =>");     //$NON-NLS-1$
                 try {
                     byte[] readBuffer = new byte[2048];
                     String reply = readLine(readBuffer).trim();
-                    mSdkLog.printf("\n");               //$NON-NLS-1$
+                    mSdkLog.info("\n");               //$NON-NLS-1$
                     if (reply.length() > 0 && reply.length() <= 3) {
                         char c = reply.charAt(0);
                         if (c == 'y' || c == 'Y') {
@@ -370,11 +375,11 @@ public class SdkUpdaterNoWindow {
                             return false;
                         }
                     }
-                    mSdkLog.printf("Unknown reply '%s'. Please use y[es]/n[o].\n");  //$NON-NLS-1$
+                    mSdkLog.info("Unknown reply '%s'. Please use y[es]/n[o].\n");  //$NON-NLS-1$
 
                 } catch (IOException e) {
                     // Exception. Be conservative and say no.
-                    mSdkLog.printf("\n");               //$NON-NLS-1$
+                    mSdkLog.info("\n");               //$NON-NLS-1$
                     return false;
                 }
             }
@@ -411,17 +416,17 @@ public class SdkUpdaterNoWindow {
             String workstation = ""; //$NON-NLS-1$
             String domain = ""; //$NON-NLS-1$
 
-            mSdkLog.printf("\n%1$s\n%2$s", title, message);
+            mSdkLog.info("\n%1$s\n%2$s", title, message);
             byte[] readBuffer = new byte[2048];
             try {
-                mSdkLog.printf("\nLogin: ");
+                mSdkLog.info("\nLogin: ");
                 login = readLine(readBuffer);
-                mSdkLog.printf("\nPassword: ");
+                mSdkLog.info("\nPassword: ");
                 password = readLine(readBuffer);
-                mSdkLog.printf("\nIf your proxy uses NTLM authentication, provide the following information. Leave blank otherwise.");
-                mSdkLog.printf("\nWorkstation: ");
+                mSdkLog.info("\nIf your proxy uses NTLM authentication, provide the following information. Leave blank otherwise.");
+                mSdkLog.info("\nWorkstation: ");
                 workstation = readLine(readBuffer);
-                mSdkLog.printf("\nDomain: ");
+                mSdkLog.info("\nDomain: ");
                 domain = readLine(readBuffer);
 
                 /*
@@ -437,7 +442,7 @@ public class SdkUpdaterNoWindow {
                 workstation = ""; //$NON-NLS-1$
                 domain = ""; //$NON-NLS-1$
                 //Just print the error to console.
-                mSdkLog.printf("\nError occurred during login/pass query: %s\n", e.getMessage());
+                mSdkLog.info("\nError occurred during login/pass query: %s\n", e.getMessage());
             }
 
             return new UserCredentials(login, password, workstation, domain);
@@ -593,7 +598,7 @@ public class SdkUpdaterNoWindow {
                     tickCount * mSubCoef);
         }
 
-        // --- ISdkLog ---
+        // --- ILogger ---
 
         @Override
         public void error(Throwable t, String errorFormat, Object... args) {
@@ -606,8 +611,13 @@ public class SdkUpdaterNoWindow {
         }
 
         @Override
-        public void printf(String msgFormat, Object... args) {
-            mRoot.printf(msgFormat, args);
+        public void info(String msgFormat, Object... args) {
+            mRoot.info(msgFormat, args);
+        }
+
+        @Override
+        public void verbose(String msgFormat, Object... args) {
+            mRoot.verbose(msgFormat, args);
         }
     }
 }

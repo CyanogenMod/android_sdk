@@ -22,7 +22,6 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.devices.DeviceManager;
@@ -32,6 +31,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -275,12 +275,12 @@ public class AvdManager {
      *            logging needs. Cannot be null.
      * @throws AndroidLocationException
      */
-    protected AvdManager(SdkManager sdkManager, ISdkLog log) throws AndroidLocationException {
+    protected AvdManager(SdkManager sdkManager, ILogger log) throws AndroidLocationException {
         mSdkManager = sdkManager;
         buildAvdList(mAllAvdList, log);
     }
 
-    public static AvdManager getInstance(SdkManager sdkManager, ISdkLog log)
+    public static AvdManager getInstance(SdkManager sdkManager, ILogger log)
             throws AndroidLocationException {
         synchronized(mManagers) {
             AvdManager manager;
@@ -511,7 +511,7 @@ public class AvdManager {
      * @throws AndroidLocationException if there was an error finding the location of the
      * AVD folder.
      */
-    public void reloadAvds(ISdkLog log) throws AndroidLocationException {
+    public void reloadAvds(ILogger log) throws AndroidLocationException {
         // build the list in a temp list first, in case the method throws an exception.
         // It's better than deleting the whole list before reading the new one.
         ArrayList<AvdInfo> allList = new ArrayList<AvdInfo>();
@@ -556,7 +556,7 @@ public class AvdManager {
             boolean createSnapshot,
             boolean removePrevious,
             boolean editExisting,
-            ISdkLog log) {
+            ILogger log) {
         if (log == null) {
             throw new IllegalArgumentException("log cannot be null");
         }
@@ -647,7 +647,7 @@ public class AvdManager {
             if (createSnapshot) {
                 File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
                 if (snapshotDest.isFile() && editExisting) {
-                    log.printf("Snapshot image already present, was not changed.\n");
+                    log.info("Snapshot image already present, was not changed.\n");
 
                 } else {
                     String toolsLib = mSdkManager.getLocation() + File.separator
@@ -749,7 +749,7 @@ public class AvdManager {
                             // There's already an sdcard file with the right size and we're
                             // not overriding it... so don't remove it.
                             runMkSdcard = false;
-                            log.printf("SD Card already present with same size, was not changed.\n");
+                            log.info("SD Card already present with same size, was not changed.\n");
                         }
                     }
 
@@ -861,7 +861,7 @@ public class AvdManager {
                 report.append("\n");
             }
 
-            log.printf(report.toString());
+            log.info(report.toString());
 
             // create the AvdInfo object, and add it to the list
             AvdInfo newAvdInfo = new AvdInfo(
@@ -1002,7 +1002,7 @@ public class AvdManager {
      * @param target The target where to find the skin.
      * @param log the log object to receive action logs. Cannot be null.
      */
-    public String getSkinRelativePath(String skinName, IAndroidTarget target, ISdkLog log) {
+    public String getSkinRelativePath(String skinName, IAndroidTarget target, ILogger log) {
         if (log == null) {
             throw new IllegalArgumentException("log cannot be null");
         }
@@ -1118,13 +1118,13 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @return True if the AVD was deleted with no error.
      */
-    public boolean deleteAvd(AvdInfo avdInfo, ISdkLog log) {
+    public boolean deleteAvd(AvdInfo avdInfo, ILogger log) {
         try {
             boolean error = false;
 
             File f = avdInfo.getIniFile();
             if (f != null && f.exists()) {
-                log.printf("Deleting file %1$s\n", f.getCanonicalPath());
+                log.info("Deleting file %1$s\n", f.getCanonicalPath());
                 if (!f.delete()) {
                     log.error(null, "Failed to delete %1$s\n", f.getCanonicalPath());
                     error = true;
@@ -1135,7 +1135,7 @@ public class AvdManager {
             if (path != null) {
                 f = new File(path);
                 if (f.exists()) {
-                    log.printf("Deleting folder %1$s\n", f.getCanonicalPath());
+                    log.info("Deleting folder %1$s\n", f.getCanonicalPath());
                     if (deleteContentOf(f) == false || f.delete() == false) {
                         log.error(null, "Failed to delete %1$s\n", f.getCanonicalPath());
                         error = true;
@@ -1146,10 +1146,10 @@ public class AvdManager {
             removeAvd(avdInfo);
 
             if (error) {
-                log.printf("\nAVD '%1$s' deleted with errors. See errors above.\n",
+                log.info("\nAVD '%1$s' deleted with errors. See errors above.\n",
                         avdInfo.getName());
             } else {
-                log.printf("\nAVD '%1$s' deleted.\n", avdInfo.getName());
+                log.info("\nAVD '%1$s' deleted.\n", avdInfo.getName());
                 return true;
             }
 
@@ -1175,7 +1175,7 @@ public class AvdManager {
      * @return True if the move succeeded or there was nothing to do.
      *         If false, this method will have had already output error in the log.
      */
-    public boolean moveAvd(AvdInfo avdInfo, String newName, String paramFolderPath, ISdkLog log) {
+    public boolean moveAvd(AvdInfo avdInfo, String newName, String paramFolderPath, ILogger log) {
 
         try {
             if (paramFolderPath != null) {
@@ -1227,7 +1227,7 @@ public class AvdManager {
                 replaceAvd(avdInfo, info);
             }
 
-            log.printf("AVD '%1$s' moved.\n", avdInfo.getName());
+            log.info("AVD '%1$s' moved.\n", avdInfo.getName());
 
         } catch (AndroidLocationException e) {
             log.error(e, null);
@@ -1311,7 +1311,7 @@ public class AvdManager {
      *
      * @throws AndroidLocationException if there's a problem getting android root directory.
      */
-    private void buildAvdList(ArrayList<AvdInfo> allList, ISdkLog log)
+    private void buildAvdList(ArrayList<AvdInfo> allList, ILogger log)
             throws AndroidLocationException {
         File[] avds = buildAvdFilesList();
         if (avds != null) {
@@ -1332,7 +1332,7 @@ public class AvdManager {
      * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is
      *         valid or not.
      */
-    private AvdInfo parseAvdInfo(File iniPath, ISdkLog log) {
+    private AvdInfo parseAvdInfo(File iniPath, ILogger log) {
         Map<String, String> map = ProjectProperties.parsePropertyFile(
                 new FileWrapper(iniPath),
                 log);
@@ -1474,7 +1474,7 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @return True if the sdcard could be created.
      */
-    private boolean createSdCard(String toolLocation, String size, String location, ISdkLog log) {
+    private boolean createSdCard(String toolLocation, String size, String location, ILogger log) {
         try {
             String[] command = new String[3];
             command[0] = toolLocation;
@@ -1545,7 +1545,7 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @throws IOException
      */
-    public void updateAvd(String name, ISdkLog log) throws IOException {
+    public void updateAvd(String name, ILogger log) throws IOException {
         // find the AVD to update. It should be be in the broken list.
         AvdInfo avd = null;
         synchronized (mAllAvdList) {
@@ -1573,7 +1573,7 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @throws IOException
      */
-    public void updateAvd(AvdInfo avd, ISdkLog log) throws IOException {
+    public void updateAvd(AvdInfo avd, ILogger log) throws IOException {
         // get the properties. This is a unmodifiable Map.
         Map<String, String> oldProperties = avd.getProperties();
 
@@ -1588,12 +1588,12 @@ public class AvdManager {
         // create the path to the new system images.
         if (setImagePathProperties(avd.getTarget(), avd.getAbiType(), properties, log)) {
             if (properties.containsKey(AVD_INI_IMAGES_1)) {
-                log.printf("Updated '%1$s' with value '%2$s'\n", AVD_INI_IMAGES_1,
+                log.info("Updated '%1$s' with value '%2$s'\n", AVD_INI_IMAGES_1,
                         properties.get(AVD_INI_IMAGES_1));
             }
 
             if (properties.containsKey(AVD_INI_IMAGES_2)) {
-                log.printf("Updated '%1$s' with value '%2$s'\n", AVD_INI_IMAGES_2,
+                log.info("Updated '%1$s' with value '%2$s'\n", AVD_INI_IMAGES_2,
                         properties.get(AVD_INI_IMAGES_2));
             }
 
@@ -1610,7 +1610,7 @@ public class AvdManager {
     public void updateAvd(AvdInfo avd,
             Map<String, String> newProperties,
             AvdStatus status,
-            ISdkLog log) throws IOException {
+            ILogger log) throws IOException {
         // now write the config file
         File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
         writeIniFile(configIniFile, newProperties);
@@ -1644,7 +1644,7 @@ public class AvdManager {
     private boolean setImagePathProperties(IAndroidTarget target,
             String abiType,
             Map<String, String> properties,
-            ISdkLog log) {
+            ILogger log) {
         properties.remove(AVD_INI_IMAGES_1);
         properties.remove(AVD_INI_IMAGES_2);
 

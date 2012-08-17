@@ -24,13 +24,13 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.io.FileOp;
 import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
+import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 
 import org.eclipse.core.filesystem.EFS;
@@ -224,7 +224,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
             String sdkLocation = sdk.getSdkLocation();
-            SdkManager manager = SdkManager.createManager(sdkLocation, new NullSdkLog());
+            SdkManager manager = SdkManager.createManager(sdkLocation, NullLogger.getLogger());
             Map<String, Integer> versions = manager.getExtrasVersions();
             Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
             if (version == null) {
@@ -297,7 +297,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
             String sdkLocation = sdk.getSdkLocation();
-            SdkManager manager = SdkManager.createManager(sdkLocation, new NullSdkLog());
+            SdkManager manager = SdkManager.createManager(sdkLocation, NullLogger.getLogger());
             Map<String, Integer> versions = manager.getExtrasVersions();
             Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
             if (version != null) {

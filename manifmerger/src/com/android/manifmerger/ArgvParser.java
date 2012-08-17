@@ -16,8 +16,8 @@
 
 package com.android.manifmerger;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.util.CommandLineParser;
+import com.android.utils.ILogger;
 
 import java.util.List;
 
@@ -64,7 +64,7 @@ class ArgvParser extends CommandLineParser {
 
     };
 
-    public ArgvParser(ISdkLog logger) {
+    public ArgvParser(ILogger logger) {
         super(logger, ACTIONS);
 
         // The following defines the parameters of the actions defined in mAction.

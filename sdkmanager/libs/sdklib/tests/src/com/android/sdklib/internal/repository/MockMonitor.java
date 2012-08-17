@@ -102,7 +102,11 @@ public class MockMonitor implements ITaskMonitor {
     }
 
     @Override
-    public void printf(String msgFormat, Object... args) {
+    public void info(String msgFormat, Object... args) {
+    }
+
+    @Override
+    public void verbose(String msgFormat, Object... args) {
     }
 
     @Override

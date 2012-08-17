@@ -25,7 +25,6 @@ import com.android.AndroidConstants;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
@@ -51,7 +50,7 @@ import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 import com.google.common.io.Closeables;
 
 import org.eclipse.core.commands.Command;
@@ -128,7 +127,7 @@ import java.util.List;
 /**
  * The activator class controls the plug-in life cycle
  */
-public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
+public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     /**
      * Temporary logging code to help track down
      * http://code.google.com/p/android/issues/detail?id=15003
@@ -1891,7 +1890,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger, ISdkLog {
     }
 
     @Override
-    public void printf(String format, Object... args) {
+    public void info(String format, Object... args) {
+        log(IStatus.INFO, format, args);
+    }
+
+    @Override
+    public void verbose(String format, Object... args) {
         log(IStatus.INFO, format, args);
     }
 

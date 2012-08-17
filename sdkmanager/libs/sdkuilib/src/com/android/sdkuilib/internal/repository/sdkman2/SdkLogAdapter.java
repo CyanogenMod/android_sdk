@@ -16,16 +16,16 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.tasks.ILogUiProvider;
+import com.android.utils.ILogger;
 
 
 /**
- * Adapter that transform log from an {@link ILogUiProvider} to an {@link ISdkLog}.
+ * Adapter that transform log from an {@link ILogUiProvider} to an {@link ILogger}.
  */
 public final class SdkLogAdapter implements ILogUiProvider {
 
-    private ISdkLog mSdkLog;
+    private ILogger mSdkLog;
     private String mLastLogMsg;
 
     /**
@@ -33,7 +33,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      *
      * @param sdkLog The logger to output to. Must not be null.
      */
-    public SdkLogAdapter(ISdkLog sdkLog) {
+    public SdkLogAdapter(ILogger sdkLog) {
         mSdkLog = sdkLog;
     }
 
@@ -44,7 +44,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
     @Override
     public void setDescription(final String description) {
         if (acceptLog(description)) {
-            mSdkLog.printf("%1$s", description);    //$NON-NLS-1$
+            mSdkLog.info("%1$s", description);    //$NON-NLS-1$
         }
     }
 
@@ -55,7 +55,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
     @Override
     public void log(String log) {
         if (acceptLog(log)) {
-            mSdkLog.printf("  %1$s", log);          //$NON-NLS-1$
+            mSdkLog.info("  %1$s", log);          //$NON-NLS-1$
         }
     }
 
@@ -78,7 +78,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
     @Override
     public void logVerbose(String log) {
         if (acceptLog(log)) {
-            mSdkLog.printf("    %1$s", log);        //$NON-NLS-1$
+            mSdkLog.verbose("    %1$s", log);        //$NON-NLS-1$
         }
     }
 

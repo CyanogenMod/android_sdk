@@ -45,10 +45,10 @@ import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.io.FileOp;
+import com.android.utils.ILogger;
 import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
@@ -827,7 +827,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
             // and maintain error markers.
-            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new ISdkLog() {
+            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new ILogger() {
 
                 @Override
                 public void warning(String warningFormat, Object... args) {
@@ -835,8 +835,13 @@ public class PreCompilerBuilder extends BaseBuilder {
                 }
 
                 @Override
-                public void printf(String msgFormat, Object... args) {
+                public void info(String msgFormat, Object... args) {
                     AdtPlugin.printToConsole(getProject(), String.format(msgFormat, args));
+                }
+
+                @Override
+                public void verbose(String msgFormat, Object... args) {
+                    info(msgFormat, args);
                 }
 
                 @Override

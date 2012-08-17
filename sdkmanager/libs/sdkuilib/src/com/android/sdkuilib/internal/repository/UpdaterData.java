@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.AdbWrapper;
@@ -49,6 +48,7 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader;
 import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.utils.ILogger;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -81,7 +81,7 @@ public class UpdaterData implements IUpdaterData {
     private final SdkSources mSources = new SdkSources();
     private final SettingsController mSettingsController;
     private final ArrayList<ISdkChangeListener> mListeners = new ArrayList<ISdkChangeListener>();
-    private final ISdkLog mSdkLog;
+    private final ILogger mSdkLog;
     private ITaskFactory mTaskFactory;
     private Shell mWindowShell;
     private SdkManager mSdkManager;
@@ -110,7 +110,7 @@ public class UpdaterData implements IUpdaterData {
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
      */
-    public UpdaterData(String osSdkRoot, ISdkLog sdkLog) {
+    public UpdaterData(String osSdkRoot, ILogger sdkLog) {
         mOsSdkRoot = osSdkRoot;
         mSdkLog = sdkLog;
 
@@ -154,7 +154,7 @@ public class UpdaterData implements IUpdaterData {
     }
 
     @Override
-    public ISdkLog getSdkLog() {
+    public ILogger getSdkLog() {
         return mSdkLog;
     }
 
@@ -817,7 +817,7 @@ public class UpdaterData implements IUpdaterData {
 
         List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeAll);
 
-        mSdkLog.printf("Packages available for installation or update: %1$d\n", archives.size());
+        mSdkLog.info("Packages available for installation or update: %1$d\n", archives.size());
 
         int index = 1;
         for (ArchiveInfo ai : archives) {
@@ -826,15 +826,15 @@ public class UpdaterData implements IUpdaterData {
                 Package p = a.getParentPackage();
                 if (p != null) {
                     if (extendedOutput) {
-                        mSdkLog.printf("----------\n");
-                        mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, p.installId());
-                        mSdkLog.printf("     Type: %1$s\n",
+                        mSdkLog.info("----------\n");
+                        mSdkLog.info("id: %1$d or \"%2$s\"\n", index, p.installId());
+                        mSdkLog.info("     Type: %1$s\n",
                                 p.getClass().getSimpleName().replaceAll("Package", "")); //$NON-NLS-1$ //$NON-NLS-2$
                         String desc = LineUtil.reformatLine("     Desc: %s\n",
                                 p.getLongDescription());
-                        mSdkLog.printf("%s", desc); //$NON-NLS-1$
+                        mSdkLog.info("%s", desc); //$NON-NLS-1$
                     } else {
-                        mSdkLog.printf("%1$ 4d- %2$s\n",
+                        mSdkLog.info("%1$ 4d- %2$s\n",
                                 index,
                                 p.getShortDescription());
                     }
@@ -847,7 +847,7 @@ public class UpdaterData implements IUpdaterData {
     /**
      * Tries to update all the *existing* local packages.
      * This version is intended to run without a GUI and
-     * only outputs to the current {@link ISdkLog}.
+     * only outputs to the current {@link ILogger}.
      *
      * @param pkgFilter A list of {@link SdkRepoConstants#NODES} or {@link Package#installId()}
      *   or package indexes to limit the packages we can update or install.
@@ -950,7 +950,7 @@ public class UpdaterData implements IUpdaterData {
             }
 
             if (archives.size() == 0) {
-                mSdkLog.printf(LineUtil.reflowLine(
+                mSdkLog.info(LineUtil.reflowLine(
                         "Warning: The package filter removed all packages. There is nothing to install.\nPlease consider trying to update again without a package filter.\n"));
                 return null;
             }
@@ -958,22 +958,22 @@ public class UpdaterData implements IUpdaterData {
 
         if (archives != null && archives.size() > 0) {
             if (dryMode) {
-                mSdkLog.printf("Packages selected for install:\n");
+                mSdkLog.info("Packages selected for install:\n");
                 for (ArchiveInfo ai : archives) {
                     Archive a = ai.getNewArchive();
                     if (a != null) {
                         Package p = a.getParentPackage();
                         if (p != null) {
-                            mSdkLog.printf("- %1$s\n", p.getShortDescription());
+                            mSdkLog.info("- %1$s\n", p.getShortDescription());
                         }
                     }
                 }
-                mSdkLog.printf("\nDry mode is on so nothing is actually being installed.\n");
+                mSdkLog.info("\nDry mode is on so nothing is actually being installed.\n");
             } else {
                 return installArchives(archives, NO_TOOLS_MSG);
             }
         } else {
-            mSdkLog.printf("There is nothing to install or update.\n");
+            mSdkLog.info("There is nothing to install or update.\n");
         }
 
         return null;

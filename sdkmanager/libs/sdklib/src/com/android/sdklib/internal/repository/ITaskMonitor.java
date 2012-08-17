@@ -16,7 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 
 /**
@@ -45,9 +45,9 @@ import com.android.sdklib.ISdkLog;
  *   logged and/or might hide the verbose text unless a flag is checked by the user.
  *   This is set using {@link #log}, {@link #logError} and {@link #logVerbose}.
  * <p/>
- * A monitor is also an {@link ISdkLog} implementation.
+ * A monitor is also an {@link ILogger} implementation.
  */
-public interface ITaskMonitor extends ISdkLog {
+public interface ITaskMonitor extends ILogger {
 
     /**
      * Sets the description in the current task dialog.

@@ -18,9 +18,9 @@ package com.android.ant;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.utils.ILogger;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -66,7 +66,7 @@ public class GetUiTargetTask extends Task {
 
         // load up the sdk targets.
         final ArrayList<String> messages = new ArrayList<String>();
-        SdkManager manager = SdkManager.createManager(sdkDir.getPath(), new ISdkLog() {
+        SdkManager manager = SdkManager.createManager(sdkDir.getPath(), new ILogger() {
             @Override
             public void error(Throwable t, String errorFormat, Object... args) {
                 if (errorFormat != null) {
@@ -78,8 +78,13 @@ public class GetUiTargetTask extends Task {
             }
 
             @Override
-            public void printf(String msgFormat, Object... args) {
+            public void info(String msgFormat, Object... args) {
                 messages.add(String.format(msgFormat, args));
+            }
+
+            @Override
+            public void verbose(String msgFormat, Object... args) {
+                info(msgFormat, args);
             }
 
             @Override

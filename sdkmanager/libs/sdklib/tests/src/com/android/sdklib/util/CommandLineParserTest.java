@@ -16,8 +16,8 @@
 
 package com.android.sdklib.util;
 
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.StdSdkLog;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 
 public class CommandLineParserTest extends TestCase {
 
-    private StdSdkLog mLog;
+    private StdLogger mLog;
 
     /**
      * A mock version of the {@link CommandLineParser} class that does not
@@ -39,7 +39,7 @@ public class CommandLineParserTest extends TestCase {
         private String mStdOut = "";
         private String mStdErr = "";
 
-        public MockCommandLineProcessor(ISdkLog logger) {
+        public MockCommandLineProcessor(ILogger logger) {
             super(logger,
                   new String[][] {
                     { "verb1", "action1", "Some action" },
@@ -104,7 +104,7 @@ public class CommandLineParserTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        mLog = new StdSdkLog();
+        mLog = new StdLogger(StdLogger.Level.VERBOSE);
         super.setUp();
     }
 

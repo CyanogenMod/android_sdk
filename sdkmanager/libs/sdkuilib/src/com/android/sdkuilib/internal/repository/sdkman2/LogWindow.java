@@ -16,10 +16,10 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.tasks.ILogUiProvider;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -57,7 +57,7 @@ class LogWindow implements ILogUiProvider {
     private Label mLogDescription;
     private Button mCloseButton;
 
-    private final ISdkLog mSecondaryLog;
+    private final ILogger mSecondaryLog;
     private boolean mCloseRequested;
     private boolean mInitPosition = true;
     private String mLastLogMsg = null;
@@ -74,7 +74,7 @@ class LogWindow implements ILogUiProvider {
      * @param parentShell Parent container
      * @param secondaryLog An optional logger where messages will <em>also</em> be output.
      */
-    public LogWindow(Shell parentShell, ISdkLog secondaryLog) {
+    public LogWindow(Shell parentShell, ILogger secondaryLog) {
         mParentShell = parentShell;
         mSecondaryLog = secondaryLog;
     }
@@ -208,7 +208,7 @@ class LogWindow implements ILogUiProvider {
                     appendLine(TextStyle.TITLE, description);
 
                     if (mSecondaryLog != null) {
-                        mSecondaryLog.printf("%1$s", description);  //$NON-NLS-1$
+                        mSecondaryLog.info("%1$s", description);  //$NON-NLS-1$
                     }
                 }
             }
@@ -230,7 +230,7 @@ class LogWindow implements ILogUiProvider {
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("  %1$s", log);                //$NON-NLS-1$
+                mSecondaryLog.info("  %1$s", log);                //$NON-NLS-1$
             }
         }
     }
@@ -271,7 +271,7 @@ class LogWindow implements ILogUiProvider {
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("    %1$s", log);              //$NON-NLS-1$
+                mSecondaryLog.info("    %1$s", log);              //$NON-NLS-1$
             }
         }
     }

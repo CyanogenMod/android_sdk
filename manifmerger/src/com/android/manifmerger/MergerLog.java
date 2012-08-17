@@ -18,7 +18,7 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 
 /**
@@ -27,12 +27,12 @@ import com.android.sdklib.ISdkLog;
 public abstract class MergerLog {
 
     /**
-     * Create a new instance of a {@link MergerLog} that prints to an {@link ISdkLog}.
+     * Create a new instance of a {@link MergerLog} that prints to an {@link ILogger}.
      *
-     * @param sdkLog A non-null {@link ISdkLog}.
+     * @param sdkLog A non-null {@link ILogger}.
      * @return A new IMergerLog.
      */
-    public static IMergerLog wrapSdkLog(final @NonNull ISdkLog sdkLog) {
+    public static IMergerLog wrapSdkLog(final @NonNull ILogger sdkLog) {
         return new IMergerLog() {
             @Override
             public void error(
@@ -43,7 +43,7 @@ public abstract class MergerLog {
 
                 switch(severity) {
                 case INFO:
-                    sdkLog.printf(
+                    sdkLog.info(
                             "[%1$s] %2$s",                                  //$NON-NLS-1$
                             location,
                             String.format(message, msgParams));
@@ -72,7 +72,7 @@ public abstract class MergerLog {
 
                 switch(severity) {
                 case INFO:
-                    sdkLog.printf(
+                    sdkLog.info(
                             "[%1$s, %2$s] %3$s",                          //$NON-NLS-1$
                             location1,
                             location2,

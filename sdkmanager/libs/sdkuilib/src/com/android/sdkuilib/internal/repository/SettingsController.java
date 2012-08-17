@@ -19,7 +19,7 @@ package com.android.sdkuilib.internal.repository;
 import com.android.annotations.NonNull;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,7 +42,7 @@ public class SettingsController {
 
     private static final String SETTINGS_FILENAME = "androidtool.cfg"; //$NON-NLS-1$
 
-    private final ISdkLog mSdkLog;
+    private final ILogger mSdkLog;
     private final Settings mSettings;
 
     public interface OnChangedListener {
@@ -58,7 +58,7 @@ public class SettingsController {
      *
      * @param sdkLog A non-null logger to use.
      */
-    public SettingsController(@NonNull ISdkLog sdkLog) {
+    public SettingsController(@NonNull ILogger sdkLog) {
         mSdkLog = sdkLog;
         mSettings = new Settings();
     }
@@ -71,7 +71,7 @@ public class SettingsController {
      * @param sdkLog   A non-null logger to use.
      * @param settings A non-null {@link Settings} to use as-is. It is not duplicated.
      */
-    protected SettingsController(@NonNull ISdkLog sdkLog, @NonNull Settings settings) {
+    protected SettingsController(@NonNull ILogger sdkLog, @NonNull Settings settings) {
         mSdkLog = sdkLog;
         mSettings = settings;
     }

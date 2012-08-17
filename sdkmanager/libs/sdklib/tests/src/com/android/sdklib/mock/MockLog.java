@@ -17,18 +17,18 @@
 package com.android.sdklib.mock;
 
 import com.android.annotations.NonNull;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
 /**
- * An instance of {@link ISdkLog} that captures all messages to an internal list.
+ * An instance of {@link ILogger} that captures all messages to an internal list.
  * Messages can be retrieved later using {@link #toString()}.
  * Useful for unit-tests.
  */
-public class MockLog implements ISdkLog {
+public class MockLog implements ILogger {
     private ArrayList<String> mMessages = new ArrayList<String>();
 
     private void add(String code, String format, Object... args) {
@@ -43,8 +43,13 @@ public class MockLog implements ISdkLog {
     }
 
     @Override
-    public void printf(String format, Object... args) {
+    public void info(String format, Object... args) {
         add("P ", format, args);
+    }
+
+    @Override
+    public void verbose(String format, Object... args) {
+        add("V ", format, args);
     }
 
     @Override

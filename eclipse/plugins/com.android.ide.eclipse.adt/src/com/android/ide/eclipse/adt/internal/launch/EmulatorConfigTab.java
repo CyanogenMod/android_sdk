@@ -25,11 +25,11 @@ import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
+import com.android.utils.NullLogger;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -147,7 +147,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
         // reload the AVDs to make sure we are up to date
         try {
-            Sdk.getCurrent().getAvdManager().reloadAvds(NullSdkLog.getLogger());
+            Sdk.getCurrent().getAvdManager().reloadAvds(NullLogger.getLogger());
         } catch (AndroidLocationException e1) {
             // this happens if the AVD Manager failed to find the folder in which the AVDs are
             // stored. There isn't much we can do at this point.

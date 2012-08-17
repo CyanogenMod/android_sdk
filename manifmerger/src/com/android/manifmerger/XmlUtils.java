@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.manifmerger.IMergerLog.FileAndLine;
 import com.android.manifmerger.IMergerLog.Severity;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -67,7 +67,7 @@ class XmlUtils {
      * You can retrieve this file later by using {@link #extractXmlFilename(Node)}.
      *
      * @param xmlFile The XML {@link File} to parse. Must not be null.
-     * @param log An {@link ISdkLog} for reporting errors. Must not be null.
+     * @param log An {@link ILogger} for reporting errors. Must not be null.
      * @return A new DOM {@link Document}, or null.
      */
     @Nullable
@@ -131,7 +131,7 @@ class XmlUtils {
      * It is namespace aware.
      *
      * @param xml The XML string to parse. Must not be null.
-     * @param log An {@link ISdkLog} for reporting errors. Must not be null.
+     * @param log An {@link ILogger} for reporting errors. Must not be null.
      * @return A new DOM {@link Document}, or null.
      */
     @Nullable

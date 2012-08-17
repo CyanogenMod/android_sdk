@@ -21,7 +21,6 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.devices.Camera;
@@ -37,6 +36,7 @@ import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -69,7 +69,7 @@ public class AvdCreationDialog extends GridDialog {
 
     private AvdManager mAvdManager;
     private ImageFactory mImageFactory;
-    private ISdkLog mSdkLog;
+    private ILogger mSdkLog;
     private AvdInfo mAvdInfo;
 
     // A map from manufacturers to their list of devices.
@@ -133,7 +133,7 @@ public class AvdCreationDialog extends GridDialog {
     public AvdCreationDialog(Shell shell,
             AvdManager avdManager,
             ImageFactory imageFactory,
-            ISdkLog log,
+            ILogger log,
             AvdInfo editAvdInfo) {
 
         super(shell, 2, false);
@@ -856,7 +856,7 @@ public class AvdCreationDialog extends GridDialog {
         Screen s = device.getDefaultHardware().getScreen();
         String skinName = s.getXDimension() + "x" + s.getYDimension();
 
-        ISdkLog log = mSdkLog;
+        ILogger log = mSdkLog;
         if (log == null || log instanceof MessageBoxLog) {
             // If the current logger is a message box, we use our own (to make sure
             // to display errors right away and customize the title).

@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository.sources;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -260,7 +260,7 @@ public class SdkSources {
      * <p/>
      * This calls {@link #notifyChangeListeners()} at the end of the operation.
      */
-    public void loadUserAddons(ISdkLog log) {
+    public void loadUserAddons(ILogger log) {
         // Implementation detail: synchronize on the sources list to make sure that
         // a- the source list doesn't change while we load/save it, and most important
         // b- to make sure it's not being saved while loaded or the reverse.
@@ -334,7 +334,7 @@ public class SdkSources {
      * Saves all the user sources.
      * @param log Logger. Cannot be null.
      */
-    public void saveUserAddons(ISdkLog log) {
+    public void saveUserAddons(ILogger log) {
         // See the implementation detail note in loadUserAddons() about the synchronization.
         synchronized (mSources) {
             FileOutputStream fos = null;

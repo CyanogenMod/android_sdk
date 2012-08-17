@@ -18,7 +18,7 @@ package com.android.sdklib.util;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -97,7 +97,7 @@ public class CommandLineParser {
      */
     private final HashMap<String, Arg> mArguments = new HashMap<String, Arg>();
     /** Logger */
-    private final ISdkLog mLog;
+    private final ILogger mLog;
 
     /**
      * Constructs a new command-line processor.
@@ -108,7 +108,7 @@ public class CommandLineParser {
      *
      * @see #mActions
      */
-    public CommandLineParser(ISdkLog logger, String[][] actions) {
+    public CommandLineParser(ILogger logger, String[][] actions) {
         mLog = logger;
         mActions = actions;
 
@@ -952,7 +952,7 @@ public class CommandLineParser {
     protected void stdout(String format, Object...args) {
         String output = String.format(format, args);
         output = LineUtil.reflowLine(output);
-        mLog.printf("%s\n", output);    //$NON-NLS-1$
+        mLog.info("%s\n", output);    //$NON-NLS-1$
     }
 
     /**

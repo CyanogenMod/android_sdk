@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 
 import com.android.SdkConstants;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.sources.SdkSourceProperties;
 import com.android.sdkuilib.internal.repository.AboutDialog;
@@ -38,6 +37,7 @@ import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -96,7 +96,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      */
     public SdkUpdaterWindowImpl2(
             Shell parentShell,
-            ISdkLog sdkLog,
+            ILogger sdkLog,
             String osSdkRoot,
             SdkInvocationContext context) {
         mParentShell = parentShell;
