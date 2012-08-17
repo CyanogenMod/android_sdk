@@ -16,10 +16,10 @@
 
 package com.android.sdkmanager;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.CommandLineParser;
+import com.android.utils.ILogger;
 
 import java.util.Arrays;
 
@@ -161,7 +161,7 @@ class SdkCommandLine extends CommandLineParser {
                 "Creates an identity file." },
     };
 
-    public SdkCommandLine(ISdkLog logger) {
+    public SdkCommandLine(ILogger logger) {
         super(logger, ACTIONS);
 
         // The following defines the parameters of the actions defined in mAction.

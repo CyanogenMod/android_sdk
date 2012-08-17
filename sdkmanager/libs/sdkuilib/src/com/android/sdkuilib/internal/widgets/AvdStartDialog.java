@@ -16,13 +16,13 @@
 
 package com.android.sdkuilib.internal.widgets;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.ui.GridDialog;
+import com.android.utils.ILogger;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.window.Window;
@@ -95,7 +95,7 @@ final class AvdStartDialog extends GridDialog {
     private Button mSnapshotLaunchCheckbox;
 
     AvdStartDialog(Shell parentShell, AvdInfo avd, String sdkLocation,
-            SettingsController settingsController, ISdkLog sdkLog) {
+            SettingsController settingsController, ILogger sdkLog) {
         super(parentShell, 2, false);
         mAvd = avd;
         mSdkLocation = sdkLocation;

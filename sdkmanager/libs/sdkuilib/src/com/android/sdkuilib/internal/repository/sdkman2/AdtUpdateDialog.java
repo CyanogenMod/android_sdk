@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformPackage;
@@ -33,6 +32,7 @@ import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import org.eclipse.swt.SWT;
@@ -92,7 +92,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
      */
     public AdtUpdateDialog(
             Shell parentShell,
-            ISdkLog sdkLog,
+            ILogger sdkLog,
             String osSdkRoot) {
         super(parentShell, SWT.NONE, APP_NAME);
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);

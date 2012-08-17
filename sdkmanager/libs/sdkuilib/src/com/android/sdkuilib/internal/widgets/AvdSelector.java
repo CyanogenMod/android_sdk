@@ -20,8 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdInfo;
@@ -38,6 +36,8 @@ import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.ui.GridDialog;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -113,7 +113,7 @@ public final class AvdSelector {
 
     private SettingsController mController;
 
-    private final ISdkLog mSdkLog;
+    private final ILogger mSdkLog;
 
 
     /**
@@ -217,7 +217,7 @@ public final class AvdSelector {
             AvdManager manager,
             IAvdFilter filter,
             DisplayMode displayMode,
-            ISdkLog sdkLog) {
+            ILogger sdkLog) {
         mOsSdkPath = osSdkPath;
         mAvdManager = manager;
         mTargetFilter = filter;
@@ -406,7 +406,7 @@ public final class AvdSelector {
             String osSdkPath,
             AvdManager manager,
             DisplayMode displayMode,
-            ISdkLog sdkLog) {
+            ILogger sdkLog) {
         this(parent, osSdkPath, manager, (IAvdFilter)null /* filter */, displayMode, sdkLog);
     }
 
@@ -427,7 +427,7 @@ public final class AvdSelector {
             AvdManager manager,
             IAndroidTarget filter,
             DisplayMode displayMode,
-            ISdkLog sdkLog) {
+            ILogger sdkLog) {
         this(parent, osSdkPath, manager, new TargetBasedFilter(filter), displayMode, sdkLog);
     }
 
@@ -468,7 +468,7 @@ public final class AvdSelector {
     public boolean refresh(boolean reload) {
         if (reload) {
             try {
-                mAvdManager.reloadAvds(NullSdkLog.getLogger());
+                mAvdManager.reloadAvds(NullLogger.getLogger());
             } catch (AndroidLocationException e) {
                 return false;
             }
@@ -960,7 +960,7 @@ public final class AvdSelector {
         }
 
         // log for this action.
-        ISdkLog log = mSdkLog;
+        ILogger log = mSdkLog;
         if (log == null || log instanceof MessageBoxLog) {
             // If the current logger is a message box, we use our own (to make sure
             // to display errors right away and customize the title).
@@ -995,7 +995,7 @@ public final class AvdSelector {
         final Display display = mTable.getDisplay();
 
         // log for this action.
-        ISdkLog log = mSdkLog;
+        ILogger log = mSdkLog;
         if (log == null || log instanceof MessageBoxLog) {
             // If the current logger is a message box, we use our own (to make sure
             // to display errors right away and customize the title).
@@ -1057,7 +1057,7 @@ public final class AvdSelector {
         Display display = mTable.getDisplay();
 
         // log for this action.
-        ISdkLog log = mSdkLog;
+        ILogger log = mSdkLog;
         if (log == null || log instanceof MessageBoxLog) {
             // If the current logger is a message box, we use our own (to make sure
             // to display errors right away and customize the title).

@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.LocalSdkParser;
@@ -31,6 +30,7 @@ import com.android.sdklib.internal.repository.archives.Archive.Os;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
+import com.android.utils.NullLogger;
 
 import org.w3c.dom.Node;
 
@@ -560,7 +560,7 @@ public class ExtraPackage extends MinToolsPackage
                 osSdkRoot,
                 sdkManager,
                 LocalSdkParser.PARSE_EXTRAS,
-                new NullTaskMonitor(new NullSdkLog()));
+                new NullTaskMonitor(NullLogger.getLogger()));
 
         for (Package pkg : pkgs) {
             if (sameItemAs(pkg) && pkg instanceof ExtraPackage) {

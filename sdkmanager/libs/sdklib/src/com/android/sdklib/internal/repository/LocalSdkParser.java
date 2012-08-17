@@ -19,7 +19,6 @@ package com.android.sdklib.internal.repository;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkManager;
@@ -35,6 +34,7 @@ import com.android.sdklib.internal.repository.packages.SamplePackage;
 import com.android.sdklib.internal.repository.packages.SourcePackage;
 import com.android.sdklib.internal.repository.packages.SystemImagePackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -281,7 +281,7 @@ public class LocalSdkParser {
     private void scanExtras(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File root = new File(sdkManager.getLocation(), SdkConstants.FD_EXTRAS);
 
         if (!root.isDirectory()) {
@@ -303,7 +303,7 @@ public class LocalSdkParser {
     private void scanExtrasDirectory(String extrasRoot,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File root = new File(extrasRoot);
 
         if (!root.isDirectory()) {
@@ -349,7 +349,7 @@ public class LocalSdkParser {
     private void scanMissingSamples(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File root = new File(sdkManager.getLocation());
         root = new File(root, SdkConstants.FD_SAMPLES);
 
@@ -384,7 +384,7 @@ public class LocalSdkParser {
     private void scanMissingAddons(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File addons = new File(new File(sdkManager.getLocation()), SdkConstants.FD_ADDONS);
 
         File[] files = addons.listFiles();
@@ -423,7 +423,7 @@ public class LocalSdkParser {
     private void scanMissingSystemImages(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File siRoot = new File(sdkManager.getLocation(), SdkConstants.FD_SYSTEM_IMAGES);
 
         File[] files = siRoot.listFiles();
@@ -469,7 +469,7 @@ public class LocalSdkParser {
     private void scanSources(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
-            ISdkLog log) {
+            ILogger log) {
         File srcRoot = new File(sdkManager.getLocation(), SdkConstants.FD_PKG_SOURCES);
 
         File[] subDirs = srcRoot.listFiles();
@@ -503,7 +503,7 @@ public class LocalSdkParser {
      * Try to find a tools package at the given location.
      * Returns null if not found.
      */
-    private Package scanTools(File toolFolder, ISdkLog log) {
+    private Package scanTools(File toolFolder, ILogger log) {
         // Can we find some properties?
         Properties props = parseProperties(new File(toolFolder, SdkConstants.FN_SOURCE_PROP));
 
@@ -555,7 +555,7 @@ public class LocalSdkParser {
      * Try to find a platform-tools package at the given location.
      * Returns null if not found.
      */
-    private Package scanPlatformTools(File platformToolsFolder, ISdkLog log) {
+    private Package scanPlatformTools(File platformToolsFolder, ILogger log) {
         // Can we find some properties?
         Properties props = parseProperties(new File(platformToolsFolder,
                 SdkConstants.FN_SOURCE_PROP));
@@ -594,7 +594,7 @@ public class LocalSdkParser {
      * Try to find a docs package at the given location.
      * Returns null if not found.
      */
-    private Package scanDoc(File docFolder, ISdkLog log) {
+    private Package scanDoc(File docFolder, ILogger log) {
         // Can we find some properties?
         Properties props = parseProperties(new File(docFolder, SdkConstants.FN_SOURCE_PROP));
 

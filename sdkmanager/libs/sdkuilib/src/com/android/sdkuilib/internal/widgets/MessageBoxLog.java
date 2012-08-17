@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.internal.widgets;
 
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
  * When <var>logErrorsOnly</var> is true, if the operation was not successful or errors
  * were generated, this will display the message box.
  */
-public final class MessageBoxLog implements ISdkLog {
+public final class MessageBoxLog implements ILogger {
 
     final ArrayList<String> logMessages = new ArrayList<String>();
     private final String mMessage;
@@ -81,7 +81,14 @@ public final class MessageBoxLog implements ISdkLog {
     }
 
     @Override
-    public void printf(String msgFormat, Object... arg) {
+    public void info(String msgFormat, Object... arg) {
+        if (!mLogErrorsOnly) {
+            logMessages.add(String.format(msgFormat, arg));
+        }
+    }
+
+    @Override
+    public void verbose(String msgFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format(msgFormat, arg));
         }

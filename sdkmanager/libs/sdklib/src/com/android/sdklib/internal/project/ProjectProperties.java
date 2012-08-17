@@ -23,7 +23,7 @@ import com.android.io.FolderWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -420,12 +420,12 @@ public class ProjectProperties implements IPropertySource {
      * <p/>If the file is not present, null is returned with no error messages sent to the log.
      *
      * @param propFile the property file to parse
-     * @param log the ISdkLog object receiving warning/error from the parsing.
+     * @param log the ILogger object receiving warning/error from the parsing.
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
     public static Map<String, String> parsePropertyFile(
             @NonNull IAbstractFile propFile,
-            @Nullable ISdkLog log) {
+            @Nullable ILogger log) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new InputStreamReader(propFile.getContents(),

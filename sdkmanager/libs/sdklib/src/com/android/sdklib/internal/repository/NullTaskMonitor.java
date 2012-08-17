@@ -16,8 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.NullSdkLog;
+import com.android.utils.ILogger;
 
 
 /**
@@ -25,12 +24,12 @@ import com.android.sdklib.NullSdkLog;
  * <p/>
  * This can be passed to methods that require a monitor when the caller doesn't
  * have any UI to update or means to report tracked progress.
- * A custom {@link ISdkLog} is used. Clients could use {@link NullSdkLog} if
+ * A custom {@link ILogger} is used. Clients could use {@link NullSdkLog} if
  * they really don't care about the logging either.
  */
 public class NullTaskMonitor implements ITaskMonitor {
 
-    private final ISdkLog mLog;
+    private final ILogger mLog;
 
     /**
      * Creates a no-op {@link ITaskMonitor} that defers logging to the specified
@@ -39,9 +38,9 @@ public class NullTaskMonitor implements ITaskMonitor {
      * This can be passed to methods that require a monitor when the caller doesn't
      * have any UI to update or means to report tracked progress.
      *
-     * @param log An {@link ISdkLog}. Must not be null. Consider using {@link NullSdkLog}.
+     * @param log An {@link ILogger}. Must not be null. Consider using {@link NullSdkLog}.
      */
-    public NullTaskMonitor(ISdkLog log) {
+    public NullTaskMonitor(ILogger log) {
         mLog = log;
     }
 
@@ -52,7 +51,7 @@ public class NullTaskMonitor implements ITaskMonitor {
 
     @Override
     public void log(String format, Object...args) {
-        mLog.printf(format, args);
+        mLog.info(format, args);
     }
 
     @Override
@@ -62,7 +61,7 @@ public class NullTaskMonitor implements ITaskMonitor {
 
     @Override
     public void logVerbose(String format, Object...args) {
-        mLog.printf(format, args);
+        mLog.verbose(format, args);
     }
 
     @Override
@@ -109,7 +108,7 @@ public class NullTaskMonitor implements ITaskMonitor {
         return null;
     }
 
-    // --- ISdkLog ---
+    // --- ILogger ---
 
     @Override
     public void error(Throwable t, String errorFormat, Object... args) {
@@ -122,8 +121,12 @@ public class NullTaskMonitor implements ITaskMonitor {
     }
 
     @Override
-    public void printf(String msgFormat, Object... args) {
-        mLog.printf(msgFormat, args);
+    public void info(String msgFormat, Object... args) {
+        mLog.info(msgFormat, args);
     }
 
+    @Override
+    public void verbose(String msgFormat, Object... args) {
+        mLog.verbose(msgFormat, args);
+    }
 }

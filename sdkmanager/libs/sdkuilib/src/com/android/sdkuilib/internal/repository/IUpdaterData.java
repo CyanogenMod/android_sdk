@@ -16,12 +16,12 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -34,7 +34,7 @@ interface IUpdaterData {
 
     public abstract ITaskFactory getTaskFactory();
 
-    public abstract ISdkLog getSdkLog();
+    public abstract ILogger getSdkLog();
 
     public abstract DownloadCache getDownloadCache();
 

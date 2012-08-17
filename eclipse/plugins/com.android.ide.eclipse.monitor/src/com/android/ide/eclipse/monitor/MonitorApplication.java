@@ -18,11 +18,11 @@ package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
 import com.android.prefs.AndroidLocation;
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdkstats.SdkStatsService;
 import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -60,7 +60,7 @@ public class MonitorApplication implements IApplication {
         MonitorPlugin.getDefault().setSdkPath(sdkPath);
 
         // install platform tools if necessary
-        ISdkLog sdkLog = new NullSdkLog();
+        ILogger sdkLog = NullLogger.getLogger();
         SdkManager manager = SdkManager.createManager(sdkPath, sdkLog);
         if (manager.getPlatformToolsVersion() == null) {
             AdtUpdateDialog window = new AdtUpdateDialog(new Shell(display), sdkLog, sdkPath);

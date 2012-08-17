@@ -16,8 +16,6 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITask;
@@ -30,6 +28,8 @@ import com.android.sdklib.internal.repository.archives.ArchiveReplacement;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdkuilib.internal.repository.SettingsController.Settings;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -124,7 +124,7 @@ public class MockUpdaterData extends UpdaterData {
     }
     //------------
 
-    public static SettingsController createSettingsController(ISdkLog sdkLog) {
+    public static SettingsController createSettingsController(ILogger sdkLog) {
         Properties props = new Properties();
         Settings settings = new Settings(props) {}; // this constructor is protected
         MockSettingsController controller = new MockSettingsController(sdkLog, settings);
@@ -136,7 +136,7 @@ public class MockUpdaterData extends UpdaterData {
 
         private Properties mProperties;
 
-        MockSettingsController(ISdkLog sdkLog, Settings settings) {
+        MockSettingsController(ILogger sdkLog, Settings settings) {
             super(sdkLog, settings);
         }
 
@@ -178,7 +178,7 @@ public class MockUpdaterData extends UpdaterData {
 
     private static class MockTask extends NullTaskMonitor {
         public MockTask(ITask task) {
-            super(new NullSdkLog());
+            super(NullLogger.getLogger());
             task.run(this);
         }
     }

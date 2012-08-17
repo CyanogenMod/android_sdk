@@ -16,11 +16,10 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.packages.MockAddonPackage;
 import com.android.sdklib.internal.repository.packages.MockBrokenPackage;
@@ -31,6 +30,7 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -56,7 +56,7 @@ public class UpdaterLogicTest extends TestCase {
         }
 
         @Override
-        public ISdkLog getSdkLog() {
+        public ILogger getSdkLog() {
             return null;
         }
 

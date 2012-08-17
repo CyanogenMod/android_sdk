@@ -203,7 +203,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                                     @Override
                                     public void err(@Nullable String line) {
                                         if (line != null) {
-                                            logger.printf("[SDK Manager] %s", line);
+                                            logger.info("[SDK Manager] %s", line);
                                         }
                                     }
                                 });
@@ -264,7 +264,11 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                 AdtPlugin.getDisplay().getActiveShell(),
                 new AdtConsoleSdkLog() {
                     @Override
-                    public void printf(String msgFormat, Object... args) {
+                    public void info(String msgFormat, Object... args) {
+                        // Do not show non-error/warning log in Eclipse.
+                    };
+                    @Override
+                    public void verbose(String msgFormat, Object... args) {
                         // Do not show non-error/warning log in Eclipse.
                     };
                 },

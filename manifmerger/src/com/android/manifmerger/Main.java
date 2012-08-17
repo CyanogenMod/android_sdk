@@ -16,7 +16,8 @@
 
 package com.android.manifmerger;
 
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 
 import java.io.File;
 
@@ -37,7 +38,7 @@ import java.io.File;
 public class Main {
 
     /** Logger object. Use this to print normal output, warnings or errors. Never null. */
-    private ISdkLog mSdkLog;
+    private ILogger mSdkLog;
     /** Command line parser. Never null. */
     private ArgvParser mArgvParser;
 
@@ -77,37 +78,11 @@ public class Main {
      * This logger prints to the attached console.
      */
     private void createLogger() {
-        mSdkLog = new ISdkLog() {
-            @Override
-            public void error(Throwable t, String errorFormat, Object... args) {
-                if (errorFormat != null) {
-                    System.err.printf("Error: " + errorFormat, args);
-                    if (!errorFormat.endsWith("\n")) {
-                        System.err.printf("\n");
-                    }
-                }
-                if (t != null) {
-                    System.err.printf("Error: %s\n", t.getMessage());
-                }
-            }
-
-            @Override
-            public void warning(String warningFormat, Object... args) {
-                System.out.printf("Warning: " + warningFormat, args);
-                if (!warningFormat.endsWith("\n")) {
-                    System.out.printf("\n");
-                }
-            }
-
-            @Override
-            public void printf(String msgFormat, Object... args) {
-                System.out.printf(msgFormat, args);
-            }
-        };
+        mSdkLog = new StdLogger(StdLogger.Level.VERBOSE);
     }
 
     /** For testing */
-    public void setLogger(ISdkLog logger) {
+    public void setLogger(ILogger logger) {
         mSdkLog = logger;
     }
 

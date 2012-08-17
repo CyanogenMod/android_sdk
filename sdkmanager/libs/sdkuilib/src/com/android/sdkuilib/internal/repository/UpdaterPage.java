@@ -16,13 +16,11 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.widgets.Composite;
 
 import java.lang.reflect.Constructor;
-
-
 
 /**
  * Base class for pages shown in the updater.
@@ -57,7 +55,7 @@ public abstract class UpdaterPage extends Composite {
             Class<? extends UpdaterPage> clazz,
             Composite parent,
             int swtStyle,
-            ISdkLog log) {
+            ILogger log) {
 
         try {
             Constructor<? extends UpdaterPage> cons =

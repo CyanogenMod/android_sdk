@@ -27,9 +27,9 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardS
 import com.android.io.FileWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
+import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
@@ -216,7 +216,7 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
                 // Parse the extras to see if we can find samples that are
                 // compatible with the selected target API.
                 // First we need an SdkManager that suppresses all output.
-                SdkManager sdkman = sdk.getNewSdkManager(new NullSdkLog());
+                SdkManager sdkman = sdk.getNewSdkManager(NullLogger.getLogger());
 
                 Map<File, String> extras = sdkman.getExtraSamples();
                 for (Entry<File, String> entry : extras.entrySet()) {

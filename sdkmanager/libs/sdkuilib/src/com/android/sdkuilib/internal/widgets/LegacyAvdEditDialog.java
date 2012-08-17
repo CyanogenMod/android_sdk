@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo;
@@ -31,6 +30,7 @@ import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -98,7 +98,7 @@ final class LegacyAvdEditDialog extends GridDialog {
     // a list of user-edited properties.
     private final ArrayList<String> mEditedProperties = new ArrayList<String>();
     private final ImageFactory mImageFactory;
-    private final ISdkLog mSdkLog;
+    private final ILogger mSdkLog;
     /**
      * The original AvdInfo if we're editing an existing AVD.
      * Null when we're creating a new AVD.
@@ -214,14 +214,14 @@ final class LegacyAvdEditDialog extends GridDialog {
      * @param parentShell The parent shell.
      * @param avdManager The existing {@link AvdManager} to use. Must not be null.
      * @param imageFactory An existing {@link ImageFactory} to use. Must not be null.
-     * @param log An existing {@link ISdkLog} where output will go. Must not be null.
+     * @param log An existing {@link ILogger} where output will go. Must not be null.
      * @param editAvdInfo An optional {@link AvdInfo}. When null, the dialog is used
      *   to create a new AVD. When non-null, the dialog is used to <em>edit</em> this AVD.
      */
     protected LegacyAvdEditDialog(Shell parentShell,
             AvdManager avdManager,
             ImageFactory imageFactory,
-            ISdkLog log,
+            ILogger log,
             AvdInfo editAvdInfo) {
         super(parentShell, 2, false);
         mAvdManager = avdManager;
@@ -1352,7 +1352,7 @@ final class LegacyAvdEditDialog extends GridDialog {
             skinName = mSkinSizeWidth.getText() + "x" + mSkinSizeHeight.getText(); //$NON-NLS-1$
         }
 
-        ISdkLog log = mSdkLog;
+        ILogger log = mSdkLog;
         if (log == null || log instanceof MessageBoxLog) {
             // If the current logger is a message box, we use our own (to make sure
             // to display errors right away and customize the title).

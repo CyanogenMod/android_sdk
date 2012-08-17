@@ -17,12 +17,12 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 /**
- * An {@link ISdkLog} logger that outputs to the ADT console.
+ * An {@link ILogger} logger that outputs to the ADT console.
  */
-public class AdtConsoleSdkLog implements ISdkLog {
+public class AdtConsoleSdkLog implements ILogger {
 
     private static final String TAG = "SDK Manager"; //$NON-NLS-1$
 
@@ -36,13 +36,18 @@ public class AdtConsoleSdkLog implements ISdkLog {
     }
 
     @Override
-    public void printf(String msgFormat, Object... args) {
+    public void info(String msgFormat, Object... args) {
         String msg = String.format(msgFormat, args);
         for (String s : msg.split("\n")) {
             if (s.trim().length() > 0) {
                 AdtPlugin.printToConsole(TAG, s);
             }
         }
+    }
+
+    @Override
+    public void verbose(String msgFormat, Object... args) {
+        info(msgFormat, args);
     }
 
     @Override

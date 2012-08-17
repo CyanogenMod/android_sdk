@@ -44,7 +44,6 @@ import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -52,6 +51,7 @@ import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.utils.ILogger;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -232,7 +232,7 @@ public final class Sdk  {
             }
 
             final ArrayList<String> logMessages = new ArrayList<String>();
-            ISdkLog log = new ISdkLog() {
+            ILogger log = new ILogger() {
                 @Override
                 public void error(Throwable throwable, String errorFormat, Object... arg) {
                     if (errorFormat != null) {
@@ -250,8 +250,13 @@ public final class Sdk  {
                 }
 
                 @Override
-                public void printf(String msgFormat, Object... arg) {
+                public void info(String msgFormat, Object... arg) {
                     logMessages.add(String.format(msgFormat, arg));
+                }
+
+                @Override
+                public void verbose(String msgFormat, Object... arg) {
+                    info(msgFormat, arg);
                 }
             };
 
@@ -321,7 +326,7 @@ public final class Sdk  {
      * @param log The logger for the {@link SdkManager}.
      * @return A new {@link SdkManager} parsing the same location.
      */
-    public @NonNull SdkManager getNewSdkManager(@NonNull ISdkLog log) {
+    public @NonNull SdkManager getNewSdkManager(@NonNull ILogger log) {
         return SdkManager.createManager(getSdkLocation(), log);
     }
 

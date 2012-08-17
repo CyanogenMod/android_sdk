@@ -20,9 +20,9 @@ import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
 import static com.android.ide.eclipse.adt.AdtConstants.DOC_HIDE;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
-import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.platform.ViewClassInfo.LayoutParamsInfo;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.utils.ILogger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -497,7 +497,7 @@ public final class AttrsXmlParser {
             for (String f : attrFormat.getNodeValue().split("\\|")) { //$NON-NLS-1$
                 Format format = mFormatNames.get(f);
                 if (format == null) {
-                    mLog.printf(
+                    mLog.info(
                         "Unknown format name '%s' in <attr name=\"%s\">, file '%s'.", //$NON-NLS-1$
                         f, name, getOsAttrsXmlPath());
                 } else if (format != AttributeInfo.Format.ENUM &&

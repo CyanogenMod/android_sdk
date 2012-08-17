@@ -16,14 +16,14 @@
 
 package com.android.sdkmanager;
 
-import com.android.sdklib.ISdkLog;
-import com.android.sdklib.StdSdkLog;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 
 import junit.framework.TestCase;
 
 public class SdkCommandLineTest extends TestCase {
 
-    private StdSdkLog mLog;
+    private StdLogger mLog;
 
     /**
      * A mock version of the {@link SdkCommandLine} class that does not
@@ -33,7 +33,7 @@ public class SdkCommandLineTest extends TestCase {
         private boolean mExitCalled;
         private boolean mHelpCalled;
 
-        public MockSdkCommandLine(ISdkLog logger) {
+        public MockSdkCommandLine(ILogger logger) {
             super(logger);
         }
 
@@ -70,7 +70,7 @@ public class SdkCommandLineTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        mLog = new StdSdkLog();
+        mLog = new StdLogger(StdLogger.Level.VERBOSE);
         super.setUp();
     }
 

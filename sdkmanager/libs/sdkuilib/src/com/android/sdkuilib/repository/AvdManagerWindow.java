@@ -16,9 +16,9 @@
 
 package com.android.sdkuilib.repository;
 
-import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
+import com.android.utils.ILogger;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -77,7 +77,7 @@ public class AvdManagerWindow {
      */
     public AvdManagerWindow(
             Shell parentShell,
-            ISdkLog sdkLog,
+            ILogger sdkLog,
             String osSdkRoot,
             AvdInvocationContext context) {
         mWindow = new AvdManagerWindowImpl1(

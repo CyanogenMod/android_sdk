@@ -18,8 +18,8 @@ package com.android.ant;
 
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
-import com.android.sdklib.StdSdkLog;
 import com.android.sdklib.io.FileOp;
+import com.android.utils.StdLogger;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
@@ -124,7 +124,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
         } else {
             System.out.println(String.format("Merging manifests from project and %d libraries.",
                     libraries.size()));
-            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new StdSdkLog()));
+            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(
+                    new StdLogger(StdLogger.Level.VERBOSE)));
             if (merger.process(
                     new File(mOutManifest),
                     appManifestFile,

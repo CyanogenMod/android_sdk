@@ -18,7 +18,6 @@ package com.android.ide.common.rendering;
 
 import static com.android.ide.common.rendering.api.Result.Status.ERROR_REFLECTION;
 
-import com.android.ide.common.log.ILogger;
 import com.android.ide.common.rendering.api.Bridge;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.DrawableParams;
@@ -43,6 +42,7 @@ import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IXmlPullParser;
 import com.android.resources.ResourceType;
+import com.android.utils.ILogger;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

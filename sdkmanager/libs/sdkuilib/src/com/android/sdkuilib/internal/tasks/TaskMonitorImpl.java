@@ -203,7 +203,7 @@ class TaskMonitorImpl implements ITaskMonitor {
         return new SubTaskMonitor(this, null, mValue, tickCount * mIncCoef);
     }
 
-    // ----- ISdkLog interface ----
+    // ----- ILogger interface ----
 
     @Override
     public void error(Throwable throwable, String errorFormat, Object... arg) {
@@ -222,7 +222,12 @@ class TaskMonitorImpl implements ITaskMonitor {
     }
 
     @Override
-    public void printf(String msgFormat, Object... arg) {
+    public void info(String msgFormat, Object... arg) {
+        log(msgFormat, arg);
+    }
+
+    @Override
+    public void verbose(String msgFormat, Object... arg) {
         log(msgFormat, arg);
     }
 
@@ -338,7 +343,7 @@ class TaskMonitorImpl implements ITaskMonitor {
                     tickCount * mSubCoef);
         }
 
-        // ----- ISdkLog interface ----
+        // ----- ILogger interface ----
 
         @Override
         public void error(Throwable throwable, String errorFormat, Object... arg) {
@@ -351,8 +356,13 @@ class TaskMonitorImpl implements ITaskMonitor {
         }
 
         @Override
-        public void printf(String msgFormat, Object... arg) {
-            mRoot.printf(msgFormat, arg);
+        public void info(String msgFormat, Object... arg) {
+            mRoot.info(msgFormat, arg);
+        }
+
+        @Override
+        public void verbose(String msgFormat, Object... arg) {
+            mRoot.verbose(msgFormat, arg);
         }
     }
 }

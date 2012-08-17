@@ -34,6 +34,8 @@ import com.android.sdklib.internal.repository.packages.ExtraPackage;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.repository.PkgProps;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 
 import java.io.File;
@@ -107,7 +109,7 @@ public class SdkManager {
 
     /**
      * Create a new {@link SdkManager} instance.
-     * External users should use {@link #createManager(String, ISdkLog)}.
+     * External users should use {@link #createManager(String, ILogger)}.
      *
      * @param osSdkPath the location of the SDK.
      */
@@ -119,10 +121,10 @@ public class SdkManager {
     /**
      * Creates an {@link SdkManager} for a given sdk location.
      * @param osSdkPath the location of the SDK.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @return the created {@link SdkManager} or null if the location is not valid.
      */
-    public static SdkManager createManager(String osSdkPath, ISdkLog log) {
+    public static SdkManager createManager(String osSdkPath, ILogger log) {
         try {
             SdkManager manager = new SdkManager(osSdkPath);
             manager.reloadSdk(log);
@@ -138,9 +140,9 @@ public class SdkManager {
     /**
      * Reloads the content of the SDK.
      *
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      */
-    public void reloadSdk(ISdkLog log) {
+    public void reloadSdk(ILogger log) {
         // get the current target list.
         mTargetDirs.clear();
         ArrayList<IAndroidTarget> targets = new ArrayList<IAndroidTarget>();
@@ -348,7 +350,7 @@ public class SdkManager {
         Package[] packages = parser.parseSdk(mOsSdkPath,
                                              this,
                                              LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(new NullSdkLog()));
+                                             new NullTaskMonitor(NullLogger.getLogger()));
 
         Map<File, String> samples = new HashMap<File, String>();
 
@@ -381,7 +383,7 @@ public class SdkManager {
         Package[] packages = parser.parseSdk(mOsSdkPath,
                                              this,
                                              LocalSdkParser.PARSE_EXTRAS,
-                                             new NullTaskMonitor(new NullSdkLog()));
+                                             new NullTaskMonitor(NullLogger.getLogger()));
 
         Map<String, Integer> extraVersions = new TreeMap<String, Integer>();
 
@@ -403,7 +405,7 @@ public class SdkManager {
     public @Nullable String getPlatformToolsVersion() {
         LocalSdkParser parser = new LocalSdkParser();
         Package[] packages = parser.parseSdk(mOsSdkPath, this, LocalSdkParser.PARSE_PLATFORM_TOOLS,
-                new NullTaskMonitor(new NullSdkLog()));
+                new NullTaskMonitor(NullLogger.getLogger()));
 
         for (Package pkg : packages) {
             if (pkg instanceof PlatformToolPackage && pkg.isLocal()) {
@@ -424,13 +426,13 @@ public class SdkManager {
      * @param sdkOsPath Location of the SDK
      * @param targets the list to fill with the platforms.
      * @param dirInfos a map to keep information on directories to see if they change later.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @throws RuntimeException when the "platforms" folder is missing and cannot be created.
      */
     private static void loadPlatforms(
             String sdkOsPath,
             ArrayList<IAndroidTarget> targets,
-            Map<File, DirInfo> dirInfos, ISdkLog log) {
+            Map<File, DirInfo> dirInfos, ILogger log) {
         File platformFolder = new File(sdkOsPath, SdkConstants.FD_PLATFORMS);
 
         if (platformFolder.isDirectory()) {
@@ -472,12 +474,12 @@ public class SdkManager {
      * Loads a specific Platform at a given location.
      * @param sdkOsPath Location of the SDK
      * @param platformFolder the root folder of the platform.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      */
     private static PlatformTarget loadPlatform(
             String sdkOsPath,
             File platformFolder,
-            ISdkLog log) {
+            ILogger log) {
         FileWrapper buildProp = new FileWrapper(platformFolder, SdkConstants.FN_BUILD_PROP);
         FileWrapper sourcePropFile = new FileWrapper(platformFolder, SdkConstants.FN_SOURCE_PROP);
 
@@ -764,13 +766,13 @@ public class SdkManager {
      * @param osSdkPath Location of the SDK
      * @param targets the list to fill with the add-ons.
      * @param dirInfos a map to keep information on directories to see if they change later.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @throws RuntimeException when the "add-ons" folder is missing and cannot be created.
      */
     private static void loadAddOns(
             String osSdkPath,
             ArrayList<IAndroidTarget> targets,
-            Map<File, DirInfo> dirInfos, ISdkLog log) {
+            Map<File, DirInfo> dirInfos, ILogger log) {
         File addonFolder = new File(osSdkPath, SdkConstants.FD_ADDONS);
 
         if (addonFolder.isDirectory()) {
@@ -815,11 +817,11 @@ public class SdkManager {
      * Loads a specific Add-on at a given location.
      * @param addonDir the location of the add-on directory.
      * @param targetList The list of Android target that were already loaded from the SDK.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      */
     private static AddOnTarget loadAddon(File addonDir,
             IAndroidTarget[] targetList,
-            ISdkLog log) {
+            ILogger log) {
 
         // Parse the addon properties to ensure we can load it.
         Pair<Map<String, String>, String> infos = parseAddonProperties(addonDir, targetList, log);
@@ -961,7 +963,7 @@ public class SdkManager {
      *
      * @param addonDir the location of the addon directory.
      * @param targetList The list of Android target that were already loaded from the SDK.
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @return A pair with the property map and an error string. Both can be null but not at the
      *  same time. If a non-null error is present then the property map must be ignored. The error
      *  should be translatable as it might show up in the SdkManager UI.
@@ -969,7 +971,7 @@ public class SdkManager {
     public static Pair<Map<String, String>, String> parseAddonProperties(
             File addonDir,
             IAndroidTarget[] targetList,
-            ISdkLog log) {
+            ILogger log) {
         Map<String, String> propertyMap = null;
         String error = null;
 
@@ -1084,7 +1086,7 @@ public class SdkManager {
      * @param platform The folder containing the platform.
      * @param log Logger. Cannot be null.
      */
-    private static boolean checkPlatformContent(File platform, ISdkLog log) {
+    private static boolean checkPlatformContent(File platform, ILogger log) {
         for (String relativePath : sPlatformContentList) {
             File f = new File(platform, relativePath);
             if (!f.exists()) {
@@ -1139,7 +1141,7 @@ public class SdkManager {
      *
      * @param log Logger. Cannot be null.
      */
-    private void initializeSamplePaths(ISdkLog log) {
+    private void initializeSamplePaths(ILogger log) {
         File sampleFolder = new File(mOsSdkPath, SdkConstants.FD_SAMPLES);
         if (sampleFolder.isDirectory()) {
             File[] platforms  = sampleFolder.listFiles();
@@ -1170,7 +1172,7 @@ public class SdkManager {
      * @param log Logger for errors. Cannot be null.
      * @return An {@link AndroidVersion} or null on error.
      */
-    private AndroidVersion getSamplesVersion(File folder, ISdkLog log) {
+    private AndroidVersion getSamplesVersion(File folder, ILogger log) {
         File sourceProp = new File(folder, SdkConstants.FN_SOURCE_PROP);
         try {
             Properties p = new Properties();

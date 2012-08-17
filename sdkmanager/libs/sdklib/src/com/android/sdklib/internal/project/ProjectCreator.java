@@ -21,9 +21,9 @@ import com.android.SdkConstants;
 import com.android.io.FileWrapper;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.utils.ILogger;
 import com.android.xml.AndroidManifest;
 import com.android.xml.AndroidXPathFactory;
 
@@ -143,7 +143,7 @@ public class ProjectCreator {
     /** The {@link OutputLevel} verbosity. */
     private final OutputLevel mLevel;
     /** Logger for errors and output. Cannot be null. */
-    private final ISdkLog mLog;
+    private final ILogger mLog;
     /** The OS path of the SDK folder. */
     private final String mSdkFolder;
     /** The {@link SdkManager} instance. */
@@ -157,7 +157,7 @@ public class ProjectCreator {
      * @param level The {@link OutputLevel} verbosity.
      * @param log Logger for errors and output. Cannot be null.
      */
-    public ProjectCreator(SdkManager sdkManager, String sdkFolder, OutputLevel level, ISdkLog log) {
+    public ProjectCreator(SdkManager sdkManager, String sdkFolder, OutputLevel level, ILogger log) {
         mSdkManager = sdkManager;
         mSdkFolder = sdkFolder;
         mLevel = level;
@@ -1237,8 +1237,8 @@ public class ProjectCreator {
     /**
      * Prints a message unless silence is enabled.
      * <p/>
-     * This is just a convenience wrapper around {@link ISdkLog#printf(String, Object...)} from
-     * {@link #mLog} after testing if ouput level is {@link OutputLevel#VERBOSE}.
+     * This is just a convenience wrapper around {@link ILogger#info(String, Object...)} from
+     * {@link #mLog} after testing if output level is {@link OutputLevel#VERBOSE}.
      *
      * @param format Format for String.format
      * @param args Arguments for String.format
@@ -1248,7 +1248,7 @@ public class ProjectCreator {
             if (!format.endsWith("\n")) {
                 format += "\n";
             }
-            mLog.printf(format, args);
+            mLog.info(format, args);
         }
     }
 

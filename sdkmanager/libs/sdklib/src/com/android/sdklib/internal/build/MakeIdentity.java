@@ -17,7 +17,7 @@
 package com.android.sdklib.internal.build;
 
 import com.android.appauth.Certificate;
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class MakeIdentity {
      * @throws IOException
      * @throws UnrecoverableEntryException
      */
-    public boolean make(PrintStream ps, ISdkLog log)
+    public boolean make(PrintStream ps, ILogger log)
             throws KeyStoreException, NoSuchAlgorithmException,
             CertificateException, IOException, UnrecoverableEntryException {
 

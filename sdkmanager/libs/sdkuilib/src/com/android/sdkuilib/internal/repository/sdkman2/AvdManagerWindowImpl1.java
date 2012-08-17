@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 
 import com.android.SdkConstants;
-import com.android.sdklib.ISdkLog;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.repository.ITaskFactory;
@@ -33,6 +32,7 @@ import com.android.sdkuilib.internal.widgets.DeviceCreationDialog;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.utils.ILogger;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -89,7 +89,7 @@ public class AvdManagerWindowImpl1 {
      */
     public AvdManagerWindowImpl1(
             Shell parentShell,
-            ISdkLog sdkLog,
+            ILogger sdkLog,
             String osSdkRoot,
             AvdInvocationContext context) {
         mParentShell = parentShell;

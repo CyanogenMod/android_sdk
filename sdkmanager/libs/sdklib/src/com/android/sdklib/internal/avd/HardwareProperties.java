@@ -16,7 +16,7 @@
 
 package com.android.sdklib.internal.avd;
 
-import com.android.sdklib.ISdkLog;
+import com.android.utils.ILogger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -153,10 +153,10 @@ public class HardwareProperties {
     /**
      * Parses the hardware definition file.
      * @param file the property file to parse
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
-    public static Map<String, HardwareProperty> parseHardwareDefinitions(File file, ISdkLog log) {
+    public static Map<String, HardwareProperty> parseHardwareDefinitions(File file, ILogger log) {
         BufferedReader reader = null;
         try {
             FileInputStream fis = new FileInputStream(file);
