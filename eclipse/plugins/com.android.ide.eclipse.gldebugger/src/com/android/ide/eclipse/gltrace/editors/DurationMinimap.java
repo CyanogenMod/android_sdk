@@ -59,10 +59,10 @@ public class DurationMinimap extends Canvas {
     private static final int MAX_DURATION_LENGTH_SCALE = 6;
 
     /** List of GL Calls in the trace. */
-    private final List<GLCall> mCalls;
+    private List<GLCall> mCalls;
 
     /** Number of GL contexts in the trace. */
-    private final int mContextCount;
+    private int mContextCount;
 
     /** Starting call index of currently displayed frame. */
     private int mStartCallIndex;
@@ -102,8 +102,7 @@ public class DurationMinimap extends Canvas {
     public DurationMinimap(Composite parent, GLTrace trace) {
         super(parent, SWT.NO_BACKGROUND);
 
-        mCalls = trace.getGLCalls();
-        mContextCount = trace.getContexts().size();
+        setInput(trace);
 
         initializeColors();
         initializeFonts();
@@ -159,6 +158,16 @@ public class DurationMinimap extends Canvas {
                 redraw();
             }
         });
+    }
+
+    public void setInput(GLTrace trace) {
+        if (trace != null) {
+            mCalls = trace.getGLCalls();
+            mContextCount = trace.getContexts().size();
+        } else {
+            mCalls = null;
+            mContextCount = 1;
+        }
     }
 
     @Override

@@ -42,7 +42,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DetailsPage extends Page implements ISelectionListener {
-    private final GLTrace mTrace;
+    private GLTrace mTrace;
 
     private IToolBarManager mToolBarManager;
     private Composite mTopComposite;
@@ -58,6 +58,10 @@ public class DetailsPage extends Page implements ISelectionListener {
             new VertexAttribPointerDataDetailProvider());
 
     public DetailsPage(GLTrace trace) {
+        mTrace = trace;
+    }
+
+    public void setInput(GLTrace trace) {
         mTrace = trace;
     }
 

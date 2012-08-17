@@ -21,6 +21,7 @@ import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -135,6 +136,10 @@ public class GLCallGroups {
      */
     public static List<GLCallNode> constructCallHierarchy(GLTrace trace, int start, int end,
             int contextToGroup) {
+        if (trace == null) {
+            return Collections.emptyList();
+        }
+
         if (contextToGroup < 0 || contextToGroup > trace.getContexts().size()) {
             return flatHierarchy(trace, start, end);
         }

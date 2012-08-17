@@ -61,11 +61,11 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
     public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
     private static final ILock sGlStateLock = Job.getJobManager().newLock();
 
-    private final GLTrace mTrace;
-    private final List<GLCall> mGLCalls;
+    private GLTrace mTrace;
+    private List<GLCall> mGLCalls;
 
     /** OpenGL State as of call {@link #mCurrentStateIndex}. */
-    private final IGLProperty mState;
+    private IGLProperty mState;
     private int mCurrentStateIndex;
 
     private String[] TREE_PROPERTIES = { "Name", "Value" };
@@ -73,11 +73,24 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
     private StateLabelProvider mLabelProvider;
 
     public StateViewPage(GLTrace trace) {
+        setInput(trace);
+    }
+
+    public void setInput(GLTrace trace) {
         mTrace = trace;
-        mGLCalls = trace.getGLCalls();
+        if (trace != null) {
+            mGLCalls = trace.getGLCalls();
+        } else {
+            mGLCalls = null;
+        }
 
         mState = GLState.createDefaultState();
         mCurrentStateIndex = -1;
+
+        if (mTreeViewer != null) {
+            mTreeViewer.setInput(mState);
+            mTreeViewer.refresh();
+        }
     }
 
     @Override

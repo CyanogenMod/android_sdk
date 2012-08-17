@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
-import com.android.ddmuilib.FindDialog;
 import com.android.ddmuilib.AbstractBufferFindTarget;
+import com.android.ddmuilib.FindDialog;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
@@ -63,6 +63,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
@@ -122,7 +123,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private boolean mShowContextSwitcher;
     private int mCurrentlyDisplayedContext = -1;
 
+    private StateViewPage mStateViewPage;
     private FrameSummaryViewPage mFrameSummaryViewPage;
+    private DetailsPage mDetailsPage;
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
@@ -170,41 +173,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         GridData gd = new GridData(GridData.FILL_BOTH);
         c.setLayoutData(gd);
 
-        ProgressMonitorDialog dlg = new ProgressMonitorDialog(parent.getShell());
-        TraceFileParserTask parser = new TraceFileParserTask(mFilePath, parent.getDisplay(),
-                THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
-        try {
-            dlg.run(true, true, parser);
-        } catch (InvocationTargetException e) {
-            // exception while parsing, display error to user
-            MessageDialog.openError(parent.getShell(),
-                    "Error parsing OpenGL Trace File",
-                    e.getCause().getMessage());
-            return;
-        } catch (InterruptedException e) {
-            // operation canceled by user, just return
-            return;
-        }
-
-        mTrace = parser.getTrace();
-        if (mTrace == null) {
-            return;
-        }
-
-        mShowContextSwitcher = mTrace.getContexts().size() > 1;
+        setInput(parent.getShell(), mFilePath);
 
         createFrameSelectionControls(c);
         createFilterBar(c);
         createFrameTraceView(c);
 
         getSite().setSelectionProvider(mFrameTreeViewer);
-
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                refreshUI();
-            }
-        });
 
         IActionBars actionBars = getEditorSite().getActionBars();
         actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(),
@@ -232,10 +207,50 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         });
     }
 
+    public void setInput(Shell shell, String tracePath) {
+        ProgressMonitorDialog dlg = new ProgressMonitorDialog(shell);
+        TraceFileParserTask parser = new TraceFileParserTask(mFilePath, shell.getDisplay(),
+                THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+        try {
+            dlg.run(true, true, parser);
+        } catch (InvocationTargetException e) {
+            // exception while parsing, display error to user
+            MessageDialog.openError(shell,
+                    "Error parsing OpenGL Trace File",
+                    e.getCause().getMessage());
+            return;
+        } catch (InterruptedException e) {
+            // operation canceled by user, just return
+            return;
+        }
+
+        mTrace = parser.getTrace();
+        mShowContextSwitcher = (mTrace == null) ? false : mTrace.getContexts().size() > 1;
+        if (mStateViewPage != null) {
+            mStateViewPage.setInput(mTrace);
+        }
+        if (mFrameSummaryViewPage != null) {
+            mFrameSummaryViewPage.setInput(mTrace);
+        }
+        if (mDetailsPage != null) {
+            mDetailsPage.setInput(mTrace);
+        }
+        if (mDurationMinimap != null) {
+            mDurationMinimap.setInput(mTrace);
+        }
+
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                refreshUI();
+            }
+        });
+    }
+
     private void refreshUI() {
         int nFrames = 0;
 
-        nFrames = mTrace.getFrames().size();
+        nFrames = mTrace == null ? 1 : mTrace.getFrames().size();
         setFrameCount(nFrames);
         selectFrame(1);
     }
@@ -302,9 +317,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionScale.setSelection(selectedFrame);
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
-        GLFrame f = mTrace.getFrame(selectedFrame - 1);
-        mCallStartIndex = f.getStartIndex();
-        mCallEndIndex = f.getEndIndex();
+        if (mTrace != null) {
+            GLFrame f = mTrace.getFrame(selectedFrame - 1);
+            mCallStartIndex = f.getStartIndex();
+            mCallEndIndex = f.getEndIndex();
+        } else {
+            mCallStartIndex = mCallEndIndex = 0;
+        }
 
         // update tree view in the editor
         refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
@@ -693,7 +712,11 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     public StateViewPage getStateViewPage() {
-        return new StateViewPage(mTrace);
+        if (mStateViewPage == null) {
+            mStateViewPage = new StateViewPage(mTrace);
+        }
+
+        return mStateViewPage;
     }
 
     public FrameSummaryViewPage getFrameSummaryViewPage() {
@@ -705,7 +728,11 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     public DetailsPage getDetailsPage() {
-        return new DetailsPage(mTrace);
+        if (mDetailsPage == null) {
+            mDetailsPage = new DetailsPage(mTrace);
+        }
+
+        return mDetailsPage;
     }
 
     private void copySelectionToClipboard() {
@@ -783,5 +810,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                 FindDialog.FIND_NEXT_ID);
         mFindDialog.open(); // blocks until find dialog is closed
         mFindDialog = null;
+    }
+
+    public String getInputPath() {
+        return mFilePath;
     }
 }
