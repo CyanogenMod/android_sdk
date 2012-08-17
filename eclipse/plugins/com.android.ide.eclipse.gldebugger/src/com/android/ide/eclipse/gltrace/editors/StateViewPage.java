@@ -248,7 +248,7 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
                 } catch (Exception e) {
                     GlTracePlugin.getDefault().logMessage("Error applying transformations for "
                             + call);
-                    GlTracePlugin.getDefault().logMessage(e.getMessage());
+                    GlTracePlugin.getDefault().logMessage(e.toString());
                 }
             }
         }

@@ -23,7 +23,7 @@ import java.util.Collections;
 
 public class GLState {
     /** # of texture units modelled in the GL State. */
-    public static final int TEXTURE_UNIT_COUNT = 8;
+    public static final int TEXTURE_UNIT_COUNT = 16;
 
     /** # of vertex attributes */
     private static final int MAX_VERTEX_ATTRIBS = 8;
@@ -253,8 +253,10 @@ public class GLState {
                 Integer.valueOf(0));
         IGLProperty bindingCubeMap = new GLIntegerProperty(GLStateType.TEXTURE_BINDING_CUBE_MAP,
                 Integer.valueOf(0));
+        IGLProperty bindingExternal = new GLIntegerProperty(GLStateType.TEXTURE_BINDING_EXTERNAL,
+                Integer.valueOf(0));
         IGLProperty perTextureUnitState = new GLCompositeProperty(
-                GLStateType.PER_TEXTURE_UNIT_STATE, binding2D, bindingCubeMap);
+                GLStateType.PER_TEXTURE_UNIT_STATE, binding2D, bindingCubeMap, bindingExternal);
         IGLProperty textureUnitState = new GLListProperty(GLStateType.TEXTURE_UNITS,
                 perTextureUnitState, TEXTURE_UNIT_COUNT);
 

@@ -116,6 +116,7 @@ public enum GLStateType {
         PER_TEXTURE_UNIT_STATE("Texture Unit Properties"),
             TEXTURE_BINDING_2D("TEXTURE_2D Binding"),
             TEXTURE_BINDING_CUBE_MAP("TEXTURE_CUBE_MAP Binding"),
+            TEXTURE_BINDING_EXTERNAL("TEXTURE_EXTERNAL Binding"),
         TEXTURES("Textures"),
             PER_TEXTURE_STATE("Per Texture State"),
                 TEXTURE_MIN_FILTER("Minification Function"),

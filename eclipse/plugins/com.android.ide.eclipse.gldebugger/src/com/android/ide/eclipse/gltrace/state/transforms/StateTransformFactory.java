@@ -947,8 +947,11 @@ public class StateTransformFactory {
     }
 
     private static GLStateType getTextureUnitTargetName(GLEnum target) {
-        if (target == GLEnum.GL_TEXTURE_BINDING_CUBE_MAP) {
+        if (target == GLEnum.GL_TEXTURE_CUBE_MAP) {
             return GLStateType.TEXTURE_BINDING_CUBE_MAP;
+        } else if (target == GLEnum.GL_TEXTURE_EXTERNAL) {
+            // added by OES_EGL_image_external
+            return GLStateType.TEXTURE_BINDING_EXTERNAL;
         } else {
             return GLStateType.TEXTURE_BINDING_2D;
         }
