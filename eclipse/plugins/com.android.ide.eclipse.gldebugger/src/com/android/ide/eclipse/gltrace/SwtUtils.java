@@ -20,10 +20,14 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Control;
 
 public class SwtUtils {
-    public static int getFontWidth(Control c) {
+    /** Minimum Character width in pixels. */
+    private static final int MIN_CHAR_WIDTH = 10;
+
+    /** Returns the font width if it is greater than {@link #MIN_CHAR_WIDTH}. */
+    public static int getApproximateFontWidth(Control c) {
         GC gc = new GC(c);
         int avgCharWidth = gc.getFontMetrics().getAverageCharWidth();
         gc.dispose();
-        return avgCharWidth;
+        return Math.max(avgCharWidth, MIN_CHAR_WIDTH);
     }
 }
