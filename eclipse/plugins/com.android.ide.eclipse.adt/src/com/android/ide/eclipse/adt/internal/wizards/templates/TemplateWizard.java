@@ -71,6 +71,10 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
         }
 
         setNeedsProgressMonitor(true);
+
+        // Trigger a check to see if the SDK needs to be reloaded (which will
+        // invoke onSdkLoaded asynchronously as needed).
+        AdtPlugin.getDefault().refreshSdk();
     }
 
     @Override

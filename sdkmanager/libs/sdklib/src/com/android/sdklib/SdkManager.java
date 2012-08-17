@@ -52,6 +52,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.Adler32;
 
 /**
  * The SDK manager parses the SDK folder and gives access to the content.
@@ -101,34 +102,8 @@ public class SdkManager {
     private final String mOsSdkPath;
     /** Valid targets that have been loaded. Can be empty but not null. */
     private IAndroidTarget[] mTargets = new IAndroidTarget[0];
-
-    public static class LayoutlibVersion implements Comparable<LayoutlibVersion> {
-        private final int mApi;
-        private final int mRevision;
-
-        public static final int NOT_SPECIFIED = 0;
-
-        public LayoutlibVersion(int api, int revision) {
-            mApi = api;
-            mRevision = revision;
-        }
-
-        public int getApi() {
-            return mApi;
-        }
-
-        public int getRevision() {
-            return mRevision;
-        }
-
-        @Override
-        public int compareTo(LayoutlibVersion rhs) {
-            boolean useRev = this.mRevision > NOT_SPECIFIED && rhs.mRevision > NOT_SPECIFIED;
-            int lhsValue = (this.mApi << 16) + (useRev ? this.mRevision : 0);
-            int rhsValue = (rhs.mApi  << 16) + (useRev ? rhs.mRevision  : 0);
-            return lhsValue - rhsValue;
-        }
-    }
+    /** A map to keep information on directories to see if they change later. */
+    private final Map<File, DirInfo> mTargetDirs = new HashMap<File, SdkManager.DirInfo>();
 
     /**
      * Create a new {@link SdkManager} instance.
@@ -150,17 +125,7 @@ public class SdkManager {
     public static SdkManager createManager(String osSdkPath, ISdkLog log) {
         try {
             SdkManager manager = new SdkManager(osSdkPath);
-            ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
-            loadPlatforms(osSdkPath, list, log);
-            loadAddOns(osSdkPath, list, log);
-
-            // sort the targets/add-ons
-            Collections.sort(list);
-
-            manager.setTargets(list.toArray(new IAndroidTarget[list.size()]));
-
-            // Initialize the targets' sample paths, after the targets have been set.
-            manager.initializeSamplePaths(log);
+            manager.reloadSdk(log);
 
             return manager;
         } catch (IllegalArgumentException e) {
@@ -168,6 +133,96 @@ public class SdkManager {
         }
 
         return null;
+    }
+
+    /**
+     * Reloads the content of the SDK.
+     *
+     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
+     */
+    public void reloadSdk(ISdkLog log) {
+        // get the current target list.
+        mTargetDirs.clear();
+        ArrayList<IAndroidTarget> targets = new ArrayList<IAndroidTarget>();
+        loadPlatforms(mOsSdkPath, targets, mTargetDirs, log);
+        loadAddOns(mOsSdkPath, targets, mTargetDirs, log);
+
+        // For now replace the old list with the new one.
+        // In the future we may want to keep the current objects, so that ADT doesn't have to deal
+        // with new IAndroidTarget objects when a target didn't actually change.
+
+        // sort the targets/add-ons
+        Collections.sort(targets);
+        setTargets(targets.toArray(new IAndroidTarget[targets.size()]));
+
+        // load the samples, after the targets have been set.
+        initializeSamplePaths(log);
+    }
+
+    /**
+     * Checks whether any of the SDK platforms/add-ons have changed on-disk
+     * since we last loaded the SDK. This does not reload the SDK nor does it
+     * change the underlying targets.
+     *
+     * @return True if at least one directory or source.prop has changed.
+     */
+    public boolean hasChanged() {
+        Set<File> visited = new HashSet<File>();
+        boolean changed = false;
+
+        File platformFolder = new File(mOsSdkPath, SdkConstants.FD_PLATFORMS);
+        if (platformFolder.isDirectory()) {
+            File[] platforms  = platformFolder.listFiles();
+            if (platforms != null) {
+                for (File platform : platforms) {
+                    visited.add(platform);
+                    DirInfo dirInfo = mTargetDirs.get(platform);
+                    if (dirInfo == null) {
+                        // This is a new platform directory.
+                        changed = true;
+                    } else {
+                        changed = dirInfo.hasChanged();
+                    }
+                    if (changed) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        File addonFolder = new File(mOsSdkPath, SdkConstants.FD_ADDONS);
+
+        if (!changed && addonFolder.isDirectory()) {
+            File[] addons  = addonFolder.listFiles();
+            if (addons != null) {
+                for (File addon : addons) {
+                    visited.add(addon);
+                    DirInfo dirInfo = mTargetDirs.get(addon);
+                    if (dirInfo == null) {
+                        // This is a new add-on directory.
+                        changed = true;
+                    } else {
+                        changed = dirInfo.hasChanged();
+                    }
+                    if (changed) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!changed) {
+            // Check whether some pre-existing target directories have vanished.
+            for (File previousDir : mTargetDirs.keySet()) {
+                if (!visited.contains(previousDir)) {
+                    // This directory is no longer present.
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        return changed;
     }
 
     /**
@@ -248,29 +303,6 @@ public class SdkManager {
                 writer.close();
             }
         }
-    }
-
-    /**
-     * Reloads the content of the SDK.
-     *
-     * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
-     */
-    public void reloadSdk(ISdkLog log) {
-        // get the current target list.
-        ArrayList<IAndroidTarget> list = new ArrayList<IAndroidTarget>();
-        loadPlatforms(mOsSdkPath, list, log);
-        loadAddOns(mOsSdkPath, list, log);
-
-        // For now replace the old list with the new one.
-        // In the future we may want to keep the current objects, so that ADT doesn't have to deal
-        // with new IAndroidTarget objects when a target didn't actually change.
-
-        // sort the targets/add-ons
-        Collections.sort(list);
-        setTargets(list.toArray(new IAndroidTarget[list.size()]));
-
-        // load the samples, after the targets have been set.
-        initializeSamplePaths(log);
     }
 
     /**
@@ -390,26 +422,33 @@ public class SdkManager {
      * Creates the "platforms" folder if necessary.
      *
      * @param sdkOsPath Location of the SDK
-     * @param list the list to fill with the platforms.
+     * @param targets the list to fill with the platforms.
+     * @param dirInfos a map to keep information on directories to see if they change later.
      * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
      * @throws RuntimeException when the "platforms" folder is missing and cannot be created.
      */
-    private static void loadPlatforms(String sdkOsPath, ArrayList<IAndroidTarget> list,
-            ISdkLog log) {
+    private static void loadPlatforms(
+            String sdkOsPath,
+            ArrayList<IAndroidTarget> targets,
+            Map<File, DirInfo> dirInfos, ISdkLog log) {
         File platformFolder = new File(sdkOsPath, SdkConstants.FD_PLATFORMS);
 
         if (platformFolder.isDirectory()) {
             File[] platforms  = platformFolder.listFiles();
 
             for (File platform : platforms) {
+                PlatformTarget target = null;
                 if (platform.isDirectory()) {
-                    PlatformTarget target = loadPlatform(sdkOsPath, platform, log);
+                    target = loadPlatform(sdkOsPath, platform, log);
                     if (target != null) {
-                        list.add(target);
+                        targets.add(target);
                     }
                 } else {
                     log.warning("Ignoring platform '%1$s', not a folder.", platform.getName());
                 }
+                // Remember we visited this file/directory, even if we failed to load anything
+                // from it.
+                dirInfos.put(platform, new DirInfo(platform, target));
             }
 
             return;
@@ -435,7 +474,9 @@ public class SdkManager {
      * @param platformFolder the root folder of the platform.
      * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
      */
-    private static PlatformTarget loadPlatform(String sdkOsPath, File platformFolder,
+    private static PlatformTarget loadPlatform(
+            String sdkOsPath,
+            File platformFolder,
             ISdkLog log) {
         FileWrapper buildProp = new FileWrapper(platformFolder, SdkConstants.FN_BUILD_PROP);
         FileWrapper sourcePropFile = new FileWrapper(platformFolder, SdkConstants.FN_SOURCE_PROP);
@@ -721,25 +762,35 @@ public class SdkManager {
      * Creates the "add-ons" folder if necessary.
      *
      * @param osSdkPath Location of the SDK
-     * @param list the list to fill with the add-ons.
+     * @param targets the list to fill with the add-ons.
+     * @param dirInfos a map to keep information on directories to see if they change later.
      * @param log the ISdkLog object receiving warning/error from the parsing. Cannot be null.
      * @throws RuntimeException when the "add-ons" folder is missing and cannot be created.
      */
-    private static void loadAddOns(String osSdkPath, ArrayList<IAndroidTarget> list, ISdkLog log) {
+    private static void loadAddOns(
+            String osSdkPath,
+            ArrayList<IAndroidTarget> targets,
+            Map<File, DirInfo> dirInfos, ISdkLog log) {
         File addonFolder = new File(osSdkPath, SdkConstants.FD_ADDONS);
 
         if (addonFolder.isDirectory()) {
             File[] addons  = addonFolder.listFiles();
 
-            IAndroidTarget[] targetList = list.toArray(new IAndroidTarget[list.size()]);
+            IAndroidTarget[] targetList = targets.toArray(new IAndroidTarget[targets.size()]);
 
-            for (File addon : addons) {
-                // Add-ons have to be folders. Ignore files and no need to warn about them.
-                if (addon.isDirectory()) {
-                    AddOnTarget target = loadAddon(addon, targetList, log);
-                    if (target != null) {
-                        list.add(target);
+            if (addons != null) {
+                for (File addon : addons) {
+                    // Add-ons have to be folders. Ignore files and no need to warn about them.
+                    AddOnTarget target = null;
+                    if (addon.isDirectory()) {
+                        target = loadAddon(addon, targetList, log);
+                        if (target != null) {
+                            targets.add(target);
+                        }
                     }
+                    // Remember we visited this file/directory, even if we failed to load anything
+                    // from it.
+                    dirInfos.put(addon, new DirInfo(addon, target));
                 }
             }
 
@@ -1148,4 +1199,136 @@ public class SdkManager {
         return null;
     }
 
+    // -------------
+
+    public static class LayoutlibVersion implements Comparable<LayoutlibVersion> {
+        private final int mApi;
+        private final int mRevision;
+
+        public static final int NOT_SPECIFIED = 0;
+
+        public LayoutlibVersion(int api, int revision) {
+            mApi = api;
+            mRevision = revision;
+        }
+
+        public int getApi() {
+            return mApi;
+        }
+
+        public int getRevision() {
+            return mRevision;
+        }
+
+        @Override
+        public int compareTo(LayoutlibVersion rhs) {
+            boolean useRev = this.mRevision > NOT_SPECIFIED && rhs.mRevision > NOT_SPECIFIED;
+            int lhsValue = (this.mApi << 16) + (useRev ? this.mRevision : 0);
+            int rhsValue = (rhs.mApi  << 16) + (useRev ? rhs.mRevision  : 0);
+            return lhsValue - rhsValue;
+        }
+    }
+
+    // -------------
+
+    private static class DirInfo {
+        private final @NonNull File mDir;
+        private final long mDirModifiedTS;
+        private final long mPropsModifedTS;
+        private final long mPropsChecksum;
+
+        /**
+         * Creates a new immutable {@link DirInfo}.
+         *
+         * @param dir The platform/addon directory of the target. It may not be a directory.
+         * @param target The target associated with the directory or null if we failed to load it.
+         */
+        public DirInfo(@NonNull File dir, @Nullable IAndroidTarget target) {
+            mDir = dir;
+            mDirModifiedTS = dir.lastModified();
+
+            // If we have a target for it, we expect the directory to have
+            // a source props. If we have a target but no source props file,
+            // mPropsModifedTS will be zero.
+            long propsChecksum = 0;
+            long propsModifedTS = 0;
+            if (target != null) {
+                File props = new File(dir, SdkConstants.FN_SOURCE_PROP);
+                if (props.isFile()) {
+                    propsModifedTS = props.lastModified();
+                    propsChecksum = getFileChecksum(props);
+                }
+            }
+            mPropsModifedTS = propsModifedTS;
+            mPropsChecksum = propsChecksum;
+        }
+
+        /**
+         * Checks whether the directory/source.properties attributes have changed.
+         *
+         * @return True if the directory modified timestampd or
+         *  its source.property files have changed.
+         */
+        public boolean hasChanged() {
+            // Does platform directory still exist?
+            if (!mDir.isDirectory()) {
+                return true;
+            }
+            // Has platform directory modified-timestamp changed?
+            if (mDirModifiedTS != mDir.lastModified()) {
+                return true;
+            }
+
+            File props = new File(mDir, SdkConstants.FN_SOURCE_PROP);
+
+            // The directory did not have a props file if target was null or
+            // if mPropsModifedTS is 0.
+            boolean hadProps = mPropsModifedTS != 0;
+
+            // Was there a props file and it vanished, or there wasn't and there's one now?
+            if (hadProps != props.isFile()) {
+                return true;
+            }
+
+            if (hadProps) {
+                // Has source.props file modified-timestampd changed?
+                if (mPropsModifedTS != props.lastModified()) {
+                    return true;
+                }
+                // Had the content of source.props changed?
+                if (mPropsChecksum != getFileChecksum(props)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Computes an adler32 checksum (source.props are small files, so this
+         * should be OK with an acceptable collision rate.)
+         */
+        private static long getFileChecksum(File file) {
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+                Adler32 a = new Adler32();
+                byte[] buf = new byte[1024];
+                int n;
+                while ((n = fis.read(buf)) > 0) {
+                    a.update(buf, 0, n);
+                }
+                return a.getValue();
+            } catch (Exception ignore) {
+            } finally {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                } catch(Exception ignore) {};
+            }
+            return 0;
+        }
+
+    }
 }

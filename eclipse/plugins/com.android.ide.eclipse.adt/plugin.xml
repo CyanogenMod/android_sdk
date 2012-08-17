@@ -826,7 +826,7 @@
                 class="com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction"
                 icon="icons/new_adt_project.png"
                 id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-                label="New Android App"
+                label="New Android Application"
                 style="push"
                 toolbarPath="android_project">
             </action>

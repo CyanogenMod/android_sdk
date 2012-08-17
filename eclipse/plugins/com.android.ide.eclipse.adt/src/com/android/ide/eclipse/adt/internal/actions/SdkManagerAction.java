@@ -66,6 +66,10 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
 
     @Override
     public void run(IAction action) {
+        // Although orthogonal to the sdk manager action, this is a good time
+        // to check whether the SDK has changed on disk.
+        AdtPlugin.getDefault().refreshSdk();
+
         if (!openExternalSdkManager()) {
             // If we failed to execute the sdk manager, check the SDK location.
             // If it's not properly set, the check will display a dialog to state

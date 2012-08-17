@@ -311,6 +311,10 @@ public class GraphicalEditorPart extends EditorPart
         if (mTargetListener == null) {
             mTargetListener = new TargetListener();
             AdtPlugin.getDefault().addTargetListener(mTargetListener);
+
+            // Trigger a check to see if the SDK needs to be reloaded (which will
+            // invoke onSdkLoaded asynchronously as needed).
+            AdtPlugin.getDefault().refreshSdk();
         }
     }
 

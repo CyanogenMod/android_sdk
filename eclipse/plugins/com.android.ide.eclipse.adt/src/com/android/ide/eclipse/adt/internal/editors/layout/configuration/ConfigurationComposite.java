@@ -147,7 +147,7 @@ import java.util.TreeMap;
  * - Target reload. This is when the target used by the project is the edited file has finished<br>
  *   loading.<br>
  */
-public class ConfigurationComposite extends Composite 
+public class ConfigurationComposite extends Composite
         implements SelectionListener, DevicesChangeListener {
     public static final String ATTR_CONTEXT = "context";          //$NON-NLS-1$
     private static final String ICON_SQUARE = "square";           //$NON-NLS-1$
@@ -710,6 +710,7 @@ public class ConfigurationComposite extends Composite
                 if (mSdkChanged || mFirstXmlModelChange) {
                     initDevices();
                     initTargets();
+                    mSdkChanged = false;
                 }
 
                 IProject iProject = mEditedFile.getProject();
@@ -1080,6 +1081,7 @@ public class ConfigurationComposite extends Composite
         if (theme != null) {
             mThemeCombo.setText(getThemeLabel(theme, true));
         } else {
+            // FIXME eclipse claims this is dead code.
             mThemeCombo.setText("(Set Theme)");
         }
         resizeToolBar();
@@ -1569,7 +1571,7 @@ public class ConfigurationComposite extends Composite
      * <p/>If the current selection is compatible, nothing is changed.
      * <p/>If it's not compatible, configs from the current devices are tested.
      * <p/>If none are compatible, it reverts to
-     * {@link #findAndSetCompatibleConfig(FolderConfiguration)}
+     * {@link #findAndSetCompatibleConfig(boolean)}
      */
     private void adaptConfigSelection(boolean needBestMatch) {
         // check the device config (ie sans locale)
@@ -1731,6 +1733,7 @@ public class ConfigurationComposite extends Composite
 
     private Map<String, String> mCountryToLanguage;
 
+    @SuppressWarnings("unused") // FIXME cleanup if really not used anymore?
     private String getCountry(String language, String region) {
         if (RegionQualifier.FAKE_REGION_VALUE.equals(region)) {
             region = "";
@@ -2687,7 +2690,7 @@ public class ConfigurationComposite extends Composite
             selectDevice(null);
         }
     }
-    
+
     @Override
     public void onDevicesChange() {
         final Sdk sdk = Sdk.getCurrent();
