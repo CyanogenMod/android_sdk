@@ -37,6 +37,9 @@ import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
 import org.apache.http.message.BasicHttpResponse;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
@@ -81,6 +84,11 @@ public class UrlOpener {
     private static Map<String, UserCredentials> sRealmCache =
             new HashMap<String, UserCredentials>();
 
+    /** Timeout to establish a connection, in milliseconds. */
+    private static int sConnectionTimeoutMs;
+    /** Timeout waiting for data on a socket, in milliseconds. */
+    private static int sSocketTimeoutMs;
+
     static {
         if (DEBUG) {
             Properties props = System.getProperties();
@@ -96,6 +104,18 @@ public class UrlOpener {
                             key, prop);
                 }
             }
+        }
+
+        try {
+            sConnectionTimeoutMs = Integer.parseInt(System.getenv("ANDROID_SDKMAN_CONN_TIMEOUT"));
+        } catch (Exception ignore) {
+            sConnectionTimeoutMs = 2 * 60 * 1000;
+        }
+
+        try {
+            sSocketTimeoutMs = Integer.parseInt(System.getenv("ANDROID_SDKMAN_READ_TIMEOUT"));
+        } catch (Exception ignore) {
+            sSocketTimeoutMs = 1 * 60 * 1000;
         }
     }
 
@@ -244,6 +264,9 @@ public class UrlOpener {
 
         URLConnection c = u.openConnection();
 
+        c.setConnectTimeout(sConnectionTimeoutMs);
+        c.setReadTimeout(sSocketTimeoutMs);
+
         if (inHeaders != null) {
             for (Header header : inHeaders) {
                 c.setRequestProperty(header.getName(), header.getValue());
@@ -297,8 +320,13 @@ public class UrlOpener {
         UserCredentials result = null;
         String realm = null;
 
+        HttpParams params = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(params, sConnectionTimeoutMs);
+        HttpConnectionParams.setSoTimeout(params, sSocketTimeoutMs);
+
         // use the simple one
-        final DefaultHttpClient httpClient = new DefaultHttpClient();
+        final DefaultHttpClient httpClient = new DefaultHttpClient(params);
+
 
         // create local execution context
         HttpContext localContext = new BasicHttpContext();
