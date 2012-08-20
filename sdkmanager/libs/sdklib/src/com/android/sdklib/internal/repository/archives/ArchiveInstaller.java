@@ -315,8 +315,13 @@ public class ArchiveInstaller {
 
         FileOutputStream os = null;
         InputStream is = null;
+        int inc_remain = NUM_MONITOR_INC;
         try {
             is = cache.openDirectUrl(urlString, monitor);
+            if (is == null) {
+                monitor.logError("Download failed: no content.");
+                return false;
+            }
             os = new FileOutputStream(tmpFile);
 
             MessageDigest digester = archive.getChecksumType().getMessageDigest();
@@ -343,6 +348,7 @@ public class ArchiveInstaller {
                 total += n;
                 if (total >= next_inc) {
                     monitor.incProgress(1);
+                    inc_remain--;
                     next_inc += inc;
                 }
 
@@ -404,7 +410,7 @@ public class ArchiveInstaller {
             monitor.logError("File not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.logError("%1$s", e.getMessage());   //$NON-NLS-1$
+            monitor.logError("Download failed: %1$s", e.getMessage());   //$NON-NLS-1$
 
         } finally {
             if (os != null) {
@@ -421,6 +427,9 @@ public class ArchiveInstaller {
                 } catch (IOException e) {
                     // pass
                 }
+            }
+            if (inc_remain > 0) {
+                monitor.incProgress(inc_remain);
             }
         }
 

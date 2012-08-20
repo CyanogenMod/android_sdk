@@ -286,10 +286,11 @@ public class DownloadCache {
      *
      * @param urlString the URL string to be opened.
      * @param monitor {@link ITaskMonitor} which is related to this URL
-     *            fetching.
-     * @return Returns an {@link InputStream} holding the URL content.
+     *                 fetching.
+     * @return Returns an {@link InputStream} holding the URL content, or null if
+     *                 there's no content.
      * @throws IOException Exception thrown when there are problems retrieving
-     *             the URL or its content.
+     *                 the URL or its content.
      * @throws CanceledByUserException Exception thrown if the user cancels the
      *              authentication dialog.
      */
@@ -303,7 +304,16 @@ public class DownloadCache {
                 false /*needsMarkResetSupport*/,
                 monitor,
                 null /*headers*/);
-        return result.getFirst();
+        InputStream is = result.getFirst();
+        HttpResponse resp = result.getSecond();
+        int status = resp.getStatusLine().getStatusCode();
+        // We shouldn't be using the input stream if the response code isn't 200; this
+        // shoouldn't happen normally.
+        if (status != HttpStatus.SC_OK && is != null) {
+            is.close();
+            is = null;
+        }
+        return is;
     }
 
     /**
@@ -323,6 +333,7 @@ public class DownloadCache {
      * @param monitor {@link ITaskMonitor} which is related to this URL
      *            fetching.
      * @return Returns an {@link InputStream} holding the URL content.
+     *   Returns null if there's no content (e.g. resource not found.)
      *   Returns null if the document is not cached and strategy is {@link Strategy#ONLY_CACHE}.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
