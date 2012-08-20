@@ -31,6 +31,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.internal.junit.runner.IListensToTestExecutions;
+import org.eclipse.jdt.internal.junit.runner.ITestReference;
 import org.eclipse.jdt.internal.junit.runner.MessageIds;
 import org.eclipse.jdt.internal.junit.runner.RemoteTestRunner;
 import org.eclipse.jdt.internal.junit.runner.TestExecution;
@@ -90,10 +92,14 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
      *
      * The tests are run concurrently on all devices. The overall structure is as follows:
      * <ol>
-     *   <li> First, a separate job per device is run to collect test tree data. </li>
-     *   <li> Once all the devices have reported their test tree data, the tree info is
-     *        passed to the Junit UI </li>
-     *   <li> A job per device is again launched to do the actual test run. </li>
+     *   <li> First, a separate job per device is run to collect test tree data. A per device
+     *        {@link TestCollector} records information regarding the tests run on the device.
+     *        </li>
+     *   <li> Once all the devices have finished collecting the test tree data, the tree info is
+     *        collected from all of them and passed to the Junit UI </li>
+     *   <li> A job per device is again launched to do the actual test run. A per device
+     *        {@link TestRunListener} notifies the shared {@link TestResultsNotifier} of test
+     *        status. </li>
      *   <li> As tests complete, the test run listener updates the Junit UI </li>
      * </ol>
      *
@@ -136,13 +142,17 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         }
 
         // Launch all test info collector jobs
-        TestCollector collector = new TestCollector();
-        List<TestRunnerJob> collectorJobs = new ArrayList<TestRunnerJob>(devices.size());
+        List<TestTreeCollectorJob> collectorJobs =
+                new ArrayList<TestTreeCollectorJob>(devices.size());
+        List<TestCollector> perDeviceCollectors = new ArrayList<TestCollector>(devices.size());
         for (int i = 0; i < devices.size(); i++) {
             RemoteAndroidTestRunner runner = runners.get(i);
+            String deviceName = devices.get(i).getName();
+            TestCollector collector = new TestCollector(deviceName);
+            perDeviceCollectors.add(collector);
 
             TestTreeCollectorJob job = new TestTreeCollectorJob(
-                    "Test Tree Collector for " + devices.get(i).getName(),
+                    "Test Tree Collector for " + deviceName,
                     runner, mLaunchInfo.isDebugMode(), collector);
             job.setPriority(Job.INTERACTIVE);
             job.schedule();
@@ -151,7 +161,8 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         }
 
         // wait for all test info collector jobs to complete
-        for (TestRunnerJob job : collectorJobs) {
+        int totalTests = 0;
+        for (TestTreeCollectorJob job : collectorJobs) {
             try {
                 job.join();
             } catch (InterruptedException e) {
@@ -163,27 +174,34 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
                 endTestRunWithError(job.getResult().getMessage());
                 return;
             }
-        }
 
-        if (collector.getErrorMessage() != null) {
-            endTestRunWithError(collector.getErrorMessage());
-            return;
+            TestCollector collector = job.getCollector();
+            String err = collector.getErrorMessage();
+            if (err != null) {
+                endTestRunWithError(err);
+                return;
+            }
+
+            totalTests += collector.getTestCaseCount();
         }
 
         AdtPlugin.printToConsole(mLaunchInfo.getProject(), "Sending test information to Eclipse");
-        notifyTestRunStarted(collector.getTestCaseCount() * devices.size());
-        collector.sendTrees(this);
+        notifyTestRunStarted(totalTests);
+        sendTestTrees(perDeviceCollectors);
 
-        TestRunListener testRunListener = new TestRunListener(devices.size());
         List<TestRunnerJob> instrumentationRunnerJobs =
                 new ArrayList<TestRunnerJob>(devices.size());
+
+        TestResultsNotifier notifier = new TestResultsNotifier(mExecution.getListener(),
+                devices.size());
 
         // Spawn all instrumentation runner jobs
         for (int i = 0; i < devices.size(); i++) {
             RemoteAndroidTestRunner runner = runners.get(i);
-
+            String deviceName = devices.get(i).getName();
+            TestRunListener testRunListener = new TestRunListener(deviceName, notifier);
             InstrumentationRunJob job = new InstrumentationRunJob(
-                    "Test Tree Collector for " + devices.get(i).getName(),
+                    "Test Tree Collector for " + deviceName,
                     runner, mLaunchInfo.isDebugMode(), testRunListener);
             job.setPriority(Job.INTERACTIVE);
             job.schedule();
@@ -204,6 +222,14 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
                 endTestRunWithError(job.getResult().getMessage());
                 return;
             }
+        }
+    }
+
+    /** Sends info about the test tree to be executed (ie the suites and their enclosed tests) */
+    private void sendTestTrees(List<TestCollector> perDeviceCollectors) {
+        for (TestCollector c : perDeviceCollectors) {
+            ITestReference ref = c.getDeviceSuite();
+            ref.sendTree(this);
         }
     }
 
@@ -258,12 +284,16 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
             return mIsDebug;
         }
 
+        public ITestRunListener getListener() {
+            return mListener;
+        }
+
         protected abstract void setupRunner();
     }
 
     private static class TestTreeCollectorJob extends TestRunnerJob {
         public TestTreeCollectorJob(String name, RemoteAndroidTestRunner runner, boolean isDebug,
-                ITestRunListener listener) {
+                TestCollector listener) {
             super(name, runner, isDebug, listener);
         }
 
@@ -278,6 +308,10 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
             // add a small delay between each test. Otherwise for large test suites framework may
             // report Binder transaction failures
             runner.addInstrumentationArg(DELAY_MSEC_KEY, COLLECT_TEST_DELAY_MS);
+        }
+
+        public TestCollector getCollector() {
+            return (TestCollector) getListener();
         }
     }
 
@@ -346,30 +380,75 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
     }
 
     /**
-     * TestRunListener that communicates results in real-time back to JDT JUnit
-     */
+     * This class provides the interface to notify the JDT UI regarding the status of tests.
+     * When running tests on multiple devices, there is a {@link TestRunListener} that listens
+     * to results from each device. Rather than all such listeners directly notifying JDT
+     * from different threads, they all notify this class which notifies JDT. In addition,
+     * the {@link #testRunEnded(String, long)} method make sure that JDT is notified that the
+     * test run has completed only when tests on all devices have completed.
+     * */
+    private class TestResultsNotifier {
+        private final IListensToTestExecutions mListener;
+        private final int mDeviceCount;
+
+        private int mCompletedRuns;
+        private long mMaxElapsedTime;
+
+        public TestResultsNotifier(IListensToTestExecutions listener, int nDevices) {
+            mListener = listener;
+            mDeviceCount = nDevices;
+        }
+
+        public synchronized void testEnded(TestCaseReference ref) {
+            mListener.notifyTestEnded(ref);
+        }
+
+        public synchronized void testFailed(TestReferenceFailure ref) {
+            mListener.notifyTestFailed(ref);
+        }
+
+        public synchronized void testRunEnded(String mDeviceName, long elapsedTime) {
+            mCompletedRuns++;
+
+            if (elapsedTime > mMaxElapsedTime) {
+                mMaxElapsedTime = elapsedTime;
+            }
+
+            if (mCompletedRuns == mDeviceCount) {
+                notifyTestRunEnded(mMaxElapsedTime);
+            }
+        }
+
+        public synchronized void testStarted(TestCaseReference testId) {
+            mListener.notifyTestStarted(testId);
+        }
+    }
+
+    /**
+     * TestRunListener that communicates results in real-time back to JDT JUnit via the
+     * {@link TestResultsNotifier}.
+     * */
     private class TestRunListener implements ITestRunListener {
-        private int mRunCount;
+        private final String mDeviceName;
+        private TestResultsNotifier mNotifier;
 
         /**
-         * Constructs a {@link ITestRunListener} that listens for completion of specified
-         * number of runs.
+         * Constructs a {@link ITestRunListener} that listens for test results on given device.
+         * @param deviceName device on which the tests are being run
+         * @param notifier notifier to inform of test status
          */
-        public TestRunListener(int runCount) {
-            mRunCount = runCount;
+        public TestRunListener(String deviceName, TestResultsNotifier notifier) {
+            mDeviceName = deviceName;
+            mNotifier = notifier;
         }
 
         @Override
-        public synchronized void testEnded(TestIdentifier test,
-                Map<String, String> ignoredTestMetrics) {
-            mExecution.getListener().notifyTestEnded(new TestCaseReference(test));
+        public void testEnded(TestIdentifier test, Map<String, String> ignoredTestMetrics) {
+            mNotifier.testEnded(new TestCaseReference(mDeviceName, test));
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testFailed(com.android.ddmlib.testrunner.ITestRunListener.TestFailure, com.android.ddmlib.testrunner.TestIdentifier, java.lang.String)
-         */
         @Override
-        public synchronized void testFailed(TestFailure status, TestIdentifier test, String trace) {
+        public void testFailed(TestFailure status, TestIdentifier test, String trace) {
             String statusString;
             if (status == TestFailure.ERROR) {
                 statusString = MessageIds.TEST_ERROR;
@@ -377,47 +456,28 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
                 statusString = MessageIds.TEST_FAILED;
             }
             TestReferenceFailure failure =
-                new TestReferenceFailure(new TestCaseReference(test),
+                new TestReferenceFailure(new TestCaseReference(mDeviceName, test),
                         statusString, trace, null);
-            mExecution.getListener().notifyTestFailed(failure);
+            mNotifier.testFailed(failure);
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testRunEnded(long, Map<String, String>)
-         */
         @Override
         public synchronized void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
-            mRunCount--;
-
-            if (mRunCount > 0) {
-                return;
-            }
-
-            // notify that test run has completed only after all runs have been completed
-            notifyTestRunEnded(elapsedTime);
+            mNotifier.testRunEnded(mDeviceName, elapsedTime);
             AdtPlugin.printToConsole(mLaunchInfo.getProject(),
                     LaunchMessages.RemoteAdtTestRunner_RunCompleteMsg);
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testRunFailed(java.lang.String)
-         */
         @Override
         public synchronized void testRunFailed(String errorMessage) {
             reportError(errorMessage);
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStarted(int)
-         */
         @Override
         public synchronized void testRunStarted(String runName, int testCount) {
             // ignore
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStopped(long)
-         */
         @Override
         public synchronized void testRunStopped(long elapsedTime) {
             notifyTestRunStopped(elapsedTime);
@@ -425,19 +485,14 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
                     LaunchMessages.RemoteAdtTestRunner_RunStoppedMsg);
         }
 
-        /* (non-Javadoc)
-         * @see com.android.ddmlib.testrunner.ITestRunListener#testStarted(com.android.ddmlib.testrunner.TestIdentifier)
-         */
         @Override
         public synchronized void testStarted(TestIdentifier test) {
-            TestCaseReference testId = new TestCaseReference(test);
-            mExecution.getListener().notifyTestStarted(testId);
+            TestCaseReference testId = new TestCaseReference(mDeviceName, test);
+            mNotifier.testStarted(testId);
         }
     }
 
-    /**
-     * Override parent to get extra logs.
-     */
+    /** Override parent to get extra logs. */
     @Override
     protected boolean connect() {
         boolean result = super.connect();
@@ -448,9 +503,7 @@ public class RemoteAdtTestRunner extends RemoteTestRunner {
         return result;
     }
 
-    /**
-     * Override parent to dump error message to console.
-     */
+    /** Override parent to dump error message to console. */
     @Override
     public void runFailed(String message, Exception exception) {
         if (exception != null) {
