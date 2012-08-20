@@ -18,9 +18,11 @@ package com.android.ide.eclipse.base;
 
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 public class InstallDetails {
     private static final String ADT_PLUGIN_ID = "com.android.ide.eclipse.adt"; //$NON-NLS-1$
+    private static final String ECLIPSE_PLATFORM_PLUGIN_ID = "org.eclipse.platform"; //$NON-NLS-1$
 
     /**
      * Returns true if the ADT plugin is available in the current platform. This is useful
@@ -29,5 +31,11 @@ public class InstallDetails {
     public static boolean isAdtInstalled() {
         Bundle b = Platform.getBundle(ADT_PLUGIN_ID);
         return b != null;
+    }
+
+    /** Returns the version of current eclipse platform. */
+    public static Version getPlatformVersion() {
+        Bundle b = Platform.getBundle(ECLIPSE_PLATFORM_PLUGIN_ID);
+        return b == null ? Version.emptyVersion : b.getVersion();
     }
 }

@@ -22,13 +22,13 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutWindowCoordinator;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.base.InstallDetails;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsService;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
@@ -293,7 +293,7 @@ public class AdtStartup implements IStartup, IWindowListener {
 
         // Report the version of Eclipse to the stat server.
         // Get the version of eclipse by getting the version of one of the runtime plugins.
-        Version eclipseVersion = getVersion(ResourcesPlugin.getPlugin());
+        Version eclipseVersion = InstallDetails.getPlatformVersion();
         String eclipseVersionString = String.format("%1$d.%2$d",  //$NON-NLS-1$
                 eclipseVersion.getMajor(), eclipseVersion.getMinor());
 
