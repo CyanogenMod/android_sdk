@@ -65,21 +65,19 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
- * This class holds methods for adding URLs management.
+ * This class holds static methods for downloading URL resources.
  * @see #openUrl(String, boolean, ITaskMonitor, Header[])
+ * <p/>
+ * Implementation detail: callers should use {@link DownloadCache} instead of this class.
+ * {@link DownloadCache#openDirectUrl(String, ITaskMonitor)} is a direct pass-through to
+ * {@link UrlOpener} since there's no caching. However from an implementation perspective
+ * it's still recommended to pass down a {@link DownloadCache} instance, which will let us
+ * override the implementation later on (for testing, for example.)
  */
-public class UrlOpener {
+class UrlOpener {
 
     private static final boolean DEBUG =
         System.getenv("ANDROID_DEBUG_URL_OPENER") != null; //$NON-NLS-1$
-
-    public static class CanceledByUserException extends Exception {
-        private static final long serialVersionUID = -7669346110926032403L;
-
-        public CanceledByUserException(String message) {
-            super(message);
-        }
-    }
 
     private static Map<String, UserCredentials> sRealmCache =
             new HashMap<String, UserCredentials>();
@@ -117,6 +115,13 @@ public class UrlOpener {
         } catch (Exception ignore) {
             sSocketTimeoutMs = 1 * 60 * 1000;
         }
+    }
+
+    /**
+     * This class cannot be instantiated.
+     * @see #openUrl(String, boolean, ITaskMonitor, Header[])
+     */
+    private UrlOpener() {
     }
 
     /**

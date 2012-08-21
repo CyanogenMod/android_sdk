@@ -19,11 +19,10 @@ package com.android.sdklib.internal.repository.sources;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.internal.repository.CanceledByUserException;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.UrlOpener;
-import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
 import com.android.sdklib.internal.repository.packages.AddonPackage;
 import com.android.sdklib.internal.repository.packages.DocPackage;
 import com.android.sdklib.internal.repository.packages.ExtraPackage;
@@ -621,7 +620,6 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      * @param monitor {@link ITaskMonitor} related to this URL.
      * @param outException If non null, where to store any exception that
      *            happens during the fetch.
-     * @see UrlOpener UrlOpener, which handles all URL logic.
      */
     private InputStream fetchXmlUrl(String urlString,
             DownloadCache cache,
