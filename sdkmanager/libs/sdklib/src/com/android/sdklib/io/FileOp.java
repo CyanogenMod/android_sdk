@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Properties;
 
 
 /**
@@ -89,6 +90,7 @@ public class FileOp implements IFileOp {
      * Helper to delete a file or a directory.
      * For a directory, recursively deletes all of its content.
      * Files that cannot be deleted right away are marked for deletion on exit.
+     * It's ok for the file or folder to not exist at all.
      * The argument can be null.
      */
     @Override
@@ -102,6 +104,11 @@ public class FileOp implements IFileOp {
                         deleteFileOrFolder(item);
                     }
                 }
+            }
+
+            // Don't try to delete it if it doesn't exist.
+            if (!exists(fileOrFolder)) {
+                return;
             }
 
             if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
@@ -336,5 +343,44 @@ public class FileOp implements IFileOp {
     @Override
     public OutputStream newFileOutputStream(File file) throws FileNotFoundException {
         return new FileOutputStream(file);
+    }
+
+    @Override
+    public Properties loadProperties(File file) {
+        Properties props = new Properties();
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            props.load(fis);
+        } catch (IOException ignore) {
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (Exception ignore) {}
+            }
+        }
+        return props;
+    }
+
+    @Override
+    public boolean saveProperties(File file, Properties props, String comments) {
+        OutputStream fos = null;
+        try {
+            fos = newFileOutputStream(file);
+
+            props.store(fos, comments);
+            return true;
+        } catch (IOException ignore) {
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        return false;
     }
 }

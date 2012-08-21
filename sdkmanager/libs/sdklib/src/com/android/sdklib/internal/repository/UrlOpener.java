@@ -69,10 +69,10 @@ import java.util.Properties;
  * @see #openUrl(String, boolean, ITaskMonitor, Header[])
  * <p/>
  * Implementation detail: callers should use {@link DownloadCache} instead of this class.
- * {@link DownloadCache#openDirectUrl(String, ITaskMonitor)} is a direct pass-through to
- * {@link UrlOpener} since there's no caching. However from an implementation perspective
- * it's still recommended to pass down a {@link DownloadCache} instance, which will let us
- * override the implementation later on (for testing, for example.)
+ * {@link DownloadCache#openDirectUrl} is a direct pass-through to {@link UrlOpener} since
+ * there's no caching. However from an implementation perspective it's still recommended
+ * to pass down a {@link DownloadCache} instance, which will let us override the implementation
+ * later on (for testing, for example.)
  */
 class UrlOpener {
 

@@ -16,11 +16,14 @@
 
 package com.android.sdklib.io;
 
+import com.android.annotations.NonNull;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Properties;
 
 
 /**
@@ -34,6 +37,7 @@ public interface IFileOp {
      * Helper to delete a file or a directory.
      * For a directory, recursively deletes all of its content.
      * Files that cannot be deleted right away are marked for deletion on exit.
+     * It's ok for the file or folder to not exist at all.
      * The argument can be null.
      */
     public abstract void deleteFileOrFolder(File fileOrFolder);
@@ -111,4 +115,25 @@ public interface IFileOp {
     /** Creates a new {@link FileOutputStream} for the given {@code file}. */
     public abstract OutputStream newFileOutputStream(File file) throws FileNotFoundException;
 
+    /**
+     * Load {@link Properties} from a file. Returns an empty property set on error.
+     *
+     * @param file A non-null file to load from. File may not exist.
+     * @return A new {@link Properties} with the properties loaded from the file,
+     *          or an empty property set in case of error.
+     */
+    public @NonNull Properties loadProperties(@NonNull File file);
+
+    /**
+     * Saves (write, store) the given {@link Properties} into the given {@link File}.
+     *
+     * @param file A non-null file to write to.
+     * @param props The properties to write.
+     * @param comments A non-null description of the properly list, written in the file.
+     * @return True if the properties could be saved, false otherwise.
+     */
+    public boolean saveProperties(
+            @NonNull File file,
+            @NonNull Properties props,
+            @NonNull String comments);
 }
