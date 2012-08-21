@@ -30,6 +30,8 @@ import java.io.File;
  */
 @Beta
 public class Location {
+    private static final String SUPER_KEYWORD = "super"; //$NON-NLS-1$
+
     private final File mFile;
     private final Position mStart;
     private final Position mEnd;
@@ -354,6 +356,9 @@ public class Location {
                                     new DefaultPosition(line, -1, end + patternEnd.length()));
                         }
                     } else if (hints != null && (hints.isJavaSymbol() || hints.isWholeWord())) {
+                        if (hints.isConstructor() && contents.startsWith(SUPER_KEYWORD, index)) {
+                            patternStart = SUPER_KEYWORD;
+                        }
                         return new Location(file, new DefaultPosition(line, column, index),
                                 new DefaultPosition(line, column + patternStart.length(),
                                         index + patternStart.length()));
@@ -388,12 +393,25 @@ public class Location {
 
     private static int findNextMatch(@NonNull String contents, int offset, String pattern,
             @Nullable SearchHints hints) {
+        int constructorIndex = -1;
+        if (hints != null && hints.isConstructor()) {
+            // Special condition: See if the call is referenced as "super" instead.
+            assert hints.isWholeWord();
+            int index = contents.indexOf(SUPER_KEYWORD, offset);
+            if (index != -1 && isMatch(contents, index, SUPER_KEYWORD, hints)) {
+                constructorIndex = index;
+            }
+        }
+
         while (true) {
             int index = contents.indexOf(pattern, offset);
             if (index == -1) {
-                return -1;
+                return constructorIndex;
             } else {
                 if (isMatch(contents, index, pattern, hints)) {
+                    if (constructorIndex != -1) {
+                        return Math.min(constructorIndex, index);
+                    }
                     return index;
                 } else {
                     offset = index + pattern.length();
@@ -431,6 +449,21 @@ public class Location {
 
                 // TODO: Additional validation to see if we're in a comment, string, etc.
                 // This will require lexing from the beginning of the buffer.
+            }
+
+            if (hints.isConstructor() && SUPER_KEYWORD.equals(pattern)) {
+                // Only looking for super(), not super.x, so assert that the next
+                // non-space character is (
+                int index = lastIndex + 1;
+                while (index < contents.length() - 1) {
+                    char c = contents.charAt(index);
+                    if (c == '(') {
+                        break;
+                    } else if (!Character.isWhitespace(c)) {
+                        return false;
+                    }
+                    index++;
+                }
             }
         }
 
@@ -595,13 +628,19 @@ public class Location {
         private SearchDirection mDirection;
 
         /** Whether the matched pattern should be a whole word */
-        public boolean mWholeWord;
+        private boolean mWholeWord;
 
         /**
          * Whether the matched pattern should be a Java symbol (so for example,
          * a match inside a comment or string literal should not be used)
          */
-        public boolean mJavaSymbol;
+        private boolean mJavaSymbol;
+
+        /**
+         * Whether the matched pattern corresponds to a constructor; if so, look for
+         * some other possible source aliases too, such as "super".
+         */
+        private boolean mConstructor;
 
         private SearchHints(SearchDirection direction) {
             super();
@@ -649,6 +688,25 @@ public class Location {
         /** @return true if the pattern match should be for Java symbols only */
         public boolean isJavaSymbol() {
             return mJavaSymbol;
+        }
+
+        /**
+         * Indicates that pattern matches should apply to constructors. If so, look for
+         * some other possible source aliases too, such as "super".
+         *
+         * @return this, for constructor chaining
+         */
+        public SearchHints matchConstructor() {
+            mConstructor = true;
+            mWholeWord = true;
+            mJavaSymbol = true;
+
+            return this;
+        }
+
+        /** @return true if the pattern match should be for a constructor */
+        public boolean isConstructor() {
+            return mConstructor;
         }
     }
 }
