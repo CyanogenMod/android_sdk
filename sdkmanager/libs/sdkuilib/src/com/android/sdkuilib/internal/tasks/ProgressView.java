@@ -33,6 +33,8 @@ import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 
 /**
  * Implements a "view" that uses an existing progress bar, status button and
@@ -347,7 +349,8 @@ public final class ProgressView implements IProgressUiProvider {
     @Override
     public UserCredentials
             displayLoginCredentialsPrompt(final String title, final String message) {
-        final String[] resultArray = new String[] {"", "", "", ""};
+        final AtomicReference<UserCredentials> result = new AtomicReference<UserCredentials>(null);
+
         // open dialog and request login and password
         syncExec(mProgressBar, new Runnable() {
             @Override
@@ -358,18 +361,16 @@ public final class ProgressView implements IProgressUiProvider {
                         message);
                 int dlgResult = authenticationDialog.open();
                 if (dlgResult == GridDialog.OK) {
-                    resultArray[0] = authenticationDialog.getLogin();
-                    resultArray[1] = authenticationDialog.getPassword();
-                    resultArray[2] = authenticationDialog.getWorkstation();
-                    resultArray[3] = authenticationDialog.getDomain();
+                    result.set(new UserCredentials(
+                        authenticationDialog.getLogin(),
+                        authenticationDialog.getPassword(),
+                        authenticationDialog.getWorkstation(),
+                        authenticationDialog.getDomain()));
                 }
             }
         });
 
-        return new UserCredentials(resultArray[0],
-                resultArray[1],
-                resultArray[2],
-                resultArray[3]);
+        return result.get();
     }
 }
 

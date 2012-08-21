@@ -184,6 +184,10 @@ public class UrlOpener {
         } catch (IOException e) {
             throw e;
 
+        } catch (CanceledByUserException e) {
+            // HTTP Basic Auth or NTLM login was canceled by user.
+            throw e;
+
         } catch (Exception e) {
             // If the protocol is not supported by HttpClient (e.g. file:///),
             // revert to the standard java.net.Url.open.

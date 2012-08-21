@@ -23,6 +23,7 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.FileOp;
@@ -404,6 +405,10 @@ public class ArchiveInstaller {
             }
 
             return true;
+
+        } catch (CanceledByUserException e) {
+            // HTTP Basic Auth or NTLM login was canceled by user.
+            // Don't output an error in the log.
 
         } catch (FileNotFoundException e) {
             // The FNF message is just the URL. Make it a bit more useful.
