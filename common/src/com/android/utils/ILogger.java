@@ -72,6 +72,6 @@ public interface ILogger {
      * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
      * @param args provides the arguments for msgFormat.
      */
-    void verbose(String msgFormat, Object... args);
+    void verbose(@NonNull String msgFormat, Object... args);
 
 }

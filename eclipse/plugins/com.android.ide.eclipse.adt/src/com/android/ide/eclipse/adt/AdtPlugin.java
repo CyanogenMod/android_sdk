@@ -1890,17 +1890,17 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     @Override
-    public void info(String format, Object... args) {
+    public void info(@NonNull String format, Object... args) {
         log(IStatus.INFO, format, args);
     }
 
     @Override
-    public void verbose(String format, Object... args) {
+    public void verbose(@NonNull String format, Object... args) {
         log(IStatus.INFO, format, args);
     }
 
     @Override
-    public void warning(String format, Object... args) {
+    public void warning(@NonNull String format, Object... args) {
         log(IStatus.WARNING, format, args);
     }
 

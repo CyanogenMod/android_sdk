@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.actions;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
@@ -264,11 +265,11 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                 AdtPlugin.getDisplay().getActiveShell(),
                 new AdtConsoleSdkLog() {
                     @Override
-                    public void info(String msgFormat, Object... args) {
+                    public void info(@NonNull String msgFormat, Object... args) {
                         // Do not show non-error/warning log in Eclipse.
                     };
                     @Override
-                    public void verbose(String msgFormat, Object... args) {
+                    public void verbose(@NonNull String msgFormat, Object... args) {
                         // Do not show non-error/warning log in Eclipse.
                     };
                 },

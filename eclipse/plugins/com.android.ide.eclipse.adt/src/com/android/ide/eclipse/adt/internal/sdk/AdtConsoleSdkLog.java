@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.utils.ILogger;
 
@@ -36,7 +37,7 @@ public class AdtConsoleSdkLog implements ILogger {
     }
 
     @Override
-    public void info(String msgFormat, Object... args) {
+    public void info(@NonNull String msgFormat, Object... args) {
         String msg = String.format(msgFormat, args);
         for (String s : msg.split("\n")) {
             if (s.trim().length() > 0) {
@@ -46,12 +47,12 @@ public class AdtConsoleSdkLog implements ILogger {
     }
 
     @Override
-    public void verbose(String msgFormat, Object... args) {
+    public void verbose(@NonNull String msgFormat, Object... args) {
         info(msgFormat, args);
     }
 
     @Override
-    public void warning(String warningFormat, Object... args) {
+    public void warning(@NonNull String warningFormat, Object... args) {
         AdtPlugin.printToConsole(TAG, String.format("Warning: " + warningFormat, args));
     }
 }

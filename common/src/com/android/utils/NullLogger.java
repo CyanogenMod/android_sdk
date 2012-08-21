@@ -16,6 +16,8 @@
 
 package com.android.utils;
 
+import com.android.annotations.NonNull;
+
 /**
  * Dummy implementation of an {@link ILogger}.
  * <p/>
@@ -35,17 +37,17 @@ public class NullLogger implements ILogger {
     }
 
     @Override
-    public void warning(String warningFormat, Object... args) {
+    public void warning(@NonNull String warningFormat, Object... args) {
         // ignore
     }
 
     @Override
-    public void info(String msgFormat, Object... args) {
+    public void info(@NonNull String msgFormat, Object... args) {
         // ignore
     }
 
     @Override
-    public void verbose(String msgFormat, Object... args) {
+    public void verbose(@NonNull String msgFormat, Object... args) {
         // ignore
     }
 

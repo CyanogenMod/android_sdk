@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
 
 
@@ -116,17 +117,17 @@ public class NullTaskMonitor implements ITaskMonitor {
     }
 
     @Override
-    public void warning(String warningFormat, Object... args) {
+    public void warning(@NonNull String warningFormat, Object... args) {
         mLog.warning(warningFormat, args);
     }
 
     @Override
-    public void info(String msgFormat, Object... args) {
+    public void info(@NonNull String msgFormat, Object... args) {
         mLog.info(msgFormat, args);
     }
 
     @Override
-    public void verbose(String msgFormat, Object... args) {
+    public void verbose(@NonNull String msgFormat, Object... args) {
         mLog.verbose(msgFormat, args);
     }
 }

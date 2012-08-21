@@ -17,6 +17,7 @@
 package com.android.sdkmanager;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.FileWrapper;
@@ -139,7 +140,7 @@ public class Main {
             }
 
             @Override
-            public void warning(String warningFormat, Object... args) {
+            public void warning(@NonNull String warningFormat, Object... args) {
                 if (mSdkCommandLine.isVerbose()) {
                     System.out.printf("Warning: " + warningFormat, args);
                     if (!warningFormat.endsWith("\n")) {
@@ -149,12 +150,12 @@ public class Main {
             }
 
             @Override
-            public void info(String msgFormat, Object... args) {
+            public void info(@NonNull String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
             }
 
             @Override
-            public void verbose(String msgFormat, Object... args) {
+            public void verbose(@NonNull String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
             }
         };

@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
@@ -267,17 +268,17 @@ public class SdkUpdaterNoWindow {
         }
 
         @Override
-        public void warning(String warningFormat, Object... args) {
+        public void warning(@NonNull String warningFormat, Object... args) {
             mSdkLog.warning(warningFormat, args);
         }
 
         @Override
-        public void info(String msgFormat, Object... args) {
+        public void info(@NonNull String msgFormat, Object... args) {
             mSdkLog.info(msgFormat, args);
         }
 
         @Override
-        public void verbose(String msgFormat, Object... args) {
+        public void verbose(@NonNull String msgFormat, Object... args) {
             mSdkLog.verbose(msgFormat, args);
         }
 
@@ -606,17 +607,17 @@ public class SdkUpdaterNoWindow {
         }
 
         @Override
-        public void warning(String warningFormat, Object... args) {
+        public void warning(@NonNull String warningFormat, Object... args) {
             mRoot.warning(warningFormat, args);
         }
 
         @Override
-        public void info(String msgFormat, Object... args) {
+        public void info(@NonNull String msgFormat, Object... args) {
             mRoot.info(msgFormat, args);
         }
 
         @Override
-        public void verbose(String msgFormat, Object... args) {
+        public void verbose(@NonNull String msgFormat, Object... args) {
             mRoot.verbose(msgFormat, args);
         }
     }

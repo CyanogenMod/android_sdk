@@ -17,6 +17,7 @@
 package com.android.ant;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
@@ -129,17 +130,17 @@ public class GetTargetTask extends Task {
             }
 
             @Override
-            public void info(String msgFormat, Object... args) {
+            public void info(@NonNull String msgFormat, Object... args) {
                 messages.add(String.format(msgFormat, args));
             }
 
             @Override
-            public void verbose(String msgFormat, Object... args) {
+            public void verbose(@NonNull String msgFormat, Object... args) {
                 info(msgFormat, args);
             }
 
             @Override
-            public void warning(String warningFormat, Object... args) {
+            public void warning(@NonNull String warningFormat, Object... args) {
                 messages.add(String.format("Warning: " + warningFormat, args));
             }
         });
