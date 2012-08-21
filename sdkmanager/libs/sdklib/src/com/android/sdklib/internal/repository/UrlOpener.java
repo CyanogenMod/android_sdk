@@ -52,6 +52,7 @@ import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -132,10 +133,10 @@ public class UrlOpener {
      * @param headers An optional array of HTTP headers to use in the GET request.
      * @return Returns a {@link Pair} with {@code first} holding an {@link InputStream}
      *      and {@code second} holding an {@link HttpResponse}.
-     *      The input stream can be null. The response is never null and contains
+     *      The returned pair is never null and contains
      *      at least a code; for http requests that provide them the response
      *      also contains locale, headers and an status line.
-     *      The returned pair is never null.
+     *      The input stream can be null, especially in case of error.
      *      The caller must only accept the stream if the response code is 200 or similar.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
@@ -154,13 +155,30 @@ public class UrlOpener {
         try {
             result = openWithHttpClient(url, monitor, headers);
 
+        } catch (UnknownHostException e) {
+            // Host in unknown. No need to even retry with the Url object,
+            // if it's broken, it's broken. It's already an IOException but
+            // it could use a better message.
+            throw new IOException("Unknown Host " + e.getMessage(), e);
+
+        } catch (IOException e) {
+            throw e;
+
         } catch (Exception e) {
             // If the protocol is not supported by HttpClient (e.g. file:///),
             // revert to the standard java.net.Url.open.
+            if (DEBUG) {
+                System.out.printf("[HttpClient Error] %s : %s\n", url, e.toString());
+            }
 
             try {
                 result = openWithUrl(url, headers);
+            } catch (IOException e2) {
+                throw e2;
             } catch (Exception e2) {
+                if (DEBUG && !e.equals(e2)) {
+                    System.out.printf("[Url Error] %s : %s\n", url, e2.toString());
+                }
             }
         }
 
@@ -190,9 +208,10 @@ public class UrlOpener {
         }
 
         if (result == null) {
+            // Make up an error code if we don't have one already.
             HttpResponse outResponse = new BasicHttpResponse(
                     new ProtocolVersion("HTTP", 1, 0),  //$NON-NLS-1$
-                    424, "");                           //$NON-NLS-1$;  // 424=Method Failure
+                    HttpStatus.SC_METHOD_FAILURE, "");  //$NON-NLS-1$;  // 420=Method Failure
             result = Pair.of(null, outResponse);
         }
 
