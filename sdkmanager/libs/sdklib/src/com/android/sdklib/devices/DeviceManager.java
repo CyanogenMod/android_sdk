@@ -67,7 +67,7 @@ public class DeviceManager {
     private String mVendorDevicesLocation = "";
     private static List<Device> mUserDevices;
     private static List<Device> mDefaultDevices;
-    private static final Object lock = new Object();
+    private static final Object sLock = new Object();
     private static final List<DevicesChangeListener> listeners =
         Collections.synchronizedList(new ArrayList<DevicesChangeListener>());
 
@@ -151,7 +151,7 @@ public class DeviceManager {
 
     /**
      * Returns both vendor provided and user created {@link Device}s.
-     * 
+     *
      * @param sdkLocation Location of the Android SDK
      * @return A list of both vendor and user provided {@link Device}s
      */
@@ -164,11 +164,11 @@ public class DeviceManager {
 
     /**
      * Gets the {@link List} of {@link Device}s packaged with the SDK.
-     * 
+     *
      * @return The {@link List} of default {@link Device}s
      */
     public List<Device> getDefaultDevices() {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mDefaultDevices == null) {
                 try {
                     mDefaultDevices = DeviceParser.parse(
@@ -190,12 +190,12 @@ public class DeviceManager {
 
     /**
      * Returns all vendor provided {@link Device}s
-     * 
+     *
      * @param sdkLocation Location of the Android SDK
      * @return A list of vendor provided {@link Device}s
      */
     public List<Device> getVendorDevices(String sdkLocation) {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mVendorDevices == null || !mVendorDevicesLocation.equals(sdkLocation)) {
                 mVendorDevicesLocation = sdkLocation;
                 List<Device> devices = new ArrayList<Device>();
@@ -225,11 +225,11 @@ public class DeviceManager {
 
     /**
      * Returns all user created {@link Device}s
-     * 
+     *
      * @return All user created {@link Device}s
      */
     public List<Device> getUserDevices() {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mUserDevices == null) {
                 // User devices should be saved out to
                 // $HOME/.android/devices.xml
@@ -244,6 +244,7 @@ public class DeviceManager {
                     mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
                 } catch (SAXException e) {
                     // Probably an old config file which we don't want to overwrite.
+                    // FIXME: userDevicesFile is likely null at this point and below.
                     String base = userDevicesFile.getAbsoluteFile()+".old";
                     File renamedConfig = new File(base);
                     int i = 0;
@@ -266,7 +267,7 @@ public class DeviceManager {
     }
 
     public void addUserDevice(Device d) {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mUserDevices == null) {
                 getUserDevices();
             }
@@ -276,7 +277,7 @@ public class DeviceManager {
     }
 
     public void removeUserDevice(Device d) {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mUserDevices == null) {
                 getUserDevices();
             }
@@ -295,7 +296,7 @@ public class DeviceManager {
     }
 
     public void replaceUserDevice(Device d) {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mUserDevices == null) {
                 getUserDevices();
             }
@@ -309,7 +310,7 @@ public class DeviceManager {
      * {@link AndroidLocation#getFolder()}.
      */
     public void saveUserDevices() {
-        synchronized (lock) {
+        synchronized (sLock) {
             if (mUserDevices != null && mUserDevices.size() != 0) {
                 File userDevicesFile;
                 try {
@@ -333,8 +334,8 @@ public class DeviceManager {
 
     /**
      * Returns hardware properties (defined in hardware.ini) as a {@link Map}.
-     * 
-     * @param The {@link State} from which to derive the hardware properties.
+     *
+     * @param s The {@link State} from which to derive the hardware properties.
      * @return A {@link Map} of hardware properties.
      */
     public static Map<String, String> getHardwareProperties(State s) {
@@ -360,9 +361,9 @@ public class DeviceManager {
 
     /**
      * Returns the hardware properties defined in
-     * {@link AvdManager.HARDWARE_INI} as a {@link Map}.
-     * 
-     * @param The {@link Device} from which to derive the hardware properties.
+     * {@link AvdManager#HARDWARE_INI} as a {@link Map}.
+     *
+     * @param d The {@link Device} from which to derive the hardware properties.
      * @return A {@link Map} of hardware properties.
      */
     public static Map<String, String> getHardwareProperties(Device d) {
@@ -381,11 +382,11 @@ public class DeviceManager {
     /**
      * Takes a boolean and returns the appropriate value for
      * {@link HardwareProperties}
-     * 
+     *
      * @param bool The boolean value to turn into the appropriate
      *            {@link HardwareProperties} value.
-     * @return {@value HardwareProperties#BOOLEAN_VALUES[0]} if true,
-     *         {@value HardwareProperties#BOOLEAN_VALUES[1]} otherwise.
+     * @return {@code HardwareProperties#BOOLEAN_VALUES[0]} if true,
+     *         {@code HardwareProperties#BOOLEAN_VALUES[1]} otherwise.
      */
     private static String getBooleanVal(boolean bool) {
         if (bool) {

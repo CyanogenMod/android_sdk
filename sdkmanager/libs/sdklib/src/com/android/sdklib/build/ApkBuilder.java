@@ -605,7 +605,6 @@ public final class ApkBuilder implements IArchiveBuilder {
      * Adds the resources from a source folder to a given {@link IArchiveBuilder}
      * @param sourceFolder the source folder.
      * @throws ApkCreationException if an error occurred
-     * @throws SealedApkException if the APK is already sealed.
      * @throws DuplicateFileException if a file conflicts with another already added to the APK
      *                                   at the same location inside the APK archive.
      */

@@ -19,6 +19,7 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.devices.Device;
 
 import java.io.File;
 import java.util.Collections;

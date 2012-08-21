@@ -47,8 +47,8 @@ public class DeviceWriter {
 
     /**
      * Writes the XML definition of the given {@link Collection} of {@link Device}s according to
-     * {@value #NS_DEVICES_XSD} to the {@link OutputStream}. Note that it is up to the caller to
-     * close the {@link OutputStream}.
+     * {@value SdkConstants#NS_DEVICES_XSD} to the {@link OutputStream}.
+     * Note that it is up to the caller to close the {@link OutputStream}.
      * @param out The {@link OutputStream} to write the resulting XML to.
      * @param devices The {@link Device}s from which to generate the XML.
      * @throws ParserConfigurationException
