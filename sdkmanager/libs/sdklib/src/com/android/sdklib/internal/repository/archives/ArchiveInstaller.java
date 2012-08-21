@@ -32,9 +32,15 @@ import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.android.utils.Pair;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.message.BasicHeader;
 
 import java.io.EOFException;
 import java.io.File;
@@ -43,12 +49,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,7 +66,8 @@ import java.util.regex.Pattern;
  */
 public class ArchiveInstaller {
 
-    public static final String ENV_VAR_IGNORE_COMPAT = "ANDROID_SDK_IGNORE_COMPAT";
+    private static final String PROP_STATUS_CODE = "StatusCode";                    //$NON-NLS-1$
+    public static final String ENV_VAR_IGNORE_COMPAT = "ANDROID_SDK_IGNORE_COMPAT"; //$NON-NLS-1$
 
     public static final int NUM_MONITOR_INC = 100;
 
@@ -108,7 +116,6 @@ public class ArchiveInstaller {
         Archive newArchive = archiveInfo.getNewArchive();
         Package pkg = newArchive.getParentPackage();
 
-        File archiveFile = null;
         String name = pkg.getShortDescription();
 
         if (newArchive.isLocal()) {
@@ -129,13 +136,16 @@ public class ArchiveInstaller {
             return false;
         }
 
-        archiveFile = downloadFile(newArchive, osSdkRoot, cache, monitor, forceHttp);
-        if (archiveFile != null) {
+        Pair<File, File> files = downloadFile(newArchive, osSdkRoot, cache, monitor, forceHttp);
+        File tmpFile   = files == null ? null : files.getFirst();
+        File propsFile = files == null ? null : files.getSecond();
+        if (tmpFile != null) {
             // Unarchive calls the pre/postInstallHook methods.
-            if (unarchive(archiveInfo, osSdkRoot, archiveFile, sdkManager, monitor)) {
+            if (unarchive(archiveInfo, osSdkRoot, tmpFile, sdkManager, monitor)) {
                 monitor.log("Installed %1$s", name);
                 // Delete the temp archive if it exists, only on success
-                mFileOp.deleteFileOrFolder(archiveFile);
+                mFileOp.deleteFileOrFolder(tmpFile);
+                mFileOp.deleteFileOrFolder(propsFile);
                 return true;
             }
         }
@@ -148,7 +158,7 @@ public class ArchiveInstaller {
      * Caller is responsible with deleting the temp file when done.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected File downloadFile(Archive archive,
+    protected Pair<File, File> downloadFile(Archive archive,
             String osSdkRoot,
             DownloadCache cache,
             ITaskMonitor monitor,
@@ -204,6 +214,9 @@ public class ArchiveInstaller {
         }
         File tmpFile = new File(tmpFolder, base);
 
+        // property file were we'll keep partial/resume information for reuse.
+        File propsFile = new File(tmpFolder, base + ".inf"); //$NON-NLS-1$
+
         // if the file exists, check its checksum & size. Use it if complete
         if (mFileOp.exists(tmpFile)) {
             if (mFileOp.length(tmpFile) == archive.getSize()) {
@@ -217,25 +230,76 @@ public class ArchiveInstaller {
                 }
                 if (chksum.equalsIgnoreCase(archive.getChecksum())) {
                     // File is good, let's use it.
-                    return tmpFile;
+                    return Pair.of(tmpFile, propsFile);
+                } else {
+                    // The file has the right size but the wrong content.
+                    // Just remove it and this will trigger a full download below.
+                    mFileOp.deleteFileOrFolder(tmpFile);
                 }
             }
-
-            // Existing file is either of different size or content.
-            // TODO: continue download when we support continue mode.
-            // Right now, let's simply remove the file and start over.
-            mFileOp.deleteFileOrFolder(tmpFile);
         }
 
-        if (fetchUrl(archive, tmpFile, link, pkgName, cache, monitor)) {
+        Header[] resumeHeaders = preparePartialDownload(archive, tmpFile, propsFile);
+
+        if (fetchUrl(archive, resumeHeaders, tmpFile, propsFile, link, pkgName, cache, monitor)) {
             // Fetching was successful, let's use this file.
-            return tmpFile;
-        } else {
-            // Delete the temp file if we aborted the download
-            // TODO: disable this when we want to support partial downloads.
-            mFileOp.deleteFileOrFolder(tmpFile);
-            return null;
+            return Pair.of(tmpFile, propsFile);
         }
+        return null;
+    }
+
+    /**
+     * Prepares to do a partial/resume download.
+     *
+     * @param archive The archive we're trying to download.
+     * @param tmpFile The destination file to download (e.g. something.zip)
+     * @param propsFile A properties file generated by the last partial download (e.g. .zip.inf)
+     * @return Null in case we should perform a full download, or a set of headers
+     *      to resume a partial download.
+     */
+    private Header[] preparePartialDownload(Archive archive, File tmpFile, File propsFile) {
+        // We need both the destination file and its properties to do a resume.
+        if (mFileOp.isFile(tmpFile) && mFileOp.isFile(propsFile)) {
+            // The caller already checked the case were the destination file has the
+            // right size _and_ checksum, so we know at this point one of them is wrong
+            // here.
+            // We can obviously only resume a file if its size is smaller than expected.
+            if (mFileOp.length(tmpFile) < archive.getSize()) {
+                Properties props = mFileOp.loadProperties(propsFile);
+
+                List<Header> headers = new ArrayList<Header>(2);
+                headers.add(new BasicHeader(HttpHeaders.RANGE,
+                                            String.format("bytes=%d-", mFileOp.length(tmpFile))));
+
+                // Don't use the properties if there's not at least a 200 or 206 code from
+                // the last download.
+                int status = 0;
+                try {
+                    status = Integer.parseInt(props.getProperty(PROP_STATUS_CODE));
+                } catch (Exception ignore) {}
+
+                if (status == HttpStatus.SC_OK || status == HttpStatus.SC_PARTIAL_CONTENT) {
+                    // Do we have an ETag and/or a Last-Modified?
+                    String etag = props.getProperty(HttpHeaders.ETAG);
+                    String lastMod = props.getProperty(HttpHeaders.LAST_MODIFIED);
+
+                    if (etag != null && etag.length() > 0) {
+                        headers.add(new BasicHeader(HttpHeaders.IF_MATCH, etag));
+                    } else if (lastMod != null && lastMod.length() > 0) {
+                        headers.add(new BasicHeader(HttpHeaders.IF_MATCH, lastMod));
+                    }
+
+                    return headers.toArray(new Header[headers.size()]);
+                }
+            }
+        }
+
+        // Existing file is either of different size or content.
+        // Remove the existing file and request a full download.
+        mFileOp.deleteFileOrFolder(tmpFile);
+        mFileOp.deleteFileOrFolder(propsFile);
+
+        return null;
     }
 
     /**
@@ -306,9 +370,23 @@ public class ArchiveInstaller {
      * SHA1 as expected. Returns true on success or false if any of those checks fail.
      * <p/>
      * Increments the monitor by {@link #NUM_MONITOR_INC}.
+     *
+     * @param archive The archive we're trying to download.
+     * @param resumeHeaders The headers to use for a partial resume, or null when fetching
+     *          a whole new file.
+     * @param tmpFile The destination file to download (e.g. something.zip)
+     * @param propsFile A properties file generated by the last partial download (e.g. .zip.inf)
+     * @param urlString The URL as a string
+     * @param pkgName The archive's package name, used for progress output.
+     * @param cache The {@link DownloadCache} instance to use.
+     * @param monitor The monitor to output the progress and errors.
+     * @return True if we fetched the file successfully.
+     *         False if the download failed or was aborted.
      */
     private boolean fetchUrl(Archive archive,
+            Header[] resumeHeaders,
             File tmpFile,
+            File propsFile,
             String urlString,
             String pkgName,
             DownloadCache cache,
@@ -318,20 +396,86 @@ public class ArchiveInstaller {
         InputStream is = null;
         int inc_remain = NUM_MONITOR_INC;
         try {
-            is = cache.openDirectUrl(urlString, monitor);
-            if (is == null) {
-                monitor.logError("Download failed: no content.");
-                return false;
-            }
-            os = new FileOutputStream(tmpFile);
+            Pair<InputStream, HttpResponse> result =
+                cache.openDirectUrl(urlString, resumeHeaders, monitor);
 
+            is = result.getFirst();
+            HttpResponse resp = result.getSecond();
+            int status = resp.getStatusLine().getStatusCode();
+            if (status == HttpStatus.SC_NOT_FOUND) {
+                throw new Exception("URL not found.");
+            }
+            if (is == null) {
+                throw new Exception("No content.");
+            }
+
+
+            Properties props = new Properties();
+            props.setProperty(PROP_STATUS_CODE, Integer.toString(status));
+            if (resp.containsHeader(HttpHeaders.ETAG)) {
+                props.setProperty(HttpHeaders.ETAG,
+                                  resp.getFirstHeader(HttpHeaders.ETAG).getValue());
+            }
+            if (resp.containsHeader(HttpHeaders.LAST_MODIFIED)) {
+                props.setProperty(HttpHeaders.LAST_MODIFIED,
+                                  resp.getFirstHeader(HttpHeaders.LAST_MODIFIED).getValue());
+            }
+
+            mFileOp.saveProperties(propsFile, props, "## Android SDK Download.");  //$NON-NLS-1$
+
+            // On success, status can be:
+            // - 206 (Partial content), if resumeHeaders is not null (we asked for a partial
+            //   download, and we get partial content for that download => we'll need to append
+            //   to the existing file.)
+            // - 200 (OK) meaning we're getting whole new content from scratch. This can happen
+            //   even if resumeHeaders is not null (typically means the server has a new version
+            //   of the file to serve.) In this case we reset the file and write from scratch.
+
+            boolean append = status == HttpStatus.SC_PARTIAL_CONTENT;
+            if (status != HttpStatus.SC_OK && !(append && resumeHeaders != null)) {
+                throw new Exception(String.format("Unexpected HTTP Status %1$d", status));
+            }
             MessageDigest digester = archive.getChecksumType().getMessageDigest();
+
+            if (append) {
+                // Seed the digest with the existing content.
+                InputStream temp = null;
+                try {
+                    temp = new FileInputStream(tmpFile);
+
+                    byte[] buf = new byte[65536];
+                    int n;
+
+                    while ((n = temp.read(buf)) >= 0) {
+                        if (n > 0) {
+                            digester.update(buf, 0, n);
+                        }
+                    }
+                } catch (Exception ignore) {
+                } finally {
+                    if (temp != null) {
+                        try {
+                            temp.close();
+                        } catch (IOException ignore) {}
+                    }
+                }
+            }
+
+            // Open the output stream in append for a resume, or reset for a full download.
+            os = new FileOutputStream(tmpFile, append);
 
             byte[] buf = new byte[65536];
             int n;
 
             long total = 0;
             long size = archive.getSize();
+            if (append) {
+                long len = mFileOp.length(tmpFile);
+                int percent = (int) (len * 100 / size);
+                size -= len;
+                monitor.logVerbose(
+                        "Resuming %1$s download at %2$d (%3$d%%)", pkgName, len, percent);
+            }
             long inc = size / NUM_MONITOR_INC;
             long next_inc = inc;
 
@@ -412,10 +556,10 @@ public class ArchiveInstaller {
 
         } catch (FileNotFoundException e) {
             // The FNF message is just the URL. Make it a bit more useful.
-            monitor.logError("File not found: %1$s", e.getMessage());
+            monitor.logError("URL not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.logError("Download failed: %1$s", e.getMessage());   //$NON-NLS-1$
+            monitor.logError("Download interrupted: %1$s", e.getMessage());   //$NON-NLS-1$
 
         } finally {
             if (os != null) {
@@ -932,27 +1076,10 @@ public class ArchiveInstaller {
             pkg.saveProperties(props);
         }
 
-        OutputStream fos = null;
-        try {
-            File f = new File(unzipDestFolder, SdkConstants.FN_SOURCE_PROP);
-
-            fos = mFileOp.newFileOutputStream(f);
-
-            props.store(fos, "## Android Tool: Source of this archive.");  //$NON-NLS-1$
-
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-
-        return false;
+        return mFileOp.saveProperties(
+                new File(unzipDestFolder, SdkConstants.FN_SOURCE_PROP),
+                props,
+                "## Android Tool: Source of this archive.");  //$NON-NLS-1$
     }
 
     /**

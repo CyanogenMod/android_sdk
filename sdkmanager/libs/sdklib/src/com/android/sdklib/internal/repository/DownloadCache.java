@@ -17,6 +17,7 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
@@ -49,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A simple cache for the XML resources handled by the SDK Manager.
  * <p/>
- * Callers should use {@link #openDirectUrl(String, ITaskMonitor)} to download "large files"
+ * Callers should use {@link #openDirectUrl} to download "large files"
  * that should not be cached (like actual installation packages which are several MBs big)
  * and call {@link #openCachedUrl(String, ITaskMonitor)} to download small XML files.
  * <p/>
@@ -284,35 +285,33 @@ public class DownloadCache {
      * documentation.
      *
      * @param urlString the URL string to be opened.
+     * @param headers An optional set of headers to pass when requesting the resource. Can be null.
      * @param monitor {@link ITaskMonitor} which is related to this URL
      *                 fetching.
-     * @return Returns an {@link InputStream} holding the URL content, or null if
-     *                 there's no content.
+     * @return Returns a pair with a {@link InputStream} and an {@link HttpResponse}.
+     *              The pair is never null.
+     *              The input stream can be null in case of error, although in general the
+     *              method will probably throw an exception instead.
+     *              The caller should look at the response code's status and only accept the
+     *              input stream if it's the desired code (e.g. 200 or 206).
      * @throws IOException Exception thrown when there are problems retrieving
      *                 the URL or its content.
      * @throws CanceledByUserException Exception thrown if the user cancels the
      *              authentication dialog.
      */
-    public InputStream openDirectUrl(String urlString, ITaskMonitor monitor)
-            throws IOException, CanceledByUserException {
+    public Pair<InputStream, HttpResponse> openDirectUrl(
+            @NonNull  String urlString,
+            @Nullable Header[] headers,
+            @NonNull  ITaskMonitor monitor)
+                throws IOException, CanceledByUserException {
         if (DEBUG) {
             System.out.println(String.format("%s : Direct download", urlString)); //$NON-NLS-1$
         }
-        Pair<InputStream, HttpResponse> result = UrlOpener.openUrl(
+        return UrlOpener.openUrl(
                 urlString,
                 false /*needsMarkResetSupport*/,
                 monitor,
-                null /*headers*/);
-        InputStream is = result.getFirst();
-        HttpResponse resp = result.getSecond();
-        int status = resp.getStatusLine().getStatusCode();
-        // We shouldn't be using the input stream if the response code isn't 200; this
-        // shoouldn't happen normally.
-        if (status != HttpStatus.SC_OK && is != null) {
-            is.close();
-            is = null;
-        }
-        return is;
+                headers);
     }
 
     /**
@@ -321,8 +320,7 @@ public class DownloadCache {
      * from the cache, potentially updated first or directly downloaded.
      * <p/>
      * For large downloads (e.g. installable archives) please do not invoke the
-     * cache and instead use the {@link #openDirectUrl(String, ITaskMonitor)}
-     * method.
+     * cache and instead use the {@link #openDirectUrl} method.
      * <p/>
      * For details on realm authentication and user/password handling,
      * check the underlying {@link UrlOpener#openUrl(String, boolean, ITaskMonitor, Header[])}

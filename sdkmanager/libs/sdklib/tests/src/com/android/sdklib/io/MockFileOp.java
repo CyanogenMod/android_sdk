@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -165,17 +167,9 @@ public class MockFileOp implements IFileOp {
     }
 
     /**
-     * Sets the executable Unix permission (+x) on a file or folder.
+     * {@inheritDoc}
      * <p/>
-     * This attempts to use File#setExecutable through reflection if
-     * it's available.
-     * If this is not available, this invokes a chmod exec instead,
-     * so there is no guarantee of it being fast.
-     * <p/>
-     * Caller must make sure to not invoke this under Windows.
-     *
-     * @param file The file to set permissions on.
-     * @throws IOException If an I/O error occurs
+     * <em>Note: this mock version does nothing.</em>
      */
     @Override
     public void setExecutablePermission(File file) throws IOException {
@@ -184,6 +178,8 @@ public class MockFileOp implements IFileOp {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * <em>Note: this mock version does nothing.</em>
      */
     @Override
     public void setReadOnly(File file) {
@@ -191,12 +187,9 @@ public class MockFileOp implements IFileOp {
     }
 
     /**
-     * Copies a binary file.
-     *
-     * @param source the source file to copy.
-     * @param dest the destination file to write.
-     * @throws FileNotFoundException if the source file doesn't exist.
-     * @throws IOException if there's a problem reading or writing the file.
+     * {@inheritDoc}
+     * <p/>
+     * <em>Note: this mock version does nothing.</em>
      */
     @Override
     public void copyFile(File source, File dest) throws IOException {
@@ -366,6 +359,56 @@ public class MockFileOp implements IFileOp {
         mExistinfFiles.addAll(newStrings);
 
         return renamed;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * <em>TODO: we might want to overload this to read mock properties instead of a real file.</em>
+     */
+    @Override
+    public Properties loadProperties(File file) {
+        Properties props = new Properties();
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            props.load(fis);
+        } catch (IOException ignore) {
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (Exception ignore) {}
+            }
+        }
+        return props;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * <em>Note that this uses the mock version of {@link #newFileOutputStream(File)} and thus
+     * records the write rather than actually performing it.</em>
+     */
+    @Override
+    public boolean saveProperties(File file, Properties props, String comments) {
+        OutputStream fos = null;
+        try {
+            fos = newFileOutputStream(file);
+
+            props.store(fos, comments);
+            return true;
+        } catch (IOException ignore) {
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

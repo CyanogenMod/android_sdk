@@ -30,6 +30,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.io.MockFileOp;
 import com.android.sdklib.repository.PkgProps;
+import com.android.utils.Pair;
 
 import java.io.File;
 import java.util.Arrays;
@@ -64,7 +65,7 @@ public class ArchiveInstallerTest extends TestCase {
         }
 
         @Override
-        protected File downloadFile(
+        protected Pair<File, File> downloadFile(
                 Archive archive,
                 String osSdkRoot,
                 DownloadCache cache,
@@ -73,7 +74,7 @@ public class ArchiveInstallerTest extends TestCase {
             File file = mDownloadMap.get(archive);
             // register the file as "created"
             ArchiveInstallerTest.this.mFile.recordExistingFile(file);
-            return file;
+            return Pair.of(file, null);
         }
 
         @Override
