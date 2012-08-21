@@ -437,14 +437,11 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
         GetUserCredentialsTask task = new GetUserCredentialsTask(mDialogShell, title, message);
         display.syncExec(task);
 
-        return new UserCredentials(task.userName, task.password, task.workstation, task.domain);
+        return task.getUserCredentials();
     }
 
     private static class GetUserCredentialsTask implements Runnable {
-        public String userName = null;
-        public String password = null;
-        public String workstation = null;
-        public String domain = null;
+        private UserCredentials mResult = null;
 
         private Shell mShell;
         private String mTitle;
@@ -462,11 +459,16 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
                         mTitle, mMessage);
             int dlgResult= authenticationDialog.open();
             if(dlgResult == GridDialog.OK) {
-                userName = authenticationDialog.getLogin();
-                password = authenticationDialog.getPassword();
-                workstation = authenticationDialog.getWorkstation();
-                domain = authenticationDialog.getDomain();
+                mResult = new UserCredentials(
+                        authenticationDialog.getLogin(),
+                        authenticationDialog.getPassword(),
+                        authenticationDialog.getWorkstation(),
+                        authenticationDialog.getDomain());
             }
+        }
+
+        public UserCredentials getUserCredentials() {
+            return mResult;
         }
     }
 
