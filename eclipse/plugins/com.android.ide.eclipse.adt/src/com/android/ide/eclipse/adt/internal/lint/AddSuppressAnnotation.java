@@ -23,6 +23,8 @@ import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 import static org.eclipse.jdt.core.dom.ArrayInitializer.EXPRESSIONS_PROPERTY;
 import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -45,7 +47,6 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
-import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -79,12 +80,18 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
     private final String mId;
     private final BodyDeclaration mNode;
     private final String mDescription;
-    /** Should it create a {@code @TargetApi} annotation instead of {@code SuppressLint} ?
-     * If so pass a positive API number */
-    private final int mTargetApi;
+    /**
+     * Should it create a {@code @TargetApi} annotation instead of
+     * {@code SuppressLint} ? If so pass a non null API level
+     */
+    private final String mTargetApi;
 
-    private AddSuppressAnnotation(String id, IMarker marker, BodyDeclaration node,
-            String description, int targetApi) {
+    private AddSuppressAnnotation(
+            @NonNull String id,
+            @NonNull IMarker marker,
+            @NonNull BodyDeclaration node,
+            @NonNull String description,
+            @Nullable String targetApi) {
         mId = id;
         mMarker = marker;
         mNode = node;
@@ -120,7 +127,7 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         ICompilationUnit compilationUnit = manager.getWorkingCopy(editorInput);
         try {
             MultiTextEdit edit;
-            if (mTargetApi <= 0) {
+            if (mTargetApi == null) {
                 edit = addSuppressAnnotation(document, compilationUnit, mNode);
             } else {
                 edit = addTargetApiAnnotation(document, compilationUnit, mNode);
@@ -247,28 +254,21 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         }
 
         ImportRewrite importRewrite = ImportRewrite.create(compilationUnit, true);
+        importRewrite.addImport("android.os.Build"); //$NON-NLS-1$
         String local = importRewrite.addImport(FQCN_TARGET_API);
         AST ast = declaration.getAST();
         ASTRewrite rewriter = ASTRewrite.create(ast);
         if (existing == null) {
             SingleMemberAnnotation newAnnotation = ast.newSingleMemberAnnotation();
             newAnnotation.setTypeName(ast.newSimpleName(local));
-            NumberLiteral value = ast.newNumberLiteral(Integer.toString(mTargetApi));
-            //value.setLiteralValue(mId);
+            Expression value = createLiteral(ast);
             newAnnotation.setValue(value);
             ListRewrite listRewrite = rewriter.getListRewrite(declaration,
                     declaration.getModifiersProperty());
             listRewrite.insertFirst(newAnnotation, null);
         } else {
-            Expression existingValue = existing.getValue();
-            if (existingValue instanceof NumberLiteral) {
-                // Change the value to the new value
-                NumberLiteral value = ast.newNumberLiteral(Integer.toString(mTargetApi));
-                rewriter.set(existing, VALUE_PROPERTY, value, null);
-            } else {
-                assert false : existingValue;
-                return null;
-            }
+            Expression value = createLiteral(ast);
+            rewriter.set(existing, VALUE_PROPERTY, value, null);
         }
 
         TextEdit importEdits = importRewrite.rewriteImports(new NullProgressMonitor());
@@ -280,6 +280,23 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         edit.addChild(annotationEdits);
 
         return edit;
+    }
+
+    private Expression createLiteral(AST ast) {
+        Expression value;
+        if (!isCodeName()) {
+            value = ast.newQualifiedName(
+                    ast.newQualifiedName(ast.newSimpleName("Build"), //$NON-NLS-1$
+                                ast.newSimpleName("VERSION_CODES")), //$NON-NLS-1$
+                    ast.newSimpleName(mTargetApi));
+        } else {
+            value = ast.newNumberLiteral(mTargetApi);
+        }
+        return value;
+    }
+
+    private boolean isCodeName() {
+        return Character.isDigit(mTargetApi.charAt(0));
     }
 
     /**
@@ -384,14 +401,19 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
                 }
 
                 String desc = String.format("Add @SuppressLint '%1$s\' to '%2$s'", id, target);
-                resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, -1));
+                resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, null));
 
                 if (api != -1
                         // @TargetApi is only valid on methods and classes, not fields etc
                         && (body instanceof MethodDeclaration
                                 || body instanceof TypeDeclaration)) {
-                    desc = String.format("Add @TargetApi(%1$d) to '%2$s'", api, target);
-                    resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc, api));
+                    String apiString = AdtUtils.getBuildCodes(api);
+                    if (apiString == null) {
+                        apiString = Integer.toString(api);
+                    }
+                    desc = String.format("Add @TargetApi(%1$s) to '%2$s'", apiString, target);
+                    resolutions.add(new AddSuppressAnnotation(id, marker, declaration, desc,
+                            apiString));
                 }
             }
         }
