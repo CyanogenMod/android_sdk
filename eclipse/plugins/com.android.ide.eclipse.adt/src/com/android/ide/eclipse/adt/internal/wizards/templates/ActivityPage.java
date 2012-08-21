@@ -56,6 +56,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
     private boolean mShown;
     private ImageControl mPreview;
     private Image mPreviewImage;
+    private boolean mDisposePreviewImage;
     private Label mHeading;
     private Label mDescription;
     private boolean mOnlyActivities;
@@ -134,6 +135,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
         // Preview
         mPreview = new ImageControl(container, SWT.NONE, null);
+        mPreview.setDisposeImage(false); // Handled manually in this class
         GridData gd_mImage = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1);
         gd_mImage.widthHint = PREVIEW_WIDTH + 2 * PREVIEW_PADDING;
         mPreview.setLayoutData(gd_mImage);
@@ -156,6 +158,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
     private void updatePreview() {
         Image oldImage = mPreviewImage;
+        boolean dispose = mDisposePreviewImage;
         mPreviewImage = null;
 
         String title = "";
@@ -172,11 +175,16 @@ class ActivityPage extends WizardPage implements SelectionListener {
                         byte[] bytes = Files.toByteArray(file);
                         ByteArrayInputStream input = new ByteArrayInputStream(bytes);
                         mPreviewImage = new Image(getControl().getDisplay(), input);
+                        mDisposePreviewImage = true;
                         input.close();
                     } catch (IOException e) {
                         AdtPlugin.log(e, null);
                     }
                 }
+            } else {
+                // Fallback icon
+                mDisposePreviewImage = false;
+                mPreviewImage = TemplateMetadata.getDefaultTemplateIcon();
             }
             title = template.getTitle();
             description = template.getDescription();
@@ -187,7 +195,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
         mPreview.setImage(mPreviewImage);
         mPreview.fitToWidth(PREVIEW_WIDTH);
 
-        if (oldImage != null) {
+        if (oldImage != null && dispose) {
             oldImage.dispose();
         }
 
@@ -200,7 +208,8 @@ class ActivityPage extends WizardPage implements SelectionListener {
     public void dispose() {
         super.dispose();
 
-        if (mPreviewImage != null) {
+        if (mPreviewImage != null && mDisposePreviewImage) {
+            mDisposePreviewImage = false;
             mPreviewImage.dispose();
             mPreviewImage = null;
         }
