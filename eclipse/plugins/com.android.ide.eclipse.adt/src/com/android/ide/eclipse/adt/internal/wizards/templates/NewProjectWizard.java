@@ -55,6 +55,7 @@ import java.util.Set;
  * Wizard for creating new projects
  */
 public class NewProjectWizard extends TemplateWizard {
+    private static final String PARENT_ACTIVITY_CLASS = "parentActivityClass";  //$NON-NLS-1$
     private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
@@ -155,6 +156,9 @@ public class NewProjectWizard extends TemplateWizard {
                 hidden.add(ATTR_TARGET_API);
                 hidden.add(ATTR_BUILD_API);
                 hidden.add(IS_LAUNCHER);
+                // Don't ask about hierarchical parent activities in new projects where there
+                // can't possibly be any
+                hidden.add(PARENT_ACTIVITY_CLASS);
 
                 mTemplatePage = new NewTemplatePage(activityValues, false);
                 addPage(mTemplatePage);
