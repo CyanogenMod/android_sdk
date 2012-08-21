@@ -35,6 +35,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.WorkbenchException;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,6 +82,26 @@ public class AddNativeWizard extends Wizard {
                                 MakeCorePlugin.MAKE_PROJECT_ID);
                         // Set up build information
                         new NdkWizardHandler().convertProject(mProject, monitor1);
+
+                        // When using CDT 8.1.x, disable the language settings provider mechanism
+                        // for scanner discovery. Use the classloader to load the class since it
+                        // will not be available pre 8.1.
+                        try {
+                            @SuppressWarnings("rawtypes")
+                            Class c = getClass().getClassLoader().loadClass(
+                                    "org.eclipse.cdt.core.language.settings.providers.ScannerDiscoveryLegacySupport"); //$NON-NLS-1$
+
+                            @SuppressWarnings("unchecked")
+                            Method m = c.getMethod(
+                                    "setLanguageSettingsProvidersFunctionalityEnabled", //$NON-NLS-1$
+                                    IProject.class, boolean.class);
+
+                            m.invoke(null, mProject, false);
+                        } catch (Exception e) {
+                            // ignore all exceptions: On pre 8.1.x CDT, this class will not be
+                            // found, but this options only needs to be set in 8.1.x
+                        }
+
                         // Run the template
                         NdkManager.addNativeSupport(mProject, mTemplateArgs, monitor1);
                     }
