@@ -17,6 +17,7 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 
 
 /**
@@ -24,7 +25,7 @@ import com.android.utils.ILogger;
  * <p/>
  * This can be passed to methods that require a monitor when the caller doesn't
  * have any UI to update or means to report tracked progress.
- * A custom {@link ILogger} is used. Clients could use {@link NullSdkLog} if
+ * A custom {@link ILogger} is used. Clients could use {@link NullLogger} if
  * they really don't care about the logging either.
  */
 public class NullTaskMonitor implements ITaskMonitor {
@@ -38,7 +39,7 @@ public class NullTaskMonitor implements ITaskMonitor {
      * This can be passed to methods that require a monitor when the caller doesn't
      * have any UI to update or means to report tracked progress.
      *
-     * @param log An {@link ILogger}. Must not be null. Consider using {@link NullSdkLog}.
+     * @param log An {@link ILogger}. Must not be null. Consider using {@link NullLogger}.
      */
     public NullTaskMonitor(ILogger log) {
         mLog = log;
