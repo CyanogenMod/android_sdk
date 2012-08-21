@@ -43,10 +43,12 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState.SourceType;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -422,5 +424,10 @@ class TemplateMetadata {
         }
 
         return null;
+    }
+
+    /** Returns a default icon for templates */
+    static Image getDefaultTemplateIcon() {
+        return IconFactory.getInstance().getIcon("default_template"); //$NON-NLS-1$
     }
 }

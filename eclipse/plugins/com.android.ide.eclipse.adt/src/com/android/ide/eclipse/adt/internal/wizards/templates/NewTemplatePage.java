@@ -112,6 +112,7 @@ public class NewTemplatePage extends WizardPage
     private Label mTipLabel;
     private ImageControl mPreview;
     private Image mPreviewImage;
+    private boolean mDisposePreviewImage;
     private ProjectCombo mProjectButton;
     private StringEvaluator mEvaluator;
 
@@ -371,6 +372,7 @@ public class NewTemplatePage extends WizardPage
 
         // Preview
         mPreview = new ImageControl(parent, SWT.NONE, null);
+        mPreview.setDisposeImage(false); // Handled manually in this class
         GridData gd_mImage = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1);
         gd_mImage.widthHint = PREVIEW_WIDTH + 2 * PREVIEW_PADDING;
         mPreview.setLayoutData(gd_mImage);
@@ -389,9 +391,7 @@ public class NewTemplatePage extends WizardPage
         mTipLabel = new Label(parent, SWT.WRAP);
         mTipLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
-        if (thumb != null && !thumb.isEmpty()) {
-            setPreview(thumb);
-        }
+        setPreview(thumb);
 
         parent.layout(true, true);
         // TODO: This is a workaround for the fact that (at least on OSX) you end up
@@ -485,27 +485,33 @@ public class NewTemplatePage extends WizardPage
     }
 
     private void setPreview(String thumb) {
-        if (thumb == null) {
-            return;
-        }
-
         Image oldImage = mPreviewImage;
+        boolean dispose = mDisposePreviewImage;
         mPreviewImage = null;
 
-        byte[] data = mValues.getTemplateHandler().readTemplateResource(thumb);
-        if (data != null) {
-            try {
-                mPreviewImage = new Image(getControl().getDisplay(),
-                        new ByteArrayInputStream(data));
-            } catch (Exception e) {
-                AdtPlugin.log(e, null);
+        if (thumb == null || thumb.isEmpty()) {
+            mPreviewImage = TemplateMetadata.getDefaultTemplateIcon();
+            mDisposePreviewImage = false;
+        } else {
+            byte[] data = mValues.getTemplateHandler().readTemplateResource(thumb);
+            if (data != null) {
+                try {
+                    mPreviewImage = new Image(getControl().getDisplay(),
+                            new ByteArrayInputStream(data));
+                    mDisposePreviewImage = true;
+                } catch (Exception e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+            if (mPreviewImage == null) {
+                return;
             }
         }
 
         mPreview.setImage(mPreviewImage);
         mPreview.fitToWidth(PREVIEW_WIDTH);
 
-        if (oldImage != null) {
+        if (oldImage != null && dispose) {
             oldImage.dispose();
         }
     }
@@ -514,7 +520,8 @@ public class NewTemplatePage extends WizardPage
     public void dispose() {
         super.dispose();
 
-        if (mPreviewImage != null) {
+        if (mPreviewImage != null && mDisposePreviewImage) {
+            mDisposePreviewImage = false;
             mPreviewImage.dispose();
             mPreviewImage = null;
         }
