@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -74,21 +75,21 @@ public final class MessageBoxLog implements ILogger {
     }
 
     @Override
-    public void warning(String warningFormat, Object... arg) {
+    public void warning(@NonNull String warningFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format("Warning: " + warningFormat, arg));
         }
     }
 
     @Override
-    public void info(String msgFormat, Object... arg) {
+    public void info(@NonNull String msgFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format(msgFormat, arg));
         }
     }
 
     @Override
-    public void verbose(String msgFormat, Object... arg) {
+    public void verbose(@NonNull String msgFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format(msgFormat, arg));
         }

@@ -245,17 +245,17 @@ public final class Sdk  {
                 }
 
                 @Override
-                public void warning(String warningFormat, Object... arg) {
+                public void warning(@NonNull String warningFormat, Object... arg) {
                     logMessages.add(String.format("Warning: " + warningFormat, arg));
                 }
 
                 @Override
-                public void info(String msgFormat, Object... arg) {
+                public void info(@NonNull String msgFormat, Object... arg) {
                     logMessages.add(String.format(msgFormat, arg));
                 }
 
                 @Override
-                public void verbose(String msgFormat, Object... arg) {
+                public void verbose(@NonNull String msgFormat, Object... arg) {
                     info(msgFormat, arg);
                 }
             };

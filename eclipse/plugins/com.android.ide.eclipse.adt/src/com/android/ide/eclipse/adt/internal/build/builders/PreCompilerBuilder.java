@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -830,17 +831,17 @@ public class PreCompilerBuilder extends BaseBuilder {
             ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new ILogger() {
 
                 @Override
-                public void warning(String warningFormat, Object... args) {
+                public void warning(@NonNull String warningFormat, Object... args) {
                     AdtPlugin.printToConsole(getProject(), String.format(warningFormat, args));
                 }
 
                 @Override
-                public void info(String msgFormat, Object... args) {
+                public void info(@NonNull String msgFormat, Object... args) {
                     AdtPlugin.printToConsole(getProject(), String.format(msgFormat, args));
                 }
 
                 @Override
-                public void verbose(String msgFormat, Object... args) {
+                public void verbose(@NonNull String msgFormat, Object... args) {
                     info(msgFormat, args);
                 }
 

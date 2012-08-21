@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.NonNull;
+
 /**
  * Mock implementation of {@link ITaskMonitor} that simply captures
  * the output in local strings. Does not provide any UI and has no
@@ -102,15 +104,15 @@ public class MockMonitor implements ITaskMonitor {
     }
 
     @Override
-    public void info(String msgFormat, Object... args) {
+    public void info(@NonNull String msgFormat, Object... args) {
     }
 
     @Override
-    public void verbose(String msgFormat, Object... args) {
+    public void verbose(@NonNull String msgFormat, Object... args) {
     }
 
     @Override
-    public void warning(String warningFormat, Object... args) {
+    public void warning(@NonNull String warningFormat, Object... args) {
     }
 
     @Override

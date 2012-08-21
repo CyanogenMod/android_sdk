@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.tasks;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.UserCredentials;
 
@@ -217,17 +218,17 @@ class TaskMonitorImpl implements ITaskMonitor {
     }
 
     @Override
-    public void warning(String warningFormat, Object... arg) {
+    public void warning(@NonNull String warningFormat, Object... arg) {
         log("Warning: " + warningFormat, arg);
     }
 
     @Override
-    public void info(String msgFormat, Object... arg) {
+    public void info(@NonNull String msgFormat, Object... arg) {
         log(msgFormat, arg);
     }
 
     @Override
-    public void verbose(String msgFormat, Object... arg) {
+    public void verbose(@NonNull String msgFormat, Object... arg) {
         log(msgFormat, arg);
     }
 
@@ -351,17 +352,17 @@ class TaskMonitorImpl implements ITaskMonitor {
         }
 
         @Override
-        public void warning(String warningFormat, Object... arg) {
+        public void warning(@NonNull String warningFormat, Object... arg) {
             mRoot.warning(warningFormat, arg);
         }
 
         @Override
-        public void info(String msgFormat, Object... arg) {
+        public void info(@NonNull String msgFormat, Object... arg) {
             mRoot.info(msgFormat, arg);
         }
 
         @Override
-        public void verbose(String msgFormat, Object... arg) {
+        public void verbose(@NonNull String msgFormat, Object... arg) {
             mRoot.verbose(msgFormat, arg);
         }
     }
