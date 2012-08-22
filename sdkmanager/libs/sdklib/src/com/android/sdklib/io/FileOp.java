@@ -17,6 +17,7 @@
 package com.android.sdklib.io;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -346,7 +347,7 @@ public class FileOp implements IFileOp {
     }
 
     @Override
-    public Properties loadProperties(File file) {
+    public @NonNull Properties loadProperties(@NonNull File file) {
         Properties props = new Properties();
         FileInputStream fis = null;
         try {
@@ -364,7 +365,8 @@ public class FileOp implements IFileOp {
     }
 
     @Override
-    public boolean saveProperties(File file, Properties props, String comments) {
+    public boolean saveProperties(@NonNull File file, @NonNull Properties props,
+            @NonNull String comments) {
         OutputStream fos = null;
         try {
             fos = newFileOutputStream(file);
