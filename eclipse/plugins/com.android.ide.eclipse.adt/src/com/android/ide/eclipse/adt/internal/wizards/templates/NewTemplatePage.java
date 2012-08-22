@@ -32,6 +32,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
+import com.android.ide.eclipse.adt.internal.wizards.templates.Parameter.Constraint;
 import com.android.ide.eclipse.adt.internal.wizards.templates.Parameter.Type;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.collect.Lists;
@@ -277,7 +278,7 @@ public class NewTemplatePage extends WizardPage
                         text.setData(parameter);
                         parameter.control = text;
 
-                        if (parameter.constraints.contains(Parameter.Constraint.EXISTS)) {
+                        if (parameter.constraints.contains(Constraint.EXISTS)) {
                             text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
                                     1, 1));
 
@@ -290,9 +291,20 @@ public class NewTemplatePage extends WizardPage
                                     2, 1));
                         }
 
+                        boolean hasValue = false;
                         if (value instanceof String) {
-                            text.setText((String) value);
+                            String stringValue = (String) value;
+                            hasValue = !stringValue.isEmpty();
+                            text.setText(stringValue);
                             mValues.parameters.put(id, value);
+                        }
+
+                        if (!hasValue) {
+                            if (parameter.constraints.contains(Constraint.EMPTY)) {
+                                text.setMessage("Optional");
+                            } else if (parameter.constraints.contains(Constraint.NONEMPTY)) {
+                                text.setMessage("Required");
+                            }
                         }
 
                         text.addModifyListener(this);
