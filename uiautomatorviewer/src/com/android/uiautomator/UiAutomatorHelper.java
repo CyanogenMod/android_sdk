@@ -40,7 +40,7 @@ public class UiAutomatorHelper {
 
     private static final String UIAUTOMATOR = "/system/bin/uiautomator";    //$NON-NLS-1$
     private static final String UIAUTOMATOR_DUMP_COMMAND = "dump";          //$NON-NLS-1$
-    private static final String UIDUMP_DEVICE_PATH = "/sdcard/uidump.xml";  //$NON-NLS-1$
+    private static final String UIDUMP_DEVICE_PATH = "/data/local/tmp/uidump.xml";  //$NON-NLS-1$
 
     private static boolean supportsUiAutomator(IDevice device) {
         String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
