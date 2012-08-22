@@ -2,6 +2,7 @@
 <recipe>
     <merge from="AndroidManifest.xml.ftl" />
 
+    <merge from="res/values/attrs.xml" />
     <merge from="res/values/colors.xml" />
     <merge from="res/values/styles.xml" />
     <merge from="res/values-v11/styles.xml" />

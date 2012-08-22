@@ -25,6 +25,7 @@
         android:fitsSystemWindows="true">
 
         <LinearLayout android:id="@+id/fullscreen_content_controls"
+            style="?buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
@@ -33,15 +34,11 @@
             tools:ignore="UselessParent">
 
             <Button android:id="@+id/button1"
+                style="?buttonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/dummy_button1" />
-            <Button android:id="@+id/button2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/dummy_button2" />
+                android:text="@string/dummy_button1" />=
 
         </LinearLayout>
     </FrameLayout>
