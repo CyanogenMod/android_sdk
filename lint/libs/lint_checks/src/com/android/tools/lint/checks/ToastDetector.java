@@ -48,8 +48,8 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
             "ShowToast", //$NON-NLS-1$
             "Looks for code creating a Toast but forgetting to call show() on it",
 
-            "Toast.makeText() creates a Toast but does *not* show it. You must call " +
-            "show() on the resulting object to actually make the Toast appear.",
+            "`Toast.makeText()` creates a `Toast` but does *not* show it. You must call " +
+            "`show()` on the resulting object to actually make the `Toast` appear.",
 
             Category.CORRECTNESS,
             6,

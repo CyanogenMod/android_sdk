@@ -129,7 +129,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "IconDipSize", //$NON-NLS-1$
             "Ensures that icons across densities provide roughly the same density-independent size",
             "Checks the all icons which are provided in multiple densities, all compute to " +
-            "roughly the same density-independent pixel (dip) size. This catches errors where " +
+            "roughly the same density-independent pixel (`dip`) size. This catches errors where " +
             "images are either placed in the wrong folder, or icons are changed to new sizes " +
             "but some folders are forgotten.",
             Category.ICONS,
@@ -143,10 +143,10 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "IconLocation", //$NON-NLS-1$
             "Ensures that images are not defined in the density-independent drawable folder",
             "The res/drawable folder is intended for density-independent graphics such as " +
-            "shapes defined in XML. For bitmaps, move it to drawable-mdpi and consider " +
-            "providing higher and lower resolution versions in drawable-ldpi, drawable-hdpi " +
-            "and drawable-xhdpi. If the icon *really* is density independent (for example " +
-            "a solid color) you can place it in drawable-nodpi.",
+            "shapes defined in XML. For bitmaps, move it to `drawable-mdpi` and consider " +
+            "providing higher and lower resolution versions in `drawable-ldpi`, `drawable-hdpi` " +
+            "and `drawable-xhdpi`. If the icon *really* is density independent (for example " +
+            "a solid color) you can place it in `drawable-nodpi`.",
             Category.ICONS,
             5,
             Severity.WARNING,
@@ -165,7 +165,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "\n" +
             "Low density is not really used much anymore, so this check ignores " +
             "the ldpi density. To force lint to include it, set the environment " +
-            "variable ANDROID_LINT_INCLUDE_LDPI=true. For more information on " +
+            "variable `ANDROID_LINT_INCLUDE_LDPI=true`. For more information on " +
             "current density usage, see " +
             "http://developer.android.com/resources/dashboard/screens.html",
             Category.ICONS,
@@ -181,11 +181,11 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "Ensures that all the density folders are present",
             "Icons will look best if a custom version is provided for each of the " +
             "major screen density classes (low, medium, high, extra high). " +
-            "This lint check identifies folders which are missing, such as drawable-hdpi." +
+            "This lint check identifies folders which are missing, such as `drawable-hdpi`." +
             "\n" +
             "Low density is not really used much anymore, so this check ignores " +
             "the ldpi density. To force lint to include it, set the environment " +
-            "variable ANDROID_LINT_INCLUDE_LDPI=true. For more information on " +
+            "variable `ANDROID_LINT_INCLUDE_LDPI=true`. For more information on " +
             "current density usage, see " +
             "http://developer.android.com/resources/dashboard/screens.html",
             Category.ICONS,
@@ -199,8 +199,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     public static final Issue GIF_USAGE = Issue.create(
             "GifUsage", //$NON-NLS-1$
             "Checks for images using the GIF file format which is discouraged",
-            "The .gif file format is discouraged. Consider using .png (preferred) " +
-            "or .jpg (acceptable) instead.",
+            "The `.gif` file format is discouraged. Consider using `.png` (preferred) " +
+            "or `.jpg` (acceptable) instead.",
             Category.ICONS,
             5,
             Severity.WARNING,
@@ -227,7 +227,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "IconDuplicatesConfig", //$NON-NLS-1$
             "Finds icons that have identical bitmaps across various configuration parameters",
             "If an icon is provided under different configuration parameters such as " +
-            "drawable-hdpi or -v11, they should typically be different. This detector " +
+            "`drawable-hdpi` or `-v11`, they should typically be different. This detector " +
             "catches cases where the same icon is provided in different configuration folder " +
             "which is usually not intentional.",
             Category.ICONS,
@@ -240,9 +240,9 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     public static final Issue ICON_NODPI = Issue.create(
             "IconNoDpi", //$NON-NLS-1$
             "Finds icons that appear in both a -nodpi folder and a dpi folder",
-            "Bitmaps that appear in drawable-nodpi folders will not be scaled by the " +
+            "Bitmaps that appear in `drawable-nodpi` folders will not be scaled by the " +
             "Android framework. If a drawable resource of the same name appears *both* in " +
-            "a -nodpi folder as well as a dpi folder such as drawable-hdpi, then " +
+            "a `-nodpi` folder as well as a dpi folder such as `drawable-hdpi`, then " +
             "the behavior is ambiguous and probably not intentional. Delete one or the " +
             "other, or use different names for the icons.",
             Category.ICONS,

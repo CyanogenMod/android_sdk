@@ -90,7 +90,7 @@ public class WrongIdDetector extends LayoutDetector {
     public static final Issue UNKNOWN_ID = Issue.create(
             "UnknownId", //$NON-NLS-1$
             "Checks for id references in RelativeLayouts that are not defined elsewhere",
-            "The \"@+id/\" syntax refers to an existing id, or creates a new one if it has " +
+            "The `@+id/` syntax refers to an existing id, or creates a new one if it has " +
             "not already been defined elsewhere. However, this means that if you have a " +
             "typo in your reference, or if the referred view no longer exists, you do not " +
             "get a warning since the id will be created on demand. This check catches " +
@@ -107,7 +107,7 @@ public class WrongIdDetector extends LayoutDetector {
             "UnknownIdInLayout", //$NON-NLS-1$
             "Makes sure that @+id references refer to views in the same layout",
 
-            "The \"@+id/\" syntax refers to an existing id, or creates a new one if it has " +
+            "The `@+id/` syntax refers to an existing id, or creates a new one if it has " +
             "not already been defined elsewhere. However, this means that if you have a " +
             "typo in your reference, or if the referred view no longer exists, you do not " +
             "get a warning since the id will be created on demand.\n" +

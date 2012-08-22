@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
+import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 
 import com.android.tools.lint.Main;
 import com.google.common.collect.Iterables;

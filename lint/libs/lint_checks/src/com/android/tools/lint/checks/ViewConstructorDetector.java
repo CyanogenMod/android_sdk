@@ -53,13 +53,13 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
 
             "Some layout tools (such as the Android layout editor for Eclipse) needs to " +
             "find a constructor with one of the following signatures:\n" +
-            "* View(Context context)\n" +
-            "* View(Context context, AttributeSet attrs)\n" +
-            "* View(Context context, AttributeSet attrs, int defStyle)\n" +
+            "* `View(Context context)`\n" +
+            "* `View(Context context, AttributeSet attrs)`\n" +
+            "* `View(Context context, AttributeSet attrs, int defStyle)`\n" +
             "\n" +
             "If your custom view needs to perform initialization which does not apply when " +
             "used in a layout editor, you can surround the given code with a check to " +
-            "see if View#isInEditMode() is false, since that method will return false " +
+            "see if `View#isInEditMode()` is false, since that method will return `false` " +
             "at runtime but true within a user interface editor.",
 
             Category.USABILITY,

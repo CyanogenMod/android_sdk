@@ -87,10 +87,10 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
     public static final Issue ISSUE = Issue.create(
             "MergeRootFrame", //$NON-NLS-1$
             "Checks whether a root <FrameLayout> can be replaced with a <merge> tag",
-            "If a <FrameLayout> is the root of a layout and does not provide background " +
-            "or padding etc, it can often be replaced with a <merge> tag which is slightly " +
+            "If a `<FrameLayout>` is the root of a layout and does not provide background " +
+            "or padding etc, it can often be replaced with a `<merge>` tag which is slightly " +
             "more efficient. Note that this depends on context, so make sure you understand " +
-            "how the <merge> tag works before proceeding.",
+            "how the `<merge>` tag works before proceeding.",
             Category.PERFORMANCE,
             4,
             Severity.WARNING,

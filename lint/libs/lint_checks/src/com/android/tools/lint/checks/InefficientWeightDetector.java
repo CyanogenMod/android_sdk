@@ -55,8 +55,8 @@ public class InefficientWeightDetector extends LayoutDetector {
             "InefficientWeight", //$NON-NLS-1$
             "Looks for inefficient weight declarations in LinearLayouts",
             "When only a single widget in a LinearLayout defines a weight, it is more " +
-            "efficient to assign a width/height of 0dp to it since it will absorb all " +
-            "the remaining space anyway. With a declared width/height of 0dp it " +
+            "efficient to assign a width/height of `0dp` to it since it will absorb all " +
+            "the remaining space anyway. With a declared width/height of `0dp` it " +
             "does not have to measure its own size first.",
             Category.PERFORMANCE,
             3,

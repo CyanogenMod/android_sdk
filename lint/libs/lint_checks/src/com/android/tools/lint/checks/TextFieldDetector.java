@@ -44,14 +44,14 @@ public class TextFieldDetector extends LayoutDetector {
     public static final Issue ISSUE = Issue.create(
             "TextFields", //$NON-NLS-1$
             "Looks for text fields missing inputType or hint settings",
-            "Providing an inputType attribute on a text field improves usability " +
+            "Providing an `inputType` attribute on a text field improves usability " +
             "because depending on the data to be input, optimized keyboards can be shown " +
             "to the user (such as just digits and parentheses for a phone number). Similarly," +
             "a hint attribute displays a hint to the user for what is expected in the " +
             "text field.\n" +
             "\n" +
             "If you really want to keep the text field generic, you can suppress this warning " +
-            "by setting inputType=\"text\".",
+            "by setting `inputType=\"text\"`.",
 
             Category.USABILITY,
             5,

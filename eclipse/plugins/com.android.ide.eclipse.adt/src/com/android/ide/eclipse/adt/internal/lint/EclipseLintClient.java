@@ -579,7 +579,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         String summary = issue.getDescription();
-        String explanation = issue.getExplanation();
+        String explanation = issue.getExplanationAsSimpleText();
 
         StringBuilder sb = new StringBuilder(summary.length() + explanation.length() + 20);
         try {

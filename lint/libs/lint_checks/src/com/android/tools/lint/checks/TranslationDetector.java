@@ -75,15 +75,15 @@ public class TranslationDetector extends ResourceXmlDetector {
             "one language should also be translated in all other languages.\n" +
             "\n" +
             "If the string should *not* be translated, you can add the attribute\n" +
-            "translatable=\"false\" on the <string> element, or you can define all " +
-            "your non-translatable strings in a resource file called \"donottranslate.xml\". " +
-            "Or, you can ignore the issue with a tools:ignore=\"MissingTranslation\" " +
+            "`translatable=\"false\"` on the `<string>` element, or you can define all " +
+            "your non-translatable strings in a resource file called `donottranslate.xml`. " +
+            "Or, you can ignore the issue with a `tools:ignore=\"MissingTranslation\"` " +
             "attribute.\n" +
             "\n" +
             "By default this detector allows regions of a language to just provide a " +
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
-            "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
+            "environment variable `ANDROID_LINT_COMPLETE_REGIONS`.",
             Category.MESSAGES,
             8,
             Severity.FATAL,

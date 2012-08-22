@@ -72,7 +72,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             "The way this is generally handled is to allocate the needed objects up front " +
             "and to reuse them for each drawing operation.\n" +
             "\n" +
-            "Some methods allocate memory on your behalf (such as Bitmap.create), and these " +
+            "Some methods allocate memory on your behalf (such as `Bitmap.create`), and these " +
             "should be handled in the same way.",
 
             Category.PERFORMANCE,
@@ -87,16 +87,16 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             "Looks for opportunities to replace HashMaps with the more efficient SparseArray",
 
             "For maps where the keys are of type integer, it's typically more efficient to " +
-            "use the Android SparseArray API. This check identifies scenarios where you might " +
-            "want to consider using SparseArray instead of HashMap for better performance.\n" +
+            "use the Android `SparseArray` API. This check identifies scenarios where you might " +
+            "want to consider using `SparseArray` instead of `HashMap` for better performance.\n" +
             "\n" +
             "This is *particularly* useful when the value types are primitives like ints, " +
-            "where you can use SparseIntArray and avoid auto-boxing the values from int to " +
-            "Integer.\n" +
+            "where you can use `SparseIntArray` and avoid auto-boxing the values from `int` to " +
+            "`Integer`.\n" +
             "\n" +
-            "If you need to construct a HashMap because you need to call an API outside of " +
-            "your control which requires a Map, you can suppress this warning using for " +
-            "example the @SuppressLint annotation.",
+            "If you need to construct a `HashMap` because you need to call an API outside of " +
+            "your control which requires a `Map`, you can suppress this warning using for " +
+            "example the `@SuppressLint` annotation.",
 
             Category.PERFORMANCE,
             4,
@@ -110,8 +110,8 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             "Looks for usages of \"new\" for wrapper classes which should use \"valueOf\" instead",
 
             "You should not call the constructor for wrapper classes directly, such as" +
-            "\"new Integer(42)\". Instead, call the \"valueOf\" factory method, such as " +
-            "Integer.valueOf(42). This will typically use less memory because common integers " +
+            "`new Integer(42)`. Instead, call the `valueOf` factory method, such as " +
+            "`Integer.valueOf(42)`. This will typically use less memory because common integers " +
             "such as 0 and 1 will share a single instance.",
 
             Category.PERFORMANCE,

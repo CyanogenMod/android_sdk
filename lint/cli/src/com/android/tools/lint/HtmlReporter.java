@@ -368,8 +368,8 @@ public class HtmlReporter extends Reporter {
         }
         mWriter.write("</div>\n");                               //$NON-NLS-1$
         mWriter.write("<div class=\"explanation\">\n");          //$NON-NLS-1$
-        String explanation = issue.getExplanation();
-        appendEscapedText(explanation, true /* preserve newlines*/);
+        String explanationHtml = issue.getExplanationAsHtml();
+        mWriter.write(explanationHtml);
         mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
         if (issue.getMoreInfo() != null) {
             mWriter.write("<br/>");                                  //$NON-NLS-1$
@@ -400,7 +400,7 @@ public class HtmlReporter extends Reporter {
         mWriter.write("Suppressing Warnings and Errors");
         mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
         mWriter.write("</div>\n");                               //$NON-NLS-1$
-        appendEscapedText(Main.getSuppressHelp(), true /* preserve newlines*/);
+        appendEscapedText(Main.getSuppressHelp());
         mWriter.write('\n');
     }
 
@@ -725,10 +725,6 @@ public class HtmlReporter extends Reporter {
     }
 
     private void appendEscapedText(String textValue) throws IOException {
-        appendEscapedText(textValue, false);
-    }
-
-    private void appendEscapedText(String textValue, boolean preserveNewlines) throws IOException {
         for (int i = 0, n = textValue.length(); i < n; i++) {
             char c = textValue.charAt(i);
             if (c == '<') {

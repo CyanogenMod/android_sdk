@@ -49,7 +49,7 @@ public class ColorUsageDetector extends Detector implements Detector.JavaScanner
 
             "Methods that take a color in the form of an integer should be passed " +
             "an RGB triple, not the actual color resource id. You must call " +
-            "getResources().getColor(resource) to resolve the actual color value first.",
+            "`getResources().getColor(resource)` to resolve the actual color value first.",
 
             Category.CORRECTNESS,
             7,

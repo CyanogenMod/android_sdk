@@ -57,10 +57,10 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
             "LocalSuppress", //$NON-NLS-1$
             "Looks for @SuppressLint annotations in locations where it doesn't work for class based checks",
 
-            "The @SuppressAnnotation is used to suppress Lint warnings in Java files. However, " +
+            "The `@SuppressAnnotation` is used to suppress Lint warnings in Java files. However, " +
             "while many lint checks analyzes the Java source code, where they can find " +
             "annotations on (for example) local variables, some checks are analyzing the " +
-            ".class files. And in class files, annotations only appear on classes, fields " +
+            "`.class` files. And in class files, annotations only appear on classes, fields " +
             "and methods. Annotations placed on local variables disappear. If you attempt " +
             "to suppress a lint error for a class-file based lint check, the suppress " +
             "annotation not work. You must move the annotation out to the surrounding method.",

@@ -54,7 +54,7 @@ public class PxUsageDetector extends LayoutDetector {
             "For performance reasons and to keep the code simpler, the Android system uses pixels " +
             "as the standard unit for expressing dimension or coordinate values. That means that " +
             "the dimensions of a view are always expressed in the code using pixels, but " +
-            "always based on the current screen density. For instance, if myView.getWidth() " +
+            "always based on the current screen density. For instance, if `myView.getWidth()` " +
             "returns 10, the view is 10 pixels wide on the current screen, but on a device with " +
             "a higher density screen, the value returned might be 15. If you use pixel values " +
             "in your application code to work with bitmaps that are not pre-scaled for the " +
@@ -72,13 +72,13 @@ public class PxUsageDetector extends LayoutDetector {
             "SpUsage", //$NON-NLS-1$
             "Looks for uses of \"dp\" instead of \"sp\" dimensions for text sizes",
 
-            "When setting text sizes, you should normally use \"sp\", or \"scale-independent " +
-            "pixels\". This is like the dp unit, but it is also scaled " +
+            "When setting text sizes, you should normally use `sp`, or \"scale-independent " +
+            "pixels\". This is like the `dp` unit, but it is also scaled " +
             "by the user's font size preference. It is recommend you use this unit when " +
             "specifying font sizes, so they will be adjusted for both the screen density " +
             "and the user's preference.\n" +
             "\n" +
-            "There *are* cases where you might need to use \"dp\"; typically this happens when " +
+            "There *are* cases where you might need to use `dp`; typically this happens when " +
             "the text is in a container with a specific dp-size. This will prevent the text " +
             "from spilling outside the container. Note however that this means that the user's " +
             "font size settings are not respected, so consider adjusting the layout itself " +

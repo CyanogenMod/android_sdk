@@ -60,9 +60,9 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
             "OnClick", //$NON-NLS-1$
             "Ensures that onClick attribute values refer to real methods",
 
-            "The onClick attribute value should be the name of a method in this View's context " +
+            "The `onClick` attribute value should be the name of a method in this View's context " +
             "to invoke when the view is clicked. This name must correspond to a public method " +
-            "that takes exactly one parameter of type View.\n" +
+            "that takes exactly one parameter of type `View`.\n" +
             "\n" +
             "Must be a string value, using '\\;' to escape characters such as '\\n' or " +
             "'\\uxxxx' for a unicode character.",

@@ -93,18 +93,18 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             "Checks that format strings are valid",
 
             "If a string contains a '%' character, then the string may be a formatting string " +
-            "which will be passed to String.format from Java code to replace each '%' " +
+            "which will be passed to `String.format` from Java code to replace each '%' " +
             "occurrence with specific values.\n" +
             "\n" +
             "This lint warning checks for two related problems:\n" +
-            "(1) Formatting strings that are invalid, meaning that String.format will throw " +
+            "(1) Formatting strings that are invalid, meaning that `String.format` will throw " +
             "exceptions at runtime when attempting to use the format string.\n" +
             "(2) Strings containing '%' that are not formatting strings getting passed to " +
-            "a String.format call. In this case the '%' will need to be escaped as '%%'.\n" +
+            "a `String.format` call. In this case the '%' will need to be escaped as '%%'.\n" +
             "\n" +
             "NOTE: Not all Strings which look like formatting strings are intended for " +
-            "use by String.format; for example, they may contain date formats intended " +
-            "for android.text.format.Time#format(). Lint cannot always figure out that " +
+            "use by `String.format`; for example, they may contain date formats intended " +
+            "for `android.text.format.Time#format()`. Lint cannot always figure out that " +
             "a String is a date format, so you may get false warnings in those scenarios. " +
             "See the suppress help topic for information on how to suppress errors in " +
             "that case.",

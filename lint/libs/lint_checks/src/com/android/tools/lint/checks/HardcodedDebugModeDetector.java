@@ -46,10 +46,10 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
             "HardcodedDebugMode", //$NON-NLS-1$
             "Checks for hardcoded values of android:debuggable in the manifest",
 
-            "It's best to leave out the android:debuggable attribute from the manifest. " +
-            "If you do, then the tools will automatically insert android:debuggable=true when " +
+            "It's best to leave out the `android:debuggable` attribute from the manifest. " +
+            "If you do, then the tools will automatically insert `android:debuggable=true` when " +
             "building an APK to debug on an emulator or device. And when you perform a " +
-            "release build, such as Exporting APK, it will automatically set it to false.\n" +
+            "release build, such as Exporting APK, it will automatically set it to `false`.\n" +
             "\n" +
             "If on the other hand you specify a specific value in the manifest file, then " +
             "the tools will always use it. This can lead to accidentally publishing " +

@@ -39,8 +39,8 @@ public class SetJavaScriptEnabledDetector extends Detector implements Detector.J
     public static final Issue ISSUE = Issue.create("SetJavaScriptEnabled", //$NON-NLS-1$
             "Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled",
 
-            "Your code should not invoke setJavaScriptEnabled if you are not sure that" +
-                    "your app really requires JavaScript support.",
+            "Your code should not invoke `setJavaScriptEnabled` if you are not sure that" +
+            "your app really requires JavaScript support.",
 
             Category.SECURITY,
             6,

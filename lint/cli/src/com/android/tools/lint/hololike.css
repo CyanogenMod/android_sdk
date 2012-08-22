@@ -24,6 +24,13 @@ body {
 .explanation {
     margin-top: 10px;
 }
+.explanation b {
+    color: #ffbbbb;
+}
+.explanation code {
+    color: #bebebe;
+    font-family: 'Roboto', Sans-Serif;
+}
 pre {
     background-color: #282828;
     margin: 5px 0px 5px 5px;

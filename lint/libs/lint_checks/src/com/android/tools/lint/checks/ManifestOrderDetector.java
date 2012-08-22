@@ -67,7 +67,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "The <application> tag should appear after the elements which declare " +
             "which version you need, which features you need, which libraries you " +
             "need, and so on. In the past there have been subtle bugs (such as " +
-            "themes not getting applied correctly) when the <application> tag appears " +
+            "themes not getting applied correctly) when the `<application>` tag appears " +
             "before some of these other elements, so it's best to order your " +
             "manifest in the logical dependency order.",
             Category.CORRECTNESS,
@@ -81,7 +81,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "UsesMinSdkAttributes", //$NON-NLS-1$
             "Checks that the minimum SDK and target SDK attributes are defined",
 
-            "The manifest should contain a <uses-sdk> element which defines the " +
+            "The manifest should contain a `<uses-sdk>` element which defines the " +
             "minimum minimum API Level required for the application to run, " +
             "as well as the target version (the highest API level you have tested " +
             "the version for.)",
@@ -99,12 +99,12 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "Checks that the manifest specifies a targetSdkVersion that is recent",
 
             "When your application runs on a version of Android that is more recent than your " +
-            "targetSdkVersion specifies that it has been tested with, various compatibility " +
+            "`targetSdkVersion` specifies that it has been tested with, various compatibility " +
             "modes kick in. This ensures that your application continues to work, but it may " +
-            "look out of place. For example, if the targetSdkVersion is less than 14, your " +
+            "look out of place. For example, if the `targetSdkVersion` is less than 14, your " +
             "app may get an option button in the UI.\n" +
             "\n" +
-            "To fix this issue, set the targetSdkVersion to the highest available value. Then " +
+            "To fix this issue, set the `targetSdkVersion` to the highest available value. Then " +
             "test your app to make sure everything works correctly. You may want to consult " +
             "the compatibility notes to see what changes apply to each version you are adding " +
             "support for: " +
@@ -122,7 +122,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "MultipleUsesSdk", //$NON-NLS-1$
             "Checks that the <uses-sdk> element appears at most once",
 
-            "The <uses-sdk> element should appear just once; the tools will *not* merge the " +
+            "The `<uses-sdk>` element should appear just once; the tools will *not* merge the " +
             "contents of all the elements so if you split up the atttributes across multiple " +
             "elements, only one of them will take effect. To fix this, just merge all the " +
             "attributes from the various elements into a single <uses-sdk> element.",
@@ -139,9 +139,9 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "WrongManifestParent", //$NON-NLS-1$
             "Checks that various manifest elements are declared in the right place",
 
-            "The <uses-library> element should be defined as a direct child of the " +
-            "<application> tag, not the <manifest> tag or an <activity> tag. Similarly, " +
-            "a <uses-sdk> tag much be declared at the root level, and so on. This check " +
+            "The `<uses-library>` element should be defined as a direct child of the " +
+            "`<application>` tag, not the `<manifest>` tag or an `<activity>` tag. Similarly, " +
+            "a `<uses-sdk>` tag much be declared at the root level, and so on. This check " +
             "looks for incorrect declaration locations in the manifest, and complains " +
             "if an element is found in the wrong place.",
 

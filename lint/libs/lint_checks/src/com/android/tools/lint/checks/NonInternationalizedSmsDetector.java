@@ -44,7 +44,8 @@ public class NonInternationalizedSmsDetector extends Detector implements Detecto
             "Looks for code sending text messages to unlocalized phone numbers",
 
             "SMS destination numbers must start with a country code or the application code " +
-            "must ensure that the SMS is only sent when the user is in the same country as the receiver.",
+            "must ensure that the SMS is only sent when the user is in the same country as " +
+            "the receiver.",
 
             Category.CORRECTNESS,
             5,
