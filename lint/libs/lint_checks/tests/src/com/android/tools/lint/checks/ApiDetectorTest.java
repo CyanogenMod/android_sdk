@@ -375,11 +375,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testIOException() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=35190
         assertEquals(
-            "src/test/pkg/ApiCallTest6.java:8: Error: Call requires API level 9 (current min is 1): java.io.IOException#<init> [NewApi]\n" +
+            "src/test/pkg/ApiCallTest6.java:8: Error: Call requires API level 9 (current min is 1): new java.io.IOException [NewApi]\n" +
             "        IOException ioException = new IOException(throwable);\n" +
             "        ~~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n" +
-            "",
+            "1 errors, 0 warnings\n",
 
             lintProject(
                     "apicheck/classpath=>.classpath",
@@ -462,14 +461,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // These errors are correctly -not- suppressed because they
             // appear outside the middle inner class suppressing its own errors
             // and its child's errors
-            "src/test/pkg/ApiCallTest4.java:9: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init> [NewApi]\n" +
+            "src/test/pkg/ApiCallTest4.java:9: Error: Call requires API level 14 (current min is 1): new android.widget.GridLayout [NewApi]\n" +
             "        new GridLayout(null, null, 0);\n" +
             "            ~~~~~~~~~~\n" +
-            "src/test/pkg/ApiCallTest4.java:38: Error: Call requires API level 14 (current min is 1): android.widget.GridLayout#<init> [NewApi]\n" +
+            "src/test/pkg/ApiCallTest4.java:38: Error: Call requires API level 14 (current min is 1): new android.widget.GridLayout [NewApi]\n" +
             "            new GridLayout(null, null, 0);\n" +
             "                ~~~~~~~~~~\n" +
-            "2 errors, 0 warnings\n" +
-            "",
+            "2 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -508,11 +506,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testTargetAnnotationInner() throws Exception {
         assertEquals(
-            "src/test/pkg/ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): android.widget.GridLayout#<init> [NewApi]\n" +
+            "src/test/pkg/ApiTargetTest2.java:32: Error: Call requires API level 14 (current min is 3): new android.widget.GridLayout [NewApi]\n" +
             "                        new GridLayout(null, null, 0);\n" +
             "                            ~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n" +
-            "",
+            "1 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -548,10 +545,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testSuper() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=36384
         assertEquals(
-            "src/test/pkg/ApiCallTest7.java:8: Error: Call requires API level 9 (current min is 4): java.io.IOException#<init> [NewApi]\n" +
+            "src/test/pkg/ApiCallTest7.java:8: Error: Call requires API level 9 (current min is 4): new java.io.IOException [NewApi]\n" +
             "        super(message, cause); // API 9\n" +
             "        ~~~~~\n" +
-            "src/test/pkg/ApiCallTest7.java:12: Error: Call requires API level 9 (current min is 4): java.io.IOException#<init> [NewApi]\n" +
+            "src/test/pkg/ApiCallTest7.java:12: Error: Call requires API level 9 (current min is 4): new java.io.IOException [NewApi]\n" +
             "        super.toString(); throw new IOException((Throwable) null); // API 9\n" +
             "                                    ~~~~~~~~~~~\n" +
             "2 errors, 0 warnings\n",
