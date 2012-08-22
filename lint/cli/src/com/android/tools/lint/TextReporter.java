@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
 
 import java.io.IOException;
@@ -75,7 +76,13 @@ public class TextReporter extends Reporter {
                     }
                 }
 
-                output.append(warning.severity.getDescription());
+                Severity severity = warning.severity;
+                if (severity == Severity.FATAL) {
+                    // Treat the fatal error as an error such that we don't display
+                    // both "Fatal:" and "Error:" etc in the error output.
+                    severity = Severity.ERROR;
+                }
+                output.append(severity.getDescription());
                 output.append(':');
                 output.append(' ');
 
