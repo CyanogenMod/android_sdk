@@ -26,6 +26,7 @@
 # Whitelist of SDK specific projects that do NOT need Java (e.g. C libraries)
 
 subdirs += \
+	external/openssl \
 	external/qemu \
 	prebuilts/tools \
 	sdk/avdlauncher \
