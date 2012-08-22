@@ -343,7 +343,12 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     while (owner != null) {
                         int api = mApiDatabase.getCallVersion(owner, name, desc);
                         if (api > minSdk) {
-                            String fqcn = owner.replace('/', '.') + '#' + name;
+                            String fqcn;
+                            if (CONSTRUCTOR_NAME.equals(name)) {
+                                fqcn = "new " + owner.replace('/', '.'); //$NON-NLS-1$
+                            } else {
+                                fqcn = owner.replace('/', '.') + '#' + name;
+                            }
                             String message = String.format(
                                     "Call requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
