@@ -182,7 +182,9 @@ public class ClassContext extends Context {
                     String topPath = mBinDir.getPath();
                     String parentPath = file.getParentFile().getPath();
                     if (parentPath.startsWith(topPath)) {
-                        String relative = parentPath.substring(topPath.length() + 1);
+                        int start = topPath.length() + 1;
+                        String relative = start > parentPath.length() ? // default package?
+                                "" : parentPath.substring(start);
                         List<File> sources = getProject().getJavaSourceFolders();
                         for (File dir : sources) {
                             File sourceFile = new File(dir, relative + File.separator + source);
@@ -531,11 +533,13 @@ public class ClassContext extends Context {
      */
     @NonNull
     public Location getLocation(@NonNull AbstractInsnNode instruction) {
+        SearchHints hints = SearchHints.create(FORWARD).matchJavaSymbol();
         String pattern = null;
         if (instruction instanceof MethodInsnNode) {
             MethodInsnNode call = (MethodInsnNode) instruction;
             if (call.name.equals(CONSTRUCTOR_NAME)) {
                 pattern = call.owner;
+                hints = hints.matchConstructor();
             } else {
                 pattern = call.name;
             }
@@ -550,8 +554,7 @@ public class ClassContext extends Context {
         }
 
         int line = findLineNumber(instruction);
-        return getLocationForLine(line, pattern, null,
-                SearchHints.create(FORWARD).matchJavaSymbol());
+        return getLocationForLine(line, pattern, null, hints);
     }
 
     private static boolean isAnonymousClass(@NonNull String fqcn) {

@@ -490,6 +490,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         // method name (<init>) but the class name
         if (patternStart != null && patternStart.equals(CONSTRUCTOR_NAME)
                 && node instanceof MethodInsnNode) {
+            if (hints != null) {
+                hints = hints.matchConstructor();
+            }
             patternStart = ((MethodInsnNode) node).owner;
             int index = patternStart.lastIndexOf('$');
             if (index != -1) {

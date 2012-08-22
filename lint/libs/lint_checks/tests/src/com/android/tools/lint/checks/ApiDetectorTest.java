@@ -530,7 +530,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
         if (System.getenv("ANDROID_BUILD_TOP") != null) {
             expected = "No warnings.";
         } else {
-            expected = "Foo.class: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError";
+            expected = "bin/classes/android/support/foo/Foo.class: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
+                    "1 errors, 0 warnings\n";
         }
 
         assertEquals(
@@ -541,6 +542,25 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 "apicheck/minsdk1.xml=>AndroidManifest.xml",
                 "apicheck/ApiCallTest2.java.txt=>src/src/android/support/foo/Foo.java",
                 "apicheck/ApiCallTest2.class.data=>bin/classes/android/support/foo/Foo.class"
+                ));
+    }
+
+    public void testSuper() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=36384
+        assertEquals(
+            "src/test/pkg/ApiCallTest7.java:8: Error: Call requires API level 9 (current min is 4): java.io.IOException#<init> [NewApi]\n" +
+            "        super(message, cause); // API 9\n" +
+            "        ~~~~~\n" +
+            "src/test/pkg/ApiCallTest7.java:12: Error: Call requires API level 9 (current min is 4): java.io.IOException#<init> [NewApi]\n" +
+            "        super.toString(); throw new IOException((Throwable) null); // API 9\n" +
+            "                                    ~~~~~~~~~~~\n" +
+            "2 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/ApiCallTest7.java.txt=>src/test/pkg/ApiCallTest7.java",
+                    "apicheck/ApiCallTest7.class.data=>bin/classes/test/pkg/ApiCallTest7.class"
                 ));
     }
 }
