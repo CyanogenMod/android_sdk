@@ -341,4 +341,13 @@ public class LintConstants {
             "android/content/ContentProvider";                                       //$NON-NLS-1$
     public static final String ANDROID_CONTENT_BROADCAST_RECEIVER =
             "android/content/BroadcastReceiver";                                     //$NON-NLS-1$
+
+    /**
+     * The highest known API level. Note that the tools may also look at the
+     * installed platforms to see if they can find more recently released
+     * platforms, e.g. when the tools have not yet been updated for a new
+     * release. This number is used as a baseline and any more recent platforms
+     * found can be used to increase the highest known number.
+     */
+    public static final int HIGHEST_KNOWN_API = 16;
 }

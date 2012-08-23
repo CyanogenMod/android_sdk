@@ -24,13 +24,18 @@ import static com.android.tools.lint.detector.api.LintConstants.SRC_FOLDER;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkManager;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintConstants;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.StdLogger;
+import com.android.utils.StdLogger.Level;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -285,6 +290,32 @@ public abstract class LintClient {
     }
 
     /**
+     * Returns the File pointing to the user's SDK install area. This is generally
+     * the root directory containing the lint tool (but also platforms/ etc).
+     *
+     * @return a file pointing to the user's install area
+     */
+    @Nullable
+    public File getSdkHome() {
+        File binDir = getLintBinDir();
+        if (binDir != null) {
+            assert binDir.getName().equals("tools");
+
+            File root = binDir.getParentFile();
+            if (root != null && root.isDirectory()) {
+                return root;
+            }
+        }
+
+        String home = System.getenv("ANDROID_HOME"); //$NON-NLS-1$
+        if (home != null) {
+            return new File(home);
+        }
+
+        return null;
+    }
+
+    /**
      * Locates an SDK resource (relative to the SDK root directory).
      * <p>
      * TODO: Consider switching to a {@link URL} return type instead.
@@ -523,5 +554,49 @@ public abstract class LintClient {
         project = Project.create(this, dir, referenceDir);
         mDirToProject.put(canonicalDir, project);
         return project;
+    }
+
+    private IAndroidTarget[] mTargets;
+
+    /**
+     * Returns all the {@link IAndroidTarget} versions installed in the user's SDK install
+     * area.
+     *
+     * @return all the installed targets
+     */
+    @NonNull
+    public IAndroidTarget[] getTargets() {
+        if (mTargets == null) {
+            File sdkHome = getSdkHome();
+            if (sdkHome != null) {
+                StdLogger log = new StdLogger(Level.WARNING);
+                SdkManager manager = SdkManager.createManager(sdkHome.getPath(), log);
+                mTargets = manager.getTargets();
+            } else {
+                mTargets = new IAndroidTarget[0];
+            }
+        }
+
+        return mTargets;
+    }
+
+    /**
+     * Returns the highest known API level.
+     *
+     * @return the highest known API level
+     */
+    public int getHighestKnownApiLevel() {
+        int max = LintConstants.HIGHEST_KNOWN_API;
+
+        for (IAndroidTarget target : getTargets()) {
+            if (target.isPlatform()) {
+                int api = target.getVersion().getApiLevel();
+                if (api > max && !target.getVersion().isPreview()) {
+                    max = api;
+                }
+            }
+        }
+
+        return max;
     }
 }

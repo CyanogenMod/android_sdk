@@ -34,6 +34,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -1649,6 +1650,41 @@ public class LintDriver {
         @Override
         public File findResource(@NonNull String relativePath) {
             return mDelegate.findResource(relativePath);
+        }
+
+        @Override
+        @Nullable
+        public File getCacheDir(boolean create) {
+            return mDelegate.getCacheDir(create);
+        }
+
+        @Override
+        @NonNull
+        protected ClassPathInfo getClassPath(@NonNull Project project) {
+            return mDelegate.getClassPath(project);
+        }
+
+        @Override
+        public void log(@Nullable Throwable exception, @Nullable String format,
+                @Nullable Object... args) {
+            mDelegate.log(exception, format, args);
+        }
+
+        @Override
+        @Nullable
+        public File getSdkHome() {
+            return mDelegate.getSdkHome();
+        }
+
+        @Override
+        @NonNull
+        public IAndroidTarget[] getTargets() {
+            return mDelegate.getTargets();
+        }
+
+        @Override
+        public int getHighestKnownApiLevel() {
+            return mDelegate.getHighestKnownApiLevel();
         }
     }
 
