@@ -1053,12 +1053,7 @@ public class Main extends LintClient {
             return;
         }
 
-        if (severity == Severity.FATAL) {
-            // From here on, treat the fatal error as an error such that we don't display
-            // both "Fatal:" and "Error:" etc in the error output.
-            severity = Severity.ERROR;
-        }
-        if (severity == Severity.ERROR) {
+        if (severity == Severity.ERROR || severity == Severity.FATAL) {
             mHasErrors = true;
             mErrorCount++;
         } else {
