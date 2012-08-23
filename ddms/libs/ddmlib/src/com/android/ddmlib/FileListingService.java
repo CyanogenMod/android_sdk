@@ -201,6 +201,20 @@ public final class FileListingService {
         }
 
         /**
+         * Returns the owner string of the entry, as returned by <code>ls</code>.
+         */
+        public String getOwner() {
+            return owner;
+        }
+
+        /**
+         * Returns the group owner of the entry, as returned by <code>ls</code>.
+         */
+        public String getGroup() {
+            return group;
+        }
+
+        /**
          * Returns the extra info for the entry.
          * <p/>For a link, it will be a description of the link.
          * <p/>For an application apk file it will be the application package as returned
