@@ -426,6 +426,10 @@ void queryConfigs(EGLNativeInternalDisplayType display,int renderableType,Config
     }
 }
 
+bool validNativeDisplay(EGLNativeInternalDisplayType dpy) {
+    return dpy != NULL;
+}
+
 bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win) {
     return IsWindow(win);
 }

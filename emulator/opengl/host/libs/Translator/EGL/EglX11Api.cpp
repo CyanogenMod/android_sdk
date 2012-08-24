@@ -171,6 +171,10 @@ void queryConfigs(EGLNativeDisplayType dpy,int renderableType,ConfigsList& listO
     XFree(frmtList);
 }
 
+bool validNativeDisplay(EGLNativeInternalDisplayType dpy) {
+    return dpy != NULL;
+}
+
 bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
    Window root;
    int tmp;
