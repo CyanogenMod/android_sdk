@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <template
-    format="1"
-    revision="1"
+    format="3"
+    revision="2"
     name="New Blank Activity"
     description="Creates a new blank activity, with optional inner navigation.">
     <dependency name="android-support-v4" revision="8" />
