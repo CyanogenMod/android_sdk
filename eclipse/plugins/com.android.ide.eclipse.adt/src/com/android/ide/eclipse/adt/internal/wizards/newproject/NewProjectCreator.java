@@ -18,11 +18,12 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import static com.android.SdkConstants.FN_PROJECT_PROPERTIES;
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
-
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import com.android.AndroidConstants;
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -33,6 +34,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
@@ -213,6 +215,11 @@ public class NewProjectCreator  {
     private final NewProjectWizardState mValues;
     private final IRunnableContext mRunnableContext;
 
+    /**
+     * Creates a new {@linkplain NewProjectCreator}
+     * @param values the wizard state with initial project parameters
+     * @param runnableContext the context to run project creation in
+     */
     public NewProjectCreator(NewProjectWizardState values, IRunnableContext runnableContext) {
         mValues = values;
         mRunnableContext = runnableContext;
@@ -644,7 +651,14 @@ public class NewProjectCreator  {
         }
     }
 
+    /** Handler which can write contents into a project */
     public interface ProjectPopulator {
+        /**
+         * Add contents into the given project
+         *
+         * @param project the project to write into
+         * @throws InvocationTargetException if anything goes wrong
+         */
         public void populate(IProject project) throws InvocationTargetException;
     }
 
@@ -660,12 +674,13 @@ public class NewProjectCreator  {
      * @return The project newly created
      * @throws StreamException
      */
-    private IProject createEclipseProject(IProgressMonitor monitor,
-            IProject project,
-            IProjectDescription description,
-            Map<String, Object> parameters,
-            Map<String, String> dictionary,
-            ProjectPopulator projectPopulator)
+    private IProject createEclipseProject(
+            @NonNull IProgressMonitor monitor,
+            @NonNull IProject project,
+            @NonNull IProjectDescription description,
+            @NonNull Map<String, Object> parameters,
+            @Nullable Map<String, String> dictionary,
+            @Nullable ProjectPopulator projectPopulator)
                 throws CoreException, IOException, StreamException {
 
         // get the project target
@@ -719,7 +734,7 @@ public class NewProjectCreator  {
             addSampleCode(project, sourceFolders[0], parameters, dictionary, monitor);
 
             // add the string definition file if needed
-            if (dictionary.size() > 0) {
+            if (dictionary != null && dictionary.size() > 0) {
                 addStringDictionaryFile(project, dictionary, monitor);
             }
 
@@ -804,13 +819,26 @@ public class NewProjectCreator  {
         return project;
     }
 
+    /**
+     * Creates a new project
+     *
+     * @param monitor An existing monitor.
+     * @param project The project to create.
+     * @param target the build target to associate with the project
+     * @param projectPopulator a handler for writing the template contents
+     * @param isLibrary whether this project should be marked as a library project
+     * @param projectLocation the location to write the project into
+     * @param workingSets Eclipse working sets, if any, to add the project to
+     * @throws CoreException if anything goes wrong
+     */
     public static void create(
-            IProgressMonitor monitor,
-            final IProject project,
-            IAndroidTarget target,
-            final ProjectPopulator projectPopulator,
+            @NonNull IProgressMonitor monitor,
+            @NonNull final IProject project,
+            @NonNull IAndroidTarget target,
+            @Nullable final ProjectPopulator projectPopulator,
             boolean isLibrary,
-            String projectLocation)
+            @NonNull String projectLocation,
+            @NonNull final IWorkingSet[] workingSets)
                 throws CoreException {
         final NewProjectCreator creator = new NewProjectCreator(null, null);
 
@@ -846,6 +874,13 @@ public class NewProjectCreator  {
                 } catch (StreamException e) {
                     throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                             "Unexpected error while creating project", e));
+                }
+                if (workingSets != null && workingSets.length > 0) {
+                    IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+                    if (javaProject != null) {
+                        Display.getDefault().syncExec(new WorksetAdder(javaProject,
+                                workingSets));
+                    }
                 }
             }
         };
@@ -1276,8 +1311,9 @@ public class NewProjectCreator  {
      * @param project the project to add the file to.
      * @param destName the name to write the file as
      * @param source the file to add. It'll keep the same filename once copied into the project.
-     * @throws FileNotFoundException
-     * @throws CoreException
+     * @param monitor the monitor to report progress to
+     * @throws FileNotFoundException if the file to be added does not exist
+     * @throws CoreException if writing the file does not work
      */
     public static void addLocalFile(IProject project, File source, String destName,
             IProgressMonitor monitor) throws FileNotFoundException, CoreException {

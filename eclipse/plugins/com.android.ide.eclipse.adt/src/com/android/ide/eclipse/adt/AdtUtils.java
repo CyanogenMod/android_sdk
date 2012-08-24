@@ -63,6 +63,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.ITextEditor;
@@ -82,6 +83,7 @@ import java.util.Locale;
 
 
 /** Utility methods for ADT */
+@SuppressWarnings("restriction") // WST API
 public class AdtUtils {
     /**
      * Returns true if the given string ends with the given suffix, using a
@@ -368,6 +370,24 @@ public class AdtUtils {
      * @return the current editor, or null
      */
     public static IEditorPart getActiveEditor() {
+        IWorkbenchWindow window = getActiveWorkbenchWindow();
+        if (window != null) {
+            IWorkbenchPage page = window.getActivePage();
+            if (page != null) {
+                return page.getActiveEditor();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the current active workbench, or null if not found
+     *
+     * @return the current window, or null
+     */
+    @Nullable
+    public static IWorkbenchWindow getActiveWorkbenchWindow() {
         IWorkbench workbench = PlatformUI.getWorkbench();
         IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
         if (window == null) {
@@ -376,13 +396,24 @@ public class AdtUtils {
                 window = windows[0];
             }
         }
+
+        return window;
+    }
+
+    /**
+     * Returns the current active workbench part, or null if not found
+     *
+     * @return the current active workbench part, or null
+     */
+    @Nullable
+    public static IWorkbenchPart getActivePart() {
+        IWorkbenchWindow window = getActiveWorkbenchWindow();
         if (window != null) {
-            IWorkbenchPage page = window.getActivePage();
-            if (page != null) {
-                return page.getActiveEditor();
+            IWorkbenchPage activePage = window.getActivePage();
+            if (activePage != null) {
+                return activePage.getActivePart();
             }
         }
-
         return null;
     }
 
@@ -725,7 +756,6 @@ public class AdtUtils {
      * @param appendValue if true, add this value as a comma separated value to
      *            the existing attribute value, if any
      */
-    @SuppressWarnings("restriction") // DOM model
     public static void setToolsAttribute(
             @NonNull final AndroidXmlEditor editor,
             @NonNull final Element element,
@@ -834,6 +864,33 @@ public class AdtUtils {
     }
 
     /**
+     * Returns a string label for the given target, of the form
+     * "API 16: Android 4.1 (Jelly Bean)".
+     *
+     * @param target the target to generate a string from
+     * @return a suitable display string
+     */
+    @NonNull
+    public static String getTargetLabel(@NonNull IAndroidTarget target) {
+        if (target.isPlatform()) {
+            AndroidVersion version = target.getVersion();
+            String codename = target.getProperty(PkgProps.PLATFORM_CODENAME);
+            String release = target.getProperty("ro.build.version.release"); //$NON-NLS-1$
+            if (codename != null) {
+                return String.format("API %1$d: Android %2$s (%3$s)",
+                        version.getApiLevel(),
+                        release,
+                        codename);
+            }
+            return String.format("API %1$d: Android %2$s", version.getApiLevel(),
+                    release);
+        }
+
+        return String.format("%1$s (API %2$s)", target.getFullName(),
+                target.getVersion().getApiString());
+    }
+
+    /**
      * Returns the Android version and code name of the given API level
      *
      * @param api the api level
@@ -870,21 +927,13 @@ public class AdtUtils {
                         if (target.isPlatform()) {
                             AndroidVersion version = target.getVersion();
                             if (version.getApiLevel() == api) {
-                                String codename = target.getProperty(PkgProps.PLATFORM_CODENAME);
-                                if (codename != null) {
-                                    return String.format("API %1$d: Android %2$s (%3$s)", api,
-                                            target.getProperty("ro.build.version.release"), //$NON-NLS-1$
-                                            codename);
-                                }
-                                return String.format("API %1$d: Android %2$s", api,
-                                        target.getProperty("ro.build.version.release")); //$NON-NLS-1$
+                                return getTargetLabel(target);
                             }
                         }
                     }
                 }
 
                 return "API " + api;
-
             }
         }
     }

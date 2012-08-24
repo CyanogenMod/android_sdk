@@ -268,7 +268,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
     public boolean isPageComplete() {
         // Ensure that the Finish button isn't enabled until
         // the user has reached and completed this page
-        if (!mShown) {
+        if (!mShown && mValues.createActivity) {
             return false;
         }
 

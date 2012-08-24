@@ -16,9 +16,9 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplatePage.WIZARD_PAGE_WIDTH;
-import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_ID;
 
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -53,16 +53,12 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +70,7 @@ import lombok.ast.libs.org.parboiled.google.collect.Lists;
  */
 public class NewProjectPage extends WizardPage
         implements ModifyListener, SelectionListener, FocusListener {
+    private static final int FIELD_WIDTH = 300;
     private static final String SAMPLE_PACKAGE_PREFIX = "com.example."; //$NON-NLS-1$
     /** Suffix added by default to activity names */
     static final String ACTIVITY_NAME_SUFFIX = "Activity";              //$NON-NLS-1$
@@ -84,33 +81,25 @@ public class NewProjectPage extends WizardPage
     private final NewProjectWizardState mValues;
     private Map<String, Integer> mMinNameToApi;
     private Parameter mThemeParameter;
+    private Combo mThemeCombo;
 
     private Text mProjectText;
     private Text mPackageText;
     private Text mApplicationText;
     private Combo mMinSdkCombo;
-
-    private boolean mIgnore;
+    private Combo mTargetSdkCombo;
     private Combo mBuildSdkCombo;
-    private Button mChooseSdkButton;
-    private Button mCustomIconToggle;
-    private Button mLibraryToggle;
-
-    private Button mUseDefaultLocationToggle;
-    private Label mLocationLabel;
-    private Text mLocationText;
-    private Button mChooseLocationButton;
-    private static String sLastProjectLocation = System.getProperty("user.home"); //$NON-NLS-1$
-
     private Label mHelpIcon;
     private Label mTipLabel;
 
+    private boolean mIgnore;
     private ControlDecoration mApplicationDec;
     private ControlDecoration mProjectDec;
     private ControlDecoration mPackageDec;
     private ControlDecoration mBuildTargetDec;
     private ControlDecoration mMinSdkDec;
-    private Combo mThemeCombo;
+    private ControlDecoration mTargetSdkDec;
+    private ControlDecoration mThemeDec;
 
     NewProjectPage(NewProjectWizardState values) {
         super("newAndroidApp"); //$NON-NLS-1$
@@ -133,7 +122,9 @@ public class NewProjectPage extends WizardPage
         applicationLabel.setText("Application Name:");
 
         mApplicationText = new Text(container, SWT.BORDER);
-        mApplicationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridData gdApplicationText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1);
+        gdApplicationText.widthHint = FIELD_WIDTH;
+        mApplicationText.setLayoutData(gdApplicationText);
         mApplicationText.addModifyListener(this);
         mApplicationText.addFocusListener(this);
         mApplicationDec = createFieldDecoration(mApplicationText,
@@ -144,7 +135,9 @@ public class NewProjectPage extends WizardPage
         projectLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
         projectLabel.setText("Project Name:");
         mProjectText = new Text(container, SWT.BORDER);
-        mProjectText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridData gdProjectText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1);
+        gdProjectText.widthHint = FIELD_WIDTH;
+        mProjectText.setLayoutData(gdProjectText);
         mProjectText.addModifyListener(this);
         mProjectText.addFocusListener(this);
         mProjectDec = createFieldDecoration(mProjectText,
@@ -156,7 +149,9 @@ public class NewProjectPage extends WizardPage
         packageLabel.setText("Package Name:");
 
         mPackageText = new Text(container, SWT.BORDER);
-        mPackageText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridData gdPackageText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1);
+        gdPackageText.widthHint = FIELD_WIDTH;
+        mPackageText.setLayoutData(gdPackageText);
         mPackageText.addModifyListener(this);
         mPackageText.addFocusListener(this);
         mPackageDec = createFieldDecoration(mPackageText,
@@ -173,28 +168,35 @@ public class NewProjectPage extends WizardPage
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
 
-        Label buildSdkLabel = new Label(container, SWT.NONE);
-        buildSdkLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
-        buildSdkLabel.setText("Build SDK:");
+        // Min SDK
 
-        mBuildSdkCombo = new Combo(container, SWT.READ_ONLY);
-        mBuildSdkCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        IAndroidTarget[] targets = getCompilationTargets();
-        mMinNameToApi = Maps.newHashMap();
-        List<String> labels = new ArrayList<String>(targets.length);
-        for (IAndroidTarget target : targets) {
-            String targetLabel = String.format("%1$s (API %2$s)", target.getFullName(),
-                    target.getVersion().getApiString());
-            labels.add(targetLabel);
-            mMinNameToApi.put(targetLabel, target.getVersion().getApiLevel());
+        Label minSdkLabel = new Label(container, SWT.NONE);
+        minSdkLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
+        minSdkLabel.setText("Minimum Required SDK:");
 
-        }
-        mBuildSdkCombo.setData(targets);
-        mBuildSdkCombo.setItems(labels.toArray(new String[labels.size()]));
+        mMinSdkCombo = new Combo(container, SWT.READ_ONLY);
+        GridData gdMinSdkCombo = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+        gdMinSdkCombo.widthHint = FIELD_WIDTH;
+        mMinSdkCombo.setLayoutData(gdMinSdkCombo);
 
         // Pick most recent platform
+        IAndroidTarget[] targets = getCompilationTargets();
+        mMinNameToApi = Maps.newHashMap();
+        List<String> targetLabels = new ArrayList<String>(targets.length);
+        for (IAndroidTarget target : targets) {
+            String targetLabel;
+            if (target.isPlatform()
+                    && target.getVersion().getApiLevel() <= AdtUtils.getHighestKnownApiLevel()) {
+                targetLabel = AdtUtils.getAndroidName(target.getVersion().getApiLevel());
+            } else {
+                targetLabel = AdtUtils.getTargetLabel(target);
+            }
+            targetLabels.add(targetLabel);
+            mMinNameToApi.put(targetLabel, target.getVersion().getApiLevel());
+        }
+
         List<String> codeNames = Lists.newArrayList();
-        int selectIndex = -1;
+        int buildTargetIndex = -1;
         for (int i = 0, n = targets.length; i < n; i++) {
             IAndroidTarget target = targets[i];
             AndroidVersion version = target.getVersion();
@@ -208,34 +210,10 @@ public class NewProjectPage extends WizardPage
                     && (mValues.target == null ||
                         apiLevel > mValues.target.getVersion().getApiLevel())) {
                 mValues.target = target;
-                selectIndex = i;
+                buildTargetIndex = i;
             }
         }
-        if (selectIndex != -1) {
-            mBuildSdkCombo.select(selectIndex);
-        }
-
-        mBuildSdkCombo.addSelectionListener(this);
-        mBuildSdkCombo.addFocusListener(this);
-        mBuildTargetDec = createFieldDecoration(mBuildSdkCombo,
-                "Choose a target API to compile your code against. This is typically the most " +
-                "recent version, or the first version that supports all the APIs you want to " +
-                "directly access");
-
-
-        mChooseSdkButton = new Button(container, SWT.NONE);
-        mChooseSdkButton.setText("Choose...");
-        mChooseSdkButton.addSelectionListener(this);
-        mChooseSdkButton.setEnabled(false);
-
-        Label minSdkLabel = new Label(container, SWT.NONE);
-        minSdkLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
-        minSdkLabel.setText("Minimum Required SDK:");
-
-        mMinSdkCombo = new Combo(container, SWT.READ_ONLY);
-        mMinSdkCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        labels = new ArrayList<String>(24);
+        List<String> labels = new ArrayList<String>(24);
         for (String label : AdtUtils.getKnownVersions()) {
             labels.add(label);
         }
@@ -261,9 +239,56 @@ public class NewProjectPage extends WizardPage
         mMinSdkDec = createFieldDecoration(mMinSdkCombo,
                 "Choose the lowest version of Android that your application will support. Lower " +
                 "API levels target more devices, but means fewer features are available. By " +
-                "targeting API 8 and later, you reach approximately 93% of the market.");
-
+                "targeting API 8 and later, you reach approximately 95% of the market.");
         new Label(container, SWT.NONE);
+
+        // Target SDK
+        Label targetSdkLabel = new Label(container, SWT.NONE);
+        targetSdkLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
+        targetSdkLabel.setText("Target SDK:");
+
+        mTargetSdkCombo = new Combo(container, SWT.READ_ONLY);
+        GridData gdTargetSdkCombo = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+        gdTargetSdkCombo.widthHint = FIELD_WIDTH;
+        mTargetSdkCombo.setLayoutData(gdTargetSdkCombo);
+
+        mTargetSdkCombo.setItems(versions);
+        mTargetSdkCombo.select(mValues.targetSdkLevel - 1);
+
+        mTargetSdkCombo.addSelectionListener(this);
+        mTargetSdkCombo.addFocusListener(this);
+        mTargetSdkDec = createFieldDecoration(mTargetSdkCombo,
+                "Choose the highest API level that the application is known to work with. " +
+                "This attribute informs the system that you have tested against the target " +
+                "version and the system should not enable any compatibility behaviors to " +
+                "maintain your app's forward-compatibility with the target version. " +
+                "The application is still able to run on older versions " +
+                "(down to minSdkVersion). Your application may look dated if you are not " +
+                "targeting the current version.");
+        new Label(container, SWT.NONE);
+
+        // Build Version
+
+        Label buildSdkLabel = new Label(container, SWT.NONE);
+        buildSdkLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
+        buildSdkLabel.setText("Compile With:");
+
+        mBuildSdkCombo = new Combo(container, SWT.READ_ONLY);
+        GridData gdBuildSdkCombo = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+        gdBuildSdkCombo.widthHint = FIELD_WIDTH;
+        mBuildSdkCombo.setLayoutData(gdBuildSdkCombo);
+        mBuildSdkCombo.setData(targets);
+        mBuildSdkCombo.setItems(targetLabels.toArray(new String[targetLabels.size()]));
+        if (buildTargetIndex != -1) {
+            mBuildSdkCombo.select(buildTargetIndex);
+        }
+
+        mBuildSdkCombo.addSelectionListener(this);
+        mBuildSdkCombo.addFocusListener(this);
+        mBuildTargetDec = createFieldDecoration(mBuildSdkCombo,
+                "Choose a target API to compile your code against, from your installed SDKs. " +
+                "This is typically the most recent version, or the first version that supports " +
+                "all the APIs you want to directly access without reflection.");
         new Label(container, SWT.NONE);
 
         TemplateMetadata metadata = mValues.template.getTemplate();
@@ -271,54 +296,25 @@ public class NewProjectPage extends WizardPage
             mThemeParameter = metadata.getParameter("baseTheme"); //$NON-NLS-1$
             if (mThemeParameter != null && mThemeParameter.element != null) {
                 Label themeLabel = new Label(container, SWT.NONE);
-                themeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+                themeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
                 themeLabel.setText("Theme:");
 
                 mThemeCombo = NewTemplatePage.createOptionCombo(mThemeParameter, container,
                         mValues.parameters, this, this);
-                mThemeCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+                GridData gdThemeCombo = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+                gdThemeCombo.widthHint = FIELD_WIDTH;
+                mThemeCombo.setLayoutData(gdThemeCombo);
                 new Label(container, SWT.NONE);
-                new Label(container, SWT.NONE);
+
+                mThemeDec = createFieldDecoration(mThemeCombo,
+                        "Choose the base theme to use for the application");
             }
         }
 
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
         new Label(container, SWT.NONE);
-
-        mCustomIconToggle = new Button(container, SWT.CHECK);
-        mCustomIconToggle.setSelection(true);
-        mCustomIconToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
-        mCustomIconToggle.setText("Create custom launcher icon");
-        mCustomIconToggle.setSelection(mValues.createIcon);
-        mCustomIconToggle.addSelectionListener(this);
-
-        mLibraryToggle = new Button(container, SWT.CHECK);
-        mLibraryToggle.setSelection(true);
-        mLibraryToggle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
-        mLibraryToggle.setText("Mark this project as a library");
-        mLibraryToggle.setSelection(mValues.isLibrary);
-        mLibraryToggle.addSelectionListener(this);
-
-        mUseDefaultLocationToggle = new Button(container, SWT.CHECK);
-        mUseDefaultLocationToggle.setLayoutData(
-                new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
-        mUseDefaultLocationToggle.setText("Create Project in Workspace");
-        mUseDefaultLocationToggle.addSelectionListener(this);
-
-        mLocationLabel = new Label(container, SWT.NONE);
-        mLocationLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 2, 1));
-        mLocationLabel.setText("Location:");
-
-        mLocationText = new Text(container, SWT.BORDER);
-        mLocationText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mLocationText.addModifyListener(this);
-
-        mChooseLocationButton = new Button(container, SWT.NONE);
-        mChooseLocationButton.setText("Browse...");
-        mChooseLocationButton.addSelectionListener(this);
-        mChooseLocationButton.setEnabled(false);
-        setUseCustomLocation(false);
+        new Label(container, SWT.NONE);
 
         Label label = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
         label.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 4, 1));
@@ -344,7 +340,41 @@ public class NewProjectPage extends WizardPage
         data.horizontalSpan = 4;
         data.widthHint = WIZARD_PAGE_WIDTH;
         dummy.setLayoutData(data);
+    }
 
+    /**
+     * Updates the theme selection such that it's valid for the current build
+     * and min sdk targets. Also runs {@link #validatePage} in case no valid entry was found.
+     * Does nothing if called on a template that does not supply a theme.
+     */
+    void updateTheme() {
+        if (mThemeParameter != null) {
+            // Pick the highest theme version that works for the current SDK level
+            Parameter parameter = NewTemplatePage.getParameter(mThemeCombo);
+            assert parameter == mThemeParameter;
+            if (parameter != null) {
+                String[] optionIds = (String[]) mThemeCombo.getData(ATTR_ID);
+                for (int index = optionIds.length - 1; index >= 0; index--) {
+                    IStatus status = NewTemplatePage.validateCombo(null, mThemeParameter,
+                            index, mValues.minSdkLevel, mValues.getBuildApi());
+                    if (status == null || status.isOK()) {
+                        String optionId = optionIds[index];
+                        parameter.value = optionId;
+                        parameter.edited = optionId != null && !optionId.toString().isEmpty();
+                        mValues.parameters.put(parameter.id, optionId);
+                        try {
+                            mIgnore = true;
+                            mThemeCombo.select(index);
+                        } finally {
+                            mIgnore = false;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            validatePage();
+        }
     }
 
     private IAndroidTarget[] getCompilationTargets() {
@@ -393,17 +423,6 @@ public class NewProjectPage extends WizardPage
         validatePage();
     }
 
-    private void setUseCustomLocation(boolean en) {
-        mUseDefaultLocationToggle.setSelection(!en);
-        if (!en) {
-            updateProjectLocation(mValues.projectName);
-        }
-
-        mLocationLabel.setEnabled(en);
-        mLocationText.setEnabled(en);
-        mChooseLocationButton.setEnabled(en);
-    }
-
     // ---- Implements ModifyListener ----
 
     @Override
@@ -448,8 +467,6 @@ public class NewProjectPage extends WizardPage
                 mIgnore = false;
             }
             suggestPackage(mValues.applicationName);
-        } else if (source == mLocationText) {
-            mValues.projectLocation = mLocationText.getText().trim();
         }
 
         validatePage();
@@ -497,12 +514,9 @@ public class NewProjectPage extends WizardPage
             projectName = "";
         }
 
-        boolean useDefaultLocation = mUseDefaultLocationToggle.getSelection();
-
-        if (useDefaultLocation) {
+        if (mValues.useDefaultLocation) {
             IPath workspace = Platform.getLocation();
             String projectLocation = workspace.append(projectName).toOSString();
-            mLocationText.setText(projectLocation);
             mValues.projectLocation = projectLocation;
         }
     }
@@ -530,98 +544,8 @@ public class NewProjectPage extends WizardPage
         }
 
         Object source = e.getSource();
-        if (source == mChooseSdkButton) {
-            // TODO: Open SDK chooser
-            assert false;
-        } else if (source == mMinSdkCombo) {
-            mValues.minSdk = getSelectedMinSdk();
-            // If higher than build target, adjust build target
-            // TODO: implement
-
-            Integer minSdk = mMinNameToApi.get(mValues.minSdk);
-            if (minSdk == null) {
-                try {
-                    minSdk = Integer.parseInt(mValues.minSdk);
-                } catch (NumberFormatException nufe) {
-                    minSdk = 1;
-                }
-            }
-            mValues.iconState.minSdk = minSdk.intValue();
-            mValues.minSdkLevel = minSdk.intValue();
-        } else if (source == mBuildSdkCombo) {
-            mValues.target = getSelectedBuildTarget();
-
-            // If lower than min sdk target, adjust min sdk target
-            if (mValues.target.getVersion().isPreview()) {
-                mValues.minSdk = mValues.target.getVersion().getCodename();
-                try {
-                    mIgnore = true;
-                    mMinSdkCombo.setText(mValues.minSdk);
-                } finally {
-                    mIgnore = false;
-                }
-            } else {
-                String minSdk = mValues.minSdk;
-                int buildApiLevel = mValues.target.getVersion().getApiLevel();
-                if (minSdk != null && !minSdk.isEmpty()
-                        && Character.isDigit(minSdk.charAt(0))
-                        && buildApiLevel < Integer.parseInt(minSdk)) {
-                    mValues.minSdk = Integer.toString(buildApiLevel);
-                    try {
-                        mIgnore = true;
-                        setSelectedMinSdk(buildApiLevel);
-                    } finally {
-                        mIgnore = false;
-                    }
-                }
-            }
-        } else if (source == mCustomIconToggle) {
-            mValues.createIcon = mCustomIconToggle.getSelection();
-        } else if (source == mLibraryToggle) {
-            mValues.isLibrary = mLibraryToggle.getSelection();
-        } else if (source == mUseDefaultLocationToggle) {
-            boolean useDefault = mUseDefaultLocationToggle.getSelection();
-            setUseCustomLocation(!useDefault);
-        } else if (source == mChooseLocationButton) {
-            String dir = promptUserForLocation(getShell());
-            if (dir != null) {
-                mLocationText.setText(dir);
-                mValues.projectLocation = dir;
-            }
-        } else if (source == mThemeCombo) {
-            String[] optionIds = (String[]) mThemeCombo.getData(ATTR_ID);
-            int index = mThemeCombo.getSelectionIndex();
-            if (index != -1 && index < optionIds.length) {
-                String optionId = optionIds[index];
-                Parameter parameter = NewTemplatePage.getParameter(mThemeCombo);
-                if (parameter != null) {
-                    parameter.value = optionId;
-                    parameter.edited = optionId != null && !optionId.toString().isEmpty();
-                    mValues.parameters.put(parameter.id, optionId);
-                }
-            }
-        }
 
         validatePage();
-    }
-
-    private String promptUserForLocation(Shell shell) {
-        DirectoryDialog dd = new DirectoryDialog(getShell());
-        dd.setMessage("Select folder where project should be created");
-
-        String curLocation = mLocationText.getText().trim();
-        if (!curLocation.isEmpty()) {
-            dd.setFilterPath(curLocation);
-        } else if (sLastProjectLocation != null) {
-            dd.setFilterPath(sLastProjectLocation);
-        }
-
-        String dir = dd.open();
-        if (dir != null) {
-            sLastProjectLocation = dir;
-        }
-
-        return dir;
     }
 
     private String getSelectedMinSdk() {
@@ -715,6 +639,10 @@ public class NewProjectPage extends WizardPage
                 }
                 mPackageText.setSelection(0, length);
             }
+        } else if (source == mTargetSdkCombo) {
+            tip = mTargetSdkDec.getDescriptionText();
+        } else if (source == mThemeCombo) {
+            tip = mThemeDec.getDescriptionText();
         }
         mTipLabel.setText(tip);
         mHelpIcon.setVisible(tip.length() > 0);
@@ -735,6 +663,12 @@ public class NewProjectPage extends WizardPage
             updateDecorator(mApplicationDec, null, true);
             updateDecorator(mPackageDec, null, true);
             updateDecorator(mProjectDec, null, true);
+            updateDecorator(mThemeDec, null, true);
+            /* These never get marked with errors:
+            updateDecorator(mBuildTargetDec, null, true);
+            updateDecorator(mMinSdkDec, null, true);
+            updateDecorator(mTargetSdkDec, null, true);
+            */
         } else {
             IStatus appStatus = validateAppName();
             if (appStatus != null && (status == null
@@ -754,7 +688,7 @@ public class NewProjectPage extends WizardPage
                 status = packageStatus;
             }
 
-            IStatus locationStatus = validateProjectLocation();
+            IStatus locationStatus = ProjectContentsPage.validateLocationInWorkspace(mValues);
             if (locationStatus != null && (status == null
                     || locationStatus.getSeverity() > status.getSeverity())) {
                 status = locationStatus;
@@ -784,13 +718,19 @@ public class NewProjectPage extends WizardPage
                         status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
                             "The minimum SDK version is higher than the build target version");
                     }
+                    if (status == null || status.getSeverity() != IStatus.ERROR) {
+                        if (mValues.targetSdkLevel < mValues.minSdkLevel) {
+                            status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
+                                "The target SDK version should be higher than the minimum SDK version");
+                        }
+                    }
                 }
             }
 
-            if (mThemeParameter != null
-                    && (status == null || status.getSeverity() != IStatus.ERROR)) {
-                status = NewTemplatePage.validateCombo(status, mThemeParameter,
-                        mValues.minSdkLevel, mValues.getBuildApi());
+            IStatus themeStatus = validateTheme();
+            if (themeStatus != null && (status == null
+                    || themeStatus.getSeverity() > status.getSeverity())) {
+                status = themeStatus;
             }
         }
 
@@ -829,7 +769,6 @@ public class NewProjectPage extends WizardPage
     }
 
     private IStatus validatePackageName() {
-
         IStatus status;
         if (mValues.packageName == null || mValues.packageName.startsWith(SAMPLE_PACKAGE_PREFIX)) {
             if (mValues.packageName != null
@@ -853,66 +792,18 @@ public class NewProjectPage extends WizardPage
         return status;
     }
 
-    private IStatus validateLocationInWorkspace() {
-        // Validate location
-        if (mValues.projectName != null) {
-            File dest = Platform.getLocation().append(mValues.projectName).toFile();
-            if (dest.exists()) {
-                return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                        String.format(
-                                "There is already a file or directory named \"%1$s\" in the selected location.",
-                        mValues.projectName));
-            }
+    private IStatus validateTheme() {
+        IStatus status = null;
+
+        if (mThemeParameter != null) {
+            status = NewTemplatePage.validateCombo(null, mThemeParameter,
+                    mThemeCombo.getSelectionIndex(),  mValues.minSdkLevel,
+                    mValues.getBuildApi());
+
+            updateDecorator(mThemeDec, status, true);
         }
 
-        return null;
-    }
-
-
-    private IStatus validateProjectLocation() {
-        if (mUseDefaultLocationToggle.getSelection()) {
-            return validateLocationInWorkspace();
-        }
-
-        String location = mLocationText.getText();
-        if (location.trim().isEmpty()) {
-            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    "Provide a valid file system location where the project should be created.");
-        }
-
-        File f = new File(location);
-        if (f.exists()) {
-            if (!f.isDirectory()) {
-                return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                        String.format("'%s' is not a valid folder.", location));
-            }
-
-            File[] children = f.listFiles();
-            if (children != null && children.length > 0) {
-                return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                        String.format("Folder '%s' is not empty.", location));
-            }
-        }
-
-        // if the folder doesn't exist, then make sure that the parent
-        // exists and is a writeable folder
-        File parent = f.getParentFile();
-        if (!parent.exists()) {
-            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    String.format("Folder '%s' does not exist.", parent.getName()));
-        }
-
-        if (!parent.isDirectory()) {
-            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    String.format("'%s' is not a folder.", parent.getName()));
-        }
-
-        if (!parent.canWrite()) {
-            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                    String.format("'%s' is not writeable.", parent.getName()));
-        }
-
-        return null;
+        return status;
     }
 
     private void updateDecorator(ControlDecoration decorator, IStatus status, boolean hasInfo) {

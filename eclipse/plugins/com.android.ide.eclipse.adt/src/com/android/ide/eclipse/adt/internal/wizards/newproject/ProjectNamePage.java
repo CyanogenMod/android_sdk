@@ -105,7 +105,7 @@ public class ProjectNamePage extends WizardPage implements SelectionListener, Mo
         setWorkingSets(new IWorkingSet[0]);
     }
 
-    public void init(IStructuredSelection selection, IWorkbenchPart activePart) {
+    void init(IStructuredSelection selection, IWorkbenchPart activePart) {
         setWorkingSets(WorkingSetHelper.getSelectedWorkingSet(selection, activePart));
     }
 
