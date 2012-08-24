@@ -103,6 +103,10 @@ void queryConfigs(EGLNativeDisplayType dpy,int renderableType,ConfigsList& listO
     }
 }
 
+bool validNativeDisplay(EGLNativeInternalDisplayType dpy) {
+    return true;
+}
+
 bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeWindowType win) {
     unsigned int width,height;
     return nsGetWinDims(win,&width,&height);

@@ -37,6 +37,7 @@ namespace EglOS{
     bool releasePbuffer(EGLNativeInternalDisplayType dis,EGLNativeSurfaceType pb);
     bool destroyContext(EGLNativeInternalDisplayType dpy,EGLNativeContextType ctx);
     bool releaseDisplay(EGLNativeInternalDisplayType dpy);
+    bool validNativeDisplay(EGLNativeInternalDisplayType dpy);
     bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType win);
     bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win);
     bool validNativePixmap(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType pix);
