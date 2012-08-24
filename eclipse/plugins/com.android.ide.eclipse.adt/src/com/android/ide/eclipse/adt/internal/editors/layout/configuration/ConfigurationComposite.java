@@ -68,8 +68,8 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.devices.State;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.repository.PkgProps;
@@ -89,6 +89,8 @@ import org.eclipse.jdt.ui.ISharedImages;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -148,7 +150,7 @@ import java.util.TreeMap;
  *   loading.<br>
  */
 public class ConfigurationComposite extends Composite
-        implements SelectionListener, DevicesChangeListener {
+        implements SelectionListener, DevicesChangeListener, DisposeListener {
     public static final String ATTR_CONTEXT = "context";          //$NON-NLS-1$
     private static final String ICON_SQUARE = "square";           //$NON-NLS-1$
     private static final String ICON_LANDSCAPE = "landscape";     //$NON-NLS-1$
@@ -559,12 +561,34 @@ public class ConfigurationComposite extends Composite
         addTargetMenuListener(mTargetCombo);
         addThemeListener(mThemeCombo);
         addOrientationMenuListener(mOrientationCombo);
+
+        addDisposeListener(this);
     }
 
     private void updateActivity() {
         if (mEditedFile != null) {
             String preferred = getPreferredActivity(mEditedFile);
             selectActivity(preferred);
+        }
+    }
+
+    // ---- Dispose
+
+    @Override
+    public void widgetDisposed(DisposeEvent e) {
+        dispose();
+    }
+
+    @Override
+    public void dispose() {
+        if (!isDisposed()) {
+            super.dispose();
+
+            final Sdk sdk = Sdk.getCurrent();
+            if (sdk != null) {
+                DeviceManager manager = sdk.getDeviceManager();
+                manager.unregisterListener(this);
+            }
         }
     }
 
@@ -2675,6 +2699,8 @@ public class ConfigurationComposite extends Composite
         if (sdk != null) {
             mDeviceList = sdk.getDevices();
             DeviceManager manager = sdk.getDeviceManager();
+            // This method can be called more than once, so avoid duplicate entries
+            manager.unregisterListener(this);
             manager.registerListener(this);
         } else {
             mDeviceList = new ArrayList<Device>();
@@ -2698,7 +2724,9 @@ public class ConfigurationComposite extends Composite
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                addDeviceMenuListener(mDeviceCombo);
+                if (!mDeviceCombo.isDisposed()) {
+                    addDeviceMenuListener(mDeviceCombo);
+                }
             }
         });
     }
