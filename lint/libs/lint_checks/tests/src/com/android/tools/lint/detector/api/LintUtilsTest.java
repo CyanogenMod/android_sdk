@@ -17,9 +17,15 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
+import static com.android.tools.lint.detector.api.LintUtils.isImported;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 
+import com.android.annotations.Nullable;
+import com.android.tools.lint.LombokParser;
 import com.android.tools.lint.Main;
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.client.api.IJavaParser;
+import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.collect.Iterables;
 
 import java.io.BufferedOutputStream;
@@ -29,6 +35,7 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
+import lombok.ast.Node;
 
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {
@@ -284,5 +291,69 @@ public class LintUtilsTest extends TestCase {
         assertEquals("pt-rPT", getLocaleAndRegion("values-pt-rPT-nokeys"));
         assertEquals("zh-rCN", getLocaleAndRegion("values-zh-rCN-keyshidden"));
         assertEquals("ms", getLocaleAndRegion("values-ms-keyshidden"));
+    }
+
+    public void testIsImported() throws Exception {
+        assertFalse(isImported(getCompilationUnit(
+                "package foo.bar;\n" +
+                "class Foo {\n" +
+                "}\n"),
+                "android.app.Activity"));
+
+        assertTrue(isImported(getCompilationUnit(
+                "package foo.bar;\n" +
+                "import foo.bar.*;\n" +
+                "import android.app.Activity;\n" +
+                "import foo.bar.Baz;\n" +
+                "class Foo {\n" +
+                "}\n"),
+                "android.app.Activity"));
+
+        assertTrue(isImported(getCompilationUnit(
+                "package foo.bar;\n" +
+                "import android.app.Activity;\n" +
+                "class Foo {\n" +
+                "}\n"),
+                "android.app.Activity"));
+
+        assertTrue(isImported(getCompilationUnit(
+                "package foo.bar;\n" +
+                "import android.app.*;\n" +
+                "class Foo {\n" +
+                "}\n"),
+                "android.app.Activity"));
+
+        assertFalse(isImported(getCompilationUnit(
+                "package foo.bar;\n" +
+                "import android.app.*;\n" +
+                "import foo.bar.Activity;\n" +
+                "class Foo {\n" +
+                "}\n"),
+                "android.app.Activity"));
+    }
+
+    private Node getCompilationUnit(String javaSource) {
+        IJavaParser parser = new LombokParser();
+        TestContext context = new TestContext(javaSource, new File("test"));
+        Node compilationUnit = parser.parseJava(context);
+        assertNotNull(javaSource, compilationUnit);
+        return compilationUnit;
+    }
+
+    private class TestContext extends JavaContext {
+        private final String mJavaSource;
+        public TestContext(String javaSource, File file) {
+            super(new LintDriver(new BuiltinIssueRegistry(),
+                    new Main()), new Main().getProject(new File("dummy"), new File("dummy")),
+                    null, file);
+
+            mJavaSource = javaSource;
+        }
+
+        @Override
+        @Nullable
+        public String getContents() {
+            return mJavaSource;
+        }
     }
 }

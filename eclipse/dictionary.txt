@@ -341,6 +341,7 @@ wakelocks
 wallpaper
 webtools
 whilst
+wildcard
 workflow
 xdpi
 xhdpi

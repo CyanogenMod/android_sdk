@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
@@ -109,8 +110,12 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         }
         VariableDefinition definition = (VariableDefinition) node.getParent().getParent();
         String type = definition.astTypeReference().toString();
-        if (!type.endsWith("SharedPreferences.Editor")) { //$NON-NLS-1$
-            return;
+        if (!type.endsWith("SharedPreferences.Editor")) {                   //$NON-NLS-1$
+            if (!type.equals("Editor") ||                                   //$NON-NLS-1$
+                    !LintUtils.isImported(context.compilationUnit,
+                            "android.content.SharedPreferences.Editor")) {  //$NON-NLS-1$
+                return;
+            }
         }
 
         Node method = findSurroundingMethod(node.getParent());
