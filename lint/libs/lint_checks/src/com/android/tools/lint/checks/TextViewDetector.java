@@ -70,14 +70,14 @@ public class TextViewDetector extends LayoutDetector {
             "TextViewEdits", //$NON-NLS-1$
             "Looks for TextViews being used for input",
 
-            "Using a <TextView> to input text is generally an error, you should be " +
-            "using <EditText> instead.  EditText is a subclass of TextView, and some " +
-            "of the editing support is provided by TextView, so it's possible to set " +
-            "some input-related properties on a TextView. However, using a TextView " +
+            "Using a `<TextView>` to input text is generally an error, you should be " +
+            "using `<EditText>` instead.  `EditText` is a subclass of `TextView`, and some " +
+            "of the editing support is provided by `TextView`, so it's possible to set " +
+            "some input-related properties on a `TextView`. However, using a `TextView` " +
             "along with input attributes is usually a cut & paste error. To input " +
-            "text you should be using <EditText>." +
+            "text you should be using `<EditText>`." +
             "\n" +
-            "This check also checks subclasses of TextView, such as Button and CheckBox, " +
+            "This check also checks subclasses of `TextView`, such as `Button` and `CheckBox`, " +
             "since these have the same issue: they should not be used with editable " +
             "attributes.",
 

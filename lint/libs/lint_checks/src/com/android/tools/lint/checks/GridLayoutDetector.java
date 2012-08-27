@@ -49,7 +49,7 @@ public class GridLayoutDetector extends LayoutDetector {
             "Checks for potential GridLayout errors like declaring rows and columns outside " +
             "the declared grid dimensions",
             "Declaring a layout_row or layout_column that falls outside the declared size " +
-            "of a GridLayout's rowCount or columnCount is usually an unintentional error.",
+            "of a GridLayout's `rowCount` or `columnCount` is usually an unintentional error.",
             Category.CORRECTNESS,
             4,
             Severity.FATAL,

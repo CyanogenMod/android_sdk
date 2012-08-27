@@ -60,8 +60,8 @@ public class FragmentDetector extends Detector implements ClassScanner {
         "restoring its activity's state. It is strongly recommended that subclasses do not " +
         "have other constructors with parameters, since these constructors will not be " +
         "called when the fragment is re-instantiated; instead, arguments can be supplied " +
-        "by the caller with setArguments(Bundle) and later retrieved by the Fragment " +
-        "with getArguments().",
+        "by the caller with `setArguments(Bundle)` and later retrieved by the Fragment " +
+        "with `getArguments()`.",
 
         Category.CORRECTNESS,
         6,

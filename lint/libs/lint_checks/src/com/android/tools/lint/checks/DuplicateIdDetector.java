@@ -76,7 +76,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     public static final Issue WITHIN_LAYOUT = Issue.create(
             "DuplicateIds", //$NON-NLS-1$
             "Checks for duplicate ids within a single layout",
-            "Within a layout, id's should be unique since otherwise findViewById() can " +
+            "Within a layout, id's should be unique since otherwise `findViewById()` can " +
             "return an unexpected view.",
             Category.CORRECTNESS,
             7,
@@ -90,7 +90,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             "Checks for duplicate ids across layouts that are combined with include tags",
             "It's okay for two independent layouts to use the same ids. However, if " +
             "layouts are combined with include tags, then the id's need to be unique " +
-            "within any chain of included layouts, or Activity#findViewById() can " +
+            "within any chain of included layouts, or `Activity#findViewById()` can " +
             "return an unexpected view.",
             Category.CORRECTNESS,
             6,

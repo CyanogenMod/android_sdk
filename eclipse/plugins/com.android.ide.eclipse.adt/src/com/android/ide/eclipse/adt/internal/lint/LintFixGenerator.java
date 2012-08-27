@@ -493,7 +493,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             sb.append('\n');
             if (issue.getExplanation() != null) {
                 sb.append('\n');
-                sb.append(issue.getExplanation());
+                sb.append(issue.getExplanationAsSimpleText());
             } else {
                 sb.append(issue.getDescription());
             }
@@ -544,7 +544,9 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         @Override
         public String getAdditionalProposalInfo() {
-            return "Provides more information about this issue";
+            return "Provides more information about this issue."
+                    + "<br><br>" //$NON-NLS-1$
+                    + EclipseLintClient.getRegistry().getIssue(mId).getExplanationAsHtml();
         }
 
         @Override

@@ -79,13 +79,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             "by this application (according to its minimum SDK attribute in the manifest).\n" +
             "\n" +
             "If you really want to use this API and don't need to support older devices just " +
-            "set the minSdkVersion in your AndroidManifest.xml file." +
+            "set the `minSdkVersion` in your `AndroidManifest.xml` file." +
             "\n" +
             "If your code is *deliberately* accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +
-            "@TargetApi annotation specifying the local minimum SDK to apply, such as" +
-            "@TargetApi(11), such that this check considers 11 rather than your manifest " +
+            "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
+            "`@TargetApi(11)`, such that this check considers 11 rather than your manifest " +
             "file's minimum SDK as the required API level.",
             Category.CORRECTNESS,
             6,

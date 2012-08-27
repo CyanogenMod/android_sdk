@@ -50,7 +50,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             "NestedScrolling", //$NON-NLS-1$
             "Checks whether a scrolling widget has any nested scrolling widgets within",
             // TODO: Better description!
-            "A scrolling widget such as a ScrollView should not contain any nested " +
+            "A scrolling widget such as a `ScrollView` should not contain any nested " +
             "scrolling widgets since this has various usability issues",
             Category.CORRECTNESS,
             7,

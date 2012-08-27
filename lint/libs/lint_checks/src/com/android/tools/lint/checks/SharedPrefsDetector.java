@@ -50,8 +50,8 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
             "CommitPrefEdits", //$NON-NLS-1$
             "Looks for code editing a SharedPreference but forgetting to call commit() on it",
 
-            "After calling edit() on a SharedPreference, you must call commit() or apply() on " +
-            "the editor to save the results.",
+            "After calling `edit()` on a `SharedPreference`, you must call `commit()` " +
+            "or `apply()` on the editor to save the results.",
 
             Category.CORRECTNESS,
             6,

@@ -51,8 +51,8 @@ public class ScrollViewChildDetector extends LayoutDetector {
             "ScrollViewSize", //$NON-NLS-1$
             "Checks that ScrollViews use wrap_content in scrolling dimension",
             // TODO add a better explanation here!
-            "ScrollView children must set their layout_width or layout_height attributes " +
-            "to wrap_content rather than fill_parent or match_parent in the scrolling " +
+            "ScrollView children must set their `layout_width` or `layout_height` attributes " +
+            "to `wrap_content` rather than `fill_parent` or `match_parent` in the scrolling " +
             "dimension",
             Category.CORRECTNESS,
             7,

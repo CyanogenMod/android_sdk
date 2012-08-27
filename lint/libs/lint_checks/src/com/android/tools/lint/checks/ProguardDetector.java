@@ -41,11 +41,11 @@ public class ProguardDetector extends Detector {
     public static final Issue WRONGKEEP = Issue.create(
             "Proguard", //$NON-NLS-1$
             "Looks for problems in proguard config files",
-            "Using -keepclasseswithmembernames in a proguard config file is not " +
+            "Using `-keepclasseswithmembernames` in a proguard config file is not " +
             "correct; it can cause some symbols to be renamed which should not be.\n" +
             "Earlier versions of ADT used to create proguard.cfg files with the " +
-            "wrong format. Instead of -keepclasseswithmembernames use " +
-            "-keepclasseswithmembers, since the old flags also implies " +
+            "wrong format. Instead of `-keepclasseswithmembernames` use " +
+            "`-keepclasseswithmembers`, since the old flags also implies " +
             "\"allow shrinking\" which means symbols only referred to from XML and " +
             "not Java (such as possibly CustomViews) can get deleted.",
             Category.CORRECTNESS,
@@ -61,7 +61,7 @@ public class ProguardDetector extends Detector {
             "ProguardSplit", //$NON-NLS-1$
             "Checks for old proguard.cfg files that contain generic Android rules",
 
-            "Earlier versions of the Android tools bundled a single \"proguard.cfg\" file " +
+            "Earlier versions of the Android tools bundled a single `proguard.cfg` file " +
             "containing a ProGuard configuration file suitable for Android shrinking and " +
             "obfuscation. However, that version was copied into new projects, which " +
             "means that it does not continue to get updated as we improve the default " +
@@ -76,14 +76,14 @@ public class ProguardDetector extends Detector {
             "directory which means that it gets updated along with the tools.\n" +
             "\n" +
             "In order for this to work, the proguard.config property in the " +
-            "project.properties file now refers to a path, so you can reference both " +
+            "`project.properties` file now refers to a path, so you can reference both " +
             "the generic file as well as your own (and any additional files too).\n" +
             "\n" +
-            "To migrate your project to the new setup, create a new proguard-project.txt file " +
+            "To migrate your project to the new setup, create a new `proguard-project.txt` file " +
             "in your project containing any project specific ProGuard flags as well as " +
             "any customizations you have made, then update your project.properties file " +
             "to contain:\n" +
-            "proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard-project.txt",
+            "`proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard-project.txt`",
 
             Category.CORRECTNESS,
             3,

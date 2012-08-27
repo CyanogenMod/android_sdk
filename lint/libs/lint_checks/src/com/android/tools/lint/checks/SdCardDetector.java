@@ -45,8 +45,8 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
             "SdCardPath", //$NON-NLS-1$
             "Looks for hardcoded references to /sdcard",
 
-            "Your code should not reference the /sdcard path directly; instead use " +
-            "Environment.getExternalStorageDirectory().getPath()",
+            "Your code should not reference the `/sdcard` path directly; instead use " +
+            "`Environment.getExternalStorageDirectory().getPath()`",
 
             Category.CORRECTNESS,
             6,

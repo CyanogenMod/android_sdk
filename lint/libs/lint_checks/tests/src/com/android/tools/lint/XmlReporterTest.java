@@ -90,7 +90,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                 "        category=\"Correctness\"\n" +
                 "        priority=\"9\"\n" +
                 "        summary=\"Checks that the minimum SDK and target SDK attributes are defined\"\n" +
-                "        explanation=\"The manifest should contain a &lt;uses-sdk> element which defines the minimum minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for.)\"\n" +
+                "        explanation=\"The manifest should contain a `&lt;uses-sdk>` element which defines the minimum minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for.)\"\n" +
                 "        url=\"http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\"\n" +
                 "        errorLine1=\"    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />\"\n" +
                 "        errorLine2=\"    ^\">\n" +

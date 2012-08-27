@@ -51,7 +51,7 @@ public class AccessibilityDetector extends LayoutDetector {
             "ContentDescription", //$NON-NLS-1$
             "Ensures that image widgets provide a contentDescription",
             "Non-textual widgets like ImageViews and ImageButtons should use the " +
-            "contentDescription attribute to specify a textual description of " +
+            "`contentDescription` attribute to specify a textual description of " +
             "the widget such that screen readers and other accessibility tools " +
             "can adequately describe the user interface.",
             Category.A11Y,

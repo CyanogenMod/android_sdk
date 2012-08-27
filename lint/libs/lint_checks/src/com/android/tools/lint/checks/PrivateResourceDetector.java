@@ -41,7 +41,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
             "even where they are they may disappear without notice.\n" +
             "\n" +
             "To fix this, copy the resource into your own project. You can find the platform " +
-            "resources under $ANDROID_SK/platforms/android-$VERSION/data/res/.",
+            "resources under `$ANDROID_SK/platforms/android-$VERSION/data/res/.`",
             Category.CORRECTNESS,
             3,
             Severity.FATAL,

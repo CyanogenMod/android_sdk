@@ -42,7 +42,7 @@ public class TooManyViewsDetector extends LayoutDetector {
             "performance. Consider using compound drawables or other tricks for " +
             "reducing the number of views in this layout.\n\n" +
             "The maximum view count defaults to 80 but can be configured with the " +
-            "environment variable ANDROID_LINT_MAX_VIEW_COUNT.",
+            "environment variable `ANDROID_LINT_MAX_VIEW_COUNT`.",
             Category.PERFORMANCE,
             1,
             Severity.WARNING,
@@ -54,9 +54,9 @@ public class TooManyViewsDetector extends LayoutDetector {
             "TooDeepLayout", //$NON-NLS-1$
             "Checks whether a layout hierarchy is too deep",
             "Layouts with too much nesting is bad for performance. " +
-            "Consider using a flatter layout (such as RelativeLayout or GridLayout)." +
+            "Consider using a flatter layout (such as `RelativeLayout` or `GridLayout`)." +
             "The default maximum depth is 10 but can be configured with the environment " +
-            "variable ANDROID_LINT_MAX_DEPTH.",
+            "variable `ANDROID_LINT_MAX_DEPTH`.",
             Category.PERFORMANCE,
             1,
             Severity.WARNING,

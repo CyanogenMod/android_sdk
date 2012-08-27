@@ -49,10 +49,13 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
     public static final Issue ISSUE = Issue.create(
             "UseCompoundDrawables", //$NON-NLS-1$
             "Checks whether the current node can be replaced by a TextView using compound drawables.",
-            // TODO: OFFER MORE HELP!
-            "A LinearLayout which contains an ImageView and a TextView can be more efficiently " +
-            "handled as a compound drawable. If the two widgets are offset from each other with " +
-            "margins, this can be replaced with a drawablePadding attribute.\n" +
+            "A `LinearLayout` which contains an `ImageView` and a `TextView` can be more " +
+            "efficiently handled as a compound drawable (a single TextView, using the " +
+            "`drawableTop`, `drawableLeft`, `drawableRight` and/or `drawableBottom` attributes " +
+            "to draw one or more images adjacent to the text).\n" +
+            "\n" +
+            "If the two widgets are offset from each other with " +
+            "margins, this can be replaced with a `drawablePadding` attribute.\n" +
             "\n" +
             "There's a lint quickfix to perform this conversion in the Eclipse plugin.",
             Category.PERFORMANCE,
