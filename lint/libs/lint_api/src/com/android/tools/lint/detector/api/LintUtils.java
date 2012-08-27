@@ -47,6 +47,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.ast.ImportDeclaration;
+
 
 /**
  * Useful utility methods related to lint.
@@ -707,4 +709,47 @@ public class LintUtils {
 
          return locale;
      }
+
+    /**
+     * Returns true if the given class (specified by a fully qualified class
+     * name) name is imported in the given compilation unit either through a fully qualified
+     * import or by a wildcard import.
+     *
+     * @param compilationUnit the compilation unit
+     * @param fullyQualifiedName the fully qualified class name
+     * @return true if the given imported name refers to the given fully
+     *         qualified name
+     */
+    public static boolean isImported(
+            @NonNull lombok.ast.Node compilationUnit,
+            @NonNull String fullyQualifiedName) {
+        int dotIndex = fullyQualifiedName.lastIndexOf('.');
+        int dotLength = fullyQualifiedName.length() - dotIndex;
+
+        boolean imported = false;
+        for (lombok.ast.Node rootNode : compilationUnit.getChildren()) {
+            if (rootNode instanceof ImportDeclaration) {
+                ImportDeclaration importDeclaration = (ImportDeclaration) rootNode;
+                String fqn = importDeclaration.asFullyQualifiedName();
+                if (fqn.equals(fullyQualifiedName)) {
+                    return true;
+                } else if (fullyQualifiedName.regionMatches(dotIndex, fqn,
+                        fqn.length() - dotLength, dotLength)) {
+                    // This import is importing the class name using some other prefix, so there
+                    // fully qualified class name cannot be imported under that name
+                    return false;
+                } else if (importDeclaration.astStarImport()
+                        && fqn.regionMatches(0, fqn, 0, dotIndex + 1)) {
+                    imported = true;
+                    // but don't break -- keep searching in case there's a non-wildcard
+                    // import of the specific class name, e.g. if we're looking for
+                    // android.content.SharedPreferences.Editor, don't match on the following:
+                    //   import android.content.SharedPreferences.*;
+                    //   import foo.bar.Editor;
+                }
+            }
+        }
+
+        return imported;
+    }
 }

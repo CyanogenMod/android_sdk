@@ -39,4 +39,40 @@ public class SharedPrefsDetectorTest  extends AbstractCheckTest {
             lintProject("src/test/pkg/SharedPrefsTest.java.txt=>" +
                     "src/test/pkg/SharedPrefsTest.java"));
     }
+
+    public void test2() throws Exception {
+        // Regression test 1 for http://code.google.com/p/android/issues/detail?id=34322
+        assertEquals(
+            "src/test/pkg/SharedPrefsTest2.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        SharedPreferences.Editor editor = preferences.edit();\n" +
+            "                                          ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest2.java:17: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        Editor editor = preferences.edit();\n" +
+            "                        ~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n",
+
+            lintProject("src/test/pkg/SharedPrefsTest2.java.txt=>" +
+                    "src/test/pkg/SharedPrefsTest2.java"));
+    }
+
+    public void test3() throws Exception {
+        // Regression test 2 for http://code.google.com/p/android/issues/detail?id=34322
+        assertEquals(
+            "src/test/pkg/SharedPrefsTest3.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        Editor editor = preferences.edit();\n" +
+            "                        ~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings\n",
+
+            lintProject("src/test/pkg/SharedPrefsTest3.java.txt=>" +
+                    "src/test/pkg/SharedPrefsTest3.java"));
+    }
+
+    public void test4() throws Exception {
+        // Regression test 3 for http://code.google.com/p/android/issues/detail?id=34322
+        assertEquals(
+            "No warnings.",
+
+            lintProject("src/test/pkg/SharedPrefsTest4.java.txt=>" +
+                    "src/test/pkg/SharedPrefsTest4.java"));
+    }
 }
