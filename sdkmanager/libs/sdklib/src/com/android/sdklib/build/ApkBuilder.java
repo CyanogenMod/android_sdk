@@ -51,6 +51,8 @@ public final class ApkBuilder implements IArchiveBuilder {
 
     private final static Pattern PATTERN_NATIVELIB_EXT = Pattern.compile("^.+\\.so$",
             Pattern.CASE_INSENSITIVE);
+    private final static Pattern PATTERN_BITCODELIB_EXT = Pattern.compile("^.+\\.bc$",
+            Pattern.CASE_INSENSITIVE);
 
     /**
      * A No-op zip filter. It's used to detect conflicts.
@@ -125,7 +127,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                     mAddedFiles.put(archivePath, mInputFile);
                 }
 
-                if (archivePath.endsWith(".so")) {
+                if (archivePath.endsWith(".so") || archivePath.endsWith(".bc")) {
                     mNativeLibs.add(archivePath);
 
                     // only .so located in lib/ will interfere with the installation
@@ -677,6 +679,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                             // are gdbserver executables
                             if (lib.isFile() &&
                                     (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches() ||
+                                    PATTERN_BITCODELIB_EXT.matcher(lib.getName()).matches() ||
                                             (mDebugMode &&
                                                     SdkConstants.FN_GDBSERVER.equals(
                                                             lib.getName())))) {
@@ -751,6 +754,7 @@ public final class ApkBuilder implements IArchiveBuilder {
                             // are gdbserver executables
                             if (lib.isFile() &&
                                     (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches() ||
+                                    PATTERN_BITCODELIB_EXT.matcher(lib.getName()).matches() ||
                                             (debugMode &&
                                                     SdkConstants.FN_GDBSERVER.equals(
                                                             lib.getName())))) {
