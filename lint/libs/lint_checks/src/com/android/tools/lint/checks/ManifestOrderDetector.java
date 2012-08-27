@@ -87,13 +87,37 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "the version for.)",
 
             Category.CORRECTNESS,
-            2,
+            9,
             Severity.WARNING,
             ManifestOrderDetector.class,
             Scope.MANIFEST_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"); //$NON-NLS-1$
 
-    /** Missing a {@code <uses-sdk>} element */
+    /** Using a targetSdkVersion that isn't recent */
+    public static final Issue TARGET_NEWER = Issue.create(
+            "OldTargetApi", //$NON-NLS-1$
+            "Checks that the manifest specifies a targetSdkVersion that is recent",
+
+            "When your application runs on a version of Android that is more recent than your " +
+            "targetSdkVersion specifies that it has been tested with, various compatibility " +
+            "modes kick in. This ensures that your application continues to work, but it may " +
+            "look out of place. For example, if the targetSdkVersion is less than 14, your " +
+            "app may get an option button in the UI.\n" +
+            "\n" +
+            "To fix this issue, set the targetSdkVersion to the highest available value. Then " +
+            "test your app to make sure everything works correctly. You may want to consult " +
+            "the compatibility notes to see what changes apply to each version you are adding " +
+            "support for: " +
+            "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            ManifestOrderDetector.class,
+            Scope.MANIFEST_SCOPE).setMoreInfo(
+            "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html"); //$NON-NLS-1$
+
+    /** Using multiple {@code <uses-sdk>} elements */
     public static final Issue MULTIPLE_USES_SDK = Issue.create(
             "MultipleUsesSdk", //$NON-NLS-1$
             "Checks that the <uses-sdk> element appears at most once",
@@ -291,8 +315,9 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                         "<uses-sdk> tag should specify a minimum API level with " +
                         "android:minSdkVersion=\"?\"", null);
                 }
-            } else if (context.getProject().getMinSdk() <= 9
-                    && !element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
+            }
+
+            if (!element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
                 // Warn if not setting target SDK -- but only if the min SDK is somewhat
                 // old so there's some compatibility stuff kicking in (such as the menu
                 // button etc)
@@ -302,6 +327,20 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                         "highest verified version; when running on later versions, " +
                         "compatibility behaviors may be enabled) with " +
                         "android:targetSdkVersion=\"?\"", null);
+                }
+            } else if (context.isEnabled(TARGET_NEWER)){
+                String target = element.getAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
+                try {
+                    int api = Integer.parseInt(target);
+                    if (api < context.getClient().getHighestKnownApiLevel()) {
+                        context.report(TARGET_NEWER, element, context.getLocation(element),
+                                "Not targeting the latest versions of Android; compatibility " +
+                                "modes apply. Consider testing and updating this version. " +
+                                "Consult the android.os.Build.VERSION_CODES javadoc for details.",
+                                null);
+                    }
+                } catch (NumberFormatException nufe) {
+                    // Ignore: AAPT will enforce this.
                 }
             }
         }

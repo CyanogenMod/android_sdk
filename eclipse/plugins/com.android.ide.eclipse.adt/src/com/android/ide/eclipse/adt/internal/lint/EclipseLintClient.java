@@ -29,6 +29,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
@@ -857,6 +859,12 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         if (model != null) {
             model.releaseFromRead();
         }
+    }
+
+    @Override
+    @NonNull
+    public IAndroidTarget[] getTargets() {
+        return Sdk.getCurrent().getTargets();
     }
 
     private static class LazyLocation extends Location implements Location.Handle {

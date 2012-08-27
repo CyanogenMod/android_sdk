@@ -93,7 +93,7 @@ public abstract class AbstractCheckTest extends TestCase {
 
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
-        TestLintClient lintClient = new TestLintClient();
+        TestLintClient lintClient = createClient();
         String result = lintClient.analyze(files);
 
         // The output typically contains a few directory/filenames.
@@ -104,6 +104,14 @@ public abstract class AbstractCheckTest extends TestCase {
         }
 
         return result;
+    }
+
+    protected TestLintClient createClient() {
+        return new TestLintClient();
+    }
+
+    protected TestConfiguration getConfiguration(Project project) {
+        return new TestConfiguration();
     }
 
     /**
@@ -349,7 +357,7 @@ public abstract class AbstractCheckTest extends TestCase {
 
         @Override
         public Configuration getConfiguration(Project project) {
-            return new TestConfiguration();
+            return AbstractCheckTest.this.getConfiguration(project);
         }
 
         @Override

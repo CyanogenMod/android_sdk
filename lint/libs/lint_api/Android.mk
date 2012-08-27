@@ -22,6 +22,7 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
 	common \
+	sdklib \
 	layoutlib_api \
 	asm-tools \
 	asm-tree-tools \

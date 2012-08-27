@@ -387,8 +387,10 @@ public class NewProjectWizard extends TemplateWizard {
         parameters.put(ATTR_APP_TITLE, mValues.applicationName);
         parameters.put(ATTR_MIN_API, mValues.minSdk);
         parameters.put(ATTR_MIN_API_LEVEL, mValues.minSdkLevel);
-        parameters.put(ATTR_TARGET_API, 15);
-        parameters.put(ATTR_BUILD_API, mValues.target.getVersion().getApiLevel());
+        int buildApiLevel = mValues.target.getVersion().getApiLevel();
+        parameters.put(ATTR_BUILD_API, buildApiLevel);
+        parameters.put(ATTR_TARGET_API, buildApiLevel);
+
         parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
         parameters.putAll(mValues.parameters);
     }
