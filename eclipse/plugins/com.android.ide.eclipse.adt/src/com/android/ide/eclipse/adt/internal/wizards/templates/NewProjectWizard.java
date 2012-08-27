@@ -21,6 +21,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
@@ -79,6 +80,7 @@ public class NewProjectWizard extends TemplateWizard {
     public static final String DEFAULT_LAUNCHER_ICON = "launcher_icon";   //$NON-NLS-1$
 
     private NewProjectPage mMainPage;
+    private ProjectContentsPage mContentsPage;
     private ActivityPage mActivityPage;
     private NewTemplatePage mTemplatePage;
     private NewProjectWizardState mValues;
@@ -93,6 +95,8 @@ public class NewProjectWizard extends TemplateWizard {
 
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);
+        mContentsPage = new ProjectContentsPage(mValues);
+        mContentsPage.init(selection, AdtUtils.getActivePart());
         mActivityPage = new ActivityPage(mValues, true, true);
     }
 
@@ -100,12 +104,17 @@ public class NewProjectWizard extends TemplateWizard {
     public void addPages() {
         super.addPages();
         addPage(mMainPage);
+        addPage(mContentsPage);
         addPage(mActivityPage);
     }
 
     @Override
     public IWizardPage getNextPage(IWizardPage page) {
         if (page == mMainPage) {
+            return mContentsPage;
+        }
+
+        if (page == mContentsPage) {
             if (mValues.createIcon) {
                 // Bundle asset studio wizard to create the launcher icon
                 CreateAssetSetWizardState iconState = mValues.iconState;
@@ -131,7 +140,11 @@ public class NewProjectWizard extends TemplateWizard {
                 p.setTitle("Configure Launcher Icon");
                 return p;
             } else {
-                return mActivityPage;
+                if (mValues.createActivity) {
+                    return mActivityPage;
+                } else {
+                    return null;
+                }
             }
         }
 
@@ -316,7 +329,7 @@ public class NewProjectWizard extends TemplateWizard {
             };
 
             NewProjectCreator.create(monitor, mProject, mValues.target, projectPopulator,
-                    mValues.isLibrary, mValues.projectLocation);
+                    mValues.isLibrary, mValues.projectLocation, mValues.workingSets);
 
             // For new projects, ensure that we're actually using the preferred compliance,
             // not just the default one
@@ -391,10 +404,8 @@ public class NewProjectWizard extends TemplateWizard {
         parameters.put(ATTR_APP_TITLE, mValues.applicationName);
         parameters.put(ATTR_MIN_API, mValues.minSdk);
         parameters.put(ATTR_MIN_API_LEVEL, mValues.minSdkLevel);
-        int buildApiLevel = mValues.target.getVersion().getApiLevel();
-        parameters.put(ATTR_BUILD_API, buildApiLevel);
-        parameters.put(ATTR_TARGET_API, buildApiLevel);
-
+        parameters.put(ATTR_TARGET_API, mValues.targetSdkLevel);
+        parameters.put(ATTR_BUILD_API, mValues.target.getVersion().getApiLevel());
         parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
         parameters.putAll(mValues.parameters);
     }

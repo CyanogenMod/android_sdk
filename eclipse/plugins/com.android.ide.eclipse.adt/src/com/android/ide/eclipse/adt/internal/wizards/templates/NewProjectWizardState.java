@@ -18,8 +18,11 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_PROJECTS;
 
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.sdklib.IAndroidTarget;
+
+import org.eclipse.ui.IWorkingSet;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,11 +74,14 @@ public class NewProjectWizardState {
     /** The compilation target to use for this project */
     public IAndroidTarget target;
 
-    /** The minimum SDK API level to use */
+    /** The minimum SDK API level, as a string (if the API is a preview release with a codename) */
     public String minSdk;
 
-    /** The minimum API level, as a string (if the API is a preview release with a codename) */
+    /** The minimum SDK API level to use */
     public int minSdkLevel;
+
+    /** The target SDK level */
+    public int targetSdkLevel = AdtUtils.getHighestKnownApiLevel();
 
     /** Whether this project should be marked as a library project */
     public boolean isLibrary;
@@ -96,11 +102,17 @@ public class NewProjectWizardState {
     /** State for the template wizard, used to embed an activity template */
     public NewTemplateWizardState activityValues = new NewTemplateWizardState();
 
+    /** Whether a custom location should be used */
+    public boolean useDefaultLocation = true;
+
     /** Folder where the project should be created. */
     public String projectLocation;
 
     /** Configured parameters, by id */
     public final Map<String, Object> parameters = new HashMap<String, Object>();
+
+    /** The set of chosen working sets to use when creating the project */
+    public IWorkingSet[] workingSets = new IWorkingSet[0];
 
     /**
      * Returns the build target API level

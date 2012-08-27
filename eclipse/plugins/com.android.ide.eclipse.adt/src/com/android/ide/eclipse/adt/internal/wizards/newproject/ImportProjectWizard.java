@@ -19,6 +19,7 @@ import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
 import static com.android.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 
 import org.eclipse.jdt.ui.actions.OpenJavaPerspectiveAction;
@@ -39,6 +40,7 @@ public class ImportProjectWizard extends Wizard implements INewWizard {
 
     private NewProjectWizardState mValues;
     private ImportPage mImportPage;
+    private IStructuredSelection mSelection;
 
     /** Constructs a new wizard default project wizard */
     public ImportProjectWizard() {
@@ -48,11 +50,16 @@ public class ImportProjectWizard extends Wizard implements INewWizard {
     public void addPages() {
         mValues = new NewProjectWizardState(Mode.ANY);
         mImportPage = new ImportPage(mValues);
+        if (mSelection != null) {
+            mImportPage.init(mSelection, AdtUtils.getActivePart());
+        }
         addPage(mImportPage);
     }
 
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
+        mSelection = selection;
+
         setHelpAvailable(false); // TODO have help
         ImageDescriptor desc = AdtPlugin.getImageDescriptor(PROJECT_LOGO_LARGE);
         setDefaultPageImageDescriptor(desc);

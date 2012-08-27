@@ -651,9 +651,15 @@ public class NewTemplatePage extends WizardPage
     /** Validates the given combo */
     static IStatus validateCombo(IStatus status, Parameter parameter, int minSdk, int buildApi) {
         Combo combo = (Combo) parameter.control;
-        Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
         int index = combo.getSelectionIndex();
+        return validateCombo(status, parameter, index, minSdk, buildApi);
+    }
 
+    /** Validates the given combo assuming the value at the given index is chosen */
+    static IStatus validateCombo(IStatus status, Parameter parameter, int index,
+            int minSdk, int buildApi) {
+        Combo combo = (Combo) parameter.control;
+        Integer[] optionIds = (Integer[]) combo.getData(ATTR_MIN_API);
         // Check minSdk
         if (index != -1 && index < optionIds.length) {
             Integer requiredMinSdk = optionIds[index];
@@ -674,7 +680,7 @@ public class NewTemplatePage extends WizardPage
                 status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     String.format(
                         "%1$s \"%2$s\"  requires a build target API version of at " +
-                        "least %3$d, and the current min version is %4$d",
+                        "least %3$d, and the current version is %4$d",
                         parameter.name, combo.getItems()[index], requiredBuildApi, buildApi));
             }
         }
