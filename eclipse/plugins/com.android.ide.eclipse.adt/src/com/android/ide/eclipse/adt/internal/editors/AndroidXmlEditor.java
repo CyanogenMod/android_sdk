@@ -427,6 +427,8 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 // first page rather than crash the editor load. Logging the error is enough.
                 AdtPlugin.log(e, "Selecting page '%s' in AndroidXmlEditor failed", defaultPageId);
             }
+        } else if (AdtPrefs.getPrefs().isLastSwitchedToXml()) {
+            setActivePage(mTextPageIndex);
         }
     }
 
@@ -483,6 +485,8 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 // ignore
             }
         }
+
+        AdtPrefs.getPrefs().setLastSwitchedToXml(newPageIndex == mTextPageIndex);
     }
 
     /**

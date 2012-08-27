@@ -52,6 +52,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_MONITOR_DENSITY = AdtPlugin.PLUGIN_ID + ".monitorDensity"; //$NON-NLS-1$
 
     public final static String PREFS_FORMAT_GUI_XML = AdtPlugin.PLUGIN_ID + ".formatXml"; //$NON-NLS-1$
+    public final static String PREFS_LAST_SWITCHED_TO_XML = AdtPlugin.PLUGIN_ID + ".lastXml"; //$NON-NLS-1$
     public final static String PREFS_USE_CUSTOM_XML_FORMATTER = AdtPlugin.PLUGIN_ID + ".androidForm"; //$NON-NLS-1$
 
     public final static String PREFS_PALETTE_MODE = AdtPlugin.PLUGIN_ID + ".palette"; //$NON-NLS-1$
@@ -86,6 +87,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private String mPalette;
 
     private boolean mFormatGuiXml;
+    private boolean mLastSwitchedToXml;
     private boolean mCustomXmlFormatter;
     private boolean mUseEclipseIndent;
     private boolean mRemoveEmptyLines;
@@ -193,6 +195,10 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
         if (property == null || PREFS_FORMAT_GUI_XML.equals(property)) {
             mFormatGuiXml = mStore.getBoolean(PREFS_FORMAT_GUI_XML);
+        }
+
+        if (property == null || PREFS_LAST_SWITCHED_TO_XML.equals(property)) {
+            mLastSwitchedToXml = mStore.getBoolean(PREFS_LAST_SWITCHED_TO_XML);
         }
 
         if (property == null || PREFS_USE_CUSTOM_XML_FORMATTER.equals(property)) {
@@ -459,6 +465,25 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             AdtPlugin.log(e, "Get default debug keystore path failed"); //$NON-NLS-1$
         } catch (AndroidLocationException e) {
             AdtPlugin.log(e, "Get default debug keystore path failed"); //$NON-NLS-1$
+        }
+    }
+
+    /** Returns whether the most recent page switch was to XML
+     * @return whether the most recent page switch was to XML */
+    public boolean isLastSwitchedToXml() {
+        return mLastSwitchedToXml;
+    }
+
+    /**
+     * Set whether the most recent page switch was to XML
+     *
+     * @param xml whether the last manual page switch was to XML
+     */
+    public void setLastSwitchedToXml(boolean xml) {
+        if (xml != mLastSwitchedToXml) {
+            mLastSwitchedToXml = xml;
+            IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+            store.setValue(PREFS_LINT_ON_SAVE, xml);
         }
     }
 }
