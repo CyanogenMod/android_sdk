@@ -56,7 +56,9 @@ import java.util.Set;
  */
 public class NewProjectWizard extends TemplateWizard {
     private static final String PARENT_ACTIVITY_CLASS = "parentActivityClass";  //$NON-NLS-1$
+    private static final String ACTIVITY_TITLE = "activityTitle";  //$NON-NLS-1$
     private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
+    static final String IS_NEW_PROJECT = "isNewProject";           //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
@@ -159,6 +161,7 @@ public class NewProjectWizard extends TemplateWizard {
                 // Don't ask about hierarchical parent activities in new projects where there
                 // can't possibly be any
                 hidden.add(PARENT_ACTIVITY_CLASS);
+                hidden.add(ACTIVITY_TITLE); // Not used for the first activity in the project
 
                 mTemplatePage = new NewTemplatePage(activityValues, false);
                 addPage(mTemplatePage);
@@ -357,6 +360,7 @@ public class NewProjectWizard extends TemplateWizard {
 
         addProjectInfo(parameters);
 
+        parameters.put(IS_NEW_PROJECT, true);
         // Ensure that activities created as part of a new project are marked as
         // launcher activities
         parameters.put(IS_LAUNCHER, true);

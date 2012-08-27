@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <template
-    format="1"
-    revision="1"
+    format="3"
+    revision="2"
     name="New Settings Activity"
     description="Creates a new application settings activity."
     minApi="4"

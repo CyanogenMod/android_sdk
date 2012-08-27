@@ -1,5 +1,7 @@
 <resources>
+    <#if !isNewProject>
     <string name="title_${simpleName}">${activityTitle}</string>
+    </#if>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <template
-    format="1"
-    revision="1"
+    format="3"
+    revision="2"
     name="New Fullscreen Activity"
     description="Creates a new activity that shows and hides the system UI (status bar, navigation/system bar), and action bar, upon user interaction."
     minApi="3"

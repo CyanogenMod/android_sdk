@@ -113,9 +113,11 @@ class TemplateHandler {
      * <li> 2: ADT 21 and up. Boolean variables that have a default value and are not
      *    edited by the user would end up as strings in ADT 20; now they are always
      *    proper Booleans. Templates which rely on this should specify format >= 2.
+     * <li> 3: The wizard infrastructure passes the {@code isNewProject} boolean variable
+     *    to indicate whether a wizard is created as part of a new blank project
      * </ul>
      */
-    static final int CURRENT_FORMAT = 2;
+    static final int CURRENT_FORMAT = 3;
 
     /**
      * Special marker indicating that this path refers to the special shared
