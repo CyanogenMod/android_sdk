@@ -124,6 +124,38 @@ a:active {
 .issue a:visited {
     text-decoration: underline;
 }
+.id a:link {
+    text-decoration: none;
+    color: #bebebe;
+}
+.id a:visited {
+    text-decoration: none;
+    color: #bebebe;
+}
+.id a:hover {
+    text-decoration: underline;
+    color: #f3f3f3;
+}
+.id a:active {
+    text-decoration: underline;
+    color: #bebebe;
+}
+.category a:link {
+    text-decoration: none;
+    color: #bebebe;
+}
+.category a:visited {
+    text-decoration: none;
+    color: #bebebe;
+}
+.category a:hover {
+    text-decoration: underline;
+    color: #f3f3f3;
+}
+.category a:active {
+    text-decoration: underline;
+    color: #bebebe;
+}
 button {
     color: #ffffff;
     background-color: #353535;
