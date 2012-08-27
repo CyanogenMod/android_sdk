@@ -63,6 +63,8 @@ import java.util.zip.Adler32;
  */
 public class SdkManager {
 
+    private static final boolean DEBUG = System.getenv("SDKMAN_DEBUG") != null;        //$NON-NLS-1$
+
     public final static String PROP_VERSION_SDK = "ro.build.version.sdk";              //$NON-NLS-1$
     public final static String PROP_VERSION_CODENAME = "ro.build.version.codename";    //$NON-NLS-1$
     public final static String PROP_VERSION_RELEASE = "ro.build.version.release";      //$NON-NLS-1$
@@ -177,6 +179,9 @@ public class SdkManager {
             File[] platforms  = platformFolder.listFiles();
             if (platforms != null) {
                 for (File platform : platforms) {
+                    if (!platform.isDirectory()) {
+                        break;
+                    }
                     visited.add(platform);
                     DirInfo dirInfo = mTargetDirs.get(platform);
                     if (dirInfo == null) {
@@ -186,6 +191,10 @@ public class SdkManager {
                         changed = dirInfo.hasChanged();
                     }
                     if (changed) {
+                        if (DEBUG) {
+                            System.out.println("SDK changed due to " +              //$NON-NLS-1$
+                                (dirInfo != null ? dirInfo.toString() : platform.getPath()));
+                        }
                         break;
                     }
                 }
@@ -198,6 +207,9 @@ public class SdkManager {
             File[] addons  = addonFolder.listFiles();
             if (addons != null) {
                 for (File addon : addons) {
+                    if (!addon.isDirectory()) {
+                        break;
+                    }
                     visited.add(addon);
                     DirInfo dirInfo = mTargetDirs.get(addon);
                     if (dirInfo == null) {
@@ -207,6 +219,10 @@ public class SdkManager {
                         changed = dirInfo.hasChanged();
                     }
                     if (changed) {
+                        if (DEBUG) {
+                            System.out.println("SDK changed due to " +              //$NON-NLS-1$
+                                (dirInfo != null ? dirInfo.toString() : addon.getPath()));
+                        }
                         break;
                     }
                 }
@@ -219,6 +235,10 @@ public class SdkManager {
                 if (!visited.contains(previousDir)) {
                     // This directory is no longer present.
                     changed = true;
+                    if (DEBUG) {
+                        System.out.println("SDK changed: " +                        //$NON-NLS-1$
+                                previousDir.getPath() + " removed");                //$NON-NLS-1$
+                    }
                     break;
                 }
             }
@@ -445,12 +465,12 @@ public class SdkManager {
                     if (target != null) {
                         targets.add(target);
                     }
+                    // Remember we visited this file/directory,
+                    // even if we failed to load anything from it.
+                    dirInfos.put(platform, new DirInfo(platform, target));
                 } else {
                     log.warning("Ignoring platform '%1$s', not a folder.", platform.getName());
                 }
-                // Remember we visited this file/directory, even if we failed to load anything
-                // from it.
-                dirInfos.put(platform, new DirInfo(platform, target));
             }
 
             return;
@@ -789,10 +809,10 @@ public class SdkManager {
                         if (target != null) {
                             targets.add(target);
                         }
+                        // Remember we visited this file/directory,
+                        // even if we failed to load anything from it.
+                        dirInfos.put(addon, new DirInfo(addon, target));
                     }
-                    // Remember we visited this file/directory, even if we failed to load anything
-                    // from it.
-                    dirInfos.put(addon, new DirInfo(addon, target));
                 }
             }
 
@@ -1332,5 +1352,15 @@ public class SdkManager {
             return 0;
         }
 
+        /** Returns a visual representation of this object for debugging. */
+        @Override
+        public String toString() {
+            String s = String.format("<DirInfo %1$s TS=%2$d", mDir, mDirModifiedTS);  //$NON-NLS-1$
+            if (mPropsModifedTS != 0) {
+                s += String.format(" | Props TS=%1$d, Chksum=%2$s",                   //$NON-NLS-1$
+                        mPropsModifedTS, mPropsChecksum);
+            }
+            return s + ">";                                                           //$NON-NLS-1$
+        }
     }
 }
