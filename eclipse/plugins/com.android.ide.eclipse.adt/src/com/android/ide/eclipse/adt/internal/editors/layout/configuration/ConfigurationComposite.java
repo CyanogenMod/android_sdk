@@ -1909,10 +1909,13 @@ public class ConfigurationComposite extends Composite
                         devices.add(device);
                     }
                     for (List<Device> devices : manufacturers.values()) {
-                        MenuItem item = new MenuItem(menu, SWT.CASCADE);
-                        item.setText(devices.get(0).getManufacturer());
-                        Menu manufacturerMenu = new Menu(menu);
-                        item.setMenu(manufacturerMenu);
+                        Menu manufacturerMenu = menu;
+                        if (manufacturers.size() > 1) {
+                            MenuItem item = new MenuItem(menu, SWT.CASCADE);
+                            item.setText(devices.get(0).getManufacturer());
+                            manufacturerMenu = new Menu(menu);
+                            item.setMenu(manufacturerMenu);
+                        }
                         for (final Device d : devices) {
                             MenuItem deviceItem = new MenuItem(manufacturerMenu, SWT.CHECK);
                             deviceItem.setText(d.getName());
@@ -1928,7 +1931,6 @@ public class ConfigurationComposite extends Composite
                             });
                         }
                     }
-
                 }
 
                 // TODO - how do I dispose of this?
