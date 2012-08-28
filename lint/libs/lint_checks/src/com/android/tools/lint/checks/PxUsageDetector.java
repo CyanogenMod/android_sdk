@@ -17,8 +17,12 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT_SIZE;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_DIP;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_DP;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_PX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -42,8 +46,6 @@ import java.util.Collections;
 /**
  * Check for px dimensions instead of dp dimensions.
  * Also look for non-"sp" text sizes.
- * <p>
- * TODO: Look in themes as well (text node usages).
  */
 public class PxUsageDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
@@ -123,7 +125,7 @@ public class PxUsageDetector extends LayoutDetector {
         }
 
         String value = attribute.getValue();
-        if (value.endsWith("px") && value.matches("\\d+px")) { //$NON-NLS-1$ //$NON-NLS-2$
+        if (value.endsWith(UNIT_PX) && value.matches("\\d+px")) { //$NON-NLS-1$
             if (value.charAt(0) == '0') {
                 // 0px is fine. 0px is 0dp regardless of density...
                 return;
@@ -132,8 +134,8 @@ public class PxUsageDetector extends LayoutDetector {
                 context.report(PX_ISSUE, attribute, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead", null);
             }
-        } else if ("textSize".equals(attribute.getLocalName())
-                && (value.endsWith("dp") || value.endsWith("dip")) //$NON-NLS-1$ //$NON-NLS-2$
+        } else if (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
+                && (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP))
                 && (value.matches("\\d+di?p"))) {
             if (context.isEnabled(DP_ISSUE)) {
                 context.report(DP_ISSUE, attribute, context.getLocation(attribute),
@@ -185,7 +187,7 @@ public class PxUsageDetector extends LayoutDetector {
                         || text.charAt(j - 1) == 'i')) { // ends with dp or di
                     text = text.trim();
                     String name = item.getAttribute(ATTR_NAME);
-                    if ((name.equals("textSize")                 //$NON-NLS-1$
+                    if ((name.equals(ATTR_TEXT_SIZE)
                             || name.equals("android:textSize"))  //$NON-NLS-1$
                             && text.matches("\\d+di?p")) {  //$NON-NLS-1$
                         if (context.isEnabled(DP_ISSUE)) {

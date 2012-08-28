@@ -17,7 +17,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
 import com.android.ide.common.resources.ResourceItem;
@@ -98,12 +100,21 @@ class ResourceValueCompleter implements IContentProposalProvider {
                 ResourceRepository repository = data.getFrameworkResources();
                 addMatches(repository, prefix, true /* isSystem */, results);
             }
+        } else if (prefix.startsWith("?") && //$NON-NLS-1$
+                prefix.regionMatches(true /* ignoreCase */, 0, PREFIX_ANDROID_THEME_REF, 0,
+                        Math.min(prefix.length() - 1, PREFIX_ANDROID_THEME_REF.length()))) {
+            AndroidTargetData data = editor.getTargetData();
+            if (data != null) {
+                ResourceRepository repository = data.getFrameworkResources();
+                addMatches(repository, prefix, true /* isSystem */, results);
+            }
         }
+
 
         // When completing project resources skip framework resources unless
         // the prefix possibly completes both, such as "@an" which can match
         // both the project resource @animator as well as @android:string
-        if (!prefix.startsWith("@and")) { //$NON-NLS-1$
+        if (!prefix.startsWith("@and") && !prefix.startsWith("?and")) { //$NON-NLS-1$ //$NON-NLS-2$
             IProject project = editor.getProject();
             if (project != null) {
                 // get the resource repository for this project and the system resources.
@@ -136,7 +147,14 @@ class ResourceValueCompleter implements IContentProposalProvider {
             if (prefix.regionMatches(typeStart, type.getName(), 0,
                     Math.min(type.getName().length(), prefix.length() - typeStart))) {
                 StringBuilder sb = new StringBuilder();
-                sb.append(PREFIX_RESOURCE_REF);
+                if (prefix.length() == 0 || prefix.startsWith(PREFIX_RESOURCE_REF)) {
+                    sb.append(PREFIX_RESOURCE_REF);
+                } else {
+                    if (type != ResourceType.ATTR) {
+                        continue;
+                    }
+                    sb.append(PREFIX_THEME_REF);
+                }
 
                 if (type == ResourceType.ID && prefix.startsWith(NEW_ID_PREFIX)) {
                     sb.append('+');

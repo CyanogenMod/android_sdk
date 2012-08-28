@@ -17,6 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
@@ -120,22 +124,29 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
             if (text.startsWith("@") || text.startsWith("?")) { //$NON-NLS-1$ //$NON-NLS-2$
                 // Yes, try to resolve it in order to show better info
                 XmlProperty xmlProperty = (XmlProperty) property;
-                ResourceResolver resolver = xmlProperty.getGraphicalEditor().getResourceResolver();
-                boolean isFramework = text.startsWith("@android:") || text.startsWith("?android:");
-                resValue = resolver.findResValue(text, isFramework);
-                while (resValue != null && resValue.getValue() != null) {
-                    String value = resValue.getValue();
-                    if (value.startsWith("@") || value.startsWith("?")) {
-                        // TODO: do I have to strip off the @ too?
-                        isFramework = isFramework || value.startsWith("@android:") || value.startsWith("?android:");;
-                        ResourceValue v = resolver.findResValue(text, isFramework);
-                        if (v != null && !value.equals(v.getValue())) {
-                            resValue = v;
+                GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
+                if (graphicalEditor != null) {
+                    ResourceResolver resolver = graphicalEditor.getResourceResolver();
+                    boolean isFramework = text.startsWith(PREFIX_ANDROID_RESOURCE_REF)
+                            || text.startsWith(PREFIX_ANDROID_THEME_REF);
+                    resValue = resolver.findResValue(text, isFramework);
+                    while (resValue != null && resValue.getValue() != null) {
+                        String value = resValue.getValue();
+                        if (value.startsWith(PREFIX_RESOURCE_REF)
+                                || value.startsWith(PREFIX_THEME_REF)) {
+                            // TODO: do I have to strip off the @ too?
+                            isFramework = isFramework
+                                    || value.startsWith(PREFIX_ANDROID_RESOURCE_REF)
+                                    || value.startsWith(PREFIX_ANDROID_THEME_REF);;
+                            ResourceValue v = resolver.findResValue(text, isFramework);
+                            if (v != null && !value.equals(v.getValue())) {
+                                resValue = v;
+                            } else {
+                                break;
+                            }
                         } else {
                             break;
                         }
-                    } else {
-                        break;
                     }
                 }
             } else if (text.startsWith("#") && text.matches("#\\p{XDigit}+")) { //$NON-NLS-1$
@@ -149,34 +160,36 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                 if (value.startsWith("#") || value.endsWith(DOT_XML) //$NON-NLS-1$
                         && value.contains("res/color")) { //$NON-NLS-1$ // TBD: File.separator?
                     XmlProperty xmlProperty = (XmlProperty) property;
-                    ResourceResolver resolver =
-                            xmlProperty.getGraphicalEditor().getResourceResolver();
-                    RGB rgb = ResourceHelper.resolveColor(resolver, resValue);
-                    if (rgb != null) {
-                        Color color = new Color(gc.getDevice(), rgb);
-                        // draw color sample
-                        Color oldBackground = gc.getBackground();
-                        Color oldForeground = gc.getForeground();
-                        try {
-                            int width_c = SAMPLE_SIZE;
-                            int height_c = SAMPLE_SIZE;
-                            int x_c = x;
-                            int y_c = y + (height - height_c) / 2;
-                            // update rest bounds
-                            int delta = SAMPLE_SIZE + SAMPLE_MARGIN;
-                            x += delta;
-                            width -= delta;
-                            // fill
-                            gc.setBackground(color);
-                            gc.fillRectangle(x_c, y_c, width_c, height_c);
-                            // draw line
-                            gc.setForeground(IColorConstants.gray);
-                            gc.drawRectangle(x_c, y_c, width_c, height_c);
-                        } finally {
-                            gc.setBackground(oldBackground);
-                            gc.setForeground(oldForeground);
+                    GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
+                    if (graphicalEditor != null) {
+                        ResourceResolver resolver = graphicalEditor.getResourceResolver();
+                        RGB rgb = ResourceHelper.resolveColor(resolver, resValue);
+                        if (rgb != null) {
+                            Color color = new Color(gc.getDevice(), rgb);
+                            // draw color sample
+                            Color oldBackground = gc.getBackground();
+                            Color oldForeground = gc.getForeground();
+                            try {
+                                int width_c = SAMPLE_SIZE;
+                                int height_c = SAMPLE_SIZE;
+                                int x_c = x;
+                                int y_c = y + (height - height_c) / 2;
+                                // update rest bounds
+                                int delta = SAMPLE_SIZE + SAMPLE_MARGIN;
+                                x += delta;
+                                width -= delta;
+                                // fill
+                                gc.setBackground(color);
+                                gc.fillRectangle(x_c, y_c, width_c, height_c);
+                                // draw line
+                                gc.setForeground(IColorConstants.gray);
+                                gc.drawRectangle(x_c, y_c, width_c, height_c);
+                            } finally {
+                                gc.setBackground(oldBackground);
+                                gc.setForeground(oldForeground);
+                            }
+                            color.dispose();
                         }
-                        color.dispose();
                     }
                 } else {
                     Image swtImage = null;
@@ -350,37 +363,38 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                 // Multiple resource types (such as string *and* boolean):
                 // just use a reference chooser
                 GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
-                LayoutEditorDelegate delegate = graphicalEditor.getEditorDelegate();
-                IProject project = delegate.getEditor().getProject();
-                if (project != null) {
-                    // get the resource repository for this project and the system resources.
-                    ResourceRepository projectRepository =
-                        ResourceManager.getInstance().getProjectResources(project);
-                    Shell shell = AdtPlugin.getDisplay().getActiveShell();
-                    ReferenceChooserDialog dlg = new ReferenceChooserDialog(
-                            project,
-                            projectRepository,
-                            shell);
-                    dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
+                if (graphicalEditor != null) {
+                    LayoutEditorDelegate delegate = graphicalEditor.getEditorDelegate();
+                    IProject project = delegate.getEditor().getProject();
+                    if (project != null) {
+                        // get the resource repository for this project and the system resources.
+                        ResourceRepository projectRepository =
+                            ResourceManager.getInstance().getProjectResources(project);
+                        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+                        ReferenceChooserDialog dlg = new ReferenceChooserDialog(
+                                project,
+                                projectRepository,
+                                shell);
+                        dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
 
-                    String currentValue = (String) property.getValue();
-                    dlg.setCurrentResource(currentValue);
+                        String currentValue = (String) property.getValue();
+                        dlg.setCurrentResource(currentValue);
 
-                    if (dlg.open() == Window.OK) {
-                        String resource = dlg.getCurrentResource();
-                        if (resource != null) {
-                            // Returns null for cancel, "" for clear and otherwise a new value
-                            if (resource.length() > 0) {
-                                property.setValue(resource);
-                            } else {
-                                property.setValue(null);
+                        if (dlg.open() == Window.OK) {
+                            String resource = dlg.getCurrentResource();
+                            if (resource != null) {
+                                // Returns null for cancel, "" for clear and otherwise a new value
+                                if (resource.length() > 0) {
+                                    property.setValue(resource);
+                                } else {
+                                    property.setValue(null);
+                                }
                             }
                         }
+
+                        return;
                     }
-
-                    return;
                 }
-
             } else if (type != null) {
                 // Single resource type: use a resource chooser
                 GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
@@ -418,7 +432,8 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
     @NonNull
     private static Map<String, Image> getImageCache(@NonNull Property property) {
         XmlProperty xmlProperty = (XmlProperty) property;
-        IProject project = xmlProperty.getGraphicalEditor().getProject();
+        GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
+        IProject project = graphicalEditor.getProject();
         try {
             Map<String, Image> cache = (Map<String, Image>) project.getSessionProperty(CACHE_NAME);
             if (cache == null) {
