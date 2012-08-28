@@ -74,7 +74,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "If an application has more than one locale, then all the strings declared in " +
             "one language should also be translated in all other languages.\n" +
             "\n" +
-            "If the string should *not* be translated, you can add the attribute\n" +
+            "If the string should *not* be translated, you can add the attribute " +
             "`translatable=\"false\"` on the `<string>` element, or you can define all " +
             "your non-translatable strings in a resource file called `donottranslate.xml`. " +
             "Or, you can ignore the issue with a `tools:ignore=\"MissingTranslation\"` " +
