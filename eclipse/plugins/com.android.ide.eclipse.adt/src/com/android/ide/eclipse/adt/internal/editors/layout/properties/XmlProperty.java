@@ -21,7 +21,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
-import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -43,7 +42,6 @@ import org.eclipse.wb.internal.core.model.property.table.PropertyTooltipTextProv
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -66,24 +64,29 @@ class XmlProperty extends Property {
         mDescriptor = descriptor;
     }
 
+    @NonNull
     public PropertyFactory getFactory() {
         return mFactory;
     }
 
+    @NonNull
     public UiViewElementNode getNode() {
         return mNode;
     }
 
+    @NonNull
     public AttributeDescriptor getDescriptor() {
         return mDescriptor;
     }
 
     @Override
+    @NonNull
     public String getName() {
         return mDescriptor.getXmlLocalName();
     }
 
     @Override
+    @NonNull
     public String getTitle() {
         String name = mDescriptor.getXmlLocalName();
         int nameLength = name.length();
@@ -137,12 +140,7 @@ class XmlProperty extends Property {
         } else if (adapter == IContentProposalProvider.class) {
             IAttributeInfo info = mDescriptor.getAttributeInfo();
             if (info != null) {
-                EnumSet<Format> formats = info.getFormats();
-                if (formats.contains(Format.FLAG)) {
-                    return adapter.cast(new FlagValueCompleter(this, info.getFlagValues()));
-                } else if (formats.contains(Format.ENUM)) {
-                    return adapter.cast(new EnumValueCompleter(this, info.getEnumValues()));
-                }
+                return adapter.cast(new PropertyValueCompleter(this));
             }
             // Fallback: complete values on resource values
             return adapter.cast(new ResourceValueCompleter(this));
@@ -183,6 +181,7 @@ class XmlProperty extends Property {
         return s != null && s.toString().length() > 0;
     }
 
+    @Nullable
     public String getStringValue() {
         Element element = (Element) mNode.getXmlNode();
         if (element == null) {
@@ -217,6 +216,7 @@ class XmlProperty extends Property {
     }
 
     @Override
+    @Nullable
     public Object getValue() throws Exception {
         return getStringValue();
     }
@@ -242,6 +242,7 @@ class XmlProperty extends Property {
     }
 
     @Override
+    @NonNull
     public Property getComposite(Property[] properties) {
         return XmlPropertyComposite.create(properties);
     }
@@ -251,7 +252,8 @@ class XmlProperty extends Property {
         return mFactory.getGraphicalEditor();
     }
 
-    @Nullable CommonXmlEditor getXmlEditor() {
+    @Nullable
+    CommonXmlEditor getXmlEditor() {
         GraphicalEditorPart graphicalEditor = getGraphicalEditor();
         if (graphicalEditor != null) {
             return graphicalEditor.getEditorDelegate().getEditor();
@@ -260,11 +262,12 @@ class XmlProperty extends Property {
         return null;
     }
 
+    @Nullable
     public Property getParent() {
         return mParent;
     }
 
-    public void setParent(Property parent) {
+    public void setParent(@Nullable Property parent) {
         mParent = parent;
     }
 

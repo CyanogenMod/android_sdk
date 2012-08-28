@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
+import com.android.annotations.NonNull;
 import com.google.common.base.Objects;
 
 import org.eclipse.wb.internal.core.model.property.Property;
@@ -46,6 +47,7 @@ class XmlPropertyComposite extends XmlProperty {
     }
 
     @Override
+    @NonNull
     public String getTitle() {
         return mProperties[0].getTitle();
     }
@@ -103,6 +105,7 @@ class XmlPropertyComposite extends XmlProperty {
         }
     }
 
+    @NonNull
     public static XmlPropertyComposite create(Property... properties) {
         // Cast from Property into XmlProperty
         XmlProperty[] xmlProperties = new XmlProperty[properties.length];

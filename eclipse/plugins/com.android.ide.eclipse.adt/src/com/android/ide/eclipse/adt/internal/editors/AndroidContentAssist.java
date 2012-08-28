@@ -19,6 +19,9 @@ package com.android.ide.eclipse.adt.internal.editors;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_DP;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_PX;
+import static com.android.tools.lint.detector.api.LintConstants.UNIT_SP;
 
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -1138,11 +1141,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * {@link #completeSuffix}.
      */
     private static final String[] sDimensionUnits = new String[] {
-        "dp", //$NON-NLS-1$
+        UNIT_DP,
         "<b>Density-independent Pixels</b> - an abstract unit that is based on the physical "
                 + "density of the screen.",
 
-        "sp", //$NON-NLS-1$
+        UNIT_SP,
         "<b>Scale-independent Pixels</b> - this is like the dp unit, but it is also scaled by "
                 + "the user's font size preference.",
 
@@ -1155,7 +1158,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         "in", //$NON-NLS-1$
         "<b>Inches</b> - based on the physical size of the screen.",
 
-        "px", //$NON-NLS-1$
+        UNIT_PX,
         "<b>Pixels</b> - corresponds to actual pixels on the screen. Not recommended.",
     };
 

@@ -149,6 +149,7 @@ public class LintConstants {
 
     public static final String ATTR_ID = "id";                         //$NON-NLS-1$
     public static final String ATTR_TEXT = "text";                     //$NON-NLS-1$
+    public static final String ATTR_TEXT_SIZE = "textSize";            //$NON-NLS-1$
     public static final String ATTR_LABEL = "label";                   //$NON-NLS-1$
     public static final String ATTR_HINT = "hint";                     //$NON-NLS-1$
     public static final String ATTR_PROMPT = "prompt";                 //$NON-NLS-1$
@@ -256,6 +257,12 @@ public class LintConstants {
     public static final String ATTR_SHOW_AS_ACTION = "showAsAction";   //$NON-NLS-1$
     public static final String VALUE_IF_ROOM = "ifRoom";               //$NON-NLS-1$
     public static final String VALUE_ALWAYS = "always";                //$NON-NLS-1$
+
+    // Units
+    public static final String UNIT_DP = "dp";                         //$NON-NLS-1$
+    public static final String UNIT_DIP = "dip";                       //$NON-NLS-1$
+    public static final String UNIT_SP = "sp";                         //$NON-NLS-1$
+    public static final String UNIT_PX = "px";                         //$NON-NLS-1$
 
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
