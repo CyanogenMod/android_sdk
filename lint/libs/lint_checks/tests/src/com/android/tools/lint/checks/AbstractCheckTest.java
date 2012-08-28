@@ -343,6 +343,10 @@ public abstract class AbstractCheckTest extends TestCase {
                 sb.append(exception.toString());
             }
             System.err.println(sb);
+
+            if (exception != null) {
+                fail(exception.toString());
+            }
         }
 
         @Override
