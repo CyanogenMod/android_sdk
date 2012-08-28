@@ -19,6 +19,7 @@ package com.android.sdkmanager;
 
 import com.android.SdkConstants;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkManager;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.repository.SdkAddonConstants;
@@ -26,6 +27,8 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.utils.Pair;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
@@ -159,6 +162,50 @@ public class MainTest extends SdkManagerTestCase {
                 "[P message, P \n" +
                 "]",
                 getLog().toString());
+    }
+
+    public void testSdkManagerHasChanged() throws IOException {
+        Main main = new Main();
+        main.setLogger(getLog());
+        SdkManager sdkman = getSdkManager();
+        main.setSdkManager(sdkman);
+        getLog().clear();
+
+        assertFalse(sdkman.hasChanged());
+
+        File addonsDir = new File(sdkman.getLocation(), SdkConstants.FD_ADDONS);
+        assertTrue(addonsDir.isDirectory());
+
+        FileWriter readme = new FileWriter(new File(addonsDir, "android.txt"));
+        readme.write("test\n");
+        readme.close();
+
+        // Adding a file doesn't alter sdk.hasChanged
+        assertFalse(sdkman.hasChanged());
+        sdkman.reloadSdk(getLog());
+        assertFalse(sdkman.hasChanged());
+
+        File fakeAddon = new File(addonsDir, "google-addon");
+        fakeAddon.mkdirs();
+        File sourceProps = new File(fakeAddon, SdkConstants.FN_SOURCE_PROP);
+        FileWriter propsWriter = new FileWriter(sourceProps);
+        propsWriter.write("revision=7\n");
+        propsWriter.close();
+
+        // Adding a directory does alter sdk.hasChanged even if not a real add-on
+        assertTrue(sdkman.hasChanged());
+        // Once reloaded, sdk.hasChanged will be reset
+        sdkman.reloadSdk(getLog());
+        assertFalse(sdkman.hasChanged());
+
+        // Changing the source.properties file alters sdk.hasChanged
+        propsWriter = new FileWriter(sourceProps);
+        propsWriter.write("revision=8\n");
+        propsWriter.close();
+        assertTrue(sdkman.hasChanged());
+        // Once reloaded, sdk.hasChanged will be reset
+        sdkman.reloadSdk(getLog());
+        assertFalse(sdkman.hasChanged());
     }
 
     public void testCheckFilterValues() {
