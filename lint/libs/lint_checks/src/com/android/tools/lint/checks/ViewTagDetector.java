@@ -41,7 +41,7 @@ import org.objectweb.asm.tree.analysis.BasicInterpreter;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -49,7 +49,7 @@ import java.util.List;
  * Checks for missing view tag detectors
  */
 public class ViewTagDetector extends Detector implements ClassScanner {
-    /** Missing onClick handlers */
+    /** Using setTag and leaking memory */
     public static final Issue ISSUE = Issue.create(
             "ViewTag", //$NON-NLS-1$
             "Finds potential leaks when using View.setTag",
@@ -82,7 +82,7 @@ public class ViewTagDetector extends Detector implements ClassScanner {
     @Override
     @Nullable
     public List<String> getApplicableCallNames() {
-        return Arrays.asList("setTag"); //$NON-NLS-1$
+        return Collections.singletonList("setTag"); //$NON-NLS-1$
     }
 
     @Override

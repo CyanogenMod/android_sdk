@@ -349,6 +349,10 @@ public class LintConstants {
     public static final String ANDROID_CONTENT_BROADCAST_RECEIVER =
             "android/content/BroadcastReceiver";                                     //$NON-NLS-1$
 
+    // Method Names
+    public static final String FORMAT_METHOD = "format";                             //$NON-NLS-1$
+    public static final String GET_STRING_METHOD = "getString";                      //$NON-NLS-1$
+
     /**
      * The highest known API level. Note that the tools may also look at the
      * installed platforms to see if they can find more recently released

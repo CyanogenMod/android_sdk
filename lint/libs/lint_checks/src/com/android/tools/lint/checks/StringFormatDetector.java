@@ -18,6 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.tools.lint.detector.api.LintConstants.FORMAT_METHOD;
+import static com.android.tools.lint.detector.api.LintConstants.GET_STRING_METHOD;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 
 import com.android.annotations.NonNull;
@@ -83,10 +85,6 @@ import lombok.ast.VariableReference;
  * TODO: Handle Resources.getQuantityString as well
  */
 public class StringFormatDetector extends ResourceXmlDetector implements Detector.JavaScanner {
-    /** The name of the String.format method */
-    private static final String FORMAT_METHOD = "format"; //$NON-NLS-1$
-    private static final String GET_STRING_METHOD = "getString"; //$NON-NLS-1$
-
     /** Whether formatting strings are invalid */
     public static final Issue INVALID = Issue.create(
             "StringFormatInvalid", //$NON-NLS-1$
@@ -767,6 +765,66 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
 
         return max;
+    }
+
+    /**
+     * Determines whether the given {@link String#format(String, Object...)}
+     * formatting string is "locale dependent", meaning that its output depends
+     * on the locale. This is the case if it for example references decimal
+     * numbers of dates and times.
+     *
+     * @param format the format string
+     * @return true if the format is locale sensitive, false otherwise
+     */
+    public static boolean isLocaleSpecific(@NonNull String format) {
+        if (format.indexOf('%') == -1) {
+            return false;
+        }
+
+        String s = format;
+        Matcher matcher = FORMAT.matcher(s);
+        int index = 0;
+        int prevIndex = 0;
+        while (true) {
+            if (matcher.find(index)) {
+                int matchStart = matcher.start();
+                // Make sure this is not an escaped '%'
+                for (; prevIndex < matchStart; prevIndex++) {
+                    char c = s.charAt(prevIndex);
+                    if (c == '\\') {
+                        prevIndex++;
+                    }
+                }
+                if (prevIndex > matchStart) {
+                    // We're in an escape, ignore this result
+                    index = prevIndex;
+                    continue;
+                }
+
+                String type = matcher.group(6);
+                if (!type.isEmpty()) {
+                    char t = type.charAt(0);
+
+                    // The following formatting characters are locale sensitive:
+                    switch (t) {
+                        case 'd': // decimal integer
+                        case 'e': // scientific
+                        case 'E':
+                        case 'f': // decimal float
+                        case 'g': // general
+                        case 'G':
+                        case 't': // date/time
+                        case 'T':
+                            return true;
+                    }
+                }
+                index = matcher.end();
+            } else {
+                break;
+            }
+        }
+
+        return false;
     }
 
     @Override

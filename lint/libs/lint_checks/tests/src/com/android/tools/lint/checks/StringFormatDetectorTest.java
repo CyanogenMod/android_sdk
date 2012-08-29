@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.StringFormatDetector.isLocaleSpecific;
+
 import com.android.tools.lint.detector.api.Detector;
 
 import java.util.HashSet;
@@ -150,5 +152,19 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
             "No warnings.",
 
             lintProject("res/values/formatstrings3.xml"));
+    }
+
+    public void testIsLocaleSpecific() throws Exception {
+        assertFalse(isLocaleSpecific(""));
+        assertFalse(isLocaleSpecific("Hello World!"));
+        assertFalse(isLocaleSpecific("%% %n"));
+        assertFalse(isLocaleSpecific(" %%f"));
+        assertFalse(isLocaleSpecific("%x %A %c %b %B %h %n %%"));
+        assertTrue(isLocaleSpecific("%f"));
+        assertTrue(isLocaleSpecific(" %1$f "));
+        assertTrue(isLocaleSpecific(" %5$e "));
+        assertTrue(isLocaleSpecific(" %E "));
+        assertTrue(isLocaleSpecific(" %g "));
+        assertTrue(isLocaleSpecific(" %1$tm %1$te,%1$tY "));
     }
 }

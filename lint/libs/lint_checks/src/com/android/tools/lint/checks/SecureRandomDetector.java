@@ -40,7 +40,7 @@ import org.objectweb.asm.tree.analysis.BasicInterpreter;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -78,7 +78,7 @@ public class SecureRandomDetector extends Detector implements ClassScanner {
     @Override
     @Nullable
     public List<String> getApplicableCallNames() {
-        return Arrays.asList(SET_SEED);
+        return Collections.singletonList(SET_SEED);
     }
 
     @Override
