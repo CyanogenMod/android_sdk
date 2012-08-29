@@ -180,7 +180,7 @@ public class SdkManager {
             if (platforms != null) {
                 for (File platform : platforms) {
                     if (!platform.isDirectory()) {
-                        break;
+                        continue;
                     }
                     visited.add(platform);
                     DirInfo dirInfo = mTargetDirs.get(platform);
@@ -195,7 +195,6 @@ public class SdkManager {
                             System.out.println("SDK changed due to " +              //$NON-NLS-1$
                                 (dirInfo != null ? dirInfo.toString() : platform.getPath()));
                         }
-                        break;
                     }
                 }
             }
@@ -208,7 +207,7 @@ public class SdkManager {
             if (addons != null) {
                 for (File addon : addons) {
                     if (!addon.isDirectory()) {
-                        break;
+                        continue;
                     }
                     visited.add(addon);
                     DirInfo dirInfo = mTargetDirs.get(addon);
@@ -223,7 +222,6 @@ public class SdkManager {
                             System.out.println("SDK changed due to " +              //$NON-NLS-1$
                                 (dirInfo != null ? dirInfo.toString() : addon.getPath()));
                         }
-                        break;
                     }
                 }
             }
@@ -467,7 +465,7 @@ public class SdkManager {
                     }
                     // Remember we visited this file/directory,
                     // even if we failed to load anything from it.
-                    dirInfos.put(platform, new DirInfo(platform, target));
+                    dirInfos.put(platform, new DirInfo(platform));
                 } else {
                     log.warning("Ignoring platform '%1$s', not a folder.", platform.getName());
                 }
@@ -811,7 +809,7 @@ public class SdkManager {
                         }
                         // Remember we visited this file/directory,
                         // even if we failed to load anything from it.
-                        dirInfos.put(addon, new DirInfo(addon, target));
+                        dirInfos.put(addon, new DirInfo(addon));
                     }
                 }
             }
@@ -1262,24 +1260,20 @@ public class SdkManager {
         /**
          * Creates a new immutable {@link DirInfo}.
          *
-         * @param dir The platform/addon directory of the target. It may not be a directory.
-         * @param target The target associated with the directory or null if we failed to load it.
+         * @param dir The platform/addon directory of the target. It should be a directory.
          */
-        public DirInfo(@NonNull File dir, @Nullable IAndroidTarget target) {
+        public DirInfo(@NonNull File dir) {
             mDir = dir;
             mDirModifiedTS = dir.lastModified();
 
-            // If we have a target for it, we expect the directory to have
-            // a source props. If we have a target but no source props file,
-            // mPropsModifedTS will be zero.
+            // Capture some info about the source.properties file if it exists.
+            // We use propsModifedTS == 0 to mean there is no props file.
             long propsChecksum = 0;
             long propsModifedTS = 0;
-            if (target != null) {
-                File props = new File(dir, SdkConstants.FN_SOURCE_PROP);
-                if (props.isFile()) {
-                    propsModifedTS = props.lastModified();
-                    propsChecksum = getFileChecksum(props);
-                }
+            File props = new File(dir, SdkConstants.FN_SOURCE_PROP);
+            if (props.isFile()) {
+                propsModifedTS = props.lastModified();
+                propsChecksum = getFileChecksum(props);
             }
             mPropsModifedTS = propsModifedTS;
             mPropsChecksum = propsChecksum;
