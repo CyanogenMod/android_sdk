@@ -112,7 +112,7 @@ BASE_PLUGIN_LIBS="common sdkstats sdklib dvlib layoutlib_api ide_common"
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \
-    prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
+    prebuilts/tools/common/guava-tools/guava-13.0.1.jar \
     prebuilts/tools/common/http-client/commons-logging-1.1.1.jar \
     prebuilts/tools/common/http-client/commons-codec-1.4.jar \
     prebuilts/tools/common/http-client/httpclient-4.1.1.jar \
