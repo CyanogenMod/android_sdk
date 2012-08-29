@@ -269,6 +269,16 @@ public class LocaleManager {
     }
 
     /**
+     * Returns all the known region codes
+     *
+     * @return all the known region codes
+     */
+    @NonNull
+    public static Set<String> getRegionCodes() {
+        return Collections.unmodifiableSet(sRegionNames.keySet());
+    }
+
+    /**
      * Populate the various maps.
      * <p>
      * The language to region mapping was constructed by using the ISO 639-1 table from

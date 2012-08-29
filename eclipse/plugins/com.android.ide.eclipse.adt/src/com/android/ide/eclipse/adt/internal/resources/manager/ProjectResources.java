@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.IntArrayWrapper;
 import com.android.ide.common.resources.ResourceFolder;
@@ -81,8 +82,9 @@ public class ProjectResources extends ResourceRepository {
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
     @Override
+    @NonNull
     public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
-            FolderConfiguration referenceConfig) {
+            @NonNull FolderConfiguration referenceConfig) {
 
         Map<ResourceType, Map<String, ResourceValue>> resultMap =
             new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
@@ -232,7 +234,8 @@ public class ProjectResources extends ResourceRepository {
     }
 
     @Override
-    protected ResourceItem createResourceItem(String name) {
+    @NonNull
+    protected ResourceItem createResourceItem(@NonNull String name) {
         return new ResourceItem(name);
     }
 

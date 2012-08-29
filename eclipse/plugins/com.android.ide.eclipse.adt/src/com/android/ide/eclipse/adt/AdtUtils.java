@@ -1089,7 +1089,8 @@ public class AdtUtils {
     }
 
     /**
-     * Ensure that a given folder (and all its parents) are created
+     * Ensure that a given folder (and all its parents) are created. This implements
+     * the equivalent of {@link File#mkdirs()} for {@link IContainer} folders.
      *
      * @param container the container to ensure exists
      * @throws CoreException if an error occurs

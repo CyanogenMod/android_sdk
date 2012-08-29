@@ -57,6 +57,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.AddTranslationDialog;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
@@ -105,6 +106,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IEditorPart;
@@ -1744,6 +1746,21 @@ public class ConfigurationComposite extends Composite
                         }
                     });
                 }
+
+                @SuppressWarnings("unused")
+                MenuItem separator = new MenuItem(menu, SWT.SEPARATOR);
+
+                MenuItem item = new MenuItem(menu, SWT.PUSH);
+                item.setText("Add New Translation...");
+                item.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        IProject project = mEditedFile.getProject();
+                        Shell shell = ConfigurationComposite.this.getShell();
+                        AddTranslationDialog dialog = new AddTranslationDialog(shell, project);
+                        dialog.open();
+                    }
+                });
 
                 Rectangle bounds = combo.getBounds();
                 Point location = new Point(bounds.x, bounds.y + bounds.height);

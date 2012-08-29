@@ -71,7 +71,8 @@ public class FrameworkResources extends ResourceRepository {
      * @return a collection of items, possible empty.
      */
     @Override
-    public List<ResourceItem> getResourceItemsOfType(ResourceType type) {
+    @NonNull
+    public List<ResourceItem> getResourceItemsOfType(@NonNull ResourceType type) {
         return mPublicResourceMap.get(type);
     }
 
@@ -81,12 +82,13 @@ public class FrameworkResources extends ResourceRepository {
      * @return true if the repository contains resources of the given type, false otherwise.
      */
     @Override
-    public boolean hasResourcesOfType(ResourceType type) {
+    public boolean hasResourcesOfType(@NonNull ResourceType type) {
         return mPublicResourceMap.get(type).size() > 0;
     }
 
     @Override
-    protected ResourceItem createResourceItem(String name) {
+    @NonNull
+    protected ResourceItem createResourceItem(@NonNull String name) {
         return new FrameworkResourceItem(name);
     }
 

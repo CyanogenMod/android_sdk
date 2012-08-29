@@ -166,7 +166,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         mTree.addPaintListener(new PaintListener() {
             @Override
             public void paintControl(PaintEvent e) {
-                treePainted = true;
+                mTreePainted = true;
                 mTreeViewer.getTree().removePaintListener(this);
             }
         });
@@ -212,7 +212,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         });
     }
 
-    private boolean treePainted;
+    private boolean mTreePainted;
 
     private void updateColumnWidths() {
         Rectangle r = mTree.getClientArea();
@@ -631,7 +631,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             LintColumn column = (LintColumn) treeColumn.getData(KEY_COLUMN);
             // Workaround for TeeColumn.getWidth() returning 0 in some cases,
             // see https://bugs.eclipse.org/341865 for details.
-            int width = getColumnWidth(column, treePainted);
+            int width = getColumnWidth(column, mTreePainted);
             columnEntry.putInteger(getKey(treeColumn), width);
             columns[positions[i]] = column;
         }
