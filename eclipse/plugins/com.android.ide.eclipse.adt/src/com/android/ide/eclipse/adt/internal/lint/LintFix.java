@@ -106,7 +106,7 @@ abstract class LintFix implements ICompletionProposal {
     public String getAdditionalProposalInfo() {
         Issue issue = EclipseLintClient.getRegistry().getIssue(mId);
         if (issue != null) {
-            return issue.getExplanation().replace("\n", "<br>"); //$NON-NLS-1$ //$NON-NLS-2$
+            return issue.getExplanationAsHtml();
         }
 
         return null;

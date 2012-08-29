@@ -758,7 +758,7 @@ public class LocaleManager {
 
          // "pa": Panjabi, -> Pakistan, India
          sLanguageToCountry.put("pa", "PK"); //$NON-NLS-1$ //$NON-NLS-2$
-         sLanguageNames.put("pa", "Panjabi,"); //$NON-NLS-1$
+         sLanguageNames.put("pa", "Panjabi"); //$NON-NLS-1$
 
          // "pl": Polish -> Poland
          sLanguageToCountry.put("pl", "PL"); //$NON-NLS-1$ //$NON-NLS-2$
