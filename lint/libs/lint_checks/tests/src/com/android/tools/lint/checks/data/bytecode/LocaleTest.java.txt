@@ -1,0 +1,29 @@
+package test.pkg;
+
+import java.util.GregorianCalendar;
+import java.util.Locale;
+
+public class LocaleTest {
+    public void test() {
+        System.out.println("OK".toUpperCase(Locale.getDefault()));
+        System.out.println("OK".toUpperCase(Locale.US));
+        System.out.println("OK".toUpperCase(Locale.CHINA));
+        System.out.println("WRONG".toUpperCase());
+
+        System.out.println("OK".toLowerCase(Locale.getDefault()));
+        System.out.println("OK".toLowerCase(Locale.US));
+        System.out.println("OK".toLowerCase(Locale.CHINA));
+        System.out.println("WRONG".toLowerCase());
+
+        String.format(Locale.getDefault(), "OK: %f", 1.0f);
+        String.format("OK: %x %A %c %b %B %h %n %%", 1, 2, 'c', true, false, 5);
+        String.format("WRONG: %f", 1.0f); // Implies locale
+        String.format("WRONG: %1$f", 1.0f);
+        String.format("WRONG: %e", 1.0f);
+        String.format("WRONG: %d", 1.0f);
+        String.format("WRONG: %g", 1.0f);
+        String.format("WRONG: %g", 1.0f);
+        String.format("WRONG: %1$tm %1$te,%1$tY",
+                new GregorianCalendar(2012, GregorianCalendar.AUGUST, 27));
+    }
+}
