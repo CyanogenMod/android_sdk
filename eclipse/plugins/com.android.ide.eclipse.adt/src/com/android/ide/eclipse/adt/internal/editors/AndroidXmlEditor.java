@@ -362,11 +362,11 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     /**
-     * Creates undo redo actions for the editor site (so that it works for any page of this
+     * Creates undo redo (etc) actions for the editor site (so that it works for any page of this
      * multi-page editor) by re-using the actions defined by the {@link StructuredTextEditor}
      * (aka the XML text editor.)
      */
-    private void updateActionBindings() {
+    protected void updateActionBindings() {
         IActionBars bars = getEditorSite().getActionBars();
         if (bars != null) {
             IAction action = mTextEditor.getAction(ActionFactory.UNDO.getId());
@@ -389,6 +389,35 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                     mTextEditor.getAction(ActionFactory.FIND.getId()));
             bars.setGlobalActionHandler(IDEActionFactory.BOOKMARK.getId(),
                     mTextEditor.getAction(IDEActionFactory.BOOKMARK.getId()));
+
+            bars.updateActionBars();
+        }
+    }
+
+    /**
+     * Clears the action bindings for the editor site.
+     */
+    protected void clearActionBindings(boolean includeUndoRedo) {
+        IActionBars bars = getEditorSite().getActionBars();
+        if (bars != null) {
+            // For some reason, undo/redo doesn't seem to work in the form editor.
+            // This appears to be the case for pure Eclipse form editors too, e.g. see
+            //      https://bugs.eclipse.org/bugs/show_bug.cgi?id=68423
+            // However, as a workaround we can use the *text* editor's underlying undo
+            // to revert operations being done in the UI, and the form automatically updates.
+            // Therefore, to work around this, we simply leave the text editor bindings
+            // in place if {@code includeUndoRedo} is not set
+            if (includeUndoRedo) {
+                bars.setGlobalActionHandler(ActionFactory.UNDO.getId(), null);
+                bars.setGlobalActionHandler(ActionFactory.REDO.getId(), null);
+            }
+            bars.setGlobalActionHandler(ActionFactory.DELETE.getId(), null);
+            bars.setGlobalActionHandler(ActionFactory.CUT.getId(), null);
+            bars.setGlobalActionHandler(ActionFactory.COPY.getId(), null);
+            bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), null);
+            bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), null);
+            bars.setGlobalActionHandler(ActionFactory.FIND.getId(), null);
+            bars.setGlobalActionHandler(IDEActionFactory.BOOKMARK.getId(), null);
 
             bars.updateActionBars();
         }
