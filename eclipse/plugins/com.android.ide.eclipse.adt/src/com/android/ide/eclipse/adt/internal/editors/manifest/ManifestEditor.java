@@ -99,6 +99,28 @@ public final class ManifestEditor extends AndroidXmlEditor {
         GlobalProjectMonitor.getMonitor().removeFileListener(mMarkerMonitor);
     }
 
+    @Override
+    public void activated() {
+        super.activated();
+        clearActionBindings(false);
+    }
+
+    @Override
+    public void deactivated() {
+        super.deactivated();
+        updateActionBindings();
+    }
+
+    @Override
+    protected void pageChange(int newPageIndex) {
+        super.pageChange(newPageIndex);
+        if (newPageIndex == mTextPageIndex) {
+            updateActionBindings();
+        } else {
+            clearActionBindings(false);
+        }
+    }
+
     /**
      * Return the root node of the UI element hierarchy, which here
      * is the "manifest" node.
