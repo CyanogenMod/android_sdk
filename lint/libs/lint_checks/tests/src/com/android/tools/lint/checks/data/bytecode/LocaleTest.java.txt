@@ -1,10 +1,10 @@
 package test.pkg;
 
-import java.util.GregorianCalendar;
-import java.util.Locale;
+import java.text.*;
+import java.util.*;
 
 public class LocaleTest {
-    public void test() {
+    public void testStrings() {
         System.out.println("OK".toUpperCase(Locale.getDefault()));
         System.out.println("OK".toUpperCase(Locale.US));
         System.out.println("OK".toUpperCase(Locale.CHINA));
@@ -25,5 +25,13 @@ public class LocaleTest {
         String.format("WRONG: %g", 1.0f);
         String.format("WRONG: %1$tm %1$te,%1$tY",
                 new GregorianCalendar(2012, GregorianCalendar.AUGUST, 27));
+    }
+
+    @android.annotation.SuppressLint("NewApi") // DateFormatSymbols requires API 9
+    public void testSimpleDateFormat() {
+        new SimpleDateFormat(); // WRONG
+        new SimpleDateFormat("yyyy-MM-dd"); // WRONG
+        new SimpleDateFormat("yyyy-MM-dd", DateFormatSymbols.getInstance()); // WRONG
+        new SimpleDateFormat("yyyy-MM-dd", Locale.US); // OK
     }
 }

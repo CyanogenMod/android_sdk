@@ -836,7 +836,7 @@ public class Main extends LintClient {
 
         if (issue.getExplanation() != null) {
             System.out.println();
-            System.out.println(wrap(issue.getExplanation()));
+            System.out.println(wrap(issue.getExplanationAsSimpleText()));
         }
         if (issue.getMoreInfo() != null) {
             System.out.println("More information: " + issue.getMoreInfo());
