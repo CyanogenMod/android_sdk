@@ -185,4 +185,11 @@ public class JavaPerformanceTest extends Button {
         if ((shader == null) || (lastWidth != getWidth()) || (lastHeight != getHeight())) {
         }
     }
+
+    public void inefficientSparseArray() {
+        new SparseArray<Integer>(); // Use SparseIntArray instead
+        new SparseArray<Long>();    // Use SparseLongArray instead
+        new SparseArray<Boolean>(); // Use SparseBooleanArray instead
+        new SparseArray<Object>();  // OK
+    }
 }

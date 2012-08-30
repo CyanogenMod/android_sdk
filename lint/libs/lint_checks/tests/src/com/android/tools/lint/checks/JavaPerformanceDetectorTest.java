@@ -63,6 +63,12 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
             "src/test/pkg/JavaPerformanceTest.java:74: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n" +
             "        Map<Integer, Integer> myIntMap = new java.util.HashMap<Integer, Integer>();\n" +
             "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:190: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n" +
+            "        new SparseArray<Integer>(); // Use SparseIntArray instead\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/JavaPerformanceTest.java:192: Warning: Use new SparseBooleanArray(...) instead for better performance [UseSparseArrays]\n" +
+            "        new SparseArray<Boolean>(); // Use SparseBooleanArray instead\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "src/test/pkg/JavaPerformanceTest.java:33: Warning: Use Integer.valueOf(5) instead [UseValueOf]\n" +
             "        Integer i = new Integer(5);\n" +
             "                    ~~~~~~~~~~~~~~\n" +
@@ -84,8 +90,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
             "src/test/pkg/JavaPerformanceTest.java:150: Warning: Use Double.valueOf(1.0) instead [UseValueOf]\n" +
             "        Double d1 = new Double(1.0);\n" +
             "                    ~~~~~~~~~~~~~~~\n" +
-            "0 errors, 19 warnings\n" +
-            "",
+            "0 errors, 21 warnings\n",
 
             lintProject("src/test/pkg/JavaPerformanceTest.java.txt=>" +
                     "src/test/pkg/JavaPerformanceTest.java"));
