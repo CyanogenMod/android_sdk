@@ -17,6 +17,8 @@
 package com.android.ide.common.resources;
 
 import com.android.AndroidConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -90,8 +92,10 @@ public abstract class ResourceRepository {
      * @param folder The workspace folder object.
      * @return the {@link ResourceFolder} object associated to this folder.
      */
-    private ResourceFolder add(ResourceFolderType type, FolderConfiguration config,
-            IAbstractFolder folder) {
+    private ResourceFolder add(
+            @NonNull ResourceFolderType type,
+            @NonNull FolderConfiguration config,
+            @NonNull IAbstractFolder folder) {
         // get the list for the resource type
         List<ResourceFolder> list = mFolderMap.get(type);
 
@@ -128,10 +132,14 @@ public abstract class ResourceRepository {
      * Removes a {@link ResourceFolder} associated with the specified {@link IAbstractFolder}.
      * @param type The type of the folder
      * @param removedFolder the IAbstractFolder object.
+     * @param context the scanning context
      * @return the {@link ResourceFolder} that was removed, or null if no matches were found.
      */
-    public ResourceFolder removeFolder(ResourceFolderType type, IAbstractFolder removedFolder,
-            ScanningContext context) {
+    @Nullable
+    public ResourceFolder removeFolder(
+            @NonNull ResourceFolderType type,
+            @NonNull IAbstractFolder removedFolder,
+            @Nullable ScanningContext context) {
         // get the list of folders for the resource type.
         List<ResourceFolder> list = mFolderMap.get(type);
 
@@ -162,7 +170,7 @@ public abstract class ResourceRepository {
      * @param url the resource URL
      * @return true if the resource is known
      */
-    public boolean hasResourceItem(String url) {
+    public boolean hasResourceItem(@NonNull String url) {
         assert url.startsWith("@") : url;
 
         int typeEnd = url.indexOf('/', 1);
@@ -195,7 +203,7 @@ public abstract class ResourceRepository {
      * @param name the name of the resource
      * @return true if the resource is known
      */
-    public boolean hasResourceItem(ResourceType type, String name) {
+    public boolean hasResourceItem(@NonNull ResourceType type, @NonNull String name) {
         Map<String, ResourceItem> map = mResourceMap.get(type);
 
         if (map != null) {
@@ -217,7 +225,8 @@ public abstract class ResourceRepository {
      * @param name the name of the resource.
      * @return A resource item matching the type and name.
      */
-    protected ResourceItem getResourceItem(ResourceType type, String name) {
+    @NonNull
+    protected ResourceItem getResourceItem(@NonNull ResourceType type, @NonNull String name) {
         // looking for an existing ResourceItem with this type and name
         ResourceItem item = findDeclaredResourceItem(type, name);
 
@@ -289,14 +298,16 @@ public abstract class ResourceRepository {
      * @param name the name of the resource
      * @return a new ResourceItem (or child class) instance.
      */
-    protected abstract ResourceItem createResourceItem(String name);
+    @NonNull
+    protected abstract ResourceItem createResourceItem(@NonNull String name);
 
     /**
      * Processes a folder and adds it to the list of existing folders.
      * @param folder the folder to process
      * @return the ResourceFolder created from this folder, or null if the process failed.
      */
-    public ResourceFolder processFolder(IAbstractFolder folder) {
+    @Nullable
+    public ResourceFolder processFolder(@NonNull IAbstractFolder folder) {
         // split the name of the folder in segments.
         String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
 
@@ -319,10 +330,12 @@ public abstract class ResourceRepository {
      * Returns a list of {@link ResourceFolder} for a specific {@link ResourceFolderType}.
      * @param type The {@link ResourceFolderType}
      */
-    public List<ResourceFolder> getFolders(ResourceFolderType type) {
+    @Nullable
+    public List<ResourceFolder> getFolders(@NonNull ResourceFolderType type) {
         return mFolderMap.get(type);
     }
 
+    @NonNull
     public List<ResourceType> getAvailableResourceTypes() {
         List<ResourceType> list = new ArrayList<ResourceType>();
 
@@ -366,7 +379,8 @@ public abstract class ResourceRepository {
      * @param type the type of the resource items to return
      * @return a non null collection of resource items
      */
-    public Collection<ResourceItem> getResourceItemsOfType(ResourceType type) {
+    @NonNull
+    public Collection<ResourceItem> getResourceItemsOfType(@NonNull ResourceType type) {
         Map<String, ResourceItem> map = mResourceMap.get(type);
 
         if (map == null) {
@@ -387,7 +401,7 @@ public abstract class ResourceRepository {
      * @param type the type of resource to check.
      * @return true if the repository contains resources of the given type, false otherwise.
      */
-    public boolean hasResourcesOfType(ResourceType type) {
+    public boolean hasResourcesOfType(@NonNull ResourceType type) {
         Map<String, ResourceItem> items = mResourceMap.get(type);
         return (items != null && items.size() > 0);
     }
@@ -397,7 +411,8 @@ public abstract class ResourceRepository {
      * @param folder The {@link IAbstractFolder} object.
      * @return the {@link ResourceFolder} or null if it was not found.
      */
-    public ResourceFolder getResourceFolder(IAbstractFolder folder) {
+    @Nullable
+    public ResourceFolder getResourceFolder(@NonNull IAbstractFolder folder) {
         Collection<List<ResourceFolder>> values = mFolderMap.values();
 
         if (values.isEmpty()) { // This shouldn't be necessary, but has been observed
@@ -427,8 +442,9 @@ public abstract class ResourceRepository {
      * layouts, bitmap based drawable, xml, anims).
      * @return the matching file or <code>null</code> if no match was found.
      */
-    public ResourceFile getMatchingFile(String name, ResourceFolderType type,
-            FolderConfiguration config) {
+    @Nullable
+    public ResourceFile getMatchingFile(@NonNull String name, @NonNull ResourceFolderType type,
+            @NonNull FolderConfiguration config) {
         // get the folders for the given type
         List<ResourceFolder> folders = mFolderMap.get(type);
 
@@ -467,8 +483,9 @@ public abstract class ResourceRepository {
      *
      * @return a list of files generating this resource or null if it was not found.
      */
-    public List<ResourceFile> getSourceFiles(ResourceType type, String name,
-            FolderConfiguration referenceConfig) {
+    @Nullable
+    public List<ResourceFile> getSourceFiles(@NonNull ResourceType type, @NonNull String name,
+            @Nullable FolderConfiguration referenceConfig) {
 
         Collection<ResourceItem> items = getResourceItemsOfType(type);
 
@@ -497,8 +514,9 @@ public abstract class ResourceRepository {
      * @param referenceConfig the configuration that each value must match.
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
+    @NonNull
     public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
-            FolderConfiguration referenceConfig) {
+            @NonNull FolderConfiguration referenceConfig) {
         return doGetConfiguredResources(referenceConfig);
     }
 
@@ -509,8 +527,9 @@ public abstract class ResourceRepository {
      * @param referenceConfig the configuration that each value must match.
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
+    @NonNull
     protected final Map<ResourceType, Map<String, ResourceValue>> doGetConfiguredResources(
-            FolderConfiguration referenceConfig) {
+            @NonNull FolderConfiguration referenceConfig) {
 
         Map<ResourceType, Map<String, ResourceValue>> map =
             new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
@@ -526,6 +545,7 @@ public abstract class ResourceRepository {
     /**
      * Returns the sorted list of languages used in the resources.
      */
+    @NonNull
     public SortedSet<String> getLanguages() {
         SortedSet<String> set = new TreeSet<String>();
 
@@ -547,7 +567,8 @@ public abstract class ResourceRepository {
      * Returns the sorted list of regions used in the resources with the given language.
      * @param currentLanguage the current language the region must be associated with.
      */
-    public SortedSet<String> getRegions(String currentLanguage) {
+    @NonNull
+    public SortedSet<String> getRegions(@NonNull String currentLanguage) {
         SortedSet<String> set = new TreeSet<String>();
 
         Collection<List<ResourceFolder>> folderList = mFolderMap.values();
@@ -577,7 +598,7 @@ public abstract class ResourceRepository {
      * resource folder (res/)
      * @throws IOException
      */
-    public void loadResources(IAbstractFolder rootFolder)
+    public void loadResources(@NonNull IAbstractFolder rootFolder)
             throws IOException {
         ScanningContext context = new ScanningContext(this);
 
@@ -603,13 +624,14 @@ public abstract class ResourceRepository {
     }
 
 
-    protected void removeFile(Collection<ResourceType> types, ResourceFile file) {
+    protected void removeFile(@NonNull Collection<ResourceType> types,
+            @NonNull ResourceFile file) {
         for (ResourceType type : types) {
             removeFile(type, file);
         }
     }
 
-    protected void removeFile(ResourceType type, ResourceFile file) {
+    protected void removeFile(@NonNull ResourceType type, @NonNull ResourceFile file) {
         Map<String, ResourceItem> map = mResourceMap.get(type);
         if (map != null) {
             Collection<ResourceItem> values = map.values();
@@ -626,8 +648,9 @@ public abstract class ResourceRepository {
      * @param type the type of the resources.
      * @param referenceConfig the configuration to best match.
      */
-    private Map<String, ResourceValue> getConfiguredResource(ResourceType type,
-            FolderConfiguration referenceConfig) {
+    @NonNull
+    private Map<String, ResourceValue> getConfiguredResource(@NonNull ResourceType type,
+            @NonNull FolderConfiguration referenceConfig) {
 
         // get the resource item for the given type
         Map<String, ResourceItem> items = mResourceMap.get(type);
@@ -678,7 +701,9 @@ public abstract class ResourceRepository {
      * @param name the Resource name.
      * @return the existing ResourceItem or null if no match was found.
      */
-    private ResourceItem findDeclaredResourceItem(ResourceType type, String name) {
+    @Nullable
+    private ResourceItem findDeclaredResourceItem(@NonNull ResourceType type,
+            @NonNull String name) {
         Map<String, ResourceItem> map = mResourceMap.get(type);
 
         if (map != null) {
