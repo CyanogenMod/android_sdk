@@ -129,6 +129,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
     private static final String DOUBLE = "Double";                          //$NON-NLS-1$
     private static final String FLOAT = "Float";                            //$NON-NLS-1$
     private static final String HASH_MAP = "HashMap";                       //$NON-NLS-1$
+    private static final String SPARSE_ARRAY = "SparseArray";               //$NON-NLS-1$
     private static final String CANVAS = "Canvas";                          //$NON-NLS-1$
     private static final String ON_DRAW = "onDraw";                         //$NON-NLS-1$
     private static final String ON_LAYOUT = "onLayout";                     //$NON-NLS-1$
@@ -199,6 +200,8 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
                 // e.g. via Guava? This is a bit trickier since we need to infer the type
                 // arguments from the calling context.
                 if (typeName.equals(HASH_MAP)) {
+                    checkHashMap(node, reference);
+                } else if (typeName.equals(SPARSE_ARRAY)) {
                     checkSparseArray(node, reference);
                 }
             }
@@ -481,7 +484,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
          * to a HashMap constructor call that is eligible for replacement by a
          * SparseArray call instead
          */
-        private void checkSparseArray(ConstructorInvocation node, TypeReference reference) {
+        private void checkHashMap(ConstructorInvocation node, TypeReference reference) {
             // reference.hasTypeArguments returns false where it should not
             StrictListAccessor<TypeReference, TypeReference> types = reference.getTypeArguments();
             if (types != null && types.size() == 2) {
@@ -507,6 +510,28 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
                               valueType),
                             null);
                     }
+                }
+            }
+        }
+
+        private void checkSparseArray(ConstructorInvocation node, TypeReference reference) {
+            // reference.hasTypeArguments returns false where it should not
+            StrictListAccessor<TypeReference, TypeReference> types = reference.getTypeArguments();
+            if (types != null && types.size() == 1) {
+                TypeReference first = types.first();
+                String valueType = first.getTypeName();
+                if (valueType.equals(INTEGER)) {
+                    mContext.report(USE_SPARSEARRAY, node, mContext.getLocation(node),
+                        "Use new SparseIntArray(...) instead for better performance",
+                        null);
+                } else if (valueType.equals(BOOLEAN)) {
+                    mContext.report(USE_SPARSEARRAY, node, mContext.getLocation(node),
+                            "Use new SparseBooleanArray(...) instead for better performance",
+                            null);
+                } else if (valueType.equals(LONG) && mContext.getProject().getMinSdk() >= 17) {
+                    mContext.report(USE_SPARSEARRAY, node, mContext.getLocation(node),
+                            "Use new SparseLongArray(...) instead for better performance",
+                            null);
                 }
             }
         }
