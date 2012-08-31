@@ -81,7 +81,7 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
         } else {
             // no error, remove existing markers.
             try {
-                if (project.exists()) {
+                if (project.isAccessible()) {
                     project.deleteMarkers(markerType, true,
                             IResource.DEPTH_INFINITE);
                 }
@@ -92,8 +92,10 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
                     @Override
                     protected IStatus run(IProgressMonitor monitor) {
                         try {
-                            project.deleteMarkers(markerType, true,
-                                    IResource.DEPTH_INFINITE);
+                            if (project.isAccessible()) {
+                                project.deleteMarkers(markerType, true,
+                                        IResource.DEPTH_INFINITE);
+                            }
                         } catch (CoreException e2) {
                             return e2.getStatus();
                         }
