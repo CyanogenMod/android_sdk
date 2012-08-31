@@ -516,5 +516,4 @@ public final class GlobalProjectMonitor {
             notifyResourceEventEnd();
         }
     };
-
 }

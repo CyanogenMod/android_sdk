@@ -42,6 +42,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -61,6 +62,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
@@ -128,15 +130,6 @@ import java.util.List;
  * The activator class controls the plug-in life cycle
  */
 public class AdtPlugin extends AbstractUIPlugin implements ILogger {
-    /**
-     * Temporary logging code to help track down
-     * http://code.google.com/p/android/issues/detail?id=15003
-     *
-     * Deactivated right now.
-     * TODO remove this and associated logging code once we're done with issue 15003.
-     */
-    public static final boolean DEBUG_XML_FILE_INIT = false;
-
     /** The plug-in ID */
     public static final String PLUGIN_ID = "com.android.ide.eclipse.adt"; //$NON-NLS-1$
 
@@ -1508,7 +1501,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         if (mResourceMonitor != null) {
             try {
-                setupDefaultEditor(mResourceMonitor);
+                setupEditors(mResourceMonitor);
                 ResourceManager.setup(mResourceMonitor);
                 LintDeltaProcessor.startListening(mResourceMonitor);
             } catch (Throwable t) {
@@ -1570,125 +1563,103 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
-     * Sets up the editor to register default editors for resource files when needed.
+     * Sets up the editor resource listener.
+     * <p>
+     * The listener handles:
+     * <ul>
+     * <li> Discovering newly created files, and ensuring that if they are in an Android
+     *      project, they default to the right XML editor.
+     * <li> Discovering deleted files, and closing the corresponding editors if necessary.
+     *      This is only done for XML files, since other editors such as Java editors handles
+     *      it on their own.
+     * <ul>
      *
      * This is called by the {@link AdtPlugin} during initialization.
      *
      * @param monitor The main Resource Monitor object.
      */
-    public void setupDefaultEditor(GlobalProjectMonitor monitor) {
+    public void setupEditors(GlobalProjectMonitor monitor) {
         monitor.addFileListener(new IFileListener() {
-
-            /* (non-Javadoc)
-             * Sent when a file changed.
-             * @param file The file that changed.
-             * @param markerDeltas The marker deltas for the file.
-             * @param kind The change kind. This is equivalent to
-             * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
-             *
-             * @see IFileListener#fileChanged
-             */
             @Override
             public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
                     int kind, @Nullable String extension, int flags) {
-                if (flags == IResourceDelta.MARKERS) {
-                    // ONLY the markers changed: not relevant to this listener
+                if (flags == IResourceDelta.MARKERS || !AdtConstants.EXT_XML.equals(extension)) {
+                    // ONLY the markers changed, or not XML file: not relevant to this listener
                     return;
                 }
 
-                if (AdtConstants.EXT_XML.equals(extension)) {
-                    // The resources files must have a file path similar to
-                    //    project/res/.../*.xml
-                    // There is no support for sub folders, so the segment count must be 4
-                    if (DEBUG_XML_FILE_INIT) {
-                        AdtPlugin.log(IStatus.INFO, "fileChanged %1$s",
-                            file.getFullPath().toOSString());
-                    }
+                if (kind == IResourceDelta.REMOVED) {
+                    AdtUtils.closeEditors(file, false /*save*/);
+                    return;
+                }
 
-                    if (file.getFullPath().segmentCount() == 4) {
-                        // check if we are inside the res folder.
-                        String segment = file.getFullPath().segment(1);
-                        if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
-                            // we are inside a res/ folder, get the ResourceFolderType of the
-                            // parent folder.
-                            String[] folderSegments = file.getParent().getName().split(
-                                    AndroidConstants.RES_QUALIFIER_SEP);
+                // The resources files must have a file path similar to
+                //    project/res/.../*.xml
+                // There is no support for sub folders, so the segment count must be 4
+                if (file.getFullPath().segmentCount() == 4) {
+                    // check if we are inside the res folder.
+                    String segment = file.getFullPath().segment(1);
+                    if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
+                        // we are inside a res/ folder, get the ResourceFolderType of the
+                        // parent folder.
+                        String[] folderSegments = file.getParent().getName().split(
+                                AndroidConstants.RES_QUALIFIER_SEP);
 
-                            // get the enum for the resource type.
-                            ResourceFolderType type = ResourceFolderType.getTypeByName(
-                                    folderSegments[0]);
+                        // get the enum for the resource type.
+                        ResourceFolderType type = ResourceFolderType.getTypeByName(
+                                folderSegments[0]);
 
-                            if (type != null) {
-                                if (kind == IResourceDelta.ADDED) {
-                                    resourceXmlAdded(file, type);
-                                } else if (kind == IResourceDelta.CHANGED) {
-                                    resourceXmlChanged(file, type);
-                                }
-                            } else {
-                                if (DEBUG_XML_FILE_INIT) {
-                                    AdtPlugin.log(IStatus.INFO, "  The resource folder was null");
-                                }
-
-                                // if the res folder is null, this means the name is invalid,
-                                // in this case we remove whatever android editors that was set
-                                // as the default editor.
-                                IEditorDescriptor desc = IDE.getDefaultEditor(file);
-                                String editorId = desc.getId();
-                                if (DEBUG_XML_FILE_INIT) {
-                                    AdtPlugin.log(IStatus.INFO, "Old editor id=%1$s", editorId);
-                                }
-                                if (editorId.startsWith(AdtConstants.EDITORS_NAMESPACE)) {
-                                    // reset the default editor.
-                                    IDE.setDefaultEditor(file, null);
-                                    if (DEBUG_XML_FILE_INIT) {
-                                        AdtPlugin.log(IStatus.INFO, "  Resetting editor id to default");
-                                    }
-                                }
+                        if (type != null) {
+                            if (kind == IResourceDelta.ADDED) {
+                                // A new file {@code /res/type-config/some.xml} was added.
+                                // All the /res XML files are handled by the same common editor now.
+                                IDE.setDefaultEditor(file, CommonXmlEditor.ID);
                             }
                         } else {
-                            if (DEBUG_XML_FILE_INIT) {
-                                AdtPlugin.log(IStatus.INFO, "    Not in resources/, ignoring");
+                            // if the res folder is null, this means the name is invalid,
+                            // in this case we remove whatever android editors that was set
+                            // as the default editor.
+                            IEditorDescriptor desc = IDE.getDefaultEditor(file);
+                            String editorId = desc.getId();
+                            if (editorId.startsWith(AdtConstants.EDITORS_NAMESPACE)) {
+                                // reset the default editor.
+                                IDE.setDefaultEditor(file, null);
                             }
                         }
                     }
                 }
             }
+        }, IResourceDelta.ADDED | IResourceDelta.REMOVED);
 
-            /**
-             * A new file {@code /res/type-config/some.xml} was added.
-             *
-             * @param file The file added to the workspace. Guaranteed to be a *.xml file.
-             * @param type The resource type.
-             */
-            private void resourceXmlAdded(IFile file, ResourceFolderType type) {
-                if (DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.INFO, "resourceAdded %1$s - type=%1$s",
-                        file.getFullPath().toOSString(), type);
-                }
-                // All the /res XML files are handled by the same common editor now.
-                IDE.setDefaultEditor(file, CommonXmlEditor.ID);
+        monitor.addProjectListener(new IProjectListener() {
+            @Override
+            public void projectClosed(IProject project) {
+                // Close any editors referencing this project
+                AdtUtils.closeEditors(project, true /*save*/);
             }
 
-            /**
-             * An existing file {@code /res/type-config/some.xml} was changed.
-             *
-             * @param file The file added to the workspace. Guaranteed to be a *.xml file.
-             * @param type The resource type.
-             */
-            private void resourceXmlChanged(IFile file, ResourceFolderType type) {
-                // Nothing to do here anymore.
-                // This used to be useful to detect that a /res/xml/something.xml
-                // changed from an empty XML to one with a root now that OtherXmlEditor
-                // could handle. Since OtherXmlEditor is now a default, it will always
-                // handle such files and we don't need this anymore.
-
-                //if (DEBUG_XML_FILE_INIT) {
-                //    AdtPlugin.log(IStatus.INFO, "resourceChanged %1$s - type=%1$s",
-                //        file.getFullPath().toOSString(), type);
-                //}
+            @Override
+            public void projectDeleted(IProject project) {
+                // Close any editors referencing this project
+                AdtUtils.closeEditors(project, false /*save*/);
             }
 
-        }, IResourceDelta.ADDED | IResourceDelta.CHANGED);
+            @Override
+            public void projectOpenedWithWorkspace(IProject project) {
+            }
+
+            @Override
+            public void allProjectsOpenedWithWorkspace() {
+            }
+
+            @Override
+            public void projectOpened(IProject project) {
+            }
+
+            @Override
+            public void projectRenamed(IProject project, IPath from) {
+            }
+        });
     }
 
     /**

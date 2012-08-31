@@ -16,9 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.binaryxml;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
-
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.content.IContentDescriber;
 import org.eclipse.core.runtime.content.IContentDescription;
@@ -63,17 +60,9 @@ public class BinaryXMLDescriber implements IContentDescriber {
             short type = buf.getShort();
             short headerSize = buf.getShort();
             int size = buf.getInt(); // chunk size
-            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(IStatus.ERROR, "BinaryXML: type 0x%04x, headerSize 0x%04x, size 0x%08x", type, headerSize, size);
-            }
             if (type == RES_XML_TYPE && headerSize == RES_XML_HEADER_SIZE) {
                 status = VALID;
             }
-        }
-        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-            AdtPlugin.log(IStatus.ERROR, "BinaryXML status: %d (%s)",
-                    status,
-                    status == VALID ? "VALID" : "INVALID");
         }
         return status;
     }
