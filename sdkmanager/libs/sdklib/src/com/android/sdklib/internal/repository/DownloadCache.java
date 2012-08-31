@@ -283,6 +283,8 @@ public class DownloadCache {
      * For details on realm authentication and user/password handling,
      * check the underlying {@link UrlOpener#openUrl(String, boolean, ITaskMonitor, Header[])}
      * documentation.
+     * <p/>
+     * The resulting input stream may not support mark/reset.
      *
      * @param urlString the URL string to be opened.
      * @param headers An optional set of headers to pass when requesting the resource. Can be null.
@@ -312,6 +314,49 @@ public class DownloadCache {
                 false /*needsMarkResetSupport*/,
                 monitor,
                 headers);
+    }
+
+    /**
+     * This is a simplified convenience method that calls
+     * {@link #openDirectUrl(String, Header[], ITaskMonitor)}
+     * without passing any specific HTTP headers  and returns the resulting input stream
+     * and the HTTP status code.
+     * See the original method's description for details on its behavior.
+     * <p/>
+     * {@link #openDirectUrl(String, Header[], ITaskMonitor)} can accept customized
+     * HTTP headers to send with the requests and also returns the full HTTP
+     * response -- status line with code and protocol and all headers.
+     * <p/>
+     * The resulting input stream may not support mark/reset.
+     *
+     * @param urlString the URL string to be opened.
+     * @param monitor {@link ITaskMonitor} which is related to this URL
+     *                 fetching.
+     * @return Returns a pair with a {@link InputStream} and an HTTP status code.
+     *              The pair is never null.
+     *              The input stream can be null in case of error, although in general the
+     *              method will probably throw an exception instead.
+     *              The caller should look at the response code's status and only accept the
+     *              input stream if it's the desired code (e.g. 200 or 206).
+     * @throws IOException Exception thrown when there are problems retrieving
+     *                 the URL or its content.
+     * @throws CanceledByUserException Exception thrown if the user cancels the
+     *              authentication dialog.
+     * @see #openDirectUrl(String, Header[], ITaskMonitor)
+     */
+    public Pair<InputStream, Integer> openDirectUrl(
+            @NonNull  String urlString,
+            @NonNull  ITaskMonitor monitor)
+                throws IOException, CanceledByUserException {
+        if (DEBUG) {
+            System.out.println(String.format("%s : Direct download", urlString)); //$NON-NLS-1$
+        }
+        Pair<InputStream, HttpResponse> result = UrlOpener.openUrl(
+                urlString,
+                false /*needsMarkResetSupport*/,
+                monitor,
+                null /*headers*/);
+        return Pair.of(result.getFirst(), result.getSecond().getStatusLine().getStatusCode());
     }
 
     /**

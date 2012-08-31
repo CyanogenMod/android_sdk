@@ -22,13 +22,25 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.SdkManagerTestCase;
 import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.repository.CanceledByUserException;
+import com.android.sdklib.internal.repository.DownloadCache;
+import com.android.sdklib.internal.repository.DownloadCache.Strategy;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.utils.Pair;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
@@ -286,4 +298,65 @@ public class MainTest extends SdkManagerTestCase {
             }
         }
     }
+
+    public void testLocalFileDownload() throws IOException, CanceledByUserException {
+        Main main = new Main();
+        main.setLogger(getLog());
+        SdkManager sdkman = getSdkManager();
+        main.setSdkManager(sdkman);
+        getLog().clear();
+
+        IAndroidTarget target = sdkman.getTargets()[0];
+        File sourceProps = new File(target.getLocation(), SdkConstants.FN_SOURCE_PROP);
+        assertTrue(sourceProps.isFile());
+
+        String urlStr = getFileUrl(sourceProps);
+        assertTrue(urlStr.startsWith("file:///"));
+
+        DownloadCache cache = new DownloadCache(Strategy.DIRECT);
+        NullTaskMonitor monitor = new NullTaskMonitor(getLog());
+        Pair<InputStream, Integer> result = cache.openDirectUrl(urlStr, monitor);
+        assertNotNull(result);
+        assertEquals(200, result.getSecond().intValue());
+
+        int len = (int) sourceProps.length();
+        byte[] buf = new byte[len];
+        FileInputStream is = new FileInputStream(sourceProps);
+        is.read(buf);
+        is.close();
+        String expected = new String(buf, "UTF-8");
+
+        buf = new byte[len];
+        result.getFirst().read(buf);
+        result.getFirst().close();
+        String actual = new String(buf, "UTF-8");
+        assertEquals(expected, actual);
+    }
+
+    private String getFileUrl(File file) throws IOException {
+        // Note: to create a file:// URL, one would typically use something like
+        // f.toURI().toURL().toString(). However this generates a broken path on
+        // Windows, namely "C:\\foo" is converted to "file:/C:/foo" instead of
+        // "file:///C:/foo" (i.e. there should be 3 / after "file:"). So we'll
+        // do the correct thing manually.
+
+        String path = file.getCanonicalPath();
+        if (File.separatorChar != '/') {
+            path = path.replace(File.separatorChar, '/');
+        }
+        // A file:// should start with 3 // (2 for file:// and 1 to make it an absolute
+        // path. On Windows that should look like file:///C:/. Linux/Mac will already
+        // have that leading / in their path so we need to compensate for windows.
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+
+        // For some reason the URL class doesn't add the mandatory "//" after
+        // the "file:" protocol name, so it has to be hacked into the path.
+        URL url = new URL("file", null, "//" + path);  //$NON-NLS-1$ //$NON-NLS-2$
+        String result = url.toString();
+        return result;
+
+    }
+
 }
