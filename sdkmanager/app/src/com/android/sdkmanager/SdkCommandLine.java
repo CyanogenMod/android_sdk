@@ -56,7 +56,6 @@ class SdkCommandLine extends CommandLineParser {
     public static final String OBJECT_TEST_PROJECT   = "test-project";              //$NON-NLS-1$
     public static final String OBJECT_LIB_PROJECT    = "lib-project";               //$NON-NLS-1$
     public static final String OBJECT_ADB            = "adb";                       //$NON-NLS-1$
-    public static final String OBJECT_IDENTITY       = "identity";                  //$NON-NLS-1$
 
     public static final String ARG_ALIAS        = "alias";                          //$NON-NLS-1$
     public static final String ARG_ACTIVITY     = "activity";                       //$NON-NLS-1$
@@ -156,9 +155,6 @@ class SdkCommandLine extends CommandLineParser {
 
             { VERB_UPDATE, OBJECT_SDK,
                 "Updates the SDK by suggesting new platforms to install if available." },
-
-            { VERB_CREATE, OBJECT_IDENTITY,
-                "Creates an identity file." },
     };
 
     public SdkCommandLine(ILogger logger) {
@@ -419,23 +415,6 @@ class SdkCommandLine extends CommandLineParser {
                 VERB_UPDATE, OBJECT_LIB_PROJECT, "t", KEY_TARGET_ID,                //$NON-NLS-1$
                 "Target ID to set for the project.", null);
 
-        // --- create identity file ---
-
-        define(Mode.STRING, true,
-                VERB_CREATE, OBJECT_IDENTITY, "a", KEY_ACCOUNT,                      //$NON-NLS-1$
-                "The publisher account.", null);
-        define(Mode.STRING, true,
-                VERB_CREATE, OBJECT_IDENTITY, "s", KEY_KEYSTORE,                     //$NON-NLS-1$
-                "The keystore path.", null);
-        define(Mode.STRING, true,
-                VERB_CREATE, OBJECT_IDENTITY, "k", KEY_ALIAS,                        //$NON-NLS-1$
-                "The key alias.", null);
-        define(Mode.STRING, false,
-                VERB_CREATE, OBJECT_IDENTITY, "p", KEY_STOREPASS,                    //$NON-NLS-1$
-                "The keystore password. Default is to prompt.", null);
-        define(Mode.STRING, false,
-                VERB_CREATE, OBJECT_IDENTITY, "w", KEY_KEYPASS,                      //$NON-NLS-1$
-                "The alias password. Default is to prompt.", null);
     }
 
     @Override

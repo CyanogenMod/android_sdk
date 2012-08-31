@@ -24,17 +24,16 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
-import com.android.sdklib.internal.build.MakeIdentity;
 import com.android.sdklib.internal.project.ProjectCreator;
-import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.DownloadCache.Strategy;
@@ -45,8 +44,8 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
-import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -275,9 +274,6 @@ public class Main {
 
             } else if (SdkCommandLine.OBJECT_LIB_PROJECT.equals(directObject)) {
                 createProject(true /*library*/);
-
-            } else if (SdkCommandLine.OBJECT_IDENTITY.equals(directObject)) {
-                createIdentity();
 
             }
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb)) {
@@ -1306,50 +1302,6 @@ public class Main {
         }
     }
 
-
-    private void createIdentity() {
-        try {
-            String account = (String) mSdkCommandLine.getValue(
-                    SdkCommandLine.VERB_CREATE,
-                    SdkCommandLine.OBJECT_IDENTITY,
-                    SdkCommandLine.KEY_ACCOUNT);
-
-            String keystorePath = (String) mSdkCommandLine.getValue(
-                    SdkCommandLine.VERB_CREATE,
-                    SdkCommandLine.OBJECT_IDENTITY,
-                    SdkCommandLine.KEY_KEYSTORE);
-
-            String aliasName = (String) mSdkCommandLine.getValue(
-                    SdkCommandLine.VERB_CREATE,
-                    SdkCommandLine.OBJECT_IDENTITY,
-                    SdkCommandLine.KEY_ALIAS);
-
-            String keystorePass = (String) mSdkCommandLine.getValue(
-                    SdkCommandLine.VERB_CREATE,
-                    SdkCommandLine.OBJECT_IDENTITY,
-                    SdkCommandLine.KEY_STOREPASS);
-
-            if (keystorePass == null) {
-                keystorePass = promptPassword("Keystore Password:  ").trim();
-            }
-
-            String aliasPass = (String) mSdkCommandLine.getValue(
-                    SdkCommandLine.VERB_CREATE,
-                    SdkCommandLine.OBJECT_IDENTITY,
-                    SdkCommandLine.KEY_KEYPASS);
-
-            if (aliasPass == null) {
-                aliasPass = promptPassword("Alias Password:  ").trim();
-            }
-
-            MakeIdentity mi = new MakeIdentity(account, keystorePath, keystorePass,
-                    aliasName, aliasPass);
-
-            mi.make(System.out, mSdkLog);
-        } catch (Exception e) {
-            errorAndExit("Unexpected error: %s", e.getMessage());
-        }
-    }
 
 
     /**
