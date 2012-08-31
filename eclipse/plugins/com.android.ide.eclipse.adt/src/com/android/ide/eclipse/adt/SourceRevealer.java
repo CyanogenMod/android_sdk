@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt;
 
+import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
+
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.ddms.ISourceRevealer;
@@ -27,7 +29,11 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -35,6 +41,7 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -115,6 +122,41 @@ public class SourceRevealer implements ISourceRevealer {
                 if (filteredMatches.size() == 1) {
                     return revealLineMatch(filteredMatches, fileName, lineNumber, perspective);
                 }
+            } else if (fileName != null && lineNumber > 0) {
+                // Couldn't find file match, but we have a filename and line number: attempt
+                // to use this to pinpoint the location within the method
+                IMethod method = (IMethod) methodMatches.get(0).getElement();
+                IJavaElement element = method;
+                while (element != null) {
+                    if (element instanceof ICompilationUnit) {
+                        ICompilationUnit unit = ((ICompilationUnit) element).getPrimary();
+                        IResource resource = unit.getResource();
+                        if (resource instanceof IFile) {
+                            IFile file = (IFile) resource;
+
+                            try {
+                                // See if the line number looks like it's inside the given method
+                                ISourceRange sourceRange = method.getSourceRange();
+                                IRegion region = AdtUtils.getRegionOfLine(file, lineNumber - 1);
+                                if (region != null
+                                        && region.getOffset() >= sourceRange.getOffset()
+                                        && region.getOffset() < sourceRange.getOffset()
+                                            + sourceRange.getLength()) {
+                                    // Yes: use the line number instead
+                                    if (perspective != null) {
+                                        SourceRevealer.switchToPerspective(perspective);
+                                    }
+                                    return displayFile(file, lineNumber);
+                                }
+
+                            } catch (JavaModelException e) {
+                                AdtPlugin.log(e, null);
+                            }
+                        }
+                    }
+                    element = element.getParent();
+                }
+
             }
 
             return displayMethod((IMethod) methodMatches.get(0).getElement(), perspective);
@@ -302,6 +344,11 @@ public class SourceRevealer implements ISourceRevealer {
     }
 
     private List<SearchMatch> searchForMethod(String fqmn) {
+        if (fqmn.endsWith(CONSTRUCTOR_NAME)) {
+            fqmn = fqmn.substring(0, fqmn.length() - CONSTRUCTOR_NAME.length() - 1); // -1: dot
+            return searchForPattern(fqmn, IJavaSearchConstants.CONSTRUCTOR,
+                    MATCH_IS_METHOD_PREDICATE);
+        }
         return searchForPattern(fqmn, IJavaSearchConstants.METHOD, MATCH_IS_METHOD_PREDICATE);
     }
 

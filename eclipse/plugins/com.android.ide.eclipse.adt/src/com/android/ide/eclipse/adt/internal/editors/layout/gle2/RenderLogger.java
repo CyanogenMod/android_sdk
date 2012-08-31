@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.eclipse.adt.AdtPlugin;
 
@@ -30,7 +32,7 @@ import java.util.Set;
  * A {@link LayoutLog} which records the problems it encounters and offers them as a
  * single summary at the end
  */
-class RenderLogger extends LayoutLog {
+public class RenderLogger extends LayoutLog {
     static final String TAG_MISSING_DIMENSION = "missing.dimension";     //$NON-NLS-1$
 
     private final String mName;
@@ -39,6 +41,7 @@ class RenderLogger extends LayoutLog {
     private List<String> mErrors;
     private boolean mHaveExceptions;
     private List<String> mTags;
+    private List<Throwable> mTraces;
     private static Set<String> sIgnoredFidelityWarnings;
 
     /** Construct a logger for the given named layout */
@@ -57,12 +60,23 @@ class RenderLogger extends LayoutLog {
     }
 
     /**
+     * Returns a list of traces encountered during rendering, or null if none
+     *
+     * @return a list of traces encountered during rendering, or null if none
+     */
+    @Nullable
+    public List<Throwable> getFirstTrace() {
+        return mTraces;
+    }
+
+    /**
      * Returns a (possibly multi-line) description of all the problems
      *
      * @param includeFidelityWarnings if true, include fidelity warnings in the problem
      *            summary
      * @return a string describing the rendering problems
      */
+    @NonNull
     public String getProblems(boolean includeFidelityWarnings) {
         StringBuilder sb = new StringBuilder();
 
@@ -98,6 +112,7 @@ class RenderLogger extends LayoutLog {
      *
      * @return the fidelity warnings
      */
+    @Nullable
     public List<String> getFidelityWarnings() {
         return mFidelityWarnings;
     }
@@ -135,10 +150,27 @@ class RenderLogger extends LayoutLog {
                 return;
             }
 
+            if (description.equals(throwable.getLocalizedMessage()) ||
+                    description.equals(throwable.getMessage())) {
+                description = "Exception raised during rendering: " + description;
+            }
+            recordThrowable(throwable);
             mHaveExceptions = true;
         }
 
         addError(tag, description);
+    }
+
+    /**
+     * Record that the given exception was encountered during rendering
+     *
+     * @param throwable the exception that was raised
+     */
+    public void recordThrowable(@NonNull Throwable throwable) {
+        if (mTraces == null) {
+            mTraces = new ArrayList<Throwable>();
+        }
+        mTraces.add(throwable);
     }
 
     @Override
@@ -188,15 +220,13 @@ class RenderLogger extends LayoutLog {
         sIgnoredFidelityWarnings.add(message);
     }
 
-    private String describe(String message) {
-        StringBuilder sb = new StringBuilder();
-        if (message != null) {
-            if (sb.length() > 0) {
-                sb.append(": ");
-            }
-            sb.append(message);
+    @NonNull
+    private String describe(@Nullable String message) {
+        if (message == null) {
+            return "";
+        } else {
+            return message;
         }
-        return sb.toString();
     }
 
     private void addWarning(String tag, String description) {
