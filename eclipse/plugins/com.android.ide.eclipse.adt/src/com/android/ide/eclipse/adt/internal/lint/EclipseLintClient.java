@@ -227,6 +227,10 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         IStructuredModel model = null;
         try {
             IModelManager modelManager = StructuredModelManager.getModelManager();
+            if (modelManager == null) {
+                // This can happen if incremental lint is running right as Eclipse is shutting down
+                return null;
+            }
             model = modelManager.getModelForRead(file);
             if (model instanceof IDOMModel) {
                 context.setProperty(MODEL_PROPERTY, model);

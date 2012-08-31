@@ -35,9 +35,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -52,7 +49,6 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -105,7 +101,7 @@ import java.util.Collections;
  * source editor. This can be a no-op if desired.
  */
 @SuppressWarnings("restriction") // Uses XML model, which has no non-restricted replacement yet
-public abstract class AndroidXmlEditor extends FormEditor implements IResourceChangeListener {
+public abstract class AndroidXmlEditor extends FormEditor {
 
     /** Icon used for the XML source page. */
     public static final String ICON_XML_PAGE = "editor_page_source"; //$NON-NLS-1$
@@ -171,7 +167,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     public AndroidXmlEditor() {
         super();
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
     }
 
     @Override
@@ -528,36 +523,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     /**
-     * Notifies this listener that some resource changes
-     * are happening, or have already happened.
-     *
-     * Closes all project files on project close.
-     * @see IResourceChangeListener
-     */
-    @Override
-    public void resourceChanged(final IResourceChangeEvent event) {
-        if (event.getType() == IResourceChangeEvent.PRE_CLOSE) {
-            IFile file = getInputFile();
-            if (file != null && file.getProject().equals(event.getResource())) {
-                final IEditorInput input = getEditorInput();
-                Display.getDefault().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        // FIXME understand why this code is accessing the current window's pages,
-                        // if that's *this* instance, we have a local pages member from the super
-                        // class we can use directly. If this is justified, please explain.
-                        IWorkbenchPage[] windowPages = getSite().getWorkbenchWindow().getPages();
-                        for (int i = 0; i < windowPages.length; i++) {
-                            IEditorPart editorPart = windowPages[i].findEditor(input);
-                            windowPages[i].closeEditor(editorPart, true);
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    /**
      * Returns the {@link IFile} matching the editor's input or null.
      */
     @Nullable
@@ -587,7 +552,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 xml_model.releaseFromRead();
             }
         }
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
 
         if (mTargetListener != null) {
             AdtPlugin.getDefault().removeTargetListener(mTargetListener);
@@ -804,53 +768,12 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     private void createTextEditor() {
         try {
-            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(
-                        IStatus.ERROR,
-                        "%s.createTextEditor: input=%s %s",
-                        this.getClass(),
-                        getEditorInput() == null ? "null" : getEditorInput().getClass(),
-                        getEditorInput() == null ? "null" : getEditorInput().toString()
-                        );
-
-                org.eclipse.core.runtime.IAdaptable adaptable= getEditorInput();
-                IFile file1 = (IFile)adaptable.getAdapter(IFile.class);
-                org.eclipse.core.runtime.IPath location= file1.getFullPath();
-                org.eclipse.core.resources.IWorkspaceRoot workspaceRoot= ResourcesPlugin.getWorkspace().getRoot();
-                IFile file2 = workspaceRoot.getFile(location);
-
-                try {
-                    org.eclipse.core.runtime.content.IContentDescription desc = file2.getContentDescription();
-                    org.eclipse.core.runtime.content.IContentType type = desc.getContentType();
-
-                    AdtPlugin.log(IStatus.ERROR,
-                            "file %s description %s %s; contentType %s %s",
-                            file2,
-                            desc == null ? "null" : desc.getClass(),
-                            desc == null ? "null" : desc.toString(),
-                            type == null ? "null" : type.getClass(),
-                            type == null ? "null" : type.toString());
-
-                } catch (CoreException e) {
-                    e.printStackTrace();
-                }
-            }
-
             mTextEditor = new StructuredTextEditor();
             int index = addPage(mTextEditor, getEditorInput());
             mTextPageIndex = index;
             setPageText(index, mTextEditor.getTitle());
             setPageImage(index,
                     IconFactory.getInstance().getIcon(ICON_XML_PAGE));
-
-            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(IStatus.ERROR, "Found document class: %1$s, file=%2$s",
-                        mTextEditor.getTextViewer().getDocument() != null ?
-                                mTextEditor.getTextViewer().getDocument().getClass() :
-                                "null",
-                                getEditorInput()
-                        );
-            }
 
             if (!(mTextEditor.getTextViewer().getDocument() instanceof IStructuredDocument)) {
                 Status status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,

@@ -59,12 +59,14 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
@@ -1174,6 +1176,126 @@ public class AdtUtils {
             return files;
         } else {
             return new File[0];
+        }
+    }
+
+    /**
+     * Closes all open editors that are showing a file for the given project. This method
+     * should be called when a project is closed or deleted.
+     * <p>
+     * This method can be called from any thread, but if it is not called on the GUI thread
+     * the editor will be closed asynchronously.
+     *
+     * @param project the project to close all editors for
+     * @param save whether unsaved editors should be saved first
+     */
+    public static void closeEditors(@NonNull final IProject project, final boolean save) {
+        final Display display = AdtPlugin.getDisplay();
+        if (display == null || display.isDisposed()) {
+            return;
+        }
+        if (display.getThread() != Thread.currentThread()) {
+            display.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    closeEditors(project, save);
+                }
+            });
+            return;
+        }
+
+        // Close editors for removed files
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                List<IEditorReference> matching = null;
+                for (IEditorReference ref : page.getEditorReferences()) {
+                    boolean close = false;
+                    try {
+                        IEditorInput input = ref.getEditorInput();
+                        if (input instanceof IFileEditorInput) {
+                            IFileEditorInput fileInput = (IFileEditorInput) input;
+                            if (project.equals(fileInput.getFile().getProject())) {
+                                close = true;
+                            }
+                        }
+                    } catch (PartInitException ex) {
+                        close = true;
+                    }
+                    if (close) {
+                        if (matching == null) {
+                            matching = new ArrayList<IEditorReference>(2);
+                        }
+                        matching.add(ref);
+                    }
+                }
+                if (matching != null) {
+                    IEditorReference[] refs = new IEditorReference[matching.size()];
+                    page.closeEditors(matching.toArray(refs), save);
+                }
+            }
+        }
+    }
+
+    /**
+     * Closes all open editors for the given file. Note that a file can be open in
+     * more than one editor, for example by using Open With on the file to choose different
+     * editors.
+     * <p>
+     * This method can be called from any thread, but if it is not called on the GUI thread
+     * the editor will be closed asynchronously.
+     *
+     * @param file the file whose editors should be closed.
+     * @param save whether unsaved editors should be saved first
+     */
+    public static void closeEditors(@NonNull final IFile file, final boolean save) {
+        final Display display = AdtPlugin.getDisplay();
+        if (display == null || display.isDisposed()) {
+            return;
+        }
+        if (display.getThread() != Thread.currentThread()) {
+            display.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    closeEditors(file, save);
+                }
+            });
+            return;
+        }
+
+        // Close editors for removed files
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        for (IWorkbenchWindow window : workbench.getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                List<IEditorReference> matching = null;
+                for (IEditorReference ref : page.getEditorReferences()) {
+                    boolean close = false;
+                    try {
+                        IEditorInput input = ref.getEditorInput();
+                        if (input instanceof IFileEditorInput) {
+                            IFileEditorInput fileInput = (IFileEditorInput) input;
+                            if (file.equals(fileInput.getFile())) {
+                                close = true;
+                            }
+                        }
+                    } catch (PartInitException ex) {
+                        close = true;
+                    }
+                    if (close) {
+                        // Found
+                        if (matching == null) {
+                            matching = new ArrayList<IEditorReference>(2);
+                        }
+                        matching.add(ref);
+                        // We don't break here in case the file is
+                        // opened multiple times with different editors.
+                    }
+                }
+                if (matching != null) {
+                    IEditorReference[] refs = new IEditorReference[matching.size()];
+                    page.closeEditors(matching.toArray(refs), save);
+                }
+            }
         }
     }
 }
