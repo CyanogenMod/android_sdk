@@ -84,21 +84,21 @@ class XmlUtils {
                 @Override
                 public void warning(SAXParseException e) {
                     log.error(Severity.WARNING,
-                            new FileAndLine(xmlFile.getName(), 0),
+                            new FileAndLine(xmlFile.getAbsolutePath(), 0),
                             "Warning when parsing: %1$s",
                             e.toString());
                 }
                 @Override
                 public void fatalError(SAXParseException e) {
                     log.error(Severity.ERROR,
-                            new FileAndLine(xmlFile.getName(), 0),
+                            new FileAndLine(xmlFile.getAbsolutePath(), 0),
                             "Fatal error when parsing: %1$s",
                             xmlFile.getName(), e.toString());
                 }
                 @Override
                 public void error(SAXParseException e) {
                     log.error(Severity.ERROR,
-                            new FileAndLine(xmlFile.getName(), 0),
+                            new FileAndLine(xmlFile.getAbsolutePath(), 0),
                             "Error when parsing: %1$s",
                             e.toString());
                 }
@@ -112,12 +112,12 @@ class XmlUtils {
 
         } catch (FileNotFoundException e) {
             log.error(Severity.ERROR,
-                    new FileAndLine(xmlFile.getName(), 0),
+                    new FileAndLine(xmlFile.getAbsolutePath(), 0),
                     "XML file not found");
 
         } catch (Exception e) {
             log.error(Severity.ERROR,
-                    new FileAndLine(xmlFile.getName(), 0),
+                    new FileAndLine(xmlFile.getAbsolutePath(), 0),
                     "Failed to parse XML file: %1$s",
                     e.toString());
         }
