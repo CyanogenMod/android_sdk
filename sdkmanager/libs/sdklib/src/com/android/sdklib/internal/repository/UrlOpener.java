@@ -175,6 +175,7 @@ class UrlOpener {
             @Nullable Header[] headers)
         throws IOException, CanceledByUserException {
 
+        Exception fallbackOnJavaUrlConnect = null;
         Pair<InputStream, HttpResponse> result = null;
 
         try {
@@ -186,6 +187,11 @@ class UrlOpener {
             // it could use a better message.
             throw new IOException("Unknown Host " + e.getMessage(), e);
 
+        } catch (ClientProtocolException e) {
+            // We get this when HttpClient fails to accept the current protocol,
+            // e.g. when processing file:// URLs.
+            fallbackOnJavaUrlConnect = e;
+
         } catch (IOException e) {
             throw e;
 
@@ -194,19 +200,24 @@ class UrlOpener {
             throw e;
 
         } catch (Exception e) {
-            // If the protocol is not supported by HttpClient (e.g. file:///),
-            // revert to the standard java.net.Url.open.
             if (DEBUG) {
                 System.out.printf("[HttpClient Error] %s : %s\n", url, e.toString());
             }
 
+            fallbackOnJavaUrlConnect = e;
+        }
+
+        if (fallbackOnJavaUrlConnect != null) {
+            // If the protocol is not supported by HttpClient (e.g. file:///),
+            // revert to the standard java.net.Url.open.
+
             try {
                 result = openWithUrl(url, headers);
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Exception e2) {
-                if (DEBUG && !e.equals(e2)) {
-                    System.out.printf("[Url Error] %s : %s\n", url, e2.toString());
+            } catch (IOException e) {
+                throw e;
+            } catch (Exception e) {
+                if (DEBUG && !fallbackOnJavaUrlConnect.equals(e)) {
+                    System.out.printf("[Url Error] %s : %s\n", url, e.toString());
                 }
             }
         }
