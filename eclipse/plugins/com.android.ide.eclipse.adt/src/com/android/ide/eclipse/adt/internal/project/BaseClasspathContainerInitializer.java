@@ -67,7 +67,10 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
                                     fmessage, IMarker.SEVERITY_ERROR,
                                     IMarker.PRIORITY_HIGH);
                         } catch (CoreException e2) {
-                            return e2.getStatus();
+                            AdtPlugin.log(e2, null);
+                            // Don't return e2.getStatus(); the job control will then produce
+                            // a popup with this error, which isn't very interesting for the
+                            // user.
                         }
 
                         return Status.OK_STATUS;
@@ -97,7 +100,7 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
                                         IResource.DEPTH_INFINITE);
                             }
                         } catch (CoreException e2) {
-                            return e2.getStatus();
+                            AdtPlugin.log(e2, null);
                         }
 
                         return Status.OK_STATUS;
