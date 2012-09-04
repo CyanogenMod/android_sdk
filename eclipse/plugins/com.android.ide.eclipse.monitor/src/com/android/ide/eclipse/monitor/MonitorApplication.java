@@ -20,7 +20,7 @@ import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
 import com.android.prefs.AndroidLocation;
 import com.android.sdklib.SdkManager;
 import com.android.sdkstats.SdkStatsService;
-import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
+import com.android.sdkuilib.internal.repository.ui.AdtUpdateDialog;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 

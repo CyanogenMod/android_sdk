@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
 
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.ui.PackagesPage;
 
 
-class PkgCategorySource extends PkgCategory {
+public class PkgCategorySource extends PkgCategory {
 
     /**
      * A special {@link SdkSource} object that represents the locally installed

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
+
 
 import java.util.ArrayList;
 import java.util.List;
 
-abstract class PkgCategory {
+public abstract class PkgCategory {
     private final Object mKey;
     private final Object mIconRef;
     private final List<PkgItem> mItems = new ArrayList<PkgItem>();

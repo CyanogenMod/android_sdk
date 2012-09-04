@@ -17,7 +17,7 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
-import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.ui.SdkUpdaterWindowImpl2;
 import com.android.utils.ILogger;
 
 import org.eclipse.swt.widgets.Shell;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
 
 import com.android.SdkConstants;
 import com.android.sdklib.internal.repository.packages.BrokenPackage;
@@ -33,6 +33,9 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdkuilib.internal.repository.ISettingsPage;
 import com.android.sdkuilib.internal.repository.MockUpdaterData;
+import com.android.sdkuilib.internal.repository.core.PackagesDiffLogic;
+import com.android.sdkuilib.internal.repository.core.PkgCategory;
+import com.android.sdkuilib.internal.repository.core.PkgItem;
 
 import java.util.Properties;
 

@@ -29,7 +29,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.io.FileOp;
-import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
+import com.android.sdkuilib.internal.repository.ui.AdtUpdateDialog;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 

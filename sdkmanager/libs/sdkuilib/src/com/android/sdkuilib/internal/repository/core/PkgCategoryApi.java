@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
 
 import com.android.sdklib.AndroidVersion;
 
 
-class PkgCategoryApi extends PkgCategory {
+public class PkgCategoryApi extends PkgCategory {
 
     /** Platform name, in the form "Android 1.2". Can be null if we don't have the name. */
     private String mPlatformName;

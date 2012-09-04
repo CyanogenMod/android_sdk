@@ -20,7 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.sdkstats.DdmsPreferenceStore;
-import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
+import com.android.sdkuilib.internal.repository.ui.AdtUpdateDialog;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.resource.ImageDescriptor;

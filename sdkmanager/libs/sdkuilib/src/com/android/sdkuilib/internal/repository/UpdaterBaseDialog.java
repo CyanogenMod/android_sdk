@@ -18,7 +18,7 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.SdkConstants;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.ui.SdkUpdaterWindowImpl2;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
