@@ -470,7 +470,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             if (translatable != null && !Boolean.valueOf(translatable.getValue())) {
                 String l = LintUtils.getLocaleAndRegion(context.file.getParentFile().getName());
                 if (l != null) {
-                    context.report(EXTRA, context.getLocation(translatable),
+                    context.report(EXTRA, translatable, context.getLocation(translatable),
                         "Non-translatable resources should only be defined in the base " +
                         "values/ folder", null);
                 } else {

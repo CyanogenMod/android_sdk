@@ -261,8 +261,8 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                         if (mActivities.contains(name)) {
                             String message = String.format(
                                     "Duplicate registration for activity %1$s", name);
-                            context.report(DUPLICATE_ACTIVITY, context.getLocation(nameNode),
-                                    message, null);
+                            context.report(DUPLICATE_ACTIVITY, element,
+                                    context.getLocation(nameNode), message, null);
                         } else {
                             mActivities.add(name);
                         }

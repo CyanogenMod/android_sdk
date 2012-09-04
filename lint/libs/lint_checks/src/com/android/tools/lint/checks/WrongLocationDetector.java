@@ -61,7 +61,7 @@ public class WrongLocationDetector extends LayoutDetector {
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         Element root = document.getDocumentElement();
         if (root != null && root.getTagName().equals(TAG_RESOURCES)) {
-            context.report(ISSUE, context.getLocation(root),
+            context.report(ISSUE, root, context.getLocation(root),
                     "This file should be placed in a values/ folder, not a layout/ folder", null);
         }
     }
