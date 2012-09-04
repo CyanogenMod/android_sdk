@@ -42,6 +42,7 @@ import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderLogger;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader;
@@ -178,6 +179,11 @@ public final class ProjectCallback extends LegacyCallback {
             AdtPlugin.log(e, "%1$s failed to instantiate.", className); //$NON-NLS-1$
 
             // Add the missing class to the list so that the renderer can print them later.
+            if (mLogger instanceof RenderLogger) {
+                RenderLogger renderLogger = (RenderLogger) mLogger;
+                renderLogger.recordThrowable(e);
+
+            }
             mBrokenClasses.add(className);
         }
 

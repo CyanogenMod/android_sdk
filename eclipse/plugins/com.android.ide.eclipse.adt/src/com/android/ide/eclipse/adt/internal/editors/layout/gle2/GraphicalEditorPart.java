@@ -30,7 +30,6 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.utils.XmlUtils.ANDROID_URI;
-
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
@@ -116,6 +115,7 @@ import org.eclipse.jdt.internal.ui.preferences.BuildPathsPropertyPage;
 import org.eclipse.jdt.ui.actions.OpenNewClassWizardAction;
 import org.eclipse.jdt.ui.wizards.NewClassWizardPage;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -1671,8 +1671,10 @@ public class GraphicalEditorPart extends EditorPart
         if (logger.hasProblems()) {
             displayLoggerProblems(iProject, logger);
             displayFailingClasses(missingClasses, brokenClasses, true);
+            displayUserStackTrace(logger, true);
         } else if (missingClasses.size() > 0 || brokenClasses.size() > 0) {
             displayFailingClasses(missingClasses, brokenClasses, false);
+            displayUserStackTrace(logger, true);
         } else {
             // Nope, no missing or broken classes. Clear success, congrats!
             hideError();
@@ -1899,6 +1901,71 @@ public class GraphicalEditorPart extends EditorPart
         mSashError.setMaximizedControl(mCanvasViewer.getControl());
     }
 
+    /** Display the problem list encountered during a render */
+    private void displayUserStackTrace(RenderLogger logger, boolean append) {
+        List<Throwable> throwables = logger.getFirstTrace();
+        if (throwables == null || throwables.isEmpty()) {
+            return;
+        }
+
+        Throwable throwable = throwables.get(0);
+        StackTraceElement[] frames = throwable.getStackTrace();
+        int end = -1;
+        boolean haveInterestingFrame = false;
+        for (int i = 0; i < frames.length; i++) {
+            StackTraceElement frame = frames[i];
+            if (isInterestingFrame(frame)) {
+                haveInterestingFrame = true;
+            }
+            String className = frame.getClassName();
+            if (className.equals(
+                    "com.android.layoutlib.bridge.impl.RenderSessionImpl")) { //$NON-NLS-1$
+                end = i;
+                break;
+            }
+        }
+
+        if (end == -1 || !haveInterestingFrame) {
+            // Not a recognized stack trace range: just skip it
+            return;
+        }
+
+        if (!append) {
+            mErrorLabel.setText("\n");    //$NON-NLS-1$
+        } else {
+            addText(mErrorLabel, "\n\n"); //$NON-NLS-1$
+        }
+
+        addText(mErrorLabel, throwable.toString() + '\n');
+        for (int i = 0; i < end; i++) {
+            StackTraceElement frame = frames[i];
+            String className = frame.getClassName();
+            String methodName = frame.getMethodName();
+            addText(mErrorLabel, "    at " + className + '.' + methodName + '(');
+            String fileName = frame.getFileName();
+            if (fileName != null && !fileName.isEmpty()) {
+                int lineNumber = frame.getLineNumber();
+                String location = fileName + ':' + lineNumber;
+                if (isInterestingFrame(frame)) {
+                    addActionLink(mErrorLabel, ActionLinkStyleRange.LINK_OPEN_LINE,
+                            location, className, methodName, fileName, lineNumber);
+                } else {
+                    addText(mErrorLabel, location);
+                }
+                addText(mErrorLabel, ")\n"); //$NON-NLS-1$
+            }
+        }
+    }
+
+    private static boolean isInterestingFrame(StackTraceElement frame) {
+        String className = frame.getClassName();
+        return !(className.startsWith("android.")         //$NON-NLS-1$
+                || className.startsWith("com.android.")   //$NON-NLS-1$
+                || className.startsWith("java.")          //$NON-NLS-1$
+                || className.startsWith("javax.")         //$NON-NLS-1$
+                || className.startsWith("sun."));         //$NON-NLS-1$
+    }
+
     /**
      * Switches the sash to display the error label to show a list of
      * missing classes and give options to create them.
@@ -1968,7 +2035,7 @@ public class GraphicalEditorPart extends EditorPart
             addText(mErrorLabel, "See the Error Log (Window > Show View) for more details.\n");
 
             if (haveCustomClass) {
-                addText(mErrorLabel, "Tip: Use View.isInEditMode() in your custom views "
+                addBoldText(mErrorLabel, "Tip: Use View.isInEditMode() in your custom views "
                         + "to skip code when shown in Eclipse");
             }
         }
@@ -2353,6 +2420,8 @@ public class GraphicalEditorPart extends EditorPart
         private static final int IGNORE_FIDELITY_WARNING = 7;
         /** Set an attribute on the given XML element to a given value  */
         private static final int SET_ATTRIBUTE = 8;
+        /** Open the given file and line number */
+        private static final int LINK_OPEN_LINE = 9;
 
         /** Client data: the contents depend on the specific action */
         private final Object[] mData;
@@ -2383,6 +2452,17 @@ public class GraphicalEditorPart extends EditorPart
                     break;
                 case LINK_OPEN_CLASS:
                     AdtPlugin.openJavaClass(getProject(), (String) mData[0]);
+                    break;
+                case LINK_OPEN_LINE:
+                    boolean success = AdtPlugin.openStackTraceLine(
+                            (String) mData[0],   // class
+                            (String) mData[1],   // method
+                            (String) mData[2],   // file
+                            (Integer) mData[3]); // line
+                    if (!success) {
+                        MessageDialog.openError(mErrorLabel.getShell(), "Not Found",
+                                String.format("Could not find %1$s.%2$s", mData[0], mData[1]));
+                    }
                     break;
                 case LINK_SHOW_LOG:
                     IWorkbench workbench = PlatformUI.getWorkbench();

@@ -1924,6 +1924,21 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
+     * For a stack trace entry, specifying a class, method, and optionally
+     * fileName and line number, open the corresponding line in the editor.
+     *
+     * @param fqcn the fully qualified name of the class
+     * @param method the method name
+     * @param fileName the file name, or null
+     * @param lineNumber the line number or -1
+     * @return true if the target location could be opened, false otherwise
+     */
+    public static boolean openStackTraceLine(@Nullable String fqcn,
+            @Nullable String method, @Nullable String fileName, int lineNumber) {
+        return new SourceRevealer().revealMethod(fqcn + '.' + method, fileName, lineNumber, null);
+    }
+
+    /**
      * Opens the given file and shows the given (optional) region in the editor (or
      * if no region is specified, opens the editor tab.)
      *

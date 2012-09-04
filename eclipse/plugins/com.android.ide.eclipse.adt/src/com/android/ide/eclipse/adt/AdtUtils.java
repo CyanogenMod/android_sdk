@@ -68,6 +68,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.Attr;
@@ -1297,5 +1299,32 @@ public class AdtUtils {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the offset region of the given 0-based line number in the given
+     * file
+     *
+     * @param file the file to look up the line number in
+     * @param line the line number (0-based, meaning that the first line is line
+     *            0)
+     * @return the corresponding offset range, or null
+     */
+    @Nullable
+    public static IRegion getRegionOfLine(@NonNull IFile file, int line) {
+        IDocumentProvider provider = new TextFileDocumentProvider();
+        try {
+            provider.connect(file);
+            IDocument document = provider.getDocument(file);
+            if (document != null) {
+                return document.getLineInformation(line);
+            }
+        } catch (Exception e) {
+            AdtPlugin.log(e, "Can't find range information for %1$s", file.getName());
+        } finally {
+            provider.disconnect(file);
+        }
+
+        return null;
     }
 }
