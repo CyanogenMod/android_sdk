@@ -140,7 +140,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout [NewApi]\n" +
@@ -189,7 +189,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout [NewApi]\n" +
@@ -235,7 +235,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout [NewApi]\n" +
@@ -272,7 +272,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout [NewApi]\n" +
@@ -424,7 +424,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/SuppressTest1.java:94: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "src/foo/bar/SuppressTest1.java:97: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff$Mode#OVERLAY [NewApi]\n" +
+            "src/foo/bar/SuppressTest1.java:97: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
 
@@ -558,6 +558,31 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/minsdk4.xml=>AndroidManifest.xml",
                     "apicheck/ApiCallTest7.java.txt=>src/test/pkg/ApiCallTest7.java",
                     "apicheck/ApiCallTest7.class.data=>bin/classes/test/pkg/ApiCallTest7.class"
+                ));
+    }
+
+    public void testEnums() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=36951
+        assertEquals(
+            "src/test/pkg/TestEnum.java:26: Error: Enum value requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
+            "            case OVERLAY: {\n" +
+            "                 ~~~~~~~\n" +
+            "src/test/pkg/TestEnum.java:37: Error: Enum value requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
+            "            case OVERLAY: {\n" +
+            "                 ~~~~~~~\n" +
+            "src/test/pkg/TestEnum.java:61: Error: Class requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
+            "        switch (type) {\n" +
+            "        ^\n" +
+            "src/test/pkg/TestEnum.java:61: Error: Enum for switch requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
+            "        switch (type) {\n" +
+            "        ^\n" +
+            "4 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/TestEnum.java.txt=>src/test/pkg/TestEnum.java",
+                    "apicheck/TestEnum.class.data=>bin/classes/test/pkg/TestEnum.class"
                 ));
     }
 }

@@ -33,4 +33,8 @@ public class ClassContextTest extends TestCase {
         assertEquals("foo/bar/Foo$Bar",
                 ClassContext.getInternalName("foo.bar.Foo.Bar"));
     }
+
+    public void testGetFqcn() {
+        assertEquals("foo.bar.Foo.Bar", ClassContext.getFqcn("foo/bar/Foo$Bar"));
+    }
 }
