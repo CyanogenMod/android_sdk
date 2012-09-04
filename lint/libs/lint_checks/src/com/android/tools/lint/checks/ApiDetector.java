@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
+import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.NEAREST;
@@ -49,8 +50,10 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.LookupSwitchInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
@@ -68,7 +71,6 @@ import java.util.List;
  */
 public class ApiDetector extends ResourceXmlDetector implements Detector.ClassScanner {
     private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
-    private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
 
     /** Accessing an unsupported API */
     public static final Issue UNSUPPORTED = Issue.create("NewApi", //$NON-NLS-1$
@@ -94,6 +96,10 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE))
             .addAnalysisScope(Scope.RESOURCE_FILE_SCOPE)
             .addAnalysisScope(Scope.CLASS_FILE_SCOPE);
+
+    private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
+    private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";  //$NON-NLS-1$
+    private static final String ORDINAL_METHOD = "ordinal"; //$NON-NLS-1$
 
     private ApiLookup mApiDatabase;
     private int mMinApi = -1;
@@ -251,7 +257,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
     // ---- Implements ClassScanner ----
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("rawtypes") // ASM API
     @Override
     public void checkClass(final @NonNull ClassContext context, @NonNull ClassNode classNode) {
         if (mApiDatabase == null) {
@@ -261,6 +267,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         if (AOSP_BUILD && classNode.name.startsWith("android/support/")) { //$NON-NLS-1$
             return;
         }
+
+        // Requires util package (add prebuilts/tools/common/asm-tools/asm-debug-all-4.0.jar)
+        //classNode.accept(new TraceClassVisitor(new PrintWriter(System.out)));
 
         int classMinSdk = getClassMinSdk(context, classNode);
         if (classMinSdk == -1) {
@@ -289,7 +298,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         String className = desc.substring(1, desc.length() - 1);
                         int api = mApiDatabase.getClassVersion(className);
                         if (api > minSdk) {
-                            String fqcn = className.replace('/', '.').replace('$', '.');
+                            String fqcn = ClassContext.getFqcn(className);
                             String message = String.format(
                                 "Class requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
@@ -313,7 +322,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     String type = signature.substring(args + 2, signature.length() - 1);
                     int api = mApiDatabase.getClassVersion(type);
                     if (api > minSdk) {
-                        String fqcn = type.replace('/', '.').replace('$', '.');
+                        String fqcn = ClassContext.getFqcn(type);
                         String message = String.format(
                             "Class requires API level %1$d (current min is %2$d): %3$s",
                             api, minSdk, fqcn);
@@ -343,15 +352,37 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     while (owner != null) {
                         int api = mApiDatabase.getCallVersion(owner, name, desc);
                         if (api > minSdk) {
+                            if (method.name.startsWith(SWITCH_TABLE_PREFIX)) {
+                                // We're in a compiler-generated method to generate an
+                                // array indexed by enum ordinal values to enum values. The enum
+                                // itself must be requiring a higher API number than is
+                                // currently used, but the call site for the switch statement
+                                // will also be referencing it, so no need to report these
+                                // calls.
+                                break;
+                            }
                             String fqcn;
                             if (CONSTRUCTOR_NAME.equals(name)) {
-                                fqcn = "new " + owner.replace('/', '.'); //$NON-NLS-1$
+                                fqcn = "new " + ClassContext.getFqcn(owner); //$NON-NLS-1$
                             } else {
-                                fqcn = owner.replace('/', '.') + '#' + name;
+                                fqcn = ClassContext.getFqcn(owner) + '#' + name;
                             }
                             String message = String.format(
                                     "Call requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
+
+                            if (name.equals(ORDINAL_METHOD)
+                                    && instruction.getNext() != null
+                                    && instruction.getNext().getNext() != null
+                                    && instruction.getNext().getOpcode() == Opcodes.IALOAD
+                                    && instruction.getNext().getNext().getOpcode()
+                                        == Opcodes.TABLESWITCH) {
+                                message = String.format(
+                                    "Enum for switch requires API level %1$d " +
+                                    "(current min is %2$d): %3$s",
+                                    api, minSdk, ClassContext.getFqcn(owner));
+                            }
+
                             report(context, message, node, method, name, null,
                                     SearchHints.create(FORWARD).matchJavaSymbol());
                         }
@@ -373,7 +404,12 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     String owner = node.owner;
                     int api = mApiDatabase.getFieldVersion(owner, name);
                     if (api > minSdk) {
-                        String fqcn = owner.replace('/', '.') + '#' + name;
+                        if (method.name.startsWith(SWITCH_TABLE_PREFIX)) {
+                            checkSwitchBlock(context, classNode, node, method, name, owner,
+                                    api, minSdk);
+                            continue;
+                        }
+                        String fqcn = ClassContext.getFqcn(owner) + '#' + name;
                         String message = String.format(
                                 "Field requires API level %1$d (current min is %2$d): %3$s",
                                 api, minSdk, fqcn);
@@ -388,7 +424,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
                         int api = mApiDatabase.getClassVersion(className);
                         if (api > minSdk) {
-                            String fqcn = className.replace('/', '.');
+                            String fqcn = ClassContext.getFqcn(className);
                             String message = String.format(
                                     "Class requires API level %1$d (current min is %2$d): %3$s",
                                     api, minSdk, fqcn);
@@ -396,6 +432,129 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                     className.substring(className.lastIndexOf('/') + 1), null,
                                     SearchHints.create(FORWARD).matchJavaSymbol());
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("rawtypes") // ASM API
+    private void checkSwitchBlock(ClassContext context, ClassNode classNode, FieldInsnNode field,
+            MethodNode method, String name, String owner, int api, int minSdk) {
+        // Switch statements on enums are tricky. The compiler will generate a method
+        // which returns an array of the enum constants, indexed by their ordinal() values.
+        // However, we only want to complain if the code is actually referencing one of
+        // the non-available enum fields.
+        //
+        // For the android.graphics.PorterDuff.Mode enum for example, the first few items
+        // in the array are populated like this:
+        //
+        //   L0
+        //    ALOAD 0
+        //    GETSTATIC android/graphics/PorterDuff$Mode.ADD : Landroid/graphics/PorterDuff$Mode;
+        //    INVOKEVIRTUAL android/graphics/PorterDuff$Mode.ordinal ()I
+        //    ICONST_1
+        //    IASTORE
+        //   L1
+        //    GOTO L3
+        //   L2
+        //   FRAME FULL [[I] [java/lang/NoSuchFieldError]
+        //    POP
+        //   L3
+        //   FRAME SAME
+        //    ALOAD 0
+        //    GETSTATIC android/graphics/PorterDuff$Mode.CLEAR : Landroid/graphics/PorterDuff$Mode;
+        //    INVOKEVIRTUAL android/graphics/PorterDuff$Mode.ordinal ()I
+        //    ICONST_2
+        //    IASTORE
+        //    ...
+        // So if we for example find that the "ADD" field isn't accessible, since it requires
+        // API 11, we need to
+        //   (1) First find out what its ordinal number is. We can look at the following
+        //       instructions to discover this; it's the "ICONST_1" and "IASTORE" instructions.
+        //       (After ICONST_5 it moves on to BIPUSH 6, BIPUSH 7, etc.)
+        //   (2) Find the corresponding *usage* of this switch method. For the above enum,
+        //       the switch ordinal lookup method will be called
+        //         "$SWITCH_TABLE$android$graphics$PorterDuff$Mode" with desc "()[I".
+        //       This means we will be looking for an invocation in some other method which looks
+        //       like this:
+        //         INVOKESTATIC (current class).$SWITCH_TABLE$android$graphics$PorterDuff$Mode ()[I
+        //       (obviously, it can be invoked more than once)
+        //       Note that it can be used more than once in this class and all sites should be
+        //       checked!
+        //   (3) Look up the corresponding table switch, which should look something like this:
+        //        INVOKESTATIC (current class).$SWITCH_TABLE$android$graphics$PorterDuff$Mode ()[I
+        //        ALOAD 0
+        //        INVOKEVIRTUAL android/graphics/PorterDuff$Mode.ordinal ()I
+        //        IALOAD
+        //        LOOKUPSWITCH
+        //          2: L1
+        //          11: L2
+        //          default: L3
+        //       Here we need to see if the LOOKUPSWITCH instruction is referencing our target
+        //       case. Above we were looking for the "ADD" case which had ordinal 1. Since this
+        //       isn't explicitly referenced, we can ignore this field reference.
+        AbstractInsnNode next = field.getNext();
+        if (next == null || next.getOpcode() != Opcodes.INVOKEVIRTUAL) {
+            return;
+        }
+        next = next.getNext();
+        if (next == null) {
+            return;
+        }
+        int ordinal = -1;
+        switch (next.getOpcode()) {
+            case Opcodes.ICONST_0: ordinal = 0; break;
+            case Opcodes.ICONST_1: ordinal = 1; break;
+            case Opcodes.ICONST_2: ordinal = 2; break;
+            case Opcodes.ICONST_3: ordinal = 3; break;
+            case Opcodes.ICONST_4: ordinal = 4; break;
+            case Opcodes.ICONST_5: ordinal = 5; break;
+            case Opcodes.BIPUSH: {
+                IntInsnNode iin = (IntInsnNode) next;
+                ordinal = iin.operand;
+                break;
+            }
+            default:
+                return;
+        }
+
+        // Find usages of this call site
+        List methodList = classNode.methods;
+        for (Object m : methodList) {
+            InsnList nodes = ((MethodNode) m).instructions;
+            for (int i = 0, n = nodes.size(); i < n; i++) {
+                AbstractInsnNode instruction = nodes.get(i);
+                if (instruction.getOpcode() != Opcodes.INVOKESTATIC){
+                    continue;
+                }
+                MethodInsnNode node = (MethodInsnNode) instruction;
+                if (node.name.equals(method.name)
+                        && node.desc.equals(method.desc)
+                        && node.owner.equals(classNode.name)) {
+                    // Find lookup switch
+                    AbstractInsnNode target = getNextInstruction(node);
+                    while (target != null) {
+                        if (target.getOpcode() == Opcodes.LOOKUPSWITCH) {
+                            LookupSwitchInsnNode lookup = (LookupSwitchInsnNode) target;
+                            @SuppressWarnings("unchecked") // ASM API
+                            List<Integer> keys = lookup.keys;
+                            if (keys != null && keys.contains(ordinal)) {
+                                String fqcn = ClassContext.getFqcn(owner) + '#' + name;
+                                String message = String.format(
+                                        "Enum value requires API level %1$d " +
+                                        "(current min is %2$d): %3$s",
+                                        api, minSdk, fqcn);
+                                report(context, message, lookup, (MethodNode) m, name, null,
+                                        SearchHints.create(FORWARD).matchJavaSymbol());
+
+                                // Break out of the inner target search only; the switch
+                                // statement could be used in other places in this class as
+                                // well and we want to report all problematic usages.
+                                break;
+                            }
+                        }
+                        target = getNextInstruction(target);
                     }
                 }
             }

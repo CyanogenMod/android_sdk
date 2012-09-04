@@ -568,6 +568,18 @@ public class ClassContext extends Context {
     }
 
     /**
+     * Converts from a VM owner name (such as foo/bar/Foo$Baz) to a
+     * fully qualified class name (such as foo.bar.Foo.Baz).
+     *
+     * @param owner the owner name to convert
+     * @return the corresponding fully qualified class name
+     */
+    @NonNull
+    public static String getFqcn(@NonNull String owner) {
+        return owner.replace('/', '.').replace('$','.');
+    }
+
+    /**
      * Computes a user-readable type signature from the given class owner, name
      * and description. For example, for owner="foo/bar/Foo$Baz", name="foo",
      * description="(I)V", it returns "void foo.bar.Foo.Bar#foo(int)".
@@ -587,7 +599,7 @@ public class ClassContext extends Context {
         }
 
         if (owner != null) {
-            sb.append(owner.replace('/', '.').replace('$','.'));
+            sb.append(getFqcn(owner));
         }
         if (name != null) {
             sb.append('#');
