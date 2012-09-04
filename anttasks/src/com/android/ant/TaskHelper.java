@@ -93,6 +93,11 @@ final class TaskHelper {
 
             String value = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (value != null) {
+                value = value.trim();
+                int space = value.indexOf(' ');
+                if (space != -1) {
+                    value = value.substring(0, space);
+                }
                 return new DeweyDecimal(value);
             }
         } catch (FileNotFoundException e) {
