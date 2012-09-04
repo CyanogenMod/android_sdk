@@ -86,7 +86,7 @@ public class StyleCycleDetector extends ResourceXmlDetector {
             } else if (parent.startsWith(STYLE_RESOURCE_PREFIX)
                     && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length())
                     && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length() + name.length())) {
-                context.report(ISSUE, context.getLocation(parentNode),
+                context.report(ISSUE, parentNode, context.getLocation(parentNode),
                         String.format("Potential cycle: %1$s is the implied parent of %2$s and " +
                                 "this defines the opposite", name,
                                 parent.substring(STYLE_RESOURCE_PREFIX.length())), null);

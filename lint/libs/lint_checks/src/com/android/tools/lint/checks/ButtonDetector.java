@@ -249,7 +249,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                                             && isEnglishResource(context)
                                             && context.isEnabled(CASE)) {
                                         assert label.equalsIgnoreCase(CANCEL_LABEL);
-                                        context.report(CASE, context.getLocation(child),
+                                        context.report(CASE, child, context.getLocation(child),
                                             String.format(
                                             "The standard Android way to capitalize %1$s " +
                                             "is \"Cancel\" (tip: use @android:string/ok instead)",
@@ -266,7 +266,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                                             && isEnglishResource(context)
                                             && context.isEnabled(CASE)) {
                                         assert text.equalsIgnoreCase(OK_LABEL);
-                                        context.report(CASE, context.getLocation(child),
+                                        context.report(CASE, child, context.getLocation(child),
                                             String.format(
                                             "The standard Android way to capitalize %1$s " +
                                             "is \"OK\" (tip: use @android:string/ok instead)",
@@ -305,7 +305,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                         assert BACK_LABEL.equalsIgnoreCase(label);
                         Location location = context.getLocation(element);
                         if (context.isEnabled(BACKBUTTON)) {
-                            context.report(BACKBUTTON, location,
+                            context.report(BACKBUTTON, element, location,
                                 "Back buttons are not standard on Android; see design guide's " +
                                 "navigation section", null);
                         }

@@ -189,4 +189,14 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                     "duplicate-manifest.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
+
+    public void testIgnoreDuplicateActivity() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.DUPLICATE_ACTIVITY);
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "duplicate-manifest-ignore.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
+    }
 }
