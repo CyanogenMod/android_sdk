@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.SdkConstants;
 import com.android.sdklib.internal.repository.DownloadCache;
@@ -28,9 +28,15 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
+import com.android.sdkuilib.internal.repository.core.PackageLoader;
+import com.android.sdkuilib.internal.repository.core.PackageLoader.ISourceLoadedCallback;
+import com.android.sdkuilib.internal.repository.core.PackagesDiffLogic;
+import com.android.sdkuilib.internal.repository.core.PkgCategory;
+import com.android.sdkuilib.internal.repository.core.PkgCategoryApi;
+import com.android.sdkuilib.internal.repository.core.PkgContentProvider;
+import com.android.sdkuilib.internal.repository.core.PkgItem;
+import com.android.sdkuilib.internal.repository.core.PkgItem.PkgState;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.ISourceLoadedCallback;
-import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
@@ -89,14 +95,14 @@ import java.util.Map.Entry;
  */
 public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
 
-    static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
-    static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
-    static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
-    static final String ICON_SORT_BY_API    = "platform_pkg_16.png";    //$NON-NLS-1$
-    static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
-    static final String ICON_PKG_INCOMPAT   = "pkg_incompat_16.png";    //$NON-NLS-1$
-    static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
-    static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
+    public  static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
+    public  static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
+    private static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
+    private static final String ICON_SORT_BY_API    = "platform_pkg_16.png";    //$NON-NLS-1$
+    private static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
+    private static final String ICON_PKG_INCOMPAT   = "pkg_incompat_16.png";    //$NON-NLS-1$
+    private static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
+    public  static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
 
     enum MenuAction {
         RELOAD                      (SWT.NONE,  "Reload"),

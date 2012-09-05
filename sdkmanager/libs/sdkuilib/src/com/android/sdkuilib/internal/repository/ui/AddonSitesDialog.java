@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.sdklib.internal.repository.sources.SdkAddonSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
@@ -67,6 +67,12 @@ import org.eclipse.swt.widgets.TableColumn;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Dialog that displays 2 tabs: <br/>
+ * - one tab with the list of extra add-ons sites defined by the user. <br/>
+ * - one tab with the list of 3rd-party add-ons currently available, which the user can
+ *   deactivate to prevent from loading them.
+ */
 public class AddonSitesDialog extends UpdaterBaseDialog {
 
     private final SdkSources mSources;

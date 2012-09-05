@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman1;
+package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.devices.DeviceManager;
@@ -31,6 +31,15 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+/**
+ * An Update page displaying AVD Manager entries.
+ * This is the sole page displayed by {@link AvdManagerWindowImpl1}.
+ *
+ * Note: historically the SDK Manager was a single window with several sub-pages and a tab
+ * switcher. For simplicity each page was separated in its own window. The AVD Manager is
+ * thus composed of the {@link AvdManagerWindowImpl1} (the window shell itself) and this
+ * page displays the actually list of AVDs and various action buttons.
+ */
 public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener, DevicesChangeListener {
 
     private AvdSelector mAvdSelector;

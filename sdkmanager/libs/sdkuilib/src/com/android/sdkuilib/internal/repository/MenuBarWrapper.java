@@ -19,7 +19,7 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.menubar.IMenuBarCallback;
 import com.android.menubar.MenuBarEnhancer;
-import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.ui.SdkUpdaterWindowImpl2;
 
 import org.eclipse.swt.widgets.Menu;
 

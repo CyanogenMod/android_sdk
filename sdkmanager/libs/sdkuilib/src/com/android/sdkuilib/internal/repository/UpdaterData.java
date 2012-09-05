@@ -44,9 +44,9 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.SettingsController.OnChangedListener;
+import com.android.sdkuilib.internal.repository.core.PackageLoader;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader;
-import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.ui.SdkUpdaterWindowImpl2;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.utils.ILogger;
 

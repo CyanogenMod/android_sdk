@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.ui;
 
 
 import com.android.SdkConstants;
@@ -28,7 +28,7 @@ import com.android.sdkuilib.internal.repository.SettingsController.Settings;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage.MenuAction;
+import com.android.sdkuilib.internal.repository.ui.PackagesPage.MenuAction;
 import com.android.sdkuilib.internal.tasks.ILogUiProvider;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;

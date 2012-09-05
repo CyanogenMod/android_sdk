@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.ui;
 
 
 import com.android.SdkConstants;
@@ -27,7 +27,6 @@ import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman1.AvdManagerPage;
 import com.android.sdkuilib.internal.widgets.DeviceCreationDialog;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;

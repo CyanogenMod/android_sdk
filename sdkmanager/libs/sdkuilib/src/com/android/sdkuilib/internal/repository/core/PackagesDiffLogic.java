@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
 
 import com.android.SdkConstants;
 import com.android.sdklib.AndroidVersion;
@@ -31,7 +31,8 @@ import com.android.sdklib.internal.repository.packages.ToolPackage;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.util.SparseArray;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
+import com.android.sdkuilib.internal.repository.core.PkgItem.PkgState;
+import com.android.sdkuilib.internal.repository.ui.PackagesPage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +48,7 @@ import java.util.Set;
  * Helper class that separates the logic of package management from the UI
  * so that we can test it using head-less unit tests.
  */
-class PackagesDiffLogic {
+public class PackagesDiffLogic {
     private final UpdaterData mUpdaterData;
     private boolean mFirstLoadComplete = true;
 

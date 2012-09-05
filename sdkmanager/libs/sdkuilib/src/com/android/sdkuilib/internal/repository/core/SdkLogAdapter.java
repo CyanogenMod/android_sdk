@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository.sdkman2;
+package com.android.sdkuilib.internal.repository.core;
 
 import com.android.sdkuilib.internal.tasks.ILogUiProvider;
 import com.android.utils.ILogger;

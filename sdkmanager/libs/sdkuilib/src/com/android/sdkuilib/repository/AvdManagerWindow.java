@@ -16,7 +16,7 @@
 
 package com.android.sdkuilib.repository;
 
-import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
+import com.android.sdkuilib.internal.repository.ui.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.utils.ILogger;
 
