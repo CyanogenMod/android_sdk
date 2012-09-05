@@ -32,7 +32,7 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.util.SparseArray;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.core.PkgItem.PkgState;
-import com.android.sdkuilib.internal.repository.ui.PackagesPage;
+import com.android.sdkuilib.internal.repository.ui.PackagesPageIcons;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -688,9 +688,9 @@ public class PackagesDiffLogic {
             // Always add the tools & extras categories, even if empty (unlikely anyway)
             if (needTools) {
                 PkgCategoryApi acat = new PkgCategoryApi(
-                        PkgCategoryApi.KEY_TOOLS,
-                        null,
-                        mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_OTHER));
+                   PkgCategoryApi.KEY_TOOLS,
+                   null,
+                   mUpdaterData.getImageFactory().getImageByName(PackagesPageIcons.ICON_CAT_OTHER));
                 synchronized (cats) {
                     cats.add(acat);
                 }
@@ -698,9 +698,9 @@ public class PackagesDiffLogic {
 
             if (needExtras) {
                 PkgCategoryApi acat = new PkgCategoryApi(
-                        PkgCategoryApi.KEY_EXTRA,
-                        null,
-                        mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_OTHER));
+                   PkgCategoryApi.KEY_EXTRA,
+                   null,
+                   mUpdaterData.getImageFactory().getImageByName(PackagesPageIcons.ICON_CAT_OTHER));
                 synchronized (cats) {
                     cats.add(acat);
                 }
@@ -733,9 +733,9 @@ public class PackagesDiffLogic {
             }
 
             cat = new PkgCategoryApi(
-                    key,
-                    platformName,
-                    mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_PLATFORM));
+                key,
+                platformName,
+                mUpdaterData.getImageFactory().getImageByName(PackagesPageIcons.ICON_CAT_PLATFORM));
 
             return cat;
         }

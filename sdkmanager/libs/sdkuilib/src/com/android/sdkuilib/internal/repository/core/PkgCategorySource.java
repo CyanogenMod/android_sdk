@@ -19,7 +19,7 @@ package com.android.sdkuilib.internal.repository.core;
 import com.android.sdklib.internal.repository.sources.SdkRepoSource;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.ui.PackagesPage;
+import com.android.sdkuilib.internal.repository.ui.PackagesPageIcons;
 
 
 public class PkgCategorySource extends PkgCategory {
@@ -42,8 +42,8 @@ public class PkgCategorySource extends PkgCategory {
             source, // the source is the key and it can be null
             source == UNKNOWN_SOURCE ? "Local Packages" : source.toString(),
             source == UNKNOWN_SOURCE ?
-                    updaterData.getImageFactory().getImageByName(PackagesPage.ICON_PKG_INSTALLED) :
-                        source);
+                updaterData.getImageFactory().getImageByName(PackagesPageIcons.ICON_PKG_INSTALLED) :
+                source);
         mSource = source;
     }
 

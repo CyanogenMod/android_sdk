@@ -78,7 +78,11 @@ public class UpdaterData implements IUpdaterData {
     private String mOsSdkRoot;
 
     private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
+    /** Holds all sources. Do not use this directly.
+     * Instead use {@link #getSources()} so that unit tests can override this as needed. */
     private final SdkSources mSources = new SdkSources();
+    /** Holds settings. Do not use this directly.
+     * Instead use {@link #getSettingsController()} so that unit tests can override this. */
     private final SettingsController mSettingsController;
     private final ArrayList<ISdkChangeListener> mListeners = new ArrayList<ISdkChangeListener>();
     private final ILogger mSdkLog;
@@ -129,7 +133,7 @@ public class UpdaterData implements IUpdaterData {
     public DownloadCache getDownloadCache() {
         if (mDownloadCache == null) {
             mDownloadCache = new DownloadCache(
-                    mSettingsController.getSettings().getUseDownloadCache() ?
+                    getSettingsController().getSettings().getUseDownloadCache() ?
                             DownloadCache.Strategy.FRESH_CACHE :
                             DownloadCache.Strategy.DIRECT);
         }
@@ -1044,7 +1048,7 @@ public class UpdaterData implements IUpdaterData {
 
                 getPackageLoader().loadRemoteAddonsList(monitor);
 
-                SdkSource[] sources = mSources.getAllSources();
+                SdkSource[] sources = getSources().getAllSources();
                 monitor.setDescription("Refresh Sources");
                 monitor.setProgressMax(monitor.getProgress() + sources.length);
                 for (SdkSource source : sources) {

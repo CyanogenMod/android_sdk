@@ -16,20 +16,12 @@
 
 package com.android.sdkuilib.internal.repository.ui;
 
-import com.android.SdkConstants;
-import com.android.sdklib.internal.repository.DownloadCache;
-import com.android.sdklib.internal.repository.DownloadCache.Strategy;
-import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.archives.Archive;
 import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.packages.Package;
-import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.core.PackageLoader;
-import com.android.sdkuilib.internal.repository.core.PackageLoader.ISourceLoadedCallback;
-import com.android.sdkuilib.internal.repository.core.PackagesDiffLogic;
 import com.android.sdkuilib.internal.repository.core.PkgCategory;
 import com.android.sdkuilib.internal.repository.core.PkgCategoryApi;
 import com.android.sdkuilib.internal.repository.core.PkgContentProvider;
@@ -50,7 +42,6 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeViewerColumn;
@@ -65,7 +56,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -79,8 +69,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -92,16 +80,7 @@ import java.util.Map.Entry;
  * remote available packages. This gives an overview of what is installed
  * vs what is available and allows the user to update or install packages.
  */
-public class PackagesPage extends Composite implements ISdkChangeListener {
-
-    public  static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
-    public  static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
-    private static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
-    private static final String ICON_SORT_BY_API    = "platform_pkg_16.png";    //$NON-NLS-1$
-    private static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
-    private static final String ICON_PKG_INCOMPAT   = "pkg_incompat_16.png";    //$NON-NLS-1$
-    private static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
-    public  static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
+public final class PackagesPage extends Composite implements ISdkChangeListener {
 
     enum MenuAction {
         RELOAD                      (SWT.NONE,  "Reload"),
@@ -133,13 +112,13 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
 
     private final Map<MenuAction, MenuItem> mMenuActions = new HashMap<MenuAction, MenuItem>();
 
+    private final PackagesPageImpl mImpl;
     private final SdkInvocationContext mContext;
-    private final UpdaterData mUpdaterData;
-    private final PackagesDiffLogic mDiffLogic;
 
     private boolean mDisplayArchives = false;
     private boolean mOperationPending;
 
+    private Composite mGroupPackages;
     private Text mTextSdkOsPath;
     private Button mCheckSortSource;
     private Button mCheckSortApi;
@@ -148,17 +127,11 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
     private Button mCheckFilterNew;
     private Composite mGroupOptions;
     private Composite mGroupSdk;
-    private Group mGroupPackages;
     private Button mButtonDelete;
     private Button mButtonInstall;
-    private Tree mTree;
-    private CheckboxTreeViewer mTreeViewer;
-    private TreeViewerColumn mColumnName;
-    private TreeViewerColumn mColumnApi;
-    private TreeViewerColumn mColumnRevision;
-    private TreeViewerColumn mColumnStatus;
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
+    private CheckboxTreeViewer mTreeViewer;
 
     public PackagesPage(
             Composite parent,
@@ -166,25 +139,45 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
             UpdaterData updaterData,
             SdkInvocationContext context) {
         super(parent, swtStyle);
-        mUpdaterData = updaterData;
-        mContext = context;
+        mImpl = new PackagesPageImpl(updaterData) {
+            @Override
+            protected boolean isUiDisposed() {
+                return mGroupPackages == null || mGroupPackages.isDisposed();
+            };
+            @Override
+            protected void syncExec(Runnable runnable) {
+                if (!isUiDisposed()) {
+                    mGroupPackages.getDisplay().syncExec(runnable);
+                }
+            };
+            @Override
+            protected void refreshViewerInput() {
+                PackagesPage.this.refreshViewerInput();
+            }
 
-        mDiffLogic = new PackagesDiffLogic(updaterData);
+            @Override
+            protected boolean isSortByApi() {
+                return PackagesPage.this.isSortByApi();
+            }
+
+            @Override
+            protected Font getTreeFontItalic() {
+                return mTreeFontItalic;
+            }
+
+            @Override
+            protected void loadPackages(boolean useLocalCache, boolean overrideExisting) {
+                PackagesPage.this.loadPackages(useLocalCache, overrideExisting);
+            }
+        };
+        mContext = context;
 
         createContents(this);
         postCreate();  //$hide$
     }
 
     public void performFirstLoad() {
-        // First a package loader is created that only checks
-        // the local cache xml files. It populates the package
-        // list based on what the client got last, essentially.
-        loadPackages(true /*useLocalCache*/, false /*overrideExisting*/);
-
-        // Next a regular package loader is created that will
-        // respect the expiration and refresh parameters of the
-        // download cache.
-        loadPackages(false /*useLocalCache*/, true /*overrideExisting*/);
+        mImpl.performFirstLoad();
     }
 
     @SuppressWarnings("unused")
@@ -202,12 +195,39 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         GridDataBuilder.create(mTextSdkOsPath).hFill().vCenter().hGrab();
         mTextSdkOsPath.setEnabled(false);
 
-        mGroupPackages = new Group(parent, SWT.NONE);
+        Group groupPackages = new Group(parent, SWT.NONE);
+        mGroupPackages = groupPackages;
         GridDataBuilder.create(mGroupPackages).fill().grab().hSpan(2);
-        mGroupPackages.setText("Packages");
-        GridLayoutBuilder.create(mGroupPackages).columns(1);
+        groupPackages.setText("Packages");
+        GridLayoutBuilder.create(groupPackages).columns(1);
 
-        mTreeViewer = new CheckboxTreeViewer(mGroupPackages, SWT.BORDER);
+        mTreeViewer = new CheckboxTreeViewer(groupPackages, SWT.BORDER);
+        mImpl.setITreeViewer(new PackagesPageImpl.ICheckboxTreeViewer() {
+            @Override
+            public Object getInput() {
+                return mTreeViewer.getInput();
+            }
+
+            @Override
+            public void setInput(List<PkgCategory> cats) {
+                mTreeViewer.setInput(cats);
+            }
+
+            @Override
+            public void setContentProvider(PkgContentProvider pkgContentProvider) {
+                mTreeViewer.setContentProvider(pkgContentProvider);
+            }
+
+            @Override
+            public void refresh() {
+                mTreeViewer.refresh();
+            }
+
+            @Override
+            public Object[] getCheckedElements() {
+                return mTreeViewer.getCheckedElements();
+            }
+        });
         mTreeViewer.addFilter(new ViewerFilter() {
             @Override
             public boolean select(Viewer viewer, Object parentElement, Object element) {
@@ -229,39 +249,45 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
             }
         });
 
-        mTree = mTreeViewer.getTree();
-        mTree.setLinesVisible(true);
-        mTree.setHeaderVisible(true);
-        GridDataBuilder.create(mTree).fill().grab();
+        Tree tree = mTreeViewer.getTree();
+        tree.setLinesVisible(true);
+        tree.setHeaderVisible(true);
+        GridDataBuilder.create(tree).fill().grab();
 
         // column name icon is set when loading depending on the current filter type
         // (e.g. API level or source)
-        mColumnName = new TreeViewerColumn(mTreeViewer, SWT.NONE);
-        mTreeColumnName = mColumnName.getColumn();
+        TreeViewerColumn columnName = new TreeViewerColumn(mTreeViewer, SWT.NONE);
+        mTreeColumnName = columnName.getColumn();
         mTreeColumnName.setText("Name");
         mTreeColumnName.setWidth(340);
 
-        mColumnApi = new TreeViewerColumn(mTreeViewer, SWT.NONE);
-        TreeColumn treeColumn2 = mColumnApi.getColumn();
+        TreeViewerColumn columnApi = new TreeViewerColumn(mTreeViewer, SWT.NONE);
+        TreeColumn treeColumn2 = columnApi.getColumn();
         treeColumn2.setText("API");
         treeColumn2.setAlignment(SWT.CENTER);
         treeColumn2.setWidth(50);
 
-        mColumnRevision = new TreeViewerColumn(mTreeViewer, SWT.NONE);
-        TreeColumn treeColumn3 = mColumnRevision.getColumn();
+        TreeViewerColumn columnRevision = new TreeViewerColumn(mTreeViewer, SWT.NONE);
+        TreeColumn treeColumn3 = columnRevision.getColumn();
         treeColumn3.setText("Rev.");
         treeColumn3.setToolTipText("Revision currently installed");
         treeColumn3.setAlignment(SWT.CENTER);
         treeColumn3.setWidth(50);
 
 
-        mColumnStatus = new TreeViewerColumn(mTreeViewer, SWT.NONE);
-        TreeColumn treeColumn4 = mColumnStatus.getColumn();
+        TreeViewerColumn columnStatus = new TreeViewerColumn(mTreeViewer, SWT.NONE);
+        TreeColumn treeColumn4 = columnStatus.getColumn();
         treeColumn4.setText("Status");
         treeColumn4.setAlignment(SWT.LEAD);
         treeColumn4.setWidth(190);
 
-        mGroupOptions = new Composite(mGroupPackages, SWT.NONE);
+        mImpl.setIColumns(
+                wrapColumn(columnName),
+                wrapColumn(columnApi),
+                wrapColumn(columnRevision),
+                wrapColumn(columnStatus));
+
+        mGroupOptions = new Composite(groupPackages, SWT.NONE);
         GridDataBuilder.create(mGroupOptions).hFill().vCenter().hGrab();
         GridLayoutBuilder.create(mGroupOptions).columns(6).noMargins();
 
@@ -392,9 +418,18 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         });
     }
 
+    private PackagesPageImpl.ITreeViewerColumn wrapColumn(final TreeViewerColumn column) {
+        return new PackagesPageImpl.ITreeViewerColumn() {
+            @Override
+            public void setLabelProvider(ColumnLabelProvider labelProvider) {
+                column.setLabelProvider(labelProvider);
+            }
+        };
+    }
+
     private Image getImage(String filename) {
-        if (mUpdaterData != null) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+        if (mImpl.mUpdaterData != null) {
+            ImageFactory imgFactory = mImpl.mUpdaterData.getImageFactory();
             if (imgFactory != null) {
                 return imgFactory.getImageByName(filename);
             }
@@ -418,19 +453,19 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
 
                 switch (action) {
                 case RELOAD:
-                    fullReload();
+                    mImpl.fullReload();
                     break;
                 case SHOW_ADDON_SITES:
-                    AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
+                    AddonSitesDialog d = new AddonSitesDialog(getShell(), mImpl.mUpdaterData);
                     if (d.open()) {
-                        loadPackages();
+                        mImpl.loadPackages();
                     }
                     break;
                 case TOGGLE_SHOW_ARCHIVES:
                     mDisplayArchives = !mDisplayArchives;
                     // Force the viewer to be refreshed
-                    ((PkgContentProvider) mTreeViewer.getContentProvider()).setDisplayArchives(
-                                                                                  mDisplayArchives);
+                    ((PkgContentProvider) mTreeViewer.getContentProvider()).
+                        setDisplayArchives(mDisplayArchives);
                     mTreeViewer.setInput(null);
                     refreshViewerInput();
                     syncViewerSelection();
@@ -533,29 +568,23 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
     }
 
     private void postCreate() {
-        if (mUpdaterData != null) {
-            mTextSdkOsPath.setText(mUpdaterData.getOsSdkRoot());
+        mImpl.postCreate();
+
+        if (mImpl.mUpdaterData != null) {
+            mTextSdkOsPath.setText(mImpl.mUpdaterData.getOsSdkRoot());
         }
 
-        mTreeViewer.setContentProvider(new PkgContentProvider(mTreeViewer));
         ((PkgContentProvider) mTreeViewer.getContentProvider()).setDisplayArchives(
-                                                                                mDisplayArchives);
+                mDisplayArchives);
+
         ColumnViewerToolTipSupport.enableFor(mTreeViewer, ToolTip.NO_RECREATE);
 
-        mColumnApi.setLabelProvider(
-                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnApi)));
-        mColumnName.setLabelProvider(
-                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnName)));
-        mColumnStatus.setLabelProvider(
-                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnStatus)));
-        mColumnRevision.setLabelProvider(
-                new PkgTreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnRevision)));
-
-        FontData fontData = mTree.getFont().getFontData()[0];
+        Tree tree = mTreeViewer.getTree();
+        FontData fontData = tree.getFont().getFontData()[0];
         fontData.setStyle(SWT.ITALIC);
-        mTreeFontItalic = new Font(mTree.getDisplay(), fontData);
+        mTreeFontItalic = new Font(tree.getDisplay(), fontData);
 
-        mTree.addDisposeListener(new DisposeListener() {
+        tree.addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {
                 mTreeFontItalic.dispose();
@@ -564,52 +593,8 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         });
     }
 
-    /**
-     * Performs a full reload by removing all cached packages data, including the platforms
-     * and addons from the sdkmanager instance. This will perform a full local parsing
-     * as well as a full reload of the remote data (by fetching all sources again.)
-     */
-    private void fullReload() {
-        // Clear all source information, forcing them to be refreshed.
-        mUpdaterData.getSources().clearAllPackages();
-        // Clear and reload all local data too.
-        localReload();
-    }
-
-    /**
-     * Performs a full reload of all the local package information, including the platforms
-     * and addons from the sdkmanager instance. This will perform a full local parsing.
-     * <p/>
-     * This method does NOT force a new fetch of the remote sources.
-     *
-     * @see #fullReload()
-     */
-    private void localReload() {
-        // Clear all source caches, otherwise loading will use the cached data
-        mUpdaterData.getLocalSdkParser().clearPackages();
-        mUpdaterData.getSdkManager().reloadSdk(mUpdaterData.getSdkLog());
-        loadPackages();
-    }
-
-    /**
-     * Performs a "normal" reload of the package information, use the default download
-     * cache and refreshing strategy as needed.
-     */
-    private void loadPackages() {
-        loadPackages(false /*useLocalCache*/, false /*overrideExisting*/);
-    }
-
-    /**
-     * Performs a reload of the package information.
-     *
-     * @param useLocalCache When true, the {@link PackageLoader} is switched to use
-     *  a specific {@link DownloadCache} using the {@link Strategy#ONLY_CACHE}, meaning
-     *  it will only use data from the local cache. It will not try to fetch or refresh
-     *  manifests. This is used once the very first time the sdk manager window opens
-     *  and is typically followed by a regular load with refresh.
-     */
-    private void loadPackages(final boolean useLocalCache, final boolean overrideExisting) {
-        if (mUpdaterData == null) {
+    private void loadPackages(boolean useLocalCache, boolean overrideExisting) {
+        if (mImpl.mUpdaterData == null) {
             return;
         }
 
@@ -619,7 +604,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         // action done after loadPackages must check the UI hasn't been
         // disposed yet. Otherwise hilarity ensues.
 
-        final boolean displaySortByApi = isSortByApi();
+        boolean displaySortByApi = isSortByApi();
 
         if (mTreeColumnName.isDisposed()) {
             // If the UI got disposed, don't try to load anything since we won't be
@@ -627,76 +612,11 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
             return;
         }
 
-        mTreeColumnName.setImage(getImage(displaySortByApi ? ICON_SORT_BY_API
-                                                           : ICON_SORT_BY_SOURCE));
+        mTreeColumnName.setImage(getImage(
+                displaySortByApi ? PackagesPageIcons.ICON_SORT_BY_API
+                                 : PackagesPageIcons.ICON_SORT_BY_SOURCE));
 
-        PackageLoader packageLoader = null;
-        if (useLocalCache) {
-            packageLoader =
-                new PackageLoader(mUpdaterData, new DownloadCache(Strategy.ONLY_CACHE));
-        } else {
-            packageLoader = mUpdaterData.getPackageLoader();
-        }
-        assert packageLoader != null;
-
-        mDiffLogic.updateStart();
-        packageLoader.loadPackages(overrideExisting, new ISourceLoadedCallback() {
-            @Override
-            public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
-                // This runs in a thread and must not access UI directly.
-                final boolean changed = mDiffLogic.updateSourcePackages(
-                        displaySortByApi, source, newPackages);
-
-                if (!mGroupPackages.isDisposed()) {
-                    mGroupPackages.getDisplay().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (changed ||
-                                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
-                                refreshViewerInput();
-                            }
-                        }
-                    });
-                }
-
-                // Return true to tell the loader to continue with the next source.
-                // Return false to stop the loader if any UI has been disposed, which can
-                // happen if the user is trying to close the window during the load operation.
-                return !mGroupPackages.isDisposed();
-            }
-
-            @Override
-            public void onLoadCompleted() {
-                // This runs in a thread and must not access UI directly.
-                final boolean changed = mDiffLogic.updateEnd(displaySortByApi);
-
-                if (!mGroupPackages.isDisposed()) {
-                    mGroupPackages.getDisplay().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (changed ||
-                                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
-                                refreshViewerInput();
-                            }
-
-                            if (!useLocalCache &&
-                                    mDiffLogic.isFirstLoadComplete() &&
-                                    !mGroupPackages.isDisposed()) {
-                                // At the end of the first load, if nothing is selected then
-                                // automatically select all new and update packages.
-                                Object[] checked = mTreeViewer.getCheckedElements();
-                                if (checked == null || checked.length == 0) {
-                                    onSelectNewUpdates(
-                                            false, //selectNew
-                                            true,  //selectUpdates,
-                                            true); //selectTop
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-        });
+        mImpl.loadPackagesImpl(useLocalCache, overrideExisting);
     }
 
     private void refreshViewerInput() {
@@ -704,16 +624,9 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         // Since the official Android source gets loaded first, it makes the
         // window look non-empty a lot sooner.
         if (!mGroupPackages.isDisposed()) {
-
-            List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
-            if (mTreeViewer.getInput() != cats) {
-                // set initial input
-                mTreeViewer.setInput(cats);
-            } else {
-                // refresh existing, which preserves the expanded state, the selection
-                // and the checked state.
-                mTreeViewer.refresh();
-            }
+            try {
+                mImpl.setViewerInput();
+            } catch (Exception ignore) {}
 
             // set the initial expanded state
             expandInitial(mTreeViewer.getInput());
@@ -787,11 +700,12 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         if (mTreeViewer != null && !mTreeViewer.getTree().isDisposed()) {
 
             boolean enablePreviews =
-                mUpdaterData.getSettingsController().getSettings().getEnablePreviews();
+                mImpl.mUpdaterData.getSettingsController().getSettings().getEnablePreviews();
 
             mTreeViewer.setExpandedState(elem, true);
             nextCategory: for (Object pkg :
-                    ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
+                    ((ITreeContentProvider) mTreeViewer.getContentProvider()).
+                        getChildren(elem)) {
                 if (pkg instanceof PkgCategory) {
                     PkgCategory cat = (PkgCategory) pkg;
 
@@ -845,7 +759,8 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
             return;
         }
 
-        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+        ITreeContentProvider provider =
+            (ITreeContentProvider) mTreeViewer.getContentProvider();
         Object[] children = provider.getElements(elem);
         if (children == null) {
             return;
@@ -874,7 +789,8 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
             boolean checked,
             boolean fixChildren,
             boolean fixParent) {
-        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+        ITreeContentProvider provider =
+            (ITreeContentProvider) mTreeViewer.getContentProvider();
 
         // fix the item itself
         if (checked != mTreeViewer.getChecked(elem)) {
@@ -958,11 +874,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
      */
     private void onSelectNewUpdates(boolean selectNew, boolean selectUpdates, boolean selectTop) {
         // This does not update the tree itself, syncViewerSelection does it below.
-        mDiffLogic.checkNewUpdateItems(
-                selectNew,
-                selectUpdates,
-                selectTop,
-                SdkConstants.CURRENT_PLATFORM);
+        mImpl.onSelectNewUpdates(selectNew, selectUpdates, selectTop);
         syncViewerSelection();
         updateButtonsState();
     }
@@ -972,7 +884,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
      */
     private void onDeselectAll() {
         // This does not update the tree itself, syncViewerSelection does it below.
-        mDiffLogic.uncheckAllItems();
+        mImpl.onDeselectAll();
         syncViewerSelection();
         updateButtonsState();
     }
@@ -983,8 +895,10 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
      * This does not update the tree itself.
      */
     private void copySelection(boolean fromSourceToApi) {
-        List<PkgItem> fromItems = mDiffLogic.getAllPkgItems(!fromSourceToApi, fromSourceToApi);
-        List<PkgItem> toItems = mDiffLogic.getAllPkgItems(fromSourceToApi, !fromSourceToApi);
+        List<PkgItem> fromItems =
+            mImpl.mDiffLogic.getAllPkgItems(!fromSourceToApi, fromSourceToApi);
+        List<PkgItem> toItems =
+            mImpl.mDiffLogic.getAllPkgItems(fromSourceToApi, !fromSourceToApi);
 
         // deselect all targets
         for (PkgItem item : toItems) {
@@ -1090,12 +1004,12 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
         ArrayList<Archive> archives = new ArrayList<Archive>();
         getArchivesForInstall(archives);
 
-        if (mUpdaterData != null) {
+        if (mImpl.mUpdaterData != null) {
             boolean needsRefresh = false;
             try {
                 beginOperationPending();
 
-                List<Archive> installed = mUpdaterData.updateOrInstallAll_WithGUI(
+                List<Archive> installed = mImpl.mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */,
                     mContext == SdkInvocationContext.IDE ?
@@ -1107,7 +1021,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
 
                 if (needsRefresh) {
                     // The local package list has changed, make sure to refresh it
-                    localReload();
+                    mImpl.localReload();
                 }
             }
         }
@@ -1219,7 +1133,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
                 try {
                     beginOperationPending();
 
-                    mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
+                    mImpl.mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
                         @Override
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
@@ -1245,7 +1159,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
                     endOperationPending();
 
                     // The local package list has changed, make sure to refresh it
-                    localReload();
+                    mImpl.localReload();
                 }
             }
         }
@@ -1335,236 +1249,6 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
 
     // ----------------------
 
-    public class PkgCellLabelProvider extends ColumnLabelProvider implements ITableFontProvider {
-
-        private final TreeViewerColumn mColumn;
-
-        public PkgCellLabelProvider(TreeViewerColumn column) {
-            super();
-            mColumn = column;
-        }
-
-        @Override
-        public String getText(Object element) {
-
-            if (mColumn == mColumnName) {
-                if (element instanceof PkgCategory) {
-                    return ((PkgCategory) element).getLabel();
-                } else if (element instanceof PkgItem) {
-                    return getPkgItemName((PkgItem) element);
-                } else if (element instanceof IDescription) {
-                    return ((IDescription) element).getShortDescription();
-                }
-
-            } else if (mColumn == mColumnApi) {
-                int api = -1;
-                if (element instanceof PkgItem) {
-                    api = ((PkgItem) element).getApi();
-                }
-                if (api >= 1) {
-                    return Integer.toString(api);
-                }
-
-            } else if (mColumn == mColumnRevision) {
-                if (element instanceof PkgItem) {
-                    PkgItem pkg = (PkgItem) element;
-                    return pkg.getRevision().toShortString();
-                }
-
-            } else if (mColumn == mColumnStatus) {
-                if (element instanceof PkgItem) {
-                    PkgItem pkg = (PkgItem) element;
-
-                    switch(pkg.getState()) {
-                    case INSTALLED:
-                        Package update = pkg.getUpdatePkg();
-                        if (update != null) {
-                            return String.format(
-                                    "Update available: rev. %1$s",
-                                    update.getRevision().toShortString());
-                        }
-                        return "Installed";
-
-                    case NEW:
-                        Package p = pkg.getMainPackage();
-                        if (p != null && p.hasCompatibleArchive()) {
-                            return "Not installed";
-                        } else {
-                            return String.format("Not compatible with %1$s",
-                                    SdkConstants.currentPlatformName());
-                        }
-                    }
-                    return pkg.getState().toString();
-
-                } else if (element instanceof Package) {
-                    // This is an update package.
-                    return "New revision " + ((Package) element).getRevision().toShortString();
-                }
-            }
-
-            return ""; //$NON-NLS-1$
-        }
-
-        private String getPkgItemName(PkgItem item) {
-            String name = item.getName().trim();
-
-            if (isSortByApi()) {
-                // When sorting by API, the package name might contains the API number
-                // or the platform name at the end. If we find it, cut it out since it's
-                // redundant.
-
-                PkgCategoryApi cat = (PkgCategoryApi) findCategoryForItem(item);
-                String apiLabel = cat.getApiLabel();
-                String platLabel = cat.getPlatformName();
-
-                if (platLabel != null && name.endsWith(platLabel)) {
-                    return name.substring(0, name.length() - platLabel.length());
-
-                } else if (apiLabel != null && name.endsWith(apiLabel)) {
-                    return name.substring(0, name.length() - apiLabel.length());
-
-                } else if (platLabel != null && item.isObsolete() && name.indexOf(platLabel) > 0) {
-                    // For obsolete items, the format is "<base name> <platform name> (Obsolete)"
-                    // so in this case only accept removing a platform name that is not at
-                    // the end.
-                    name = name.replace(platLabel, ""); //$NON-NLS-1$
-                }
-            }
-
-            // Collapse potential duplicated spacing
-            name = name.replaceAll(" +", " "); //$NON-NLS-1$ //$NON-NLS-2$
-
-            return name;
-        }
-
-        private PkgCategory findCategoryForItem(PkgItem item) {
-            List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
-            for (PkgCategory cat : cats) {
-                for (PkgItem i : cat.getItems()) {
-                    if (i == item) {
-                        return cat;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public Image getImage(Object element) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
-
-            if (imgFactory != null) {
-                if (mColumn == mColumnName) {
-                    if (element instanceof PkgCategory) {
-                        return imgFactory.getImageForObject(((PkgCategory) element).getIconRef());
-                    } else if (element instanceof PkgItem) {
-                        return imgFactory.getImageForObject(((PkgItem) element).getMainPackage());
-                    }
-                    return imgFactory.getImageForObject(element);
-
-                } else if (mColumn == mColumnStatus && element instanceof PkgItem) {
-                    PkgItem pi = (PkgItem) element;
-                    switch(pi.getState()) {
-                    case INSTALLED:
-                        if (pi.hasUpdatePkg()) {
-                            return imgFactory.getImageByName(ICON_PKG_UPDATE);
-                        } else {
-                            return imgFactory.getImageByName(ICON_PKG_INSTALLED);
-                        }
-                    case NEW:
-                        Package p = pi.getMainPackage();
-                        if (p != null && p.hasCompatibleArchive()) {
-                            return imgFactory.getImageByName(ICON_PKG_NEW);
-                        } else {
-                            return imgFactory.getImageByName(ICON_PKG_INCOMPAT);
-                        }
-                    }
-                }
-            }
-            return super.getImage(element);
-        }
-
-        // -- ITableFontProvider
-
-        @Override
-        public Font getFont(Object element, int columnIndex) {
-            if (element instanceof PkgItem) {
-                if (((PkgItem) element).getState() == PkgState.NEW) {
-                    return mTreeFontItalic;
-                }
-            } else if (element instanceof Package) {
-                // update package
-                return mTreeFontItalic;
-            }
-            return super.getFont(element);
-        }
-
-        // -- Tooltip support
-
-        @Override
-        public String getToolTipText(Object element) {
-            PkgItem pi = element instanceof PkgItem ? (PkgItem) element : null;
-            if (pi != null) {
-                element = pi.getMainPackage();
-            }
-            if (element instanceof IDescription) {
-                String s = getTooltipDescription((IDescription) element);
-
-                if (pi != null && pi.hasUpdatePkg()) {
-                    s += "\n-----------------" +        //$NON-NLS-1$
-                         "\nUpdate Available:\n" +      //$NON-NLS-1$
-                         getTooltipDescription(pi.getUpdatePkg());
-                }
-
-                return s;
-            }
-            return super.getToolTipText(element);
-        }
-
-        private String getTooltipDescription(IDescription element) {
-            String s = element.getLongDescription();
-            if (element instanceof Package) {
-                Package p = (Package) element;
-
-                if (!p.isLocal()) {
-                    // For non-installed item, try to find a download size
-                    for (Archive a : p.getArchives()) {
-                        if (!a.isLocal() && a.isCompatible()) {
-                            s += '\n' + a.getSizeDescription();
-                            break;
-                        }
-                    }
-                }
-
-                // Display info about where this package comes/came from
-                SdkSource src = p.getParentSource();
-                if (src != null) {
-                    try {
-                        URL url = new URL(src.getUrl());
-                        String host = url.getHost();
-                        if (p.isLocal()) {
-                            s += String.format("\nInstalled from %1$s", host);
-                        } else {
-                            s += String.format("\nProvided by %1$s", host);
-                        }
-                    } catch (MalformedURLException ignore) {
-                    }
-                }
-            }
-            return s;
-        }
-
-        @Override
-        public Point getToolTipShift(Object object) {
-            return new Point(15, 5);
-        }
-
-        @Override
-        public int getToolTipDisplayDelayTime(Object object) {
-            return 500;
-        }
-    }
 
     // --- Implementation of ISdkChangeListener ---
 
@@ -1577,7 +1261,7 @@ public class PackagesPage extends Composite implements ISdkChangeListener {
     public void onSdkReload() {
         // The sdkmanager finished reloading its data. We must not call localReload() from here
         // since we don't want to alter the sdkmanager's data that just finished loading.
-        loadPackages();
+        mImpl.loadPackages();
     }
 
     @Override
