@@ -27,7 +27,6 @@ import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.core.PackageLoader;
 import com.android.sdkuilib.internal.repository.core.PackageLoader.ISourceLoadedCallback;
 import com.android.sdkuilib.internal.repository.core.PackagesDiffLogic;
@@ -93,7 +92,7 @@ import java.util.Map.Entry;
  * remote available packages. This gives an overview of what is installed
  * vs what is available and allows the user to update or install packages.
  */
-public class PackagesPage extends UpdaterPage implements ISdkChangeListener {
+public class PackagesPage extends Composite implements ISdkChangeListener {
 
     public  static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
     public  static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
