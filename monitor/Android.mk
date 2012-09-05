@@ -42,7 +42,7 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 			-DbuildFor=$(HOST_OS) 2>&1 && \
 		  mv -f ../../$(RCP_LOG_FILE) ../../$(RCP_LOG_FILE).1 ) \
 		| tee ../../$(RCP_LOG_FILE) \
-		| sed '/SUCCESSFUL/d ; /\[java\]/!b label; s/\s\+\[java\]//; /^\s*$$/d; /Compiling/!d; :label /^\s*$$/d; s/^/monitor: /'; \
+		| sed -E '/\[java\]/!d; /SUCCESSFUL/d ; s/^ +\[java\] //; /^ *$$/d; /:$$/d; /\[javac\] [^C]/d; s/^/monitor: /'; \
 		if [[ -f ../../$(RCP_LOG_FILE) ]]; then \
 		  echo "Monitor failed. Full log:" ; \
 		  cat ../../$(RCP_LOG_FILE) ; \
