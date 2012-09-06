@@ -28,6 +28,7 @@ import static com.android.ide.common.layout.LayoutConstants.SPINNER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.RuleAction;
@@ -56,6 +57,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 
@@ -79,6 +81,8 @@ import java.util.Set;
  * they are both linked to the current selection state of the {@link LayoutCanvas}.
  */
 class DynamicContextMenu {
+    public static String DEFAULT_ACTION_SHORTCUT = "F2"; //$NON-NLS-1$
+    public static int DEFAULT_ACTION_KEY = SWT.F2;
 
     /** The XML layout editor that contains the canvas that uses this menu. */
     private final LayoutEditorDelegate mEditorDelegate;
@@ -197,8 +201,9 @@ class DynamicContextMenu {
         // the set of all selected nodes to that first action. Actions are required
         // to work this way to facilitate multi selection and actions which apply
         // to multiple nodes.
-        List<RuleAction> firstSelectedActions = allActions.get(nodes.get(0));
-
+        NodeProxy first = (NodeProxy) nodes.get(0);
+        List<RuleAction> firstSelectedActions = allActions.get(first);
+        String defaultId = getDefaultActionId(first);
         for (RuleAction action : firstSelectedActions) {
             if (!availableIds.contains(action.getId())
                     && !(action instanceof RuleAction.Separator)) {
@@ -206,7 +211,7 @@ class DynamicContextMenu {
                 continue;
             }
 
-            items.add(createContributionItem(action, nodes));
+            items.add(createContributionItem(action, nodes, defaultId));
         }
 
         return items;
@@ -369,15 +374,26 @@ class DynamicContextMenu {
     }
 
     /**
+     * Returns the default action id, or null
+     *
+     * @param node the node to look up the default action for
+     * @return the action id, or null
+     */
+    private String getDefaultActionId(NodeProxy node) {
+        return mCanvas.getRulesEngine().callGetDefaultActionId(node);
+    }
+
+    /**
      * Creates a {@link ContributionItem} for the given {@link RuleAction}.
      *
      * @param action the action to create a {@link ContributionItem} for
      * @param nodes the set of nodes the action should be applied to
+     * @param defaultId if not non null, the id of an action which should be considered default
      * @return a new {@link ContributionItem} which implements the given action
      *         on the given nodes
      */
     private ContributionItem createContributionItem(final RuleAction action,
-            final List<INode> nodes) {
+            final List<INode> nodes, final String defaultId) {
         if (action instanceof RuleAction.Separator) {
             return new Separator();
         } else if (action instanceof NestedAction) {
@@ -389,7 +405,7 @@ class DynamicContextMenu {
         } else if (action instanceof Toggle) {
             return new ActionContributionItem(createToggleAction(action, nodes));
         } else {
-            return new ActionContributionItem(createPlainAction(action, nodes));
+            return new ActionContributionItem(createPlainAction(action, nodes, defaultId));
         }
     }
 
@@ -415,7 +431,8 @@ class DynamicContextMenu {
         return a;
     }
 
-    private IAction createPlainAction(final RuleAction action, final List<INode> nodes) {
+    private IAction createPlainAction(final RuleAction action, final List<INode> nodes,
+            final String defaultId) {
         IAction a = new Action(action.getTitle(), IAction.AS_PUSH_BUTTON) {
             @Override
             public void run() {
@@ -430,7 +447,29 @@ class DynamicContextMenu {
                 });
             }
         };
-        a.setId(action.getId());
+
+        String id = action.getId();
+        if (defaultId != null && id.equals(defaultId)) {
+            a.setAccelerator(DEFAULT_ACTION_KEY);
+            String text = a.getText();
+            text = text + '\t' + DEFAULT_ACTION_SHORTCUT;
+            a.setText(text);
+
+        } else if (ATTR_ID.equals(id)) {
+            // Keep in sync with {@link LayoutCanvas#handleKeyPressed}
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                a.setAccelerator('R' | SWT.MOD1 | SWT.MOD3);
+                // Option+Command
+                a.setText(a.getText().trim() + "\t\u2325\u2318R"); //$NON-NLS-1$
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+                a.setAccelerator('R' | SWT.MOD2 | SWT.MOD3);
+                a.setText(a.getText() + "\tShift+Alt+R"); //$NON-NLS-1$
+            } else {
+                a.setAccelerator('R' | SWT.MOD2 | SWT.MOD3);
+                a.setText(a.getText() + "\tAlt+Shift+R"); //$NON-NLS-1$
+            }
+        }
+        a.setId(id);
         return a;
     }
 
@@ -495,7 +534,10 @@ class DynamicContextMenu {
             }
 
             Set<String> availableIds = computeApplicableActionIds(allActions);
-            List<RuleAction> firstSelectedActions = allActions.get(mNodes.get(0));
+
+            NodeProxy first = (NodeProxy) mNodes.get(0);
+            String defaultId = getDefaultActionId(first);
+            List<RuleAction> firstSelectedActions = allActions.get(first);
 
             int count = 0;
             for (RuleAction firstAction : firstSelectedActions) {
@@ -505,7 +547,7 @@ class DynamicContextMenu {
                     continue;
                 }
 
-                createContributionItem(firstAction, mNodes).fill(menu, -1);
+                createContributionItem(firstAction, mNodes, defaultId).fill(menu, -1);
                 count++;
             }
 

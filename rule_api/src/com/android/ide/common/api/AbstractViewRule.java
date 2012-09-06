@@ -63,6 +63,12 @@ public class AbstractViewRule implements IViewRule {
     }
 
     @Override
+    @Nullable
+    public String getDefaultActionId(@NonNull INode node) {
+        return null;
+    }
+
+    @Override
     public void paintSelectionFeedback(@NonNull IGraphics graphics, @NonNull INode parentNode,
             @NonNull List<? extends INode> childNodes, @Nullable Object view) {
     }

@@ -396,6 +396,23 @@ public class LayoutCanvas extends Canvas {
             mDeleteAction.run();
         } else if (e.keyCode == SWT.ESC) {
             mSelectionManager.selectParent();
+        } else if (e.keyCode == DynamicContextMenu.DEFAULT_ACTION_KEY) {
+            mSelectionManager.performDefaultAction();
+        } else if (e.keyCode == 'r') {
+            // Keep key bindings in sync with {@link DynamicContextMenu#createPlainAction}
+            // TODO: Find a way to look up the Eclipse key bindings and attempt
+            // to use the current keymap's rename action.
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                // Command+Option+R
+                if ((e.stateMask & (SWT.MOD1 | SWT.MOD3)) == (SWT.MOD1 | SWT.MOD3)) {
+                    mSelectionManager.performRename();
+                }
+            } else {
+                // Alt+Shift+R
+                if ((e.stateMask & (SWT.MOD2 | SWT.MOD3)) == (SWT.MOD2 | SWT.MOD3)) {
+                    mSelectionManager.performRename();
+                }
+            }
         } else {
             // Zooming actions
             char c = e.character;

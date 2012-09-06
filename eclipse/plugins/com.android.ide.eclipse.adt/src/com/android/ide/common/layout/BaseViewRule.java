@@ -482,6 +482,17 @@ public class BaseViewRule extends AbstractViewRule {
         actions.add(properties);
     }
 
+    @Override
+    @Nullable
+    public String getDefaultActionId(@NonNull final INode selectedNode) {
+        IAttributeInfo textAttribute = selectedNode.getAttributeInfo(ANDROID_URI, ATTR_TEXT);
+        if (textAttribute != null) {
+            return PROP_PREFIX + ATTR_TEXT;
+        }
+
+        return null;
+    }
+
     private static String getPropertyMapKey(INode node) {
         // Compute the key for mAttributesMap. This depends on the type of this
         // node and its parent in the view hierarchy.

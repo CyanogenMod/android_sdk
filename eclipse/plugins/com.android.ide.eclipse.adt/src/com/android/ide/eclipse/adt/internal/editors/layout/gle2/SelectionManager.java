@@ -15,28 +15,40 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
+import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
+import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.common.layout.GridLayoutRule;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
+import com.android.resources.ResourceType;
 import com.android.utils.Pair;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -45,6 +57,7 @@ import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MouseEvent;
@@ -1107,5 +1120,103 @@ public class SelectionManager implements ISelectionProvider {
 
         }
         return null;
+    }
+
+    /** Performs the default action provided by the currently selected view */
+    public void performDefaultAction() {
+        final List<SelectionItem> selections = getSelections();
+        if (selections.size() > 0) {
+            NodeProxy primary = selections.get(0).getNode();
+            if (primary != null) {
+                RulesEngine rulesEngine = mCanvas.getRulesEngine();
+                final String id = rulesEngine.callGetDefaultActionId(primary);
+                if (id == null) {
+                    return;
+                }
+                final List<RuleAction> actions = rulesEngine.callGetContextMenu(primary);
+                if (actions == null) {
+                    return;
+                }
+                RuleAction matching = null;
+                for (RuleAction a : actions) {
+                    if (id.equals(a.getId())) {
+                        matching = a;
+                        break;
+                    }
+                }
+                if (matching == null) {
+                    return;
+                }
+                final List<INode> selectedNodes = new ArrayList<INode>();
+                for (SelectionItem item : selections) {
+                    NodeProxy n = item.getNode();
+                    if (n != null) {
+                        selectedNodes.add(n);
+                    }
+                }
+                final RuleAction action = matching;
+                mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel(action.getTitle(),
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            action.getCallback().action(action, selectedNodes,
+                                    action.getId(), null);
+                            LayoutCanvas canvas = mCanvas;
+                            CanvasViewInfo root = canvas.getViewHierarchy().getRoot();
+                            if (root != null) {
+                                UiViewElementNode uiViewNode = root.getUiViewNode();
+                                NodeFactory nodeFactory = canvas.getNodeFactory();
+                                NodeProxy rootNode = nodeFactory.create(uiViewNode);
+                                if (rootNode != null) {
+                                    rootNode.applyPendingChanges();
+                                }
+                            }
+                        }
+                });
+            }
+        }
+    }
+
+    /** Performs renaming the selected views */
+    public void performRename() {
+        final List<SelectionItem> selections = getSelections();
+        if (selections.size() > 0) {
+            NodeProxy primary = selections.get(0).getNode();
+            if (primary != null) {
+                String currentId = primary.getStringAttr(ANDROID_URI, ATTR_ID);
+                currentId = BaseViewRule.stripIdPrefix(currentId);
+                InputDialog d = new InputDialog(
+                            AdtPlugin.getDisplay().getActiveShell(),
+                            "Set ID",
+                            "New ID:",
+                            currentId,
+                            ResourceNameValidator.create(false, (IProject) null, ResourceType.ID));
+                if (d.open() == Window.OK) {
+                    final String s = d.getValue();
+                    mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel("Set ID",
+                            new Runnable() {
+                        @Override
+                        public void run() {
+                            String newId = s;
+                            newId = NEW_ID_PREFIX + BaseViewRule.stripIdPrefix(s);
+                            for (SelectionItem item : selections) {
+                                item.getNode().setAttribute(ANDROID_URI, ATTR_ID, newId);
+                            }
+
+                            LayoutCanvas canvas = mCanvas;
+                            CanvasViewInfo root = canvas.getViewHierarchy().getRoot();
+                            if (root != null) {
+                                UiViewElementNode uiViewNode = root.getUiViewNode();
+                                NodeFactory nodeFactory = canvas.getNodeFactory();
+                                NodeProxy rootNode = nodeFactory.create(uiViewNode);
+                                if (rootNode != null) {
+                                    rootNode.applyPendingChanges();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 }
