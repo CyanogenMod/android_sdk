@@ -18,6 +18,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Dummy string references for unused resource check -->
+        <meta-data
+            android:name="com.google.android.backup.api_key"
+            android:value="@string/string3" />
+        <meta-data
+            android:name="foo"
+            android:value="@string/string1" />
     </application>
 
 </manifest>

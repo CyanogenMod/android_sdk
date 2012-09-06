@@ -73,6 +73,7 @@ public class Project {
     private boolean mLibrary;
     private String mName;
     private String mProguardPath;
+    private boolean mMergeManifests;
 
     /** The SDK info, if any */
     private SdkInfo mSdkInfo;
@@ -126,6 +127,8 @@ public class Project {
                     String value = properties.getProperty(ANDROID_LIBRARY);
                     mLibrary = VALUE_TRUE.equals(value);
                     mProguardPath = properties.getProperty(PROGUARD_CONFIG);
+                    mMergeManifests = VALUE_TRUE.equals(properties.getProperty(
+                            "manifestmerger.enabled")); //$NON-NLS-1$
 
                     for (int i = 1; i < 1000; i++) {
                         String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
@@ -606,6 +609,25 @@ public class Project {
     public boolean getReportIssues() {
         return mReportIssues;
     }
+
+    /**
+     * Sets whether manifest merging is in effect.
+     *
+     * @param merging whether manifest merging is in effect
+     */
+    public void setMergingManifests(boolean merging) {
+        mMergeManifests = merging;
+    }
+
+    /**
+     * Returns whether manifest merging is in effect
+     *
+     * @return true if manifests in library projects should be merged into main projects
+     */
+    public boolean isMergingManifests() {
+        return mMergeManifests;
+    }
+
 
     // ---------------------------------------------------------------------------
     // Support for running lint on the AOSP source tree itself

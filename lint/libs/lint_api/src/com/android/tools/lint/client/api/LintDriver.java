@@ -763,7 +763,8 @@ public class LintDriver {
                 if (context.document != null) {
                     project.readManifest(context.document);
 
-                    if (!project.isLibrary() && mScope.contains(Scope.MANIFEST)) {
+                    if ((!project.isLibrary() || (main != null && main.isMergingManifests()))
+                            && mScope.contains(Scope.MANIFEST)) {
                         List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
                         if (detectors != null) {
                             XmlVisitor v = new XmlVisitor(parser, detectors);

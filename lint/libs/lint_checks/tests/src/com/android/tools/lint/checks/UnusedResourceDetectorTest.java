@@ -202,4 +202,54 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "res/values/plurals.xml",
                 "AndroidManifest.xml"));
     }
+
+    public void testNoMerging() throws Exception {
+        // http://code.google.com/p/android/issues/detail?id=36952
+
+        File master = getProjectDir("MasterProject",
+                // Master project
+                "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                "multiproject/main.properties=>project.properties",
+                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+        );
+        File library = getProjectDir("LibraryProject",
+                // Library project
+                "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                "multiproject/library.properties=>project.properties",
+                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
+                "multiproject/strings.xml=>res/values/strings.xml"
+        );
+        assertEquals(
+           // The strings are all referenced in the library project's manifest file
+           // which in this project is merged in
+           "/TESTROOT/UnusedResourceDetectorTest_testNoMerging/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
+           "    <string name=\"string3\">String 3</string>\n" +
+           "            ~~~~~~~~~~~~~~\n" +
+           "0 errors, 1 warnings\n",
+
+           checkLint(Arrays.asList(master, library)));
+    }
+
+    public void testLibraryMerging() throws Exception {
+        // http://code.google.com/p/android/issues/detail?id=36952
+        File master = getProjectDir("MasterProject",
+                // Master project
+                "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                "multiproject/main-merge.properties=>project.properties",
+                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+        );
+        File library = getProjectDir("LibraryProject",
+                // Library project
+                "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                "multiproject/library.properties=>project.properties",
+                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
+                "multiproject/strings.xml=>res/values/strings.xml"
+        );
+        assertEquals(
+           // The strings are all referenced in the library project's manifest file
+           // which in this project is merged in
+           "No warnings.",
+
+           checkLint(Arrays.asList(master, library)));
+    }
 }
