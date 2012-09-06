@@ -5,6 +5,8 @@ Thumbs.db
 *.class
 *.DS_Store
 testapps/testSensors/proguard.cfg
+.gradle
+/build/ivy.xml
 
 # Hide temporary files created by the build_server script
 eclipse/assemble.com.android.ide.eclipse.*.xml
