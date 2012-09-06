@@ -55,9 +55,19 @@ import junit.framework.TestCase;
 public abstract class AbstractCheckTest extends TestCase {
     protected abstract Detector getDetector();
 
+    private Detector mDetector;
+
+    private Detector getDetectorInstance() {
+        if (mDetector == null) {
+            mDetector = getDetector();
+        }
+
+        return mDetector;
+    }
+
     protected List<Issue> getIssues() {
         List<Issue> issues = new ArrayList<Issue>();
-        Class<? extends Detector> detectorClass = getDetector().getClass();
+        Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
         // Get the list of issues from the registry and filter out others, to make sure
         // issues are properly registered
         List<Issue> candidates = new BuiltinIssueRegistry().getIssues();
@@ -264,7 +274,7 @@ public abstract class AbstractCheckTest extends TestCase {
     }
 
     protected boolean isEnabled(Issue issue) {
-        Class<? extends Detector> detectorClass = getDetector().getClass();
+        Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
         if (issue.getDetectorClass() == detectorClass) {
             return true;
         }
