@@ -868,7 +868,7 @@ public class AvdCreationDialog extends GridDialog {
 
         Map<String, String> hwProps = DeviceManager.getHardwareProperties(device);
         if (mGpuEmulation.getSelection()) {
-            hwProps.put(AvdManager.AVD_INI_GPU_EMULATION, HardwareProperties.BOOLEAN_VALUES[0]);
+            hwProps.put(AvdManager.AVD_INI_GPU_EMULATION, HardwareProperties.BOOLEAN_YES);
         }
 
         File avdFolder = null;
@@ -904,6 +904,10 @@ public class AvdCreationDialog extends GridDialog {
         if (mBackCamera.isEnabled()) {
             hwProps.put(AvdManager.AVD_INI_CAMERA_BACK,
                     mBackCamera.getText().toLowerCase());
+        }
+
+        if (sdName != null) {
+            hwProps.put(HardwareProperties.HW_SDCARD, HardwareProperties.BOOLEAN_YES);
         }
 
         AvdInfo avdInfo = mAvdManager.createAvd(avdFolder,

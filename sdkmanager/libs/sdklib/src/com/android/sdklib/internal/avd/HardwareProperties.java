@@ -30,6 +30,43 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HardwareProperties {
+    /** AVD/config.ini key for whether hardware buttons are present. */
+    public static final String HW_MAINKEYS = "hw.mainKeys";
+
+    /** AVD/config.ini key indicating whether trackball is present. */
+    public static final String HW_TRACKBALL = "hw.trackBall";
+
+    /** AVD/config.ini key indicating whether qwerty keyboard is present. */
+    public static final String HW_KEYBOARD = "hw.keyboard";
+
+    /** AVD/config.ini key indicating whether dpad is present. */
+    public static final String HW_DPAD = "hw.dPad";
+
+    /** AVD/config.ini key indicating whether gps is present. */
+    public static final String HW_GPS = "hw.gps";
+
+    /** AVD/config.ini key indicating whether the device is running on battery. */
+    public static final String HW_BATTERY = "hw.battery";
+
+    /** AVD/config.ini key indicating whether accelerometer is present. */
+    public static final String HW_ACCELEROMETER = "hw.accelerometer";
+
+    /** AVD/config.ini key indicating whether gyroscope is present. */
+    public static final String HW_ORIENTATION_SENSOR = "hw.sensors.orientation";
+
+    /** AVD/config.ini key indicating whether h/w mic is present. */
+    public static final String HW_AUDIO_INPUT = "hw.audioInput";
+
+    /** AVD/config.ini key indicating whether sdcard is present. */
+    public static final String HW_SDCARD = "hw.sdCard";
+
+    /** AVD/config.ini key for LCD density. */
+    public static final String HW_LCD_DENSITY = "hw.lcd.density";
+
+    /** AVD/config.ini key indicating whether proximity sensor present. */
+    public static final String HW_PROXIMITY_SENSOR = "hw.sensors.proximity";
+
+
     private final static Pattern PATTERN_PROP = Pattern.compile(
     "^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");
 
@@ -46,8 +83,8 @@ public class HardwareProperties {
     /** Comma-separate values for a property of type "enum" */
     private final static String HW_PROP_ENUM = "enum";              //$NON-NLS-1$
 
-    private final static String BOOLEAN_YES = "yes";
-    private final static String BOOLEAN_NO = "no";
+    public final static String BOOLEAN_YES = "yes";
+    public final static String BOOLEAN_NO = "no";
     public final static String[] BOOLEAN_VALUES = new String[] { BOOLEAN_YES, BOOLEAN_NO };
     public final static Pattern DISKSIZE_PATTERN = Pattern.compile("\\d+[MK]B"); //$NON-NLS-1$
 

@@ -341,20 +341,28 @@ public class DeviceManager {
     public static Map<String, String> getHardwareProperties(State s) {
         Hardware hw = s.getHardware();
         Map<String, String> props = new HashMap<String, String>();
-        props.put("hw.mainKeys", getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
-        props.put("hw.trackBall", getBooleanVal(hw.getNav().equals(Navigation.TRACKBALL)));
-        props.put("hw.keyboard", getBooleanVal(hw.getKeyboard().equals(Keyboard.QWERTY)));
-        props.put("hw.dPad", getBooleanVal(hw.getNav().equals(Navigation.DPAD)));
+        props.put(HardwareProperties.HW_MAINKEYS,
+                getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
+        props.put(HardwareProperties.HW_TRACKBALL,
+                getBooleanVal(hw.getNav().equals(Navigation.TRACKBALL)));
+        props.put(HardwareProperties.HW_KEYBOARD,
+                getBooleanVal(hw.getKeyboard().equals(Keyboard.QWERTY)));
+        props.put(HardwareProperties.HW_DPAD,
+                getBooleanVal(hw.getNav().equals(Navigation.DPAD)));
+
         Set<Sensor> sensors = hw.getSensors();
-        props.put("hw.gps", getBooleanVal(sensors.contains(Sensor.GPS)));
-        props.put("hw.battery", getBooleanVal(hw.getChargeType().equals(PowerType.BATTERY)));
-        props.put("hw.accelerometer", getBooleanVal(sensors.contains(Sensor.ACCELEROMETER)));
-        props.put("hw.sensors.orientation", getBooleanVal(sensors.contains(Sensor.GYROSCOPE)));
-        props.put("hw.audioInput", getBooleanVal(hw.hasMic()));
-        props.put("hw.sdCard", getBooleanVal(hw.getRemovableStorage().size() > 0));
-        props.put("hw.lcd.density",
+        props.put(HardwareProperties.HW_GPS, getBooleanVal(sensors.contains(Sensor.GPS)));
+        props.put(HardwareProperties.HW_BATTERY,
+                getBooleanVal(hw.getChargeType().equals(PowerType.BATTERY)));
+        props.put(HardwareProperties.HW_ACCELEROMETER,
+                getBooleanVal(sensors.contains(Sensor.ACCELEROMETER)));
+        props.put(HardwareProperties.HW_ORIENTATION_SENSOR,
+                getBooleanVal(sensors.contains(Sensor.GYROSCOPE)));
+        props.put(HardwareProperties.HW_AUDIO_INPUT, getBooleanVal(hw.hasMic()));
+        props.put(HardwareProperties.HW_SDCARD, getBooleanVal(hw.getRemovableStorage().size() > 0));
+        props.put(HardwareProperties.HW_LCD_DENSITY,
                 Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
-        props.put("hw.sensors.proximity",
+        props.put(HardwareProperties.HW_PROXIMITY_SENSOR,
                 getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
         return props;
     }
