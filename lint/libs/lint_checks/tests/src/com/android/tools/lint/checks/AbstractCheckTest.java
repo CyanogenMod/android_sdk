@@ -91,6 +91,16 @@ public abstract class AbstractCheckTest extends TestCase {
         return checkLint(files);
     }
 
+    protected void deleteFile(File dir) {
+        if (dir.isDirectory()) {
+            for (File f : dir.listFiles()) {
+                deleteFile(f);
+            }
+        } else if (dir.isFile()) {
+            assertTrue(dir.getPath(), dir.delete());
+        }
+    }
+
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
         TestLintClient lintClient = createClient();
@@ -101,6 +111,10 @@ public abstract class AbstractCheckTest extends TestCase {
         // forward slash to make the test as OS-agnostic as possible.
         if (File.separatorChar != '/') {
             result = result.replace(File.separatorChar, '/');
+        }
+
+        for (File f : files) {
+            deleteFile(f);
         }
 
         return result;
