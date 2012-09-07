@@ -464,7 +464,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         return sAdbLocation;
     }
 
-    public static String getToolsFolder2() {
+    public static String getToolsFolder() {
         return sToolsFolder;
     }
 
@@ -504,6 +504,8 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         sAdbLocation = adbLocation;
         sHprofConverter = hprofConverter.getAbsolutePath();
         DdmUiPreferences.setTraceviewLocation(traceview.getAbsolutePath());
+
+        sToolsFolder = traceview.getParent();
 
         return true;
     }

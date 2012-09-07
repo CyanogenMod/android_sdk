@@ -22,6 +22,7 @@ import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
 import com.android.ddmlib.ClientData.MethodProfilingStatus;
+import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.SyncException;
@@ -41,9 +42,14 @@ import com.android.ide.eclipse.ddms.IDebuggerConnector;
 import com.android.ide.eclipse.ddms.editors.UiAutomatorViewer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
+import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog;
+import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog.SystraceOptions;
+import com.android.ide.eclipse.ddms.systrace.SystraceOutputParser;
+import com.android.ide.eclipse.ddms.systrace.SystraceTask;
 import com.android.uiautomator.UiAutomatorHelper;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorException;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorResult;
+import com.google.common.io.Files;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -80,6 +86,8 @@ import org.eclipse.ui.part.ViewPart;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class DeviceView extends ViewPart implements IUiSelectionListener, IClientChangeListener {
 
@@ -95,6 +103,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
     private Action mResetAdbAction;
     private Action mCaptureAction;
     private Action mViewUiAutomatorHierarchyAction;
+    private Action mSystraceAction;
     private Action mUpdateThreadAction;
     private Action mUpdateHeapAction;
     private Action mGcAction;
@@ -331,6 +340,18 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         mViewUiAutomatorHierarchyAction.setImageDescriptor(
                 DdmsPlugin.getImageDescriptor("icons/uiautomator.png")); //$NON-NLS-1$
 
+        mSystraceAction = new Action("Capture System Wide Trace") {
+            @Override
+            public void run() {
+                launchSystrace(mDeviceList.getSelectedDevice(),
+                        DdmsPlugin.getDisplay().getActiveShell());
+            }
+        };
+        mSystraceAction.setToolTipText("Capture system wide trace using Android systrace");
+        mSystraceAction.setImageDescriptor(
+                DdmsPlugin.getImageDescriptor("icons/systrace.png")); //$NON-NLS-1$
+        mSystraceAction.setEnabled(true);
+
         mResetAdbAction = new Action(Messages.DeviceView_Reset_ADB) {
             @Override
             public void run() {
@@ -536,6 +557,98 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         }
     };
 
+    private void launchSystrace(final IDevice device, final Shell parentShell) {
+        final SystraceOptionsDialog dlg = new SystraceOptionsDialog(parentShell);
+        if (dlg.open() != SystraceOptionsDialog.OK) {
+            return;
+        }
+
+        final SystraceOptions options = dlg.getSystraceOptions();
+
+        // set trace tag if necessary:
+        //      adb shell setprop debug.atrace.tags.enableflags <tag>
+        String tag = options.getTraceTag();
+        if (tag != null) {
+            CountDownLatch setTagLatch = new CountDownLatch(1);
+            CollectingOutputReceiver receiver = new CollectingOutputReceiver(setTagLatch);
+            try {
+                String cmd = "setprop debug.atrace.tags.enableflags " + tag;
+                device.executeShellCommand(cmd, receiver);
+                setTagLatch.await(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                MessageDialog.openError(parentShell,
+                        "Systrace",
+                        "Unexpected error while setting trace tags: " + e);
+                return;
+            }
+
+            String shellOutput = receiver.getOutput();
+            if (shellOutput.contains("Error type")) {                   //$NON-NLS-1$
+                throw new RuntimeException(receiver.getOutput());
+            }
+        }
+
+        // obtain the output of "adb shell atrace <trace-options>" and generate the html file
+        ProgressMonitorDialog d = new ProgressMonitorDialog(parentShell);
+        try {
+            d.run(true, true, new IRunnableWithProgress() {
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException,
+                        InterruptedException {
+                    boolean COMPRESS_DATA = true;
+
+                    monitor.setTaskName("Collecting Trace Information");
+                    final String atraceOptions = options.getCommandLineOptions()
+                                                + (COMPRESS_DATA ? " -z" : "");
+                    SystraceTask task = new SystraceTask(device, atraceOptions);
+                    Thread t = new Thread(task, "Systrace Output Receiver");
+                    t.start();
+
+                    // check if the user has cancelled tracing every so often
+                    while (true) {
+                        t.join(1000);
+
+                        if (t.isAlive()) {
+                            if (monitor.isCanceled()) {
+                                task.cancel();
+                                return;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (task.getError() != null) {
+                        throw new RuntimeException(task.getError());
+                    }
+
+                    monitor.setTaskName("Saving trace information");
+                    File systraceAssets = new File(DdmsPlugin.getToolsFolder(), "systrace"); //$NON-NLS-1$
+                    SystraceOutputParser parser = new SystraceOutputParser(
+                            COMPRESS_DATA,
+                            SystraceOutputParser.getJs(systraceAssets),
+                            SystraceOutputParser.getCss(systraceAssets));
+
+                    parser.parse(task.getAtraceOutput());
+
+                    String html = parser.getSystraceHtml();
+                    try {
+                        Files.write(html.getBytes(), new File(dlg.getTraceFilePath()));
+                    } catch (IOException e) {
+                        throw new InvocationTargetException(e);
+                    }
+                }
+            });
+        } catch (InvocationTargetException e) {
+            ErrorDialog.openError(parentShell, "Systrace",
+                    "Unable to collect system trace.",
+                    new Status(Status.ERROR,
+                            DdmsPlugin.PLUGIN_ID,
+                            "Unexpected error while collecting system trace.",
+                            e.getCause()));
+        } catch (InterruptedException ignore) {
+        }
+    }
 
     @Override
     public void setFocus() {
@@ -635,8 +748,11 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
     }
 
     private void doSelectionChanged(IDevice selectedDevice) {
-        mCaptureAction.setEnabled(selectedDevice != null);
-        mViewUiAutomatorHierarchyAction.setEnabled(selectedDevice != null);
+        boolean validDevice = selectedDevice != null;
+
+        mCaptureAction.setEnabled(validDevice);
+        mViewUiAutomatorHierarchyAction.setEnabled(validDevice);
+        mSystraceAction.setEnabled(validDevice);
     }
 
     /**
@@ -663,6 +779,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         menuManager.add(new Separator());
         menuManager.add(mViewUiAutomatorHierarchyAction);
         menuManager.add(new Separator());
+        menuManager.add(mSystraceAction);
+        menuManager.add(new Separator());
         menuManager.add(mResetAdbAction);
 
         // and then in the toolbar
@@ -682,6 +800,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         toolBarManager.add(mCaptureAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mViewUiAutomatorHierarchyAction);
+        toolBarManager.add(new Separator());
+        toolBarManager.add(mSystraceAction);
     }
 
     @Override
