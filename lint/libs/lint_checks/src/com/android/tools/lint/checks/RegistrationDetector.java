@@ -117,23 +117,29 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
         }
     }
 
-    private static String getFqcn(Element element) {
-        StringBuilder sb = new StringBuilder();
+    /**
+     * Returns the fully qualified class name for a manifest entry element that
+     * specifies a name attribute
+     *
+     * @param element the element
+     * @return the fully qualified class name
+     */
+    @NonNull
+    private static String getFqcn(@NonNull Element element) {
         Element root = element.getOwnerDocument().getDocumentElement();
         String pkg = root.getAttribute(ATTR_PACKAGE);
         String className = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
         if (className.startsWith(".")) { //$NON-NLS-1$
-            sb.append(pkg);
+            return pkg + className;
         } else if (className.indexOf('.') == -1) {
             // According to the <activity> manifest element documentation, this is not
             // valid ( http://developer.android.com/guide/topics/manifest/activity-element.html )
             // but it appears in manifest files and appears to be supported by the runtime
             // so handle this in code as well:
-            sb.append(pkg);
-            sb.append('.');
+            return pkg + '.' + className;
         } // else: the class name is already a fully qualified class name
-        sb.append(className);
-        return sb.toString();
+
+        return className;
     }
 
     // ---- Implements ClassScanner ----
