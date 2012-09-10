@@ -106,6 +106,7 @@ public class PropertySheetPage extends Page
         });
         mPropertyTable.setDefaultCollapsedNames(Arrays.asList(
                 "Deprecated",
+                "Layout Parameters",
                 "Layout Parameters|Margins"));
 
         createActions();
