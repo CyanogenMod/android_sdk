@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * A display of both the devices and their clients.
@@ -244,7 +245,11 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     case CLIENT_COL_NAME:
                         String name = cd.getClientDescription();
                         if (name != null) {
-                            return name;
+                            if (cd.isValidUserId()) {
+                                return String.format(Locale.US, "%s (%d)", name, cd.getUserId());
+                            } else {
+                                return name;
+                            }
                         }
                         return "?";
                     case CLIENT_COL_PID:
