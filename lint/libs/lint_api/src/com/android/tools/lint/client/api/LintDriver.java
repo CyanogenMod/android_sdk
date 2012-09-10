@@ -129,6 +129,7 @@ public class LintDriver {
     private Project[] mCurrentProjects;
     private Project mCurrentProject;
     private boolean mAbbreviating = true;
+    private boolean mParserErrors;
 
     /**
      * Creates a new {@link LintDriver}
@@ -227,6 +228,30 @@ public class LintDriver {
      */
     public boolean isAbbreviating() {
         return mAbbreviating;
+    }
+
+    /**
+     * Returns whether lint has encountered any files with fatal parser errors
+     * (e.g. broken source code, or even broken parsers)
+     * <p>
+     * This is useful for checks that need to make sure they've seen all data in
+     * order to be conclusive (such as an unused resource check).
+     *
+     * @return true if any files were not properly processed because they
+     *         contained parser errors
+     */
+    public boolean hasParserErrors() {
+        return mParserErrors;
+    }
+
+    /**
+     * Sets whether lint has encountered files with fatal parser errors.
+     *
+     * @see #hasParserErrors()
+     * @param hasErrors whether parser errors have been encountered
+     */
+    public void setHasParserErrors(boolean hasErrors) {
+        mParserErrors = hasErrors;
     }
 
     /**

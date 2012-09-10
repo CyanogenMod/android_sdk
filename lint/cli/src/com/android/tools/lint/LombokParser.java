@@ -48,6 +48,8 @@ public class LombokParser implements IJavaParser {
             // Don't analyze files containing errors
             List<ParseProblem> problems = source.getProblems();
             if (problems != null && problems.size() > 0) {
+                context.getDriver().setHasParserErrors(true);
+
                 /* Silently ignore the errors. There are still some bugs in Lombok/Parboiled
                  * (triggered if you run lint on the AOSP framework directory for example),
                  * and having these show up as fatal errors when it's really a tool bug
@@ -61,7 +63,7 @@ public class LombokParser implements IJavaParser {
                     // See http://code.google.com/p/projectlombok/issues/detail?id=313
                     String message = problem.getMessage();
                     context.report(
-                            IssueRegistry.PARSER_ERROR, location,
+                            com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR, location,
                             message,
                             null);
 
