@@ -252,4 +252,16 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
            checkLint(Arrays.asList(master, library)));
     }
+
+    public void testCornerCase() throws Exception {
+        // See http://code.google.com/p/projectlombok/issues/detail?id=415
+        mEnableIds = true;
+        assertEquals(
+            "No warnings.",
+
+             lintProject(
+                 "res/layout/accessibility.xml",
+                 "src/test/pkg/Foo.java.txt=>src/test/pkg/Foo.java",
+                 "AndroidManifest.xml"));
+    }
 }

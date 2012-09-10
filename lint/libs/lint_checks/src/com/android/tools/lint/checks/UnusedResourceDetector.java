@@ -227,7 +227,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 unused.removeAll(ids);
             }
 
-            if (unused.size() > 0) {
+            if (unused.size() > 0 && !context.getDriver().hasParserErrors()) {
                 mUnused = new HashMap<String, Location>(unused.size());
                 for (String resource : unused) {
                     mUnused.put(resource, null);
