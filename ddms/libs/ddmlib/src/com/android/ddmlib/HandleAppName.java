@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
@@ -77,11 +78,32 @@ final class HandleAppName extends ChunkHandler {
         appNameLen = data.getInt();
         appName = getString(data, appNameLen);
 
+        // Newer devices send user id in the APNM packet.
+        int userId = -1;
+        boolean validUserId = false;
+        if (data.hasRemaining()) {
+            try {
+                userId = data.getInt();
+                validUserId = true;
+            } catch (BufferUnderflowException e) {
+                // two integers + utf-16 string
+                int expectedPacketLength = 8 + appNameLen * 2;
+
+                Log.e("ddm-appname", "Insufficient data in APNM chunk to retrieve user id.");
+                Log.e("ddm-appname", "Actual chunk length: " + data.capacity());
+                Log.e("ddm-appname", "Expected chunk length: " + expectedPacketLength);
+            }
+        }
+
         Log.d("ddm-appname", "APNM: app='" + appName + "'");
 
         ClientData cd = client.getClientData();
         synchronized (cd) {
             cd.setClientDescription(appName);
+
+            if (validUserId) {
+                cd.setUserId(userId);
+            }
         }
 
         client = checkDebuggerPortForAppName(client, appName);

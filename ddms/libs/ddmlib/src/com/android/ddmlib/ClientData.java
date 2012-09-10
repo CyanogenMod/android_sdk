@@ -156,6 +156,12 @@ public class ClientData {
     // client's self-description
     private String mClientDescription;
 
+    // client's user id (on device in a multi user environment)
+    private int mUserId;
+
+    // client's user id is valid
+    private boolean mValidUserId;
+
     // how interested are we in a debugger?
     private DebuggerStatus mDebuggerInterest;
 
@@ -430,6 +436,23 @@ public class ClientData {
     }
 
     /**
+     * Returns the client's user id.
+     * @return user id if set, -1 otherwise
+     */
+    public int getUserId() {
+        return mUserId;
+    }
+
+    /**
+     * Returns true if the user id of this client was set. Only devices that support multiple
+     * users will actually return the user id to ddms. For other/older devices, this will not
+     * be set.
+     */
+    public boolean isValidUserId() {
+        return mValidUserId;
+    }
+
+    /**
      * Sets client description.
      *
      * There may be a race between HELO and APNM.  Rather than try
@@ -449,6 +472,11 @@ public class ClientData {
                 mClientDescription = description;
             }
         }
+    }
+
+    void setUserId(int id) {
+        mUserId = id;
+        mValidUserId = true;
     }
 
     /**

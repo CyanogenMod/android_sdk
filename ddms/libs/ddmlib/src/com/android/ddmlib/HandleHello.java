@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
@@ -100,6 +101,23 @@ final class HandleHello extends ChunkHandler {
         vmIdent = getString(data, vmIdentLen);
         appName = getString(data, appNameLen);
 
+        // Newer devices send user id in the APNM packet.
+        int userId = -1;
+        boolean validUserId = false;
+        if (data.hasRemaining()) {
+            try {
+                userId = data.getInt();
+                validUserId = true;
+            } catch (BufferUnderflowException e) {
+                // five integers + two utf-16 strings
+                int expectedPacketLength = 20 + appNameLen * 2 + vmIdentLen * 2;
+
+                Log.e("ddm-hello", "Insufficient data in HELO chunk to retrieve user id.");
+                Log.e("ddm-hello", "Actual chunk length: " + data.capacity());
+                Log.e("ddm-hello", "Expected chunk length: " + expectedPacketLength);
+            }
+        }
+
         Log.d("ddm-hello", "HELO: v=" + version + ", pid=" + pid
             + ", vm='" + vmIdent + "', app='" + appName + "'");
 
@@ -110,6 +128,10 @@ final class HandleHello extends ChunkHandler {
                 cd.setVmIdentifier(vmIdent);
                 cd.setClientDescription(appName);
                 cd.isDdmAware(true);
+
+                if (validUserId) {
+                    cd.setUserId(userId);
+                }
             } else {
                 Log.e("ddm-hello", "Received pid (" + pid + ") does not match client pid ("
                         + cd.getPid() + ")");
