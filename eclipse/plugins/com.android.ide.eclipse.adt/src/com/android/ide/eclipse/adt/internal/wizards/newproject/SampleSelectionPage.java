@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.sdklib.IAndroidTarget;
@@ -150,6 +151,10 @@ class SampleSelectionPage extends WizardPage implements SelectionListener, Modif
         mValues.chosenSample = sample;
         if (sample != null && !mValues.projectNameModifiedByUser) {
             mValues.projectName = sample.getName();
+            if (SdkConstants.FD_SAMPLE.equals(mValues.projectName) &&
+                    sample.getParentFile() != null) {
+                mValues.projectName = sample.getParentFile().getName() + '_' + mValues.projectName;
+            }
             try {
                 mIgnore = true;
                 mSampleProjectName.setText(mValues.projectName);
