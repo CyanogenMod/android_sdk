@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -237,5 +238,16 @@ public abstract class IssueRegistry {
             sIdToIssue.put(LINT_ERROR.getId(), LINT_ERROR);
         }
         return sIdToIssue.get(id);
+    }
+
+    /**
+     * Reset the registry such that it recomputes its available issues.
+     * <p>
+     * NOTE: This is only intended for testing purposes.
+     */
+    @VisibleForTesting
+    protected static void reset() {
+        sIdToIssue = null;
+        sCategories = null;
     }
 }
