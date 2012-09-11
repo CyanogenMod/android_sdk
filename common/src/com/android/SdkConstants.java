@@ -247,6 +247,15 @@ public final class SdkConstants {
     public final static String FD_SAMPLES = "samples";                  //$NON-NLS-1$
     /** Name of the SDK extras folder. */
     public final static String FD_EXTRAS = "extras";                    //$NON-NLS-1$
+    /**
+     * Name of an extra's sample folder.
+     * Ideally extras should have one {@link #FD_SAMPLES} folder containing
+     * one or more sub-folders (one per sample). However some older extras
+     * might contain a single "sample" folder with directly the samples files
+     * in it. When possible we should encourage extras' owners to move to the
+     * multi-samples format.
+     */
+    public final static String FD_SAMPLE = "sample";                    //$NON-NLS-1$
     /** Name of the SDK templates folder, i.e. "templates" */
     public final static String FD_TEMPLATES = "templates";              //$NON-NLS-1$
     /** Name of the SDK Ant folder, i.e. "ant" */

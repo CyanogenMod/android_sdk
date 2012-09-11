@@ -222,9 +222,17 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
                 for (Entry<File, String> entry : extras.entrySet()) {
                     File path = entry.getKey();
                     String name = entry.getValue();
-                    findSamplesManifests(path, path, name,
-                                         target.getVersion(),
-                                         mValues.samples);
+
+                    // Case where the sample is at the root of the directory and not
+                    // in a per-sample sub-directory.
+                    if (path.getName().equals(SdkConstants.FD_SAMPLE)) {
+                        findSampleManifestInDir(
+                                path, path, name, target.getVersion(), mValues.samples);
+                    }
+
+                    // Scan sub-directories
+                    findSamplesManifests(
+                            path, path, name, target.getVersion(), mValues.samples);
                 }
             }
 
@@ -280,40 +288,7 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
 
         for (File f : currDir.listFiles()) {
             if (f.isDirectory()) {
-                // Assume this is a sample if it contains an android manifest.
-                File manifestFile = new File(f, SdkConstants.FN_ANDROID_MANIFEST_XML);
-                if (manifestFile.isFile()) {
-                    try {
-                        ManifestData data =
-                            AndroidManifestParser.parse(new FileWrapper(manifestFile));
-                        if (data != null) {
-                            boolean accept = false;
-                            if (targetVersion == null) {
-                                accept = true;
-                            } else if (targetVersion != null) {
-                                int i = data.getMinSdkVersion();
-                                if (i != ManifestData.MIN_SDK_CODENAME) {
-                                   accept = i <= targetVersion.getApiLevel();
-                                } else {
-                                    String s = data.getMinSdkVersionString();
-                                    if (s != null) {
-                                        accept = s.equals(targetVersion.getCodename());
-                                    }
-                                }
-                            }
-
-                            if (accept) {
-                                String name = getSampleDisplayName(extraName, rootDir, f);
-                                samplesPaths.add(Pair.of(name, f));
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Ignore. Don't use a sample which manifest doesn't parse correctly.
-                        AdtPlugin.log(IStatus.INFO,
-                                "NPW ignoring malformed manifest %s",   //$NON-NLS-1$
-                                manifestFile.getAbsolutePath());
-                    }
-                }
+                findSampleManifestInDir(f, rootDir, extraName, targetVersion, samplesPaths);
 
                 // Recurse in the project, to find embedded tests sub-projects
                 // We can however skip this recursion for known android sub-dirs that
@@ -328,27 +303,98 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
         }
     }
 
+    private void findSampleManifestInDir(
+            File sampleDir,
+            File rootDir,
+            String extraName,
+            AndroidVersion targetVersion,
+            List<Pair<String, File>> samplesPaths) {
+        // Assume this is a sample if it contains an android manifest.
+        File manifestFile = new File(sampleDir, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        if (manifestFile.isFile()) {
+            try {
+                ManifestData data =
+                    AndroidManifestParser.parse(new FileWrapper(manifestFile));
+                if (data != null) {
+                    boolean accept = false;
+                    if (targetVersion == null) {
+                        accept = true;
+                    } else if (targetVersion != null) {
+                        int i = data.getMinSdkVersion();
+                        if (i != ManifestData.MIN_SDK_CODENAME) {
+                           accept = i <= targetVersion.getApiLevel();
+                        } else {
+                            String s = data.getMinSdkVersionString();
+                            if (s != null) {
+                                accept = s.equals(targetVersion.getCodename());
+                            }
+                        }
+                    }
+
+                    if (accept) {
+                        String name = getSampleDisplayName(extraName, rootDir, sampleDir);
+                        samplesPaths.add(Pair.of(name, sampleDir));
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore. Don't use a sample which manifest doesn't parse correctly.
+                AdtPlugin.log(IStatus.INFO,
+                        "NPW ignoring malformed manifest %s",   //$NON-NLS-1$
+                        manifestFile.getAbsolutePath());
+            }
+        }
+    }
+
     /**
      * Compute the sample name compared to its root directory.
      */
     private String getSampleDisplayName(String extraName, File rootDir, File sampleDir) {
-        String path = sampleDir.getPath();
-        int n = rootDir.getPath().length();
-        if (path.length() > n) {
-            path = path.substring(n);
-            if (path.charAt(0) == File.separatorChar) {
-                path = path.substring(1);
+        String name = null;
+        if (!rootDir.equals(sampleDir)) {
+            String path = sampleDir.getPath();
+            int n = rootDir.getPath().length();
+            if (path.length() > n) {
+                path = path.substring(n);
+                if (path.charAt(0) == File.separatorChar) {
+                    path = path.substring(1);
+                }
+                if (path.endsWith(File.separator)) {
+                    path = path.substring(0, path.length() - 1);
+                }
+                name = path.replaceAll(Pattern.quote(File.separator), " > ");   //$NON-NLS-1$
             }
-            if (path.endsWith(File.separator)) {
-                path = path.substring(0, path.length() - 1);
+        }
+        if (name == null &&
+                rootDir.equals(sampleDir) &&
+                sampleDir.getName().equals(SdkConstants.FD_SAMPLE) &&
+                extraName != null) {
+            // This is an old-style extra with one single sample directory. Just use the
+            // extra's name as the same name.
+            return extraName;
+        }
+        if (name == null) {
+            // Otherwise try to use the sample's directory name as the sample name.
+            while (sampleDir != null &&
+                   (name == null ||
+                    SdkConstants.FD_SAMPLE.equals(name) ||
+                    SdkConstants.FD_SAMPLES.equals(name))) {
+                name = sampleDir.getName();
+                sampleDir = sampleDir.getParentFile();
             }
-            path = path.replaceAll(Pattern.quote(File.separator), " > ");   //$NON-NLS-1$
+        }
+        if (name == null) {
+            if (extraName != null) {
+                // In the unlikely case nothing worked and we have an extra name, use that.
+                return extraName;
+            } else {
+                name = "Sample"; // fallback name... should not happen.         //$NON-NLS-1$
+            }
         }
         if (extraName != null) {
-            path = path + " [" + extraName + ']';                            //$NON-NLS-1$
+            name = name + " [" + extraName + ']';                               //$NON-NLS-1$
         }
 
-        return path;
+        return name;
     }
 
     private void validatePage() {

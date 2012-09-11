@@ -381,6 +381,14 @@ public class SdkManager {
                 File path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLES);
                 if (path.isDirectory()) {
                     samples.put(path, pkg.getListDescription());
+                    continue;
+                }
+                // Some old-style extras simply have a single "sample" directory.
+                // Accept it if it contains an AndroidManifest.xml.
+                path = new File(a.getLocalOsPath(), SdkConstants.FD_SAMPLE);
+                if (path.isDirectory() &&
+                        new File(path, SdkConstants.FN_ANDROID_MANIFEST_XML).isFile()) {
+                    samples.put(path, pkg.getListDescription());
                 }
             }
         }
