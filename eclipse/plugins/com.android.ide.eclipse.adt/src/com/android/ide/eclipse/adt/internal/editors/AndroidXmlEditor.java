@@ -49,6 +49,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -940,7 +941,20 @@ public abstract class AndroidXmlEditor extends FormEditor {
      * @param undoLabel if non null, the edit action will be run as a single undo event
      *            and the label used as the name of the undoable action
      */
-    private final void wrapEditXmlModel(Runnable editAction, String undoLabel) {
+    private final void wrapEditXmlModel(final Runnable editAction, final String undoLabel) {
+        Display display = mTextEditor.getSite().getShell().getDisplay();
+        if (display.getThread() != Thread.currentThread()) {
+            display.syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (!mTextEditor.getTextViewer().getControl().isDisposed()) {
+                        wrapEditXmlModel(editAction, undoLabel);
+                    }
+                }
+            });
+            return;
+        }
+
         IStructuredModel model = null;
         int undoReverseCount = 0;
         try {
@@ -955,7 +969,7 @@ public abstract class AndroidXmlEditor extends FormEditor {
                         // own -- see http://code.google.com/p/android/issues/detail?id=15901
                         // for one such call chain. By nesting these calls several times
                         // we've incrementing the command count such that a couple of
-                        // cancellations are ignored. Interfering which this mechanism may
+                        // cancellations are ignored. Interfering with this mechanism may
                         // sound dangerous, but it appears that this undo-termination is
                         // done for UI reasons to anticipate what the user wants, and we know
                         // that in *our* scenarios we want the entire unit run as a single
@@ -995,8 +1009,6 @@ public abstract class AndroidXmlEditor extends FormEditor {
                     boolean oldIgnore = mIgnoreXmlUpdate;
                     try {
                         mIgnoreXmlUpdate = true;
-                        // Notify the model we're done modifying it. This must *always* be executed.
-                        model.changedModel();
 
                         if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
                             if (mFormatNode == getUiRootNode()) {
@@ -1019,6 +1031,9 @@ public abstract class AndroidXmlEditor extends FormEditor {
                             mFormatNode = null;
                             mFormatChildren = false;
                         }
+
+                        // Notify the model we're done modifying it. This must *always* be executed.
+                        model.changedModel();
 
                         // Clean up the undo unit. This is done more than once as explained
                         // above for beginRecording.
