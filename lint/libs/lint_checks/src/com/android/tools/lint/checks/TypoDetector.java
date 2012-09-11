@@ -169,7 +169,7 @@ public class TypoDetector extends ResourceXmlDetector {
     private void visit(XmlContext context, Node node) {
         if (node.getNodeType() == Node.TEXT_NODE) {
             // TODO: Figure out how to deal with entities
-            check(context, node, node.getTextContent());
+            check(context, node, node.getNodeValue());
         } else {
             NodeList children = node.getChildNodes();
             for (int i = 0, n = children.getLength(); i < n; i++) {
