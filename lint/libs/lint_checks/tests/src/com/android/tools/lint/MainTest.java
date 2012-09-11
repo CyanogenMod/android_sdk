@@ -16,10 +16,25 @@
 
 package com.android.tools.lint;
 
-import junit.framework.TestCase;
+import com.android.tools.lint.checks.AbstractCheckTest;
+import com.android.tools.lint.checks.AccessibilityDetector;
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.detector.api.Detector;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.security.Permission;
+import java.util.List;
 
 @SuppressWarnings("javadoc")
-public class MainTest extends TestCase {
+public class MainTest extends AbstractCheckTest {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        BuiltinIssueRegistry.reset();
+    }
+
     public void testWrap() {
         String s =
             "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
@@ -64,5 +79,144 @@ public class MainTest extends TestCase {
             "    * The application cannot be translated to other languages by just\n" +
             "    adding new translations for existing string resources.\n",
             wrapped);
+    }
+
+    protected String checkLint(String[] args, List<File> files) throws Exception {
+        PrintStream previousOut = System.out;
+        try {
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            System.setOut(new PrintStream(output));
+
+            Main.main(args);
+
+            return output.toString();
+        } finally {
+            System.setOut(previousOut);
+        }
+    }
+
+    private void checkDriver(String expectedOutput, String expectedError, String[] args)
+            throws Exception {
+        PrintStream previousOut = System.out;
+        PrintStream previousErr = System.err;
+        try {
+            // Trap System.exit calls:
+            System.setSecurityManager(new SecurityManager() {
+                @Override
+                public void checkPermission(Permission perm)
+                {
+                        // allow anything.
+                }
+                @Override
+                public void checkPermission(Permission perm, Object context)
+                {
+                        // allow anything.
+                }
+                @Override
+                public void checkExit(int status) {
+                    throw new ExitException();
+                }
+            });
+
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            System.setOut(new PrintStream(output));
+            final ByteArrayOutputStream error = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(error));
+
+            try {
+                Main.main(args);
+            } catch (ExitException e) {
+                // Allow
+            }
+
+            assertEquals(expectedError, cleanup(error.toString()));
+            assertEquals(expectedOutput, cleanup(output.toString()));
+        } finally {
+            // Re-enable system exit for unit test
+            System.setSecurityManager(null);
+
+            System.setOut(previousOut);
+            System.setErr(previousErr);
+        }
+    }
+
+
+    public void testArguments() throws Exception {
+        checkDriver(
+        // Expected output
+        "\n" +
+        "Scanning MainTest_testArguments: .\n" +
+        "res/layout/accessibility.xml:4: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]\n" +
+        "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n" +
+        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+        "res/layout/accessibility.xml:5: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]\n" +
+        "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n" +
+        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+        "0 errors, 2 warnings\n",
+
+        // Expected error
+        "",
+
+        // Args
+        new String[] {
+                "--check",
+                "ContentDescription",
+                "--disable",
+                "LintError",
+                getProjectDir(null, "res/layout/accessibility.xml").getPath()
+
+        });
+    }
+
+    public void testShowDescription() throws Exception {
+        checkDriver(
+        // Expected output
+        "NewApi\n" +
+        "------\n" +
+        "Summary: Finds API accesses to APIs that are not supported in all targeted API\n" +
+        "versions\n" +
+        "\n" +
+        "Priority: 6 / 10\n" +
+        "Severity: Error\n" +
+        "Category: Correctness\n" +
+        "\n" +
+        "This check scans through all the Android API calls in the application and\n" +
+        "warns about any calls that are not available on all versions targeted by this\n" +
+        "application (according to its minimum SDK attribute in the manifest).\n" +
+        "\n" +
+        "If you really want to use this API and don't need to support older devices\n" +
+        "just set the minSdkVersion in your AndroidManifest.xml file.\n" +
+        "If your code is deliberately accessing newer APIs, and you have ensured (e.g.\n" +
+        "with conditional execution) that this code will only ever be called on a\n" +
+        "supported platform, then you can annotate your class or method with the\n" +
+        "@TargetApi annotation specifying the local minimum SDK to apply, such as\n" +
+        "@TargetApi(11), such that this check considers 11 rather than your manifest\n" +
+        "file's minimum SDK as the required API level.\n" +
+        "\n" +
+        "\n",
+
+        // Expected error
+        "",
+
+        // Args
+        new String[] {
+                "--show",
+                "NewApi"
+        });
+    }
+
+
+    @Override
+    protected Detector getDetector() {
+        // Sample issue to check by the main driver
+        return new AccessibilityDetector();
+    }
+
+    private static class ExitException extends SecurityException {
+        private static final long serialVersionUID = 1L;
+
+        private ExitException() {
+            super("Unit test");
+        }
     }
 }

@@ -188,7 +188,8 @@ public abstract class AbstractCheckTest extends TestCase {
 
     private StringBuilder mOutput = null;
 
-    private static File sTempDir = null;
+    protected static File sTempDir = null;
+
     protected File getTempDir() {
         if (sTempDir == null) {
             File base = new File(System.getProperty("java.io.tmpdir"));     //$NON-NLS-1$
@@ -284,6 +285,23 @@ public abstract class AbstractCheckTest extends TestCase {
 
     protected boolean includeParentPath() {
         return false;
+    }
+
+    protected static String cleanup(String result) throws IOException {
+        if (sTempDir != null && result.contains(sTempDir.getPath())) {
+            result = result.replace(sTempDir.getCanonicalFile().getPath(), "/TESTROOT");
+            result = result.replace(sTempDir.getAbsoluteFile().getPath(), "/TESTROOT");
+            result = result.replace(sTempDir.getPath(), "/TESTROOT");
+        }
+
+        // The output typically contains a few directory/filenames.
+        // On Windows we need to change the separators to the unix-style
+        // forward slash to make the test as OS-agnostic as possible.
+        if (File.separatorChar != '/') {
+            result = result.replace(File.separatorChar, '/');
+        }
+
+        return result;
     }
 
     public class TestLintClient extends Main {

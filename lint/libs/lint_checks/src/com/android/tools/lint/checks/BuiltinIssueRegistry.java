@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -318,5 +319,15 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         }
 
         return sAdtFixes.contains(issue);
+    }
+
+    /**
+     * Reset the registry such that it recomputes its available issues.
+     * <p>
+     * NOTE: This is only intended for testing purposes.
+     */
+    @VisibleForTesting
+    public static void reset() {
+        IssueRegistry.reset();
     }
 }
