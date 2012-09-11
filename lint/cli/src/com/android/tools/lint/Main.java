@@ -88,6 +88,7 @@ public class Main extends LintClient {
     private static final String ARG_EXITCODE   = "--exitcode";     //$NON-NLS-1$
     private static final String ARG_CLASSES    = "--classpath";    //$NON-NLS-1$
     private static final String ARG_SOURCES    = "--sources";      //$NON-NLS-1$
+    private static final String ARG_LIBRARIES  = "--libraries";    //$NON-NLS-1$
 
     private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
     // GCC style flag names for options
@@ -123,6 +124,7 @@ public class Main extends LintClient {
     protected boolean mAllErrors;
     protected List<File> mSources;
     protected List<File> mClasses;
+    protected List<File> mLibraries;
 
     protected Configuration mDefaultConfiguration;
     protected IssueRegistry mRegistry;
@@ -495,6 +497,23 @@ public class Main extends LintClient {
                     }
                     mSources.add(input);
                 }
+            } else if (arg.equals(ARG_LIBRARIES)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing library folder name");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                String paths = args[++index];
+                for (String path : LintUtils.splitPath(paths)) {
+                    File input = getInArgumentPath(path);
+                    if (!input.exists()) {
+                        System.err.println("Library " + input + " does not exist.");
+                        System.exit(ERRNO_INVALIDARGS);
+                    }
+                    if (mLibraries == null) {
+                        mLibraries = new ArrayList<File>();
+                    }
+                    mLibraries.add(input);
+                }
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -514,9 +533,10 @@ public class Main extends LintClient {
         if (files.size() == 0) {
             System.err.println("No files to analyze.");
             System.exit(ERRNO_INVALIDARGS);
-        } else if (files.size() > 1 && (mClasses != null || mSources != null)) {
-            System.err.println("The " + ARG_SOURCES + " and " + ARG_CLASSES
-                    + " can only be used with a single project");
+        } else if (files.size() > 1
+                && (mClasses != null || mSources != null || mLibraries != null)) {
+            System.err.println("The " + ARG_SOURCES + ", " + ARG_CLASSES + " and "
+                    + ARG_LIBRARIES + " arguments can only be used with a single project");
             System.exit(ERRNO_INVALIDARGS);
         }
 
@@ -953,6 +973,8 @@ public class Main extends LintClient {
                 "the project. Only valid when running lint on a single project.",
             ARG_CLASSES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
                 "directory for the project. Only valid when running lint on a single project.",
+            ARG_LIBRARIES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
+                    "library for the project. Only valid when running lint on a single project.",
 
             "", "\nExit Status:",
             "0",                                 "Success.",
@@ -1185,7 +1207,7 @@ public class Main extends LintClient {
     protected ClassPathInfo getClassPath(@NonNull Project project) {
         ClassPathInfo classPath = super.getClassPath(project);
 
-        if (mClasses == null && mSources == null) {
+        if (mClasses == null && mSources == null && mLibraries == null) {
             return classPath;
         }
 
@@ -1210,7 +1232,14 @@ public class Main extends LintClient {
             } else {
                 classes = classPath.getClassFolders();
             }
-            info = new ClassPathInfo(sources, classes, classPath.getLibraries());
+            List<File> libraries;
+            if (mLibraries != null) {
+                libraries = mLibraries;
+            } else {
+                libraries = classPath.getLibraries();
+            }
+
+            info = new ClassPathInfo(sources, classes, libraries);
             mProjectInfo.put(project, info);
         }
 

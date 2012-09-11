@@ -140,7 +140,6 @@ public class MainTest extends AbstractCheckTest {
         }
     }
 
-
     public void testArguments() throws Exception {
         checkDriver(
         // Expected output
@@ -205,6 +204,101 @@ public class MainTest extends AbstractCheckTest {
         });
     }
 
+    public void testNonexistentLibrary() throws Exception {
+        checkDriver(
+        "",
+        "Library foo.jar does not exist.\n",
+
+        // Args
+        new String[] {
+                "--libraries",
+                "foo.jar",
+                "prj"
+
+        });
+    }
+
+    public void testMultipleProjects() throws Exception {
+        File project = getProjectDir(null, "bytecode/classes.jar=>libs/classes.jar");
+        checkDriver(
+        "",
+        "The --sources, --classpath and --libraries arguments can only be used with a single project\n",
+
+        // Args
+        new String[] {
+                "--libraries",
+                new File(project, "libs/classes.jar").getPath(),
+                "--disable",
+                "LintError",
+                project.getPath(),
+                project.getPath()
+
+        });
+    }
+
+    public void testClassPath() throws Exception {
+        File project = getProjectDir(null,
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.jar.data=>bin/classes.jar"
+        );
+        checkDriver(
+        "\n" +
+        "Scanning MainTest_testClassPath: \n" +
+        "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n" +
+        "  getFoo1();\n" +
+        "  ~~~~~~~\n" +
+        "src/test/bytecode/GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n" +
+        "  getFoo2();\n" +
+        "  ~~~~~~~\n" +
+        "src/test/bytecode/GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1) [FieldGetter]\n" +
+        "  isBar1();\n" +
+        "  ~~~~~~\n" +
+        "src/test/bytecode/GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n" +
+        "  this.getFoo1();\n" +
+        "       ~~~~~~~\n" +
+        "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n" +
+        "  this.getFoo2();\n" +
+        "       ~~~~~~~\n" +
+        "0 errors, 5 warnings\n",
+        "",
+
+        // Args
+        new String[] {
+                "--check",
+                "FieldGetter",
+                "--classpath",
+                new File(project, "bin/classes.jar").getPath(),
+                "--disable",
+                "LintError",
+                project.getPath()
+        });
+    }
+
+    public void testLibraries() throws Exception {
+        File project = getProjectDir(null,
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
+                "bytecode/GetterTest.jar.data=>bin/classes.jar"
+        );
+        checkDriver(
+        "\n" +
+        "Scanning MainTest_testLibraries: \n" +
+        "\n" +
+        "No issues found.\n",
+        "",
+
+        // Args
+        new String[] {
+                "--check",
+                "FieldGetter",
+                "--libraries",
+                new File(project, "bin/classes.jar").getPath(),
+                "--disable",
+                "LintError",
+                project.getPath()
+        });
+    }
 
     @Override
     protected Detector getDetector() {
