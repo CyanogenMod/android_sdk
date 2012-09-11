@@ -117,4 +117,19 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                     "bytecode/GetterTest.jar.data=>bin/test/pkg/bogus.class"
                     ));
     }
+
+    public void testCornerCases() throws Exception {
+        assertEquals(
+            "src/test/pkg/TestFieldGetter.java:21: Warning: Calling getter method getPath() on self is slower than field access (path) [FieldGetter]\n" +
+            "        getPath(); // Should be flagged\n" +
+            "        ~~~~~~~\n" +
+            "0 errors, 1 warnings\n",
+
+            lintProject(
+                "bytecode/classpath-jar=>.classpath",
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "bytecode/TestFieldGetter.java.txt=>src/test/pkg/TestFieldGetter.java",
+                "bytecode/TestFieldGetter.class.data=>bin/classes/test/pkg/TestFieldGetter.class"
+                ));
+    }
 }

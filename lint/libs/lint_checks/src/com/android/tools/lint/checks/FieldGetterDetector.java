@@ -22,6 +22,7 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -35,6 +36,7 @@ import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -95,9 +97,27 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             return;
         }
 
+        if ((method.access & Opcodes.ACC_STATIC) != 0) {
+            // Not an instance method
+            return;
+        }
+
+        if (instruction.getOpcode() != Opcodes.INVOKEVIRTUAL) {
+            return;
+        }
+
         MethodInsnNode node = (MethodInsnNode) instruction;
         String name = node.name;
         String owner = node.owner;
+
+        AbstractInsnNode prev = LintUtils.getPrevInstruction(instruction);
+        if (prev == null || prev.getOpcode() != Opcodes.ALOAD) {
+            return;
+        }
+        VarInsnNode prevVar = (VarInsnNode) prev;
+        if (prevVar.var != 0) { // Not on "this", variable 0 in instance methods?
+            return;
+        }
 
         if (((name.startsWith("get") && name.length() > 3     //$NON-NLS-1$
                 && Character.isUpperCase(name.charAt(3)))
@@ -153,6 +173,8 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
                 }
             }
         }
+
+        mPendingCalls = null;
     }
 
     // Holder class for getters to be checked
