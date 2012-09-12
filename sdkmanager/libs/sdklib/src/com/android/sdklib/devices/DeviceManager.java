@@ -68,8 +68,8 @@ public class DeviceManager {
     private static List<Device> mUserDevices;
     private static List<Device> mDefaultDevices;
     private static final Object sLock = new Object();
-    private static final List<DevicesChangeListener> listeners =
-        Collections.synchronizedList(new ArrayList<DevicesChangeListener>());
+    private static final List<DevicesChangeListener> sListeners =
+                                        new ArrayList<DevicesChangeListener>();
 
     public static enum DeviceStatus {
         /**
@@ -87,10 +87,8 @@ public class DeviceManager {
     }
 
     // TODO: Refactor this to look more like AvdManager so that we don't have
-    // multiple instances
-    // in the same application, which forces us to parse the XML multiple times
-    // when we don't
-    // to.
+    // multiple instances in the same application, which forces us to parse
+    // the XML multiple times when we don't have to.
     public DeviceManager(ILogger log) {
         mLog = log;
     }
@@ -108,19 +106,29 @@ public class DeviceManager {
 
     /**
      * Register a listener to be notified when the device lists are modified.
-     * @param listener The listener to add
+     *
+     * @param listener The listener to add. Ignored if already registered.
      */
     public void registerListener(DevicesChangeListener listener) {
-        listeners.add(listener);
+        if (listener != null) {
+            synchronized (sListeners) {
+                if (!sListeners.contains(listener)) {
+                    sListeners.add(listener);
+                }
+            }
+        }
     }
 
     /**
      * Removes a listener from the notification list such that it will no longer receive
      * notifications when modifications to the {@link Device} list occur.
+     *
      * @param listener The listener to remove.
      */
     public boolean unregisterListener(DevicesChangeListener listener) {
-        return listeners.remove(listener);
+        synchronized (sListeners) {
+            return sListeners.remove(listener);
+        }
     }
 
     public DeviceStatus getDeviceStatus(
@@ -189,10 +197,10 @@ public class DeviceManager {
     }
 
     /**
-     * Returns all vendor provided {@link Device}s
+     * Returns all vendor-provided {@link Device}s
      *
      * @param sdkLocation Location of the Android SDK
-     * @return A list of vendor provided {@link Device}s
+     * @return A list of vendor-provided {@link Device}s
      */
     public List<Device> getVendorDevices(String sdkLocation) {
         synchronized (sLock) {
@@ -224,9 +232,9 @@ public class DeviceManager {
     }
 
     /**
-     * Returns all user created {@link Device}s
+     * Returns all user-created {@link Device}s
      *
-     * @return All user created {@link Device}s
+     * @return All user-created {@link Device}s
      */
     public List<Device> getUserDevices() {
         synchronized (sLock) {
@@ -244,22 +252,25 @@ public class DeviceManager {
                     mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
                 } catch (SAXException e) {
                     // Probably an old config file which we don't want to overwrite.
-                    // FIXME: userDevicesFile is likely null at this point and below.
-                    String base = userDevicesFile.getAbsoluteFile()+".old";
-                    File renamedConfig = new File(base);
-                    int i = 0;
-                    while (renamedConfig.exists()) {
-                        renamedConfig = new File(base + "." + (i++));
+                    if (userDevicesFile != null) {
+                        String base = userDevicesFile.getAbsoluteFile() + ".old";
+                        File renamedConfig = new File(base);
+                        int i = 0;
+                        while (renamedConfig.exists()) {
+                            renamedConfig = new File(base + '.' + (i++));
+                        }
+                        mLog.error(null, "Error parsing %1$s, backing up to %2$s",
+                                userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
+                        userDevicesFile.renameTo(renamedConfig);
                     }
-                    mLog.error(null, "Error parsing %1$s, backing up to %2$s",
-                            userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
-                    userDevicesFile.renameTo(renamedConfig);
                 } catch (FileNotFoundException e) {
                     mLog.warning("No user devices found");
                 } catch (ParserConfigurationException e) {
-                    mLog.error(null, "Error parsing %1$s", userDevicesFile.getAbsolutePath());
+                    mLog.error(null, "Error parsing %1$s",
+                            userDevicesFile == null ? "(null)" : userDevicesFile.getAbsolutePath());
                 } catch (IOException e) {
-                    mLog.error(null, "Error parsing %1$s", userDevicesFile.getAbsolutePath());
+                    mLog.error(null, "Error parsing %1$s",
+                            userDevicesFile == null ? "(null)" : userDevicesFile.getAbsolutePath());
                 }
             }
         }
@@ -421,8 +432,8 @@ public class DeviceManager {
     }
 
     private void notifyListeners() {
-        synchronized (listeners) {
-            for (DevicesChangeListener listener : listeners) {
+        synchronized (sListeners) {
+            for (DevicesChangeListener listener : sListeners) {
                 listener.onDevicesChange();
             }
         }

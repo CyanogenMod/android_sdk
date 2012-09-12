@@ -149,9 +149,17 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void createControl(Composite parent) {
         Font font = parent.getFont();
 
-        // reload the AVDs to make sure we are up to date
+        // Reload the AVDs to make sure we are up to date
         try {
-            Sdk.getCurrent().getAvdManager().reloadAvds(NullLogger.getLogger());
+            // SDK can be null if the user opens the dialog before ADT finished
+            // initializing the SDK itself. In this case just don't reload anything
+            // so there's nothing obsolete yet.
+            Sdk sdk = Sdk.getCurrent();
+            if (sdk != null) {
+                AvdManager avdMan = sdk.getAvdManager();
+                assert avdMan != null;
+                avdMan.reloadAvds(NullLogger.getLogger());
+            }
         } catch (AndroidLocationException e1) {
             // this happens if the AVD Manager failed to find the folder in which the AVDs are
             // stored. There isn't much we can do at this point.
