@@ -447,7 +447,7 @@
 
 <h3 data-toctitle="activityToLayout">string <em>activityToLayout</em>(string)</h3>
 
-<p>This function converts an activity class-like identifer string, such as <code>FooActivity</code> to a corresponding resource-friendly identifier string, such as <code>activity_foo</code>.</p>
+<p>This function converts an activity class-like identifer string, such as <code>FooActivity</code>, to a corresponding resource-friendly identifier string, such as <code>activity_foo</code>.</p>
 
 <h4>Arguments</h4>
 <dl>
@@ -458,9 +458,42 @@
 <h4>See also</h4>
 <p><a href="#toc_layouttoactivity"><code>layoutToActivity</code></a></p>
 
+<h3 data-toctitle="camelCaseToUnderscore">string <em>camelCaseToUnderscore</em>(string)</h3>
+
+<p>This function converts a camel-case identifer string, such as <code>FooBar</code>, to its corresponding underscore-separated identifier string, such as <code>foo_bar</code>.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>camelStr</code></dt>
+  <dd>The camel-case string, e.g. <code>FooBar</code> to convert to an underscore-delimited string.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_underscoretocamelcase"><code>underscoreToCamelCase</code></a></p>
+
+<h3 data-toctitle="classToResource">string <em>classToResource</em>(string)</h3>
+
+<p>This function converts an Android class name, such as <code>FooActivity</code> or <code>FooFragment</code>, to a corresponding resource-friendly identifier string, such as <code>foo</code>, stripping the 'Activity' or 'Fragment' suffix. Currently stripped suffixes are listed below.</p>
+
+<ul>
+  <li>Activity</li>
+  <li>Fragment</li>
+  <li>Provider</li>
+  <li>Service</li>
+</ul>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>className</code></dt>
+  <dd>The class name, e.g. <code>FooActivity</code> to reformat as an underscore-delimited string with suffixes removed.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_activitytolayout"><code>activityToLayout</code></a></p>
+
 <h3 data-toctitle="layoutToActivity">string <em>layoutToActivity</em>(string)</h3>
 
-<p>This function converts a resource-friendly identifer string, such as <code>activity_foo</code> to a corresponding Java class-friendly identifier string, such as <code>FooActivity</code>.</p>
+<p>This function converts a resource-friendly identifer string, such as <code>activity_foo</code>, to a corresponding Java class-friendly identifier string, such as <code>FooActivity</code>.</p>
 
 <h4>Arguments</h4>
 <dl>
@@ -480,6 +513,19 @@
   <dt><code>packageName</code></dt>
   <dd>The package name to reformat, e.g. <code>com.example.foo</code>.</dd>
 </dl>
+
+<h3 data-toctitle="underscoreToCamelCase">string <em>underscoreToCamelCase</em>(string)</h3>
+
+<p>This function converts an underscore-delimited string, such as <code>foo_bar</code>, to its corresponding camel-case string, such as <code>FooBar</code>.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>underStr</code></dt>
+  <dd>The underscore-delimited string, e.g. <code>foo_bar</code> to convert to a camel-case string.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_camelcasetounderscore"><code>camelCaseToUnderscore</code></a></p>
 
 <h2>Notes for Template Authors</h2>
 
