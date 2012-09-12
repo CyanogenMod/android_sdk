@@ -35,7 +35,6 @@ import static com.android.ide.common.layout.LayoutConstants.SPACE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 import static com.android.utils.XmlUtils.ANDROID_URI;
@@ -783,7 +782,6 @@ public final class DescriptorsUtils {
         // By default, layouts do not need ids.
         String tag = descriptor.getXmlLocalName();
         if (tag.endsWith("Layout")  //$NON-NLS-1$
-                || tag.equals(VIEW_FRAGMENT)
                 || tag.equals(VIEW_INCLUDE)
                 || tag.equals(VIEW_MERGE)
                 || tag.equals(SPACE)
