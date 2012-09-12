@@ -45,43 +45,46 @@ class OrientationMenuAction extends SubmenuAction {
     private static final int MENU_NIGHTMODE = 1;
     private static final int MENU_UIMODE = 2;
 
-    private final ConfigurationComposite mConfiguration;
+    private final ConfigurationChooser mConfigChooser;
     /** Type of menu; one of the constants {@link #MENU_NIGHTMODE} etc */
     private final int mType;
 
-    OrientationMenuAction(int type, String title, ConfigurationComposite configuration) {
+    OrientationMenuAction(int type, String title, ConfigurationChooser configuration) {
         super(title);
         mType = type;
-        mConfiguration = configuration;
+        mConfigChooser = configuration;
     }
 
-    static void showMenu(ConfigurationComposite configuration, ToolItem combo) {
+    static void showMenu(ConfigurationChooser configChooser, ToolItem combo) {
         MenuManager manager = new MenuManager();
 
-        // Show toggles for all the available configurations
-        State current = configuration.getSelectedDeviceState();
-        Device device = configuration.getSelectedDevice();
+        // Show toggles for all the available states
+
+        Configuration configuration = configChooser.getConfiguration();
+        Device device = configuration.getDevice();
+        State current = configuration.getDeviceState();
         if (device != null) {
             List<State> states = device.getAllStates();
 
             if (states.size() > 1 && current != null) {
                 State flip = configuration.getNextDeviceState(current);
-                manager.add(new DeviceConfigAction(configuration,
-                        String.format("Switch to %1$s", flip.getName()), flip, false, true));
+                String flipName = flip != null ? flip.getName() : current.getName();
+                manager.add(new DeviceConfigAction(configChooser,
+                        String.format("Switch to %1$s", flipName), flip, false, true));
                 manager.add(new Separator());
             }
 
             for (State config : states) {
-                manager.add(new DeviceConfigAction(configuration, config.getName(),
+                manager.add(new DeviceConfigAction(configChooser, config.getName(),
                         config, config == current, false));
             }
             manager.add(new Separator());
         }
-        manager.add(new OrientationMenuAction(MENU_UIMODE, "UI Mode", configuration));
+        manager.add(new OrientationMenuAction(MENU_UIMODE, "UI Mode", configChooser));
         manager.add(new Separator());
-        manager.add(new OrientationMenuAction(MENU_NIGHTMODE, "Night Mode", configuration));
+        manager.add(new OrientationMenuAction(MENU_NIGHTMODE, "Night Mode", configChooser));
 
-        Menu menu = manager.createContextMenu(configuration.getShell());
+        Menu menu = manager.createContextMenu(configChooser.getShell());
         Rectangle bounds = combo.getBounds();
         Point location = new Point(bounds.x, bounds.y + bounds.height);
         location = combo.getParent().toDisplay(location);
@@ -93,7 +96,7 @@ class OrientationMenuAction extends SubmenuAction {
     protected void addMenuItems(Menu menu) {
         switch (mType) {
             case MENU_NIGHTMODE: {
-                NightMode selected = mConfiguration.getSelectedNightMode();
+                NightMode selected = mConfigChooser.getConfiguration().getNightMode();
                 for (NightMode mode : NightMode.values()) {
                     boolean checked = mode == selected;
                     SelectNightModeAction action = new SelectNightModeAction(mode, checked);
@@ -103,7 +106,7 @@ class OrientationMenuAction extends SubmenuAction {
                 break;
             }
             case MENU_UIMODE: {
-                UiMode selected = mConfiguration.getSelectedUiMode();
+                UiMode selected = mConfigChooser.getConfiguration().getUiMode();
                 for (UiMode mode : UiMode.values()) {
                     boolean checked = mode == selected;
                     SelectUiModeAction action = new SelectUiModeAction(mode, checked);
@@ -113,6 +116,7 @@ class OrientationMenuAction extends SubmenuAction {
             }
         }
     }
+
 
     private class SelectNightModeAction extends Action {
         private final NightMode mMode;
@@ -127,7 +131,9 @@ class OrientationMenuAction extends SubmenuAction {
 
         @Override
         public void run() {
-            mConfiguration.selectNightMode(mMode);
+            Configuration configuration = mConfigChooser.getConfiguration();
+            configuration.setNightMode(mMode, false);
+            mConfigChooser.notifyFolderConfigChanged();
         }
     }
 
@@ -144,15 +150,16 @@ class OrientationMenuAction extends SubmenuAction {
 
         @Override
         public void run() {
-            mConfiguration.selectUiMode(mMode);
+            Configuration configuration = mConfigChooser.getConfiguration();
+            configuration.setUiMode(mMode, false);
         }
     }
 
     private static class DeviceConfigAction extends Action {
-        private final ConfigurationComposite mConfiguration;
+        private final ConfigurationChooser mConfiguration;
         private final State mState;
 
-        private DeviceConfigAction(ConfigurationComposite configuration, String title,
+        private DeviceConfigAction(ConfigurationChooser configuration, String title,
                 State state, boolean checked, boolean flip) {
             super(title, IAction.AS_RADIO_BUTTON);
             mConfiguration = configuration;

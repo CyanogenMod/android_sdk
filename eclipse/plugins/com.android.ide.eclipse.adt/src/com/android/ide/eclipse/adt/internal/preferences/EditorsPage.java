@@ -127,6 +127,10 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
                 "Format on Save",
                 parent));
 
+        addField(new BooleanFieldEditor(AdtPrefs.PREFS_SHARED_LAYOUT_EDITOR,
+                "Use a single layout editor for all configuration variations of a layout",
+                parent));
+
         boolean enabled = getPreferenceStore().getBoolean(AdtPrefs.PREFS_USE_CUSTOM_XML_FORMATTER);
         updateCustomFormattingOptions(enabled);
     }

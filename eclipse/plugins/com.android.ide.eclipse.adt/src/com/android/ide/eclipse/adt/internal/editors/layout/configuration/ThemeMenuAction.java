@@ -73,30 +73,31 @@ class ThemeMenuAction extends SubmenuAction {
     private static final int MENU_DEVICE_LIGHT = 8;
     private static final int MENU_ALL = 9;
 
-    private final ConfigurationComposite mConfiguration;
+    private final ConfigurationChooser mConfigChooser;
     private final List<String> mThemeList;
     /** Type of menu; one of the constants {@link #MENU_ALL} etc */
     private final int mType;
 
-    ThemeMenuAction(int type, String title, ConfigurationComposite configuration,
+    ThemeMenuAction(int type, String title, ConfigurationChooser configuration,
             List<String> themeList) {
         super(title);
         mType = type;
-        mConfiguration = configuration;
+        mConfigChooser = configuration;
         mThemeList = themeList;
     }
 
-    static void showThemeMenu(ConfigurationComposite configuration, ToolItem combo,
+    static void showThemeMenu(ConfigurationChooser configChooser, ToolItem combo,
             List<String> themeList) {
         MenuManager manager = new MenuManager();
 
         // First show the currently selected theme (grayed out since you can't
         // reselect it)
-        String currentTheme = configuration.getSelectedTheme();
+        Configuration configuration = configChooser.getConfiguration();
+        String currentTheme = configuration.getTheme();
         String currentName = null;
         if (currentTheme != null) {
             currentName = ResourceHelper.styleToTheme(currentTheme);
-            SelectThemeAction action = new SelectThemeAction(configuration,
+            SelectThemeAction action = new SelectThemeAction(configChooser,
                     currentName,
                     currentTheme,
                     true /* selected */);
@@ -105,16 +106,16 @@ class ThemeMenuAction extends SubmenuAction {
             manager.add(new Separator());
         }
 
-        String preferred = configuration.getPreferredTheme();
+        String preferred = configChooser.computePreferredTheme();
         if (preferred != null && !preferred.equals(currentTheme)) {
-            manager.add(new SelectThemeAction(configuration,
+            manager.add(new SelectThemeAction(configChooser,
                     ResourceHelper.styleToTheme(preferred),
                     preferred, false /* selected */));
             manager.add(new Separator());
         }
 
-        IAndroidTarget target = configuration.getRenderingTarget();
-        int apiLevel = target.getVersion().getApiLevel();
+        IAndroidTarget target = configuration.getTarget();
+        int apiLevel = target != null ? target.getVersion().getApiLevel() : 1;
         boolean hasHolo = apiLevel >= 11;   // Honeycomb
         boolean hasDeviceDefault = apiLevel >= 14; // ICS
 
@@ -123,44 +124,44 @@ class ThemeMenuAction extends SubmenuAction {
         // Theme.Holo.Wallpaper etc
 
         manager.add(new ThemeMenuAction(MENU_PROJECT, "Project Themes",
-                configuration, themeList));
+                configChooser, themeList));
         manager.add(new ThemeMenuAction(MENU_MANIFEST, "Manifest Themes",
-                configuration, themeList));
+                configChooser, themeList));
 
         manager.add(new Separator());
 
         if (hasHolo) {
             manager.add(new ThemeMenuAction(MENU_HOLO, "Holo",
-                    configuration, themeList));
+                    configChooser, themeList));
             manager.add(new ThemeMenuAction(MENU_HOLO_LIGHT, "Holo.Light",
-                    configuration, themeList));
+                    configChooser, themeList));
         }
         if (hasDeviceDefault) {
             manager.add(new ThemeMenuAction(MENU_DEVICE, "DeviceDefault",
-                    configuration, themeList));
+                    configChooser, themeList));
             manager.add(new ThemeMenuAction(MENU_DEVICE_LIGHT, "DeviceDefault.Light",
-                    configuration, themeList));
+                    configChooser, themeList));
         }
         manager.add(new ThemeMenuAction(MENU_THEME, "Theme",
-                configuration, themeList));
+                configChooser, themeList));
         manager.add(new ThemeMenuAction(MENU_THEME_LIGHT, "Theme.Light",
-                configuration, themeList));
+                configChooser, themeList));
 
         // TODO: Add generic types like Wallpaper, Dialog, Alert, etc here, with
         // submenus for picking it within each theme category?
 
         manager.add(new Separator());
         manager.add(new ThemeMenuAction(MENU_ALL, "All",
-                configuration, themeList));
+                configChooser, themeList));
 
         if (currentTheme != null) {
             assert currentName != null;
             manager.add(new Separator());
             String title = String.format("Open %1$s Declaration...", currentName);
-            manager.add(new OpenThemeAction(title, configuration.getEditedFile(), currentTheme));
+            manager.add(new OpenThemeAction(title, configChooser.getEditedFile(), currentTheme));
         }
 
-        Menu menu = manager.createContextMenu(configuration.getShell());
+        Menu menu = manager.createContextMenu(configChooser.getShell());
 
         Rectangle bounds = combo.getBounds();
         Point location = new Point(bounds.x, bounds.y + bounds.height);
@@ -177,10 +178,11 @@ class ThemeMenuAction extends SubmenuAction {
                 break;
 
             case MENU_MANIFEST: {
-                IProject project = mConfiguration.getEditedFile().getProject();
+                IProject project = mConfigChooser.getEditedFile().getProject();
                 ManifestInfo manifest = ManifestInfo.get(project);
                 Map<String, String> activityThemes = manifest.getActivityThemes();
-                String activity = mConfiguration.getSelectedActivity();
+                Configuration configuration = mConfigChooser.getConfiguration();
+                String activity = configuration.getActivity();
                 if (activity != null) {
                     String theme = activityThemes.get(activity);
                     if (theme != null) {
@@ -196,7 +198,7 @@ class ThemeMenuAction extends SubmenuAction {
                     }
                     List<String> sorted = new ArrayList<String>(allThemes);
                     Collections.sort(sorted);
-                    String current = mConfiguration.getSelectedTheme();
+                    String current = configuration.getTheme();
                     for (String theme : sorted) {
                         boolean selected = theme.equals(current);
                         addMenuItem(menu, theme, selected);
@@ -268,19 +270,19 @@ class ThemeMenuAction extends SubmenuAction {
     }
 
     private void addMenuItems(Menu menu, List<String> themes) {
-        String current = mConfiguration.getSelectedTheme();
+        String current = mConfigChooser.getConfiguration().getTheme();
         for (String theme : themes) {
             addMenuItem(menu, theme, theme.equals(current));
         }
     }
 
     private boolean isSelectedTheme(String theme) {
-        return theme.equals(mConfiguration.getSelectedTheme());
+        return theme.equals(mConfigChooser.getConfiguration().getTheme());
     }
 
     private void addMenuItem(Menu menu, String theme, boolean selected) {
         String title = ResourceHelper.styleToTheme(theme);
-        SelectThemeAction action = new SelectThemeAction(mConfiguration, title, theme, selected);
+        SelectThemeAction action = new SelectThemeAction(mConfigChooser, title, theme, selected);
         new ActionContributionItem(action).fill(menu, -1);
     }
 

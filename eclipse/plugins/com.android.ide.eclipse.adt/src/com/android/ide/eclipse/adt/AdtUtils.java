@@ -405,6 +405,29 @@ public class AdtUtils {
     }
 
     /**
+     * Returns the current active workbench page, or null if not found
+     *
+     * @return the current page, or null
+     */
+    @Nullable
+    public static IWorkbenchPage getActiveWorkbenchPage() {
+        IWorkbenchWindow window = getActiveWorkbenchWindow();
+        if (window != null) {
+            IWorkbenchPage page = window.getActivePage();
+            if (page == null) {
+                IWorkbenchPage[] pages = window.getPages();
+                if (pages.length > 0) {
+                    page = pages[0];
+                }
+            }
+
+            return page;
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the current active workbench part, or null if not found
      *
      * @return the current active workbench part, or null
@@ -1326,5 +1349,15 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns whether the current thread is the UI thread
+     *
+     * @return true if the current thread is the UI thread
+     */
+    public static boolean isUiThread() {
+        return AdtPlugin.getDisplay() != null
+                && AdtPlugin.getDisplay().getThread() == Thread.currentThread();
     }
 }

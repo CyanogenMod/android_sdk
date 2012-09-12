@@ -240,6 +240,7 @@ registry
 reindent
 reindenting
 remap
+renderable
 reparse
 reparses
 rescales
@@ -306,6 +307,7 @@ timestamp
 timestamps
 tmp
 toolbar
+toolbars
 tooltip
 tooltips
 traceview

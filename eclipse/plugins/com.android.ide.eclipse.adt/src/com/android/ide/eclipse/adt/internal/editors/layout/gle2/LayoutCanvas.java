@@ -26,7 +26,7 @@ import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
@@ -1074,7 +1074,7 @@ public class LayoutCanvas extends Canvas {
                     try {
                         // Set initial state of a new file
                         // TODO: Only set rendering target portion of the state
-                        QualifiedName qname = ConfigurationComposite.NAME_CONFIG_STATE;
+                        QualifiedName qname = ConfigurationChooser.NAME_CONFIG_STATE;
                         String state = AdtPlugin.getFileProperty(leavingFile, qname);
                         xmlFile.setSessionProperty(GraphicalEditorPart.NAME_INITIAL_STATE,
                                 state);
@@ -1528,10 +1528,10 @@ public class LayoutCanvas extends Canvas {
      */
     public Margins getInsets(String fqcn) {
         if (ViewMetadataRepository.INSETS_SUPPORTED) {
-            ConfigurationComposite configComposite =
-                    mEditorDelegate.getGraphicalEditor().getConfigurationComposite();
+            ConfigurationChooser configComposite =
+                    mEditorDelegate.getGraphicalEditor().getConfigurationChooser();
             String theme = configComposite.getThemeName();
-            Density density = configComposite.getDensity();
+            Density density = configComposite.getConfiguration().getDensity();
             return ViewMetadataRepository.getInsets(fqcn, density, theme);
         } else {
             return null;

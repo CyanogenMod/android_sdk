@@ -49,6 +49,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.client.api.IssueRegistry;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -82,6 +83,7 @@ import org.eclipse.wst.sse.ui.StructuredTextEditor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,6 +96,9 @@ import java.util.Set;
  */
 public class LayoutEditorDelegate extends CommonXmlDelegate
          implements IShowEditorInput, CommonXmlDelegate.IActionContributorDelegate {
+
+    /** The prefix for layout folders that are not the default layout folder */
+    private static final String LAYOUT_FOLDER_PREFIX = "layout-"; //$NON-NLS-1$
 
     public static class Creator implements IDelegateCreator {
         @Override
@@ -313,8 +318,10 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
 
     /**
      * Called to replace the current {@link IEditorInput} with another one.
-     * <p/>This is used when {@link LayoutEditorMatchingStrategy} returned <code>true</code> which means we're
-     * opening a different configuration of the same layout.
+     * <p/>
+     * This is used when {@link LayoutEditorMatchingStrategy} returned
+     * <code>true</code> which means we're opening a different configuration of
+     * the same layout.
      */
     @Override
     public void showEditorInput(IEditorInput editorInput) {
@@ -735,6 +742,25 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         if (mGraphicalEditor != null && getEditor().getActivePage() == mGraphicalEditorIndex) {
             mGraphicalEditor.deactivated();
         }
+    }
+
+    @Override
+    public String delegateGetPartName() {
+        IEditorInput editorInput = getEditor().getEditorInput();
+        if (editorInput instanceof IFileEditorInput) {
+            IFileEditorInput fileInput = (IFileEditorInput) editorInput;
+            IFile file = fileInput.getFile();
+            IContainer parent = file.getParent();
+            if (parent != null) {
+                String parentName = parent.getName();
+                if  (parentName.startsWith(LAYOUT_FOLDER_PREFIX)) {
+                    parentName = parentName.substring(LAYOUT_FOLDER_PREFIX.length());
+                    return parentName + File.separatorChar + file.getName();
+                }
+            }
+        }
+
+        return super.delegateGetPartName();
     }
 
     // ---- Local Methods ----

@@ -41,14 +41,14 @@ public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
             FileEditorInput fileInput = (FileEditorInput)input;
 
             // get the IFile object and check it's in one of the layout folders.
-            IFile iFile = fileInput.getFile();
+            IFile file = fileInput.getFile();
             ResourceManager manager = ResourceManager.getInstance();
-            ResourceFolder resFolder = manager.getResourceFolder(iFile);
+            ResourceFolder resFolder = manager.getResourceFolder(file);
 
             // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
             // is expensive so try exclude files that definitely don't match, such
             // as those with the wrong extension or wrong file name
-            if (!iFile.getName().equals(editorRef.getName()) ||
+            if (!file.getName().equals(editorRef.getName()) ||
                     !editorRef.getId().equals(CommonXmlEditor.ID)) {
                 return false;
             }
@@ -60,16 +60,16 @@ public class LayoutEditorMatchingStrategy implements IEditorMatchingStrategy {
                     IEditorInput editorInput = editorRef.getEditorInput();
                     if (editorInput instanceof FileEditorInput) {
                         FileEditorInput editorFileInput = (FileEditorInput)editorInput;
-                        IFile editorIFile = editorFileInput.getFile();
+                        IFile editorFile = editorFileInput.getFile();
 
-                        ResourceFolder editorFolder = manager.getResourceFolder(editorIFile);
+                        ResourceFolder editorFolder = manager.getResourceFolder(editorFile);
                         if (editorFolder == null
                                 || editorFolder.getType() != ResourceFolderType.LAYOUT) {
                             return false;
                         }
 
-                        return editorIFile.getProject().equals(iFile.getProject())
-                            && editorIFile.getName().equals(iFile.getName());
+                        return editorFile.getProject().equals(file.getProject())
+                            && editorFile.getName().equals(file.getName());
                     }
                 } catch (PartInitException e) {
                     // we do nothing, we'll just return false.

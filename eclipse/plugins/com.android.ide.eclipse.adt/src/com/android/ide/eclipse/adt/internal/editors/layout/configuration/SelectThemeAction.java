@@ -27,10 +27,10 @@ import org.eclipse.jface.action.IAction;
  * animation category
  */
 class SelectThemeAction extends Action {
-    private final ConfigurationComposite mConfiguration;
+    private final ConfigurationChooser mConfiguration;
     private final String mTheme;
 
-    public SelectThemeAction(ConfigurationComposite configuration, String title, String theme,
+    public SelectThemeAction(ConfigurationChooser configuration, String title, String theme,
             boolean selected) {
         super(title, IAction.AS_RADIO_BUTTON);
         assert theme.startsWith(STYLE_RESOURCE_PREFIX)

@@ -50,6 +50,7 @@ public final class LayoutCreatorDialog extends GridDialog {
     /**
      * Creates a dialog, and init the UI from a {@link FolderConfiguration}.
      * @param parentShell the parent {@link Shell}.
+     * @param fileName the filename associated with the configuration
      * @param config The starting configuration.
      */
     public LayoutCreatorDialog(Shell parentShell, String fileName, FolderConfiguration config) {
@@ -127,6 +128,11 @@ public final class LayoutCreatorDialog extends GridDialog {
         resetStatus();
     }
 
+    /**
+     * Sets the edited configuration on the given configuration parameter
+     *
+     * @param config the configuration to apply the current edits to
+     */
     public void getConfiguration(FolderConfiguration config) {
         config.set(mConfig);
     }
