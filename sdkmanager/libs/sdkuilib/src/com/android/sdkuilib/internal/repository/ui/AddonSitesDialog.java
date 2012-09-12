@@ -21,6 +21,8 @@ import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
 import com.android.sdklib.internal.repository.sources.SdkSourceProperties;
 import com.android.sdklib.internal.repository.sources.SdkSources;
+import com.android.sdklib.internal.repository.sources.SdkSysImgSource;
+import com.android.sdklib.repository.SdkSysImgConstants;
 import com.android.sdkuilib.internal.repository.UpdaterBaseDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.ui.GridDataBuilder;
@@ -387,7 +389,14 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
                 }
 
                 // create the source, store it and update the list
-                SdkAddonSource newSource = new SdkAddonSource(url, null/*uiName*/);
+                SdkSource newSource;
+                // use url suffix to decide whether this is a SysImg or Addon;
+                // see SdkSources.loadUserAddons() for another check like this
+                if (url.endsWith(SdkSysImgConstants.URL_DEFAULT_FILENAME)) {
+                     newSource = new SdkSysImgSource(url, null/*uiName*/);
+                } else {
+                     newSource = new SdkAddonSource(url, null/*uiName*/);
+                }
                 mSources.add(SdkSourceCategory.USER_ADDONS, newSource);
                 setReturnValue(true);
                 // notify sources change listeners. This will invoke our own loadUserUrlsList().

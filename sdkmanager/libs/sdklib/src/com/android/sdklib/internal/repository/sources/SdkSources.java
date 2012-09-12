@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository.sources;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.repository.SdkSysImgConstants;
 import com.android.utils.ILogger;
 
 import java.io.File;
@@ -297,7 +298,7 @@ public class SdkSources {
                             // make a "dynamic" source object that tries to guess its type once
                             // the URI has been fetched.
                             SdkSource s;
-                            if (url.endsWith("sys-img.xml")) {
+                            if (url.endsWith(SdkSysImgConstants.URL_DEFAULT_FILENAME)) {
                                 s = new SdkSysImgSource(url, null/*uiName*/);
                             } else {
                                 s = new SdkAddonSource(url, null/*uiName*/);
