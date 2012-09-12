@@ -52,7 +52,7 @@ Require-Bundle: com.android.ide.eclipse.base,
  org.eclipse.ltk.ui.refactoring,
  org.eclipse.core.expressions,
  org.eclipse.compare
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.layout;x-friends:="com.android.ide.eclipse.tests",
@@ -137,6 +137,8 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.tools.lint.client.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.tools.lint.detector.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.util;x-friends:="com.android.ide.eclipse.tests",
+ freemarker.cache;x-friends:="com.android.ide.eclipse.tests",
+ freemarker.template;x-friends:="com.android.ide.eclipse.tests",
  org.kxml2.io;x-friends:="com.android.ide.eclipse.tests",
  org.kxml2.kdom;x-friends:="com.android.ide.eclipse.tests",
  org.kxml2.wap;x-friends:="com.android.ide.eclipse.tests",
