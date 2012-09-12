@@ -35,11 +35,13 @@ import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 /** Dialog displayed while the trace is being streamed from device to host. */
 public class GLTraceCollectorDialog extends TitleAreaDialog {
     private static final String TITLE = "OpenGL ES Trace";
     private static final String DEFAULT_MESSAGE = "Trace collection in progress.";
+    private static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#.##"); //$NON-NLS-1$
 
     private TraceOptions mTraceOptions;
     private final TraceFileWriter mTraceFileWriter;
@@ -194,7 +196,7 @@ public class GLTraceCollectorDialog extends TitleAreaDialog {
 
                 double fileSize = mTraceFileWriter.getCurrentFileSize();
                 fileSize /= (1024 * 1024); // convert to size in MB
-                final String frameSize = String.format("%.2g MB", fileSize); //$NON-NLS-1$
+                final String frameSize = SIZE_FORMATTER.format(fileSize) + " MB";
 
                 Display.getDefault().syncExec(new Runnable() {
                     @Override

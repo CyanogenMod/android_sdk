@@ -64,6 +64,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private Combo mDeviceCombo;
     private Text mAppPackageToTraceText;
     private Text mActivityToTraceText;
+    private Button mIsActivityFullyQualifiedButton;
     private Text mTraceFilePathText;
 
     private String mSelectedDevice = "";
@@ -74,6 +75,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private static boolean sCollectFbOnEglSwap = true;
     private static boolean sCollectFbOnGlDraw = false;
     private static boolean sCollectTextureData = false;
+    private static boolean sIsActivityFullyQualified = false;
     private IDevice[] mDevices;
 
     public GLTraceOptionsDialog(Shell parentShell) {
@@ -95,11 +97,19 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         mDevices = AndroidDebugBridge.getBridge().getDevices();
         createDeviceDropdown(c, mDevices);
 
+        createSeparator(c);
+
         createLabel(c, "Application Package:");
         createAppToTraceText(c, "e.g. com.example.package");
 
         createLabel(c, "Activity to launch:");
         createActivityToTraceText(c, "Leave blank to launch default activity");
+
+        createLabel(c, "");
+        createIsFullyQualifedActivityButton(c,
+                "Activity name is fully qualified, do not prefix with package name");
+
+        createSeparator(c);
 
         createLabel(c, "Data Collection Options:");
         createCaptureImageOptions(c);
@@ -245,6 +255,15 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         return mActivityToTraceText;
     }
 
+    private Button createIsFullyQualifedActivityButton(Composite parent, String message) {
+        mIsActivityFullyQualifiedButton = new Button(parent, SWT.CHECK);
+        mIsActivityFullyQualifiedButton.setText(message);
+        mIsActivityFullyQualifiedButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mIsActivityFullyQualifiedButton.setSelection(sIsActivityFullyQualified);
+
+        return mIsActivityFullyQualifiedButton;
+    }
+
     private void validateAndSetMessage() {
         DialogStatus status = validateDialog();
         mOkButton.setEnabled(status.valid);
@@ -324,6 +343,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         if (mActivityToTrace.startsWith(".")) { //$NON-NLS-1$
             mActivityToTrace = mActivityToTrace.substring(1);
         }
+        sIsActivityFullyQualified = mIsActivityFullyQualifiedButton.getSelection();
         mTraceFilePath = mTraceFilePathText.getText().trim();
         mSelectedDevice = mDeviceCombo.getText();
 
@@ -333,7 +353,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void savePreferences() {
-        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
+        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(GlTracePlugin.PLUGIN_ID);
         prefs.put(PREF_APP_PACKAGE, mAppPackageToTrace);
         prefs.put(PREF_ACTIVITY, mActivityToTrace);
         prefs.put(PREF_TRACEFILE, mTraceFilePath);
@@ -346,7 +366,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void loadPreferences() {
-        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
+        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(GlTracePlugin.PLUGIN_ID);
         mAppPackageToTrace = prefs.get(PREF_APP_PACKAGE, "");
         mActivityToTrace = prefs.get(PREF_ACTIVITY, "");
         mTraceFilePath = prefs.get(PREF_TRACEFILE, "");
@@ -355,6 +375,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     public TraceOptions getTraceOptions() {
         return new TraceOptions(mSelectedDevice, mAppPackageToTrace, mActivityToTrace,
-                mTraceFilePath, sCollectFbOnEglSwap, sCollectFbOnGlDraw, sCollectTextureData);
+                sIsActivityFullyQualified, mTraceFilePath, sCollectFbOnEglSwap,
+                sCollectFbOnGlDraw, sCollectTextureData);
     }
 }
