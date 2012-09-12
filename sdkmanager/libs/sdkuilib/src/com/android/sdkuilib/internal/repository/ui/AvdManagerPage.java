@@ -25,6 +25,8 @@ import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +41,8 @@ import org.eclipse.swt.widgets.Label;
  * thus composed of the {@link AvdManagerWindowImpl1} (the window shell itself) and this
  * page displays the actually list of AVDs and various action buttons.
  */
-public class AvdManagerPage extends Composite implements ISdkChangeListener, DevicesChangeListener {
+public class AvdManagerPage extends Composite
+    implements ISdkChangeListener, DevicesChangeListener, DisposeListener {
 
     private AvdSelector mAvdSelector;
 
@@ -90,6 +93,11 @@ public class AvdManagerPage extends Composite implements ISdkChangeListener, Dev
                 DisplayMode.MANAGER,
                 mUpdaterData.getSdkLog());
         mAvdSelector.setSettingsController(mUpdaterData.getSettingsController());
+    }
+
+    @Override
+    public void widgetDisposed(DisposeEvent e) {
+        dispose();
     }
 
     @Override
