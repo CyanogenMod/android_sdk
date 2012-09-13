@@ -168,22 +168,17 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
                             // get the AvdInfo
                             AvdInfo info = mSdk.getAvdManager().getAvd(device.getAvdName(),
                                     true /*validAvdOnly*/);
-                            if (info == null) {
-                                return mWarningImage;
+                            AvdCompatibility.Compatibility c =
+                                    AvdCompatibility.canRun(info, mProjectTarget,
+                                            mMinApiVersion);
+                            switch (c) {
+                                case YES:
+                                    return mMatchImage;
+                                case NO:
+                                    return mNoMatchImage;
+                                case UNKNOWN:
+                                    return mWarningImage;
                             }
-                            IAndroidTarget avdTarget = info.getTarget();
-                            if (avdTarget == null) {
-                                return mWarningImage;
-                            }
-
-                            // for platform targets, we only need to check the min api level
-                            if (mProjectTarget.isPlatform()
-                                    && avdTarget.getVersion().canRun(mMinApiVersion))
-                                return mMatchImage;
-
-                            // for add on targets, check if required libraries are available
-                            return mProjectTarget.canRunOn(info.getTarget()) ?
-                                    mMatchImage : mNoMatchImage;
                         }
                 }
             }
@@ -774,23 +769,17 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
         @Override
         public boolean accept(AvdInfo avd) {
-            IAndroidTarget avdTarget = avd.getTarget();
-
             if (mDevices != null) {
                 for (IDevice d : mDevices) {
+                    // do not accept running avd's
                     if (avd.getName().equals(d.getAvdName())) {
                         return false;
                     }
 
-                    if (avdTarget == null) {
-                        return true;
-                    }
-
-                    if (mProjectTarget.isPlatform()) {
-                        return avdTarget.getVersion().canRun(mMinApiVersion);
-                    }
-
-                    return mProjectTarget.canRunOn(avd.getTarget());
+                    // only accept avd's that can actually run the project
+                    AvdCompatibility.Compatibility c =
+                            AvdCompatibility.canRun(avd, mProjectTarget, mMinApiVersion);
+                    return (c == AvdCompatibility.Compatibility.NO) ? false : true;
                 }
             }
 
