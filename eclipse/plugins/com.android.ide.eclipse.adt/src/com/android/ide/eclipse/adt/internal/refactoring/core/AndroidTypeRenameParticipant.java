@@ -16,9 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
-import com.android.AndroidConstants;
 import com.android.SdkConstants;
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -194,7 +192,7 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
     private void addLayoutChanges(IProject project, String className) {
         try {
             IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
-            IFolder layoutFolder = resFolder.getFolder(AndroidConstants.FD_RES_LAYOUT);
+            IFolder layoutFolder = resFolder.getFolder(SdkConstants.FD_RES_LAYOUT);
             IResource[] members = layoutFolder.members();
             for (int i = 0; i < members.length; i++) {
                 IResource member = members[i];
@@ -243,13 +241,13 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
                     IDOMModel xmlModel = (IDOMModel) model;
                     IDOMDocument xmlDoc = xmlModel.getDocument();
                     NodeList nodes = xmlDoc
-                            .getElementsByTagName(LayoutConstants.VIEW);
+                            .getElementsByTagName(SdkConstants.VIEW);
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Node node = nodes.item(i);
                         NamedNodeMap attributes = node.getAttributes();
                         if (attributes != null) {
                             Node attributeNode =
-                                attributes.getNamedItem(LayoutConstants.ATTR_CLASS);
+                                attributes.getNamedItem(SdkConstants.ATTR_CLASS);
                             if (attributeNode instanceof Attr) {
                                 Attr attribute = (Attr) attributeNode;
                                 String value = attribute.getValue();

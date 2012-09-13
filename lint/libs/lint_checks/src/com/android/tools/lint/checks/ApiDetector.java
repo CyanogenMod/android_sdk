@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_THEME_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_CLASS;
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
-import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.TARGET_API;
+import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
@@ -148,8 +148,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         String value = attribute.getValue();
 
         String prefix = null;
-        if (value.startsWith(ANDROID_RESOURCE_PREFIX)) {
-            prefix = ANDROID_RESOURCE_PREFIX;
+        if (value.startsWith(ANDROID_PREFIX)) {
+            prefix = ANDROID_PREFIX;
         } else if (value.startsWith(ANDROID_THEME_PREFIX)) {
             prefix = ANDROID_THEME_PREFIX;
         } else {
@@ -194,13 +194,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 Node textNode = childNodes.item(i);
                 if (textNode.getNodeType() == Node.TEXT_NODE) {
                     String text = textNode.getNodeValue();
-                    if (text.indexOf(ANDROID_RESOURCE_PREFIX) != -1) {
+                    if (text.indexOf(ANDROID_PREFIX) != -1) {
                         text = text.trim();
                         // Convert @android:type/foo into android/R$type and "foo"
-                        int index = text.indexOf('/', ANDROID_RESOURCE_PREFIX.length());
+                        int index = text.indexOf('/', ANDROID_PREFIX.length());
                         if (index != -1) {
                             String owner = "android/R$"    //$NON-NLS-1$
-                                    + text.substring(ANDROID_RESOURCE_PREFIX.length(), index);
+                                    + text.substring(ANDROID_PREFIX.length(), index);
                             String name = text.substring(index + 1);
                             int api = mApiDatabase.getFieldVersion(owner, name);
                             int minSdk = getMinSdk(context);

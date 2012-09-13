@@ -25,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ListAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.SWT;
@@ -141,9 +140,9 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
         // FrameworkResourceManager expects a specific prefix for the attribute.
         String nsPrefix = "";
         if (SdkConstants.NS_RESOURCES.equals(descriptor.getNamespaceUri())) {
-            nsPrefix = XmlUtils.ANDROID_NS_NAME + ':';
-        } else if (XmlUtils.XMLNS_URI.equals(descriptor.getNamespaceUri())) {
-            nsPrefix = XmlUtils.XMLNS_COLON;
+            nsPrefix = SdkConstants.ANDROID_NS_NAME + ':';
+        } else if (SdkConstants.XMLNS_URI.equals(descriptor.getNamespaceUri())) {
+            nsPrefix = SdkConstants.XMLNS_PREFIX;
         }
         attr_name = nsPrefix + attr_name;
 

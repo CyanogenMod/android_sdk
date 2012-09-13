@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_FRAGMENT_LAYOUT;
 
 import com.android.SdkConstants;

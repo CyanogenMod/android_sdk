@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;

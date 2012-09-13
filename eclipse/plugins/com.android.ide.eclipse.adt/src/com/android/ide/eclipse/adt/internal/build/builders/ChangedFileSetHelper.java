@@ -120,7 +120,7 @@ class ChangedFileSetHelper {
         String path = getRelativeJavaCOut(project);
 
         ChangedFileSet set = new ChangedFileSet("compiledCode",                   //$NON-NLS-1$
-                path + "/**/*" + AdtConstants.DOT_CLASS);                         //$NON-NLS-1$
+                path + "/**/*" + SdkConstants.DOT_CLASS);                         //$NON-NLS-1$
 
         return set;
     }
@@ -154,8 +154,8 @@ class ChangedFileSetHelper {
         String path = getRelativeJavaCOut(project);
 
         ChangedFileSet set = new ChangedFileSet("classAndJars",                    //$NON-NLS-1$
-                path + "/**/*" + AdtConstants.DOT_CLASS,                           //$NON-NLS-1$
-                SdkConstants.FD_NATIVE_LIBS + "/*" + AdtConstants.DOT_JAR);        //$NON-NLS-1$
+                path + "/**/*" + SdkConstants.DOT_CLASS,                           //$NON-NLS-1$
+                SdkConstants.FD_NATIVE_LIBS + "/*" + SdkConstants.DOT_JAR);        //$NON-NLS-1$
 
         // output file is based on the project's android output folder
         path = getRelativeAndroidOut(project);

@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import static com.android.AndroidConstants.FD_RES_COLOR;
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_COLOR;
+import static com.android.SdkConstants.FD_RES_LAYOUT;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;

@@ -16,8 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
-import static com.android.utils.XmlUtils.ANDROID_URI;
-
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.editors.mock.MockXmlNode;
@@ -279,7 +278,7 @@ public class UiElementNodeTest extends TestCase {
         Element baz = document.createElement("baz");
         root.appendChild(baz);
 
-        String prefix = XmlUtils.lookupNamespacePrefix(baz, ANDROID_URI);
+        String prefix = XmlUtils.lookupNamespacePrefix(baz, SdkConstants.ANDROID_URI);
         assertEquals("android", prefix);
     }
 }

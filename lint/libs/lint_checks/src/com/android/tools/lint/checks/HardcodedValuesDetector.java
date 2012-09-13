@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DESCRIPTION;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_HINT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LABEL;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PROMPT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.SdkConstants.ATTR_HINT;
+import static com.android.SdkConstants.ATTR_LABEL;
+import static com.android.SdkConstants.ATTR_PROMPT;
+import static com.android.SdkConstants.ATTR_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

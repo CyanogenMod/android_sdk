@@ -15,7 +15,7 @@
  */
 
 package com.android.tools.lint.checks;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_APP_ACTIVITY;
+import static com.android.SdkConstants.ANDROID_APP_ACTIVITY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

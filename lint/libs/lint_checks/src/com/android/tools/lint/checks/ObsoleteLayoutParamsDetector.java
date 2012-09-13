@@ -16,52 +16,52 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ABOVE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_BASELINE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_LEFT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_BOTTOM;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_RIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_TOP;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_BELOW;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_CENTER_VERTICAL;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_COLUMN_SPAN;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_LEFT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_RIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_TOP;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW_SPAN;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_SPAN;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_TO_LEFT_OF;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_TO_RIGHT_OF;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_X;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_Y;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.GRID_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
-import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.MERGE;
-import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
-import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
+import static com.android.SdkConstants.ABSOLUTE_LAYOUT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ABOVE;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BASELINE;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
+import static com.android.SdkConstants.ATTR_LAYOUT_BELOW;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_VERTICAL;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_LEFT_OF;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_RIGHT_OF;
+import static com.android.SdkConstants.ATTR_LAYOUT_WEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_LAYOUT_X;
+import static com.android.SdkConstants.ATTR_LAYOUT_Y;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.VIEW_MERGE;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.TABLE_ROW;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.IDomParser;
@@ -225,7 +225,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(INCLUDE);
+        return Collections.singletonList(VIEW_INCLUDE);
     }
 
     @Override
@@ -236,7 +236,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String name = attribute.getLocalName();
-        if (name != null && name.startsWith(ATTR_LAYOUT_PREFIX)
+        if (name != null && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 && ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (VALID.contains(name)) {
                 return;
@@ -263,7 +263,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 }
 
                 String parentTag = ((Element) layoutNode).getTagName();
-                if (parentTag.equals(MERGE)) {
+                if (parentTag.equals(VIEW_MERGE)) {
                     // This is a merge which means we need to check the including contexts,
                     // wherever they are. This has to be done after all the files have been
                     // scanned since we are not processing the files in any particular order.
@@ -305,7 +305,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             Node parent = element.getParentNode();
             if (parent.getNodeType() == Node.ELEMENT_NODE) {
                 String tag = parent.getNodeName();
-                if (tag.indexOf('.') == -1 && !tag.equals(MERGE)) {
+                if (tag.indexOf('.') == -1 && !tag.equals(VIEW_MERGE)) {
                     if (mIncludes == null) {
                         mIncludes = new HashMap<String, List<Pair<File, String>>>();
                     }

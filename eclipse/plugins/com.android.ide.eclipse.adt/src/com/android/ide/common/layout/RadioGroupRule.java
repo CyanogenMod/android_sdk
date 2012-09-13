@@ -15,11 +15,13 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CHECKED;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CHECKED;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.VALUE_TRUE;
 
+
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
@@ -37,7 +39,7 @@ public class RadioGroupRule extends LinearLayoutRule {
 
         if (insertType.isCreate()) {
             for (int i = 0; i < 3; i++) {
-                INode handle = node.appendChild(LayoutConstants.FQCN_RADIO_BUTTON);
+                INode handle = node.appendChild(SdkConstants.FQCN_RADIO_BUTTON);
                 handle.setAttribute(ANDROID_URI, ATTR_ID, String.format("@+id/radio%d", i));
                 if (i == 0) {
                     handle.setAttribute(ANDROID_URI, ATTR_CHECKED, VALUE_TRUE);

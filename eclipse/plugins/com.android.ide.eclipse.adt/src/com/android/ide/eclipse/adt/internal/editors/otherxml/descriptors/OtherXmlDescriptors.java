@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.SdkConstants;
 import com.android.ide.common.resources.platform.AttributeInfo;

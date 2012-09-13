@@ -16,13 +16,13 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PARENT;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.SdkConstants.SCROLL_VIEW;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

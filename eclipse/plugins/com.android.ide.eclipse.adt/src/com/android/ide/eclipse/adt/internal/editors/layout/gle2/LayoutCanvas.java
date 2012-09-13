@@ -37,7 +37,6 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.LintEditAction;
 import com.android.resources.Density;
-import com.android.utils.XmlUtils;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -1507,8 +1506,8 @@ public class LayoutCanvas extends Canvas {
 
                 // A root node requires the Android XMLNS
                 uiNew.setAttributeValue(
-                        XmlUtils.ANDROID_NS_NAME,
-                        XmlUtils.XMLNS_URI,
+                        SdkConstants.ANDROID_NS_NAME,
+                        SdkConstants.XMLNS_URI,
                         SdkConstants.NS_RESOURCES,
                         true /*override*/);
 

@@ -15,35 +15,33 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_RES;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.SdkConstants.FD_RESOURCES;
+import static com.android.SdkConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.XMLNS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.resources.ResourceType.LAYOUT;
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.XMLNS;
-import static com.android.utils.XmlUtils.XMLNS_COLON;
 
-import com.android.AndroidConstants;
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
@@ -161,7 +159,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                     UiViewElementNode uiNode = infos.get(0).getUiViewNode();
                     if (uiNode != null) {
                         Node xmlNode = uiNode.getXmlNode();
-                        if (xmlNode.getLocalName().equals(LayoutDescriptors.VIEW_INCLUDE)) {
+                        if (xmlNode.getLocalName().equals(VIEW_INCLUDE)) {
                             status.addWarning("No point in refactoring a single include tag");
                         }
                     }
@@ -327,7 +325,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         IPath parentPath = parent.getProjectRelativePath();
         final IFile file = project.getFile(new Path(parentPath + WS_SEP + newFileName));
         TextFileChange addFile = new TextFileChange("Create new separate layout", file);
-        addFile.setTextType(AdtConstants.EXT_XML);
+        addFile.setTextType(EXT_XML);
         changes.add(addFile);
 
         String newFile = sb.toString();
@@ -401,10 +399,10 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     private List<IFile> getOtherLayouts(IFile sourceFile) {
         List<IFile> layouts = new ArrayList<IFile>(100);
         IPath sourcePath = sourceFile.getProjectRelativePath();
-        IFolder resources = mProject.getFolder(SdkConstants.FD_RESOURCES);
+        IFolder resources = mProject.getFolder(FD_RESOURCES);
         try {
             for (IResource folder : resources.members()) {
-                if (folder.getName().startsWith(AndroidConstants.FD_RES_LAYOUT) &&
+                if (folder.getName().startsWith(FD_RES_LAYOUT) &&
                         folder instanceof IFolder) {
                     IFolder layoutFolder = (IFolder) folder;
                     for (IResource file : layoutFolder.members()) {
@@ -494,8 +492,8 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                 String value = attributeNode.getNodeValue();
                 if (value.equals(ANDROID_URI)) {
                     androidNsPrefix = name;
-                    if (androidNsPrefix.startsWith(XMLNS_COLON)) {
-                        androidNsPrefix = androidNsPrefix.substring(XMLNS_COLON.length());
+                    if (androidNsPrefix.startsWith(XMLNS_PREFIX)) {
+                        androidNsPrefix = androidNsPrefix.substring(XMLNS_PREFIX.length());
                     }
                 }
                 sb.append(XmlUtils.toXmlAttributeValue(value));
@@ -511,7 +509,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         if (namespaceDeclarations.length() == 0) {
             sb.setLength(0);
             sb.append(' ');
-            sb.append(XMLNS_COLON);
+            sb.append(XMLNS_PREFIX);
             sb.append(androidNsPrefix);
             sb.append('=').append('"');
             sb.append(ANDROID_URI);
@@ -606,7 +604,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Node attr = attributes.item(i);
                 String name = attr.getLocalName();
-                if (name.startsWith(ATTR_LAYOUT_PREFIX)
+                if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                         && ANDROID_URI.equals(attr.getNamespaceURI())) {
                     if (name.equals(ATTR_LAYOUT_WIDTH) || name.equals(ATTR_LAYOUT_HEIGHT)) {
                         // Already handled

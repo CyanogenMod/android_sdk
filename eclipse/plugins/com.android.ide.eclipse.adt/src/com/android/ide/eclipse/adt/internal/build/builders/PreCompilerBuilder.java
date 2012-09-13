@@ -995,7 +995,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // We actually need to delete the manifest.java as it may become empty and
         // in this case aapt doesn't generate an empty one, but instead doesn't
         // touch it.
-        IFile manifestJavaFile = packageFolder.getFile(AdtConstants.FN_MANIFEST_CLASS);
+        IFile manifestJavaFile = packageFolder.getFile(SdkConstants.FN_MANIFEST_CLASS);
         manifestJavaFile.getLocation().toFile().delete();
 
         // launch aapt: create the command line

@@ -16,12 +16,13 @@
 
 package com.android.tools.lint.client.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.CLASS_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
-import static com.android.tools.lint.detector.api.LintConstants.GEN_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.LIBS_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.SRC_FOLDER;
+import static com.android.SdkConstants.CLASS_FOLDER;
+import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.GEN_FOLDER;
+import static com.android.SdkConstants.LIBS_FOLDER;
+import static com.android.SdkConstants.SRC_FOLDER;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.IAndroidTarget;
@@ -29,7 +30,6 @@ import com.android.sdklib.SdkManager;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintConstants;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -586,7 +586,7 @@ public abstract class LintClient {
      * @return the highest known API level
      */
     public int getHighestKnownApiLevel() {
-        int max = LintConstants.HIGHEST_KNOWN_API;
+        int max = SdkConstants.HIGHEST_KNOWN_API;
 
         for (IAndroidTarget target : getTargets()) {
             if (target.isPlatform()) {

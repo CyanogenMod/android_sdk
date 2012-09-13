@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

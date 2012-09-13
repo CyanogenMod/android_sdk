@@ -16,11 +16,16 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TAG;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TAG;
+import static com.android.SdkConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.SdkConstants.REQUEST_FOCUS;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.VIEW_MERGE;
 
 import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -50,54 +55,6 @@ import java.util.Map.Entry;
  * Complete description of the layout structure.
  */
 public final class LayoutDescriptors implements IDescriptorProvider {
-
-    /**
-     * The XML name of the special {@code <include>} layout tag.
-     * A synthetic element with that name is created as part of the view descriptors list
-     * returned by {@link #getViewDescriptors()}.
-     */
-    public static final String VIEW_INCLUDE = "include";      //$NON-NLS-1$
-
-    /**
-     * The XML name of the special {@code <merge>} layout tag.
-     * A synthetic element with that name is created as part of the view descriptors list
-     * returned by {@link #getViewDescriptors()}.
-     */
-    public static final String VIEW_MERGE = "merge";          //$NON-NLS-1$
-
-    /**
-     * The XML name of the special {@code <fragment>} layout tag.
-     * A synthetic element with that name is created as part of the view descriptors list
-     * returned by {@link #getViewDescriptors()}.
-     */
-    public static final String VIEW_FRAGMENT = "fragment";    //$NON-NLS-1$
-
-    /**
-     * The XML name of the special {@code <view>} layout tag. This is used to add generic
-     * views with a class attribute to specify the view.
-     * <p>
-     * TODO: We should add a synthetic descriptor for this, similar to our descriptors for
-     * include, merge and requestFocus.
-     */
-    public static final String VIEW_VIEWTAG = "view";           //$NON-NLS-1$
-
-    /**
-     * The XML name of the special {@code <requestFocus>} layout tag.
-     * A synthetic element with that name is created as part of the view descriptors list
-     * returned by {@link #getViewDescriptors()}.
-     */
-    public static final String REQUEST_FOCUS = "requestFocus";//$NON-NLS-1$
-
-    /**
-     * The attribute name of the include tag's url naming the resource to be inserted
-     * <p>
-     * <b>NOTE</b>: The layout attribute is NOT in the Android namespace!
-     */
-    public static final String ATTR_LAYOUT = "layout"; //$NON-NLS-1$
-
-    // Public attributes names, attributes descriptors and elements descriptors
-    public static final String ID_ATTR = "id"; //$NON-NLS-1$
-
     /** The document descriptor. Contains all layouts and views linked together. */
     private DocumentDescriptor mRootDescriptor =
         new DocumentDescriptor("layout_doc", null); //$NON-NLS-1$
@@ -288,7 +245,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         // Process all View attributes
         DescriptorsUtils.appendAttributes(attributes,
                 null, // elementName
-                SdkConstants.NS_RESOURCES,
+                ANDROID_URI,
                 info.getAttributes(),
                 null, // requiredAttributes
                 null /* overrides */);
@@ -306,7 +263,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 attributeSources.add(link.getFullClassName());
                 DescriptorsUtils.appendAttributes(attributes,
                         null, // elementName
-                        SdkConstants.NS_RESOURCES,
+                        ANDROID_URI,
                         attrList,
                         null, // requiredAttributes
                         null /* overrides */);
@@ -320,12 +277,12 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         for(; layoutParams != null; layoutParams = layoutParams.getSuperClass()) {
             for (AttributeInfo attrInfo : layoutParams.getAttributes()) {
                 if (DescriptorsUtils.containsAttribute(layoutAttributes,
-                        SdkConstants.NS_RESOURCES, attrInfo)) {
+                        ANDROID_URI, attrInfo)) {
                     continue;
                 }
                 DescriptorsUtils.appendAttribute(layoutAttributes,
                         null, // elementName
-                        SdkConstants.NS_RESOURCES,
+                        ANDROID_URI,
                         attrInfo,
                         false, // required
                         null /* overrides */);
@@ -371,7 +328,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
 
         DescriptorsUtils.appendAttribute(attributes,
                 null, //elementXmlName
-                SdkConstants.NS_RESOURCES, //nsUri
+                ANDROID_URI, //nsUri
                 new AttributeInfo(
                         "id",           //$NON-NLS-1$
                         Format.REFERENCE_SET ),
@@ -455,7 +412,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             descs.add(classAttribute);
             DescriptorsUtils.appendAttributes(descs,
                     null,   // elementName
-                    SdkConstants.NS_RESOURCES,
+                    ANDROID_URI,
                     style.getAttributes(),
                     null,   // requiredAttributes
                     null);  // overrides

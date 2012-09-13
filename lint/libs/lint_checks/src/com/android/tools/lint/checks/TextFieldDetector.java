@@ -16,11 +16,11 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_HINT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_METHOD;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_TYPE;
-import static com.android.tools.lint.detector.api.LintConstants.EDIT_TEXT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_HINT;
+import static com.android.SdkConstants.ATTR_INPUT_METHOD;
+import static com.android.SdkConstants.ATTR_INPUT_TYPE;
+import static com.android.SdkConstants.EDIT_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

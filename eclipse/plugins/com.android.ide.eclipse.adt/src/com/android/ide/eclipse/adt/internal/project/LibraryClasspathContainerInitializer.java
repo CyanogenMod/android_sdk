@@ -207,7 +207,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
             if (outputFolder != null) { // can happen when closing/deleting a library)
                 IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
-                        AdtConstants.DOT_JAR);
+                        SdkConstants.DOT_JAR);
 
                 // get the source folder for the library project
                 List<IPath> srcs = BaseProjectHelper.getSourceClasspaths(libProject);
@@ -383,7 +383,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                 IResource[] members = libsFolder.members();
                 for (IResource member : members) {
                     if (member.getType() == IResource.FILE &&
-                            AdtConstants.EXT_JAR.equalsIgnoreCase(member.getFileExtension())) {
+                            SdkConstants.EXT_JAR.equalsIgnoreCase(member.getFileExtension())) {
                         jarFiles.add(member.getLocation().toFile());
                     }
                 }
@@ -536,7 +536,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
         IResource resource = wsRoot.findMember(path);
 
-        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+        if (SdkConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
             // case of a jar file (which could be relative to the workspace or a full path)
             if (resource != null && resource.exists() &&
                     resource.getType() == IResource.FILE) {

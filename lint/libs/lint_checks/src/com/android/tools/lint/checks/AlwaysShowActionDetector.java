@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_SHOW_AS_ACTION;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_ALWAYS;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_IF_ROOM;
+import static com.android.SdkConstants.ATTR_SHOW_AS_ACTION;
+import static com.android.SdkConstants.VALUE_ALWAYS;
+import static com.android.SdkConstants.VALUE_IF_ROOM;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

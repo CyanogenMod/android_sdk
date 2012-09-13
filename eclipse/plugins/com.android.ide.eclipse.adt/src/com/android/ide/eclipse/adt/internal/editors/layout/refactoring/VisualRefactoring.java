@@ -15,17 +15,17 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.XMLNS;
-import static com.android.utils.XmlUtils.XMLNS_COLON;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.XMLNS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -361,7 +361,7 @@ public abstract class VisualRefactoring extends Refactoring {
             return Collections.emptyList();
         }
 
-        String namePrefix = androidNamePrefix + ':' + ATTR_LAYOUT_PREFIX;
+        String namePrefix = androidNamePrefix + ':' + ATTR_LAYOUT_RESOURCE_PREFIX;
         List<TextEdit> edits = new ArrayList<TextEdit>();
 
         IStructuredDocumentRegion region = doc.getFirstStructuredDocumentRegion();
@@ -425,9 +425,9 @@ public abstract class VisualRefactoring extends Refactoring {
                     String value = attributeNode.getNodeValue();
                     if (value.equals(ANDROID_URI)) {
                         mAndroidNamespacePrefix = name;
-                        if (mAndroidNamespacePrefix.startsWith(XMLNS_COLON)) {
+                        if (mAndroidNamespacePrefix.startsWith(XMLNS_PREFIX)) {
                             mAndroidNamespacePrefix =
-                                mAndroidNamespacePrefix.substring(XMLNS_COLON.length());
+                                mAndroidNamespacePrefix.substring(XMLNS_PREFIX.length());
                         }
                     }
                 }
@@ -451,9 +451,9 @@ public abstract class VisualRefactoring extends Refactoring {
                 String value = attributeNode.getNodeValue();
                 if (value.equals(ANDROID_URI)) {
                     nsPrefix = name;
-                    if (nsPrefix.startsWith(XMLNS_COLON)) {
+                    if (nsPrefix.startsWith(XMLNS_PREFIX)) {
                         nsPrefix =
-                            nsPrefix.substring(XMLNS_COLON.length());
+                            nsPrefix.substring(XMLNS_PREFIX.length());
                     }
                 }
             }
@@ -502,7 +502,7 @@ public abstract class VisualRefactoring extends Refactoring {
             Node attributeNode = attributes.item(i);
 
             String name = attributeNode.getLocalName();
-            if (name.startsWith(ATTR_LAYOUT_PREFIX)
+            if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                     && ANDROID_URI.equals(attributeNode.getNamespaceURI())) {
                 result.add((Attr) attributeNode);
             }
@@ -537,7 +537,7 @@ public abstract class VisualRefactoring extends Refactoring {
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Node attr = attributes.item(i);
                 String name = attr.getLocalName();
-                if (name.startsWith(ATTR_LAYOUT_PREFIX)
+                if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                         && ANDROID_URI.equals(attr.getNamespaceURI())) {
                     if (name.equals(ATTR_LAYOUT_WIDTH) || name.equals(ATTR_LAYOUT_HEIGHT)) {
                         // These are special and are left in

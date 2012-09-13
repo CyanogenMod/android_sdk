@@ -568,7 +568,7 @@ public class ApplicationInfoPage extends WizardPage implements SelectionListener
         } else if (osTarget.indexOf('.') == 0) {
             osTarget = mValues.packageName + osTarget;
         }
-        osTarget = osTarget.replace('.', File.separatorChar) + AdtConstants.DOT_JAVA;
+        osTarget = osTarget.replace('.', File.separatorChar) + SdkConstants.DOT_JAVA;
 
         File projectDir = mValues.projectLocation;
         File[] allDirs = projectDir.listFiles(new FileFilter() {

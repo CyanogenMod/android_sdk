@@ -16,15 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.CALENDAR_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
-import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
+import static com.android.SdkConstants.CALENDAR_VIEW;
+import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.FQCN_GRID_VIEW;
+import static com.android.SdkConstants.FQCN_SPINNER;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;

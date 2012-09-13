@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_RADIO_BUTTON;
-import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.RADIO_GROUP;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.SdkConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.SdkConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.SdkConstants.FQCN_RADIO_BUTTON;
+import static com.android.SdkConstants.GESTURE_OVERLAY_VIEW;
+import static com.android.SdkConstants.RADIO_GROUP;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;

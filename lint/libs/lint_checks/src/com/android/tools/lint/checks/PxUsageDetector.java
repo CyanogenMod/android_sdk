@@ -16,13 +16,13 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT_SIZE;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_DIP;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_DP;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_PX;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TEXT_SIZE;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.UNIT_DIP;
+import static com.android.SdkConstants.UNIT_DP;
+import static com.android.SdkConstants.UNIT_PX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

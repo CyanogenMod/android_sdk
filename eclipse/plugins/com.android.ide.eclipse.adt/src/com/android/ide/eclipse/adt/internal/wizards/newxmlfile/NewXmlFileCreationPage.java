@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
-import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
-import static com.android.ide.common.layout.LayoutConstants.HORIZONTAL_SCROLL_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
+import static com.android.SdkConstants.SCROLL_VIEW;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP_CHAR;
 import static com.android.ide.eclipse.adt.internal.wizards.newxmlfile.ChooseConfigurationPage.RES_FOLDER_ABS;
 
@@ -37,8 +37,6 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
-import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
@@ -313,7 +311,7 @@ class NewXmlFileCreationPage extends WizardPage {
         new TypeInfo("Values",                                              // UI name
                 "An XML file with simple values: colors, strings, dimensions, etc.", // tooltip
                 ResourceFolderType.VALUES,                                  // folder type
-                ValuesDescriptors.ROOT_ELEMENT,                          // root seed
+                SdkConstants.TAG_RESOURCES,                                 // root seed
                 null,                                                       // default root
                 null,                                                       // xmlns
                 null,                                                       // default attributes
@@ -331,7 +329,7 @@ class NewXmlFileCreationPage extends WizardPage {
         new TypeInfo("Menu",                                                // UI name
                 "An XML file that describes an menu.",                      // tooltip
                 ResourceFolderType.MENU,                                    // folder type
-                MenuDescriptors.MENU_ROOT_ELEMENT,                          // root seed
+                SdkConstants.TAG_MENU,                                      // root seed
                 null,                                                       // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
                 null,                                                       // default attributes

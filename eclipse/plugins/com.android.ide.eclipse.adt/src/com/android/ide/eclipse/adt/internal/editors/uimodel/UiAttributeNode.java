@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.ATTR_COLOR;
 import static com.google.common.base.Strings.nullToEmpty;
 
@@ -259,7 +259,7 @@ public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
             return 20;
         }
 
-        if (name.startsWith(ATTR_LAYOUT_PREFIX)) {
+        if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
             // Width and height are special cased because we (a) want width and height
             // before the other layout attributes, and (b) we want width to sort before height
             // even though it comes after it alphabetically.

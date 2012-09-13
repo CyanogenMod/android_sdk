@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;

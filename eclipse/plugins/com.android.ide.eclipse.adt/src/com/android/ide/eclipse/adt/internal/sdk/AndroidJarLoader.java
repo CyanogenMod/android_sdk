@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
-import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.SdkConstants;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -162,7 +162,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             // get the name of the entry.
             String entryPath = entry.getName();
 
-            if (!entryPath.endsWith(AdtConstants.DOT_CLASS)) {
+            if (!entryPath.endsWith(SdkConstants.DOT_CLASS)) {
                 // only accept class files
                 continue;
             }
@@ -227,7 +227,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         while ((entry = zis.getNextEntry()) != null) {
             // get the name of the entry and convert to a class binary name
             String entryPath = entry.getName();
-            if (!entryPath.endsWith(AdtConstants.DOT_CLASS)) {
+            if (!entryPath.endsWith(SdkConstants.DOT_CLASS)) {
                 // only accept class files
                 continue;
             }
@@ -349,7 +349,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
 
         // The name is a binary name. Something like "android.R", or "android.R$id".
         // Make a path out of it.
-        String entryName = className.replaceAll("\\.", "/") + AdtConstants.DOT_CLASS; //$NON-NLS-1$ //$NON-NLS-2$
+        String entryName = className.replaceAll("\\.", "/") + SdkConstants.DOT_CLASS; //$NON-NLS-1$ //$NON-NLS-2$
 
        // create streams to read the intermediary archive
         FileInputStream fis = new FileInputStream(mOsFrameworkLocation);

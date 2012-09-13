@@ -15,7 +15,10 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.NS_RESOURCES;
+import static com.android.SdkConstants.XMLNS_URI;
+
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode;
@@ -28,7 +31,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.utils.XmlUtils;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.custom.StyledText;
@@ -338,10 +340,7 @@ public class ClipboardSupport {
                 UiElementNode uiNew = uiDoc.appendNewUiChild(viewDesc);
 
                 // A root node requires the Android XMLNS
-                uiNew.setAttributeValue(
-                        XmlUtils.ANDROID_NS_NAME,
-                        XmlUtils.XMLNS_URI,
-                        SdkConstants.NS_RESOURCES,
+                uiNew.setAttributeValue(ANDROID_NS_NAME, XMLNS_URI, NS_RESOURCES,
                         true /*override*/);
 
                 // Copy all the attributes from the pasted element

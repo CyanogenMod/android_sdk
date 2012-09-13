@@ -20,12 +20,12 @@ import static com.android.ide.common.layout.GridLayoutRule.GRID_SIZE;
 import static com.android.ide.common.layout.GridLayoutRule.MARGIN_SIZE;
 import static com.android.ide.common.layout.GridLayoutRule.MAX_CELL_DIFFERENCE;
 import static com.android.ide.common.layout.GridLayoutRule.SHORT_GAP_DP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.ide.common.layout.grid.GridModel.UNDEFINED;
 import static java.lang.Math.abs;
 

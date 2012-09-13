@@ -15,29 +15,29 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_PADDING;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_DRAWABLE_TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_DRAWABLE_BOTTOM;
+import static com.android.SdkConstants.ATTR_DRAWABLE_LEFT;
+import static com.android.SdkConstants.ATTR_DRAWABLE_PADDING;
+import static com.android.SdkConstants.ATTR_DRAWABLE_RIGHT;
+import static com.android.SdkConstants.ATTR_DRAWABLE_TOP;
+import static com.android.SdkConstants.ATTR_GRAVITY;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.ATTR_SRC;
+import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.IMAGE_VIEW;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.TEXT_VIEW;
+import static com.android.SdkConstants.VALUE_VERTICAL;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -254,7 +254,7 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Attr attribute = (Attr) attributes.item(i);
             String name = attribute.getLocalName();
-            if (name.startsWith(ATTR_LAYOUT_PREFIX)
+            if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                     && ANDROID_URI.equals(attribute.getNamespaceURI())
                     && !(name.equals(ATTR_LAYOUT_WIDTH) || name.equals(ATTR_LAYOUT_HEIGHT))) {
                 // Ignore layout params: the parent layout is going away

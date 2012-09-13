@@ -15,15 +15,16 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.FQCN_SPACE;
+import static com.android.SdkConstants.FQCN_SPACE_V7;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+
 
 import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;

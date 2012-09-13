@@ -16,18 +16,18 @@
 
 package com.android.tools.lint.client.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.OLD_PROGUARD_FILE;
-import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_FILE;
-import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
-import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.ATTR_IGNORE;
+import static com.android.SdkConstants.DOT_CLASS;
+import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
+import static com.android.SdkConstants.OLD_PROGUARD_FILE;
+import static com.android.SdkConstants.RES_FOLDER;
+import static com.android.SdkConstants.SUPPRESS_ALL;
+import static com.android.SdkConstants.SUPPRESS_LINT;
+import static com.android.SdkConstants.TOOLS_URI;
 import static org.objectweb.asm.Opcodes.ASM4;
 
 import com.android.annotations.NonNull;
@@ -300,8 +300,6 @@ public class LintDriver {
                             mScope.add(Scope.MANIFEST);
                         } else if (name.endsWith(DOT_XML)) {
                             mScope.add(Scope.RESOURCE_FILE);
-                        } else if (name.equals(PROGUARD_FILE) || name.equals(OLD_PROGUARD_FILE)) {
-                            mScope.add(Scope.PROGUARD_FILE);
                         } else if (name.equals(RES_FOLDER)
                                 || file.getParent().equals(RES_FOLDER)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
@@ -310,7 +308,8 @@ public class LintDriver {
                             mScope.add(Scope.JAVA_FILE);
                         } else if (name.endsWith(DOT_CLASS)) {
                             mScope.add(Scope.CLASS_FILE);
-                        } else if (name.equals(OLD_PROGUARD_FILE) || name.equals(PROGUARD_FILE)) {
+                        } else if (name.equals(OLD_PROGUARD_FILE)
+                                || name.equals(FN_PROJECT_PROGUARD_FILE)) {
                             mScope.add(Scope.PROGUARD_FILE);
                         }
                     }
@@ -889,7 +888,7 @@ public class LintDriver {
                 if (file.exists()) {
                     files.add(file);
                 }
-                file = new File(project.getDir(), PROGUARD_FILE);
+                file = new File(project.getDir(), FN_PROJECT_PROGUARD_FILE);
                 if (file.exists()) {
                     files.add(file);
                 }

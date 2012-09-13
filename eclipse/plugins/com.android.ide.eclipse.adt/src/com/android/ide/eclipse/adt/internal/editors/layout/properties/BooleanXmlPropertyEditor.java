@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;

@@ -15,12 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.COLOR_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.DIMEN_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STRING_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
-import static com.android.utils.XmlUtils.XMLNS;
+import static com.android.SdkConstants.TAG_COLOR;
+import static com.android.SdkConstants.TAG_DIMEN;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.XMLNS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -708,7 +708,7 @@ public class XmlPrettyPrinter {
         // element
         if (mPrefs.spaceBeforeClose && (mStyle != XmlFormatStyle.RESOURCE || isClosed)
                 // in <selector> files etc still treat the <item> entries as in resource files
-                && !ITEM_TAG.equals(element.getTagName())
+                && !TAG_ITEM.equals(element.getTagName())
                 && (isClosed || element.getAttributes().getLength() > 0)) {
             mOut.append(' ');
         }
@@ -777,7 +777,7 @@ public class XmlPrettyPrinter {
             Node curr = element.getPreviousSibling();
 
             // <style> elements are traditionally separated unless it follows a comment
-            if (STYLE_ELEMENT.equals(element.getTagName())) {
+            if (TAG_STYLE.equals(element.getTagName())) {
                 if (curr == null
                         || curr.getNodeType() == Node.ELEMENT_NODE
                         || (curr.getNodeType() == Node.TEXT_NODE
@@ -908,7 +908,7 @@ public class XmlPrettyPrinter {
 
         Node curr = element.getParentNode();
         while (curr != null) {
-            if (STRING_ELEMENT.equals(curr.getNodeName())) {
+            if (TAG_STRING.equals(curr.getNodeName())) {
                 return true;
             }
 
@@ -928,10 +928,10 @@ public class XmlPrettyPrinter {
     private boolean isSingleLineTag(Element element) {
         String tag = element.getTagName();
 
-        return (tag.equals(ITEM_TAG) && mStyle == XmlFormatStyle.RESOURCE)
-                || tag.equals(STRING_ELEMENT)
-                || tag.equals(DIMEN_ELEMENT)
-                || tag.equals(COLOR_ELEMENT);
+        return (tag.equals(TAG_ITEM) && mStyle == XmlFormatStyle.RESOURCE)
+                || tag.equals(TAG_STRING)
+                || tag.equals(TAG_DIMEN)
+                || tag.equals(TAG_COLOR);
     }
 
     private boolean keepElementAsSingleLine(int depth, Element element) {

@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_VIEW_PKG;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WEBKIT_PKG;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.ANDROID_VIEW_PKG;
+import static com.android.SdkConstants.ANDROID_WEBKIT_PKG;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
 
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;

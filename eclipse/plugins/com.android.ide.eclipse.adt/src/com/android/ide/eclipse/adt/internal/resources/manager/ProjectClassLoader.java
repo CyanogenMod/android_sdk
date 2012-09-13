@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
@@ -304,7 +304,7 @@ public final class ProjectClassLoader extends ClassLoader {
         IPath path = e.getPath();
 
         // check the name ends with .jar
-        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+        if (SdkConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
             boolean local = false;
             IResource resource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
             if (resource != null && resource.exists() &&

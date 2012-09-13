@@ -813,10 +813,10 @@ public final class ProjectHelper {
      */
     public static String getApkFilename(IProject project, String config) {
         if (config != null) {
-            return project.getName() + "-" + config + AdtConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$
+            return project.getName() + "-" + config + SdkConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$
         }
 
-        return project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
+        return project.getName() + SdkConstants.DOT_ANDROID_PACKAGE;
     }
 
     /**
@@ -872,7 +872,7 @@ public final class ProjectHelper {
 
 
         // get the package path
-        String packageName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
+        String packageName = project.getName() + SdkConstants.DOT_ANDROID_PACKAGE;
         IResource r = outputLocation.findMember(packageName);
 
         // check the package is present

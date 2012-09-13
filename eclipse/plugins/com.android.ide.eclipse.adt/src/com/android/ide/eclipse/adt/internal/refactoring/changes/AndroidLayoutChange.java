@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.changes;
 
-import com.android.ide.common.layout.LayoutConstants;
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.refactoring.core.RefactoringUtil;
 
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
@@ -135,8 +135,8 @@ public class AndroidLayoutChange extends DocumentChange {
         MultiTextEdit multiEdit = new MultiTextEdit();
         for (AndroidLayoutChangeDescription change : mChanges) {
             if (!change.isStandalone()) {
-                TextEdit edit = createTextEdit(LayoutConstants.VIEW,
-                        LayoutConstants.ATTR_CLASS,
+                TextEdit edit = createTextEdit(SdkConstants.VIEW,
+                        SdkConstants.ATTR_CLASS,
                         change.getClassName(),
                         change.getNewName());
                 if (edit != null) {

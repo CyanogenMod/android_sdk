@@ -15,21 +15,21 @@
  */
 package com.android.ide.common.layout.relative;
 
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.BaseViewRule.stripIdPrefix;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.relative.ConstraintType.LAYOUT_CENTER_HORIZONTAL;
 import static com.android.ide.common.layout.relative.ConstraintType.LAYOUT_CENTER_VERTICAL;
-import static com.android.utils.XmlUtils.ANDROID_URI;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INode.IAttribute;
-import com.android.ide.common.layout.LayoutConstants;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -42,7 +42,7 @@ import java.util.Set;
  * deleted nodes
  * <p>
  * TODO: Consider adding the
- * {@link LayoutConstants#ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING} attribute to a
+ * {@link SdkConstants#ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING} attribute to a
  * node if it's pointing to a node which is deleted and which has no transitive
  * reference to another node.
  */
@@ -96,7 +96,7 @@ public class DeletionHandler {
 
     @Nullable
     private static String getId(@NonNull IAttribute attribute) {
-        if (attribute.getName().startsWith(ATTR_LAYOUT_PREFIX)
+        if (attribute.getName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 && ANDROID_URI.equals(attribute.getUri())
                 && !attribute.getName().startsWith(ATTR_LAYOUT_MARGIN)) {
             String id = attribute.getValue();

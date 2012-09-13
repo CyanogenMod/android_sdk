@@ -16,18 +16,17 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_PADDING;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_PADDING;
+import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
-import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -166,7 +165,7 @@ public class UiElementPullParser extends BasePullParser {
             ViewElementDescriptor descriptor = mDescriptors.findDescriptorByTag(xml);
             if (descriptor != null) {
                 NamedNodeMap attributes = node.getXmlNode().getAttributes();
-                Node padding = attributes.getNamedItemNS(SdkConstants.NS_RESOURCES, ATTR_PADDING);
+                Node padding = attributes.getNamedItemNS(ANDROID_URI, ATTR_PADDING);
                 if (padding == null) {
                     // we'll return an extra padding
                     mZeroAttributeIsPadding = true;
@@ -271,7 +270,7 @@ public class UiElementPullParser extends BasePullParser {
     public String getAttributeNamespace(int i) {
         if (mZeroAttributeIsPadding) {
             if (i == 0) {
-                return SdkConstants.NS_RESOURCES;
+                return ANDROID_URI;
             } else {
                 i--;
             }
@@ -294,7 +293,7 @@ public class UiElementPullParser extends BasePullParser {
             if (i == 0) {
                 // figure out the prefix associated with the android namespace.
                 Document doc = mRoot.getXmlDocument();
-                return doc.lookupPrefix(SdkConstants.NS_RESOURCES);
+                return doc.lookupPrefix(ANDROID_URI);
             } else {
                 i--;
             }
@@ -325,7 +324,7 @@ public class UiElementPullParser extends BasePullParser {
         if (attribute != null) {
             String value = attribute.getNodeValue();
             if (mIncreaseExistingPadding && ATTR_PADDING.equals(attribute.getLocalName()) &&
-                    SdkConstants.NS_RESOURCES.equals(attribute.getNamespaceURI())) {
+                    ANDROID_URI.equals(attribute.getNamespaceURI())) {
                 // add the padding and return the value
                 return addPaddingToValue(value);
             }
@@ -341,7 +340,7 @@ public class UiElementPullParser extends BasePullParser {
     @Override
     public String getAttributeValue(String namespace, String localName) {
         if (mExplodeNodes != null && ATTR_PADDING.equals(localName) &&
-                SdkConstants.NS_RESOURCES.equals(namespace)) {
+                ANDROID_URI.equals(namespace)) {
             UiElementNode node = getCurrentNode();
             if (node != null && mExplodeNodes.contains(node)) {
                 return FIXED_PADDING_VALUE;
@@ -349,7 +348,7 @@ public class UiElementPullParser extends BasePullParser {
         }
 
         if (mZeroAttributeIsPadding && ATTR_PADDING.equals(localName) &&
-                SdkConstants.NS_RESOURCES.equals(namespace)) {
+                ANDROID_URI.equals(namespace)) {
             return DEFAULT_PADDING_VALUE;
         }
 
@@ -380,7 +379,7 @@ public class UiElementPullParser extends BasePullParser {
             if (attribute != null) {
                 String value = attribute.getNodeValue();
                 if (mIncreaseExistingPadding && ATTR_PADDING.equals(localName) &&
-                        SdkConstants.NS_RESOURCES.equals(namespace)) {
+                        ANDROID_URI.equals(namespace)) {
                     // add the padding and return the value
                     return addPaddingToValue(value);
                 }
@@ -390,7 +389,7 @@ public class UiElementPullParser extends BasePullParser {
                 if (VALUE_MATCH_PARENT.equals(value) &&
                         (ATTR_LAYOUT_WIDTH.equals(localName) ||
                                 ATTR_LAYOUT_HEIGHT.equals(localName)) &&
-                        SdkConstants.NS_RESOURCES.equals(namespace)) {
+                        ANDROID_URI.equals(namespace)) {
                     return VALUE_FILL_PARENT;
                 }
 

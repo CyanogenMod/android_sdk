@@ -84,7 +84,7 @@ public class AidlProcessor extends SourceProcessor {
 
     @Override
     protected String getExtension() {
-        return AdtConstants.EXT_AIDL;
+        return SdkConstants.EXT_AIDL;
     }
 
     @Override
@@ -390,7 +390,7 @@ public class AidlProcessor extends SourceProcessor {
             String javaName;
             if (replaceExt) {
                 javaName = sourceFile.getName().replaceAll(
-                        AdtConstants.RE_AIDL_EXT, AdtConstants.DOT_JAVA);
+                        AdtConstants.RE_AIDL_EXT, SdkConstants.DOT_JAVA);
             } else {
                 javaName = sourceFile.getName();
             }
@@ -441,7 +441,7 @@ public class AidlProcessor extends SourceProcessor {
         // TODO: properly parse aidl file to determine type and generate dependency graphs.
 //
 //        String className = file.getName().substring(0,
-//                file.getName().length() - AndroidConstants.DOT_AIDL.length());
+//                file.getName().length() - SdkConstants.DOT_AIDL.length());
 //
 //        InputStream input = file.getContents(true /* force*/);
 //        try {

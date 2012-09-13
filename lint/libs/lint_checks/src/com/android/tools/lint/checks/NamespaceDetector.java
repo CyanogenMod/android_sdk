@@ -16,11 +16,11 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
-import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
+import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.URI_PREFIX;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

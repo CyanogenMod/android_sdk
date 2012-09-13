@@ -16,9 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
-import com.android.AndroidConstants;
 import com.android.SdkConstants;
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -298,7 +296,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                 IResource resource = layoutMembers[j];
                 if (resource instanceof IFolder
                         && resource.exists()
-                        && resource.getName().startsWith(AndroidConstants.FD_RES_LAYOUT)) {
+                        && resource.getName().startsWith(SdkConstants.FD_RES_LAYOUT)) {
                     IFolder layoutFolder = (IFolder) resource;
                     IResource[] members = layoutFolder.members();
                     for (int i = 0; i < members.length; i++) {
@@ -355,13 +353,13 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                 if (model != null) {
                     IDOMModel xmlModel = (IDOMModel) model;
                     IDOMDocument xmlDoc = xmlModel.getDocument();
-                    NodeList nodes = xmlDoc.getElementsByTagName(LayoutConstants.VIEW);
+                    NodeList nodes = xmlDoc.getElementsByTagName(SdkConstants.VIEW);
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Node node = nodes.item(i);
                         NamedNodeMap attributes = node.getAttributes();
                         if (attributes != null) {
                             Node attributeNode = attributes
-                                    .getNamedItem(LayoutConstants.ATTR_CLASS);
+                                    .getNamedItem(SdkConstants.ATTR_CLASS);
                             if (attributeNode instanceof Attr) {
                                 Attr attribute = (Attr) attributeNode;
                                 String value = attribute.getValue();

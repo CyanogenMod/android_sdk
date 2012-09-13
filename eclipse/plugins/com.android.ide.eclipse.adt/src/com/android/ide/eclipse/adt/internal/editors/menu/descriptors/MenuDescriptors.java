@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu.descriptors;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.TAG_MENU;
 
-import com.android.SdkConstants;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -31,13 +31,10 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDe
 import java.util.ArrayList;
 import java.util.Map;
 
-
 /**
  * Complete description of the menu structure.
  */
 public final class MenuDescriptors implements IDescriptorProvider {
-
-    public static final String MENU_ROOT_ELEMENT = "menu"; //$NON-NLS-1$
 
     /** The root element descriptor. */
     private ElementDescriptor mDescriptor = null;
@@ -74,7 +71,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
 
         if (mDescriptor == null) {
             mDescriptor = createElement(styleMap,
-                MENU_ROOT_ELEMENT, // xmlName
+                TAG_MENU, // xmlName
                 "Menu", // uiName,
                 null, // TODO SDK URL
                 null, // extraAttribute
@@ -101,7 +98,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
                 false /* mandatory */);
 
         ElementDescriptor sub_menu = createElement(styleMap,
-                MENU_ROOT_ELEMENT, // xmlName
+                TAG_MENU, // xmlName
                 "Sub-Menu", // uiName,
                 null, // TODO SDK URL
                 null, // extraAttribute
@@ -165,7 +162,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
         if (style != null) {
             DescriptorsUtils.appendAttributes(descs,
                     null,   // elementName
-                    SdkConstants.NS_RESOURCES,
+                    ANDROID_URI,
                     style.getAttributes(),
                     null,   // requiredAttributes
                     null);  // overrides

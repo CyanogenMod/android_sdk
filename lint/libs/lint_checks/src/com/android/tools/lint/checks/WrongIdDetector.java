@@ -16,16 +16,16 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TYPE;
-import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_ID;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.VALUE_ID;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 
 import com.android.annotations.NonNull;
@@ -168,10 +168,10 @@ public class WrongIdDetector extends LayoutDetector {
                     for (int i = 0, n = attributes.getLength(); i < n; i++) {
                         Attr attr = (Attr) attributes.item(i);
                         String value = attr.getValue();
-                        if ((value.startsWith(NEW_ID_RESOURCE_PREFIX) ||
-                                value.startsWith(ID_RESOURCE_PREFIX))
+                        if ((value.startsWith(NEW_ID_PREFIX) ||
+                                value.startsWith(ID_PREFIX))
                                 && ANDROID_URI.equals(attr.getNamespaceURI())
-                                && attr.getLocalName().startsWith(ATTR_LAYOUT_PREFIX)) {
+                                && attr.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                             if (!idDefined(mFileIds, value)) {
                                 // Stash a reference to this id and location such that
                                 // we can check after the *whole* layout has been processed,
@@ -273,7 +273,7 @@ public class WrongIdDetector extends LayoutDetector {
                     if (mDeclaredIds == null) {
                         mDeclaredIds = Sets.newHashSet();
                     }
-                    mDeclaredIds.add(ID_RESOURCE_PREFIX + name);
+                    mDeclaredIds.add(ID_PREFIX + name);
                 }
             }
         }
@@ -293,12 +293,12 @@ public class WrongIdDetector extends LayoutDetector {
         }
         boolean definedLocally = ids.contains(id);
         if (!definedLocally) {
-            if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
-                definedLocally = ids.contains(ID_RESOURCE_PREFIX +
-                        id.substring(NEW_ID_RESOURCE_PREFIX.length()));
-            } else if (id.startsWith(ID_RESOURCE_PREFIX)) {
-                definedLocally = ids.contains(NEW_ID_RESOURCE_PREFIX +
-                        id.substring(ID_RESOURCE_PREFIX.length()));
+            if (id.startsWith(NEW_ID_PREFIX)) {
+                definedLocally = ids.contains(ID_PREFIX +
+                        id.substring(NEW_ID_PREFIX.length()));
+            } else if (id.startsWith(ID_PREFIX)) {
+                definedLocally = ids.contains(NEW_ID_PREFIX +
+                        id.substring(ID_PREFIX.length()));
             }
         }
 

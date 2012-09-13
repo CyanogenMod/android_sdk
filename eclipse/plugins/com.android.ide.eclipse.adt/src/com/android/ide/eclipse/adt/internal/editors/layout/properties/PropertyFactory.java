@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
@@ -276,7 +276,7 @@ public class PropertyFactory {
             }
 
             String firstName = descriptor.getXmlLocalName();
-            if (firstName.startsWith(ATTR_LAYOUT_PREFIX)) {
+            if (firstName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                 if (firstName.startsWith(ATTR_LAYOUT_MARGIN)) {
                     if (marginProperties == null) {
                         marginProperties = Lists.newArrayListWithExpectedSize(5);
@@ -443,7 +443,7 @@ public class PropertyFactory {
             }
 
             String firstName = descriptor.getXmlLocalName();
-            if (firstName.startsWith(ATTR_LAYOUT_PREFIX)) {
+            if (firstName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                 if (firstName.startsWith(ATTR_LAYOUT_MARGIN)) {
                     if (marginProperties == null) {
                         marginProperties = Lists.newArrayListWithExpectedSize(5);

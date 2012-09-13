@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_LAYOUT_PREFIX;
+import static com.android.SdkConstants.ANDROID_LAYOUT_RESOURCE_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_LV_FOOTER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_LV_HEADER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_LV_ITEM;
@@ -80,8 +80,8 @@ public class ListViewTypeMenu extends SubmenuAction {
 
             String selected = getSelectedLayout();
             if (selected != null) {
-                if (selected.startsWith(ANDROID_LAYOUT_PREFIX)) {
-                    selected = selected.substring(ANDROID_LAYOUT_PREFIX.length());
+                if (selected.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX)) {
+                    selected = selected.substring(ANDROID_LAYOUT_RESOURCE_PREFIX.length());
                 }
             }
 
@@ -151,7 +151,7 @@ public class ListViewTypeMenu extends SubmenuAction {
         @Override
         public void run() {
             if (isChecked()) {
-                setNewType(KEY_LV_ITEM, ANDROID_LAYOUT_PREFIX + mLayout);
+                setNewType(KEY_LV_ITEM, ANDROID_LAYOUT_RESOURCE_PREFIX + mLayout);
             }
         }
     }

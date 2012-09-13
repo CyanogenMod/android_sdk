@@ -16,10 +16,10 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT_X;
+import static com.android.SdkConstants.ATTR_LAYOUT_Y;
+import static com.android.SdkConstants.VALUE_N_DP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

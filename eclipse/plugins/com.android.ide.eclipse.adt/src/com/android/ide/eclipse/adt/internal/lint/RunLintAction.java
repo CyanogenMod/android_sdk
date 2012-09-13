@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_XML;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;

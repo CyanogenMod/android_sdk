@@ -16,22 +16,22 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ICON;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_GIF;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_HDPI;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_LDPI;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_MDPI;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_XHDPI;
-import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ICON;
+import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.DRAWABLE_FOLDER;
+import static com.android.SdkConstants.DRAWABLE_HDPI;
+import static com.android.SdkConstants.DRAWABLE_LDPI;
+import static com.android.SdkConstants.DRAWABLE_MDPI;
+import static com.android.SdkConstants.DRAWABLE_PREFIX;
+import static com.android.SdkConstants.DRAWABLE_XHDPI;
+import static com.android.SdkConstants.RES_FOLDER;
+import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
@@ -1221,8 +1221,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         assert element.getTagName().equals(TAG_APPLICATION);
         mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
-        if (mApplicationIcon.startsWith(DRAWABLE_RESOURCE_PREFIX)) {
-            mApplicationIcon = mApplicationIcon.substring(DRAWABLE_RESOURCE_PREFIX.length());
+        if (mApplicationIcon.startsWith(DRAWABLE_PREFIX)) {
+            mApplicationIcon = mApplicationIcon.substring(DRAWABLE_PREFIX.length());
         }
     }
 }

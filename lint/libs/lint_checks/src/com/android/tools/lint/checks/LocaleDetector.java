@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.FORMAT_METHOD;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.FORMAT_METHOD;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -15,13 +15,15 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
+import static com.android.SdkConstants.ANDROID_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_FRAGMENT_LAYOUT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
 
+
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceRepository;
@@ -58,7 +60,7 @@ import java.util.List;
  * Fragment context menu allowing a layout to be chosen for previewing in the fragment frame.
  */
 public class FragmentMenu extends SubmenuAction {
-    private static final String R_LAYOUT_PREFIX = "R.layout."; //$NON-NLS-1$
+    private static final String R_LAYOUT_RESOURCE_PREFIX = "R.layout."; //$NON-NLS-1$
     private static final String ANDROID_R_PREFIX = "android.R.layout"; //$NON-NLS-1$
 
     /** Associated canvas */
@@ -94,8 +96,8 @@ public class FragmentMenu extends SubmenuAction {
 
         String selected = getSelectedLayout();
         if (selected != null) {
-            if (selected.startsWith(ANDROID_LAYOUT_PREFIX)) {
-                selected = selected.substring(ANDROID_LAYOUT_PREFIX.length());
+            if (selected.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX)) {
+                selected = selected.substring(ANDROID_LAYOUT_RESOURCE_PREFIX.length());
             }
         }
 
@@ -129,11 +131,11 @@ public class FragmentMenu extends SubmenuAction {
 
                 int index = 0;
                 while (true) {
-                    index = source.indexOf(R_LAYOUT_PREFIX, index);
+                    index = source.indexOf(R_LAYOUT_RESOURCE_PREFIX, index);
                     if (index == -1) {
                         break;
                     } else {
-                        index += R_LAYOUT_PREFIX.length();
+                        index += R_LAYOUT_RESOURCE_PREFIX.length();
                         int end = index;
                         while (end < source.length()) {
                             char c = source.charAt(end);
@@ -148,9 +150,9 @@ public class FragmentMenu extends SubmenuAction {
                             // Is this R.layout part of an android.R.layout?
                             int len = ANDROID_R_PREFIX.length() + 1; // prefix length to check
                             if (index > len && source.startsWith(ANDROID_R_PREFIX, index - len)) {
-                                layout = ANDROID_LAYOUT_PREFIX + title;
+                                layout = ANDROID_LAYOUT_RESOURCE_PREFIX + title;
                             } else {
-                                layout = LAYOUT_PREFIX + title;
+                                layout = LAYOUT_RESOURCE_PREFIX + title;
                             }
                             if (!self.equals(title)) {
                                 layouts.add(Pair.of(title, layout));

@@ -16,22 +16,22 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_STYLE;
-import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.GRID_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.MERGE;
-import static com.android.tools.lint.detector.api.LintConstants.RADIO_GROUP;
-import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.TABLE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
+import static com.android.SdkConstants.ABSOLUTE_LAYOUT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BACKGROUND;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_STYLE;
+import static com.android.SdkConstants.FRAME_LAYOUT;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.VIEW_MERGE;
+import static com.android.SdkConstants.RADIO_GROUP;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.SCROLL_VIEW;
+import static com.android.SdkConstants.TABLE_LAYOUT;
+import static com.android.SdkConstants.TABLE_ROW;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -158,7 +158,7 @@ public class UselessViewDetector extends LayoutDetector {
         Element parent = (Element) parentNode;
         String parentTag = parent.getTagName();
         if (parentTag.equals(SCROLL_VIEW) || parentTag.equals(HORIZONTAL_SCROLL_VIEW) ||
-                parentTag.equals(MERGE)) {
+                parentTag.equals(VIEW_MERGE)) {
             // Can't remove if the parent is a scroll view or a merge
             return;
         }

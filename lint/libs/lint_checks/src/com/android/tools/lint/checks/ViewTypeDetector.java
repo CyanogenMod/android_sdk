@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_CLASS;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -106,10 +106,10 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
         String view = attribute.getOwnerElement().getTagName();
         String value = attribute.getValue();
         String id = null;
-        if (value.startsWith(ID_RESOURCE_PREFIX)) {
-            id = value.substring(ID_RESOURCE_PREFIX.length());
-        } else if (value.startsWith(NEW_ID_RESOURCE_PREFIX)) {
-            id = value.substring(NEW_ID_RESOURCE_PREFIX.length());
+        if (value.startsWith(ID_PREFIX)) {
+            id = value.substring(ID_PREFIX.length());
+        } else if (value.startsWith(NEW_ID_PREFIX)) {
+            id = value.substring(NEW_ID_PREFIX.length());
         } // else: could be @android id
 
         if (id != null) {

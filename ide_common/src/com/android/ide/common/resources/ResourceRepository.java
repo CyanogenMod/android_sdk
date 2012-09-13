@@ -16,7 +16,7 @@
 
 package com.android.ide.common.resources;
 
-import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -309,7 +309,7 @@ public abstract class ResourceRepository {
     @Nullable
     public ResourceFolder processFolder(@NonNull IAbstractFolder folder) {
         // split the name of the folder in segments.
-        String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
+        String[] folderSegments = folder.getName().split(SdkConstants.RES_QUALIFIER_SEP);
 
         // get the enum for the resource type.
         ResourceFolderType type = ResourceFolderType.getTypeByName(folderSegments[0]);

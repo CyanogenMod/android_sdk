@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.layout.relative;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.layout.BaseViewRule;

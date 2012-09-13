@@ -33,7 +33,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ListAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
-import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
 
@@ -233,7 +232,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         insertAttribute(MANIFEST_ELEMENT, PACKAGE_ATTR_DESC);
 
         XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(
-                XmlUtils.ANDROID_NS_NAME, XmlUtils.ANDROID_URI);
+                SdkConstants.ANDROID_NS_NAME, SdkConstants.ANDROID_URI);
         insertAttribute(MANIFEST_ELEMENT, xmlns);
 
         assert sanityCheck(manifestMap, MANIFEST_ELEMENT);

@@ -73,7 +73,7 @@ import java.util.Iterator;
 public class ResourceExplorerView extends ViewPart implements ISelectionListener,
         IResourceEventListener {
 
-    // Note: keep using the obsolete AndroidConstants.EDITORS_NAMESPACE (which used
+    // Note: keep using the obsolete SdkConstants.EDITORS_NAMESPACE (which used
     // to be the Editors Plugin ID) to keep existing preferences functional.
     private final static String PREFS_COLUMN_RES =
         AdtConstants.EDITORS_NAMESPACE + "ResourceExplorer.Col1"; //$NON-NLS-1$

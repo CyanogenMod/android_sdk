@@ -16,10 +16,10 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PARENT;
-import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_STYLE;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

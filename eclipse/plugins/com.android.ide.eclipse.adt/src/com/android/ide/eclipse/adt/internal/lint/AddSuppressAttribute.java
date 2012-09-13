@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.SdkConstants.ATTR_IGNORE;
+import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

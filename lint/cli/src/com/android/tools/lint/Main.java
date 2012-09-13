@@ -18,7 +18,7 @@ package com.android.tools.lint;
 
 import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
 import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;

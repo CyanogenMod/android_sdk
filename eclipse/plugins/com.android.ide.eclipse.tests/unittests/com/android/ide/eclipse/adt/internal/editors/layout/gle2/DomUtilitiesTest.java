@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.TOOLS_URI;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

@@ -15,6 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
+import static com.android.SdkConstants.ATTR_TEXT_SIZE;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.UNIT_DP;
+import static com.android.SdkConstants.UNIT_SP;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.ide.common.api.IAttributeInfo.Format.BOOLEAN;
 import static com.android.ide.common.api.IAttributeInfo.Format.DIMENSION;
 import static com.android.ide.common.api.IAttributeInfo.Format.ENUM;
@@ -23,13 +30,6 @@ import static com.android.ide.common.api.IAttributeInfo.Format.FLOAT;
 import static com.android.ide.common.api.IAttributeInfo.Format.INTEGER;
 import static com.android.ide.common.api.IAttributeInfo.Format.REFERENCE;
 import static com.android.ide.common.api.IAttributeInfo.Format.STRING;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT_SIZE;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_DP;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_SP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

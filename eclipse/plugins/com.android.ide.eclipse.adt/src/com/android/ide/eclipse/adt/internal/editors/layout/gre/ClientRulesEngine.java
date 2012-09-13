@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
-import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.URI_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -16,17 +16,17 @@
 
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_LIBRARY;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
-import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CONFIG;
-import static com.android.tools.lint.detector.api.LintConstants.PROJECT_PROPERTIES;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_TRUE;
+import static com.android.SdkConstants.ANDROID_LIBRARY;
+import static com.android.SdkConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.SdkConstants.PROGUARD_CONFIG;
+import static com.android.SdkConstants.PROJECT_PROPERTIES;
+import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

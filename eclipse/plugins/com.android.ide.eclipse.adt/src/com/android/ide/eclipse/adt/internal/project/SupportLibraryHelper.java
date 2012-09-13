@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT_V7;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT_V7;
+import static com.android.SdkConstants.FQCN_SPACE;
+import static com.android.SdkConstants.FQCN_SPACE_V7;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

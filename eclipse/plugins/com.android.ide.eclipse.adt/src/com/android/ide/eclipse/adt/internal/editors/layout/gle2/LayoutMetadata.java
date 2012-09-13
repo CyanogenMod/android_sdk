@@ -15,14 +15,16 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NUM_COLUMNS;
-import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_NUM_COLUMNS;
+import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TOOLS_URI;
 
+
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.AdapterBinding;
@@ -359,10 +361,10 @@ public class LayoutMetadata {
 
     /** Strips out @layout/ or @android:layout/ from the given layout reference */
     private static String stripLayoutPrefix(String layout) {
-        if (layout.startsWith(ANDROID_LAYOUT_PREFIX)) {
-            layout = layout.substring(ANDROID_LAYOUT_PREFIX.length());
-        } else if (layout.startsWith(LAYOUT_PREFIX)) {
-            layout = layout.substring(LAYOUT_PREFIX.length());
+        if (layout.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX)) {
+            layout = layout.substring(ANDROID_LAYOUT_RESOURCE_PREFIX.length());
+        } else if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) {
+            layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
         }
 
         return layout;
@@ -401,23 +403,23 @@ public class LayoutMetadata {
             AdapterBinding binding = new AdapterBinding(count);
 
             if (header != null) {
-                boolean isFramework = header.startsWith(ANDROID_LAYOUT_PREFIX);
+                boolean isFramework = header.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX);
                 binding.addHeader(new ResourceReference(stripLayoutPrefix(header),
                         isFramework));
             }
 
             if (footer != null) {
-                boolean isFramework = footer.startsWith(ANDROID_LAYOUT_PREFIX);
+                boolean isFramework = footer.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX);
                 binding.addFooter(new ResourceReference(stripLayoutPrefix(footer),
                         isFramework));
             }
 
             if (layout != null) {
-                boolean isFramework = layout.startsWith(ANDROID_LAYOUT_PREFIX);
+                boolean isFramework = layout.startsWith(ANDROID_LAYOUT_RESOURCE_PREFIX);
                 if (isFramework) {
-                    layout = layout.substring(ANDROID_LAYOUT_PREFIX.length());
-                } else if (layout.startsWith(LAYOUT_PREFIX)) {
-                    layout = layout.substring(LAYOUT_PREFIX.length());
+                    layout = layout.substring(ANDROID_LAYOUT_RESOURCE_PREFIX.length());
+                } else if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) {
+                    layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
                 }
 
                 binding.addItem(new DataBindingItem(layout, isFramework, 1));

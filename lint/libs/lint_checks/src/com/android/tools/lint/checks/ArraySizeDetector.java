@@ -17,10 +17,10 @@
 package com.android.tools.lint.checks;
 
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_INTEGER_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.TAG_ARRAY;
+import static com.android.SdkConstants.TAG_INTEGER_ARRAY;
+import static com.android.SdkConstants.TAG_STRING_ARRAY;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

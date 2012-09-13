@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.FQCN_SUPPRESS_LINT;
-import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
+import static com.android.SdkConstants.FQCN_SUPPRESS_LINT;
+import static com.android.SdkConstants.SUPPRESS_LINT;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.IssueRegistry;

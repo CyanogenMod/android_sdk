@@ -80,7 +80,7 @@ class InstrumentationRunnerValidator {
     }
 
     /**
-     * Helper method to determine if given manifest has a <code>AndroidConstants.LIBRARY_TEST_RUNNER
+     * Helper method to determine if given manifest has a <code>SdkConstants.LIBRARY_TEST_RUNNER
      * </code> library reference
      *
      * @param manifestParser the {@link ManifestData} to search

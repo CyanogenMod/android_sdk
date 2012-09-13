@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ON_CLICK;
+import static com.android.SdkConstants.ATTR_ON_CLICK;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;

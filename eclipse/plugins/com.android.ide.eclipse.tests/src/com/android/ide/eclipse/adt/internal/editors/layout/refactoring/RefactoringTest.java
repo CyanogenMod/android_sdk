@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.DOT_XML;
 
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;

@@ -15,6 +15,18 @@
  */
 package com.android.utils;
 
+import static com.android.SdkConstants.AMP_ENTITY;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APOS_ENTITY;
+import static com.android.SdkConstants.APP_PREFIX;
+import static com.android.SdkConstants.LT_ENTITY;
+import static com.android.SdkConstants.QUOT_ENTITY;
+import static com.android.SdkConstants.XMLNS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
+import static com.android.SdkConstants.XMLNS_URI;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
@@ -27,39 +39,6 @@ import java.util.HashSet;
 
 /** XML Utilities */
 public class XmlUtils {
-    /** Namespace used in XML files for Android attributes */
-    public static final String ANDROID_URI =
-            "http://schemas.android.com/apk/res/android";                    //$NON-NLS-1$
-    /** Namespace used in XML files for Android Tooling attributes */
-    public static final String TOOLS_URI =
-            "http://schemas.android.com/tools";                              //$NON-NLS-1$
-    /** URI of the reserved "xmlns"  prefix */
-    public final static String XMLNS_URI = "http://www.w3.org/2000/xmlns/";  //$NON-NLS-1$
-    /** The "xmlns" attribute name */
-    public static final String XMLNS = "xmlns";                              //$NON-NLS-1$
-    /** The default prefix used for the {@link #XMLNS_URI} */
-    public static final String XMLNS_PREFIX = "xmlns:";                      //$NON-NLS-1$
-    /** Qualified name of the xmlns android declaration element */
-    public static final String XMLNS_ANDROID = "xmlns:android";              //$NON-NLS-1$
-    /** The default prefix used for the {@link #ANDROID_URI} name space */
-    public static final String ANDROID_NS_NAME = "android";                  //$NON-NLS-1$
-    /** The default prefix used for the {@link #ANDROID_URI} name space including the colon  */
-    public static final String ANDROID_NS_NAME_PREFIX = "android:";          //$NON-NLS-1$
-    /** The default prefix used for the app */
-    private static final String APP_PREFIX = "app";                          //$NON-NLS-1$
-    /** The "xmlns:" attribute prefix used for namespace declarations */
-    public static final String XMLNS_COLON = "xmlns:";                       //$NON-NLS-1$
-    /** The entity for the ampersand character */
-    public static final String AMP_ENTITY = "&amp;";                         //$NON-NLS-1$
-    /** The entity for the quote character */
-    public static final String QUOT_ENTITY = "&quot;";                       //$NON-NLS-1$
-    /** The entity for the apostrophe character */
-    public static final String APOS_ENTITY = "&apos;";                       //$NON-NLS-1$
-    /** The entity for the less than character */
-    public static final String LT_ENTITY = "&lt;";                           //$NON-NLS-1$
-    /** The entity for the greater than character */
-    public static final String GT_ENTITY = "&gt;";                           //$NON-NLS-1$
-
     /**
      * Returns the namespace prefix matching the requested namespace URI.
      * If no such declaration is found, returns the default "android" prefix for
@@ -67,7 +46,7 @@ public class XmlUtils {
      *
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. SdkConstants.NS_RESOURCES
+     *              e.g. {@link SdkConstants#ANDROID_URI}
      * @return The first prefix declared or the default "android" prefix
      *              (or "app" for non-Android URIs)
      */
@@ -83,7 +62,7 @@ public class XmlUtils {
      *
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. SdkConstants.NS_RESOURCES
+     *              e.g. {@link SdkConstants#ANDROID_URI}
      * @param defaultPrefix The default prefix (root) to use if the namespace
      *              is not found. If null, do not create a new namespace
      *              if this URI is not defined for the document.
@@ -94,7 +73,7 @@ public class XmlUtils {
             @Nullable Node node, @Nullable String nsUri, @Nullable String defaultPrefix) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following code emulates this simple call:
-        //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
+        //   String prefix = node.lookupPrefix(NS_RESOURCES);
 
         // if the requested URI is null, it denotes an attribute with no namespace.
         if (nsUri == null) {

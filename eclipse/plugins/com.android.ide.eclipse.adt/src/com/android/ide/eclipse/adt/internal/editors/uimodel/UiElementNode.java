@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_SUPPORT_PKG_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
+import static com.android.SdkConstants.ANDROID_SUPPORT_PKG_PREFIX;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 
 import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
@@ -37,11 +37,9 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttribu
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.UiUpdateState;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.utils.XmlUtils;
@@ -252,7 +250,7 @@ public class UiElementNode implements IPropertySource {
                 attr = _Element_getAttributeNS(elem,
                                 SdkConstants.NS_RESOURCES,
                                 AndroidManifestDescriptors.ANDROID_LABEL_ATTR);
-            } else if (mXmlNode.getNodeName().equals(LayoutDescriptors.VIEW_FRAGMENT)) {
+            } else if (mXmlNode.getNodeName().equals(SdkConstants.VIEW_FRAGMENT)) {
                 attr = attr.substring(attr.lastIndexOf('.') + 1);
             }
             if (attr == null || attr.length() == 0) {
@@ -263,12 +261,12 @@ public class UiElementNode implements IPropertySource {
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,
                                 null, // no namespace
-                                ValuesDescriptors.NAME_ATTR);
+                                SdkConstants.ATTR_NAME);
             }
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,
                                 SdkConstants.NS_RESOURCES,
-                                LayoutDescriptors.ID_ATTR);
+                                SdkConstants.ATTR_ID);
 
                 if (attr != null && attr.length() > 0) {
                     for (String prefix : ID_PREFIXES) {
@@ -299,7 +297,7 @@ public class UiElementNode implements IPropertySource {
         // Special case: for <view>, show the class attribute value instead.
         // This is done here rather than in the descriptor since this depends on
         // node instance data.
-        if (LayoutDescriptors.VIEW_VIEWTAG.equals(uiName) && mXmlNode instanceof Element) {
+        if (SdkConstants.VIEW_TAG.equals(uiName) && mXmlNode instanceof Element) {
             Element element = (Element) mXmlNode;
             String cls = element.getAttribute(ATTR_CLASS);
             if (cls != null) {
@@ -1061,7 +1059,7 @@ public class UiElementNode implements IPropertySource {
         for (AttributeDescriptor attrDesc : getAttributeDescriptors()) {
             if (attrDesc instanceof XmlnsAttributeDescriptor) {
                 XmlnsAttributeDescriptor desc = (XmlnsAttributeDescriptor) attrDesc;
-                Attr attr = doc.createAttributeNS(XmlUtils.XMLNS_URI,
+                Attr attr = doc.createAttributeNS(SdkConstants.XMLNS_URI,
                         desc.getXmlNsName());
                 attr.setValue(desc.getValue());
                 attr.setPrefix(desc.getXmlNsPrefix());

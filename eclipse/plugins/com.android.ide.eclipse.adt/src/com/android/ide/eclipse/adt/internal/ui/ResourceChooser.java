@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -155,7 +155,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
                 PREFIX_RESOURCE_REF + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$
 
         mSystemResourcePattern = Pattern.compile(
-                PREFIX_ANDROID_RESOURCE_REF + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$
+                ANDROID_PREFIX + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$
 
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",

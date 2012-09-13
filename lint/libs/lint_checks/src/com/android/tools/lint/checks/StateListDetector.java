@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

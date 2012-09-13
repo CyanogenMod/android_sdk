@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.TAG_RESOURCES;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

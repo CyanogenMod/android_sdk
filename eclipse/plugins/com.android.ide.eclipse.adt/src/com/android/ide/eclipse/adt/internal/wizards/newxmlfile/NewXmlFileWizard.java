@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.GRID_LAYOUT;
 
+import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -389,7 +389,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             } else {
                 fileName = name.trim();
                 if (fileName.length() > 0 && fileName.indexOf('.') == -1) {
-                    fileName = fileName + AdtConstants.DOT_XML;
+                    fileName = fileName + SdkConstants.DOT_XML;
                 }
             }
 

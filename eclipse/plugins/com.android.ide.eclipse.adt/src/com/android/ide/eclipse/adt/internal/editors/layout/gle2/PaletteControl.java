@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.XMLNS_ANDROID;
-import static com.android.utils.XmlUtils.XMLNS_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.SdkConstants.XMLNS_ANDROID;
+import static com.android.SdkConstants.XMLNS_URI;
 
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Rect;
@@ -925,10 +925,8 @@ public class PaletteControl extends Composite {
             attr.setValue(ANDROID_URI);
             element.getAttributes().setNamedItemNS(attr);
 
-            element.setAttributeNS(ANDROID_URI,
-                    ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
-            element.setAttributeNS(ANDROID_URI,
-                    ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
+            element.setAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
+            element.setAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
 
             // This doesn't apply to all, but doesn't seem to cause harm and makes for a
             // better experience with text-oriented views like buttons and texts

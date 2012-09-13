@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.tools.lint.detector.api.LintConstants.FQCN_SUPPRESS_LINT;
-import static com.android.tools.lint.detector.api.LintConstants.FQCN_TARGET_API;
-import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
-import static com.android.tools.lint.detector.api.LintConstants.TARGET_API;
+import static com.android.SdkConstants.FQCN_SUPPRESS_LINT;
+import static com.android.SdkConstants.FQCN_TARGET_API;
+import static com.android.SdkConstants.SUPPRESS_LINT;
+import static com.android.SdkConstants.TARGET_API;
 import static org.eclipse.jdt.core.dom.ArrayInitializer.EXPRESSIONS_PROPERTY;
 import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 

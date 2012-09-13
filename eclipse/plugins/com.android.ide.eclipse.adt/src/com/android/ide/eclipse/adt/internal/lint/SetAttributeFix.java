@@ -15,17 +15,18 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CONTENT_DESCRIPTION;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_INPUT_TYPE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TRANSLATABLE;
+import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
+import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.SdkConstants.ATTR_INPUT_TYPE;
+import static com.android.SdkConstants.ATTR_PERMISSION;
+import static com.android.SdkConstants.ATTR_TRANSLATABLE;
+import static com.android.SdkConstants.VALUE_FALSE;
 
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TranslationDetector;
-import com.android.tools.lint.detector.api.LintConstants;
 
 import org.eclipse.core.resources.IMarker;
 
@@ -40,9 +41,9 @@ final class SetAttributeFix extends SetPropertyFix {
         if (mId.equals(AccessibilityDetector.ISSUE.getId())) {
             return ATTR_CONTENT_DESCRIPTION;
         } else if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
-            return LintConstants.ATTR_BASELINE_ALIGNED;
+            return ATTR_BASELINE_ALIGNED;
         } else if (mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())) {
-            return LintConstants.ATTR_PERMISSION;
+            return ATTR_PERMISSION;
         } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
             return ATTR_INPUT_TYPE;
         } else if (mId.equals(TranslationDetector.MISSING.getId())) {

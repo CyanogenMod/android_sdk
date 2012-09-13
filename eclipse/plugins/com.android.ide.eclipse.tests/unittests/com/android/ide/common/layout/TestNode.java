@@ -15,9 +15,9 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ANDROID_URI;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

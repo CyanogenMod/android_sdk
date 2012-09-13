@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_ROW;
+import static com.android.SdkConstants.FQCN_TABLE_ROW;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

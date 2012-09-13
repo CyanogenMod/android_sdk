@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.XMLNS_ANDROID;
-import static com.android.utils.XmlUtils.XMLNS_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.XMLNS_ANDROID;
+import static com.android.SdkConstants.XMLNS_URI;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;

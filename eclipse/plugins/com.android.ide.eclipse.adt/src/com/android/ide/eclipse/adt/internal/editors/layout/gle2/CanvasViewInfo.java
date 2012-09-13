@@ -16,11 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
-import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
+import static com.android.SdkConstants.FQCN_SPACE;
+import static com.android.SdkConstants.FQCN_SPACE_V7;
+import static com.android.SdkConstants.GESTURE_OVERLAY_VIEW;
+import static com.android.SdkConstants.VIEW_MERGE;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Margins;
@@ -31,7 +32,6 @@ import com.android.ide.common.rendering.api.MergeCookie;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.UiElementPullParser;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -566,14 +566,14 @@ public class CanvasViewInfo implements IPropertySource {
                 if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
                     String nodeName = node.getNodeName();
                     if (node.getNamespaceURI() == null
-                            && LayoutDescriptors.VIEW_INCLUDE.equals(nodeName)) {
+                            && SdkConstants.VIEW_INCLUDE.equals(nodeName)) {
                         // Note: the layout attribute is NOT in the Android namespace
                         Element element = (Element) node;
-                        String url = element.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
+                        String url = element.getAttribute(SdkConstants.ATTR_LAYOUT);
                         if (url.length() > 0) {
                             return url;
                         }
-                    } else if (LayoutDescriptors.VIEW_FRAGMENT.equals(nodeName)) {
+                    } else if (SdkConstants.VIEW_FRAGMENT.equals(nodeName)) {
                         String url = FragmentMenu.getFragmentLayout(node);
                         if (url != null) {
                             return url;
@@ -910,7 +910,7 @@ public class CanvasViewInfo implements IPropertySource {
                 UiViewElementNode uiViewNode = view.getUiViewNode();
                 String containerName = uiViewNode != null
                     ? uiViewNode.getDescriptor().getXmlLocalName() : ""; //$NON-NLS-1$
-                if (containerName.equals(LayoutDescriptors.VIEW_INCLUDE)) {
+                if (containerName.equals(SdkConstants.VIEW_INCLUDE)) {
                     // This is expected -- we don't WANT to get node keys for the content
                     // of an include since it's in a different file and should be treated
                     // as a single unit that cannot be edited (hence, no CanvasViewInfo

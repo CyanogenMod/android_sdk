@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 
 import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SubmenuAction;
@@ -49,17 +49,17 @@ import java.util.Set;
  */
 class ThemeMenuAction extends SubmenuAction {
     private static final String DEVICE_LIGHT_PREFIX =
-            PREFIX_ANDROID_STYLE + "Theme.DeviceDefault.Light";  //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX + "Theme.DeviceDefault.Light";  //$NON-NLS-1$
     private static final String HOLO_LIGHT_PREFIX =
-            PREFIX_ANDROID_STYLE + "Theme.Holo.Light";           //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX + "Theme.Holo.Light";           //$NON-NLS-1$
     private static final String DEVICE_PREFIX =
-            PREFIX_ANDROID_STYLE + "Theme.DeviceDefault";        //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX + "Theme.DeviceDefault";        //$NON-NLS-1$
     private static final String HOLO_PREFIX =
-            PREFIX_ANDROID_STYLE + "Theme.Holo";                 //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX + "Theme.Holo";                 //$NON-NLS-1$
     private static final String LIGHT_PREFIX =
-            PREFIX_ANDROID_STYLE +"Theme.Light";                 //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX +"Theme.Light";                 //$NON-NLS-1$
     private static final String THEME_PREFIX =
-            PREFIX_ANDROID_STYLE +"Theme";                       //$NON-NLS-1$
+            ANDROID_STYLE_RESOURCE_PREFIX +"Theme";                       //$NON-NLS-1$
 
     // Constants used to indicate what type of menu is being shown, such that
     // the submenus can lazily construct their contents

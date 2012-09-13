@@ -15,11 +15,13 @@
  */
 package com.android.ide.common.layout.relative;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.VALUE_TRUE;
 
+
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode;
@@ -314,8 +316,8 @@ class DependencyGraph {
         }
 
         private static String stripLayoutAttributePrefix(String name) {
-            if (name.startsWith(ATTR_LAYOUT_PREFIX)) {
-                return name.substring(ATTR_LAYOUT_PREFIX.length());
+            if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
+                return name.substring(ATTR_LAYOUT_RESOURCE_PREFIX.length());
             }
 
             return name;

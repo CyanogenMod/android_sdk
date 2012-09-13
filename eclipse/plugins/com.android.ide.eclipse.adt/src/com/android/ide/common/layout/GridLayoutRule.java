@@ -16,20 +16,20 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE_V7;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_SPACE;
+import static com.android.SdkConstants.FQCN_SPACE_V7;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL_VERTICAL;
+import static com.android.SdkConstants.GRAVITY_VALUE_LEFT;
+import static com.android.SdkConstants.VALUE_HORIZONTAL;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

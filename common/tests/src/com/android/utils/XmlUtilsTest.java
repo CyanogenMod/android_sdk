@@ -15,6 +15,7 @@
  */
 package com.android.utils;
 
+import com.android.SdkConstants;
 import com.android.utils.XmlUtils;
 
 import org.w3c.dom.Attr;
@@ -36,9 +37,9 @@ public class XmlUtilsTest extends TestCase {
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.newDocument();
         Element rootElement = document.createElement("root");
-        Attr attr = document.createAttributeNS(XmlUtils.XMLNS_URI,
+        Attr attr = document.createAttributeNS(SdkConstants.XMLNS_URI,
                 "xmlns:customPrefix");
-        attr.setValue(XmlUtils.ANDROID_URI);
+        attr.setValue(SdkConstants.ANDROID_URI);
         rootElement.getAttributes().setNamedItemNS(attr);
         document.appendChild(rootElement);
         Element root = document.getDocumentElement();
@@ -51,7 +52,7 @@ public class XmlUtilsTest extends TestCase {
         Element baz = document.createElement("baz");
         root.appendChild(baz);
 
-        String prefix = XmlUtils.lookupNamespacePrefix(baz, XmlUtils.ANDROID_URI);
+        String prefix = XmlUtils.lookupNamespacePrefix(baz, SdkConstants.ANDROID_URI);
         assertEquals("customPrefix", prefix);
 
         prefix = XmlUtils.lookupNamespacePrefix(baz,

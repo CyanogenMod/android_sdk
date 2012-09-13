@@ -16,26 +16,26 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STRING_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_TO_LEFT_OF;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_TO_RIGHT_OF;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ORIENTATION;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT;
-import static com.android.tools.lint.detector.api.LintConstants.BUTTON;
-import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.STRING_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_TRUE;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.ANDROID_STRING_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_LEFT_OF;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_RIGHT_OF;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.BUTTON;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.STRING_PREFIX;
+import static com.android.SdkConstants.TABLE_ROW;
+import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.SdkConstants.VALUE_VERTICAL;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -85,10 +85,10 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** Layout text attribute reference to {@code @android:string/ok} */
     private static final String ANDROID_OK_RESOURCE =
-            ANDROID_STRING_RESOURCE_PREFIX + "ok"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "ok"; //$NON-NLS-1$
     /** Layout text attribute reference to {@code @android:string/cancel} */
     private static final String ANDROID_CANCEL_RESOURCE =
-            ANDROID_STRING_RESOURCE_PREFIX + "cancel"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "cancel"; //$NON-NLS-1$
 
     /** The main issue discovered by this detector */
     public static final Issue ORDER = Issue.create(
@@ -288,8 +288,8 @@ public class ButtonDetector extends ResourceXmlDetector {
             if (context.getDriver().getPhase() == 2) {
                 if (mApplicableResources.contains(text)) {
                     String key = text;
-                    if (key.startsWith(STRING_RESOURCE_PREFIX)) {
-                        key = key.substring(STRING_RESOURCE_PREFIX.length());
+                    if (key.startsWith(STRING_PREFIX)) {
+                        key = key.substring(STRING_PREFIX.length());
                     }
                     String label = mKeyToLabel.get(key);
                     boolean isCancel = CANCEL_LABEL.equalsIgnoreCase(label);
@@ -370,7 +370,7 @@ public class ButtonDetector extends ResourceXmlDetector {
             mApplicableResources = new HashSet<String>();
         }
 
-        mApplicableResources.add(STRING_RESOURCE_PREFIX + name);
+        mApplicableResources.add(STRING_PREFIX + name);
 
         // ALSO record all the other string resources in this file to pick up other
         // labels. If you define "OK" in one resource file and "Cancel" in another
@@ -431,7 +431,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                 if (resFolders != null) {
                     for (File folder : resFolders) {
                         String folderName = folder.getName();
-                        if (folderName.startsWith(FD_RES_LAYOUT)
+                        if (folderName.startsWith(SdkConstants.FD_RES_LAYOUT)
                                 && folderName.contains("-v14")) { //$NON-NLS-1$
                             File layout = new File(folder, fileName);
                             if (layout.exists()) {
@@ -549,15 +549,15 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     private String getLabel(String key) {
         String label = null;
-        if (key.startsWith(ANDROID_STRING_RESOURCE_PREFIX)) {
+        if (key.startsWith(ANDROID_STRING_PREFIX)) {
             if (key.equals(ANDROID_OK_RESOURCE)) {
                 label = OK_LABEL;
             } else if (key.equals(ANDROID_CANCEL_RESOURCE)) {
                 label = CANCEL_LABEL;
             }
         } else if (mKeyToLabel != null) {
-            if (key.startsWith(STRING_RESOURCE_PREFIX)) {
-                label = mKeyToLabel.get(key.substring(STRING_RESOURCE_PREFIX.length()));
+            if (key.startsWith(STRING_PREFIX)) {
+                label = mKeyToLabel.get(key.substring(STRING_PREFIX.length()));
             }
         }
 

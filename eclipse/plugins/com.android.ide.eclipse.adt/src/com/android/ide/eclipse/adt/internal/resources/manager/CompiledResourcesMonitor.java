@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.IntArrayWrapper;
@@ -91,7 +92,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
 
         IProject project = file.getProject();
 
-        if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)) {
+        if (file.getName().equals(SdkConstants.FN_COMPILED_RESOURCE_CLASS)) {
             // create the classname
             String className = getRClassName(project);
             if (className == null) {
@@ -118,7 +119,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      */
     private boolean packagePathMatches(String path, String packageName) {
         // First strip the ".class" off the end of the path
-        String pathWithoutExtension = path.substring(0, path.indexOf(AdtConstants.DOT_CLASS));
+        String pathWithoutExtension = path.substring(0, path.indexOf(SdkConstants.DOT_CLASS));
 
         // then split the components of each path by their separators
         String [] pathArray = pathWithoutExtension.split(Pattern.quote(File.separator));

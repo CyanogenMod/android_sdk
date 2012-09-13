@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.AndroidConstants.FD_RES_ANIMATOR;
 import static com.android.SdkConstants.FD_RESOURCES;
+import static com.android.SdkConstants.FD_RES_ANIMATOR;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 
 import com.android.ide.common.rendering.api.Capability;

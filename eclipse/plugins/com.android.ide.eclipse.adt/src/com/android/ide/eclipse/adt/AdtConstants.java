@@ -16,7 +16,11 @@
 
 package com.android.ide.eclipse.adt;
 
-import com.android.AndroidConstants;
+import static com.android.SdkConstants.DOT_AIDL;
+import static com.android.SdkConstants.DOT_DEP;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_RS;
+
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
@@ -68,86 +72,11 @@ public class AdtConstants {
     /** Separator character for workspace path, i.e. '/'. */
     public final static char WS_SEP_CHAR = '/';
 
-    /** Extension of the Application package Files, i.e. "apk". */
-    public final static String EXT_ANDROID_PACKAGE = "apk"; //$NON-NLS-1$
-    /** Extension of java files, i.e. "java" */
-    public final static String EXT_JAVA = "java"; //$NON-NLS-1$
-    /** Extension of compiled java files, i.e. "class" */
-    public final static String EXT_CLASS = "class"; //$NON-NLS-1$
-    /** Extension of xml files, i.e. "xml" */
-    public final static String EXT_XML = "xml"; //$NON-NLS-1$
-    /** Extension of jar files, i.e. "jar" */
-    public final static String EXT_JAR = "jar"; //$NON-NLS-1$
-    /** Extension of aidl files, i.e. "aidl" */
-    public final static String EXT_AIDL = "aidl"; //$NON-NLS-1$
-    /** Extension of Renderscript files, i.e. "rs" */
-    public final static String EXT_RS = "rs"; //$NON-NLS-1$
-    /** Extension of dependency files, i.e. "d" */
-    public final static String EXT_DEP = "d"; //$NON-NLS-1$
-    /** Extension of native libraries, i.e. "so" */
-    public final static String EXT_NATIVE_LIB = "so"; //$NON-NLS-1$
-    /** Extension of dex files, i.e. "dex" */
-    public final static String EXT_DEX = "dex"; //$NON-NLS-1$
-    /** Extension for temporary resource files, ie "ap_ */
-    public final static String EXT_RES = "ap_"; //$NON-NLS-1$
-    /** Extension for pre-processable images. Right now pngs */
-    public final static String EXT_PNG = "png"; //$NON-NLS-1$
-
-    private final static String DOT = "."; //$NON-NLS-1$
-
-    /** Dot-Extension of the Application package Files, i.e. ".apk". */
-    public final static String DOT_ANDROID_PACKAGE = DOT + EXT_ANDROID_PACKAGE;
-    /** Dot-Extension of java files, i.e. ".java" */
-    public final static String DOT_JAVA = DOT + EXT_JAVA;
-    /** Dot-Extension of compiled java files, i.e. ".class" */
-    public final static String DOT_CLASS = DOT + EXT_CLASS;
-    /** Dot-Extension of xml files, i.e. ".xml" */
-    public final static String DOT_XML = DOT + EXT_XML;
-    /** Dot-Extension of jar files, i.e. ".jar" */
-    public final static String DOT_JAR = DOT + EXT_JAR;
-    /** Dot-Extension of aidl files, i.e. ".aidl" */
-    public final static String DOT_AIDL = DOT + EXT_AIDL;
-    /** Dot-Extension of renderscript files, i.e. ".rs" */
-    public final static String DOT_RS = DOT + EXT_RS;
-    /** Dot-Extension of dependency files, i.e. ".d" */
-    public final static String DOT_DEP = DOT + EXT_DEP;
-    /** Dot-Extension of dex files, i.e. ".dex" */
-    public final static String DOT_DEX = DOT + EXT_DEX;
-    /** Dot-Extension for temporary resource files, ie "ap_ */
-    public final static String DOT_RES = DOT + EXT_RES;
-    /** Dot-Extension for PNG files, i.e. ".png" */
-    public static final String DOT_PNG = ".png"; //$NON-NLS-1$
-    /** Dot-Extension for 9-patch files, i.e. ".9.png" */
-    public static final String DOT_9PNG = ".9.png"; //$NON-NLS-1$
-    /** Dot-Extension for GIF files, i.e. ".gif" */
-    public static final String DOT_GIF = ".gif"; //$NON-NLS-1$
-    /** Dot-Extension for JPEG files, i.e. ".jpg" */
-    public static final String DOT_JPG = ".jpg"; //$NON-NLS-1$
-    /** Dot-Extension for BMP files, i.e. ".bmp" */
-    public static final String DOT_BMP = ".bmp"; //$NON-NLS-1$
-    /** Dot-Extension for SVG files, i.e. ".svg" */
-    public static final String DOT_SVG = ".svg"; //$NON-NLS-1$
-    /** Dot-Extension for template files */
-    public static final String DOT_FTL = ".ftl"; //$NON-NLS-1$
-    /** Dot-Extension of text files, i.e. ".txt" */
-    public final static String DOT_TXT = ".txt"; //$NON-NLS-1$
-
-    /** Name of the android sources directory */
-    public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$
-
-    /** Resource base name for java files and classes */
-    public final static String FN_RESOURCE_BASE = "R"; //$NON-NLS-1$
-    /** Resource java class  filename, i.e. "R.java" */
-    public final static String FN_RESOURCE_CLASS = FN_RESOURCE_BASE + DOT_JAVA;
-    /** Resource class file  filename, i.e. "R.class" */
-    public final static String FN_COMPILED_RESOURCE_CLASS = FN_RESOURCE_BASE + DOT_CLASS;
-    /** Manifest java class filename, i.e. "Manifest.java" */
-    public final static String FN_MANIFEST_CLASS = "Manifest.java"; //$NON-NLS-1$
-    /** Temporary packaged resources file name, i.e. "resources.ap_" */
-    public final static String FN_RESOURCES_AP_ = "resources.ap_"; //$NON-NLS-1$
-
     /** aapt's proguard output */
     public final static String FN_AAPT_PROGUARD = "proguard.txt"; //$NON-NLS-1$
+
+    /** Temporary packaged resources file name, i.e. "resources.ap_" */
+    public final static String FN_RESOURCES_AP_ = "resources.ap_"; //$NON-NLS-1$
 
     public final static String FN_TRACEVIEW =
         (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
@@ -171,7 +100,7 @@ public class AdtConstants {
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;
 
     /** Absolute path of the layout folder, e.g. "/res/layout".<br> This is a workspace path. */
-    public final static String WS_LAYOUTS = WS_RESOURCES + WS_SEP + AndroidConstants.FD_RES_LAYOUT;
+    public final static String WS_LAYOUTS = WS_RESOURCES + WS_SEP + SdkConstants.FD_RES_LAYOUT;
 
     /** Leaf of the javaDoc folder. Does not start with a separator. */
     public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/" + //$NON-NLS-1$
@@ -197,8 +126,8 @@ public class AdtConstants {
      * <p/>
      * This string contains a %s. It must be combined with the desired Java package, e.g.:
      * <pre>
-     *    String.format(AndroidConstants.NS_CUSTOM_RESOURCES, "android");
-     *    String.format(AndroidConstants.NS_CUSTOM_RESOURCES, "com.test.mycustomapp");
+     *    String.format(SdkConstants.NS_CUSTOM_RESOURCES, "android");
+     *    String.format(SdkConstants.NS_CUSTOM_RESOURCES, "com.test.mycustomapp");
      * </pre>
      *
      * Note: if you need an URI specifically for the "android" namespace, consider using
@@ -207,9 +136,6 @@ public class AdtConstants {
     // TODO rename NS_CUSTOM_RESOURCES to NS_CUSTOM_RESOURCES_S (denoting it takes a %s) in
     // another CL.
     public final static String NS_CUSTOM_RESOURCES = "http://schemas.android.com/apk/res/%1$s"; //$NON-NLS-1$
-
-    /** The package "android" as used in resource urls etc */
-    public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
 
     /** The old common plug-in ID. Please do not use for new features. */
     private static final String LEGACY_PLUGIN_ID = "com.android.ide.eclipse.common"; //$NON-NLS-1$

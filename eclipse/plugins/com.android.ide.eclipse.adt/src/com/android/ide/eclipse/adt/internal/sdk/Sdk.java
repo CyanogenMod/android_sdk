@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import static com.android.SdkConstants.FD_RES;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_JAR;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.EXT_JAR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;

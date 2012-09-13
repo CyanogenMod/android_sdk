@@ -16,16 +16,16 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_FOREGROUND;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
-import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.R_LAYOUT_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BACKGROUND;
+import static com.android.SdkConstants.ATTR_FOREGROUND;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.FRAME_LAYOUT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.R_LAYOUT_RESOURCE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -143,13 +143,13 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(INCLUDE, FRAME_LAYOUT);
+        return Arrays.asList(VIEW_INCLUDE, FRAME_LAYOUT);
     }
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
-        if (tag.equals(INCLUDE)) {
+        if (tag.equals(VIEW_INCLUDE)) {
             String layout = element.getAttribute(ATTR_LAYOUT); // NOTE: Not in android: namespace
             if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
                 layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
@@ -199,8 +199,8 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
             Expression argument = argumentList.first();
             if (argument instanceof Select) {
                 String expression = argument.toString();
-                if (expression.startsWith(R_LAYOUT_PREFIX)) {
-                    whiteListLayout(expression.substring(R_LAYOUT_PREFIX.length()));
+                if (expression.startsWith(R_LAYOUT_RESOURCE_PREFIX)) {
+                    whiteListLayout(expression.substring(R_LAYOUT_RESOURCE_PREFIX.length()));
                 }
             }
         }

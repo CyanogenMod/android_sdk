@@ -17,42 +17,44 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_HORIZ_MASK;
 import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.RADIO_GROUP;
-import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.SPACE;
-import static com.android.ide.common.layout.LayoutConstants.TABLE_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.TABLE_ROW;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BACKGROUND;
+import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BASELINE;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
+import static com.android.SdkConstants.GRAVITY_VALUE_FILL_VERTICAL;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.RADIO_GROUP;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.SPACE;
+import static com.android.SdkConstants.TABLE_LAYOUT;
+import static com.android.SdkConstants.TABLE_ROW;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_HORIZONTAL;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
 
+
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.layout.GravityHelper;
@@ -879,7 +881,7 @@ class GridLayoutConverter {
                         for (int i = 0, n = attributes.getLength(); i < n; i++) {
                             Attr attr = (Attr) attributes.item(i);
                             String name = attr.getLocalName();
-                            if (name.startsWith(ATTR_LAYOUT_PREFIX)) {
+                            if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                                 boolean alignVertical =
                                         name.equals(ATTR_LAYOUT_ALIGN_TOP) ||
                                         name.equals(ATTR_LAYOUT_ALIGN_BOTTOM) ||
