@@ -544,6 +544,51 @@ public class NewProjectPage extends WizardPage
         }
 
         Object source = e.getSource();
+        if (source == mMinSdkCombo) {
+            mValues.minSdk = getSelectedMinSdk();
+            // If higher than build target, adjust build target
+            // TODO: implement
+
+            Integer minSdk = mMinNameToApi.get(mValues.minSdk);
+            if (minSdk == null) {
+                try {
+                    minSdk = Integer.parseInt(mValues.minSdk);
+                } catch (NumberFormatException nufe) {
+                    minSdk = 1;
+                }
+            }
+            mValues.iconState.minSdk = minSdk.intValue();
+            mValues.minSdkLevel = minSdk.intValue();
+        } else if (source == mBuildSdkCombo) {
+            mValues.target = getSelectedBuildTarget();
+
+            // If lower than min sdk target, adjust min sdk target
+            if (mValues.target.getVersion().isPreview()) {
+                mValues.minSdk = mValues.target.getVersion().getCodename();
+                try {
+                    mIgnore = true;
+                    mMinSdkCombo.setText(mValues.minSdk);
+                } finally {
+                    mIgnore = false;
+                }
+            } else {
+                String minSdk = mValues.minSdk;
+                int buildApiLevel = mValues.target.getVersion().getApiLevel();
+                if (minSdk != null && !minSdk.isEmpty()
+                        && Character.isDigit(minSdk.charAt(0))
+                        && buildApiLevel < Integer.parseInt(minSdk)) {
+                    mValues.minSdk = Integer.toString(buildApiLevel);
+                    try {
+                        mIgnore = true;
+                        setSelectedMinSdk(buildApiLevel);
+                    } finally {
+                        mIgnore = false;
+                    }
+                }
+            }
+        } else if (source == mTargetSdkCombo) {
+            mValues.targetSdkLevel = getSelectedTargetSdk();
+        }
 
         validatePage();
     }
@@ -558,6 +603,11 @@ public class NewProjectPage extends WizardPage
 
         // +1: First API level (at index 0) is 1
         return Integer.toString(mMinSdkCombo.getSelectionIndex() + 1);
+    }
+
+    private int getSelectedTargetSdk() {
+        // +1: First API level (at index 0) is 1
+        return mTargetSdkCombo.getSelectionIndex() + 1;
     }
 
     private void setSelectedMinSdk(int api) {
@@ -720,8 +770,8 @@ public class NewProjectPage extends WizardPage
                     }
                     if (status == null || status.getSeverity() != IStatus.ERROR) {
                         if (mValues.targetSdkLevel < mValues.minSdkLevel) {
-                            status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID,
-                                "The target SDK version should be higher than the minimum SDK version");
+                            status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                                "The target SDK version should be at least as high as the minimum SDK version");
                         }
                     }
                 }
