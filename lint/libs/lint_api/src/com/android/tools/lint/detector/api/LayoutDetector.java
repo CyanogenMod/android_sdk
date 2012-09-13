@@ -16,16 +16,16 @@
 
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_BOTTOM;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_LEFT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_RIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_TOP;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PARENT;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_PADDING;
+import static com.android.SdkConstants.ATTR_PADDING_BOTTOM;
+import static com.android.SdkConstants.ATTR_PADDING_LEFT;
+import static com.android.SdkConstants.ATTR_PADDING_RIGHT;
+import static com.android.SdkConstants.ATTR_PADDING_TOP;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

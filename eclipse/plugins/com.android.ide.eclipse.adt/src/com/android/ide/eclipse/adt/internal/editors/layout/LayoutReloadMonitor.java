@@ -177,8 +177,8 @@ public final class LayoutReloadMonitor {
         public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
                 int kind, @Nullable String extension, int flags) {
             // This listener only cares about .class files and AndroidManifest.xml files
-            if (!(AdtConstants.EXT_CLASS.equals(extension)
-                    || AdtConstants.EXT_XML.equals(extension)
+            if (!(SdkConstants.EXT_CLASS.equals(extension)
+                    || SdkConstants.EXT_XML.equals(extension)
                         && SdkConstants.FN_ANDROID_MANIFEST_XML.equals(file.getName()))) {
                 return;
             }
@@ -233,7 +233,7 @@ public final class LayoutReloadMonitor {
 
             // here we only care about code change (so change for .class files).
             // Resource changes is handled by the IResourceListener.
-            if (AdtConstants.EXT_CLASS.equals(extension)) {
+            if (SdkConstants.EXT_CLASS.equals(extension)) {
                 if (file.getName().matches("R[\\$\\.](.*)")) {
                     // this is a R change!
                     if (changeFlags == null) {

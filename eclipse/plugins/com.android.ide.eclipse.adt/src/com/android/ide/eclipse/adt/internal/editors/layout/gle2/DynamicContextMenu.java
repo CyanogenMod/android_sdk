@@ -16,17 +16,17 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_IMAGE_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_TEXT_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.SPINNER;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.SdkConstants.FQCN_IMAGE_VIEW;
+import static com.android.SdkConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.SdkConstants.FQCN_TEXT_VIEW;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.SPINNER;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
 
 import com.android.SdkConstants;
 import com.android.ide.common.api.INode;

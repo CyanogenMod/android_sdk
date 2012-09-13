@@ -66,7 +66,7 @@ public class AndroidTargetData {
      * mAttributeValues is a map { key => list [ values ] }.
      * The key for the map is "(element-xml-name,attribute-namespace:attribute-xml-local-name)".
      * The attribute namespace prefix must be:
-     * - "android" for AndroidConstants.NS_RESOURCES
+     * - "android" for SdkConstants.NS_RESOURCES
      * - "xmlns" for the XMLNS URI.
      *
      * This is used for attributes that do not have a unique name, but still need to be populated

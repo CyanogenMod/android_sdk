@@ -16,12 +16,12 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_EDIT_TEXT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_BELOW;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.FQCN_EDIT_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;

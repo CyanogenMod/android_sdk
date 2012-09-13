@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_ID;
 
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;

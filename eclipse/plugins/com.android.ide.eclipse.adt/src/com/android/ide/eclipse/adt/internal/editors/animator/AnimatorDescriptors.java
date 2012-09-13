@@ -15,10 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.animator;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
 
-import com.android.SdkConstants;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -56,7 +55,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
         return mRootDescriptors;
     }
 
-    public ElementDescriptor getElementDescriptor(String mRootTag) {
+    ElementDescriptor getElementDescriptor(String rootTag) {
         if (nameToDescriptor == null) {
             nameToDescriptor = new HashMap<String, ElementDescriptor>();
             for (ElementDescriptor descriptor : getRootElementDescriptors()) {
@@ -64,7 +63,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
             }
         }
 
-        ElementDescriptor descriptor = nameToDescriptor.get(mRootTag);
+        ElementDescriptor descriptor = nameToDescriptor.get(rootTag);
         if (descriptor == null) {
             descriptor = getDescriptor();
         }
@@ -153,7 +152,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
 
         DescriptorsUtils.appendAttributes(descs,
                 null,   // elementName
-                SdkConstants.NS_RESOURCES,
+                ANDROID_URI,
                 style.getAttributes(),
                 null,   // requiredAttributes
                 null);  // overrides
@@ -164,7 +163,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
             if (style != null) {
                 DescriptorsUtils.appendAttributes(descs,
                         null,   // elementName
-                        SdkConstants.NS_RESOURCES,
+                        ANDROID_URI,
                         style.getAttributes(),
                         null,   // requiredAttributes
                         null);  // overrides

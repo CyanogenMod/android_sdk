@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.values.uimodel;
 
+import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ItemElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -45,8 +45,8 @@ public class UiItemElementNode extends UiElementNode {
         if (xmlNode != null && xmlNode instanceof Element && xmlNode.hasAttributes()) {
 
             Element elem = (Element) xmlNode;
-            String type = elem.getAttribute(ValuesDescriptors.TYPE_ATTR);
-            String name = elem.getAttribute(ValuesDescriptors.NAME_ATTR);
+            String type = elem.getAttribute(SdkConstants.ATTR_TYPE);
+            String name = elem.getAttribute(SdkConstants.ATTR_NAME);
             if (type != null && name != null && type.length() > 0 && name.length() > 0) {
                 type = AdtUtils.capitalize(type);
                 return String.format("%1$s (%2$s %3$s)", name, type, getDescriptor().getUiName());

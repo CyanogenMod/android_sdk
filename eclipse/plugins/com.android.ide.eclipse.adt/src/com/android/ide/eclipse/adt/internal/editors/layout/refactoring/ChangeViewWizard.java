@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.SdkConstants.REQUEST_FOCUS;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;

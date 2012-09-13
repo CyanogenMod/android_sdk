@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_PNG;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 

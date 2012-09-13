@@ -16,13 +16,13 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TRANSLATABLE;
-import static com.android.tools.lint.detector.api.LintConstants.STRING_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TRANSLATABLE;
+import static com.android.SdkConstants.STRING_PREFIX;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.TAG_STRING_ARRAY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -533,8 +533,8 @@ public class TranslationDetector extends ResourceXmlDetector {
                     Node valueNode = itemChildren.item(j);
                     if (valueNode.getNodeType() == Node.TEXT_NODE) {
                         String value = valueNode.getNodeValue().trim();
-                        if (!value.startsWith(ANDROID_RESOURCE_PREFIX)
-                                && !value.startsWith(STRING_RESOURCE_PREFIX)) {
+                        if (!value.startsWith(ANDROID_PREFIX)
+                                && !value.startsWith(STRING_PREFIX)) {
                             return false;
                         }
                     }

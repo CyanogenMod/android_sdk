@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.FRAGMENT;
-import static com.android.tools.lint.detector.api.LintConstants.FRAGMENT_V4;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.FRAGMENT;
+import static com.android.SdkConstants.FRAGMENT_V4;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;

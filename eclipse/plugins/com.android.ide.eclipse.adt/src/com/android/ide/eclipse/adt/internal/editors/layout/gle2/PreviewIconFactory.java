@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_DATE_PICKER;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_EXPANDABLE_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_TIME_PICKER;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
+import static com.android.SdkConstants.FQCN_DATE_PICKER;
+import static com.android.SdkConstants.FQCN_EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.FQCN_LIST_VIEW;
+import static com.android.SdkConstants.FQCN_TIME_PICKER;
+import static com.android.SdkConstants.DOT_PNG;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;

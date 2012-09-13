@@ -20,11 +20,9 @@ import static com.android.SdkConstants.FN_PROJECT_PROPERTIES;
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
-import com.android.AndroidConstants;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -147,23 +145,23 @@ public class NewProjectCreator  {
     private static final String ASSETS_DIRECTORY =
         SdkConstants.FD_ASSETS + AdtConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + AdtConstants.WS_SEP;
+        SdkConstants.FD_RES_DRAWABLE + AdtConstants.WS_SEP;
     private static final String DRAWABLE_XHDPI_DIRECTORY =
-            AndroidConstants.FD_RES_DRAWABLE + '-' + Density.XHIGH.getResourceValue() +
+            SdkConstants.FD_RES_DRAWABLE + '-' + Density.XHIGH.getResourceValue() +
             AdtConstants.WS_SEP;
     private static final String DRAWABLE_HDPI_DIRECTORY =
-            AndroidConstants.FD_RES_DRAWABLE + '-' + Density.HIGH.getResourceValue() +
+            SdkConstants.FD_RES_DRAWABLE + '-' + Density.HIGH.getResourceValue() +
             AdtConstants.WS_SEP;
     private static final String DRAWABLE_MDPI_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + '-' + Density.MEDIUM.getResourceValue() +
+        SdkConstants.FD_RES_DRAWABLE + '-' + Density.MEDIUM.getResourceValue() +
         AdtConstants.WS_SEP;
     private static final String DRAWABLE_LDPI_DIRECTORY =
-        AndroidConstants.FD_RES_DRAWABLE + '-' + Density.LOW.getResourceValue() +
+        SdkConstants.FD_RES_DRAWABLE + '-' + Density.LOW.getResourceValue() +
         AdtConstants.WS_SEP;
     private static final String LAYOUT_DIRECTORY =
-        AndroidConstants.FD_RES_LAYOUT + AdtConstants.WS_SEP;
+        SdkConstants.FD_RES_LAYOUT + AdtConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
-        AndroidConstants.FD_RES_VALUES + AdtConstants.WS_SEP;
+        SdkConstants.FD_RES_VALUES + AdtConstants.WS_SEP;
     private static final String GEN_SRC_DIRECTORY =
         SdkConstants.FD_GEN_SOURCES + AdtConstants.WS_SEP;
 
@@ -195,7 +193,7 @@ public class NewProjectCreator  {
 
     private static final String STRINGS_FILE = "strings.xml";       //$NON-NLS-1$
 
-    private static final String STRING_RSRC_PREFIX = LayoutConstants.STRING_PREFIX;
+    private static final String STRING_RSRC_PREFIX = SdkConstants.STRING_PREFIX;
     private static final String STRING_APP_NAME = "app_name";       //$NON-NLS-1$
     private static final String STRING_HELLO_WORLD = "hello";       //$NON-NLS-1$
 
@@ -1202,7 +1200,7 @@ public class NewProjectCreator  {
 
                 // Resource class
                 if (lastDotIndex > 0) {
-                    resourcePackageClass = packageName + "." + AdtConstants.FN_RESOURCE_BASE; //$NON-NLS-1$
+                    resourcePackageClass = packageName + '.' + SdkConstants.FN_RESOURCE_BASE;
                 }
 
                 // Package name
@@ -1235,7 +1233,7 @@ public class NewProjectCreator  {
 
         if (activityName != null) {
             // create the main activity Java file
-            String activityJava = activityName + AdtConstants.DOT_JAVA;
+            String activityJava = activityName + SdkConstants.DOT_JAVA;
             IFile file = pkgFolder.getFile(activityJava);
             if (!file.exists()) {
                 copyFile(JAVA_ACTIVITY_TEMPLATE, file, java_activity_parameters, monitor, false);

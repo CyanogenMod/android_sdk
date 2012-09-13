@@ -16,14 +16,14 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_BASELINE_ALIGNED;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WEIGHT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ORIENTATION;
-import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.VALUE_VERTICAL;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

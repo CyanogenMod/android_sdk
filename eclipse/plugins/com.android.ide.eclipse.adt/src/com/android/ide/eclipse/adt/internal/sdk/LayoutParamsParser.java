@@ -262,7 +262,7 @@ public class LayoutParamsParser {
         IClassDescriptor superClass = groupClass.getSuperclass();
 
         // Assertion: at this point, we should have
-        //   superClass != mTopViewClass || fqcn.equals(AndroidConstants.CLASS_VIEWGROUP);
+        //   superClass != mTopViewClass || fqcn.equals(SdkConstants.CLASS_VIEWGROUP);
 
         if (superClass != null && superClass.equals(mTopViewClass) == false) {
             ExtViewClassInfo superClassInfo = addGroup(superClass);

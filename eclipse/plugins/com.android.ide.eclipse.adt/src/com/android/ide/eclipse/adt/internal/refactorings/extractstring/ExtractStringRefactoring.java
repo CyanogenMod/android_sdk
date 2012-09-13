@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
-import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
-import static com.android.utils.XmlUtils.AMP_ENTITY;
-import static com.android.utils.XmlUtils.LT_ENTITY;
-import static com.android.utils.XmlUtils.QUOT_ENTITY;
+import static com.android.SdkConstants.AMP_ENTITY;
+import static com.android.SdkConstants.LT_ENTITY;
+import static com.android.SdkConstants.QUOT_ENTITY;
+import static com.android.SdkConstants.STRING_PREFIX;
 
 import com.android.SdkConstants;
 import com.android.ide.common.xml.ManifestData;
@@ -29,7 +29,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescrip
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -427,7 +426,7 @@ public class ExtractStringRefactoring extends Refactoring {
             }
 
             // Check this a Layout XML file and get the selection and its context.
-            if (mFile != null && AdtConstants.EXT_XML.equals(mFile.getFileExtension())) {
+            if (mFile != null && SdkConstants.EXT_XML.equals(mFile.getFileExtension())) {
 
                 // Currently we only support Android resource XML files, so they must have a path
                 // similar to
@@ -1069,7 +1068,7 @@ public class ExtractStringRefactoring extends Refactoring {
                             if (res.exists() && !res.isDerived() && res instanceof IFile) {
                                 IFile file = (IFile) res;
                                 // Must have an XML extension
-                                if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
+                                if (SdkConstants.EXT_XML.equals(file.getFileExtension())) {
                                     IPath p = file.getFullPath();
                                     // And not be either paths we want to filter out
                                     if ((mFilterPath1 != null && mFilterPath1.equals(p)) ||
@@ -1117,7 +1116,7 @@ public class ExtractStringRefactoring extends Refactoring {
             SubMonitor monitor) {
 
         TextFileChange xmlChange = new TextFileChange(getName(), targetXml);
-        xmlChange.setTextType(AdtConstants.EXT_XML);
+        xmlChange.setTextType(SdkConstants.EXT_XML);
 
         String error = "";                  //$NON-NLS-1$
         TextEdit edit = null;
@@ -1186,9 +1185,9 @@ public class ExtractStringRefactoring extends Refactoring {
 
         IModelManager modelMan = StructuredModelManager.getModelManager();
 
-        final String NODE_RESOURCES = ValuesDescriptors.ROOT_ELEMENT;
-        final String NODE_STRING = "string";    //$NON-NLS-1$ //TODO find or create constant
-        final String ATTR_NAME = "name";        //$NON-NLS-1$ //TODO find or create constant
+        final String NODE_RESOURCES = SdkConstants.TAG_RESOURCES;
+        final String NODE_STRING = SdkConstants.TAG_STRING;
+        final String ATTR_NAME = SdkConstants.ATTR_NAME;
 
 
         // Scan the source to find the best insertion point.
@@ -1570,7 +1569,7 @@ public class ExtractStringRefactoring extends Refactoring {
         HashSet<IFile> files = new HashSet<IFile>();
         files.add(sourceFile);
 
-        if (allConfigurations && AdtConstants.EXT_XML.equals(sourceFile.getFileExtension())) {
+        if (allConfigurations && SdkConstants.EXT_XML.equals(sourceFile.getFileExtension())) {
             IPath path = sourceFile.getFullPath();
             if (path.segmentCount() == 4 && path.segment(1).equals(SdkConstants.FD_RESOURCES)) {
                 IProject project = sourceFile.getProject();

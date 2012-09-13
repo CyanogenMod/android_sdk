@@ -16,11 +16,11 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.GALLERY;
-import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.LIST_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+import static com.android.SdkConstants.GALLERY;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.SCROLL_VIEW;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

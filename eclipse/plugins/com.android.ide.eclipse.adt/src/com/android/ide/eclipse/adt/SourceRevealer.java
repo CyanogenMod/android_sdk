@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;

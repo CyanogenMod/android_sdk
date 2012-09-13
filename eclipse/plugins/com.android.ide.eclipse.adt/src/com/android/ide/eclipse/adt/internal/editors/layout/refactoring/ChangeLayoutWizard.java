@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_RELATIVE_LAYOUT;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.VIEW_MERGE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;

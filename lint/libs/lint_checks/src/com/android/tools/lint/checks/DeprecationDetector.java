@@ -16,17 +16,17 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_AUTO_TEXT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_CAPITALIZE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_EDITABLE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ENABLED;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_METHOD;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NUMERIC;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PASSWORD;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PHONE_NUMBER;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_SINGLE_LINE;
+import static com.android.SdkConstants.ABSOLUTE_LAYOUT;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_AUTO_TEXT;
+import static com.android.SdkConstants.ATTR_CAPITALIZE;
+import static com.android.SdkConstants.ATTR_EDITABLE;
+import static com.android.SdkConstants.ATTR_ENABLED;
+import static com.android.SdkConstants.ATTR_INPUT_METHOD;
+import static com.android.SdkConstants.ATTR_NUMERIC;
+import static com.android.SdkConstants.ATTR_PASSWORD;
+import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
+import static com.android.SdkConstants.ATTR_SINGLE_LINE;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

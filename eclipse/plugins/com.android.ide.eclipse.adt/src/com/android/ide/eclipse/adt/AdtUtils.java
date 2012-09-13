@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt;
 
-import static com.android.tools.lint.detector.api.LintConstants.HIGHEST_KNOWN_API;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
+import static com.android.SdkConstants.TOOLS_PREFIX;
+import static com.android.SdkConstants.TOOLS_URI;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -950,7 +950,7 @@ public class AdtUtils {
      * @return the highest known API number
      */
     public static int getHighestKnownApiLevel() {
-        return HIGHEST_KNOWN_API;
+        return SdkConstants.HIGHEST_KNOWN_API;
     }
 
     /**

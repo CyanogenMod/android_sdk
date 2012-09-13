@@ -16,15 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.values;
 
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.DESCRIPTOR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TYPE;
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
@@ -76,7 +76,7 @@ public class ValuesContentAssist extends AndroidContentAssist {
         super.computeAttributeValues(proposals, offset, parentTagName, attributeName, node,
                 wordPrefix, skipEndTag, replaceLength);
 
-        if (parentTagName.equals(ITEM_TAG) && NAME_ATTR.equals(attributeName)) {
+        if (parentTagName.equals(TAG_ITEM) && ATTR_NAME.equals(attributeName)) {
 
             // Special case: the user is code completing inside
             //    <style><item name="^"/></style>
@@ -142,9 +142,9 @@ public class ValuesContentAssist extends AndroidContentAssist {
         super.computeTextValues(proposals, offset, parentNode, currentNode, uiParent,
                 prefix);
 
-        if (parentNode.getNodeName().equals(ITEM_TAG) &&
+        if (parentNode.getNodeName().equals(TAG_ITEM) &&
             parentNode.getParentNode() != null &&
-            STYLE_ELEMENT.equals(parentNode.getParentNode().getNodeName())) {
+            TAG_STYLE.equals(parentNode.getParentNode().getNodeName())) {
 
             // Special case: the user is code completing inside
             //    <style><item name="android:foo"/>|</style>
@@ -158,7 +158,7 @@ public class ValuesContentAssist extends AndroidContentAssist {
                 if (descriptorProvider != null) {
 
                     Element element = (Element) parentNode;
-                    String attrName = element.getAttribute(NAME_ATTR);
+                    String attrName = element.getAttribute(ATTR_NAME);
                     int pos = attrName.indexOf(':');
                     if (pos >= 0) {
                         attrName = attrName.substring(pos + 1);
@@ -203,7 +203,7 @@ public class ValuesContentAssist extends AndroidContentAssist {
             }
         }
 
-        if (parentNode.getNodeName().equals(ITEM_TAG)) {
+        if (parentNode.getNodeName().equals(TAG_ITEM)) {
             // Completing text content inside an <item> tag: offer @resource completion.
             if (prefix.startsWith(PREFIX_RESOURCE_REF) || prefix.trim().length() == 0) {
                 String[] choices = UiResourceAttributeNode.computeResourceStringMatches(
@@ -218,7 +218,7 @@ public class ValuesContentAssist extends AndroidContentAssist {
                     String value = typeNode.getNodeValue();
                     List<String> filtered = new ArrayList<String>();
                     for (String s : choices) {
-                        if (s.startsWith(PREFIX_ANDROID_RESOURCE_REF) ||
+                        if (s.startsWith(ANDROID_PREFIX) ||
                                 s.startsWith(PREFIX_RESOURCE_REF+ value)) {
                             filtered.add(s);
                         }

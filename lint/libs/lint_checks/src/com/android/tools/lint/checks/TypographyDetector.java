@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.TAG_STRING_ARRAY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;

@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.editors.formatting;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findLineStart;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findTextStart;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.SELECTOR_TAG;
-
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_MEDIUM;
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_PARTITION;
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_REGION;
@@ -31,7 +30,6 @@ import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.resources.ResourceType;
 
@@ -512,7 +510,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         // integer-arrays, string-arrays, and typed-arrays
         Element rootElement = domDocument.getDocumentElement();
         if (rootElement != null
-                && ValuesDescriptors.ROOT_ELEMENT.equals(rootElement.getTagName())) {
+                && SdkConstants.TAG_RESOURCES.equals(rootElement.getTagName())) {
             style = XmlFormatStyle.RESOURCE;
         }
 

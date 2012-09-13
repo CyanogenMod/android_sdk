@@ -16,11 +16,11 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.FORMAT_METHOD;
-import static com.android.tools.lint.detector.api.LintConstants.GET_STRING_METHOD;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.FORMAT_METHOD;
+import static com.android.SdkConstants.GET_STRING_METHOD;
+import static com.android.SdkConstants.TAG_STRING;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

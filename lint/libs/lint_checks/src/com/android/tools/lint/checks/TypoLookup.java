@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.NonNull;

@@ -16,24 +16,24 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.FD_RESOURCES;
+import static com.android.SdkConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_LAYOUTS;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.resources.ResourceType.LAYOUT;
-
 import static org.eclipse.core.resources.IResourceDelta.ADDED;
 import static org.eclipse.core.resources.IResourceDelta.CHANGED;
 import static org.eclipse.core.resources.IResourceDelta.CONTENT;
 import static org.eclipse.core.resources.IResourceDelta.REMOVED;
 
-import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -529,12 +529,12 @@ public class IncludeFinder {
 
     /** Searches the given DOM document and returns the list of includes, if any */
     private List<String> findIncludesInDocument(Document document) {
-        NodeList includes = document.getElementsByTagName(LayoutDescriptors.VIEW_INCLUDE);
+        NodeList includes = document.getElementsByTagName(VIEW_INCLUDE);
         if (includes.getLength() > 0) {
             List<String> urls = new ArrayList<String>();
             for (int i = 0; i < includes.getLength(); i++) {
                 Element element = (Element) includes.item(i);
-                String url = element.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
+                String url = element.getAttribute(ATTR_LAYOUT);
                 if (url.length() > 0) {
                     String resourceName = urlToLocalResource(url);
                     if (resourceName != null) {
@@ -921,7 +921,7 @@ public class IncludeFinder {
                 reference = FD_RES_LAYOUT + WS_SEP + reference;
             }
 
-            String projectPath = SdkConstants.FD_RESOURCES + WS_SEP + reference + '.' + EXT_XML;
+            String projectPath = FD_RESOURCES + WS_SEP + reference + '.' + EXT_XML;
             IResource member = mProject.findMember(projectPath);
             if (member instanceof IFile) {
                 return (IFile) member;

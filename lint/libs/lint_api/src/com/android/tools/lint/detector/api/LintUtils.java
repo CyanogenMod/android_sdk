@@ -16,11 +16,11 @@
 
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.detector.api.LintConstants.BIN_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.BIN_FOLDER;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -218,10 +218,10 @@ public class LintUtils {
     public static String stripIdPrefix(@Nullable String id) {
         if (id == null) {
             return "";
-        } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
-            return id.substring(NEW_ID_RESOURCE_PREFIX.length());
-        } else if (id.startsWith(ID_RESOURCE_PREFIX)) {
-            return id.substring(ID_RESOURCE_PREFIX.length());
+        } else if (id.startsWith(NEW_ID_PREFIX)) {
+            return id.substring(NEW_ID_PREFIX.length());
+        } else if (id.startsWith(ID_PREFIX)) {
+            return id.substring(ID_PREFIX.length());
         }
 
         return id;
@@ -236,28 +236,28 @@ public class LintUtils {
      * @return true if the two id references refer to the same id
      */
     public static boolean idReferencesMatch(String id1, String id2) {
-        if (id1.startsWith(NEW_ID_RESOURCE_PREFIX)) {
-            if (id2.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+        if (id1.startsWith(NEW_ID_PREFIX)) {
+            if (id2.startsWith(NEW_ID_PREFIX)) {
                 return id1.equals(id2);
             } else {
-                assert id2.startsWith(ID_RESOURCE_PREFIX);
+                assert id2.startsWith(ID_PREFIX);
                 return ((id1.length() - id2.length())
-                            == (NEW_ID_RESOURCE_PREFIX.length() - ID_RESOURCE_PREFIX.length()))
-                        && id1.regionMatches(NEW_ID_RESOURCE_PREFIX.length(), id2,
-                                ID_RESOURCE_PREFIX.length(),
-                                id2.length() - ID_RESOURCE_PREFIX.length());
+                            == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
+                        && id1.regionMatches(NEW_ID_PREFIX.length(), id2,
+                                ID_PREFIX.length(),
+                                id2.length() - ID_PREFIX.length());
             }
         } else {
-            assert id1.startsWith(ID_RESOURCE_PREFIX);
-            if (id2.startsWith(ID_RESOURCE_PREFIX)) {
+            assert id1.startsWith(ID_PREFIX);
+            if (id2.startsWith(ID_PREFIX)) {
                 return id1.equals(id2);
             } else {
-                assert id2.startsWith(NEW_ID_RESOURCE_PREFIX);
+                assert id2.startsWith(NEW_ID_PREFIX);
                 return (id2.length() - id1.length()
-                            == (NEW_ID_RESOURCE_PREFIX.length() - ID_RESOURCE_PREFIX.length()))
-                        && id2.regionMatches(NEW_ID_RESOURCE_PREFIX.length(), id1,
-                                ID_RESOURCE_PREFIX.length(),
-                                id1.length() - ID_RESOURCE_PREFIX.length());
+                            == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
+                        && id2.regionMatches(NEW_ID_PREFIX.length(), id1,
+                                ID_PREFIX.length(),
+                                id1.length() - ID_PREFIX.length());
             }
         }
     }

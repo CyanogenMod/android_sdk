@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.DOT_CLASS;
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.EOL_BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;

@@ -15,14 +15,16 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.TOOLS_URI;
+
 
 import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentTypeIdForXML.ContentTypeID_XML;
 
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;

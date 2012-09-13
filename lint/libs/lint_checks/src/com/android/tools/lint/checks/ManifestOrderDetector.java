@@ -16,20 +16,20 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_RECEIVER;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_LIBRARY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_PERMISSION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_PROVIDER;
+import static com.android.SdkConstants.TAG_RECEIVER;
+import static com.android.SdkConstants.TAG_SERVICE;
+import static com.android.SdkConstants.TAG_USES_LIBRARY;
+import static com.android.SdkConstants.TAG_USES_PERMISSION;
+import static com.android.SdkConstants.TAG_USES_SDK;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

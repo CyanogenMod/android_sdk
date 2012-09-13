@@ -16,7 +16,8 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.utils.XmlUtils.ANDROID_URI;
+
+import static com.android.SdkConstants.ANDROID_URI;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Point;

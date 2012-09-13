@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
-import static com.android.AndroidConstants.FD_RES_VALUES;
-import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
 import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;

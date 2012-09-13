@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_RADIO_BUTTON;
+import static com.android.SdkConstants.FQCN_RADIO_BUTTON;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;

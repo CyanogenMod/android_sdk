@@ -16,13 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_FRAME_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_VIEWTAG;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.FQCN_FRAME_LAYOUT;
+import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -38,7 +39,6 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.utils.XmlUtils;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -125,9 +125,7 @@ public class UiViewElementNode extends UiElementNode {
                 mCachedAttributeDescriptors, direct_attrs.length,
                 layout_attrs.length);
         if (need_xmlns) {
-            AttributeDescriptor desc = new XmlnsAttributeDescriptor(
-                    XmlUtils.ANDROID_NS_NAME,
-                    XmlUtils.ANDROID_URI);
+            AttributeDescriptor desc = new XmlnsAttributeDescriptor(ANDROID_NS_NAME, ANDROID_URI);
             mCachedAttributeDescriptors[direct_attrs.length + layout_attrs.length] = desc;
         }
 
@@ -144,12 +142,11 @@ public class UiViewElementNode extends UiElementNode {
             IconFactory icons = IconFactory.getInstance();
             if (uiName.equals(LINEAR_LAYOUT)) {
                 Element e = (Element) getXmlNode();
-                if (VALUE_VERTICAL.equals(e.getAttributeNS(ANDROID_URI,
-                        ATTR_ORIENTATION))) {
+                if (VALUE_VERTICAL.equals(e.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION))) {
                     IconFactory factory = icons;
                     img = factory.getIcon("VerticalLinearLayout"); //$NON-NLS-1$
                 }
-            } else if (uiName.equals(VIEW_VIEWTAG)) {
+            } else if (uiName.equals(VIEW_TAG)) {
                 Node xmlNode = getXmlNode();
                 if (xmlNode instanceof Element) {
                     String className = ((Element) xmlNode).getAttribute(ATTR_CLASS);

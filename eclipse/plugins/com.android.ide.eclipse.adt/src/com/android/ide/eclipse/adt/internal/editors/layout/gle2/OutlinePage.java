@@ -16,25 +16,25 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ROW_COUNT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.AUTO_URI;
-import static com.android.tools.lint.detector.api.LintConstants.URI_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.SdkConstants.ATTR_ROW_COUNT;
+import static com.android.SdkConstants.ATTR_SRC;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.DRAWABLE_PREFIX;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.URI_PREFIX;
 import static org.eclipse.jface.viewers.StyledString.COUNTER_STYLER;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
+import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.InsertType;
@@ -45,7 +45,6 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertySheetPage;
@@ -918,14 +917,14 @@ public class OutlinePage extends ContentOutlinePage
                             styledString.append(LABEL_SEPARATOR, QUALIFIER_STYLER);
                             styledString.append(truncate(src, styledString), QUALIFIER_STYLER);
                         }
-                    } else if (e.getTagName().equals(LayoutDescriptors.VIEW_INCLUDE)) {
+                    } else if (e.getTagName().equals(SdkConstants.VIEW_INCLUDE)) {
                         // Show the include reference.
 
                         // Note: the layout attribute is NOT in the Android namespace
-                        String src = e.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
+                        String src = e.getAttribute(SdkConstants.ATTR_LAYOUT);
                         if (src != null && src.length() > 0) {
-                            if (src.startsWith(LAYOUT_PREFIX)) {
-                                src = src.substring(LAYOUT_PREFIX.length());
+                            if (src.startsWith(LAYOUT_RESOURCE_PREFIX)) {
+                                src = src.substring(LAYOUT_RESOURCE_PREFIX.length());
                             }
                             styledString.append(LABEL_SEPARATOR, QUALIFIER_STYLER);
                             styledString.append(truncate(src, styledString), QUALIFIER_STYLER);
@@ -938,7 +937,7 @@ public class OutlinePage extends ContentOutlinePage
                 if (includedWithin != null) {
                     styledString = new StyledString();
                     styledString.append(includedWithin.getDisplayName(), QUALIFIER_STYLER);
-                    image = IconFactory.getInstance().getIcon(LayoutDescriptors.VIEW_INCLUDE);
+                    image = IconFactory.getInstance().getIcon(SdkConstants.VIEW_INCLUDE);
                 }
             }
 

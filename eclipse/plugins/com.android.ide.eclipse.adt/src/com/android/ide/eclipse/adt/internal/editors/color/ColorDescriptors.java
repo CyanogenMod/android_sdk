@@ -15,10 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.color;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
 
-import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -77,7 +76,7 @@ public class ColorDescriptors implements IDescriptorProvider {
             SDK_URL,
             new ReferenceAttributeDescriptor(
                     ResourceType.COLOR, ATTR_COLOR,
-                    SdkConstants.NS_RESOURCES,
+                    ANDROID_URI,
                     new AttributeInfo(ATTR_COLOR, Format.COLOR_SET)).setTooltip(
                 "Hexadeximal color. Required. The color is specified with an RGB value and "
                     + "optional alpha channel.\n"

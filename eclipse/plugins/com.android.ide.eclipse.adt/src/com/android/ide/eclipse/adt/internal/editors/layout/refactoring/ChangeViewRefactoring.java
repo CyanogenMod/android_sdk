@@ -15,13 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -255,7 +255,7 @@ public class ChangeViewRefactoring extends VisualRefactoring {
             Node attributeNode = attributes.item(i);
 
             String name = attributeNode.getLocalName();
-            if (!name.startsWith(ATTR_LAYOUT_PREFIX)
+            if (!name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                     && ANDROID_URI.equals(attributeNode.getNamespaceURI())) {
                 result.add((Attr) attributeNode);
             }

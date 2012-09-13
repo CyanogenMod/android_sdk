@@ -16,13 +16,13 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
-import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -120,7 +120,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(INCLUDE);
+        return Collections.singletonList(VIEW_INCLUDE);
     }
 
     @Override
@@ -259,9 +259,9 @@ public class DuplicateIdDetector extends LayoutDetector {
                 context.report(WITHIN_LAYOUT, attribute, location,
                         String.format("Duplicate id %1$s, already defined earlier in this layout",
                                 id), null);
-            } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+            } else if (id.startsWith(NEW_ID_PREFIX)) {
                 // Skip id's on include tags
-                if (attribute.getOwnerElement().getTagName().equals(INCLUDE)) {
+                if (attribute.getOwnerElement().getTagName().equals(VIEW_INCLUDE)) {
                     return;
                 }
 

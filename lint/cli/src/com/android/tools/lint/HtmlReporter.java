@@ -16,8 +16,8 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.tools.lint.checks.BuiltinIssueRegistry;

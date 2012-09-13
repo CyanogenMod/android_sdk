@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
+import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.SdkConstants.FQCN_RELATIVE_LAYOUT;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 

@@ -16,15 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
-import static com.android.tools.lint.detector.api.LintConstants.TOOLS_URI;
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TOOLS_URI;
 
-import com.android.AndroidConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
@@ -336,9 +335,9 @@ public class ConfigurationComposite extends Composite
                 // can be mistaken for {@link #SEP}. Instead use {@link #MARKER_FRAMEWORK}.
                 if (theme != null) {
                     String themeName = ResourceHelper.styleToTheme(theme);
-                    if (theme.startsWith(PREFIX_STYLE)) {
+                    if (theme.startsWith(STYLE_RESOURCE_PREFIX)) {
                         sb.append(MARKER_PROJECT);
-                    } else if (theme.startsWith(PREFIX_ANDROID_STYLE)) {
+                    } else if (theme.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)) {
                         sb.append(MARKER_FRAMEWORK);
                     }
                     sb.append(themeName);
@@ -396,10 +395,11 @@ public class ConfigurationComposite extends Composite
                             // Decode the theme name: See {@link #getData}
                             theme = values[3];
                             if (theme.startsWith(MARKER_FRAMEWORK)) {
-                                theme = PREFIX_ANDROID_STYLE
+                                theme = ANDROID_STYLE_RESOURCE_PREFIX
                                         + theme.substring(MARKER_FRAMEWORK.length());
                             } else if (theme.startsWith(MARKER_PROJECT)) {
-                                theme = PREFIX_STYLE + theme.substring(MARKER_PROJECT.length());
+                                theme = STYLE_RESOURCE_PREFIX
+                                        + theme.substring(MARKER_PROJECT.length());
                             }
 
                             uiMode = UiMode.getEnum(values[4]);
@@ -1102,7 +1102,8 @@ public class ConfigurationComposite extends Composite
     }
 
     void selectTheme(String theme) {
-        assert theme.startsWith(PREFIX_STYLE) || theme.startsWith(PREFIX_ANDROID_STYLE) : theme;
+        assert theme.startsWith(STYLE_RESOURCE_PREFIX)
+            || theme.startsWith(ANDROID_STYLE_RESOURCE_PREFIX) : theme;
         mThemeCombo.setData(theme);
         if (theme != null) {
             mThemeCombo.setText(getThemeLabel(theme, true));
@@ -1686,7 +1687,7 @@ public class ConfigurationComposite extends Composite
         //String current = fileConfig.toDisplayString();
         //String current = fileConfig.getFolderName(ResourceFolderType.LAYOUT);
         String current = mEditedFile.getParent().getName();
-        if (current.equals(AndroidConstants.FD_RES_LAYOUT)) {
+        if (current.equals(FD_RES_LAYOUT)) {
             current = "default";
         }
 
@@ -2396,7 +2397,7 @@ public class ConfigurationComposite extends Composite
 
                         for (String theme : themes) {
                             if (!theme.startsWith(PREFIX_RESOURCE_REF)) {
-                                theme = PREFIX_STYLE + theme;
+                                theme = STYLE_RESOURCE_PREFIX + theme;
                             }
                             mThemeList.add(theme);
                         }
@@ -2428,7 +2429,7 @@ public class ConfigurationComposite extends Composite
 
                     for (String theme : themes) {
                         if (!theme.startsWith(PREFIX_RESOURCE_REF)) {
-                            theme = PREFIX_ANDROID_STYLE + theme;
+                            theme = ANDROID_STYLE_RESOURCE_PREFIX + theme;
                         }
                         mThemeList.add(theme);
                     }
@@ -2442,8 +2443,8 @@ public class ConfigurationComposite extends Composite
             // or a framework style. For now we need to migrate. Search through the
             // theme list until we have a match
             if (!mState.theme.startsWith(PREFIX_RESOURCE_REF)) {
-                String projectStyle = PREFIX_STYLE + mState.theme;
-                String frameworkStyle = PREFIX_ANDROID_STYLE + mState.theme;
+                String projectStyle = STYLE_RESOURCE_PREFIX + mState.theme;
+                String frameworkStyle = ANDROID_STYLE_RESOURCE_PREFIX + mState.theme;
                 for (String theme : mThemeList) {
                     if (theme.equals(projectStyle)) {
                         mState.theme = projectStyle;
@@ -2656,7 +2657,8 @@ public class ConfigurationComposite extends Composite
     public boolean isProjectTheme() {
         String theme = getSelectedTheme();
         if (theme != null) {
-            assert theme.startsWith(PREFIX_STYLE) || theme.startsWith(PREFIX_ANDROID_STYLE);
+            assert theme.startsWith(STYLE_RESOURCE_PREFIX)
+            || theme.startsWith(ANDROID_STYLE_RESOURCE_PREFIX);
 
             return ResourceHelper.isProjectStyle(theme);
         }

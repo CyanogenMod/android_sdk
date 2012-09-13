@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_SRC;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;

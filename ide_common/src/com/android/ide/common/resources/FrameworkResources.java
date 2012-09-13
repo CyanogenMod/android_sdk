@@ -16,8 +16,8 @@
 
 package com.android.ide.common.resources;
 
-import static com.android.AndroidConstants.FD_RES_VALUES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.IAbstractFile;
@@ -103,7 +103,7 @@ public class FrameworkResources extends ResourceRepository {
      * @param logger a logger to report issues to
      */
     public void loadPublicResources(@NonNull IAbstractFolder resFolder, @Nullable ILogger logger) {
-        IAbstractFolder valueFolder = resFolder.getFolder(FD_RES_VALUES);
+        IAbstractFolder valueFolder = resFolder.getFolder(SdkConstants.FD_RES_VALUES);
         if (valueFolder.exists() == false) {
             return;
         }

@@ -15,10 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.drawable;
 
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
 
-import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
@@ -212,7 +211,7 @@ public class DrawableDescriptors implements IDescriptorProvider {
                  + "its attributes. Must be a child of a <selector> element.",
             SDK_URL_BASE + "drawable-resource.html#StateList", //$NON-NLS-1$
             new ReferenceAttributeDescriptor(
-                    ResourceType.DRAWABLE, "drawable", SdkConstants.NS_RESOURCES, //$NON-NLS-1$
+                    ResourceType.DRAWABLE, "drawable", ANDROID_URI, //$NON-NLS-1$
                     new AttributeInfo("drawable", Format.REFERENCE_SET))
                     .setTooltip("Reference to a drawable resource."),
             null, /* This is wrong -- we can now embed any above drawable

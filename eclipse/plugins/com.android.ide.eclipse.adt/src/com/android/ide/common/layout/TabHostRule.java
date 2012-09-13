@@ -16,16 +16,16 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_FRAME_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_TAB_WIDGET;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.FQCN_FRAME_LAYOUT;
+import static com.android.SdkConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.SdkConstants.FQCN_TAB_WIDGET;
+import static com.android.SdkConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;

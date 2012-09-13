@@ -16,29 +16,28 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.SdkConstants.ANDROID_PKG;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_ON_CLICK;
+import static com.android.SdkConstants.CLASS_ACTIVITY;
+import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_DOCS;
 import static com.android.SdkConstants.FD_DOCS_REFERENCE;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.VIEW;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
-import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_CLASS;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.NAME_ATTR;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ROOT_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STYLE_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.FN_RESOURCE_BASE;
+import static com.android.SdkConstants.FN_RESOURCE_CLASS;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.VIEW;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -57,7 +56,6 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -215,7 +213,7 @@ public class Hyperlinks {
         }
 
         String value = attribute.getValue();
-        if (value.startsWith(NEW_ID_RESOURCE_PREFIX)) {
+        if (value.startsWith(NEW_ID_PREFIX)) {
             // It's a value -declaration-, nowhere else to jump
             // (though we could consider jumping to the R-file; would that
             // be helpful?)
@@ -329,7 +327,7 @@ public class Hyperlinks {
     /** Returns true if this represents a style attribute */
     private static boolean isStyleAttribute(XmlContext context) {
         String tag = context.getElement().getTagName();
-        return STYLE_ELEMENT.equals(tag);
+        return TAG_STYLE.equals(tag);
     }
 
     /**
@@ -508,7 +506,7 @@ public class Hyperlinks {
     public static String getTagName(ResourceType type) {
         if (type == ResourceType.ID) {
             // Ids are recorded in <item> tags instead of <id> tags
-            return ValuesDescriptors.ITEM_TAG;
+            return SdkConstants.TAG_ITEM;
         }
 
         return type.getName();
@@ -629,7 +627,7 @@ public class Hyperlinks {
             IType activityType = null;
             IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
             if (javaProject != null) {
-                activityType = javaProject.findType(SdkConstants.CLASS_ACTIVITY);
+                activityType = javaProject.findType(CLASS_ACTIVITY);
                 if (activityType != null) {
                     scope = SearchEngine.createHierarchyScope(activityType);
                 }
@@ -897,14 +895,14 @@ public class Hyperlinks {
             ResourceType type, String name, IFile file, Document document) {
         String targetTag = getTagName(type);
         Element root = document.getDocumentElement();
-        if (root.getTagName().equals(ROOT_ELEMENT)) {
+        if (root.getTagName().equals(TAG_RESOURCES)) {
             NodeList children = root.getChildNodes();
             for (int i = 0, n = children.getLength(); i < n; i++) {
                 Node child = children.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element)child;
                     if (element.getTagName().equals(targetTag)) {
-                        String elementName = element.getAttribute(NAME_ATTR);
+                        String elementName = element.getAttribute(ATTR_NAME);
                         if (elementName.equals(name)) {
                             IRegion region = null;
                             if (element instanceof IndexedRegion) {
@@ -1050,7 +1048,7 @@ public class Hyperlinks {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) child;
                 if (element.getTagName().equals(targetTag)) {
-                    String elementName = element.getAttribute(NAME_ATTR);
+                    String elementName = element.getAttribute(ATTR_NAME);
                     if (elementName.equals(name)) {
                         return Pair.of(file, parser.getOffset(element));
                     }
@@ -1080,10 +1078,10 @@ public class Hyperlinks {
         Pair<ResourceType,String> resource = parseResource(url);
         if (resource == null) {
             String androidStyle = ANDROID_STYLE_RESOURCE_PREFIX;
-            if (url.startsWith(PREFIX_ANDROID_RESOURCE_REF)) {
-                url = androidStyle + url.substring(PREFIX_ANDROID_RESOURCE_REF.length());
-            } else if (url.startsWith(PREFIX_ANDROID_THEME_REF)) {
-                url = androidStyle + url.substring(PREFIX_ANDROID_THEME_REF.length());
+            if (url.startsWith(ANDROID_PREFIX)) {
+                url = androidStyle + url.substring(ANDROID_PREFIX.length());
+            } else if (url.startsWith(ANDROID_THEME_PREFIX)) {
+                url = androidStyle + url.substring(ANDROID_THEME_PREFIX.length());
             } else if (url.startsWith(ANDROID_PKG + ':')) {
                 url = androidStyle + url.substring(ANDROID_PKG.length() + 1);
             } else {
@@ -1130,8 +1128,8 @@ public class Hyperlinks {
         ResourceType type = resource.getFirst();
         String name = resource.getSecond();
 
-        boolean isFramework = url.startsWith(PREFIX_ANDROID_RESOURCE_REF)
-                || url.startsWith(PREFIX_ANDROID_THEME_REF);
+        boolean isFramework = url.startsWith(ANDROID_PREFIX)
+                || url.startsWith(ANDROID_THEME_PREFIX);
         if (project == null) {
             // Local reference *within* a framework
             isFramework = true;

@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -91,12 +91,12 @@ class XmlProperty extends Property {
         String name = mDescriptor.getXmlLocalName();
         int nameLength = name.length();
 
-        if (name.startsWith(ATTR_LAYOUT_PREFIX)) {
+        if (name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
             if (name.startsWith(ATTR_LAYOUT_MARGIN)
                     && nameLength > ATTR_LAYOUT_MARGIN.length()) {
                 name = name.substring(ATTR_LAYOUT_MARGIN.length());
             } else {
-                name = name.substring(ATTR_LAYOUT_PREFIX.length());
+                name = name.substring(ATTR_LAYOUT_RESOURCE_PREFIX.length());
             }
         }
 

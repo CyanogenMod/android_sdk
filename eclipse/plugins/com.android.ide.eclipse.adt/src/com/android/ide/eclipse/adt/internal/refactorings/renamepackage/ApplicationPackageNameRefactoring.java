@@ -16,9 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.XMLNS_COLON;
-
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -151,7 +148,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
 
             ImportRewrite irw = ImportRewrite.create(cu, true);
             irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
-                    + AdtConstants.FN_RESOURCE_BASE);
+                    + SdkConstants.FN_RESOURCE_BASE);
 
             try {
                 rewrittenImports.addChild( irw.rewriteImports(null) );
@@ -208,7 +205,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
 
         TextFileChange xmlChange = new TextFileChange("XML resource file edit", file);
-        xmlChange.setTextType(AdtConstants.EXT_XML);
+        xmlChange.setTextType(SdkConstants.EXT_XML);
 
         MultiTextEdit multiEdit = new MultiTextEdit();
         ArrayList<TextEditGroup> editGroups = new ArrayList<TextEditGroup>();
@@ -241,7 +238,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                     // Check this is the attribute and the original string
 
                     if (lastAttrName != null &&
-                            lastAttrName.startsWith(XMLNS_COLON)) {
+                            lastAttrName.startsWith(SdkConstants.XMLNS_PREFIX)) {
 
                         String lastAttrValue = region.getText(subRegion);
                         if (oldAppNamespaceString.equals(stripQuotes(lastAttrValue))) {
@@ -299,7 +296,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
 
         TextFileChange xmlChange = new TextFileChange("Make Manifest edits", file);
-        xmlChange.setTextType(AdtConstants.EXT_XML);
+        xmlChange.setTextType(SdkConstants.EXT_XML);
 
         MultiTextEdit multiEdit = new MultiTextEdit();
         ArrayList<TextEditGroup> editGroups = new ArrayList<TextEditGroup>();
@@ -336,12 +333,12 @@ class ApplicationPackageNameRefactoring extends Refactoring {
 
                     String lastAttrValue = region.getText(subRegion);
                     if (lastAttrName != null &&
-                            lastAttrName.startsWith(XMLNS_COLON)) {
+                            lastAttrName.startsWith(SdkConstants.XMLNS_PREFIX)) {
 
                         // Resolves the android namespace prefix for this file
-                        if (ANDROID_URI.equals(stripQuotes(lastAttrValue))) {
+                        if (SdkConstants.ANDROID_URI.equals(stripQuotes(lastAttrValue))) {
                             String android_namespace_prefix = lastAttrName
-                                .substring(XMLNS_COLON.length());
+                                .substring(SdkConstants.XMLNS_PREFIX.length());
                             android_name_attribute = android_namespace_prefix + ':'
                                 + AndroidManifest.ATTRIBUTE_NAME;
                         }
@@ -416,7 +413,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         public boolean visit(IResource resource) throws CoreException {
             if (resource instanceof IFile) {
                 IFile file = (IFile) resource;
-                if (AdtConstants.EXT_JAVA.equals(file.getFileExtension())) {
+                if (SdkConstants.EXT_JAVA.equals(file.getFileExtension())) {
 
                     ICompilationUnit icu = JavaCore.createCompilationUnitFrom(file);
 
@@ -429,7 +426,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                         edit.addChild(text_edit);
 
                         TextFileChange text_file_change = new TextFileChange(file.getName(), file);
-                        text_file_change.setTextType(AdtConstants.EXT_JAVA);
+                        text_file_change.setTextType(SdkConstants.EXT_JAVA);
                         text_file_change.setEdit(edit);
                         mChanges.add(text_file_change);
                     }
@@ -437,7 +434,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                     // XXX Partially taken from ExtractStringRefactoring.java
                     // Check this a Layout XML file and get the selection and
                     // its context.
-                } else if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
+                } else if (SdkConstants.EXT_XML.equals(file.getFileExtension())) {
 
                     if (SdkConstants.FN_ANDROID_MANIFEST_XML.equals(file.getName())) {
 
@@ -509,7 +506,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                 QualifiedName qualifiedImportName = (QualifiedName) importName;
 
                 if (qualifiedImportName.getName().getIdentifier()
-                        .equals(AdtConstants.FN_RESOURCE_BASE)) {
+                        .equals(SdkConstants.FN_RESOURCE_BASE)) {
                     mRewriter.replace(qualifiedImportName.getQualifier(), mNewPackageName,
                             null);
                 }

@@ -16,27 +16,27 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_REF_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_GIF;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STYLEABLE;
-import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
-import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
-import static com.android.tools.lint.detector.api.LintConstants.R_ATTR_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.R_CLASS;
-import static com.android.tools.lint.detector.api.LintConstants.R_ID_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.R_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_PLURALS;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_REF_PREFIX;
+import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.RESOURCE_CLR_STYLEABLE;
+import static com.android.SdkConstants.RESOURCE_CLZ_ARRAY;
+import static com.android.SdkConstants.RESOURCE_CLZ_ID;
+import static com.android.SdkConstants.RES_FOLDER;
+import static com.android.SdkConstants.R_ATTR_PREFIX;
+import static com.android.SdkConstants.R_CLASS;
+import static com.android.SdkConstants.R_ID_PREFIX;
+import static com.android.SdkConstants.R_PREFIX;
+import static com.android.SdkConstants.TAG_ARRAY;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_PLURALS;
+import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;

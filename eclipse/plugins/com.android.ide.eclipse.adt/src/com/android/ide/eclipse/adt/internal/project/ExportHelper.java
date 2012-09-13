@@ -136,7 +136,7 @@ public final class ExportHelper {
 
             // tmp file for the packaged resource file. To not disturb the incremental builders
             // output, all intermediary files are created in tmp files.
-            File resourceFile = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_RES);
+            File resourceFile = File.createTempFile(TEMP_PREFIX, SdkConstants.DOT_RES);
             resourceFile.deleteOnExit();
 
             // Make sure the PNG crunch cache is up to date
@@ -160,7 +160,7 @@ public final class ExportHelper {
             // Step 2. Convert the byte code to Dalvik bytecode
 
             // tmp file for the packaged resource file.
-            File dexFile = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_DEX);
+            File dexFile = File.createTempFile(TEMP_PREFIX, SdkConstants.DOT_DEX);
             dexFile.deleteOnExit();
 
             ProjectState state = Sdk.getProjectState(project);
@@ -219,7 +219,7 @@ public final class ExportHelper {
 
                 // create a jar file containing all the project output (as proguard cannot
                 // process folders of .class files).
-                File inputJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
+                File inputJar = File.createTempFile(TEMP_PREFIX, SdkConstants.DOT_JAR);
                 inputJar.deleteOnExit();
                 JarOutputStream jos = new JarOutputStream(new FileOutputStream(inputJar));
 
@@ -237,7 +237,7 @@ public final class ExportHelper {
                 jos.close();
 
                 // destination file for proguard
-                File obfuscatedJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
+                File obfuscatedJar = File.createTempFile(TEMP_PREFIX, SdkConstants.DOT_JAR);
                 obfuscatedJar.deleteOnExit();
 
                 // run proguard
@@ -327,7 +327,7 @@ public final class ExportHelper {
         Shell shell = Display.getCurrent().getActiveShell();
 
         // create a default file name for the apk.
-        String fileName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
+        String fileName = project.getName() + SdkConstants.DOT_ANDROID_PACKAGE;
 
         // Pop up the file save window to get the file location
         FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);

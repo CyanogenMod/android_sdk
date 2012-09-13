@@ -16,30 +16,30 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.EDIT_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_ADAPTER_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.GALLERY;
-import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
-import static com.android.ide.common.layout.LayoutConstants.SPACE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-import static com.android.utils.XmlUtils.GT_ENTITY;
-import static com.android.utils.XmlUtils.LT_ENTITY;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_BELOW;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.EDIT_TEXT;
+import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.FQCN_ADAPTER_VIEW;
+import static com.android.SdkConstants.GALLERY;
+import static com.android.SdkConstants.GRID_LAYOUT;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.GT_ENTITY;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.LT_ENTITY;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.RELATIVE_LAYOUT;
+import static com.android.SdkConstants.REQUEST_FOCUS;
+import static com.android.SdkConstants.SPACE;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.VIEW_MERGE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -715,12 +715,12 @@ public final class DescriptorsUtils {
                            node.getUiParent() instanceof UiDocumentNode;
             node.setAttributeValue(
                     ATTR_LAYOUT_WIDTH,
-                    SdkConstants.NS_RESOURCES,
+                    ANDROID_URI,
                     fill ? VALUE_FILL_PARENT : VALUE_WRAP_CONTENT,
                     false /* override */);
             node.setAttributeValue(
                     ATTR_LAYOUT_HEIGHT,
-                    SdkConstants.NS_RESOURCES,
+                    ANDROID_URI,
                     fill ? VALUE_FILL_PARENT : VALUE_WRAP_CONTENT,
                     false /* override */);
         }
@@ -730,7 +730,7 @@ public final class DescriptorsUtils {
             if (freeId != null) {
                 node.setAttributeValue(
                         ATTR_ID,
-                        SdkConstants.NS_RESOURCES,
+                        ANDROID_URI,
                         freeId,
                         false /* override */);
             }
@@ -744,7 +744,7 @@ public final class DescriptorsUtils {
             String type = getBasename(descriptor.getUiName());
             node.setAttributeValue(
                 ATTR_TEXT,
-                SdkConstants.NS_RESOURCES,
+                ANDROID_URI,
                 type,
                 false /*override*/);
         }
@@ -761,7 +761,7 @@ public final class DescriptorsUtils {
                         id = id.replace("@+", "@");                     //$NON-NLS-1$ //$NON-NLS-2$
                         node.setAttributeValue(
                                 ATTR_LAYOUT_BELOW,
-                                SdkConstants.NS_RESOURCES,
+                                ANDROID_URI,
                                 id,
                                 false /* override */);
                     }

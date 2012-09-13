@@ -16,14 +16,14 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_AIDL;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_RS;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_SVG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_TXT;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.DOT_FTL;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_RS;
+import static com.android.SdkConstants.DOT_SVG;
+import static com.android.SdkConstants.DOT_TXT;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
 
@@ -702,7 +702,7 @@ class TemplateHandler {
             MultiTextEdit rootEdit = new MultiTextEdit();
             rootEdit.addChild(new ReplaceEdit(0, currentXml.length(), contents));
             change.setEdit(rootEdit);
-            change.setTextType(AdtConstants.EXT_XML);
+            change.setTextType(SdkConstants.EXT_XML);
             mMergeChanges.add(change);
         }
     }

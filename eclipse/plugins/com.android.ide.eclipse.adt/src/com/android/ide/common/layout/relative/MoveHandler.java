@@ -23,10 +23,12 @@ import static com.android.ide.common.api.SegmentType.CENTER_VERTICAL;
 import static com.android.ide.common.api.SegmentType.LEFT;
 import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+
 import static java.lang.Math.abs;
 
+import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;

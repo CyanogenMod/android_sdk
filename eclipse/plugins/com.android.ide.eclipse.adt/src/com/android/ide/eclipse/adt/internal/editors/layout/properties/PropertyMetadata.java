@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CONTENT_DESCRIPTION;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
+import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.SdkConstants.ATTR_HINT;
+import static com.android.SdkConstants.ATTR_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

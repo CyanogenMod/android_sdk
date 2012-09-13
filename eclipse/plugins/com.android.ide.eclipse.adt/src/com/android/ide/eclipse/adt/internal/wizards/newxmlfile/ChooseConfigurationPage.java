@@ -15,7 +15,6 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
-import com.android.AndroidConstants;
 import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -161,7 +160,7 @@ public class ChooseConfigurationPage extends WizardPage {
                 wsFolderPath = wsFolderPath.substring(0, pos);
             }
 
-            String[] folderSegments = wsFolderPath.split(AndroidConstants.RES_QUALIFIER_SEP);
+            String[] folderSegments = wsFolderPath.split(SdkConstants.RES_QUALIFIER_SEP);
 
             if (folderSegments.length > 0) {
                 String folderName = folderSegments[0];

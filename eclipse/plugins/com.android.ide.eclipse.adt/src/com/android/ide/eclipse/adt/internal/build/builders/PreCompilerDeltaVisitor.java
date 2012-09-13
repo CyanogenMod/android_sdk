@@ -275,8 +275,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 String fileName = resource.getName();
 
                 // Special case of R.java/Manifest.java.
-                if (AdtConstants.FN_RESOURCE_CLASS.equals(fileName) ||
-                        AdtConstants.FN_MANIFEST_CLASS.equals(fileName)) {
+                if (SdkConstants.FN_RESOURCE_CLASS.equals(fileName) ||
+                        SdkConstants.FN_MANIFEST_CLASS.equals(fileName)) {
                     // if it was removed, there's a possibility that it was removed due to a
                     // package change, or an aidl that was removed, but the only thing
                     // that will happen is that we'll have an extra build. Not much of a problem.
@@ -341,12 +341,12 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 case IResourceDelta.ADDED:
                     // display verbose message
                     message = String.format(Messages.Added_s_s_Needs_Updating, p,
-                            AdtConstants.FN_RESOURCE_CLASS);
+                            SdkConstants.FN_RESOURCE_CLASS);
                     break;
                 case IResourceDelta.REMOVED:
                     // display verbose message
                     message = String.format(Messages.s_Removed_s_Needs_Updating, p,
-                            AdtConstants.FN_RESOURCE_CLASS);
+                            SdkConstants.FN_RESOURCE_CLASS);
                     break;
             }
             if (message != null) {
@@ -358,7 +358,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 handler.handleResourceFile((IFile)resource, kind);
             }
             // If it's an XML resource, check the syntax
-            if (AdtConstants.EXT_XML.equalsIgnoreCase(ext) && kind != IResourceDelta.REMOVED) {
+            if (SdkConstants.EXT_XML.equalsIgnoreCase(ext) && kind != IResourceDelta.REMOVED) {
                 // check xml Validity
                 mBuilder.checkXML(resource, this);
             }

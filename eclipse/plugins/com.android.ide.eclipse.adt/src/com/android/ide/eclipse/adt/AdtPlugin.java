@@ -21,7 +21,6 @@ import static com.android.SdkConstants.PLATFORM_DARWIN;
 import static com.android.SdkConstants.PLATFORM_LINUX;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
 
-import com.android.AndroidConstants;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -1583,7 +1582,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             @Override
             public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
                     int kind, @Nullable String extension, int flags) {
-                if (flags == IResourceDelta.MARKERS || !AdtConstants.EXT_XML.equals(extension)) {
+                if (flags == IResourceDelta.MARKERS || !SdkConstants.EXT_XML.equals(extension)) {
                     // ONLY the markers changed, or not XML file: not relevant to this listener
                     return;
                 }
@@ -1603,7 +1602,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         // we are inside a res/ folder, get the ResourceFolderType of the
                         // parent folder.
                         String[] folderSegments = file.getParent().getName().split(
-                                AndroidConstants.RES_QUALIFIER_SEP);
+                                SdkConstants.RES_QUALIFIER_SEP);
 
                         // get the enum for the resource type.
                         ResourceFolderType type = ResourceFolderType.getTypeByName(

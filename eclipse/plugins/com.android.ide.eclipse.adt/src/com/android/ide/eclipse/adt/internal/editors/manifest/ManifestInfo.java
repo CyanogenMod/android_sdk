@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.NS_RESOURCES;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_ICON;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_LABEL;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
@@ -27,10 +28,8 @@ import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_THEME;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.xml.AndroidManifest.NODE_USES_SDK;
-
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -358,9 +357,9 @@ public class ManifestInfo {
         // For now this theme works only on XLARGE screens. When it works for all sizes,
         // add that new apiLevel to this check.
         if (apiLevel >= 11 && screenSize == ScreenSize.XLARGE || apiLevel >= 14) {
-            return PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
+            return ANDROID_STYLE_RESOURCE_PREFIX + "Theme.Holo"; //$NON-NLS-1$
         } else {
-            return PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$
+            return ANDROID_STYLE_RESOURCE_PREFIX + "Theme"; //$NON-NLS-1$
         }
     }
 
@@ -562,7 +561,7 @@ public class ManifestInfo {
             final IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
             if (javaProject != null) {
                 IType[] activityTypes = new IType[0];
-                IType activityType = javaProject.findType(SdkConstants.CLASS_ACTIVITY);
+                IType activityType = javaProject.findType(CLASS_ACTIVITY);
                 if (activityType != null) {
                     ITypeHierarchy hierarchy =
                         activityType.newTypeHierarchy(javaProject, new NullProgressMonitor());
@@ -669,7 +668,7 @@ public class ManifestInfo {
                         typeFqcn = mPackage + '.' + typeFqcn;
                     }
 
-                    IType activityType = javaProject.findType(SdkConstants.CLASS_ACTIVITY);
+                    IType activityType = javaProject.findType(CLASS_ACTIVITY);
                     if (activityType != null) {
                         IMethod method = activityType.getMethod(
                                 "setContentView", new String[] {"I"}); //$NON-NLS-1$ //$NON-NLS-2$

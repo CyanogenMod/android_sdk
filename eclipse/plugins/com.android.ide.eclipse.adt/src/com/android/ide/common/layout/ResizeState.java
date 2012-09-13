@@ -16,8 +16,8 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.SdkConstants.VALUE_N_DP;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;

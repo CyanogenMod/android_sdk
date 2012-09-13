@@ -16,7 +16,7 @@
 
 package com.android.ide.common.resources.configuration;
 
-import com.android.AndroidConstants;
+import com.android.SdkConstants;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
@@ -566,7 +566,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             if (qualifier != null) {
                 String segment = qualifier.getFolderSegment();
                 if (segment != null && segment.length() > 0) {
-                    result.append(AndroidConstants.RES_QUALIFIER_SEP);
+                    result.append(SdkConstants.RES_QUALIFIER_SEP);
                     result.append(segment);
                 }
             }

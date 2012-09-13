@@ -16,23 +16,23 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PARENT;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_THEME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_TILE_MODE;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.NULL_RESOURCE;
-import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_BITMAP;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
-import static com.android.tools.lint.detector.api.LintConstants.TRANSPARENT_COLOR;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_DISABLED;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BACKGROUND;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.ATTR_THEME;
+import static com.android.SdkConstants.ATTR_TILE_MODE;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.DRAWABLE_PREFIX;
+import static com.android.SdkConstants.NULL_RESOURCE;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_BITMAP;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TRANSPARENT_COLOR;
+import static com.android.SdkConstants.VALUE_DISABLED;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
@@ -360,7 +360,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         if (endsWith(resource, DOT_XML)) {
             resource = resource.substring(0, resource.length() - DOT_XML.length());
         }
-        return DRAWABLE_RESOURCE_PREFIX + resource;
+        return DRAWABLE_PREFIX + resource;
     }
 
     private void scanBitmap(Context context, Element element) {

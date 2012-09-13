@@ -16,6 +16,13 @@
 
 package com.android.ide.common.resources;
 
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.PREFIX_ANDROID;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.REFERENCE_STYLE;
+
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -27,24 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ResourceResolver extends RenderResources {
-
-    /** The constant {@code style/} */
-    public final static String REFERENCE_STYLE = ResourceType.STYLE.getName() + "/";
-    /** The constant {@code @android:} */
-    public final static String PREFIX_ANDROID_RESOURCE_REF = "@android:";
-    /** The constant {@code @} */
-    public final static String PREFIX_RESOURCE_REF = "@";
-    /** The constant {@code ?android:} */
-    public final static String PREFIX_ANDROID_THEME_REF = "?android:";
-    /** The constant {@code ?} */
-    public final static String PREFIX_THEME_REF = "?";
-    /** The constant {@code android:} */
-    public final static String PREFIX_ANDROID = "android:";
-    /** The constant {@code @style/} */
-    public static final String PREFIX_STYLE = PREFIX_RESOURCE_REF + REFERENCE_STYLE;
-    /** The constant {@code @android:style/} */
-    public static final String PREFIX_ANDROID_STYLE = PREFIX_ANDROID_RESOURCE_REF
-            + REFERENCE_STYLE;
 
     private final Map<ResourceType, Map<String, ResourceValue>> mProjectResources;
     private final Map<ResourceType, Map<String, ResourceValue>> mFrameworkResources;
@@ -209,9 +198,9 @@ public class ResourceResolver extends RenderResources {
             boolean frameworkOnly = false;
 
             // eliminate the prefix from the string
-            if (reference.startsWith(PREFIX_ANDROID_THEME_REF)) {
+            if (reference.startsWith(ANDROID_THEME_PREFIX)) {
                 frameworkOnly = true;
-                reference = reference.substring(PREFIX_ANDROID_THEME_REF.length());
+                reference = reference.substring(ANDROID_THEME_PREFIX.length());
             } else {
                 reference = reference.substring(PREFIX_THEME_REF.length());
             }
@@ -265,10 +254,9 @@ public class ResourceResolver extends RenderResources {
             }
 
             // Eliminate the prefix from the string.
-            if (reference.startsWith(PREFIX_ANDROID_RESOURCE_REF)) {
+            if (reference.startsWith(ANDROID_PREFIX)) {
                 frameworkOnly = true;
-                reference = reference.substring(
-                        PREFIX_ANDROID_RESOURCE_REF.length());
+                reference = reference.substring(ANDROID_PREFIX.length());
             } else {
                 reference = reference.substring(PREFIX_RESOURCE_REF.length());
             }

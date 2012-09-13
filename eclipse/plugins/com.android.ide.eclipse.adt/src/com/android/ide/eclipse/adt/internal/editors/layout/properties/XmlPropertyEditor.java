@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo;
@@ -127,8 +127,8 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                 GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
                 if (graphicalEditor != null) {
                     ResourceResolver resolver = graphicalEditor.getResourceResolver();
-                    boolean isFramework = text.startsWith(PREFIX_ANDROID_RESOURCE_REF)
-                            || text.startsWith(PREFIX_ANDROID_THEME_REF);
+                    boolean isFramework = text.startsWith(ANDROID_PREFIX)
+                            || text.startsWith(ANDROID_THEME_PREFIX);
                     resValue = resolver.findResValue(text, isFramework);
                     while (resValue != null && resValue.getValue() != null) {
                         String value = resValue.getValue();
@@ -136,8 +136,8 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                                 || value.startsWith(PREFIX_THEME_REF)) {
                             // TODO: do I have to strip off the @ too?
                             isFramework = isFramework
-                                    || value.startsWith(PREFIX_ANDROID_RESOURCE_REF)
-                                    || value.startsWith(PREFIX_ANDROID_THEME_REF);;
+                                    || value.startsWith(ANDROID_PREFIX)
+                                    || value.startsWith(ANDROID_THEME_PREFIX);;
                             ResourceValue v = resolver.findResValue(text, isFramework);
                             if (v != null && !value.equals(v.getValue())) {
                                 resValue = v;

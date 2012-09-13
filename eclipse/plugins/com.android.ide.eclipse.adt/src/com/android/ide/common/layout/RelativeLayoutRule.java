@@ -16,27 +16,27 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_TOP;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_GRAVITY;
+import static com.android.SdkConstants.ATTR_LAYOUT_ABOVE;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BASELINE;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_BOTTOM;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_RIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_TOP;
+import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
+import static com.android.SdkConstants.ATTR_LAYOUT_BELOW;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
+import static com.android.SdkConstants.ATTR_LAYOUT_CENTER_VERTICAL;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_LEFT_OF;
+import static com.android.SdkConstants.ATTR_LAYOUT_TO_RIGHT_OF;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -118,8 +118,8 @@ public class RelativeLayoutRule extends BaseLayoutRule {
         if (a != null && a.length() > 0) {
             // Display the layout parameters without the leading layout_ prefix
             // and id references without the @+id/ prefix
-            if (propertyName.startsWith(ATTR_LAYOUT_PREFIX)) {
-                propertyName = propertyName.substring(ATTR_LAYOUT_PREFIX.length());
+            if (propertyName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
+                propertyName = propertyName.substring(ATTR_LAYOUT_RESOURCE_PREFIX.length());
             }
             a = stripIdPrefix(a);
             String s = propertyName + ": " + a;

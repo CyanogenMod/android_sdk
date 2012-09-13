@@ -961,7 +961,7 @@ public class BuildHelper {
             // if it's a project we should just ignore it because it's going to be added
             // later when we add all the referenced projects.
 
-        } else if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+        } else if (SdkConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
             // case of a jar file (which could be relative to the workspace or a full path)
             if (resource != null && resource.exists() &&
                     resource.getType() == IResource.FILE) {

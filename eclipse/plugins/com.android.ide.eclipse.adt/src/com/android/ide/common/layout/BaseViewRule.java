@@ -16,24 +16,24 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_HINT;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_STYLE;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.DOT_LAYOUT_PARAMS;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -638,7 +638,7 @@ public class BaseViewRule extends AbstractViewRule {
                     if (!definedBy.endsWith(DOT_LAYOUT_PARAMS)) {
                         continue;
                     }
-                } else if (!id.startsWith(ATTR_LAYOUT_PREFIX)) {
+                } else if (!id.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                     continue;
                 }
             }

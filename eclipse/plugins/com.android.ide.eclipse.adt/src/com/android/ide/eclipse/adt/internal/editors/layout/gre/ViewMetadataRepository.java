@@ -16,15 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_TOGGLE_BUTTON;
-import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.FQCN_BUTTON;
+import static com.android.SdkConstants.FQCN_SPINNER;
+import static com.android.SdkConstants.FQCN_TOGGLE_BUTTON;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IViewMetadata.FillPreference;

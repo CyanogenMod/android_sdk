@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.UNIT_DP;
+import static com.android.SdkConstants.UNIT_PX;
+import static com.android.SdkConstants.UNIT_SP;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_DP;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_PX;
-import static com.android.tools.lint.detector.api.LintConstants.UNIT_SP;
 
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -742,9 +742,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             }
         }
 
-        if (!matches && word.startsWith(ATTR_LAYOUT_PREFIX, wordStart)
-                && !prefix.startsWith(ATTR_LAYOUT_PREFIX, prefixStart)) {
-            wordStart += ATTR_LAYOUT_PREFIX.length();
+        if (!matches && word.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, wordStart)
+                && !prefix.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, prefixStart)) {
+            wordStart += ATTR_LAYOUT_RESOURCE_PREFIX.length();
 
             if (wordLength - wordStart < prefixLength - prefixStart) {
                 return false;

@@ -13,26 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.eclipse.adt.internal.editors;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
-import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
-import static com.android.utils.XmlUtils.ANDROID_URI;
-
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_SRC;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.DRAWABLE_PREFIX;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.xml.ui.internal.contentoutline.JFaceNodeLabelProvider;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 
-/** Label provider for the XML outlines and quick outlines: Use our own icons,
- * when available, and and include the most important attribute (id, name, or text) */
-@SuppressWarnings("restriction") // XML UI API
+/**
+ * Label provider for the XML outlines and quick outlines: Use our own icons,
+ * when available, and and include the most important attribute (id, name, or
+ * text)
+ */
+@SuppressWarnings("restriction")
+// XML UI API
 class OutlineLabelProvider extends JFaceNodeLabelProvider {
     @Override
     public Image getImage(Object element) {
@@ -70,10 +74,10 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
                                     id = id.substring(DRAWABLE_PREFIX.length());
                                 }
                             } else {
-                                id = e.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
+                                id = e.getAttribute(ATTR_LAYOUT);
                                 if (id != null && id.length() > 0) {
-                                    if (id.startsWith(LAYOUT_PREFIX)) {
-                                        id = id.substring(LAYOUT_PREFIX.length());
+                                    if (id.startsWith(LAYOUT_RESOURCE_PREFIX)) {
+                                        id = id.substring(LAYOUT_RESOURCE_PREFIX.length());
                                     }
                                 }
                             }
@@ -81,7 +85,6 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
                     }
                 }
             }
-
             if (id != null && id.length() > 0) {
                 return text + ": " + id; //$NON-NLS-1$
             }
@@ -92,8 +95,8 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
     /**
      * Wrapper around {@link Element#getAttributeNS(String, String)}.
      * <p/>
-     * The implementation used in Eclipse's XML editor sometimes internally throws
-     * an NPE instead of politely returning null.
+     * The implementation used in Eclipse's XML editor sometimes internally
+     * throws an NPE instead of politely returning null.
      *
      * @see Element#getAttributeNS(String, String)
      */

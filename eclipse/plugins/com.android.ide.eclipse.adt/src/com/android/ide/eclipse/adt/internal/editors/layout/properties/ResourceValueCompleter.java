@@ -15,12 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.properties;
 
-import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+import static com.android.SdkConstants.ANDROID_PKG;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
@@ -93,16 +93,16 @@ class ResourceValueCompleter implements IContentProposalProvider {
         // System matches: only do this if the value already matches at least @a,
         // and doesn't start with something that can't possibly be @android
         if (prefix.startsWith("@a") && //$NON-NLS-1$
-                prefix.regionMatches(true /* ignoreCase */, 0, PREFIX_ANDROID_RESOURCE_REF, 0,
-                        Math.min(prefix.length() - 1, PREFIX_ANDROID_RESOURCE_REF.length()))) {
+                prefix.regionMatches(true /* ignoreCase */, 0, ANDROID_PREFIX, 0,
+                        Math.min(prefix.length() - 1, ANDROID_PREFIX.length()))) {
             AndroidTargetData data = editor.getTargetData();
             if (data != null) {
                 ResourceRepository repository = data.getFrameworkResources();
                 addMatches(repository, prefix, true /* isSystem */, results);
             }
         } else if (prefix.startsWith("?") && //$NON-NLS-1$
-                prefix.regionMatches(true /* ignoreCase */, 0, PREFIX_ANDROID_THEME_REF, 0,
-                        Math.min(prefix.length() - 1, PREFIX_ANDROID_THEME_REF.length()))) {
+                prefix.regionMatches(true /* ignoreCase */, 0, ANDROID_THEME_PREFIX, 0,
+                        Math.min(prefix.length() - 1, ANDROID_THEME_PREFIX.length()))) {
             AndroidTargetData data = editor.getTargetData();
             if (data != null) {
                 ResourceRepository repository = data.getFrameworkResources();
@@ -141,7 +141,7 @@ class ResourceValueCompleter implements IContentProposalProvider {
     private static void addMatches(ResourceRepository repository, String prefix, boolean isSystem,
             List<String> results) {
         int typeStart = isSystem
-                ? PREFIX_ANDROID_RESOURCE_REF.length() : PREFIX_RESOURCE_REF.length();
+                ? ANDROID_PREFIX.length() : PREFIX_RESOURCE_REF.length();
 
         for (ResourceType type : repository.getAvailableResourceTypes()) {
             if (prefix.regionMatches(typeStart, type.getName(), 0,

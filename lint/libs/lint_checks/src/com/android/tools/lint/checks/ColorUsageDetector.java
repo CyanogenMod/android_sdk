@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_COLOR;
+import static com.android.SdkConstants.RESOURCE_CLZ_COLOR;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

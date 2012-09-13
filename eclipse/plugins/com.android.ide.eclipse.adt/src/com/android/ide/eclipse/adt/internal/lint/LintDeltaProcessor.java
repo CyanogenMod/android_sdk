@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_CLASS;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_JAVA;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_JAVA;
+import static com.android.SdkConstants.DOT_CLASS;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.EXT_JAVA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

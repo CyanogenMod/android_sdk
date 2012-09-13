@@ -16,7 +16,7 @@
 
 package com.android.ide.common.resources.platform;
 
-import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
+import static com.android.SdkConstants.DOT_LAYOUT_PARAMS;
 import static com.android.ide.eclipse.adt.AdtConstants.DOC_HIDE;
 
 import com.android.ide.common.api.IAttributeInfo.Format;

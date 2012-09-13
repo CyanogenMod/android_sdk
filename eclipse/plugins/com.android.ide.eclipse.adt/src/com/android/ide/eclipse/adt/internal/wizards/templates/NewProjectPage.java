@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_ID;
 import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplatePage.WIZARD_PAGE_WIDTH;
 

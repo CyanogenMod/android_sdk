@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
+import static com.android.SdkConstants.VALUE_N_DP;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 

@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -33,7 +33,8 @@ class SelectThemeAction extends Action {
     public SelectThemeAction(ConfigurationComposite configuration, String title, String theme,
             boolean selected) {
         super(title, IAction.AS_RADIO_BUTTON);
-        assert theme.startsWith(PREFIX_STYLE) || theme.startsWith(PREFIX_ANDROID_STYLE) : theme;
+        assert theme.startsWith(STYLE_RESOURCE_PREFIX)
+            || theme.startsWith(ANDROID_STYLE_RESOURCE_PREFIX) : theme;
         mConfiguration = configuration;
         mTheme = theme;
         if (selected) {

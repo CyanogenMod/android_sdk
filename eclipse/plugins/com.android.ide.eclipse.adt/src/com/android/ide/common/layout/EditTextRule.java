@@ -16,9 +16,9 @@
 
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_EMS;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_EMS;
+import static com.android.SdkConstants.REQUEST_FOCUS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -15,12 +15,12 @@
  */
 package com.android.ide.common.layout.grid;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
-import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
-import static com.android.utils.XmlUtils.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
+import static com.android.SdkConstants.FQCN_BUTTON;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;

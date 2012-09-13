@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.FD_RES_VALUES;
 
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;

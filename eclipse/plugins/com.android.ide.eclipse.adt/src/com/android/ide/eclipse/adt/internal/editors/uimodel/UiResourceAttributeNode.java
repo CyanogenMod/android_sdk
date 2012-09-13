@@ -16,13 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_THEME_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_THEME_REF;
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+import static com.android.SdkConstants.ANDROID_PKG;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_STYLE;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -32,7 +33,6 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -254,7 +254,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // or does not have the resource type in it. Simply offer the list of potential
             // resource types.
             if (prefix != null && prefix.startsWith(PREFIX_THEME_REF)) {
-                results.add(PREFIX_ANDROID_THEME_REF + ResourceType.ATTR.getName() + '/');
+                results.add(ANDROID_THEME_PREFIX + ResourceType.ATTR.getName() + '/');
                 if (resTypes.contains(ResourceType.ATTR)
                         || resTypes.contains(ResourceType.STYLE)) {
                     results.add(PREFIX_THEME_REF + ResourceType.ATTR.getName() + '/');
@@ -264,7 +264,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
 
             for (ResourceType resType : resTypes) {
                 if (isSystem) {
-                    results.add(PREFIX_ANDROID_RESOURCE_REF + resType.getName() + '/');
+                    results.add(ANDROID_PREFIX + resType.getName() + '/');
                 } else {
                     results.add('@' + resType.getName() + '/');
                 }
@@ -278,7 +278,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // "@an" we offer to complete it.
             if (prefix == null ||
                     ANDROID_PKG.regionMatches(0, prefix, 1, prefix.length() - 1)) {
-                results.add(PREFIX_ANDROID_RESOURCE_REF);
+                results.add(ANDROID_PREFIX);
             }
         } else if (repository != null) {
             // We have a style name and a repository. Find all resources that match this
@@ -351,7 +351,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
 
     /** Compute a suitable sorting score for the given  */
     private static final int score(IAttributeInfo attributeInfo, String value) {
-        if (value.equals(PREFIX_ANDROID_RESOURCE_REF)) {
+        if (value.equals(ANDROID_PREFIX)) {
             return -1;
         }
 
@@ -383,7 +383,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                         return -2;
                     }
 
-                    if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
+                    if (value.startsWith(ANDROID_PREFIX + type + '/')) {
                         return -2;
                     }
                 }
@@ -392,7 +392,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                         return -2;
                     }
 
-                    if (value.startsWith(PREFIX_ANDROID_THEME_REF + type + '/')) {
+                    if (value.startsWith(ANDROID_THEME_PREFIX + type + '/')) {
                         return -2;
                     }
                 }
@@ -407,7 +407,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             type = "id"; //$NON-NLS-1$
         } else if (attribute.equals(ATTR_STYLE)) {
             type = "style"; //$NON-NLS-1$
-        } else if (attribute.equals(LayoutDescriptors.ATTR_LAYOUT)) {
+        } else if (attribute.equals(ATTR_LAYOUT)) {
             type = "layout"; //$NON-NLS-1$
         } else if (attribute.equals("drawable")) { //$NON-NLS-1$
             type = "drawable"; //$NON-NLS-1$
@@ -422,7 +422,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                     return -2;
                 }
 
-                if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
+                if (value.startsWith(ANDROID_PREFIX + type + '/')) {
                     return -2;
                 }
             }
@@ -431,7 +431,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                     return -2;
                 }
 
-                if (value.startsWith(PREFIX_ANDROID_THEME_REF + type + '/')) {
+                if (value.startsWith(ANDROID_THEME_PREFIX + type + '/')) {
                     return -2;
                 }
             }

@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
+import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.INode;
@@ -303,7 +303,7 @@ public class RenderService {
 
             // Find the layout file.
             ResourceValue contextLayout = mResourceResolver.findResValue(
-                    LAYOUT_PREFIX + contextLayoutName, false  /* forceFrameworkOnly*/);
+                    LAYOUT_RESOURCE_PREFIX + contextLayoutName, false  /* forceFrameworkOnly*/);
             if (contextLayout != null) {
                 File layoutFile = new File(contextLayout.getValue());
                 if (layoutFile.isFile()) {

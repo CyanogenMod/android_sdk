@@ -15,11 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_9PNG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_BMP;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_GIF;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_JPG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.DOT_BMP;
+import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
 import static com.android.ide.eclipse.adt.AdtUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;

@@ -16,16 +16,21 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import static com.android.AndroidConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_COLOR;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_RESOURCES;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
-import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.utils.XmlUtils.ANDROID_URI;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
@@ -58,7 +63,6 @@ import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.VisualRefactoring;
-import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
@@ -112,9 +116,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 @SuppressWarnings("restriction") // XML model
 public class ResourceHelper {
-
-    private static final String TAG_ITEM = "item"; //$NON-NLS-1$
-    private static final String ATTR_COLOR = "color";  //$NON-NLS-1$
 
     private final static Map<Class<?>, Image> sIconMap = new HashMap<Class<?>, Image>(
             FolderConfiguration.getQualifierCount());
@@ -183,7 +184,7 @@ public class ResourceHelper {
      * @return a pair of the resource type and the resource name
      */
     public static Pair<ResourceType,String> parseResource(String url) {
-        if (!url.startsWith("@")) { //$NON-NLS-1$
+        if (!url.startsWith(PREFIX_RESOURCE_REF)) {
             return null;
         }
         int typeEnd = url.indexOf('/', 1);
@@ -274,7 +275,7 @@ public class ResourceHelper {
      */
     public static boolean canCreateResource(String resource) {
         // Cannot create framework resources
-        if (resource.startsWith('@' + ANDROID_PKG + ':')) {
+        if (resource.startsWith(ANDROID_PREFIX)) {
             return false;
         }
 
@@ -411,9 +412,9 @@ public class ResourceHelper {
                                 elementImpl.setEmptyTag(true);
                             }
                         }
-                        element.setAttribute(ValuesDescriptors.NAME_ATTR, name);
+                        element.setAttribute(ATTR_NAME, name);
                         if (!tagName.equals(typeName)) {
-                            element.setAttribute(ValuesDescriptors.TYPE_ATTR, typeName);
+                            element.setAttribute(ATTR_TYPE, typeName);
                         }
                         root.insertBefore(element, nextChild);
                         IRegion region = null;
@@ -450,7 +451,7 @@ public class ResourceHelper {
             String prolog = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"; //$NON-NLS-1$
             StringBuilder sb = new StringBuilder(prolog);
 
-            String root = ValuesDescriptors.ROOT_ELEMENT;
+            String root = TAG_RESOURCES;
             sb.append('<').append(root).append('>').append('\n');
             sb.append("    "); //$NON-NLS-1$
             sb.append('<');
@@ -508,10 +509,10 @@ public class ResourceHelper {
      * @return the user visible theme name
      */
     public static String styleToTheme(String style) {
-        if (style.startsWith(PREFIX_STYLE)) {
-            style = style.substring(PREFIX_STYLE.length());
-        } else if (style.startsWith(PREFIX_ANDROID_STYLE)) {
-            style = style.substring(PREFIX_ANDROID_STYLE.length());
+        if (style.startsWith(STYLE_RESOURCE_PREFIX)) {
+            style = style.substring(STYLE_RESOURCE_PREFIX.length());
+        } else if (style.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)) {
+            style = style.substring(ANDROID_STYLE_RESOURCE_PREFIX.length());
         } else if (style.startsWith(PREFIX_RESOURCE_REF)) {
             // @package:style/foo
             int index = style.indexOf('/');
@@ -530,9 +531,10 @@ public class ResourceHelper {
      *         to a framework theme
      */
     public static boolean isProjectStyle(String style) {
-        assert style.startsWith(PREFIX_STYLE) || style.startsWith(PREFIX_ANDROID_STYLE) : style;
+        assert style.startsWith(STYLE_RESOURCE_PREFIX)
+            || style.startsWith(ANDROID_STYLE_RESOURCE_PREFIX) : style;
 
-        return style.startsWith(PREFIX_STYLE);
+        return style.startsWith(STYLE_RESOURCE_PREFIX);
     }
 
     /**
@@ -577,7 +579,7 @@ public class ResourceHelper {
                 }
                 return null;
             }
-            if (value.startsWith("@")) { //$NON-NLS-1$
+            if (value.startsWith(PREFIX_RESOURCE_REF)) {
                 boolean isFramework = color.isFramework();
                 color = resources.findResValue(value, isFramework);
                 if (color != null) {

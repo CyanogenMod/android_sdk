@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import static com.android.utils.XmlUtils.XMLNS;
-import static com.android.utils.XmlUtils.XMLNS_URI;
+import static com.android.SdkConstants.XMLNS;
+import static com.android.SdkConstants.XMLNS_URI;
 
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;

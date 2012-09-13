@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CONFIG;
-import static com.android.tools.lint.detector.api.LintConstants.PROJECT_PROPERTIES;
+import static com.android.SdkConstants.PROGUARD_CONFIG;
+import static com.android.SdkConstants.PROJECT_PROPERTIES;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

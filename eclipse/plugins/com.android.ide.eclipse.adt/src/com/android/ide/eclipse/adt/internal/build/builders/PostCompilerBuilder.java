@@ -356,7 +356,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             if (isLibrary) {
                 // check the jar output file is present, if not create it.
                 IFile jarIFile = androidOutputFolder.getFile(
-                        project.getName().toLowerCase() + AdtConstants.DOT_JAR);
+                        project.getName().toLowerCase() + SdkConstants.DOT_JAR);
                 if (mConvertToDex == false && jarIFile.exists() == false) {
                     mConvertToDex = true;
                 }
@@ -746,7 +746,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
         public void addFile(IFile file, IFolder rootFolder) throws ApkCreationException {
             // we only package class file from the output folder
-            if (AdtConstants.EXT_CLASS.equals(file.getFileExtension()) == false) {
+            if (SdkConstants.EXT_CLASS.equals(file.getFileExtension()) == false) {
                 return;
             }
 

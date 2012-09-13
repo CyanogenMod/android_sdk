@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.animator;
 
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
-import static com.android.utils.XmlUtils.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_PKG;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;

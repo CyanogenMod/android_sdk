@@ -16,16 +16,16 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG_PREFIX;
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
-import static com.android.tools.lint.detector.api.LintConstants.CONSTRUCTOR_NAME;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_ACTIVITY;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_PROVIDER;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_RECEIVER;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
+import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_PROVIDER;
+import static com.android.SdkConstants.TAG_RECEIVER;
+import static com.android.SdkConstants.TAG_SERVICE;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

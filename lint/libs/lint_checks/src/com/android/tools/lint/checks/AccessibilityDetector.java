@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DESCRIPTION;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_IMPORTANT_FOR_ACCESSIBILITY;
-import static com.android.tools.lint.detector.api.LintConstants.IMAGE_BUTTON;
-import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_NO;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.SdkConstants.ATTR_IMPORTANT_FOR_ACCESSIBILITY;
+import static com.android.SdkConstants.IMAGE_BUTTON;
+import static com.android.SdkConstants.IMAGE_VIEW;
+import static com.android.SdkConstants.VALUE_NO;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

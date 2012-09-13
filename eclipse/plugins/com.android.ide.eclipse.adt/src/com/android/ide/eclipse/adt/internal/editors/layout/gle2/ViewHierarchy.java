@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.VIEW_MERGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

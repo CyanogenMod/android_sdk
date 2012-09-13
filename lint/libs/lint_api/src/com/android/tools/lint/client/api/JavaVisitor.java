@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_PKG;
-import static com.android.tools.lint.detector.api.LintConstants.R_CLASS;
+import static com.android.SdkConstants.ANDROID_PKG;
+import static com.android.SdkConstants.R_CLASS;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
