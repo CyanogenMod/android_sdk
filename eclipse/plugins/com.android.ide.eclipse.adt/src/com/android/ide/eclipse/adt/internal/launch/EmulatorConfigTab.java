@@ -20,6 +20,7 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
+import com.android.ide.eclipse.adt.internal.launch.AvdCompatibility.Compatibility;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
@@ -394,16 +395,9 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
             @Override
             public boolean accept(AvdInfo avd) {
-                IAndroidTarget avdTarget = avd.getTarget();
-                if (avdTarget == null) {
-                    return true;
-                }
-
-                if (mProjectTarget.isPlatform()) {
-                    return avdTarget.getVersion().canRun(mProjectMinApiVersion);
-                }
-
-                return mProjectTarget.canRunOn(avdTarget);
+                AvdCompatibility.Compatibility c =
+                        AvdCompatibility.canRun(avd, mProjectTarget, mProjectMinApiVersion);
+                return (c == Compatibility.NO) ? false : true;
             }
         });
     }

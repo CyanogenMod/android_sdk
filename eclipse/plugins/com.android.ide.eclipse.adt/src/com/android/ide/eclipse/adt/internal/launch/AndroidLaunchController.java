@@ -464,7 +464,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 String deviceAvd = d.getAvdName();
                 if (deviceAvd != null) { // physical devices return null.
                     AvdInfo info = avdManager.getAvd(deviceAvd, true /*validAvdOnly*/);
-                    if (info != null && projectTarget.canRunOn(info.getTarget())) {
+                    if (AvdCompatibility.canRun(info, projectTarget, minApiVersion)
+                            == AvdCompatibility.Compatibility.YES) {
                         compatibleRunningAvds.put(d, info);
                     }
                 } else {
@@ -496,7 +497,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
                 // we are going to take the closest AVD. ie a compatible AVD that has the API level
                 // closest to the project target.
-                AvdInfo defaultAvd = findMatchingAvd(avdManager, projectTarget);
+                AvdInfo defaultAvd = findMatchingAvd(avdManager, projectTarget, minApiVersion);
 
                 if (defaultAvd != null) {
                     response.setAvdToLaunch(defaultAvd);
@@ -529,7 +530,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     });
                     if (searchAgain[0]) {
                         // attempt to reload the AVDs and find one compatible.
-                        defaultAvd = findMatchingAvd(avdManager, projectTarget);
+                        defaultAvd = findMatchingAvd(avdManager, projectTarget, minApiVersion);
 
                         if (defaultAvd == null) {
                             AdtPlugin.printErrorToConsole(project, String.format(
@@ -683,23 +684,25 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
 
     /**
      * Find a matching AVD.
+     * @param minApiVersion
      */
-    private AvdInfo findMatchingAvd(AvdManager avdManager, final IAndroidTarget projectTarget) {
+    private AvdInfo findMatchingAvd(AvdManager avdManager, final IAndroidTarget projectTarget,
+            AndroidVersion minApiVersion) {
         AvdInfo[] avds = avdManager.getValidAvds();
-        AvdInfo defaultAvd = null;
+        AvdInfo bestAvd = null;
         for (AvdInfo avd : avds) {
-            if (projectTarget.canRunOn(avd.getTarget())) {
+            if (AvdCompatibility.canRun(avd, projectTarget, minApiVersion)
+                    == AvdCompatibility.Compatibility.YES) {
                 // at this point we can ignore the code name issue since
-                // IAndroidTarget.canRunOn() will already have filtered the non
-                // compatible AVDs.
-                if (defaultAvd == null ||
+                // AvdCompatibility.canRun() will already have filtered out the non compatible AVDs.
+                if (bestAvd == null ||
                         avd.getTarget().getVersion().getApiLevel() <
-                            defaultAvd.getTarget().getVersion().getApiLevel()) {
-                    defaultAvd = avd;
+                            bestAvd.getTarget().getVersion().getApiLevel()) {
+                    bestAvd = avd;
                 }
             }
         }
-        return defaultAvd;
+        return bestAvd;
     }
 
     /**
