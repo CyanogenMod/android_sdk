@@ -219,14 +219,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         SelectionListener targetModeChangeListener = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-
-                boolean auto = mAutoTargetButton.getSelection();
-                mPreferredAvdSelector.setEnabled(auto);
-                mPreferredAvdLabel.setEnabled(auto);
-
-                boolean all = mAllDevicesTargetButton.getSelection();
-                mDeviceTypeCombo.setEnabled(all);
+                targetModeChanged();
             }
         };
 
@@ -358,6 +351,17 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         });
     }
 
+    private void targetModeChanged() {
+        updateLaunchConfigurationDialog();
+
+        boolean auto = mAutoTargetButton.getSelection();
+        mPreferredAvdSelector.setEnabled(auto);
+        mPreferredAvdLabel.setEnabled(auto);
+
+        boolean all = mAllDevicesTargetButton.getSelection();
+        mDeviceTypeCombo.setEnabled(all);
+    }
+
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
      */
@@ -426,6 +430,8 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mAutoTargetButton.setSelection(mode == TargetMode.AUTO);
         mManualTargetButton.setSelection(mode == TargetMode.MANUAL);
         mAllDevicesTargetButton.setSelection(multipleDevices);
+
+        targetModeChanged();
 
         mDeviceTypeCombo.setEnabled(multipleDevices);
         if (multipleDevices) {
