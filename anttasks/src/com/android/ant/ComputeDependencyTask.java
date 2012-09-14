@@ -59,6 +59,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
     private String mJarLibraryPathOut;
     private String mLibraryNativeFolderPathOut;
     private String mLibraryBinAidlFolderPathOut;
+    private String mLibraryRFilePathOut;
     private int mTargetApi = -1;
     private boolean mVerbose = false;
 
@@ -80,6 +81,10 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
 
     public void setLibraryBinAidlFolderPathOut(String libraryBinAidlFolderPathOut) {
         mLibraryBinAidlFolderPathOut = libraryBinAidlFolderPathOut;
+    }
+
+    public void setLibraryRFilePathOut(String libraryRFilePathOut) {
+        mLibraryRFilePathOut = libraryRFilePathOut;
     }
 
     public void setLibraryNativeFolderPathOut(String libraryNativeFolderPathOut) {
@@ -110,6 +115,9 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
         if (mLibraryBinAidlFolderPathOut == null) {
             throw new BuildException("Missing attribute libraryBinFolderPathOut");
         }
+        if (mLibraryRFilePathOut == null) {
+            throw new BuildException("Missing attribute libraryRFilePathOut");
+        }
         if (mTargetApi == -1) {
             throw new BuildException("Missing attribute targetApi");
         }
@@ -124,6 +132,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
         final Path resFolderPath = new Path(antProject);
         final Path nativeFolderPath = new Path(antProject);
         final Path binAidlFolderPath = new Path(antProject);
+        final Path rFilePath = new Path(antProject);
         final StringBuilder packageStrBuilder = new StringBuilder();
 
         // custom jar processor doing a bit more than just collecting the jar files
@@ -157,12 +166,6 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
                 element.setPath(libRootPath + '/' + SdkConstants.FD_OUTPUT +
                         '/' + SdkConstants.FD_AIDL);
 
-                // get the bin folder. $PROJECT/bin for now
-                // FIXME: support renamed folder.
-                element = binAidlFolderPath.createPathElement();
-                element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
-                        "/" + SdkConstants.FD_AIDL);
-
                 // get the package from the manifest.
                 FileWrapper manifest = new FileWrapper(libRootPath,
                         SdkConstants.FN_ANDROID_MANIFEST_XML);
@@ -172,6 +175,14 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
                     if (value != null) { // aapt will complain if it's missing.
                         packageStrBuilder.append(';');
                         packageStrBuilder.append(value);
+
+                        // get the text R file. $PROJECT/bin/R.txt for now
+                        // This must be in sync with the package list.
+                        // FIXME: support renamed folder.
+                        element = rFilePath.createPathElement();
+                        element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+                                "/" + "R.txt");
+
                     }
                 } catch (Exception e) {
                     throw new BuildException(e);
@@ -225,6 +236,7 @@ public class ComputeDependencyTask extends GetLibraryPathTask {
         if (hasLibraries) {
             antProject.addReference(mLibraryResFolderPathOut, resFolderPath);
             antProject.setProperty(mLibraryPackagesOut, packageStrBuilder.toString());
+            antProject.addReference(mLibraryRFilePathOut, rFilePath);
         }
 
         File projectFolder = antProject.getBaseDir();

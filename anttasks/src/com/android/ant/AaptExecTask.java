@@ -16,12 +16,16 @@
 
 package com.android.ant;
 
+import com.android.sdklib.internal.build.SymbolLoader;
+import com.android.sdklib.internal.build.SymbolWriter;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.Path;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -95,8 +99,10 @@ public final class AaptExecTask extends SingleDependencyTask {
     private final ArrayList<NoCompress> mNoCompressList = new ArrayList<NoCompress>();
     private String mLibraryResFolderPathRefid;
     private String mLibraryPackagesRefid;
+    private String mLibraryRFileRefid;
     private boolean mNonConstantId;
     private String mIgnoreAssets;
+    private String mBinFolder;
     private String mProguardFile;
 
     /**
@@ -322,6 +328,14 @@ public final class AaptExecTask extends SingleDependencyTask {
         mLibraryPackagesRefid = libraryPackagesRefid;
     }
 
+    public void setLibraryRFileRefid(String libraryRFileRefid) {
+        mLibraryRFileRefid = libraryRFileRefid;
+    }
+
+    public void setBinFolder(Path binFolder) {
+        mBinFolder = TaskHelper.checkSinglePath("binFolder", binFolder);
+    }
+
     public void setProguardFile(Path proguardFile) {
         mProguardFile = TaskHelper.checkSinglePath("proguardFile", proguardFile);
     }
@@ -370,19 +384,34 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (mLibraryPackagesRefid == null) {
             throw new BuildException("Missing attribute libraryPackagesRefid");
         }
+        if (mLibraryRFileRefid == null) {
+            throw new BuildException("Missing attribute libraryRFileRefid");
+        }
 
         Project taskProject = getProject();
 
         String libPkgProp = null;
+        Path libRFileProp = null;
 
         // if the parameters indicate generation of the R class, check if
         // more R classes need to be created for libraries, only if this project itself
         // is not a library
         if (mNonConstantId == false && mRFolder != null && new File(mRFolder).isDirectory()) {
             libPkgProp = taskProject.getProperty(mLibraryPackagesRefid);
-            if (libPkgProp != null) {
-                // Replace ";" with ":" since that's what aapt expects
-                libPkgProp = libPkgProp.replace(';', ':');
+            Object rFilePath = taskProject.getReference(mLibraryRFileRefid);
+
+            // if one is null, both should be
+            if ((libPkgProp == null || rFilePath == null) &&
+                    rFilePath != libPkgProp) {
+                throw new BuildException(String.format(
+                        "Both %1$s and %2$s should resolve to valid values.",
+                        mLibraryPackagesRefid, mLibraryRFileRefid));
+            }
+
+            if (rFilePath instanceof Path) {
+                libRFileProp = (Path) rFilePath;
+            } else if (rFilePath != null) {
+                throw new BuildException("attribute libraryRFileRefid must reference a Path object.");
             }
         }
 
@@ -530,9 +559,14 @@ public final class AaptExecTask extends SingleDependencyTask {
             }
         }
 
-        if (mNonConstantId == false && libPkgProp != null && libPkgProp.length() > 0) {
-            task.createArg().setValue("--extra-packages");
-            task.createArg().setValue(libPkgProp);
+        // if this is a library or there are library dependencies
+        if (mNonConstantId || (libPkgProp != null && libPkgProp.length() > 0)) {
+            if (mBinFolder == null) {
+                throw new BuildException(
+                        "Missing attribute binFolder when compiling libraries or projects with libraries.");
+            }
+            task.createArg().setValue("--output-text-symbols");
+            task.createArg().setValue(mBinFolder);
         }
 
         // if the project contains libraries, force auto-add-overlay
@@ -639,5 +673,41 @@ public final class AaptExecTask extends SingleDependencyTask {
 
         // execute it.
         task.execute();
+
+        // now if the project has libraries, R needs to be created for each libraries
+        try {
+            if (libPkgProp != null && !libPkgProp.isEmpty()) {
+                SymbolLoader symbolValues = new SymbolLoader(new File(mBinFolder, "R.txt"));
+                symbolValues.load();
+
+                // we have two props which contains list of items. Both items reprensent 2 data of
+                // a single property.
+                // Don't want to use guava's splitter because it doesn't provide a list of the
+                // result. but we know the list starts with a ; so strip it.
+                if (libPkgProp.startsWith(";")) {
+                    libPkgProp = libPkgProp.substring(1).trim();
+                }
+                String[] packages = libPkgProp.split(";");
+                String[] rFiles = libRFileProp.list();
+
+                if (packages.length != rFiles.length) {
+                    throw new BuildException(String.format(
+                            "%1$s and %2$s must contain the same number of items.",
+                            mLibraryPackagesRefid, mLibraryRFileRefid));
+                }
+
+                for (int i = 0 ; i < packages.length ; i++) {
+                    SymbolLoader symbols = new SymbolLoader(new File(rFiles[i]));
+                    symbols.load();
+
+                    SymbolWriter writer = new SymbolWriter(mRFolder, packages[i],
+                            symbols, symbolValues);
+                    writer.write();
+                }
+            }
+        } catch (IOException e) {
+            throw new BuildException(e);
+        }
+
     }
 }

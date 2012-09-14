@@ -48,10 +48,14 @@ import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
+import com.android.sdklib.internal.build.SymbolLoader;
+import com.android.sdklib.internal.build.SymbolWriter;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.io.FileOp;
 import com.android.utils.ILogger;
+import com.android.utils.Pair;
 import com.android.xml.AndroidManifest;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -931,8 +935,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             IFolder mainPackageFolder = getGenManifestPackageFolder();
 
             // handle libraries
-            ArrayList<IFolder> libResFolders = new ArrayList<IFolder>();
-            StringBuilder libJavaPackages = null;
+            ArrayList<IFolder> libResFolders = Lists.newArrayList();
+            ArrayList<Pair<File, String>> libRFiles = Lists.newArrayList();
             if (libProjects != null) {
                 for (IProject lib : libProjects) {
                     IFolder libResFolder = lib.getFolder(SdkConstants.FD_RES);
@@ -941,31 +945,29 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
 
                     try {
+                        // get the package of the library, and if it's different form the
+                        // main project, generate the R class for it too.
                         String libJavaPackage = AndroidManifest.getPackage(new IFolderWrapper(lib));
                         if (libJavaPackage.equals(javaPackage) == false) {
-                            if (libJavaPackages == null) {
-                                libJavaPackages = new StringBuilder(libJavaPackage);
-                            } else {
-                                libJavaPackages.append(":");
-                                libJavaPackages.append(libJavaPackage);
-                            }
+
+                            IFolder libOutput = BaseProjectHelper.getAndroidOutputFolder(lib);
+                            File libOutputFolder = libOutput.getLocation().toFile();
+
+                            libRFiles.add(Pair.of(
+                                    new File(libOutputFolder, "R.txt"),
+                                    libJavaPackage));
+
                         }
                     } catch (Exception e) {
                     }
                 }
             }
 
-            String libPackages = null;
-            if (libJavaPackages != null) {
-                libPackages = libJavaPackages.toString();
-
-            }
-
             String proguardFilePath = proguardFile != null ?
                     proguardFile.getLocation().toOSString(): null;
 
             execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                    mainPackageFolder, libResFolders, libPackages, isLibrary, proguardFilePath);
+                    mainPackageFolder, libResFolders, libRFiles, isLibrary, proguardFilePath);
         }
     }
 
@@ -982,16 +984,15 @@ public class PreCompilerBuilder extends BaseBuilder {
      * If <var>customJavaPackage</var> is not null, this must match the new destination triggered
      * by its value.
      * @param libResFolders the list of res folders for the library.
-     * @param libraryPackages an optional list of javapackages to replace the main project java
-     * package. can be null.
+     * @param libRFiles a list of R files for the libraries.
      * @param isLibrary if the project is a library project
      * @param proguardFile an optional path to store proguard information
      * @throws AbortBuildException
      */
     private void execAapt(IProject project, IAndroidTarget projectTarget, String osOutputPath,
             String osResPath, String osManifestPath, IFolder packageFolder,
-            ArrayList<IFolder> libResFolders, String libraryPackages, boolean isLibrary,
-            String proguardFile)
+            ArrayList<IFolder> libResFolders, List<Pair<File, String>> libRFiles,
+            boolean isLibrary, String proguardFile)
             throws AbortBuildException {
 
         // We actually need to delete the manifest.java as it may become empty and
@@ -1021,10 +1022,13 @@ public class PreCompilerBuilder extends BaseBuilder {
             array.add("--auto-add-overlay"); //$NON-NLS-1$
         }
 
-        // there's no need to generate the R class of the libraries if this is a library too.
-        if (isLibrary == false && libraryPackages != null) {
-            array.add("--extra-packages"); //$NON-NLS-1$
-            array.add(libraryPackages);
+        // If a library or has libraries, generate a text version of the R symbols.
+        File outputFolder = BaseProjectHelper.getAndroidOutputFolder(project).getLocation()
+                .toFile();
+
+        if (isLibrary || !libRFiles.isEmpty()) {
+            array.add("--output-text-symbols"); //$NON-NLS-1$
+            array.add(outputFolder.getAbsolutePath());
         }
 
         array.add("-J"); //$NON-NLS-1$
@@ -1103,6 +1107,22 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // abort if exec failed.
                 throw new AbortBuildException();
             }
+
+            // now if the project has libraries, R needs to be created for each libraries
+            if (!libRFiles.isEmpty()) {
+                SymbolLoader symbolValues = new SymbolLoader(new File(outputFolder, "R.txt"));
+                symbolValues.load();
+
+                for (Pair<File, String> libData : libRFiles) {
+                    SymbolLoader symbols = new SymbolLoader(libData.getFirst());
+                    symbols.load();
+
+                    SymbolWriter writer = new SymbolWriter(osOutputPath, libData.getSecond(),
+                            symbols, symbolValues);
+                    writer.write();
+                }
+            }
+
         } catch (IOException e1) {
             // something happen while executing the process,
             // mark the project and exit

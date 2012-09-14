@@ -937,7 +937,7 @@ public class BuildHelper {
                         entry.getPath(), javaProject);
                 // ignore the system and default_system types as they represent
                 // libraries that are part of the runtime.
-                if (container.getKind() == IClasspathContainer.K_APPLICATION) {
+                if (container != null && container.getKind() == IClasspathContainer.K_APPLICATION) {
                     IClasspathEntry[] entries = container.getClasspathEntries();
                     for (IClasspathEntry cpe : entries) {
                         handleCPE(cpe, javaProject, wsRoot, resMarker);
