@@ -45,7 +45,7 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Merges a library manifest into a main application manifest.
  * <p/>
- * To use, create with {@link ManifestMerger#ManifestMerger(IMergerLog)} then
+ * To use, create with {@link ManifestMerger#ManifestMerger(IMergerLog, ICallback)} then
  * call {@link ManifestMerger#process(File, File, File[])}.
  * <p/>
  * <pre> Merge operations:
@@ -69,6 +69,7 @@ import javax.xml.xpath.XPathExpressionException;
  *      => Add. OK if already defined.
  * E- uses-sdk:
  *      {@code @minSdkVersion}: error if dest&lt;lib. Never automatically change dest minsdk.
+ *                              Codenames are accepted if we can resolve their API level.
  *      {@code @targetSdkVersion}: warning if dest&lt;lib.
  *                                 Never automatically change dest targetsdk.
  *      {@code @maxSdkVersion}: obsolete, ignored. Not used in comparisons and not merged.
@@ -117,7 +118,9 @@ import javax.xml.xpath.XPathExpressionException;
 public class ManifestMerger {
 
     /** Logger object. Never null. */
-    private IMergerLog mLog;
+    private final IMergerLog mLog;
+    /** An optional callback that the merger can use to query the calling SDK. */
+    private final ICallback mCallback;
     private XPath mXPath;
     private Document mMainDoc;
 
@@ -125,8 +128,15 @@ public class ManifestMerger {
     private String NS_PREFIX = AndroidXPathFactory.DEFAULT_NS_PREFIX;
     private int destMinSdk;
 
-    public ManifestMerger(IMergerLog log) {
+    /**
+     * Creates a new {@link ManifestMerger}.
+     *
+     * @param log A non-null merger log to capture all warnings, errors and their location.
+     * @param callback An optional callback that the merger can use to query the calling SDK.
+     */
+    public ManifestMerger(@NonNull IMergerLog log, @Nullable ICallback callback) {
         mLog = log;
+        mCallback = callback;
     }
 
     /**
@@ -726,11 +736,12 @@ public class ManifestMerger {
     }
 
     /**
-     * Checks (but does not merge) uses-sdk attribues using the following rules:
+     * Checks (but does not merge) uses-sdk attributes using the following rules:
      * <pre>
      * - {@code @minSdkVersion}: error if dest&lt;lib. Never automatically change dest minsdk.
      * - {@code @targetSdkVersion}: warning if dest&lt;lib. Never automatically change destination.
      * - {@code @maxSdkVersion}: obsolete, ignored. Not used in comparisons and not merged.
+     * - The API level can be a codename if we have a callback that can convert it to an integer.
      * </pre>
      * @param libDoc The library document to merge from. Must not be null.
      * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
@@ -838,6 +849,7 @@ public class ManifestMerger {
         String s = destUsesSdk == null ? ""                                      //$NON-NLS-1$
                      : destUsesSdk.getAttributeNS(NS_URI, attr + "SdkVersion");  //$NON-NLS-1$
 
+        boolean result = true;
         assert s != null;
         s = s.trim();
         try {
@@ -846,14 +858,27 @@ public class ManifestMerger {
                 destImplied.set(false);
             }
         } catch (NumberFormatException e) {
-            // Note: NumberFormatException.toString() has no interesting information
-            // so we don't output it.
-            mLog.error(Severity.ERROR,
+            boolean error = true;
+            if (mCallback != null) {
+                // Versions can contain codenames such as "JellyBean".
+                // We'll accept it only if have a callback that can give us the API level for it.
+                int apiLevel = mCallback.queryCodenameApiLevel(s);
+                if (apiLevel > ICallback.UNKNOWN_CODENAME) {
+                    destValue.set(apiLevel);
+                    destImplied.set(false);
+                    error = false;
+                }
+            }
+            if (error) {
+                // Note: NumberFormatException.toString() has no interesting information
+                // so we don't output it.
+                mLog.error(Severity.ERROR,
                     xmlFileAndLine(destUsesSdk == null ? mMainDoc : destUsesSdk),
-                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
+                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number or codename.",
                     attr,
                     s);
-            return false;
+                result = false;
+            }
         }
 
         s = srcUsesSdk == null ? ""                                      //$NON-NLS-1$
@@ -866,15 +891,28 @@ public class ManifestMerger {
                 srcImplied.set(false);
             }
         } catch (NumberFormatException e) {
-            mLog.error(Severity.ERROR,
+            boolean error = true;
+            if (mCallback != null) {
+                // Versions can contain codenames such as "JellyBean".
+                // We'll accept it only if have a callback that can give us the API level for it.
+                int apiLevel = mCallback.queryCodenameApiLevel(s);
+                if (apiLevel > ICallback.UNKNOWN_CODENAME) {
+                    srcValue.set(apiLevel);
+                    srcImplied.set(false);
+                    error = false;
+                }
+            }
+            if (error) {
+                mLog.error(Severity.ERROR,
                     xmlFileAndLine(srcUsesSdk == null ? libDoc : srcUsesSdk),
-                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number.",
+                    "Failed to parse <uses-sdk %1$sSdkVersion='%2$s'>: must be an integer number or codename.",
                     attr,
                     s);
-            return false;
+                result = false;
+            }
         }
 
-        return true;
+        return result;
     }
 
 

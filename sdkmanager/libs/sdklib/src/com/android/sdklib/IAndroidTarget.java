@@ -25,6 +25,12 @@ import java.util.Map;
  */
 public interface IAndroidTarget extends Comparable<IAndroidTarget> {
 
+    /**
+     * Prefix used to build hash strings for platform targets
+     * @see SdkManager#getTargetFromHashString(String)
+     */
+    public static final String PLATFORM_HASH_PREFIX = "android-";
+
     /** OS Path to the "android.jar" file. */
     public final static int ANDROID_JAR         = 1;
     /** OS Path to the "framework.aidl" file. */

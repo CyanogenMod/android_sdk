@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErro
 import com.android.ide.eclipse.adt.internal.resources.manager.IdeScanningContext;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.sdk.AdtManifestMergeCallback;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -828,28 +829,29 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
             // and maintain error markers.
-            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(new ILogger() {
+            ManifestMerger merger = new ManifestMerger(
+                MergerLog.wrapSdkLog(new ILogger() {
+                    @Override
+                    public void warning(@NonNull String warningFormat, Object... args) {
+                        AdtPlugin.printToConsole(getProject(), String.format(warningFormat, args));
+                    }
 
-                @Override
-                public void warning(@NonNull String warningFormat, Object... args) {
-                    AdtPlugin.printToConsole(getProject(), String.format(warningFormat, args));
-                }
+                    @Override
+                    public void info(@NonNull String msgFormat, Object... args) {
+                        AdtPlugin.printToConsole(getProject(), String.format(msgFormat, args));
+                    }
 
-                @Override
-                public void info(@NonNull String msgFormat, Object... args) {
-                    AdtPlugin.printToConsole(getProject(), String.format(msgFormat, args));
-                }
+                    @Override
+                    public void verbose(@NonNull String msgFormat, Object... args) {
+                        info(msgFormat, args);
+                    }
 
-                @Override
-                public void verbose(@NonNull String msgFormat, Object... args) {
-                    info(msgFormat, args);
-                }
-
-                @Override
-                public void error(Throwable t, String errorFormat, Object... args) {
-                    errors.add(String.format(errorFormat, args));
-                }
-            }));
+                    @Override
+                    public void error(Throwable t, String errorFormat, Object... args) {
+                        errors.add(String.format(errorFormat, args));
+                    }
+                }),
+                new AdtManifestMergeCallback());
 
             File[] libManifests = new File[libProjects.size()];
             int libIndex = 0;

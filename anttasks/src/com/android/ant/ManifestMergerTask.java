@@ -16,8 +16,11 @@
 
 package com.android.ant;
 
+import com.android.manifmerger.ICallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkManager;
 import com.android.sdklib.io.FileOp;
 import com.android.utils.StdLogger;
 
@@ -124,8 +127,27 @@ public class ManifestMergerTask extends SingleDependencyTask {
         } else {
             System.out.println(String.format("Merging manifests from project and %d libraries.",
                     libraries.size()));
-            ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(
-                    new StdLogger(StdLogger.Level.VERBOSE)));
+            ManifestMerger merger = new ManifestMerger(
+                    MergerLog.wrapSdkLog(new StdLogger(StdLogger.Level.VERBOSE)),
+                    new ICallback() {
+                        SdkManager mManager;
+                        @Override
+                        public int queryCodenameApiLevel(String codename) {
+                            if (mManager == null) {
+                                File sdkDir = TaskHelper.getSdkLocation(getProject());
+                                mManager = SdkManager.createManager(sdkDir.getPath(),
+                                        new StdLogger(StdLogger.Level.VERBOSE));
+                            }
+                            if (mManager != null) {
+                                IAndroidTarget t = mManager.getTargetFromHashString(
+                                        IAndroidTarget.PLATFORM_HASH_PREFIX + codename);
+                                if (t != null) {
+                                    return t.getVersion().getApiLevel();
+                                }
+                            }
+                            return ICallback.UNKNOWN_CODENAME;
+                        }
+                    });
             if (merger.process(
                     new File(mOutManifest),
                     appManifestFile,
