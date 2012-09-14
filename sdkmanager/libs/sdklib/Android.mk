@@ -28,7 +28,7 @@ LOCAL_JAR_MANIFEST := manifest.txt
 LOCAL_JAVA_LIBRARIES := \
         layoutlib_api \
         common \
-        mkidentity-prebuilt \
+        guava-tools \
         commons-compress-1.0 \
         httpclient-4.1.1 \
         httpcore-4.1 \
