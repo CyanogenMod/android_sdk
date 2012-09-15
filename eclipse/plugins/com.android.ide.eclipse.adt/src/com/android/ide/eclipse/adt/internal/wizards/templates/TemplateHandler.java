@@ -15,8 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
-import static com.android.SdkConstants.FD_NATIVE_LIBS;
-import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_FTL;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_RS;
@@ -24,13 +23,13 @@ import static com.android.SdkConstants.DOT_SVG;
 import static com.android.SdkConstants.DOT_TXT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
@@ -39,6 +38,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.AdtManifestMergeCallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
@@ -792,9 +792,12 @@ class TemplateHandler {
     private boolean mergeManifest(Document currentManifest, Document fragment) {
         // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
         // and maintain error markers.
-        ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(AdtPlugin.getDefault()));
-        return currentManifest != null && fragment != null
-                && merger.process(currentManifest, fragment);
+        ManifestMerger merger = new ManifestMerger(
+                MergerLog.wrapSdkLog(AdtPlugin.getDefault()),
+                new AdtManifestMergeCallback());
+        return currentManifest != null &&
+               fragment != null &&
+               merger.process(currentManifest, fragment);
     }
 
     /**

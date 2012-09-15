@@ -377,7 +377,17 @@ abstract class ManifestMergerTestCase extends TestCase {
     void processTestFiles(TestFiles testFiles) throws Exception {
         MockLog log = new MockLog();
         IMergerLog mergerLog = MergerLog.wrapSdkLog(log);
-        ManifestMerger merger = new ManifestMerger(mergerLog);
+        ManifestMerger merger = new ManifestMerger(mergerLog, new ICallback() {
+            @Override
+            public int queryCodenameApiLevel(String codename) {
+                if ("ApiCodename1".equals(codename)) {
+                    return 1;
+                } else if ("ApiCodename10".equals(codename)) {
+                    return 10;
+                }
+                return ICallback.UNKNOWN_CODENAME;
+            }
+        });
         boolean processOK = merger.process(testFiles.getActualResult(),
                                   testFiles.getMain(),
                                   testFiles.getLibs());

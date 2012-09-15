@@ -1,6 +1,6 @@
-
+#
 # Test uses-sdk: there's a warning if the main manifest defines a targetSdkVersion that
-# .
+# is smaller than what the libraries target.
 #
 
 @fails
@@ -13,10 +13,10 @@
     android:versionCode="100"
     android:versionName="1.0.0">
 
-    <!-- This app requires cupcake and targets honeycomb's yummy Holo theme. -->
+    <!-- This app requires cupcake and targets at least 10. -->
     <uses-sdk
         android:minSdkVersion="3"
-        android:targetSdkVersion="4"
+        android:targetSdkVersion="ApiCodename10"
         />
 
     <application />
@@ -28,7 +28,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- This app requires cupcake and targets honeycomb's yummy Holo theme. -->
+    <!-- This lib requires cupcake and targets 11 which is > 10 so it's a warning. -->
     <uses-sdk
         android:minSdkVersion="3"
         android:targetSdkVersion="11"
@@ -57,10 +57,10 @@
     android:versionCode="100"
     android:versionName="1.0.0">
 
-    <!-- This app requires cupcake and targets honeycomb's yummy Holo theme. -->
+    <!-- This app requires cupcake and targets at least 10. -->
     <uses-sdk
         android:minSdkVersion="3"
-        android:targetSdkVersion="4"
+        android:targetSdkVersion="ApiCodename10"
         />
 
     <application />
@@ -70,4 +70,4 @@
 
 @errors
 
-W [ManifestMergerTest0_main.xml:4, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-sdk android:targetSdkVersion='4'> but library uses targetSdkVersion='11'
+W [ManifestMergerTest0_main.xml:4, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-sdk android:targetSdkVersion='10'> but library uses targetSdkVersion='11'
