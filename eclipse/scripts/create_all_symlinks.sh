@@ -105,6 +105,7 @@ set -e # fail early
 LIBS=""
 CP_FILES=""
 
+
 ### BASE ###
 
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
@@ -122,6 +123,7 @@ BASE_PLUGIN_PREBUILTS="\
 LIBS="$LIBS $BASE_PLUGIN_LIBS"
 CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS"
 
+
 ### ADT ###
 
 ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
@@ -135,6 +137,7 @@ ADT_PREBUILTS="\
 
 LIBS="$LIBS $ADT_LIBS"
 CP_FILES="$CP_FILES @:$ADT_DEST $ADT_LIBS $ADT_PREBUILTS"
+
 
 ### DDMS ###
 
@@ -170,7 +173,6 @@ if [[ $PLATFORM != "windows-x86" ]]; then
 fi
 
 
-
 ### HIERARCHYVIEWER ###
 
 HV_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.hierarchyviewer/libs"
@@ -188,6 +190,7 @@ TV_LIBS="traceview"
 LIBS="$LIBS $TV_LIBS"
 CP_FILES="$CP_FILES @:$TV_DEST $TV_LIBS"
 
+
 ### MONITOR ###
 
 MONITOR_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.monitor/libs"
@@ -196,11 +199,13 @@ MONITOR_LIBS="sdkuilib"
 LIBS="$LIBS $MONITOR_LIBS"
 CP_FILES="$CP_FILES @:$MONITOR_DEST $MONITOR_LIBS"
 
+
 ### SDKMANAGER ###
 
-SDMAN_LIBS="swtmenubar"
+SDKMAN_LIBS="swtmenubar"
 
 LIBS="$LIBS $SDKMAN_LIBS"
+
 
 ### GL DEBUGGER ###
 

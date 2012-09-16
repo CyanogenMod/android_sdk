@@ -26,16 +26,17 @@ LOCAL_JAR_MANIFEST := manifest.txt
 #   sdkmanager/sdklib/manifest.txt
 #   sdkmanager/app/etc/android.bat
 LOCAL_JAVA_LIBRARIES := \
-        layoutlib_api \
         common \
-        guava-tools \
+        commons-codec-1.4 \
         commons-compress-1.0 \
+        commons-logging-1.1.1 \
+        dvlib \
+        guava-tools \
         httpclient-4.1.1 \
         httpcore-4.1 \
         httpmime-4.1.1 \
-        commons-logging-1.1.1 \
-        commons-codec-1.4 \
-        dvlib
+        mkidentity-prebuilt \
+        layoutlib_api
 
 LOCAL_MODULE := sdklib
 

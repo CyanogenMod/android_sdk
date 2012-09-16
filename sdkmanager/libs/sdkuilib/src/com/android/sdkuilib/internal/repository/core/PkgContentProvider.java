@@ -22,6 +22,7 @@ import com.android.sdklib.internal.repository.packages.Package;
 import com.android.sdklib.internal.repository.sources.SdkSource;
 import com.android.sdkuilib.internal.repository.ui.PackagesPage;
 
+import org.eclipse.jface.viewers.IInputProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
@@ -33,10 +34,10 @@ import java.util.List;
  */
 public class PkgContentProvider implements ITreeContentProvider {
 
-    private final Viewer mViewer;
+    private final IInputProvider mViewer;
     private boolean mDisplayArchives;
 
-    public PkgContentProvider(Viewer viewer) {
+    public PkgContentProvider(IInputProvider viewer) {
         mViewer = viewer;
     }
 
@@ -139,7 +140,7 @@ public class PkgContentProvider implements ITreeContentProvider {
     }
 
     @Override
-    public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
+    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         // unused
     }
 

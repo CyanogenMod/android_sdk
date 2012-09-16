@@ -143,6 +143,14 @@ public class SdkManagerTestCase extends TestCase {
         AndroidLocation.resetFolder();
         File addonsDir = new File(sdkDir, SdkConstants.FD_ADDONS);
         addonsDir.mkdir();
+
+        File toolsDir = new File(sdkDir, SdkConstants.OS_SDK_TOOLS_FOLDER);
+        toolsDir.mkdir();
+        new File(toolsDir, SdkConstants.androidCmdName()).createNewFile();
+        new File(toolsDir, SdkConstants.FN_EMULATOR).createNewFile();
+
+        // TODO makePlatformTools with at least a source props
+
         File toolsLibEmuDir = new File(sdkDir, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + "emulator");
         toolsLibEmuDir.mkdirs();
         new File(toolsLibEmuDir, "snapshots.img").createNewFile();

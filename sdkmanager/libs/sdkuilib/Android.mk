@@ -25,13 +25,19 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 # (Note: there is no manifest.txt for sdkuilib.)
 LOCAL_JAVA_LIBRARIES := \
 	common \
-	sdklib \
-	layoutlib_api \
-	swtmenubar \
-	swt \
+	commons-codec-1.4 \
+	commons-compress-1.0 \
+	commons-logging-1.1.1 \
+	httpclient-4.1.1 \
+	httpcore-4.1 \
+	httpmime-4.1.1 \
 	org.eclipse.jface_3.6.2.M20110210-1200 \
 	org.eclipse.equinox.common_3.6.0.v20100503 \
-	org.eclipse.core.commands_3.6.0.I20100512-1500
+	org.eclipse.core.commands_3.6.0.I20100512-1500 \
+	sdklib \
+	layoutlib_api \
+	swt \
+	swtmenubar
 
 LOCAL_MODULE := sdkuilib
 

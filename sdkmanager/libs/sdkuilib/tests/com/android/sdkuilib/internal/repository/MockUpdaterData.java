@@ -25,6 +25,8 @@ import com.android.sdklib.internal.repository.MockEmptySdkManager;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.archives.ArchiveInstaller;
 import com.android.sdklib.internal.repository.archives.ArchiveReplacement;
+import com.android.sdklib.internal.repository.sources.SdkSourceCategory;
+import com.android.sdklib.internal.repository.sources.SdkSources;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdkuilib.internal.repository.SettingsController.Settings;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -33,7 +35,6 @@ import com.android.utils.NullLogger;
 
 import org.eclipse.swt.graphics.Image;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -45,11 +46,28 @@ public class MockUpdaterData extends UpdaterData {
 
     private final List<ArchiveReplacement> mInstalled = new ArrayList<ArchiveReplacement>();
 
-    private DownloadCache mMockDownloadCache;
+    private DownloadCache mMockDownloadCache = new MockDownloadCache();
 
+    private final SdkSources mMockSdkSources = new SdkSources() {
+        @Override
+        public void loadUserAddons(ILogger log) {
+            // This source does not load user addons.
+            removeAll(SdkSourceCategory.USER_ADDONS);
+        };
+    };
+
+    /** Creates a {@link MockUpdaterData} using a {@link MockEmptySdkManager}. */
     public MockUpdaterData() {
         super(SDK_PATH, new MockLog());
 
+        setTaskFactory(new MockTaskFactory());
+        setImageFactory(new NullImageFactory());
+    }
+
+    /** Creates a {@link MockUpdaterData} using the given {@link SdkManager}. */
+    public MockUpdaterData(SdkManager sdkManager) {
+        super(sdkManager.getLocation(), new MockLog());
+        setSdkManager(sdkManager);
         setTaskFactory(new MockTaskFactory());
         setImageFactory(new NullImageFactory());
     }
@@ -75,9 +93,19 @@ public class MockUpdaterData extends UpdaterData {
         return createSettingsController(getSdkLog());
     }
 
+    /** Override original implementation to do nothing. */
     @Override
     public void reloadSdk() {
-        // bypass original implementation
+        // nop
+    }
+
+    /**
+     * Override original implementation to return a mock SdkSources that
+     * does not load user add-ons from the local .android/repository.cfg file.
+     */
+    @Override
+    public SdkSources getSources() {
+        return mMockSdkSources;
     }
 
     /** Returns a mock installer that simply records what would have been installed. */
@@ -98,23 +126,15 @@ public class MockUpdaterData extends UpdaterData {
         };
     }
 
-    /**
-     * Lazily initializes and returns a mock download cache that doesn't use the
-     * local disk and doesn't cache anything.
-     */
+    /** Returns a mock download cache. */
     @Override
     public DownloadCache getDownloadCache() {
-        if (mMockDownloadCache == null) {
-            mMockDownloadCache = new DownloadCache(DownloadCache.Strategy.DIRECT) {
-                @Override
-                protected File initCacheRoot() {
-                    // returns null, preventing the cache from using the default
-                    // $HOME/.android folder; this effectively disables the cache.
-                    return null;
-                }
-            };
-        }
         return mMockDownloadCache;
+    }
+
+    /** Overrides the mock download cache. */
+    public void setMockDownloadCache(DownloadCache mockDownloadCache) {
+        mMockDownloadCache = mockDownloadCache;
     }
 
     public void overrideSetting(String key, boolean boolValue) {
@@ -122,6 +142,7 @@ public class MockUpdaterData extends UpdaterData {
         assert sc instanceof MockSettingsController;
         ((MockSettingsController)sc).overrideSetting(key, boolValue);
     }
+
     //------------
 
     public static SettingsController createSettingsController(ILogger sdkLog) {

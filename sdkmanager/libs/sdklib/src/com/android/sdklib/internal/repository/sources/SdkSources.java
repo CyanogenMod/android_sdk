@@ -420,7 +420,8 @@ public class SdkSources {
                 try {
                     runnable.run();
                 } catch (Throwable ignore) {
-                    assert ignore == null : "A SdkSource.ChangeListener failed with an exception.";
+                    assert ignore == null :
+                        "A SdkSource.ChangeListener failed with an exception: " + ignore.toString();
                 }
             }
         }
