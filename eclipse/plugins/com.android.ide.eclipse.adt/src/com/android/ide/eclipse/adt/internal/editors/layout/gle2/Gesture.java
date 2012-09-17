@@ -96,8 +96,8 @@ public abstract class Gesture {
      *            otherwise 0.
      */
     public void begin(ControlPoint pos, int startMask) {
-        this.mStart = pos;
-        this.mStartMask = startMask;
+        mStart = pos;
+        mStartMask = startMask;
     }
 
     /**

@@ -65,7 +65,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
      */
     public ImageControl(@NonNull Composite parent, int style, @Nullable Image image) {
         super(parent, style | SWT.NO_FOCUS | SWT.DOUBLE_BUFFERED);
-        this.mImage = image;
+        mImage = image;
 
         addPaintListener(new PaintListener() {
             @Override
@@ -136,8 +136,8 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         mImage = null;
     }
 
-    public void setDisposeImage(boolean mDisposeImage) {
-        this.mDisposeImage = mDisposeImage;
+    public void setDisposeImage(boolean disposeImage) {
+        mDisposeImage = disposeImage;
     }
 
     public boolean getDisposeImage() {

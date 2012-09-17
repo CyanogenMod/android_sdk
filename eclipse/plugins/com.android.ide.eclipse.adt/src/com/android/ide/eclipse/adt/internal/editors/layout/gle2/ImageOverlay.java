@@ -91,9 +91,9 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      * @param vScale The vertical scale information.
      */
     public ImageOverlay(LayoutCanvas canvas, CanvasTransform hScale, CanvasTransform vScale) {
-        this.mCanvas = canvas;
-        this.mHScale = hScale;
-        this.mVScale = vScale;
+        mCanvas = canvas;
+        mHScale = hScale;
+        mVScale = vScale;
     }
 
     @Override

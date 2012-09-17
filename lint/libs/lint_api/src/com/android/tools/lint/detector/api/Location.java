@@ -56,9 +56,9 @@ public class Location {
      */
     protected Location(@NonNull File file, @Nullable Position start, @Nullable Position end) {
         super();
-        this.mFile = file;
-        this.mStart = start;
-        this.mEnd = end;
+        mFile = file;
+        mStart = start;
+        mEnd = end;
     }
 
     /**
@@ -113,7 +113,7 @@ public class Location {
      * @param secondary a secondary location associated with this location
      */
     public void setSecondary(@Nullable Location secondary) {
-        this.mSecondary = secondary;
+        mSecondary = secondary;
     }
 
     /**

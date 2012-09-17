@@ -69,8 +69,8 @@ public class HoverOverlay extends Overlay {
      */
     public HoverOverlay(LayoutCanvas canvas, CanvasTransform hScale, CanvasTransform vScale) {
         mCanvas = canvas;
-        this.mHScale = hScale;
-        this.mVScale = vScale;
+        mHScale = hScale;
+        mVScale = vScale;
     }
 
     @Override

@@ -46,9 +46,9 @@ public class DefaultPosition extends Position {
      * @param offset the offset, or -1 if unknown
      */
     public DefaultPosition(int line, int column, int offset) {
-        this.mLine = line;
-        this.mColumn = column;
-        this.mOffset = offset;
+        mLine = line;
+        mColumn = column;
+        mOffset = offset;
     }
 
     @Override

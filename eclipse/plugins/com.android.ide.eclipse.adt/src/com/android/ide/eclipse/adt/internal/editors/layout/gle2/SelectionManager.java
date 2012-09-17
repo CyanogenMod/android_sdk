@@ -120,7 +120,7 @@ public class SelectionManager implements ISelectionProvider {
      * @param layoutCanvas The layout canvas to create a {@link SelectionManager} for.
      */
     public SelectionManager(LayoutCanvas layoutCanvas) {
-        this.mCanvas = layoutCanvas;
+        mCanvas = layoutCanvas;
     }
 
     @Override

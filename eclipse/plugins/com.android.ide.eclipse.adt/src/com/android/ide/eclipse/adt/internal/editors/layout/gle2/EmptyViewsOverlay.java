@@ -52,9 +52,9 @@ public class EmptyViewsOverlay extends Overlay {
             CanvasTransform hScale,
             CanvasTransform vScale) {
         super();
-        this.mViewHierarchy = viewHierarchy;
-        this.mHScale = hScale;
-        this.mVScale = vScale;
+        mViewHierarchy = viewHierarchy;
+        mHScale = hScale;
+        mVScale = vScale;
     }
 
     @Override

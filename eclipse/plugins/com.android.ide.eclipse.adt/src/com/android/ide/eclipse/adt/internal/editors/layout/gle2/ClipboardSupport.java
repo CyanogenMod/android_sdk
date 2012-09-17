@@ -65,7 +65,7 @@ public class ClipboardSupport {
      * @param parent The parent widget in the SWT hierarchy of the canvas.
      */
     public ClipboardSupport(LayoutCanvas canvas, Composite parent) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
 
         mClipboard = new Clipboard(parent.getDisplay());
     }

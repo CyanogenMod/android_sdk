@@ -115,7 +115,7 @@ public class MoveGesture extends DropGesture {
      * @param canvas The canvas to associate the {@link MoveGesture} with.
      */
     public MoveGesture(LayoutCanvas canvas) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
         mGlobalDragInfo = GlobalCanvasDragInfo.getInstance();
     }
 
