@@ -353,7 +353,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void savePreferences() {
-        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(GlTracePlugin.PLUGIN_ID);
+        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
         prefs.put(PREF_APP_PACKAGE, mAppPackageToTrace);
         prefs.put(PREF_ACTIVITY, mActivityToTrace);
         prefs.put(PREF_TRACEFILE, mTraceFilePath);
@@ -366,7 +366,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private void loadPreferences() {
-        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(GlTracePlugin.PLUGIN_ID);
+        IEclipsePreferences prefs = new InstanceScope().getNode(GlTracePlugin.PLUGIN_ID);
         mAppPackageToTrace = prefs.get(PREF_APP_PACKAGE, "");
         mActivityToTrace = prefs.get(PREF_ACTIVITY, "");
         mTraceFilePath = prefs.get(PREF_TRACEFILE, "");
