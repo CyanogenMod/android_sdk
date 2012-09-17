@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.annotations.NonNull;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.sdklib.IAndroidTarget;
@@ -26,7 +27,7 @@ import com.android.sdklib.IAndroidTarget;
  */
 public class AdtManifestMergeCallback implements ICallback {
     @Override
-    public int queryCodenameApiLevel(String codename) {
+    public int queryCodenameApiLevel(@NonNull String codename) {
         Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
             IAndroidTarget t = sdk.getTargetFromHashString(

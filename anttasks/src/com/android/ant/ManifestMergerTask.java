@@ -16,6 +16,7 @@
 
 package com.android.ant;
 
+import com.android.annotations.NonNull;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
@@ -132,7 +133,7 @@ public class ManifestMergerTask extends SingleDependencyTask {
                     new ICallback() {
                         SdkManager mManager;
                         @Override
-                        public int queryCodenameApiLevel(String codename) {
+                        public int queryCodenameApiLevel(@NonNull String codename) {
                             if (mManager == null) {
                                 File sdkDir = TaskHelper.getSdkLocation(getProject());
                                 mManager = SdkManager.createManager(sdkDir.getPath(),
