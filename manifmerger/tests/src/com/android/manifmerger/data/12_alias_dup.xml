@@ -65,11 +65,11 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
-    <application
-        android:label="@string/lib_name1"
-        android:name="com.example.Library1" >
+    <application android:label="@string/lib_name1" >
 
         <!-- Same as 1 in main -->
         <activity-alias
@@ -109,11 +109,11 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
-    <application
-        android:label="@string/lib_name2"
-        android:name="com.example.Library2" >
+    <application android:label="@string/lib_name2" >
 
         <!-- Conflicts with 3 from lib1 -->
         <activity-alias

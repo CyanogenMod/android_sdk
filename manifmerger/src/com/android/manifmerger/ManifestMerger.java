@@ -51,7 +51,11 @@ import javax.xml.xpath.XPathExpressionException;
  * <pre> Merge operations:
  * - root manifest: attributes ignored, warn if defined.
  * - application:
- *      {@code @attributes}: ignored in libs
+ *      G- {@code @attributes}: most attributes are ignored in libs
+ *          except: application:name if defined, it must match.
+ *          except: application:agentBackup if defined, it must match.
+ *          (these represent class names and we don't want a lib to assume their app or backup
+ *           classes are being used when that will never be the case.)
  *      C- activity / activity-alias / service / receiver / provider
  *          => Merge as-is. Error if exists in the destination (same {@code @name})
  *             unless the definitions are exactly the same.
@@ -94,7 +98,7 @@ import javax.xml.xpath.XPathExpressionException;
  * B = Do not merge but if defined in both must match equally.
  * C = Must not exist in dest or be exactly the same (key is the {@code @name} attribute).
  * D = Add new or merge with same key {@code @name}, adjust {@code @required} true>false.
- * E, F = Custom strategies; see above.
+ * E, F, G = Custom strategies; see above.
  *
  * What happens when merging libraries with conflicting information?
  * Say for example a main manifest has a minSdkVersion of 3, whereas libraries have
@@ -127,6 +131,21 @@ public class ManifestMerger {
     private String NS_URI = SdkConstants.NS_RESOURCES;
     private String NS_PREFIX = AndroidXPathFactory.DEFAULT_NS_PREFIX;
     private int destMinSdk;
+
+    /**
+     * Sets of element/attribute that need to be treated as class names.
+     * The attribute name must be the local name for the Android namespace.
+     * For example "application/name" maps to &lt;application android:name=...&gt;.
+     */
+    private static final String[] sClassAttributes = {
+            "application/name",
+            "application/backupAgent",
+            "activity/name",
+            "receiver/name",
+            "service/name",
+            "provider/name",
+            "instrumentation/name"
+    };
 
     /**
      * Creates a new {@link ManifestMerger}.
@@ -172,9 +191,12 @@ public class ManifestMerger {
      * <p/>
      * This does NOT stop on errors, in an attempt to accumulate as much
      * info as possible to return to the user.
+     * <p/>
+     * The method might modify the input XML document in-place for its own processing.
      *
      * @param mainDoc The document to merge into. Will be modified in-place.
      * @param libraryFiles The library manifest paths to read. Must not be null.
+     *                     These will be modified in-place.
      * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     public boolean process(Document mainDoc, File[] libraryFiles) {
@@ -186,6 +208,7 @@ public class ManifestMerger {
         String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
+        expandFqcns(mainDoc);
         for (File libFile : libraryFiles) {
             Document libDoc = XmlUtils.parseDocument(libFile, mLog);
             if (libDoc == null || !mergeLibDoc(libDoc)) {
@@ -203,9 +226,12 @@ public class ManifestMerger {
      * <p/>
      * This does NOT stop on errors, in an attempt to accumulate as much
      * info as possible to return to the user.
+     * <p/>
+     * The method might modify the input XML documents in-place for its own processing.
      *
      * @param mainDoc The document to merge into. Will be modified in-place.
      * @param libraryDocs The library manifest documents to merge in. Must not be null.
+     *                    These will be modified in-place.
      * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
     public boolean process(@NonNull Document mainDoc, @NonNull Document... libraryDocs) {
@@ -217,6 +243,7 @@ public class ManifestMerger {
         String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
+        expandFqcns(mainDoc);
         for (Document libDoc : libraryDocs) {
             XmlUtils.decorateDocument(libDoc, IMergerLog.LIBRARY);
             if (!mergeLibDoc(libDoc)) {
@@ -241,6 +268,11 @@ public class ManifestMerger {
     private boolean mergeLibDoc(Document libDoc) {
 
         boolean err = false;
+
+        expandFqcns(libDoc);
+
+        // Strategy G (check <application> is compatible)
+        err |= !checkApplication(libDoc);
 
         // Strategy B
         err |= !doNotMergeCheckEqual("/manifest/uses-configuration",  libDoc);     //$NON-NLS-1$
@@ -316,6 +348,115 @@ public class ManifestMerger {
         err |= !checkGlEsVersion(libDoc);
 
         return !err;
+    }
+
+    /**
+     * Expand all possible class names attributes in the given document.
+     * <p/>
+     * Some manifest attributes represent class names. These can be specified as fully
+     * qualified class names or use a short notation consisting of just the terminal
+     * class simple name or a dot followed by a partial class name. Unfortunately this
+     * makes textual comparison of the attributes impossible. To simplify this, we can
+     * modify the document to fully expand all these class names. The list of elements
+     * and attributes to process is listed by {@link #sClassAttributes} and the expansion
+     * simply consists of appending the manifest' package if defined.
+     *
+     * @param doc The document in which to expand potential FQCNs.
+     */
+    private void expandFqcns(Document doc) {
+        // Find the package attribute of the manifest.
+        String pkg = null;
+        Element manifest = findFirstElement(doc, "/manifest");
+        if (manifest != null) {
+            pkg = manifest.getAttribute("package");
+        }
+
+        if (pkg == null || pkg.length() == 0) {
+            // We can't adjust FQCNs if we don't know the root package name.
+            // It's not a proper manifest if this is missing anyway.
+            mLog.error(Severity.WARNING,
+                       xmlFileAndLine(manifest),
+                       "Missing 'package' attribute in manifest.");
+            return;
+        }
+
+        for (String elementAttr : sClassAttributes) {
+            String[] names = elementAttr.split("/");
+            if (names.length != 2) {
+                continue;
+            }
+            String elemName = names[0];
+            String attrName = names[1];
+            NodeList elements = doc.getElementsByTagName(elemName);
+            for (int i = 0; i < elements.getLength(); i++) {
+                Node elem = elements.item(i);
+                if (elem instanceof Element) {
+                    Attr attr = ((Element) elem).getAttributeNodeNS(NS_URI, attrName);
+                    if (attr != null) {
+                        String value = attr.getNodeValue();
+
+                        // We know it's a shortened FQCN if it starts with a dot
+                        // or does not contain any dot.
+                        if (value != null && value.length() > 0 &&
+                                (value.indexOf('.') == -1 || value.charAt(0) == '.')) {
+                            if (value.charAt(0) == '.') {
+                                value = pkg + value;
+                            } else {
+                                value = pkg + '.' + value;
+                            }
+                            attr.setNodeValue(value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks (but does not merge) the application attributes using the following rules:
+     * <pre>
+     * - {@code @name}: Ignore if empty. Warning if its expanded FQCN doesn't match the main doc.
+     * - {@code @backupAgent}:  Ignore if empty. Warning if its expanded FQCN doesn't match main doc.
+     * - All other attributes are ignored.
+     * </pre>
+     * The name and backupAgent represent classes and the merger will warn since if a lib has
+     * these defined they will never be used anyway.
+     * @param libDoc The library document to merge from. Must not be null.
+     * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
+     */
+    private boolean checkApplication(Document libDoc) {
+
+        Element mainApp = findFirstElement(mMainDoc, "/manifest/application");  //$NON-NLS-1$
+        Element libApp  = findFirstElement(libDoc,   "/manifest/application");  //$NON-NLS-1$
+
+        // A manifest does not necessarily define an application.
+        // If the lib has none, there's nothing to check for.
+        if (libApp == null) {
+            return true;
+        }
+
+        for (String attrName : new String[] { "name", "backupAgent" }) {
+            String libValue  = getAttributeValue(libApp, attrName);
+            if (libValue == null || libValue.length() == 0) {
+                // Nothing to do if the attribute is not defined in the lib.
+                continue;
+            }
+            // The main doc does not have to have an application node.
+            String mainValue = mainApp == null ? "" : getAttributeValue(mainApp, attrName);
+            if (!libValue.equals(mainValue)) {
+                mLog.conflict(Severity.WARNING,
+                        xmlFileAndLine(mainApp),
+                        xmlFileAndLine(libApp),
+                        mainApp == null ?
+                            "Library has <application android:%1$s='%3$s'> but main manifest has no application element." :
+                            "Main manifest has <application android:%1$s='%2$s'> but library uses %1$s='%3$s'.",
+                        attrName,
+                        mainValue,
+                        libValue);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -401,8 +542,7 @@ public class ManifestMerger {
         boolean success = true;
 
         nextSource: for (Element src : findElements(libDoc, path)) {
-            Attr attr = src.getAttributeNodeNS(NS_URI, keyAttr);
-            String name = attr == null ? "" : attr.getNodeValue();  //$NON-NLS-1$
+            String name = getAttributeValue(src, keyAttr);
             if (name.length() == 0) {
                 mLog.error(Severity.ERROR,
                         xmlFileAndLine(src),
@@ -453,6 +593,20 @@ public class ManifestMerger {
         }
 
         return success;
+    }
+
+    /**
+     * Returns the value of the given "android:attribute" in the given element.
+     *
+     * @param element The non-null element where to extract the attribute.
+     * @param attrName The local name of the attribute.
+     *                 It must use the {@link #NS_URI} but no prefix should be specified here.
+     * @return The value of the attribute or a non-null empty string if not found.
+     */
+    private String getAttributeValue(Element element, String attrName) {
+        Attr attr = element.getAttributeNodeNS(NS_URI, attrName);
+        String value = attr == null ? "" : attr.getNodeValue();  //$NON-NLS-1$
+        return value;
     }
 
     /**

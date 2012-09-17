@@ -22,7 +22,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
     <!-- This app requires cupcake. -->
     <uses-sdk android:minSdkVersion="3" />
@@ -32,7 +34,9 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
     <!-- This only defines a max-sdk, and we purposely ignore this attribute.
          It doesn't get merged and doesn't generate a conflict either.
@@ -46,7 +50,9 @@
 
 @lib3
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib3">
 
     <!-- Lib3 redefines the same requirements as lib1.
     -->

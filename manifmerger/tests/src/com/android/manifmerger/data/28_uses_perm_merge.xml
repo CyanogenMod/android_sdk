@@ -57,7 +57,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
     <!-- Same permissions as main manifest -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -74,7 +76,9 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
     <!-- Redefine one permission from main manifest -->
     <uses-permission android:name="android.permission.INTERNET" />
