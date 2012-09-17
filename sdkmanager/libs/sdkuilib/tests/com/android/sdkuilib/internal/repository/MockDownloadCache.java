@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.internal.repository.CanceledByUserException;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -156,9 +158,9 @@ public class MockDownloadCache extends DownloadCache {
      */
     @Override
     public Pair<InputStream, HttpResponse> openDirectUrl(
-            String urlString,
-            Header[] headers,
-            ITaskMonitor monitor) throws IOException, CanceledByUserException {
+            @NonNull String urlString,
+            @Nullable Header[] headers,
+            @NonNull ITaskMonitor monitor) throws IOException, CanceledByUserException {
 
         synchronized (mDirectHits) {
             Integer count = mDirectHits.get(urlString);

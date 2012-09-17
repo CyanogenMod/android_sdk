@@ -379,7 +379,7 @@ abstract class ManifestMergerTestCase extends TestCase {
         IMergerLog mergerLog = MergerLog.wrapSdkLog(log);
         ManifestMerger merger = new ManifestMerger(mergerLog, new ICallback() {
             @Override
-            public int queryCodenameApiLevel(String codename) {
+            public int queryCodenameApiLevel(@NonNull String codename) {
                 if ("ApiCodename1".equals(codename)) {
                     return 1;
                 } else if ("ApiCodename10".equals(codename)) {
