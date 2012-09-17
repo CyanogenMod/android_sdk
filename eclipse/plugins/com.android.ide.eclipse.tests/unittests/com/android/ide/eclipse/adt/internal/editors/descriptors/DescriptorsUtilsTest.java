@@ -68,6 +68,8 @@ public class DescriptorsUtilsTest extends TestCase {
         assertEquals("SDK version", DescriptorsUtils.prettyAttributeUiName("sdkVersion"));
         assertEquals("IME action method",
                 DescriptorsUtils.prettyAttributeUiName("imeActionMethod"));
+        assertEquals("VM safe mode", DescriptorsUtils.prettyAttributeUiName("vmSafeMode"));
+        assertEquals("UI options", DescriptorsUtils.prettyAttributeUiName("uiOptions"));
     }
 
     public void testCapitalize() {
@@ -96,6 +98,8 @@ public class DescriptorsUtilsTest extends TestCase {
         assertEquals("URI Permission", DescriptorsUtils.capitalize("uriPermission"));
         assertEquals("SDK Version", DescriptorsUtils.capitalize("sdkVersion"));
         assertEquals("Grant IME", DescriptorsUtils.capitalize("GrantIme"));
+        assertEquals("VM Safe Mode", DescriptorsUtils.capitalize("vmSafeMode"));
+        assertEquals("UI Options", DescriptorsUtils.capitalize("uiOptions"));
     }
 
     public void testFormatTooltip() {

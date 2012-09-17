@@ -294,18 +294,7 @@ public final class DescriptorsUtils {
 
         name = buf.toString();
 
-        // Replace these acronyms by upper-case versions
-        // - (?<=^| ) means "if preceded by a space or beginning of string"
-        // - (?=$| )  means "if followed by a space or end of string"
-        if (name.contains("sdk") || name.startsWith("Sdk")) {
-            name = name.replaceAll("(?<=^| )[sS]dk(?=$| )", "SDK");
-        }
-        if (name.contains("uri") || name.startsWith("Uri")) {
-            name = name.replaceAll("(?<=^| )[uU]ri(?=$| )", "URI");
-        }
-        if (name.contains("ime") || name.startsWith("Ime")) {
-            name = name.replaceAll("(?<=^| )[iI]me(?=$| )", "IME");
-        }
+        name = replaceAcronyms(name);
 
         return name;
     }
@@ -354,19 +343,30 @@ public final class DescriptorsUtils {
 
         name = buf.toString();
 
+        name = replaceAcronyms(name);
+
+        return name;
+    }
+
+    private static String replaceAcronyms(String name) {
         // Replace these acronyms by upper-case versions
         // - (?<=^| ) means "if preceded by a space or beginning of string"
         // - (?=$| )  means "if followed by a space or end of string"
-        if (name.contains("Sdk")) {
-            name = name.replaceAll("(?<=^| )Sdk(?=$| )", "SDK");
+        if (name.contains("sdk") || name.contains("Sdk")) {
+            name = name.replaceAll("(?<=^| )[sS]dk(?=$| )", "SDK");
         }
-        if (name.contains("Uri")) {
-            name = name.replaceAll("(?<=^| )Uri(?=$| )", "URI");
+        if (name.contains("uri") || name.contains("Uri")) {
+            name = name.replaceAll("(?<=^| )[uU]ri(?=$| )", "URI");
         }
-        if (name.contains("Ime")) {
-            name = name.replaceAll("(?<=^| )Ime(?=$| )", "IME");
+        if (name.contains("ime") || name.contains("Ime")) {
+            name = name.replaceAll("(?<=^| )[iI]me(?=$| )", "IME");
         }
-
+        if (name.contains("vm") || name.contains("Vm")) {
+            name = name.replaceAll("(?<=^| )[vV]m(?=$| )", "VM");
+        }
+        if (name.contains("ui") || name.contains("Ui")) {
+            name = name.replaceAll("(?<=^| )[uU]i(?=$| )", "UI");
+        }
         return name;
     }
 
