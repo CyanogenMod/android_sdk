@@ -36,7 +36,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         // a legacy armeabi system image (this is not a separate system image package)
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                "[Android SDK Tools, revision 0, " +
+                 "SDK Platform Android 0.0, API 0, revision 1, " +
                  "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
@@ -63,7 +64,7 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                         monitor)));
 
         assertEquals(
-                "[]",
+                "[Android SDK Tools, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(),
                         sdkman,
                         LocalSdkParser.PARSE_TOOLS,
@@ -82,7 +83,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         t = sdkman.getTargets()[0];
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                "[Android SDK Tools, revision 0, " +
+                 "SDK Platform Android 0.0, API 0, revision 1, " +
                  "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
@@ -98,7 +100,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         sdkman.reloadSdk(getLog());
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                "[Android SDK Tools, revision 0, " +
+                 "SDK Platform Android 0.0, API 0, revision 1, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
                  "ARM EABI System Image, Android API 0, revision 0, " +
                  "Sources for Android SDK, API 0, revision 0]",
@@ -112,7 +115,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                 sdkman, t, LocationType.IN_SYSTEM_IMAGE, SdkConstants.ABI_INTEL_ATOM));
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                "[Android SDK Tools, revision 0, " +
+                 "SDK Platform Android 0.0, API 0, revision 1, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
                  "ARM EABI System Image, Android API 0, revision 0, " +
                  "Sources for Android SDK, API 0, revision 0, " +
@@ -120,7 +124,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                "[Android SDK Tools, revision 0, " +
+                 "SDK Platform Android 0.0, API 0, revision 1, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
                  "ARM EABI System Image, Android API 0, revision 0, " +
                  "Sources for Android SDK, API 0, revision 0, " +
