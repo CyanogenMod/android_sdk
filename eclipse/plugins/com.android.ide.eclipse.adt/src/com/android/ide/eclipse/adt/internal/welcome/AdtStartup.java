@@ -31,10 +31,12 @@ import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWindowListener;
 import org.eclipse.ui.IWorkbench;
@@ -69,6 +71,10 @@ public class AdtStartup implements IStartup, IWindowListener {
 
     @Override
     public void earlyStartup() {
+        if (InstallDetails.isAndroidIdePackage()) {
+            useBundledSdk();
+        }
+
         if (isFirstTime()) {
             showWelcomeWizard();
             // Usage statistics are sent after the wizard has run asynchronously (provided the
@@ -80,6 +86,32 @@ public class AdtStartup implements IStartup, IWindowListener {
         initializeWindowCoordinator();
 
         AdtPlugin.getDefault().workbenchStarted();
+    }
+
+    private void useBundledSdk() {
+        String osSdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
+
+        // sdk path is already set
+        if (osSdkFolder != null && osSdkFolder.length() > 0) {
+            return;
+        }
+
+        // The Android IDE bundle is structured as follows:
+        // root
+        //    |--eclipse
+        //    |--sdk
+        // So use the SDK folder that is
+        Location install = Platform.getInstallLocation();
+        if (install != null && install.getURL() != null) {
+            String toolsFolder = new File(install.getURL().getFile()).getParent();
+            if (toolsFolder != null) {
+                String osSdkPath = toolsFolder + File.separator + "sdk";
+                if (AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
+                                new SdkValidator())) {
+                    AdtPrefs.getPrefs().setSdkLocation(new File(osSdkPath));
+                }
+            }
+        }
     }
 
     private boolean isFirstTime() {
@@ -112,22 +144,8 @@ public class AdtStartup implements IStartup, IWindowListener {
 
                 if (ok) {
                     // Verify that the SDK is valid
-                    ok = AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
-                            new AdtPlugin.CheckSdkErrorHandler() {
-                        @Override
-                        public boolean handleError(
-                                CheckSdkErrorHandler.Solution solution,
-                                String message) {
-                            return false;
-                        }
-
-                        @Override
-                        public boolean handleWarning(
-                                CheckSdkErrorHandler.Solution  solution,
-                                String message) {
-                            return true;
-                        }
-                    });
+                    ok = AdtPlugin.getDefault().checkSdkLocationAndId(
+                            osSdkPath, new SdkValidator());
                     if (ok) {
                         // Yes, we've seen an SDK location before and we can use it again,
                         // no need to pester the user with the welcome wizard.
@@ -142,6 +160,22 @@ public class AdtStartup implements IStartup, IWindowListener {
 
         // Check whether we've run this wizard before.
         return !mStore.isAdtUsed();
+    }
+
+    private static class SdkValidator extends AdtPlugin.CheckSdkErrorHandler {
+        @Override
+        public boolean handleError(
+                CheckSdkErrorHandler.Solution solution,
+                String message) {
+            return false;
+        }
+
+        @Override
+        public boolean handleWarning(
+                CheckSdkErrorHandler.Solution  solution,
+                String message) {
+            return true;
+        }
     }
 
     private String getSdkPathFromWindowsRegistry() {
