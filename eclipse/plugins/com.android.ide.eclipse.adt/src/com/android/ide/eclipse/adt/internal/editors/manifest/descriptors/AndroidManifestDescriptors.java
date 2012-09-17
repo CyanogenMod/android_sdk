@@ -197,14 +197,18 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         overrides.put("action,category,uses-permission/" + ANDROID_NAME_ATTR,       //$NON-NLS-1$
                                             ListAttributeDescriptor.CREATOR);
 
-        overrides.put("application/" + ANDROID_NAME_ATTR,                           //$NON-NLS-1$
-                                            ApplicationAttributeDescriptor.CREATOR);
-
-        overrideClassName(overrides, "activity", SdkConstants.CLASS_ACTIVITY);           //$NON-NLS-1$
-        overrideClassName(overrides, "receiver", SdkConstants.CLASS_BROADCASTRECEIVER);  //$NON-NLS-1$
-        overrideClassName(overrides, "service",  SdkConstants.CLASS_SERVICE);            //$NON-NLS-1$
-        overrideClassName(overrides, "provider", SdkConstants.CLASS_CONTENTPROVIDER);    //$NON-NLS-1$
-        overrideClassName(overrides, "instrumentation", SdkConstants.CLASS_INSTRUMENTATION);    //$NON-NLS-1$
+        overrideClassName(overrides, "application",                                    //$NON-NLS-1$
+                                     SdkConstants.CLASS_APPLICATION,
+                                     false /*mandatory*/);
+        overrideClassName(overrides, "application/backupAgent",                        //$NON-NLS-1$
+                                     "android.app.backup.BackupAgent",                 //$NON-NLS-1$
+                                     false /*mandatory*/);
+        overrideClassName(overrides, "activity", SdkConstants.CLASS_ACTIVITY);         //$NON-NLS-1$
+        overrideClassName(overrides, "receiver", SdkConstants.CLASS_BROADCASTRECEIVER);//$NON-NLS-1$
+        overrideClassName(overrides, "service",  SdkConstants.CLASS_SERVICE);          //$NON-NLS-1$
+        overrideClassName(overrides, "provider", SdkConstants.CLASS_CONTENTPROVIDER);  //$NON-NLS-1$
+        overrideClassName(overrides, "instrumentation",
+                                                 SdkConstants.CLASS_INSTRUMENTATION);  //$NON-NLS-1$
 
         // -- list element nodes already created --
         // These elements are referenced by already opened editors, so we want to update them
@@ -235,18 +239,52 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 SdkConstants.ANDROID_NS_NAME, SdkConstants.ANDROID_URI);
         insertAttribute(MANIFEST_ELEMENT, xmlns);
 
+        /*
+         *
+         *
+         */
         assert sanityCheck(manifestMap, MANIFEST_ELEMENT);
     }
 
     /**
-     * Sets up an attribute override for ANDROID_NAME_ATTR using a ClassAttributeDescriptor
+     * Sets up a mandatory attribute override using a ClassAttributeDescriptor
      * with the specified class name.
+     *
+     * @param overrides The current map of overrides.
+     * @param elementName The element name to override, e.g. "application".
+     *  If this name does NOT have a slash (/), the ANDROID_NAME_ATTR attribute will be overriden.
+     *  Otherwise, if it contains a (/) the format is "element/attribute", for example
+     *  "application/name" vs "application/backupAgent".
+     * @param className The fully qualified name of the base class of the attribute.
      */
     private static void overrideClassName(
             Map<String, ITextAttributeCreator> overrides,
             String elementName,
             final String className) {
-        overrides.put(elementName + "/" + ANDROID_NAME_ATTR,
+        overrideClassName(overrides, elementName, className, true);
+    }
+
+    /**
+     * Sets up an attribute override using a ClassAttributeDescriptor
+     * with the specified class name.
+     *
+     * @param overrides The current map of overrides.
+     * @param elementName The element name to override, e.g. "application".
+     *  If this name does NOT have a slash (/), the ANDROID_NAME_ATTR attribute will be overriden.
+     *  Otherwise, if it contains a (/) the format is "element/attribute", for example
+     *  "application/name" vs "application/backupAgent".
+     * @param className The fully qualified name of the base class of the attribute.
+     * @param mandatory True if this attribute is mandatory, false if optional.
+     */
+    private static void overrideClassName(
+            Map<String, ITextAttributeCreator> overrides,
+            String elementName,
+            final String className,
+            final boolean mandatory) {
+        if (elementName.indexOf('/') == -1) {
+            elementName = elementName + '/' + ANDROID_NAME_ATTR;
+        }
+        overrides.put(elementName,
                 new ITextAttributeCreator() {
             @Override
             public TextAttributeDescriptor create(String xmlName, String nsUri,
@@ -262,7 +300,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             xmlName,
                             nsUri,
                             attrInfo,
-                            true /*mandatory */,
+                            mandatory,
                             true /*defaultToProjectOnly*/);
                 } else if (SdkConstants.CLASS_BROADCASTRECEIVER.equals(className)) {
                     return new ClassAttributeDescriptor(
@@ -271,7 +309,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             xmlName,
                             nsUri,
                             attrInfo,
-                            true /*mandatory */,
+                            mandatory,
                             true /*defaultToProjectOnly*/);
                 } else if (SdkConstants.CLASS_INSTRUMENTATION.equals(className)) {
                     return new ClassAttributeDescriptor(
@@ -280,7 +318,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             xmlName,
                             nsUri,
                             attrInfo,
-                            true /*mandatory */,
+                            mandatory,
                             false /*defaultToProjectOnly*/);
                 } else {
                     return new ClassAttributeDescriptor(
@@ -288,7 +326,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                             xmlName,
                             nsUri,
                             attrInfo,
-                            true /*mandatory */);
+                            mandatory);
                 }
             }
         });
