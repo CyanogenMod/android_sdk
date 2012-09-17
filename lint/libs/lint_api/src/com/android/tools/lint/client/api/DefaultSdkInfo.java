@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ABS_LIST_VIEW;
 import static com.android.SdkConstants.ABS_SEEK_BAR;
 import static com.android.SdkConstants.ABS_SPINNER;
 import static com.android.SdkConstants.ADAPTER_VIEW;
+import static com.android.SdkConstants.AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.CHECKED_TEXT_VIEW;
 import static com.android.SdkConstants.CHECK_BOX;
@@ -35,6 +36,7 @@ import static com.android.SdkConstants.IMAGE_BUTTON;
 import static com.android.SdkConstants.IMAGE_VIEW;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.MULTI_AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.PROGRESS_BAR;
 import static com.android.SdkConstants.RADIO_BUTTON;
 import static com.android.SdkConstants.RADIO_GROUP;
@@ -191,6 +193,8 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(SCROLL_VIEW, FRAME_LAYOUT);
         PARENTS.put(GRID_VIEW, ABS_LIST_VIEW);
         PARENTS.put(WEB_VIEW, ABSOLUTE_LAYOUT);
+        PARENTS.put(AUTO_COMPLETE_TEXT_VIEW, EDIT_TEXT);
+        PARENTS.put(MULTI_AUTO_COMPLETE_TEXT_VIEW, AUTO_COMPLETE_TEXT_VIEW);
 
         PARENTS.put("CheckedTextView", TEXT_VIEW);        //$NON-NLS-1$
         PARENTS.put("MediaController", FRAME_LAYOUT);     //$NON-NLS-1$
@@ -207,12 +211,9 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put("TimePicker", FRAME_LAYOUT);          //$NON-NLS-1$
         PARENTS.put("VideoView", SURFACE_VIEW);           //$NON-NLS-1$
         PARENTS.put("ZoomButton", IMAGE_BUTTON);          //$NON-NLS-1$
-        PARENTS.put("AutoCompleteTextView", EDIT_TEXT);   //$NON-NLS-1$
         PARENTS.put("RatingBar", ABS_SEEK_BAR);           //$NON-NLS-1$
         PARENTS.put("ViewFlipper", VIEW_ANIMATOR);        //$NON-NLS-1$
         PARENTS.put("NumberPicker", LINEAR_LAYOUT);       //$NON-NLS-1$
-        PARENTS.put("MultiAutoCompleteTextView",          //$NON-NLS-1$
-                "AutoCompleteTextView");                  //$NON-NLS-1$
 
         assert PARENTS.size() <= CLASS_COUNT : PARENTS.size();
 

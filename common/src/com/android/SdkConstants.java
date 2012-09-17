@@ -666,6 +666,8 @@ public final class SdkConstants {
     public static final String VIEW_SWITCHER = "ViewSwitcher";         //$NON-NLS-1$
     public static final String EXPANDABLE_LIST_VIEW = "ExpandableListView";    //$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
+    public static final String MULTI_AUTO_COMPLETE_TEXT_VIEW = "MultiAutoCompleteTextView"; //$NON-NLS-1$
+    public static final String AUTO_COMPLETE_TEXT_VIEW = "AutoCompleteTextView"; //$NON-NLS-1$
 
     // Tags: Drawables
     public static final String TAG_BITMAP = "bitmap";                  //$NON-NLS-1$
@@ -721,6 +723,7 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT = "layout";                 //$NON-NLS-1$
     public static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
+    public static final String ATTR_LABEL_FOR = "labelFor";            //$NON-NLS-1$
     public static final String ATTR_BASELINE_ALIGNED = "baselineAligned";       //$NON-NLS-1$
     public static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
     public static final String ATTR_IME_ACTION_LABEL = "imeActionLabel";        //$NON-NLS-1$
