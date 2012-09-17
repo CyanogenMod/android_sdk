@@ -35,7 +35,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferen
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -304,7 +304,7 @@ public abstract class VisualRefactoring extends Refactoring {
 
         try {
             // Duplicate the current state into the newly created file
-            QualifiedName qname = ConfigurationComposite.NAME_CONFIG_STATE;
+            QualifiedName qname = ConfigurationChooser.NAME_CONFIG_STATE;
             String state = AdtPlugin.getFileProperty(leavingFile, qname);
 
             // TODO: Look for a ".NoTitleBar.Fullscreen" theme version of the current

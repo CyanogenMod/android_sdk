@@ -67,6 +67,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_ATTRIBUTE_SORT = AdtPlugin.PLUGIN_ID + ".attrSort"; //$NON-NLS-1$
     public final static String PREFS_LINT_SEVERITIES = AdtPlugin.PLUGIN_ID + ".lintSeverities"; //$NON-NLS-1$
     public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
+    public final static String PREFS_SHARED_LAYOUT_EDITOR = AdtPlugin.PLUGIN_ID + ".sharedLayoutEditor"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -97,6 +98,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mLintOnSave;
     private boolean mLintOnExport;
     private AttributeSortOrder mAttributeSort;
+    private boolean mSharedLayoutEditor;
 
     public static enum BuildVerbosity {
         /** Build verbosity "Always". Those messages are always displayed, even in silent mode */
@@ -246,6 +248,11 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         if (property == null || PREFS_LINT_ON_EXPORT.equals(property)) {
             mLintOnExport = mStore.getBoolean(PREFS_LINT_ON_EXPORT);
         }
+
+        if (property == null || PREFS_SHARED_LAYOUT_EDITOR.equals(property)) {
+            mSharedLayoutEditor = mStore.getBoolean(PREFS_SHARED_LAYOUT_EDITOR);
+        }
+
     }
 
     /**
@@ -375,6 +382,32 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setValue(PREFS_LINT_ON_EXPORT, on);
     }
 
+    /**
+     * Returns whether the layout editor is sharing a single editor for all variations
+     * of a single resource. The default is false.
+     *
+     * @return true if the editor should be shared
+     */
+    public boolean isSharedLayoutEditor() {
+        return mSharedLayoutEditor;
+    }
+
+    /**
+     * Sets whether the layout editor should share a single editor for all variations
+     * of a single resource
+     *
+     * @param on if true, use a single editor
+     */
+    public void setSharedLayoutEditor(boolean on) {
+        mSharedLayoutEditor = on;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        store.setValue(PREFS_SHARED_LAYOUT_EDITOR, on);
+
+        // TODO: If enabling a shared editor, go and close all editors that are aliasing
+        // the same resource except for one of them.
+    }
+
+
     public boolean getBuildForceErrorOnNativeLibInJar() {
         return mBuildForceErrorOnNativeLibInJar;
     }
@@ -457,6 +490,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         //store.setDefault(PREFS_USE_ECLIPSE_INDENT, false);
         //store.setDefault(PREVS_REMOVE_EMPTY_LINES, false);
         //store.setDefault(PREFS_FORMAT_ON_SAVE, false);
+        //store.setDefault(PREFS_SHARED_LAYOUT_EDITOR, false);
 
         try {
             store.setDefault(PREFS_DEFAULT_DEBUG_KEYSTORE,

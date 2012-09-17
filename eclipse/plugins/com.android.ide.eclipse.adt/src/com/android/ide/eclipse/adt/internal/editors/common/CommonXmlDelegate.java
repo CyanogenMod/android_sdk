@@ -225,4 +225,14 @@ public abstract class CommonXmlDelegate {
     /** Called after an editor has been deactivated */
     public void delegateDeactivated() {
     }
+
+    /**
+     * Returns the name of the editor to be shown in the editor tab etc. Return
+     * null to keep the default.
+     *
+     * @return the part name, or null to use the default
+     */
+    public String delegateGetPartName() {
+        return null;
+    }
 }

@@ -88,7 +88,6 @@ import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -1964,15 +1963,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      */
     public static IEditorPart openFile(IFile file, IRegion region, boolean showEditorTab)
             throws PartInitException {
-        IWorkbench workbench = PlatformUI.getWorkbench();
-        if (workbench == null) {
-            return null;
-        }
-        IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
-        if (activeWorkbenchWindow == null) {
-            return null;
-        }
-        IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
+        IWorkbenchPage page = AdtUtils.getActiveWorkbenchPage();
         if (page == null) {
             return null;
         }

@@ -16,9 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.common;
 
+import static com.android.SdkConstants.FD_RES_LAYOUT;
+
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorMatchingStrategy;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
 
@@ -41,27 +44,29 @@ public class CommonMatchingStrategy implements IEditorMatchingStrategy {
             FileEditorInput fileInput = (FileEditorInput)input;
 
             // get the IFile object and check it's in one of the layout folders.
-            IFile iFile = fileInput.getFile();
-            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+            IFile file = fileInput.getFile();
+            if (file.getParent().getName().startsWith(FD_RES_LAYOUT)) {
+                ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
+                if (resFolder != null && resFolder.getType() == ResourceFolderType.LAYOUT
+                        && AdtPrefs.getPrefs().isSharedLayoutEditor()) {
+                    LayoutEditorMatchingStrategy m = new LayoutEditorMatchingStrategy();
+                    return m.matches(editorRef, fileInput);
+                }
+            }
 
-            if (resFolder != null && resFolder.getType() == ResourceFolderType.LAYOUT) {
-
-                LayoutEditorMatchingStrategy m = new LayoutEditorMatchingStrategy();
-                return m.matches(editorRef, fileInput);
-            } else {
-                // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
-                // is expensive so try exclude files that definitely don't match, such
-                // as those with the wrong extension or wrong file name
-                if (iFile.getName().equals(editorRef.getName()) &&
-                        editorRef.getId().equals(CommonXmlEditor.ID)) {
-                    try {
-                        return input.equals(editorRef.getEditorInput());
-                    } catch (PartInitException e) {
-                        AdtPlugin.log(e, null);
-                    }
+            // Per the IEditorMatchingStrategy documentation, editorRef.getEditorInput()
+            // is expensive so try exclude files that definitely don't match, such
+            // as those with the wrong extension or wrong file name
+            if (file.getName().equals(editorRef.getName()) &&
+                    editorRef.getId().equals(CommonXmlEditor.ID)) {
+                try {
+                    return input.equals(editorRef.getEditorInput());
+                } catch (PartInitException e) {
+                    AdtPlugin.log(e, null);
                 }
             }
         }
+
         return false;
     }
 }

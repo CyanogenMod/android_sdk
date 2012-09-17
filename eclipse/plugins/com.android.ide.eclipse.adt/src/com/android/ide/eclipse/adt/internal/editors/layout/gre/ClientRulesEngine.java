@@ -40,7 +40,7 @@ import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
@@ -531,15 +531,15 @@ class ClientRulesEngine implements IClientRulesEngine {
 
     @Override
     public int pxToDp(int px) {
-        ConfigurationComposite config = mRulesEngine.getEditor().getConfigurationComposite();
-        float dpi = config.getDensity().getDpiValue();
+        ConfigurationChooser chooser = mRulesEngine.getEditor().getConfigurationChooser();
+        float dpi = chooser.getConfiguration().getDensity().getDpiValue();
         return (int) (px * 160 / dpi);
     }
 
     @Override
     public int dpToPx(int dp) {
-        ConfigurationComposite config = mRulesEngine.getEditor().getConfigurationComposite();
-        float dpi = config.getDensity().getDpiValue();
+        ConfigurationChooser chooser = mRulesEngine.getEditor().getConfigurationChooser();
+        float dpi = chooser.getConfiguration().getDensity().getDpiValue();
         return (int) (dp * dpi / 160);
     }
 

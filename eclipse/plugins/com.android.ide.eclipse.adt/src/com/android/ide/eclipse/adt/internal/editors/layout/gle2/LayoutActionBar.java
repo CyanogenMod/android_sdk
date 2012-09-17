@@ -15,11 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 
-
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.RuleAction;
@@ -29,7 +27,8 @@ import com.android.ide.common.api.RuleAction.Toggle;
 import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
@@ -707,14 +706,14 @@ public class LayoutActionBar extends Composite {
 
     boolean computeAndSetRealScale(boolean redraw) {
         // compute average dpi of X and Y
-        ConfigurationComposite config = mEditor.getConfigurationComposite();
+        ConfigurationChooser chooser = mEditor.getConfigurationChooser();
+        Configuration config = chooser.getConfiguration();
         float dpi = (config.getXDpi() + config.getYDpi()) / 2.f;
 
         // get the monitor dpi
         float monitor = AdtPrefs.getPrefs().getMonitorDensity();
         if (monitor == 0.f) {
-            ResolutionChooserDialog dialog = new ResolutionChooserDialog(
-                    config.getShell());
+            ResolutionChooserDialog dialog = new ResolutionChooserDialog(chooser.getShell());
             if (dialog.open() == Window.OK) {
                 monitor = dialog.getDensity();
                 AdtPrefs.getPrefs().setMonitorDensity(monitor);

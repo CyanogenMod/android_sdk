@@ -287,4 +287,9 @@ public final class Device {
         hash = 31 * hash + mDefaultState.hashCode();
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return mName;
+    }
 }

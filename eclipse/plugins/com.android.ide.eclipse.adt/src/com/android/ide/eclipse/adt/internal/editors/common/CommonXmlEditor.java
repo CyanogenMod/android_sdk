@@ -417,6 +417,18 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
         }
     }
 
+    @Override
+    public String getPartName() {
+        if (mDelegate != null) {
+            String name = mDelegate.delegateGetPartName();
+            if (name != null) {
+                return name;
+            }
+        }
+
+        return super.getPartName();
+    }
+
     // --------------------
     // Base methods exposed so that XmlEditorDelegate can access them
 

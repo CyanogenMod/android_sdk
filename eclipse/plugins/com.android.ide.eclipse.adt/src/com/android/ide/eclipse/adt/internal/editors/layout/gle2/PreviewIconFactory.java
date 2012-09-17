@@ -16,12 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.FQCN_DATE_PICKER;
 import static com.android.SdkConstants.FQCN_EXPANDABLE_LIST_VIEW;
 import static com.android.SdkConstants.FQCN_LIST_VIEW;
 import static com.android.SdkConstants.FQCN_TIME_PICKER;
-import static com.android.SdkConstants.DOT_PNG;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.RenderSession;
@@ -477,10 +479,15 @@ public class PreviewIconFactory {
     /**
      * Cleans up a name by removing punctuation and whitespace etc to make
      * it a better filename
-     * @param name
-     * @return
+     * @param name the name to clean
+     * @return a cleaned up name
      */
-    private static String cleanup(String name) {
+    @NonNull
+    private static String cleanup(@Nullable String name) {
+        if (name == null) {
+            return "";
+        }
+
         // Extract just the characters (no whitespace, parentheses, punctuation etc)
         // to ensure that the filename is pretty portable
         StringBuilder sb = new StringBuilder(name.length());
@@ -516,8 +523,11 @@ public class PreviewIconFactory {
             if (themeName.startsWith(themeNamePrefix)) {
                 themeName = themeName.substring(themeNamePrefix.length());
             }
-            String dirName = String.format("palette-preview-r16b-%s-%s-%s", cleanup(targetName),
-                    cleanup(themeName), cleanup(mPalette.getCurrentDevice()));
+            targetName = cleanup(targetName);
+            themeName = cleanup(themeName);
+            String deviceName = cleanup(mPalette.getCurrentDevice());
+            String dirName = String.format("palette-preview-r16b-%s-%s-%s", targetName,
+                    themeName, deviceName);
             IPath dirPath = pluginState.append(dirName);
 
             mImageDir = new File(dirPath.toOSString());

@@ -38,7 +38,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
@@ -375,9 +375,9 @@ public class PaletteControl extends Composite {
      * @param target The target that has just been loaded
      */
     public void reloadPalette(IAndroidTarget target) {
-        ConfigurationComposite configuration = mEditor.getConfigurationComposite();
-        String theme = configuration.getThemeName();
-        String device = configuration.getDevice();
+        ConfigurationChooser configChooser = mEditor.getConfigurationChooser();
+        String theme = configChooser.getThemeName();
+        String device = configChooser.getDeviceName();
         AndroidTargetData targetData =
             target != null ? Sdk.getCurrent().getTargetData(target) : null;
         if (target == mCurrentTarget && targetData == mCurrentTargetData
@@ -628,7 +628,8 @@ public class PaletteControl extends Composite {
                         } else if (mPaletteMode == PaletteMode.TINY_PREVIEW) {
                             scale = 0.5f;
                         }
-                        int dpi = mEditor.getConfigurationComposite().getDensity().getDpiValue();
+                        ConfigurationChooser chooser = mEditor.getConfigurationChooser();
+                        int dpi = chooser.getConfiguration().getDensity().getDpiValue();
                         while (dpi > 160) {
                             scale = scale / 2;
                             dpi = dpi / 2;

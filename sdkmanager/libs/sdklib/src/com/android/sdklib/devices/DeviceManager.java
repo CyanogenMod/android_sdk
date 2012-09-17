@@ -246,8 +246,10 @@ public class DeviceManager {
                 try {
                     userDevicesFile = new File(AndroidLocation.getFolder(),
                             SdkConstants.FN_DEVICES_XML);
-                    mUserDevices.addAll(DeviceParser.parse(userDevicesFile));
-                    notifyListeners();
+                    if (userDevicesFile.exists()) {
+                        mUserDevices.addAll(DeviceParser.parse(userDevicesFile));
+                        notifyListeners();
+                    }
                 } catch (AndroidLocationException e) {
                     mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
                 } catch (SAXException e) {
@@ -263,8 +265,6 @@ public class DeviceManager {
                                 userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
                         userDevicesFile.renameTo(renamedConfig);
                     }
-                } catch (FileNotFoundException e) {
-                    mLog.warning("No user devices found");
                 } catch (ParserConfigurationException e) {
                     mLog.error(null, "Error parsing %1$s",
                             userDevicesFile == null ? "(null)" : userDevicesFile.getAbsolutePath());

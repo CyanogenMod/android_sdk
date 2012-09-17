@@ -138,4 +138,8 @@ public class State {
         return hash;
     }
 
+    @Override
+    public String toString() {
+        return mName;
+    }
 }
