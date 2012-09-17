@@ -126,7 +126,8 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
 
         try {
             if (!SYSTEM_APP.equals(traceOptions.appToTrace)) {
-                startActivity(device, traceOptions.appToTrace, traceOptions.activityToTrace);
+                startActivity(device, traceOptions.appToTrace, traceOptions.activityToTrace,
+                        traceOptions.isActivityNameFullyQualified);
             }
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
@@ -272,19 +273,24 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
     }
 
-    private void startActivity(IDevice device, String appPackage, String activity)
+    private void startActivity(IDevice device, String appPackage, String activity,
+            boolean isActivityNameFullyQualified)
             throws TimeoutException, AdbCommandRejectedException,
             ShellCommandUnresponsiveException, IOException, InterruptedException {
         killApp(device, appPackage); // kill app if it is already running
         waitUntilAppKilled(device, appPackage, KILL_TIMEOUT);
 
-        String activityPath = appPackage;
+        StringBuilder activityPath = new StringBuilder(appPackage);
         if (!activity.isEmpty()) {
-            activityPath = String.format("%s/.%s", appPackage, activity);   //$NON-NLS-1$
+            activityPath.append('/');
+            if (!isActivityNameFullyQualified) {
+                activityPath.append('.');
+            }
+            activityPath.append(activity);
         }
         String startAppCmd = String.format(
                 "am start --opengl-trace %s -a android.intent.action.MAIN -c android.intent.category.LAUNCHER", //$NON-NLS-1$
-                activityPath);
+                activityPath.toString());
 
         Semaphore launchCompletionSempahore = new Semaphore(0);
         StartActivityOutputReceiver receiver = new StartActivityOutputReceiver(
