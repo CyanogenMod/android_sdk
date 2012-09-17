@@ -402,7 +402,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
 
         public IdentifierVisitor(JavaContext context) {
             super();
-            this.mContext = context;
+            mContext = context;
         }
 
         @Override

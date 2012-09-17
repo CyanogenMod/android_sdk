@@ -46,7 +46,7 @@ public class IncludeOverlay extends Overlay {
      * @param canvas The {@link LayoutCanvas} to paint the overlay over.
      */
     public IncludeOverlay(LayoutCanvas canvas) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
     }
 
     @Override

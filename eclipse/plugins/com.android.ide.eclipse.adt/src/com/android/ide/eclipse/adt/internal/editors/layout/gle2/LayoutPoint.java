@@ -96,7 +96,7 @@ public final class LayoutPoint {
      * @param y The canvas Y coordinate
      */
     private LayoutPoint(LayoutCanvas canvas, int x, int y) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
         this.x = x;
         this.y = y;
     }

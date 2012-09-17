@@ -132,7 +132,7 @@ public final class ControlPoint {
      * @param y The mouse y coordinate
      */
     private ControlPoint(LayoutCanvas canvas, int x, int y) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
         this.x = x;
         this.y = y;
     }

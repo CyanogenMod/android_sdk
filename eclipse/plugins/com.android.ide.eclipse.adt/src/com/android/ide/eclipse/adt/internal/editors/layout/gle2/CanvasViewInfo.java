@@ -499,7 +499,7 @@ public class CanvasViewInfo implements IPropertySource {
      * @param exploded New value of the exploded property to mark this info with.
      */
     void setExploded(boolean exploded) {
-        this.mExploded = exploded;
+        mExploded = exploded;
     }
 
     /**

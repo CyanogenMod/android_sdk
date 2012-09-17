@@ -89,7 +89,7 @@ public class WrongImportDetector extends Detector implements Detector.JavaScanne
 
         public ImportVisitor(JavaContext context) {
             super();
-            this.mContext = context;
+            mContext = context;
         }
 
         @Override

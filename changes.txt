@@ -2,6 +2,7 @@ Change log for Android SDK Tools.
 
 Revision 20:
 - Ant build system:
+- Ant build system:
    * the location of the SDK can now be set through the ANDROID_HOME
      environment variable (requires updating the project's build.xml file)
    * Fixed issues with compilation, deployment of test projects and running tests.

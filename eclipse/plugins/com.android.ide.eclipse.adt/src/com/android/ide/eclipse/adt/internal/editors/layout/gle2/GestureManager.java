@@ -138,7 +138,7 @@ public class GestureManager {
      * @param canvas The canvas which controls this {@link GestureManager}
      */
     public GestureManager(LayoutCanvas canvas) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
     }
 
     /**

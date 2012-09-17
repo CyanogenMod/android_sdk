@@ -1252,7 +1252,7 @@ public class PaletteControl extends Composite {
         private final Composite mParent;
 
         private ViewFinderListener(Composite parent) {
-            this.mParent = parent;
+            mParent = parent;
         }
 
         @Override

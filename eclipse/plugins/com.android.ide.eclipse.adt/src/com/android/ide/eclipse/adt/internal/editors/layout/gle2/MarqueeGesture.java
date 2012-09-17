@@ -50,7 +50,7 @@ public class MarqueeGesture extends Gesture {
      *            instead of adding it.
      */
     public MarqueeGesture(LayoutCanvas canvas, boolean toggle) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
 
         if (toggle) {
             List<SelectionItem> selection = canvas.getSelectionManager().getSelections();

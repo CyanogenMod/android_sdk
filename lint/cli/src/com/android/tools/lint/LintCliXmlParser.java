@@ -129,9 +129,9 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
          * @param offset the offset, or -1 if unknown
          */
         public OffsetPosition(int line, int column, int offset) {
-            this.mLine = line;
-            this.mColumn = column;
-            this.mOffset = offset;
+            mLine = line;
+            mColumn = column;
+            mOffset = offset;
         }
 
         @Override

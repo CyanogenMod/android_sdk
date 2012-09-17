@@ -63,7 +63,7 @@ public class ViewHierarchy {
      *            for.
      */
     public ViewHierarchy(LayoutCanvas canvas) {
-        this.mCanvas = canvas;
+        mCanvas = canvas;
     }
 
     /**
