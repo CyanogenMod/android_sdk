@@ -631,8 +631,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
         private int mPosition;
 
         public MatchPos(int distance, int position) {
-            this.mDistance = distance;
-            this.mPosition = position;
+            mDistance = distance;
+            mPosition = position;
         }
 
         @Override
@@ -682,10 +682,10 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
         public LinearDropData(List<MatchPos> indexes, int numPositions,
                 boolean isVertical, int selfPos) {
-            this.mIndexes = indexes;
-            this.mNumPositions = numPositions;
-            this.mVertical = isVertical;
-            this.mSelfPos = selfPos;
+            mIndexes = indexes;
+            mNumPositions = numPositions;
+            mVertical = isVertical;
+            mSelfPos = selfPos;
         }
 
         @Override
@@ -706,7 +706,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         private void setCurrX(Integer currX) {
-            this.mCurrX = currX;
+            mCurrX = currX;
         }
 
         private Integer getCurrX() {
@@ -714,7 +714,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         private void setCurrY(Integer currY) {
-            this.mCurrY = currY;
+            mCurrY = currY;
         }
 
         private Integer getCurrY() {
@@ -726,7 +726,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         private void setInsertPos(int insertPos) {
-            this.mInsertPos = insertPos;
+            mInsertPos = insertPos;
         }
 
         private int getInsertPos() {
@@ -738,7 +738,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         private void setWidth(Integer width) {
-            this.mWidth = width;
+            mWidth = width;
         }
 
         private Integer getWidth() {
@@ -746,7 +746,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         private void setHeight(Integer height) {
-            this.mHeight = height;
+            mHeight = height;
         }
 
         private Integer getHeight() {

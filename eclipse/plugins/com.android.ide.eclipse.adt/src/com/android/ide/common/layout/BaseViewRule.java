@@ -95,7 +95,7 @@ public class BaseViewRule extends AbstractViewRule {
 
     @Override
     public boolean onInitialize(@NonNull String fqcn, @NonNull IClientRulesEngine engine) {
-        this.mRulesEngine = engine;
+        mRulesEngine = engine;
 
         // This base rule can handle any class so we don't need to filter on
         // FQCN. Derived classes should do so if they can handle some
@@ -785,7 +785,7 @@ public class BaseViewRule extends AbstractViewRule {
 
         public EnumPropertyChoiceProvider(Prop property) {
             super();
-            this.mProperty = property;
+            mProperty = property;
         }
 
         @Override

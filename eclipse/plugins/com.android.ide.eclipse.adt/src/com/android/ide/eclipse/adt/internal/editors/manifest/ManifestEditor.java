@@ -121,6 +121,11 @@ public final class ManifestEditor extends AndroidXmlEditor {
         }
     }
 
+    @Override
+    protected int getPersistenceCategory() {
+        return CATEGORY_MANIFEST;
+    }
+
     /**
      * Return the root node of the UI element hierarchy, which here
      * is the "manifest" node.

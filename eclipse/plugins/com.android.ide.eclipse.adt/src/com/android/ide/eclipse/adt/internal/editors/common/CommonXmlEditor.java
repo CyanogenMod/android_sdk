@@ -368,6 +368,14 @@ public class CommonXmlEditor extends AndroidXmlEditor implements IShowEditorInpu
     }
 
     @Override
+    protected int getPersistenceCategory() {
+        if (mDelegate != null) {
+            return mDelegate.delegateGetPersistenceCategory();
+        }
+        return CATEGORY_OTHER;
+    }
+
+    @Override
     public void initUiRootNode(boolean force) {
         if (mDelegate != null) {
             mDelegate.delegateInitUiRootNode(force);

@@ -452,9 +452,41 @@ public abstract class AndroidXmlEditor extends FormEditor {
                 // first page rather than crash the editor load. Logging the error is enough.
                 AdtPlugin.log(e, "Selecting page '%s' in AndroidXmlEditor failed", defaultPageId);
             }
-        } else if (AdtPrefs.getPrefs().isLastSwitchedToXml()) {
+        } else if (AdtPrefs.getPrefs().isXmlEditorPreferred(getPersistenceCategory())) {
             setActivePage(mTextPageIndex);
         }
+    }
+
+    /** The layout editor */
+    public static final int CATEGORY_LAYOUT   = 1 << 0;
+    /** The manifest editor */
+    public static final int CATEGORY_MANIFEST = 1 << 1;
+    /** Any other XML editor */
+    public static final int CATEGORY_OTHER    = 1 << 2;
+
+    /**
+     * Returns the persistence category to use for this editor; this should be
+     * one of the {@code CATEGORY_} constants such as {@link #CATEGORY_MANIFEST},
+     * {@link #CATEGORY_LAYOUT}, {@link #CATEGORY_OTHER}, ...
+     * <p>
+     * The persistence category is used to group editors together when it comes
+     * to certain types of persistence metadata. For example, whether this type
+     * of file was most recently edited graphically or with an XML text editor.
+     * We'll open new files in the same text or graphical mode as the last time
+     * the user edited a file of the same persistence category.
+     * <p>
+     * Before we added the persistence category, we had a single boolean flag
+     * recording whether the XML files were most recently edited graphically or
+     * not. However, this meant that users can't for example prefer to edit
+     * Manifest files graphically and string files via XML. By splitting the
+     * editors up into categories, we can track the mode at a finer granularity,
+     * and still allow similar editors such as those used for animations and
+     * colors to be treated the same way.
+     *
+     * @return the persistence category constant
+     */
+    protected int getPersistenceCategory() {
+        return CATEGORY_OTHER;
     }
 
     /**
@@ -511,7 +543,8 @@ public abstract class AndroidXmlEditor extends FormEditor {
             }
         }
 
-        AdtPrefs.getPrefs().setLastSwitchedToXml(newPageIndex == mTextPageIndex);
+        boolean isTextPage = newPageIndex == mTextPageIndex;
+        AdtPrefs.getPrefs().setXmlEditorPreferred(getPersistenceCategory(), isTextPage);
     }
 
     /**

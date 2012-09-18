@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.preferences;
 
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
@@ -52,7 +53,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_MONITOR_DENSITY = AdtPlugin.PLUGIN_ID + ".monitorDensity"; //$NON-NLS-1$
 
     public final static String PREFS_FORMAT_GUI_XML = AdtPlugin.PLUGIN_ID + ".formatXml"; //$NON-NLS-1$
-    public final static String PREFS_LAST_SWITCHED_TO_XML = AdtPlugin.PLUGIN_ID + ".lastXml"; //$NON-NLS-1$
+    public final static String PREFS_PREFER_XML = AdtPlugin.PLUGIN_ID + ".xmlEditor"; //$NON-NLS-1$
     public final static String PREFS_USE_CUSTOM_XML_FORMATTER = AdtPlugin.PLUGIN_ID + ".androidForm"; //$NON-NLS-1$
 
     public final static String PREFS_PALETTE_MODE = AdtPlugin.PLUGIN_ID + ".palette"; //$NON-NLS-1$
@@ -88,7 +89,6 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private String mPalette;
 
     private boolean mFormatGuiXml;
-    private boolean mLastSwitchedToXml;
     private boolean mCustomXmlFormatter;
     private boolean mUseEclipseIndent;
     private boolean mRemoveEmptyLines;
@@ -99,6 +99,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mLintOnExport;
     private AttributeSortOrder mAttributeSort;
     private boolean mSharedLayoutEditor;
+    private int mPreferXmlEditor;
 
     public static enum BuildVerbosity {
         /** Build verbosity "Always". Those messages are always displayed, even in silent mode */
@@ -199,8 +200,8 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             mFormatGuiXml = mStore.getBoolean(PREFS_FORMAT_GUI_XML);
         }
 
-        if (property == null || PREFS_LAST_SWITCHED_TO_XML.equals(property)) {
-            mLastSwitchedToXml = mStore.getBoolean(PREFS_LAST_SWITCHED_TO_XML);
+        if (property == null || PREFS_PREFER_XML.equals(property)) {
+            mPreferXmlEditor = mStore.getInt(PREFS_PREFER_XML);
         }
 
         if (property == null || PREFS_USE_CUSTOM_XML_FORMATTER.equals(property)) {
@@ -502,22 +503,39 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         }
     }
 
-    /** Returns whether the most recent page switch was to XML
-     * @return whether the most recent page switch was to XML */
-    public boolean isLastSwitchedToXml() {
-        return mLastSwitchedToXml;
+    /**
+     * Returns whether the most recent page switch was to XML
+     *
+     * @param editorType the editor to check a preference for; corresponds to
+     *            one of the persistence class ids returned by
+     *            {@link AndroidXmlEditor#getPersistenceCategory}
+     * @return whether the most recent page switch in the given editor was to
+     *         XML
+     */
+    public boolean isXmlEditorPreferred(int editorType) {
+        return (mPreferXmlEditor & editorType) != 0;
     }
 
     /**
-     * Set whether the most recent page switch was to XML
+     * Set whether the most recent page switch for a given editor type was to
+     * XML
      *
-     * @param xml whether the last manual page switch was to XML
+     * @param editorType the editor to check a preference for; corresponds to
+     *            one of the persistence class ids returned by
+     *            {@link AndroidXmlEditor#getPersistenceCategory}
+     * @param xml whether the last manual page switch in the given editor type
+     *            was to XML
      */
-    public void setLastSwitchedToXml(boolean xml) {
-        if (xml != mLastSwitchedToXml) {
-            mLastSwitchedToXml = xml;
+    public void setXmlEditorPreferred(int editorType, boolean xml) {
+        if (xml != isXmlEditorPreferred(editorType)) {
+            if (xml) {
+                mPreferXmlEditor |= editorType;
+            } else {
+                mPreferXmlEditor &= ~editorType;
+            }
+            assert ((mPreferXmlEditor & editorType) != 0) == xml;
             IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
-            store.setValue(PREFS_LINT_ON_SAVE, xml);
+            store.setValue(PREFS_PREFER_XML, xml);
         }
     }
 }
