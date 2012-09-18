@@ -110,7 +110,7 @@ framework/sdkuilib.jar           tools/lib/sdkuilib.jar
 framework/sdkmanager.jar         tools/lib/sdkmanager.jar
 framework/monkeyrunner.jar       tools/lib/monkeyrunner.jar
 framework/chimpchat.jar          tools/lib/chimpchat.jar
-framework/guavalib.jar           tools/lib/guavalib.jar
+framework/guava-tools.jar        tools/lib/guava-tools.jar
 framework/jsilver.jar            tools/lib/jsilver.jar
 framework/jython.jar             tools/lib/jython.jar
 framework/mkidentity-prebuilt.jar tools/lib/mkidentity.jar

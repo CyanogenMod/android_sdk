@@ -16,13 +16,13 @@
 
 package com.android.ant;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+
 import org.apache.tools.ant.BuildException;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -145,7 +145,7 @@ public class DependencyGraph {
         mDepFileLastModified = depFile.lastModified();
 
         // Read in our dependency file
-        String content = readFile(dependencyFilePath);
+        List<String> content = readFile(depFile);
         if (content == null) {
             System.err.println("ERROR: Couldn't read " + dependencyFilePath);
             return;
@@ -155,9 +155,8 @@ public class DependencyGraph {
         // output1 output2 [...]: dep1 dep2 [...]
         // expect it's likely split on several lines. So let's move it back on a single line
         // first
-        String[] lines = content.toString().split("\n");
-        StringBuilder sb = new StringBuilder(content.length());
-        for (String line : lines) {
+        StringBuilder sb = new StringBuilder();
+        for (String line : content) {
             line = line.trim();
             if (line.endsWith("\\")) {
                 line = line.substring(0, line.length() - 1);
@@ -427,33 +426,16 @@ public class DependencyGraph {
 
     /**
      * Reads and returns the content of a text file.
-     * @param filepath the file path to the text file
+     * @param file the file path to the text file
      * @return null if the file could not be read
      */
-    private static String readFile(String filepath) {
-        FileInputStream fStream = null;
-        BufferedReader reader = null;
+    private static List<String> readFile(File file) {
         try {
-            fStream = new FileInputStream(filepath);
-            reader = new BufferedReader(new InputStreamReader(fStream));
-
-            String line;
-            StringBuilder total = new StringBuilder(reader.readLine());
-            while ((line = reader.readLine()) != null) {
-                total.append('\n');
-                total.append(line);
-            }
-            return total.toString();
+            return Files.readLines(file, Charsets.UTF_8);
         } catch (IOException e) {
-            // we'll just return null
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                }
-            }
+            // return null below
         }
+
         return null;
     }
 }
