@@ -155,7 +155,15 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     @Override
     public void run(IProgressMonitor monitor) throws InvocationTargetException,
             InterruptedException {
-        monitor.beginTask("Parsing OpenGL Trace File", IProgressMonitor.UNKNOWN);
+        long fileLength;
+        try {
+            fileLength = mFile.length();
+        } catch (IOException e1) {
+            fileLength = 0;
+        }
+
+        monitor.beginTask("Parsing OpenGL Trace File",
+                fileLength > 0 ? 100 : IProgressMonitor.UNKNOWN);
 
         List<GLFrame> glFrames = null;
 
@@ -163,6 +171,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
             GLMessage msg = null;
             int msgCount = 0;
             long filePointer = mFile.getFilePointer();
+            int percentParsed = 0;
 
             // counters that maintain some statistics about the trace messages
             long minTraceStartTime = Long.MAX_VALUE;
@@ -179,6 +188,12 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
                 if (monitor.isCanceled()) {
                     throw new InterruptedException();
+                }
+
+                if (fileLength > 0) {
+                    int percentParsedNow = (int)((filePointer * 100) / fileLength);
+                    monitor.worked(percentParsedNow - percentParsed);
+                    percentParsed = percentParsedNow;
                 }
             }
 
