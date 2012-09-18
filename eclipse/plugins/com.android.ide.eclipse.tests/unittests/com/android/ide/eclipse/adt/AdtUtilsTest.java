@@ -174,4 +174,17 @@ public class AdtUtilsTest extends TestCase {
             Locale.setDefault(originalDefaultLocale);
         }
     }
+
+    public void testEscapeUnicodeChars() throws Exception {
+        assertEquals("", AdtUtils.replaceUnicodeEscapes(""));
+        assertEquals("foo bar", AdtUtils.replaceUnicodeEscapes("foo bar"));
+        assertEquals("\u25C0", AdtUtils.replaceUnicodeEscapes("\\u25C0"));
+        assertEquals("!\u25C0\u25C1!", AdtUtils.replaceUnicodeEscapes("!\\u25C0\\u25C1!"));
+        assertEquals("\u1234\\", AdtUtils.replaceUnicodeEscapes("\\u1234\\"));
+
+        assertEquals("\\U25C0", AdtUtils.replaceUnicodeEscapes("\\U25C0")); // no unicode expand
+        assertEquals("\\u25C", AdtUtils.replaceUnicodeEscapes("\\u25C")); // no unicode expand
+        assertEquals("\\\\u25C0", AdtUtils.replaceUnicodeEscapes("\\\\u25C0")); // escaped
+        assertEquals("\\u123\\", AdtUtils.replaceUnicodeEscapes("\\u123\\")); // broken
+    }
 }
