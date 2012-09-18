@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
+import static com.android.SdkConstants.CLASS_CONSTRUCTOR;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -31,8 +32,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -138,9 +141,15 @@ public class SourceRevealer implements ISourceRevealer {
                                 // See if the line number looks like it's inside the given method
                                 ISourceRange sourceRange = method.getSourceRange();
                                 IRegion region = AdtUtils.getRegionOfLine(file, lineNumber - 1);
-                                if (region != null
-                                        && region.getOffset() >= sourceRange.getOffset()
-                                        && region.getOffset() < sourceRange.getOffset()
+                                // When fields are initialized with code, this logically belongs
+                                // to the constructor, but the line numbers are outside of the
+                                // constructor. In this case we'll trust the line number rather
+                                // than the method range.
+                                boolean isConstructor = fqmn.endsWith(CONSTRUCTOR_NAME);
+                                if (isConstructor
+                                        || region != null
+                                            && region.getOffset() >= sourceRange.getOffset()
+                                            && region.getOffset() < sourceRange.getOffset()
                                             + sourceRange.getLength()) {
                                     // Yes: use the line number instead
                                     if (perspective != null) {
@@ -167,6 +176,29 @@ public class SourceRevealer implements ISourceRevealer {
             if (fileMatches.size() > 0) {
                 return revealLineMatch(fileMatches, fileName, lineNumber, perspective);
             } else {
+                // Last ditch effort: attempt to look up the class corresponding to the fqn
+                // and jump to the line there
+                if (fileMatches.isEmpty() && fqmn.indexOf('.') != -1) {
+                    String className = fqmn.substring(0, fqmn.lastIndexOf('.'));
+                    for (IJavaProject project : BaseProjectHelper.getAndroidProjects(null)) {
+                        IType type;
+                        try {
+                            type = project.findType(className);
+                            if (type != null && type.exists()) {
+                                IResource resource = type.getResource();
+                                if (resource instanceof IFile) {
+                                    if (perspective != null) {
+                                        SourceRevealer.switchToPerspective(perspective);
+                                    }
+                                    return displayFile((IFile) resource, lineNumber);
+                                }
+                            }
+                        } catch (JavaModelException e) {
+                            AdtPlugin.log(e, null);
+                        }
+                    }
+                }
+
                 return false;
             }
         }
@@ -349,6 +381,11 @@ public class SourceRevealer implements ISourceRevealer {
             return searchForPattern(fqmn, IJavaSearchConstants.CONSTRUCTOR,
                     MATCH_IS_METHOD_PREDICATE);
         }
+        if (fqmn.endsWith(CLASS_CONSTRUCTOR)) {
+            // Don't try to search for class init methods: Eclipse will throw NPEs if you do
+            return Collections.emptyList();
+        }
+
         return searchForPattern(fqmn, IJavaSearchConstants.METHOD, MATCH_IS_METHOD_PREDICATE);
     }
 

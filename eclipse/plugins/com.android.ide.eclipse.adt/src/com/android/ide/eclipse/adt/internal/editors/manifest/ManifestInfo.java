@@ -409,7 +409,7 @@ public class ManifestInfo {
      * Returns the minimum SDK version name (which may not be a numeric string, e.g.
      * it could be a codename). It will never be null or empty; if no min sdk version
      * was specified in the manifest, the return value will be "1". Use
-     * {@link #getCodeName()} instead if you want to look up whether there is a code name.
+     * {@link #getMinSdkCodeName()} instead if you want to look up whether there is a code name.
      *
      * @return the minimum SDK version
      */
