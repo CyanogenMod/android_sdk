@@ -28,6 +28,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
 
 import org.kxml2.io.KXmlParser;
@@ -116,6 +117,11 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
                         ATTR_LAYOUT_HEIGHT.equals(localName)) &&
                 SdkConstants.NS_RESOURCES.equals(namespace)) {
             return VALUE_FILL_PARENT;
+        }
+
+        // Handle unicode escapes
+        if (value.indexOf('\\') != -1) {
+            value = AdtUtils.replaceUnicodeEscapes(value);
         }
 
         return value;
