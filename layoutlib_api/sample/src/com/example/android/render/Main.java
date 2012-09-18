@@ -46,7 +46,7 @@ import javax.imageio.ImageIO;
 
 /**
  * Sample code showing how to use the different API used to achieve a layout rendering.
- * This requires the following jar: layoutlib_api.jar, common.jar, ide_common.jar, sdklib.jar (altho
+ * This requires the following jar: layoutlib_api.jar, common.jar, sdk_common.jar, sdklib.jar (altho
  * we should get rid of this one) and a full SDK (or at leas the platform component).
  *
  */

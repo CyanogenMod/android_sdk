@@ -52,7 +52,7 @@ subdirs += \
 	sdk/device_validator \
 	sdk/eclipse/scripts/rcp \
 	sdk/hierarchyviewer2 \
-	sdk/ide_common \
+	sdk/sdk_common \
 	sdk/jarutils \
 	sdk/layoutlib_api \
 	sdk/manifmerger \

@@ -24,7 +24,7 @@ LOCAL_JAVA_LIBRARIES := \
 	kxml2-2.3.0 \
 	sdklib
 
-LOCAL_MODULE := ide_common
+LOCAL_MODULE := sdk_common
 
 LOCAL_MODULE_TAGS := optional
 

@@ -21,7 +21,7 @@ Bundle-ClassPath: .,
  libs/sdklib.jar,
  libs/sdkstats.jar,
  libs/dvlib.jar,
- libs/ide_common.jar
+ libs/sdk_common.jar
 Export-Package: com.android,
  com.android.annotations,
  com.android.dvlib,
