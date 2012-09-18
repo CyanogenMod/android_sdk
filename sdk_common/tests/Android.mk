@@ -19,9 +19,9 @@ include $(CLEAR_VARS)
 # Only compile source java files in this lib.
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-LOCAL_MODULE := ide_common-tests
+LOCAL_MODULE := sdk_common-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := common ide_common junit
+LOCAL_JAVA_LIBRARIES := common sdk_common junit
 
 include $(BUILD_HOST_JAVA_LIBRARY)

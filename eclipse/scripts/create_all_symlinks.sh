@@ -109,7 +109,7 @@ CP_FILES=""
 ### BASE ###
 
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
-BASE_PLUGIN_LIBS="common sdkstats sdklib dvlib layoutlib_api ide_common"
+BASE_PLUGIN_LIBS="common sdkstats sdklib dvlib layoutlib_api sdk_common"
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \

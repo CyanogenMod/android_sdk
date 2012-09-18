@@ -15,6 +15,6 @@
 	<classpathentry kind="lib" path="/plugin-base/libs/common.jar" sourcepath="/common"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/lint_api.jar" sourcepath="/lint-api"/>
 	<classpathentry kind="lib" path="/plugin-adt/libs/lint_checks.jar" sourcepath="/lint-checks"/>
-	<classpathentry kind="lib" path="/plugin-base/libs/ide_common.jar"/>
+	<classpathentry kind="lib" path="/plugin-base/libs/sdk_common.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

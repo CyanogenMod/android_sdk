@@ -43,7 +43,7 @@ PRODUCT_PACKAGES += \
 	dvlib-tests \
 	emulator \
 	hierarchyviewer \
-	ide_common \
+	sdk_common \
 	layoutlib_api \
 	lint \
 	manifmerger \
