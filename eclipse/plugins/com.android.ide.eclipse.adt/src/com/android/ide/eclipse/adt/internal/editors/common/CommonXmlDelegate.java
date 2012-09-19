@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.common;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.ResourceFolderType;
 
@@ -234,5 +235,15 @@ public abstract class CommonXmlDelegate {
      */
     public String delegateGetPartName() {
         return null;
+    }
+
+    /**
+     * Returns the persistence category, as described in
+     * {@link AndroidXmlEditor#getPersistenceCategory}.
+     *
+     * @return the persistence category to use for this editor
+     */
+    public int delegateGetPersistenceCategory() {
+        return AndroidXmlEditor.CATEGORY_OTHER;
     }
 }

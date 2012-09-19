@@ -22,6 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.XmlEditorMultiOutline;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
@@ -683,6 +684,11 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
                 mGraphicalEditor.deactivated();
             }
         }
+    }
+
+    @Override
+    public int delegateGetPersistenceCategory() {
+        return AndroidXmlEditor.CATEGORY_LAYOUT;
     }
 
     @Override
