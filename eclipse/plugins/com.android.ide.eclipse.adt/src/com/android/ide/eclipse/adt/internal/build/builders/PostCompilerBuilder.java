@@ -732,7 +732,6 @@ public class PostCompilerBuilder extends BaseBuilder {
     private static class JarBuilder implements IArchiveBuilder {
 
         private static Pattern R_PATTERN = Pattern.compile("R(\\$.*)?\\.class"); //$NON-NLS-1$
-        private static Pattern MANIFEST_PATTERN = Pattern.compile("Manifest(\\$.*)?\\.class"); //$NON-NLS-1$
         private static String BUILD_CONFIG_CLASS = "BuildConfig.class"; //$NON-NLS-1$
 
         private final byte[] buffer = new byte[1024];
@@ -757,7 +756,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             // Ignore the library's R/Manifest/BuildConfig classes.
             if (mAppPackage.equals(packageApp.toString()) &&
                             (BUILD_CONFIG_CLASS.equals(name) ||
-                            MANIFEST_PATTERN.matcher(name).matches() ||
                             R_PATTERN.matcher(name).matches())) {
                 return;
             }

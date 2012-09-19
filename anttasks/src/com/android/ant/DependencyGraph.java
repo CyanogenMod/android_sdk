@@ -426,7 +426,7 @@ public class DependencyGraph {
 
     /**
      * Reads and returns the content of a text file.
-     * @param file the file path to the text file
+     * @param file the file to read
      * @return null if the file could not be read
      */
     private static List<String> readFile(File file) {

@@ -18,6 +18,11 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under,src)
 
+LOCAL_JAR_MANIFEST := manifest.txt
+
+# IMPORTANT: if you add a new dependency here, please make sure
+# to also check the following files:
+#   common/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	guava-tools
 
