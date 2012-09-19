@@ -75,6 +75,9 @@ public class FrameSummaryViewPage extends Page {
     private StatsLabelProvider mStatsLabelProvider;
     private StatsTableComparator mStatsTableComparator;
 
+    private FitToCanvasAction mFitToCanvasAction;
+    private SaveImageAction mSaveImageAction;
+
     private static final String[] STATS_TABLE_PROPERTIES = {
         "Function",
         "Count",
@@ -108,8 +111,12 @@ public class FrameSummaryViewPage extends Page {
 
         mSash.setWeights(new int[] {70, 30});
 
+        mFitToCanvasAction = new FitToCanvasAction(true, mImageCanvas);
+        mSaveImageAction = new SaveImageAction(mImageCanvas);
+
         IToolBarManager toolbarManager = getSite().getActionBars().getToolBarManager();
-        toolbarManager.add(new FitToCanvasAction(true, mImageCanvas));
+        toolbarManager.add(mFitToCanvasAction);
+        toolbarManager.add(mSaveImageAction);
     }
 
     private void createFrameStatisticsPart(Composite parent) {
@@ -280,6 +287,9 @@ public class FrameSummaryViewPage extends Page {
                 @Override
                 public void run() {
                     mImageCanvas.setImage(image);
+
+                    mFitToCanvasAction.setEnabled(image != null);
+                    mSaveImageAction.setEnabled(image != null);
                 }
             });
         }
