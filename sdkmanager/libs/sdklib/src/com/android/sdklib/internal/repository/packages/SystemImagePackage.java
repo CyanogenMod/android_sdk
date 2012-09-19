@@ -210,7 +210,7 @@ public class SystemImagePackage extends MajorRevisionPackage
     private static String getAbiDisplayNameInternal(String abi) {
         return abi.replace("armeabi", "ARM EABI")         //$NON-NLS-1$  //$NON-NLS-2$
                   .replace("x86",     "Intel x86 Atom")   //$NON-NLS-1$  //$NON-NLS-2$
-                  .replace("mips",    "Mips")             //$NON-NLS-1$  //$NON-NLS-2$
+                  .replace("mips",    "MIPS")             //$NON-NLS-1$  //$NON-NLS-2$
                   .replace("-", " ");                     //$NON-NLS-1$  //$NON-NLS-2$
     }
 

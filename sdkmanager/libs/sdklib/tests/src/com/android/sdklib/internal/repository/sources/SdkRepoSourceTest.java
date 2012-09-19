@@ -747,7 +747,7 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Android SDK Platform-tools, revision 3\n" +
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
                      "Found ARM EABI System Image, Android API 42, revision 12\n" +
-                     "Found Mips System Image, Android API 42, revision 12\n" +
+                     "Found MIPS System Image, Android API 42, revision 12\n" +
                      "Found Sources for Android SDK, API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
@@ -891,7 +891,7 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
                      "Found Samples for SDK API 14, revision 25 (Obsolete)\n" +
                      "Found ARM EABI System Image, Android API 42, revision 12\n" +
-                     "Found Mips System Image, Android API 42, revision 12\n" +
+                     "Found MIPS System Image, Android API 42, revision 12\n" +
                      "Found Sources for Android SDK, API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());

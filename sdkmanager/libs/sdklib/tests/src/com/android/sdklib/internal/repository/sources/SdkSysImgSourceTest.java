@@ -131,7 +131,7 @@ public class SdkSysImgSourceTest extends TestCase {
                 "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
                 "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
                 "Found ARM EABI System Image, Android API 42, revision 12\n" +
-                "Found Mips System Image, Android API 42, revision 12\n",
+                "Found MIPS System Image, Android API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
         assertEquals("", monitor.getCapturedErrorLog());
