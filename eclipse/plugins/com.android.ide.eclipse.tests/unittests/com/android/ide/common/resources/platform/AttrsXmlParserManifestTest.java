@@ -35,8 +35,8 @@ public class AttrsXmlParserManifestTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        mFilePath = AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH); //$NON-NLS-1$
-        mParser = new AttrsXmlParser(mFilePath, new TestLogger());
+        mFilePath = AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH);
+        mParser = new AttrsXmlParser(mFilePath, new TestLogger(), 100);
     }
 
     @Override

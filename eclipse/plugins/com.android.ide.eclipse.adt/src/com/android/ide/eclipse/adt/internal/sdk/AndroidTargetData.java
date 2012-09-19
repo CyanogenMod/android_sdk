@@ -16,9 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimDescriptors;
@@ -87,11 +90,33 @@ public class AndroidTargetData {
 
     private ResourceRepository mFrameworkResources;
     private LayoutLibrary mLayoutLibrary;
+    private Map<String, AttributeInfo> mAttributeMap;
 
     private boolean mLayoutBridgeInit = false;
 
     AndroidTargetData(IAndroidTarget androidTarget) {
         mTarget = androidTarget;
+    }
+
+    /**
+     * Sets the associated map from string attribute name to
+     * {@link AttributeInfo}
+     *
+     * @param attributeMap the map
+     */
+    public void setAttributeMap(@NonNull Map<String, AttributeInfo> attributeMap) {
+        mAttributeMap = attributeMap;
+    }
+
+    /**
+     * Returns the associated map from string attribute name to
+     * {@link AttributeInfo}
+     *
+     * @return the map
+     */
+    @Nullable
+    public Map<String, AttributeInfo> getAttributeMap() {
+        return mAttributeMap;
     }
 
     /**

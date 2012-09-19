@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.SdkConstants.UNIT_PX;
 import static com.android.SdkConstants.VALUE_N_DP;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -63,7 +64,7 @@ final class ConvertToDpFix extends DocumentFix implements IInputValidator {
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
                 String value = attribute.getValue();
-                if (value.endsWith("px")) {
+                if (value.endsWith(UNIT_PX)) {
                     Matcher matcher = pattern.matcher(value);
                     if (matcher.matches()) {
                         String numberString = matcher.group(1);

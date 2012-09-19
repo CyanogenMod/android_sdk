@@ -171,7 +171,7 @@ public abstract class ResourceRepository {
      * @return true if the resource is known
      */
     public boolean hasResourceItem(@NonNull String url) {
-        assert url.startsWith("@") : url;
+        assert url.startsWith("@") || url.startsWith("?") : url;
 
         int typeEnd = url.indexOf('/', 1);
         if (typeEnd != -1) {

@@ -88,6 +88,10 @@ public class SingleResourceFile extends ResourceFile {
     protected void update(ScanningContext context) {
         // when this happens, nothing needs to be done since the file only generates
         // a single resources that doesn't actually change (its content is the file path)
+
+        // However, we should check for newly introduced errors
+        // Parse the file and look for @+id/ entries
+        validateAttributes(context);
     }
 
     @Override
@@ -138,5 +142,27 @@ public class SingleResourceFile extends ResourceFile {
         }
 
         return name;
+    }
+
+    /**
+     * Validates the associated resource file to make sure the attribute references are valid
+     *
+     * @return true if parsing succeeds and false if it fails
+     */
+    private boolean validateAttributes(ScanningContext context) {
+        // We only need to check if it's a non-framework file
+        if (!isFramework()) {
+            ValidatingResourceParser parser = new ValidatingResourceParser(context, false);
+            try {
+                IAbstractFile file = getFile();
+                return parser.parse(file.getOsLocation(), file.getContents());
+            } catch (Exception e) {
+                context.needsFullAapt();
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

@@ -423,7 +423,7 @@ public final class ResourceManager {
                 if (delta.getResource() instanceof IProject) {
                     IProject project = (IProject) delta.getResource();
                     IdeScanningContext context =
-                            new IdeScanningContext(getProjectResources(project), project);
+                            new IdeScanningContext(getProjectResources(project), project, true);
 
                     processDelta(delta, context);
 
@@ -522,7 +522,7 @@ public final class ResourceManager {
                     mMap.put(project, projectResources);
                 }
             }
-            IdeScanningContext context = new IdeScanningContext(projectResources, project);
+            IdeScanningContext context = new IdeScanningContext(projectResources, project, true);
 
             if (resourceFolder != null && resourceFolder.exists()) {
                 try {
