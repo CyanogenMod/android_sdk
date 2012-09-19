@@ -1,6 +1,6 @@
 <resources>
     <#if !isNewProject>
-    <string name="title_${simpleName}">${activityTitle}</string>
+    <string name="title_${simpleName}">${escapeXmlString(activityTitle)}</string>
     </#if>
 
     <!-- Strings related to Settings -->

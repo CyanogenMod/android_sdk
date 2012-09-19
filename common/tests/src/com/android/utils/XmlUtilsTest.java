@@ -16,7 +16,6 @@
 package com.android.utils;
 
 import com.android.SdkConstants;
-import com.android.utils.XmlUtils;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -77,6 +76,10 @@ public class XmlUtilsTest extends TestCase {
         StringBuilder sb = new StringBuilder();
         XmlUtils.appendXmlAttributeValue(sb, "<\"'>&");
         assertEquals("&lt;&quot;&apos;>&amp;", sb.toString());
+    }
+
+    public void testToXmlTextValue() throws Exception {
+        assertEquals("&lt;\"'>&amp;", XmlUtils.toXmlTextValue("<\"'>&"));
     }
 
     public void testAppendXmlTextValue() throws Exception {

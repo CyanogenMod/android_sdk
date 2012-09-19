@@ -315,6 +315,10 @@ class TemplateHandler {
         paramMap.put("activityToLayout", new FmActivityToLayoutMethod());           //$NON-NLS-1$
         paramMap.put("layoutToActivity", new FmLayoutToActivityMethod());           //$NON-NLS-1$
         paramMap.put("classToResource", new FmClassNameToResourceMethod());         //$NON-NLS-1$
+        paramMap.put("escapeXmlAttribute", new FmEscapeXmlStringMethod());          //$NON-NLS-1$
+        paramMap.put("escapeXmlText", new FmEscapeXmlStringMethod());               //$NON-NLS-1$
+        paramMap.put("escapeXmlString", new FmEscapeXmlStringMethod());             //$NON-NLS-1$
+        paramMap.put("extractLetters", new FmExtractLettersMethod());               //$NON-NLS-1$
 
         // This should be handled better: perhaps declared "required packages" as part of the
         // inputs? (It would be better if we could conditionally disable template based

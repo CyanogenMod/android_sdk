@@ -1,3 +1,3 @@
 <resources>
-    <string name="app_name">${appTitle}</string>
+    <string name="app_name">${escapeXmlString(appTitle)}</string>
 </resources>
