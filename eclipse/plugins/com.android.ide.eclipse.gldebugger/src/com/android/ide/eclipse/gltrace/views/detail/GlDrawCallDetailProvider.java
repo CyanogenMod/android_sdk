@@ -20,6 +20,7 @@ import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.FitToCanvasAction;
+import com.android.ide.eclipse.gltrace.views.SaveImageAction;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
 import org.eclipse.jface.action.ActionContributionItem;
@@ -27,12 +28,13 @@ import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class GlDrawCallDetailProvider implements ICallDetailProvider {
     private ImageCanvas mImageCanvas;
     private FitToCanvasAction mFitToCanvasAction;
+    private SaveImageAction mSaveImageAction;
     private List<IContributionItem> mToolBarItems;
 
     @Override
@@ -47,8 +49,11 @@ public class GlDrawCallDetailProvider implements ICallDetailProvider {
         mImageCanvas.setFitToCanvas(false);
 
         mFitToCanvasAction = new FitToCanvasAction(false, mImageCanvas);
-        mToolBarItems = Collections.singletonList(
-                (IContributionItem) new ActionContributionItem(mFitToCanvasAction));
+        mSaveImageAction = new SaveImageAction(mImageCanvas);
+
+        mToolBarItems = Arrays.asList(
+                (IContributionItem) new ActionContributionItem(mFitToCanvasAction),
+                (IContributionItem) new ActionContributionItem(mSaveImageAction));
     }
 
     @Override

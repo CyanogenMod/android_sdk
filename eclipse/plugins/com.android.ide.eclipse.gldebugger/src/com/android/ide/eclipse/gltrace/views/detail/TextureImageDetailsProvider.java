@@ -22,6 +22,7 @@ import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.GLStringProperty;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 import com.android.ide.eclipse.gltrace.views.FitToCanvasAction;
+import com.android.ide.eclipse.gltrace.views.SaveImageAction;
 import com.android.ide.eclipse.gltrace.widgets.ImageCanvas;
 
 import org.eclipse.jface.action.ActionContributionItem;
@@ -31,12 +32,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class TextureImageDetailsProvider implements IStateDetailProvider {
     private ImageCanvas mImageCanvas;
     private FitToCanvasAction mFitToCanvasAction;
+    private SaveImageAction mSaveImageAction;
     private List<IContributionItem> mToolBarItems;
 
     @Override
@@ -50,8 +52,11 @@ public class TextureImageDetailsProvider implements IStateDetailProvider {
         mImageCanvas.setFitToCanvas(false);
 
         mFitToCanvasAction = new FitToCanvasAction(false, mImageCanvas);
-        mToolBarItems = Collections.singletonList(
-                (IContributionItem) new ActionContributionItem(mFitToCanvasAction));
+        mSaveImageAction = new SaveImageAction(mImageCanvas);
+
+        mToolBarItems = Arrays.asList(
+                (IContributionItem) new ActionContributionItem(mFitToCanvasAction),
+                (IContributionItem) new ActionContributionItem(mSaveImageAction));
     }
 
     @Override

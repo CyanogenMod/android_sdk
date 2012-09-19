@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.gltrace.widgets;
 
+import com.android.ide.eclipse.gltrace.GlTracePlugin;
+
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -23,6 +27,8 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
@@ -31,6 +37,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
+
+import java.io.File;
 
 public class ImageCanvas extends Canvas {
     private static final int SCROLLBAR_INCREMENT = 20;
@@ -221,6 +229,22 @@ public class ImageCanvas extends Canvas {
     public void dispose() {
         if (mImage != null && !mImage.isDisposed()) {
             mImage.dispose();
+        }
+    }
+
+    public void exportImageTo(File file) {
+        if (mImage == null || file == null) {
+            return;
+        }
+
+        ImageLoader imageLoader = new ImageLoader();
+        imageLoader.data = new ImageData[] { mImage.getImageData() };
+
+        try {
+            imageLoader.save(file.getAbsolutePath(), SWT.IMAGE_PNG);
+        } catch (Exception e) {
+            ErrorDialog.openError(getShell(), "Save Image", "Error saving image",
+                    new Status(Status.ERROR, GlTracePlugin.PLUGIN_ID, e.toString()));
         }
     }
 }
