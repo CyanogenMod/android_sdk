@@ -28,6 +28,7 @@ import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -93,7 +94,7 @@ final class LintJob extends Job {
                     scope = Scope.ALL;
                 } else {
                     String name = resource.getName();
-                    if (AdtUtils.endsWithIgnoreCase(name, DOT_XML)) {
+                    if (SdkUtils.endsWithIgnoreCase(name, DOT_XML)) {
                         if (name.equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
                             scope = EnumSet.of(Scope.MANIFEST);
                         } else {

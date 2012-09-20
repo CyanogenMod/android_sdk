@@ -35,9 +35,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.jface.fieldassist.ContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposal;
@@ -147,7 +147,7 @@ abstract class ValueCompleter implements IContentProposalProvider {
                 }
 
                 for (String value : values) {
-                    if (AdtUtils.startsWithIgnoreCase(value, prefix)) {
+                    if (SdkUtils.startsWithIgnoreCase(value, prefix)) {
                         if (prepend != null && prepend.contains(value)) {
                             continue;
                         }
@@ -165,13 +165,13 @@ abstract class ValueCompleter implements IContentProposalProvider {
             String[] values = info.getEnumValues();
             if (values != null) {
                 for (String value : values) {
-                    if (AdtUtils.startsWithIgnoreCase(value, prefix)) {
+                    if (SdkUtils.startsWithIgnoreCase(value, prefix)) {
                         proposals.add(new ContentProposal(value));
                     }
                 }
 
                 for (String value : values) {
-                    if (!AdtUtils.startsWithIgnoreCase(value, prefix)) {
+                    if (!SdkUtils.startsWithIgnoreCase(value, prefix)) {
                         proposals.add(new ContentProposal(value));
                     }
                 }

@@ -29,6 +29,7 @@ import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -258,7 +259,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             }
             IFile file = (IFile) resource;
             boolean isJava = file.getName().endsWith(DOT_JAVA);
-            boolean isXml = AdtUtils.endsWith(file.getName(), DOT_XML);
+            boolean isXml = SdkUtils.endsWith(file.getName(), DOT_XML);
             if (!isJava && !isXml) {
                 return;
             }

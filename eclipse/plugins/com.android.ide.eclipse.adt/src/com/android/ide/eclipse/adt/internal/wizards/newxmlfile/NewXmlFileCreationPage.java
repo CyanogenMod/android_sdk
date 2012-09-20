@@ -46,6 +46,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -648,7 +649,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 if (res.getType() == IResource.FOLDER) {
                     wsFolderPath = res.getProjectRelativePath();
                 } else if (res.getType() == IResource.FILE) {
-                    if (AdtUtils.endsWithIgnoreCase(res.getName(), DOT_XML)) {
+                    if (SdkUtils.endsWithIgnoreCase(res.getName(), DOT_XML)) {
                         fileName = res.getName();
                     }
                     wsFolderPath = res.getParent().getProjectRelativePath();

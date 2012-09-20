@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.ui;
 
 import static com.android.SdkConstants.DOT_9PNG;
-import static com.android.ide.eclipse.adt.AdtUtils.endsWithIgnoreCase;
+import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceResolver;

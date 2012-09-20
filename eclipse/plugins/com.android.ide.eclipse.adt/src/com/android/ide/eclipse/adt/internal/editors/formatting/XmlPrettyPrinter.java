@@ -24,8 +24,8 @@ import static com.android.SdkConstants.XMLNS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
@@ -86,7 +86,7 @@ public class XmlPrettyPrinter {
         mPrefs = prefs;
         mStyle = style;
         if (lineSeparator == null) {
-            lineSeparator = AdtUtils.getLineSeparator();
+            lineSeparator = SdkUtils.getLineSeparator();
         }
         mLineSeparator = lineSeparator;
     }
@@ -877,8 +877,8 @@ public class XmlPrettyPrinter {
             return false;
         }
 
-        return AdtUtils.endsWith(mOut, mLineSeparator) &&
-                AdtUtils.endsWith(mOut, mOut.length() - mLineSeparator.length(), mLineSeparator);
+        return SdkUtils.endsWith(mOut, mLineSeparator) &&
+                SdkUtils.endsWith(mOut, mOut.length() - mLineSeparator.length(), mLineSeparator);
     }
 
     private boolean newlineAfterElementClose(Element element, int depth) {
