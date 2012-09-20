@@ -19,6 +19,7 @@ package com.android.ide.eclipse.gltrace.editors;
 import com.android.ddmuilib.AbstractBufferFindTarget;
 import com.android.ddmuilib.FindDialog;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
+import com.android.ide.eclipse.gltrace.GlTracePlugin;
 import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
 import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
@@ -28,11 +29,16 @@ import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.FrameSummaryViewPage;
 import com.android.ide.eclipse.gltrace.views.detail.DetailsPage;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -54,30 +60,38 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.part.EditorPart;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +110,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     /** Height of thumbnail images of the framebuffer. */
     private static final int THUMBNAIL_HEIGHT = 50;
+
+    private static Image sExpandAllIcon;
+
+    private static String sLastExportedToFolder;
 
     private String mFilePath;
     private Scale mFrameSelectionScale;
@@ -126,6 +144,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private StateViewPage mStateViewPage;
     private FrameSummaryViewPage mFrameSummaryViewPage;
     private DetailsPage mDetailsPage;
+
+    private ToolItem mExpandAllToolItem;
+    private ToolItem mCollapseAllToolItem;
+    private ToolItem mSaveAsToolItem;
 
     public GLFunctionTraceViewer() {
         mGldrawTextColor = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
@@ -176,7 +198,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         setInput(parent.getShell(), mFilePath);
 
         createFrameSelectionControls(c);
-        createFilterBar(c);
+        createOptionsBar(c);
         createFrameTraceView(c);
 
         getSite().setSelectionProvider(mFrameTreeViewer);
@@ -360,13 +382,53 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameTreeViewer.expandAll();
     }
 
-    private void createFilterBar(Composite parent) {
-        int numColumns = mShowContextSwitcher ? 3 : 2;
+    private void createOptionsBar(Composite parent) {
+        int numColumns = mShowContextSwitcher ? 4 : 3;
 
         Composite c = new Composite(parent, SWT.NONE);
         c.setLayout(new GridLayout(numColumns, false));
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         c.setLayoutData(gd);
+
+        ToolBar toolBar = new ToolBar(c, SWT.FLAT | SWT.BORDER);
+
+        mExpandAllToolItem = new ToolItem(toolBar, SWT.PUSH);
+        mExpandAllToolItem.setToolTipText("Expand All");
+        if (sExpandAllIcon == null) {
+            ImageDescriptor id = GlTracePlugin.getImageDescriptor("/icons/expandall.png");
+            sExpandAllIcon = id.createImage();
+        }
+        if (sExpandAllIcon != null) {
+            mExpandAllToolItem.setImage(sExpandAllIcon);
+        }
+
+        mCollapseAllToolItem = new ToolItem(toolBar, SWT.PUSH);
+        mCollapseAllToolItem.setToolTipText("Collapse All");
+        mCollapseAllToolItem.setImage(
+                PlatformUI.getWorkbench().getSharedImages().getImage(
+                        ISharedImages.IMG_ELCL_COLLAPSEALL));
+
+        mSaveAsToolItem = new ToolItem(toolBar, SWT.PUSH);
+        mSaveAsToolItem.setToolTipText("Export Trace");
+        mSaveAsToolItem.setImage(
+                PlatformUI.getWorkbench().getSharedImages().getImage(
+                        ISharedImages.IMG_ETOOL_SAVEAS_EDIT));
+
+        SelectionListener toolbarSelectionListener = new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (e.getSource() == mCollapseAllToolItem) {
+                    setTreeItemsExpanded(false);
+                } else if (e.getSource() == mExpandAllToolItem) {
+                    setTreeItemsExpanded(true);
+                } else if (e.getSource() == mSaveAsToolItem) {
+                    exportTrace();
+                }
+            }
+        };
+        mExpandAllToolItem.addSelectionListener(toolbarSelectionListener);
+        mCollapseAllToolItem.addSelectionListener(toolbarSelectionListener);
+        mSaveAsToolItem.addSelectionListener(toolbarSelectionListener);
 
         Label l = new Label(c, SWT.NONE);
         l.setText("Filter:");
@@ -599,12 +661,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                         return ((String) marker);
                     }
                 }
-                try {
-                    return c.toString();
-                } catch (Exception e) {
-                    // in case of any formatting errors, just return the function name.
-                    return c.getFunction().toString();
-                }
+                return c.toString();
             case 1:
                 return formatDuration(c.getWallDuration());
             case 2:
@@ -765,6 +822,66 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         mFrameTreeViewer.getTree().selectAll();
+    }
+
+    private void exportTrace() {
+        if (mFrameTreeViewer == null || mFrameTreeViewer.getTree().isDisposed()) {
+            return;
+        }
+
+        if (mCallEndIndex == 0) {
+            return;
+        }
+
+        FileDialog fd = new FileDialog(mFrameTreeViewer.getTree().getShell(), SWT.SAVE);
+        fd.setFilterExtensions(new String[] { "*.txt" });
+        if (sLastExportedToFolder != null) {
+            fd.setFilterPath(sLastExportedToFolder);
+        }
+
+        String path = fd.open();
+        if (path == null) {
+            return;
+        }
+
+        File f = new File(path);
+        sLastExportedToFolder = f.getParent();
+        try {
+            exportFrameTo(f);
+        } catch (IOException e) {
+            ErrorDialog.openError(mFrameTreeViewer.getTree().getShell(),
+                    "Export trace file.",
+                    "Unexpected error exporting trace file.",
+                    new Status(Status.ERROR, GlTracePlugin.PLUGIN_ID, e.toString()));
+        }
+    }
+
+    private void exportFrameTo(File f) throws IOException {
+        String glCalls = serializeGlCalls(mTrace.getGLCalls(), mCallStartIndex, mCallEndIndex);
+        Files.write(glCalls, f, Charsets.UTF_8);
+    }
+
+    private String serializeGlCalls(List<GLCall> glCalls, int start, int end) {
+        StringBuilder sb = new StringBuilder();
+        while (start < end) {
+            sb.append(glCalls.get(start).toString());
+            sb.append("\n"); //$NON-NLS-1$
+            start++;
+        }
+
+        return sb.toString();
+    }
+
+    private void setTreeItemsExpanded(boolean expand) {
+        if (mFrameTreeViewer == null || mFrameTreeViewer.getTree().isDisposed()) {
+            return;
+        }
+
+        if (expand) {
+            mFrameTreeViewer.expandAll();
+        } else {
+            mFrameTreeViewer.collapseAll();
+        }
     }
 
     private class TraceViewerFindTarget extends AbstractBufferFindTarget {
