@@ -165,12 +165,22 @@
 
 P [ManifestMergerTest0_main.xml:6, ManifestMergerTest1_lib1.xml:6] Skipping identical /manifest/application/receiver[@name=com.example.AppReceiver1] element.
 E [ManifestMergerTest0_main.xml:12, ManifestMergerTest1_lib1.xml:13] Trying to merge incompatible /manifest/application/receiver[@name=com.example.AppReceiver2] element:
-  <receiver android:name=com.example.AppReceiver2>
-++    @android:icon = @drawable/app_icon
-      @android:name = com.example.AppReceiver2
+  <receiver
+--    @android:icon="@drawable/app_icon"
+--    @android:name="com.example.AppReceiver2">
+--    <intent-filter>
+  <receiver
+++    @android:name="com.example.AppReceiver2">
+++</receiver>
+++(end reached)
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/application/receiver[@name=com.example.AppReceiver3] element:
-  <receiver android:name=com.example.AppReceiver3>
-    <intent-filter>
-      <action android:name=com.example.action.ACTION_CUSTOM>
---        @android:name = com.example.action.ACTION_CUSTOM
-++        @android:name = com.example.action.ACTION_CUSTOM1
+  <receiver
+      @android:name="com.example.AppReceiver3">
+      <intent-filter>
+          <action
+--            @android:name="com.example.action.ACTION_CUSTOM1">
+  <receiver
+      @android:name="com.example.AppReceiver3">
+      <intent-filter>
+          <action
+++            @android:name="com.example.action.ACTION_CUSTOM">

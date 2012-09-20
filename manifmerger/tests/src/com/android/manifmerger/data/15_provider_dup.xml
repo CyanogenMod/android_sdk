@@ -134,12 +134,20 @@
 
 P [ManifestMergerTest0_main.xml:6, ManifestMergerTest1_lib1.xml:6] Skipping identical /manifest/application/provider[@name=com.example.Provider1] element.
 E [ManifestMergerTest0_main.xml:8, ManifestMergerTest1_lib1.xml:9] Trying to merge incompatible /manifest/application/provider[@name=com.example.Provider2] element:
-  <provider android:name=com.example.Provider2>
---    @android:authorities = com.example.android.apis.app.thingy2
---    @android:enabled = @bool/someConditionalValue2
-      @android:name = com.example.Provider2
+  <provider
+--    @android:name="com.example.Provider2">
+--</provider>
+--(end reached)
+  <provider
+++    @android:authorities="com.example.android.apis.app.thingy2"
+++    @android:enabled="@bool/someConditionalValue2"
+++    @android:name="com.example.Provider2">
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/application/provider[@name=com.example.Provider3] element:
-  <provider android:name=com.example.Provider3>
-      @android:authorities = com.example.android.apis.app.thingy3
-++    @android:enabled = @bool/someConditionalValue
-      @android:name = com.example.Provider3
+  <provider
+--    @android:enabled="@bool/someConditionalValue"
+--    @android:name="com.example.Provider3">
+--</provider>
+  <provider
+++    @android:name="com.example.Provider3">
+++</provider>
+++(end reached)

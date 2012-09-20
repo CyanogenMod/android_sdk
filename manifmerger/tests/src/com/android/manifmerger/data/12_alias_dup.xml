@@ -192,14 +192,20 @@
 
 P [ManifestMergerTest0_main.xml:6, ManifestMergerTest1_lib1.xml:6] Skipping identical /manifest/application/activity-alias[@name=com.example.alias.MyActivity1] element.
 E [ManifestMergerTest0_main.xml:13, ManifestMergerTest1_lib1.xml:14] Trying to merge incompatible /manifest/application/activity-alias[@name=com.example.alias.MyActivity2] element:
-  <activity-alias android:name=com.example.alias.MyActivity2>
-++    @android:icon = @drawable/alias_icon2
-++    @android:label = @string/alias_name2
-      @android:name = com.example.alias.MyActivity2
-      @android:targetActivity = com.example.MainActivity2
+  <activity-alias
+--    @android:icon="@drawable/alias_icon2"
+--    @android:label="@string/alias_name2"
+--    @android:name="com.example.alias.MyActivity2"
+  <activity-alias
+++    @android:name="com.example.alias.MyActivity2"
+++    @android:targetActivity="com.example.MainActivity2">
+++</activity-alias>
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/application/activity-alias[@name=com.example.alias.MyActivity3] element:
-  <activity-alias android:name=com.example.alias.MyActivity3>
-      @android:icon = @drawable/alias_icon3
-      @android:label = @string/alias_name3
-      @android:name = com.example.alias.MyActivity3
-++    @android:targetActivity = com.example.MainActivity3
+  <activity-alias
+--    @android:name="com.example.alias.MyActivity3"
+--    @android:targetActivity="com.example.MainActivity3">
+--    <intent-filter>
+  <activity-alias
+++    @android:name="com.example.alias.MyActivity3">
+++    <intent-filter>
+++        <category

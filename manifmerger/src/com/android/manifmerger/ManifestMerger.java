@@ -32,9 +32,9 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -484,7 +484,7 @@ public class ManifestMerger {
             boolean found = false;
 
             for (Element dest : findElements(mMainDoc, path)) {
-                if (compareElements(src, dest, false, null /*diff*/, null /*keyAttr*/)) {
+                if (compareElements(dest, src, false, null /*diff*/, null /*keyAttr*/)) {
                     found = true;
                     break;
                 }
@@ -564,7 +564,7 @@ public class ManifestMerger {
             for (Element dest : dests) {
                 // If there's already a similar node in the destination, check it's identical.
                 StringBuilder diff = new StringBuilder();
-                if (compareElements(src, dest, false, diff, keyAttr)) {
+                if (compareElements(dest, src, false, diff, keyAttr)) {
                     // Same element. Skip.
                     if (warnDups) {
                         mLog.conflict(Severity.INFO,
@@ -1190,11 +1190,13 @@ public class ManifestMerger {
     }
 
     /**
-     * Compares two {@link Element}s recursively. They must be identical with the same
-     * structure and order. Whitespace and comments are ignored.
+     * Compares two {@link Element}s recursively.
+     * They must be identical with the same structure.
+     * Order should not matter.
+     * Whitespace and comments are ignored.
      *
-     * @param e1 The first element to compare.
-     * @param e2 The second element to compare with.
+     * @param expected The first element to compare.
+     * @param actual The second element to compare with.
      * @param nextSiblings If true, will also compare the following siblings.
      *   If false, it will just compare the given node.
      * @param diff An optional {@link StringBuilder} where to accumulate a diff output.
@@ -1202,197 +1204,22 @@ public class ManifestMerger {
      * @return True if {@code e1} and {@code e2} are equal.
      */
     private boolean compareElements(
-            @NonNull Node e1,
-            @NonNull Node e2,
+            @NonNull Node expected,
+            @NonNull Node actual,
             boolean nextSiblings,
             @Nullable StringBuilder diff,
             @Nullable String keyAttr) {
-        return compareElements(e1, e2, nextSiblings, diff, 0, keyAttr);
-    }
-
-    /**
-     * Do not call directly. This is an implementation detail for
-     * {@link #compareElements(Node, Node, boolean, StringBuilder, String)}.
-     */
-    private boolean compareElements(
-            @NonNull Node e1,
-            @NonNull Node e2,
-            boolean nextSiblings,
-            @Nullable StringBuilder diff,
-            int diffOffset,
-            @Nullable String keyAttr) {
-        while(true) {
-            // Find the next non-whitespace text or non-comment in e1.
-            while (e1 != null) {
-                short t = e1.getNodeType();
-
-                if (t == Node.COMMENT_NODE) {
-                    e1 = e1.getNextSibling();
-                } else if (t == Node.TEXT_NODE) {
-                    String s = e1.getNodeValue().trim();
-                    if (s.length() == 0) {
-                        e1 = e1.getNextSibling();
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-
-            // Find the next non-whitespace text or non-comment in e2.
-            while (e2 != null) {
-                short t = e2.getNodeType();
-
-                if (t == Node.COMMENT_NODE) {
-                    e2 = e2.getNextSibling();
-                } else if (t == Node.TEXT_NODE) {
-                    String s = e2.getNodeValue().trim();
-                    if (s.length() == 0) {
-                        e2 = e2.getNextSibling();
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-
-            // Same elements, or both null?
-            if (e1 == e2 || (e1 == null && e2 == null)) {
-                return true;
-            }
-
-            // Is one null but not the other?
-            if ((e1 == null && e2 != null) || (e1 != null && e2 == null)) {
-                break;  // dumpMismatchAndExit
-            }
-
-            assert e1 != null;
-            assert e2 != null;
-
-            // Same type?
-            short t = e1.getNodeType();
-            if (t != e2.getNodeType()) {
-                break;  // dumpMismatchAndExit
-            }
-
-            // Same node name? Must both be null or have the same value.
-            String s1 = e1.getNodeName();
-            String s2 = e2.getNodeName();
-            if ( !( (s1 == null && s2 == null) || (s1 != null && s1.equals(s2)) ) ) {
-                break;  // dumpMismatchAndExit
-            }
-
-            // Same node value? Must both be null or have the same value once whitespace is trimmed.
-            s1 = e1.getNodeValue();
-            s2 = e2.getNodeValue();
-            if (s1 != null) {
-                s1 = s1.trim();
-            }
-            if (s2 != null) {
-                s2 = s2.trim();
-            }
-            if ( !( (s1 == null && s2 == null) || (s1 != null && s1.equals(s2)) ) ) {
-                break;  // dumpMismatchAndExit
-            }
-
+        Map<String, String> nsPrefixE = new HashMap<String, String>();
+        Map<String, String> nsPrefixA = new HashMap<String, String>();
+        String sE = XmlUtils.printElement(expected, nsPrefixE, "");                 //$NON-NLS-1$
+        String sA = XmlUtils.printElement(actual,   nsPrefixA, "");                 //$NON-NLS-1$
+        if (sE.equals(sA)) {
+            return true;
+        } else {
             if (diff != null) {
-                // So far e1 and e2 seem pretty much equal. Dump it to the diff.
-                // We need to print to the diff before dealing with the children or attributes.
-                // Note: diffOffset + 1 because we want to reserve 2 spaces to write -/+
-                diff.append(XmlUtils.dump(e1, diffOffset + 1,
-                                          false /*nextSiblings*/, false /*deep*/, keyAttr));
+                XmlUtils.printXmlDiff(diff, sE, sA, nsPrefixE, nsPrefixA, NS_URI + ':' + keyAttr);
             }
-
-            // Now compare the attributes. When using the w3c.DOM this way, attributes are
-            // accessible via the Node/Element attributeMap and are not actually exposed
-            // as ATTR_NODEs in the node list. The downside is that we don't really
-            // have the proper attribute order but that's not an issue as far as the validity
-            // of the XML since attribute order should never matter.
-            List<Attr> a1 = XmlUtils.sortedAttributeList(e1.getAttributes());
-            List<Attr> a2 = XmlUtils.sortedAttributeList(e2.getAttributes());
-            if (a1.size() > 0 || a2.size() > 0) {
-
-                  int count1 = 0;
-                  int count2 = 0;
-                Map<String, AttrDiff> map = new TreeMap<String, AttrDiff>();
-                for (Attr a : a1) {
-                    AttrDiff ad1 = new AttrDiff(a, "--");       //$NON-NLS-1$
-                    map.put(ad1.mKey, ad1);
-                    count1++;
-                }
-
-                for (Attr a : a2) {
-                    AttrDiff ad2 = new AttrDiff(a, "++");       //$NON-NLS-1$
-                    AttrDiff ad1 = map.get(ad2.mKey);
-                    if (ad1 != null) {
-                        ad1.mSide = "  ";                       //$NON-NLS-1$
-                        count1--;
-                    } else {
-                        map.put(ad2.mKey, ad2);
-                        count2++;
-                    }
-                }
-
-                if (count1 != 0 || count2 != 0) {
-                    // We found some items not matching in both sets. Dump the result.
-                    if (diff != null) {
-                        for (AttrDiff ad : map.values()) {
-                            diff.append(ad.mSide)
-                                .append(XmlUtils.dump(ad.mAttr, diffOffset,
-                                                      false /*nextSiblings*/, false /*deep*/,
-                                                      keyAttr));
-                        }
-                    }
-                    // Exit without dumping
-                    return false;
-                }
-            }
-
-            // Compare recursively for elements.
-            if (t == Node.ELEMENT_NODE &&
-                    !compareElements(
-                            e1.getFirstChild(), e2.getFirstChild(), true,
-                            diff, diffOffset + 1, keyAttr)) {
-                // Exit without dumping since the recursive call take cares of its own diff
-                return false;
-            }
-
-            if (nextSiblings) {
-                e1 = e1.getNextSibling();
-                e2 = e2.getNextSibling();
-                continue;
-            } else {
-                return true;
-            }
-        }
-
-        // <INTERCAL COME FROM dumpMismatchAndExit PLEASE>
-        if (diff != null) {
-            diff.append("--")
-                .append(XmlUtils.dump(e1, diffOffset,
-                                      false /*nextSiblings*/, false /*deep*/, keyAttr));
-            diff.append("++")
-                .append(XmlUtils.dump(e2, diffOffset,
-                                      false /*nextSiblings*/, false /*deep*/, keyAttr));
-        }
-        return false;
-    }
-
-    private static class AttrDiff {
-        public final String mKey;
-        public final Attr mAttr;
-        public String mSide;
-
-        public AttrDiff(Attr attr, String side) {
-            mKey = getKey(attr);
-            mAttr = attr;
-            mSide = side;
-        }
-
-        String getKey(Attr attr) {
-            return String.format("%s=%s", attr.getNodeName(), attr.getNodeValue());
+            return false;
         }
     }
 
@@ -1518,5 +1345,6 @@ public class ManifestMerger {
         int line = XmlUtils.extractLineNumber(node); // 0 in case of error or unknown
         return new FileAndLine(name, line);
     }
+
 
 }

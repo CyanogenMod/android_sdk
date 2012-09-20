@@ -269,39 +269,46 @@
 @errors
 
 E [ManifestMergerTest0_main.xml:12, ManifestMergerTest1_lib1.xml:4] Trying to merge incompatible /manifest/permission[@name=com.example.DangerWillRobinson] element:
-  <permission android:name=com.example.DangerWillRobinson>
---    @android:description = Different description here
-++    @android:description = Insert boring description here
---    @android:icon = @drawable/not_the_same_icon
-++    @android:icon = @drawable/robot
-      @android:label = Danger, Will Robinson!
-      @android:name = com.example.DangerWillRobinson
-      @android:permissionGroup = com.example.MasterControlPermission
-      @android:protectionLevel = dangerous
+  <permission
+--    @android:description="Insert boring description here"
+--    @android:icon="@drawable/robot"
+  <permission
+++    @android:description="Different description here"
+++    @android:icon="@drawable/not_the_same_icon"
 E [ManifestMergerTest0_main.xml:14, ManifestMergerTest1_lib1.xml:8] Trying to merge incompatible /manifest/permission[@name=com.example.WhatWereYouThinking] element:
-  <permission android:name=com.example.WhatWereYouThinking>
-      @android:name = com.example.WhatWereYouThinking
-      @android:permissionGroup = com.example.MasterControlPermission
---    @android:protectionLevel = normal
-++    @android:protectionLevel = signatureOrSystem
+  <permission
+      @android:name="com.example.WhatWereYouThinking"
+--    @android:protectionLevel="signatureOrSystem">
+  <permission
+      @android:name="com.example.WhatWereYouThinking"
+++    @android:protectionLevel="normal">
 E [ManifestMergerTest0_main.xml:16, ManifestMergerTest1_lib1.xml:5] Trying to merge incompatible /manifest/permission-group[@name=com.example.MasterControlPermission] element:
-  <permission-group android:name=com.example.MasterControlPermission>
-      @android:description = Nobody expects...
-++    @android:icon = @drawable/ignored_icon
-      @android:label = the Spanish Inquisition
-      @android:name = com.example.MasterControlPermission
+  <permission-group
+--    @android:icon="@drawable/ignored_icon"
+--    @android:label="the Spanish Inquisition"
+--    @android:name="com.example.MasterControlPermission">
+  <permission-group
+++    @android:label="the Spanish Inquisition"
+++    @android:name="com.example.MasterControlPermission">
+++</permission-group>
 E [ManifestMergerTest0_main.xml:18, ManifestMergerTest1_lib1.xml:6] Trying to merge incompatible /manifest/permission-tree[@name=com.example.PermTree] element:
-  <permission-tree android:name=com.example.PermTree>
-++    @android:label = This is not a label
---    @android:label = This is not the same label
-      @android:name = com.example.PermTree
+  <permission-tree
+--    @android:label="This is not a label"
+  <permission-tree
+++    @android:label="This is not the same label"
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/permission[@name=com.example.Permission1] element:
-  <permission android:name=com.example.Permission1>
-      @android:name = com.example.Permission1
-      @android:permissionGroup = com.example.Permission1
-++    @android:protectionLevel = normal
---    @android:protectionLevel = system
+  <permission
+      @android:name="com.example.Permission1"
+--    @android:protectionLevel="normal">
+  <permission
+      @android:name="com.example.Permission1"
+++    @android:protectionLevel="system">
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:7] Trying to merge incompatible /manifest/permission-tree[@name=com.example.PermTree1] element:
-  <permission-tree android:name=com.example.PermTree1>
---    @android:description = Extra description
-      @android:name = com.example.PermTree1
+  <permission-tree
+--    @android:name="com.example.PermTree1">
+--</permission-tree>
+--(end reached)
+  <permission-tree
+++    @android:description="Extra description"
+++    @android:name="com.example.PermTree1">
+++</permission-tree>

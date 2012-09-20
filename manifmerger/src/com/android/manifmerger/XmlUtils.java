@@ -39,6 +39,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -499,4 +503,296 @@ class XmlUtils {
             }
         };
     }
+
+    // -------
+
+    /**
+     * Flatten the element to a string. This "pretty prints" the XML tree starting
+     * from the given node and all its children and attributes.
+     * <p/>
+     * The output is designed to be printed using {@link #printXmlDiff}.
+     *
+     * @param node The root node to print.
+     * @param nsPrefix A map that is filled with all the URI=>prefix found.
+     *   The internal string only contains the expanded URIs but this is rather verbose
+     *   so when printing the diff these will be replaced by the prefixes collected here.
+     * @param prefix A "space" prefix added at the beginning of each line for indentation
+     *   purposes. The diff printer later relies on this to find out the structure.
+     */
+    @NonNull
+    static String printElement(
+            @NonNull Node node,
+            @NonNull Map<String, String> nsPrefix,
+            @NonNull String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append('<');
+        String uri = node.getNamespaceURI();
+        if (uri != null) {
+            sb.append(uri).append(':');
+            nsPrefix.put(uri, node.getPrefix());
+        }
+        sb.append(node.getLocalName());
+        printAttributes(sb, node, nsPrefix, prefix);
+        sb.append(">\n");                                                           //$NON-NLS-1$
+        printChildren(sb, node.getFirstChild(), true, nsPrefix, prefix + "    "); //$NON-NLS-1$
+
+        sb.append(prefix).append("</");                                             //$NON-NLS-1$
+        if (uri != null) {
+            sb.append(uri).append(':');
+        }
+        sb.append(node.getLocalName());
+        sb.append(">\n");                                                           //$NON-NLS-1$
+
+        return sb.toString();
+    }
+
+    /**
+     * Flatten several children elements to a string.
+     * This is an implementation detail for {@link #printElement(Node, Map, String)}.
+     * <p/>
+     * If {@code nextSiblings} is false, the string conversion takes only the given
+     * child element and stops there.
+     * <p/>
+     * If {@code nextSiblings} is true, the string conversion also takes _all_ the siblings
+     * after the given element. The idea is the caller can call this with the first child
+     * of a parent and get a string showing all the children at the same time. They are
+     * sorted to avoid the ordering issue.
+     */
+    @NonNull
+    private static StringBuilder printChildren(
+            @NonNull StringBuilder sb,
+            @NonNull Node child,
+            boolean nextSiblings,
+            @NonNull Map<String, String> nsPrefix,
+            @NonNull String prefix) {
+        ArrayList<String> children = new ArrayList<String>();
+
+        boolean hasText = false;
+        for (; child != null; child = child.getNextSibling()) {
+            short t = child.getNodeType();
+            if (nextSiblings && t == Node.TEXT_NODE) {
+                // We don't typically have meaningful text nodes in an Android manifest.
+                // If there are, just dump them as-is into the element representation.
+                // We do trim whitespace and ignore all-whitespace or empty text nodes.
+                String s = child.getNodeValue().trim();
+                if (s.length() > 0) {
+                    sb.append(s);
+                    hasText = true;
+                }
+            } else if (t == Node.ELEMENT_NODE) {
+                children.add(printElement(child, nsPrefix, prefix)); //$NON-NLS-1$
+                if (!nextSiblings) {
+                    break;
+                }
+            }
+        }
+
+        if (hasText) {
+            sb.append('\n');
+        }
+
+        if (!children.isEmpty()) {
+            Collections.sort(children);
+            for (String s : children) {
+                sb.append(s);
+            }
+        }
+
+        return sb;
+    }
+
+    /**
+     * Flatten several attributes to a string using their alphabethical order.
+     * This is an implementation detail for {@link #printElement(Node, Map, String)}.
+     */
+    @NonNull
+    private static StringBuilder printAttributes(
+            @NonNull StringBuilder sb,
+            @NonNull Node node,
+            @NonNull Map<String, String> nsPrefix,
+            @NonNull String prefix) {
+        ArrayList<String> attrs = new ArrayList<String>();
+
+        NamedNodeMap attrMap = node.getAttributes();
+        if (attrMap != null) {
+            StringBuilder sb2 = new StringBuilder();
+            for (int i = 0; i < attrMap.getLength(); i++) {
+                Node attr = attrMap.item(i);
+                if (attr instanceof Attr) {
+                    sb2.setLength(0);
+                    sb2.append('@');
+                    String uri = attr.getNamespaceURI();
+                    if (uri != null) {
+                        sb2.append(uri).append(':');
+                        nsPrefix.put(uri, attr.getPrefix());
+                    }
+                    sb2.append(attr.getLocalName());
+                    sb2.append("=\"").append(attr.getNodeValue()).append('\"');     //$NON-NLS-1$
+                    attrs.add(sb2.toString());
+                }
+            }
+        }
+
+        Collections.sort(attrs);
+
+        for(String attr : attrs) {
+            sb.append('\n');
+            sb.append(prefix).append("    ").append(attr);                          //$NON-NLS-1$
+        }
+        return sb;
+    }
+
+    //------------
+
+    /**
+     * Computes a quick diff between two strings generated by
+     * {@link #printElement(Node, Map, String)}.
+     * <p/>
+     * This is a <em>not</em> designed to be a full contextual diff.
+     * It just stops at the first difference found, printing up to 3 lines of diff
+     * and backtracking to add prior contextual information to understand the
+     * structure of the element where the first diff line occured (by printing
+     * each parent found till the root one as well as printing the attribute
+     * named by {@code keyAttr}).
+     *
+     * @param sb The string builder where to output is written.
+     * @param expected The expected XML tree (as generated by {@link #printElement}.)
+     *          For best result this would be the "destination" XML we're merging into,
+     *          e.g. the main manifest.
+     * @param actual   The actual XML tree (as generated by {@link #printElement}.)
+     *          For best result this would be the "source" XML we're merging from,
+     *          e.g. a library manifest.
+     * @param nsPrefixE The map of URI=>prefix for the expected XML tree.
+     * @param nsPrefixA The map of URI=>prefix for the actual XML tree.
+     * @param keyAttr An optional attribute *full* name (uri:local name) to always
+     *          insert when writing the contextual lines before a diff line.
+     *          For example when writing an Activity, it helps to always insert
+     *          the "name" attribute since that's the key element to help the user
+     *          identify which node is being dumped.
+     */
+    static void printXmlDiff(
+            StringBuilder sb,
+            String expected,
+            String actual,
+            Map<String, String> nsPrefixE,
+            Map<String, String> nsPrefixA,
+            String keyAttr) {
+        String[] aE = expected.split("\n");
+        String[] aA = actual.split("\n");
+        int lE = aE.length;
+        int lA = aA.length;
+        int lm = lE < lA ? lA : lE;
+        boolean eofE = false;
+        boolean eofA = false;
+        boolean contextE = true;
+        boolean contextA = true;
+        int numDiff = 0;
+
+        StringBuilder sE = new StringBuilder();
+        StringBuilder sA = new StringBuilder();
+
+        outerLoop: for (int i = 0, iE = 0, iA = 0; i < lm; i++) {
+            if (iE < lE && iA < lA && aE[iE].equals(aA[iA])) {
+                if (numDiff > 0) {
+                    // If we found a difference, stop now.
+                    break outerLoop;
+                }
+                iE++;
+                iA++;
+                continue;
+            } else {
+                // Try to print some context for each side based on previous lines's space prefix.
+                if (contextE) {
+                    if (iE > 0) {
+                        String p = diffGetPrefix(aE[iE]);
+                        for (int kE = iE-1; kE >= 0; kE--) {
+                            if (!aE[kE].startsWith(p)) {
+                                sE.insert(0, '\n').insert(0, diffReplaceNs(aE[kE], nsPrefixE)).insert(0, "  ");
+                                if (p.length() == 0) {
+                                    break;
+                                }
+                                p = diffGetPrefix(aE[kE]);
+                            } else if (aE[kE].contains(keyAttr) || kE == 0) {
+                                sE.insert(0, '\n').insert(0, diffReplaceNs(aE[kE], nsPrefixE)).insert(0, "  ");
+                            }
+                        }
+                    }
+                    contextE = false;
+                }
+                if (iE >= lE) {
+                    if (!eofE) {
+                        sE.append("--(end reached)\n");
+                        eofE = true;
+                    }
+                } else {
+                    sE.append("--").append(diffReplaceNs(aE[iE++], nsPrefixE)).append('\n');
+                }
+
+                if (contextA) {
+                    if (iA > 0) {
+                        String p = diffGetPrefix(aA[iA]);
+                        for (int kA = iA-1; kA >= 0; kA--) {
+                            if (!aA[kA].startsWith(p)) {
+                                sA.insert(0, '\n').insert(0, diffReplaceNs(aA[kA], nsPrefixA)).insert(0, "  ");
+                                p = diffGetPrefix(aA[kA]);
+                                if (p.length() == 0) {
+                                    break;
+                                }
+                            } else if (aA[kA].contains(keyAttr) || kA == 0) {
+                                sA.insert(0, '\n').insert(0, diffReplaceNs(aA[kA], nsPrefixA)).insert(0, "  ");
+                            }
+                        }
+                    }
+                    contextA = false;
+                }
+                if (iA >= lA) {
+                    if (!eofA) {
+                        sA.append("++(end reached)\n");
+                        eofA = true;
+                    }
+                } else {
+                    sA.append("++").append(diffReplaceNs(aA[iA++], nsPrefixA)).append('\n');
+                }
+
+                // Dump up to 3 lines of difference
+                numDiff++;
+                if (numDiff == 3) {
+                    break outerLoop;
+                }
+            }
+        }
+
+        sb.append(sE);
+        sb.append(sA);
+    }
+
+    /**
+     * Returns all the whitespace at the beginning of a string.
+     * Implementation details for {@link #printXmlDiff} used to find the "parent"
+     * element and include it in the context of the diff.
+     */
+    private static String diffGetPrefix(String str) {
+        int pos = 0;
+        int len = str.length();
+        while (pos < len && str.charAt(pos) == ' ') {
+            pos++;
+        }
+        return str.substring(0, pos);
+    }
+
+    /**
+     * Simplifies a diff line by replacing NS URIs by their prefix.
+     * Implementation details for {@link #printXmlDiff}.
+     */
+    private static String diffReplaceNs(String str, Map<String, String> nsPrefix) {
+        for (Entry<String, String> entry : nsPrefix.entrySet()) {
+            String uri = entry.getKey();
+            String prefix = entry.getValue();
+            if (prefix != null && str.contains(uri)) {
+                str = str.replaceAll(Pattern.quote(uri), Matcher.quoteReplacement(prefix));
+            }
+        }
+        return str;
+    }
+
 }
