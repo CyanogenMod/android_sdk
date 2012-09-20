@@ -22,13 +22,19 @@ import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.GLState;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.android.ide.eclipse.gltrace.state.StatePrettyPrinter;
 import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ILock;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -40,13 +46,19 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.IPageSite;
 import org.eclipse.ui.part.Page;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -59,6 +71,7 @@ import java.util.Set;
  */
 public class StateViewPage extends Page implements ISelectionListener, ISelectionProvider {
     public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
+    private static String sLastUsedPath;
     private static final ILock sGlStateLock = Job.getJobManager().newLock();
 
     private GLTrace mTrace;
@@ -116,6 +129,48 @@ public class StateViewPage extends Page implements ISelectionListener, ISelectio
         mTreeViewer.setLabelProvider(mLabelProvider);
         mTreeViewer.setInput(mState);
         mTreeViewer.refresh();
+
+        final IToolBarManager manager = getSite().getActionBars().getToolBarManager();
+        manager.add(new Action("Save to File",
+                PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(
+                        ISharedImages.IMG_ETOOL_SAVEAS_EDIT)) {
+            @Override
+            public void run() {
+                saveCurrentState();
+            }
+        });
+    }
+
+    private void saveCurrentState() {
+        final Shell shell = mTreeViewer.getTree().getShell();
+        FileDialog fd = new FileDialog(shell, SWT.SAVE);
+        fd.setFilterExtensions(new String[] { "*.txt" });
+        if (sLastUsedPath != null) {
+            fd.setFilterPath(sLastUsedPath);
+        }
+
+        String path = fd.open();
+        if (path == null) {
+            return;
+        }
+
+        File f = new File(path);
+        sLastUsedPath = f.getParent();
+
+        // export state to f
+        StatePrettyPrinter pp = new StatePrettyPrinter();
+        synchronized (sGlStateLock) {
+            mState.prettyPrint(pp);
+        }
+
+        try {
+            Files.write(pp.toString(), f, Charsets.UTF_8);
+        } catch (IOException e) {
+            ErrorDialog.openError(shell,
+                    "Export GL State",
+                    "Unexpected error while writing GL state to file.",
+                    new Status(Status.ERROR, GlTracePlugin.PLUGIN_ID, e.toString()));
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.state;
 
+
 /**
  * The GL state is modeled as a hierarchical set of properties, all of which implement
  * this interface.
@@ -56,4 +57,7 @@ public interface IGLProperty extends Cloneable {
 
     /** Deep clone this property. */
     IGLProperty clone();
+
+    /** Pretty print current property value to the given writer. */
+    void prettyPrint(StatePrettyPrinter pp);
 }

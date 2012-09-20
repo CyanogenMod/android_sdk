@@ -123,4 +123,14 @@ public class GLCompositeProperty implements IGLProperty {
         throw new UnsupportedOperationException(
                 "Values cannot be obtained for composite properties."); //$NON-NLS-1$
     }
+
+    @Override
+    public void prettyPrint(StatePrettyPrinter pp) {
+        pp.prettyPrint(mType, null);
+        pp.incrementIndentLevel();
+        for (IGLProperty p : mPropertiesMap.values()) {
+            p.prettyPrint(pp);
+        }
+        pp.decrementIndentLevel();
+    }
 }

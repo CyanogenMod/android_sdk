@@ -18,6 +18,7 @@ package com.android.ide.eclipse.gltrace.state;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * A list property is a container for a list of properties, addressed by index.
@@ -165,5 +166,17 @@ public class GLListProperty implements IGLProperty {
 
     public int size() {
         return mList.size();
+    }
+
+    @Override
+    public void prettyPrint(StatePrettyPrinter pp) {
+        pp.prettyPrint(mType, null);
+        pp.incrementIndentLevel();
+        for (int i = 0; i < mList.size(); i++) {
+            pp.prettyPrint(String.format(Locale.US, "Index %d:", i));
+            IGLProperty p = mList.get(i);
+            p.prettyPrint(pp);
+        }
+        pp.decrementIndentLevel();
     }
 }
