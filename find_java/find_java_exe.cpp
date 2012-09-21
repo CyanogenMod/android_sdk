@@ -117,12 +117,15 @@ int main(int argc, char* argv[]) {
     _ASSERT(!javaPath.isEmpty());
 
     if (doShortPath) {
+        PVOID oldWow64Value = disableWow64FsRedirection();
         if (!javaPath.toShortPath(&javaPath)) {
+            revertWow64FsRedirection(&oldWow64Value);
             fprintf(stderr,
                 "Failed to convert path to a short DOS path: %s\n",
                 javaPath.cstr());
             return 1;
         }
+        revertWow64FsRedirection(&oldWow64Value);
     }
 
     if (doVersion) {
