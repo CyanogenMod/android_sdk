@@ -52,8 +52,13 @@ public class ProtoBufUtils {
                 palette,
                 1,          // scan line padding
                 uncompressed);
-        imageData = imageData.scaledTo(imageData.width, -imageData.height);
+        byte[] alpha = new byte[width*height];
+        for (int i = 0; i < width * height; i++) {
+            alpha[i] = uncompressed[i * 4 + 3];
+        }
+        imageData.alphaData = alpha;
 
+        imageData = imageData.scaledTo(imageData.width, -imageData.height);
         return imageData;
     }
 

@@ -383,6 +383,41 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         c.setLayoutData(gd);
 
+        Label l = new Label(c, SWT.NONE);
+        l.setText("Filter:");
+
+        mFilterText = new Text(c, SWT.BORDER | SWT.ICON_SEARCH | SWT.SEARCH | SWT.ICON_CANCEL);
+        mFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mFilterText.setMessage(DEFAULT_FILTER_MESSAGE);
+        mFilterText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                updateAppliedFilters();
+            }
+        });
+
+        if (mShowContextSwitcher) {
+            mContextSwitchCombo = new Combo(c, SWT.BORDER | SWT.READ_ONLY);
+
+            // Setup the combo such that "All Contexts" is the first item,
+            // and then we have an item for each context.
+            mContextSwitchCombo.add("All Contexts");
+            mContextSwitchCombo.select(0);
+            mCurrentlyDisplayedContext = -1; // showing all contexts
+            for (int i = 0; i < mTrace.getContexts().size(); i++) {
+                mContextSwitchCombo.add("Context " + i);
+            }
+
+            mContextSwitchCombo.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    selectContext(mContextSwitchCombo.getSelectionIndex() - 1);
+                }
+            });
+        } else {
+            mCurrentlyDisplayedContext = 0;
+        }
+
         ToolBar toolBar = new ToolBar(c, SWT.FLAT | SWT.BORDER);
 
         mExpandAllToolItem = new ToolItem(toolBar, SWT.PUSH);
@@ -422,41 +457,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mExpandAllToolItem.addSelectionListener(toolbarSelectionListener);
         mCollapseAllToolItem.addSelectionListener(toolbarSelectionListener);
         mSaveAsToolItem.addSelectionListener(toolbarSelectionListener);
-
-        Label l = new Label(c, SWT.NONE);
-        l.setText("Filter:");
-
-        mFilterText = new Text(c, SWT.BORDER | SWT.ICON_SEARCH | SWT.SEARCH | SWT.ICON_CANCEL);
-        mFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mFilterText.setMessage(DEFAULT_FILTER_MESSAGE);
-        mFilterText.addModifyListener(new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent e) {
-                updateAppliedFilters();
-            }
-        });
-
-        if (mShowContextSwitcher) {
-            mContextSwitchCombo = new Combo(c, SWT.BORDER | SWT.READ_ONLY);
-
-            // Setup the combo such that "All Contexts" is the first item,
-            // and then we have an item for each context.
-            mContextSwitchCombo.add("All Contexts");
-            mContextSwitchCombo.select(0);
-            mCurrentlyDisplayedContext = -1; // showing all contexts
-            for (int i = 0; i < mTrace.getContexts().size(); i++) {
-                mContextSwitchCombo.add("Context " + i);
-            }
-
-            mContextSwitchCombo.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    selectContext(mContextSwitchCombo.getSelectionIndex() - 1);
-                }
-            });
-        } else {
-            mCurrentlyDisplayedContext = 0;
-        }
     }
 
     private void updateAppliedFilters() {
