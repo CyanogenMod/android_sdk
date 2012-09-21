@@ -82,14 +82,14 @@ public class GLTrace {
         }
 
         if (isTraceFileModified()) {
-            return c.getThumbnailImage();
+            return null;
         }
 
         RandomAccessFile file;
         try {
             file = new RandomAccessFile(mTraceFileInfo.getPath(), "r"); //$NON-NLS-1$
         } catch (FileNotFoundException e1) {
-            return c.getThumbnailImage();
+            return null;
         }
 
         GLMessage m = null;

@@ -21,8 +21,6 @@ import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
 import com.android.sdklib.util.SparseArray;
 
-import org.eclipse.swt.graphics.Image;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -60,9 +58,6 @@ public class GLCall {
     /** Flag indicating whether the original protobuf message included FB data. */
     private final boolean mHasFb;
 
-    /** Thumbnail image of the framebuffer if available. */
-    private final Image mThumbnailImage;
-
     /** Full string representation of this call. */
     private final String mDisplayString;
 
@@ -88,12 +83,11 @@ public class GLCall {
     private SparseArray<Object> mProperties;
 
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
-            Image thumbnailImage, Function function, boolean hasFb, int contextId,
+            Function function, boolean hasFb, int contextId,
             int wallTime, int threadTime) {
         mIndex = index;
         mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
-        mThumbnailImage = thumbnailImage;
         mDisplayString = displayString;
         mFunction = function;
         mHasFb = hasFb;
@@ -124,10 +118,6 @@ public class GLCall {
 
     public boolean hasFb() {
         return mHasFb;
-    }
-
-    public Image getThumbnailImage() {
-        return mThumbnailImage;
     }
 
     public long getStartTime() {
