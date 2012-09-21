@@ -1,6 +1,6 @@
 <resources>
     <#if !isNewProject>
-    <string name="title_${activityToLayout(activityClass)}">${activityTitle}</string>
+    <string name="title_${activityToLayout(activityClass)}">${escapeXmlString(activityTitle)}</string>
     </#if>
 
     <string name="menu_settings">Settings</string>

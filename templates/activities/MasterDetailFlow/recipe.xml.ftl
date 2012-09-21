@@ -11,7 +11,7 @@
     <instantiate from="res/layout/activity_content_list.xml.ftl"
                    to="res/layout/activity_${collection_name}.xml" />
     <instantiate from="res/layout/activity_content_twopane.xml.ftl"
-                   to="res/layout/activity_${objectKind?lower_case}_twopane.xml" />
+                   to="res/layout/activity_${extractLetters(objectKind?lower_case)}_twopane.xml" />
     <instantiate from="res/layout/fragment_content_detail.xml.ftl"
                    to="res/layout/fragment_${detail_name}.xml" />
 

@@ -7,5 +7,5 @@
     For more on layout aliases, see:
     http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters
     -->
-    <item type="layout" name="activity_${collection_name}">@layout/activity_${objectKind?lower_case}_twopane</item>
+    <item type="layout" name="activity_${collection_name}">@layout/activity_${extractLetters(objectKind?lower_case)}_twopane</item>
 </resources>

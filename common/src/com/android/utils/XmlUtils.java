@@ -182,6 +182,27 @@ public class XmlUtils {
     }
 
     /**
+     * Converts the given attribute value to an XML-text-safe value, meaning that
+     * less than and ampersand characters are escaped.
+     *
+     * @param textValue the text value to be escaped
+     * @return the escaped value
+     */
+    @NonNull
+    public static String toXmlTextValue(@NonNull String textValue) {
+        for (int i = 0, n = textValue.length(); i < n; i++) {
+            char c = textValue.charAt(i);
+            if (c == '<' || c == '&') {
+                StringBuilder sb = new StringBuilder(2 * textValue.length());
+                appendXmlTextValue(sb, textValue);
+                return sb.toString();
+            }
+        }
+
+        return textValue;
+    }
+
+    /**
      * Appends text to the given {@link StringBuilder} and escapes it as required for a
      * DOM attribute node.
      *

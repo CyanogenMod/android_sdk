@@ -471,6 +471,58 @@
 <h4>See also</h4>
 <p><a href="#toc_underscoretocamelcase"><code>underscoreToCamelCase</code></a></p>
 
+<h3 data-toctitle="escapeXmlAttribute">string <em>escapeXmlAttribute</em>(string)</h3>
+
+<p>This function escapes a string, such as <code>Android's</code> such that it can be used as an XML attribute value: <code>Android&amp;apos;s</code>. In particular, it will escape ', ", &lt; and &amp;.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>str</code></dt>
+  <dd>The string to be escaped.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_escapexmltext"><code>escapeXmlText</code></a></p>
+<p><a href="#toc_escapexmlstring"><code>escapeXmlString</code></a></p>
+
+<h3 data-toctitle="escapeXmlText">string <em>escapeXmlText</em>(string)</h3>
+
+<p>This function escapes a string, such as <code>A &amp; B's</code> such that it can be used as XML text. This means it will escape &lt; and &gt;, but unlike <a href="#toc_escapexmlattribute"><code>escapeXmlAttribute</code></a> it will <b>not</b> escape ' and ". In the preceeding example, it will escape the string to <code>A &amp;amp; B\s</code>. Note that if you plan to use the XML text as the value for a &lt;string&gt; resource value, you should consider using <a href="#toc_escapexmlstring"><code>escapeXmlString</code></a> instead, since it performs additional escapes necessary for string resources.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>str</code></dt>
+  <dd>The string to escape to proper XML text.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_escapexmlattribute"><code>escapeXmlAttribute</code></a></p>
+<p><a href="#toc_escapexmlstring"><code>escapeXmlString</code></a></p>
+
+<h3 data-toctitle="escapeXmlString">string <em>escapeXmlString</em>(string)</h3>
+
+<p>This function escapes a string, such as <code>A &amp; B's</code> such that it is suitable to be inserted in a string resource file as XML text, such as <code>A &amp;amp; B\s</code>. In addition to escaping XML characters like &lt; and &amp;, it also performs additional Android specific escapes, such as escaping apostrophes with a backslash, and so on.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>str</code></dt>
+  <dd>The string, e.g. <code>Activity's Title</code> to escape to a proper resource XML value.</dd>
+</dl>
+
+<h4>See also</h4>
+<p><a href="#toc_escapexmlattribute"><code>escapeXmlAttribute</code></a></p>
+<p><a href="#toc_escapexmltext"><code>escapeXmlText</code></a></p>
+
+<h3 data-toctitle="extractLetters">string <em>extractLetters</em>(string)</h3>
+
+<p>This function extracts all the letters from a string, effectively removing any punctuation and whitespace characters.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>str</code></dt>
+  <dd>The string to extract letters from</dd>
+</dl>
+
 <h3 data-toctitle="classToResource">string <em>classToResource</em>(string)</h3>
 
 <p>This function converts an Android class name, such as <code>FooActivity</code> or <code>FooFragment</code>, to a corresponding resource-friendly identifier string, such as <code>foo</code>, stripping the 'Activity' or 'Fragment' suffix. Currently stripped suffixes are listed below.</p>
