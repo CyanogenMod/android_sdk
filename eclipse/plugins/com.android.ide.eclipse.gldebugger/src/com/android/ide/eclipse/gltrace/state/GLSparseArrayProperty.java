@@ -20,6 +20,7 @@ import com.android.sdklib.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class GLSparseArrayProperty implements IGLProperty {
     private final GLStateType mType;
@@ -148,5 +149,22 @@ public class GLSparseArrayProperty implements IGLProperty {
     public Object getValue() {
         throw new UnsupportedOperationException(
                 "Values cannot be obtained for composite properties."); //$NON-NLS-1$
+    }
+
+    @Override
+    public void prettyPrint(StatePrettyPrinter pp) {
+        pp.prettyPrint(mType, null);
+        pp.incrementIndentLevel();
+        for (int i = 0; i < mSparseArray.size(); i++) {
+            int key = mSparseArray.keyAt(i);
+            pp.prettyPrint(String.format(Locale.US, "Index %d:", key));
+            IGLProperty prop = mSparseArray.get(key);
+
+            assert prop != null;
+            if (prop != null) {
+                prop.prettyPrint(pp);
+            }
+        }
+        pp.decrementIndentLevel();
     }
 }
