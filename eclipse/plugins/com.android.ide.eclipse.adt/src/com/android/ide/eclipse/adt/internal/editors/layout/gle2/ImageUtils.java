@@ -20,7 +20,7 @@ import static com.android.SdkConstants.DOT_BMP;
 import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
-import static com.android.ide.eclipse.adt.AdtUtils.endsWithIgnoreCase;
+import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

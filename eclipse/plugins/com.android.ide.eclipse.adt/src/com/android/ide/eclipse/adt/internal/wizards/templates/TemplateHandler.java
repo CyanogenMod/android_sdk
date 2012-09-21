@@ -42,6 +42,7 @@ import com.android.ide.eclipse.adt.internal.sdk.AdtManifestMergeCallback;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -692,7 +693,7 @@ class TemplateHandler {
         } else {
             // Just insert into file along with comment, using the "standard" conflict
             // syntax that many tools and editors recognize.
-            String sep = AdtUtils.getLineSeparator();
+            String sep = SdkUtils.getLineSeparator();
             contents =
                     "<<<<<<< Original" + sep
                     + currentXml + sep

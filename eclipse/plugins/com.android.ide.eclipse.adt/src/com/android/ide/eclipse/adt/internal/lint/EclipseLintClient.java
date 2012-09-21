@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
-import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
 import static com.android.ide.eclipse.adt.AdtUtils.workspacePathToFile;
 
@@ -50,6 +50,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
+import com.android.utils.SdkUtils;
 import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IFile;
@@ -673,7 +674,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             return readPlainFile(f);
         }
 
-        if (AdtUtils.endsWithIgnoreCase(file.getName(), DOT_XML)) {
+        if (SdkUtils.endsWithIgnoreCase(file.getName(), DOT_XML)) {
             IStructuredModel model = null;
             try {
                 IModelManager modelManager = StructuredModelManager.getModelManager();
@@ -813,7 +814,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                         File[] jars = libs.listFiles();
                         if (jars != null) {
                             for (File jar : jars) {
-                                if (AdtUtils.endsWith(jar.getPath(), DOT_JAR)) {
+                                if (SdkUtils.endsWith(jar.getPath(), DOT_JAR)) {
                                     libraries.add(jar);
                                 }
                             }

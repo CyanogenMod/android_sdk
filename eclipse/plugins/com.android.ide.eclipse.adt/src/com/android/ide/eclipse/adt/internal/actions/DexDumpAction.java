@@ -19,12 +19,12 @@ package com.android.ide.eclipse.adt.internal.actions;
 import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -166,7 +166,7 @@ public class DexDumpAction implements IObjectActionDelegate {
 
                 final BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
                 try {
-                    final String lineSep = AdtUtils.getLineSeparator();
+                    final String lineSep = SdkUtils.getLineSeparator();
 
                     int err = GrabProcessOutput.grabProcessOutput(
                             process,

@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
 import static com.android.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 import static com.android.ide.eclipse.adt.AdtUtils.capitalize;
-import static com.android.ide.eclipse.adt.AdtUtils.stripWhitespace;
 import static com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPage.ACTIVITY_NAME_SUFFIX;
+import static com.android.utils.SdkUtils.stripWhitespace;
 
 import com.android.SdkConstants;
 import com.android.ide.common.xml.ManifestData;

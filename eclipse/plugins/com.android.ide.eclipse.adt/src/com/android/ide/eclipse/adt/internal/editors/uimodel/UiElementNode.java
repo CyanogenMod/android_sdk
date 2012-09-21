@@ -27,7 +27,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -42,6 +41,7 @@ import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXm
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.UiUpdateState;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.jface.text.TextUtilities;
@@ -1035,7 +1035,7 @@ public class UiElementNode implements IPropertySource {
         if (document != null) {
             newLine = TextUtilities.getDefaultLineDelimiter(document);
         } else {
-            newLine = AdtUtils.getLineSeparator();
+            newLine = SdkUtils.getLineSeparator();
         }
         Text indentNode = doc.createTextNode(newLine + indent);
         parentXmlNode.insertBefore(indentNode, xmlNextSibling);

@@ -24,7 +24,6 @@ import static com.android.SdkConstants.PREFIX_THEME_REF;
 
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -32,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeN
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceType;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.fieldassist.ContentProposal;
@@ -172,7 +172,7 @@ class ResourceValueCompleter implements IContentProposalProvider {
                         prefix.length() <= nameStart ? "" : prefix.substring(nameStart);
                 for (ResourceItem item : repository.getResourceItemsOfType(type)) {
                     String name = item.getName();
-                    if (AdtUtils.startsWithIgnoreCase(name, namePrefix)) {
+                    if (SdkUtils.startsWithIgnoreCase(name, namePrefix)) {
                         results.add(base + name);
                     }
                 }

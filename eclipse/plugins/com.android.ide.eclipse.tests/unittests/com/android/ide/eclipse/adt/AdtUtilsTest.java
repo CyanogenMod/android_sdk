@@ -15,75 +15,12 @@
  */
 package com.android.ide.eclipse.adt;
 
-import java.util.Locale;
-
 import junit.framework.TestCase;
+
+import java.util.Locale;
 
 @SuppressWarnings("javadoc")
 public class AdtUtilsTest extends TestCase {
-    public void testEndsWithIgnoreCase() {
-        assertTrue(AdtUtils.endsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.endsWithIgnoreCase("foo", "Foo"));
-        assertTrue(AdtUtils.endsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.endsWithIgnoreCase("Barfoo", "foo"));
-        assertTrue(AdtUtils.endsWithIgnoreCase("BarFoo", "foo"));
-        assertTrue(AdtUtils.endsWithIgnoreCase("BarFoo", "foO"));
-
-        assertFalse(AdtUtils.endsWithIgnoreCase("foob", "foo"));
-        assertFalse(AdtUtils.endsWithIgnoreCase("foo", "fo"));
-    }
-
-    public void testStartsWithIgnoreCase() {
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "Foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("foo", "foo"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("barfoo", "bar"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("BarFoo", "bar"));
-        assertTrue(AdtUtils.startsWithIgnoreCase("BarFoo", "bAr"));
-
-        assertFalse(AdtUtils.startsWithIgnoreCase("bfoo", "foo"));
-        assertFalse(AdtUtils.startsWithIgnoreCase("fo", "foo"));
-    }
-
-    public void testStartsWith() {
-        assertTrue(AdtUtils.startsWith("foo", 0, "foo"));
-        assertTrue(AdtUtils.startsWith("foo", 0, "Foo"));
-        assertTrue(AdtUtils.startsWith("Foo", 0, "foo"));
-        assertTrue(AdtUtils.startsWith("aFoo", 1, "foo"));
-
-        assertFalse(AdtUtils.startsWith("aFoo", 0, "foo"));
-        assertFalse(AdtUtils.startsWith("aFoo", 2, "foo"));
-    }
-
-    public void testEndsWith() {
-        assertTrue(AdtUtils.endsWith("foo", "foo"));
-        assertTrue(AdtUtils.endsWith("foobar", "obar"));
-        assertTrue(AdtUtils.endsWith("foobar", "bar"));
-        assertTrue(AdtUtils.endsWith("foobar", "ar"));
-        assertTrue(AdtUtils.endsWith("foobar", "r"));
-        assertTrue(AdtUtils.endsWith("foobar", ""));
-
-        assertTrue(AdtUtils.endsWith(new StringBuilder("foobar"), "bar"));
-        assertTrue(AdtUtils.endsWith(new StringBuilder("foobar"), new StringBuffer("obar")));
-        assertTrue(AdtUtils.endsWith("foobar", new StringBuffer("obar")));
-
-        assertFalse(AdtUtils.endsWith("foo", "fo"));
-        assertFalse(AdtUtils.endsWith("foobar", "Bar"));
-        assertFalse(AdtUtils.endsWith("foobar", "longfoobar"));
-    }
-
-    public void testEndsWith2() {
-        assertTrue(AdtUtils.endsWith("foo", "foo".length(), "foo"));
-        assertTrue(AdtUtils.endsWith("foo", "fo".length(), "fo"));
-        assertTrue(AdtUtils.endsWith("foo", "f".length(), "f"));
-    }
-
-    public void testStripWhitespace() {
-        assertEquals("foo", AdtUtils.stripWhitespace("foo"));
-        assertEquals("foobar", AdtUtils.stripWhitespace("foo bar"));
-        assertEquals("foobar", AdtUtils.stripWhitespace("  foo bar  \n\t"));
-    }
-
     public void testExtractClassName() {
         assertEquals("Foo", AdtUtils.extractClassName("foo"));
         assertEquals("Foobar", AdtUtils.extractClassName("foo bar"));
