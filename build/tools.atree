@@ -173,7 +173,6 @@ framework/annotations.jar   tools/support/annotations.jar
 
 # systrace
 external/chromium-trace/systrace.py    tools/systrace/systrace.py
-external/chromium-trace/config.py      tools/systrace/config.py
 external/chromium-trace/script.js      tools/systrace/script.js
 external/chromium-trace/style.css      tools/systrace/style.css
 external/chromium-trace/LICENSE        tools/systrace/LICENSE
