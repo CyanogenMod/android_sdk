@@ -120,7 +120,7 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
         }
 
         // Handle unicode escapes
-        if (value.indexOf('\\') != -1) {
+        if (value != null && value.indexOf('\\') != -1) {
             value = AdtUtils.replaceUnicodeEscapes(value);
         }
 
