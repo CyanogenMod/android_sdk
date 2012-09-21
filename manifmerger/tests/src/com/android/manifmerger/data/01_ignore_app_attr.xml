@@ -1,6 +1,6 @@
 #
 # Test:
-# - Attributes from the application element in a library are ignored.
+# - Attributes from the application element in a library are ignored (except name)
 # - Comments from nodes ignored in libraries are not merged either.
 #
 
@@ -33,12 +33,13 @@
     android:versionCode="100"
     android:versionName="1.0.0">
 
-    <!-- The attributes from <application> in a library are not merged nor checked.
+    <!-- The attributes from <application> in a library are not merged nor checked
+         except for 'name' and 'backupAgent' which must match.
          This comment is ignored. -->
     <application
         android:label="@string/lib_name"
         android:icon="@drawable/lib_icon"
-        android:name="com.example.TheLib" >
+        android:name="com.example.TheApp" >
     </application>
 
 </manifest>

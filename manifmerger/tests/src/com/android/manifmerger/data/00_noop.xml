@@ -111,7 +111,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 </manifest>
 
 
@@ -212,7 +214,8 @@
         </activity>
 
         <!-- Provider extracted from ApiDemos -->
-        <provider android:name=".app.LoaderThrottle$SimpleProvider"
+        <provider
+            android:name="com.example.app1.app.LoaderThrottle$SimpleProvider"
             android:authorities="com.example.android.apis.app.LoaderThrottle"
             android:enabled="@bool/atLeastHoneycomb" />
 
@@ -223,3 +226,4 @@
 
 @errors
 
+W [ManifestMergerTest2_lib2.xml:1] Missing 'package' attribute in manifest.

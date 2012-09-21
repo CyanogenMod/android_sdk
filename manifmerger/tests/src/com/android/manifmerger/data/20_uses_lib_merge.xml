@@ -52,11 +52,11 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
-    <application
-        android:label="@string/lib_name1"
-        android:name="com.example.Library1" >
+    <application android:label="@string/lib_name1" >
 
         <!-- Same as 1 from main, marking it as required=false -->
         <uses-library
@@ -89,11 +89,11 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
-    <application
-        android:label="@string/lib_name1"
-        android:name="com.example.Library1" >
+    <application android:label="@string/lib_name1" >
 
         <!-- Overrides 3, changing it from required=false to true -->
         <uses-library

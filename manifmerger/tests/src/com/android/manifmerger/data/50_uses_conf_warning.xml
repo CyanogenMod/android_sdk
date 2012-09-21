@@ -65,7 +65,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
     <!-- this is the same uses-conf than in the main. -->
     <uses-configuration
@@ -81,7 +83,9 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
     <!-- this is the not same uses-conf than in the main. -->
     <uses-configuration

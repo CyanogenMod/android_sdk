@@ -65,7 +65,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
     <!-- this is the same supports-gl-texture than in the main. -->
     <supports-gl-texture android:name="some.gl.texture1" />
@@ -75,7 +77,9 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
     <!-- this is the not same supports-gl-texture than in the main. -->
     <supports-gl-texture android:name="some.gl.texture3" />

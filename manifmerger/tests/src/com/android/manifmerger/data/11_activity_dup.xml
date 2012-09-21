@@ -104,11 +104,11 @@
 
 @lib1_widget
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
-    <application
-        android:label="@string/lib_name"
-        android:name="com.example.WidgetLibrary" >
+    <application android:label="@string/lib_name" >
 
         <!-- Broadcast Receiver for a widget. -->
         <receiver
@@ -145,11 +145,11 @@
 
 @lib2_activity
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
-    <application
-        android:label="@string/lib_name"
-        android:name="com.example.WidgetLibrary" >
+    <application android:label="@string/lib_name" >
 
         <!-- This won't be merged because there's already an identical definition in the main. -->
         <activity
@@ -187,13 +187,13 @@
 
 @lib3_alias
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib3">
 
     <!-- This comment is ignored. -->
 
-    <application
-        android:label="@string/lib_name"
-        android:name="com.example.WidgetLibrary" >
+    <application android:label="@string/lib_name" >
 
         <!-- The first comment just before the element
              is carried over as-is.
@@ -339,7 +339,7 @@
         </activity>
 
         <!-- Provider extracted from ApiDemos -->
-        <provider android:name=".app.LoaderThrottle$SimpleProvider"
+        <provider android:name="com.example.lib2.app.LoaderThrottle$SimpleProvider"
             android:authorities="com.example.android.apis.app.LoaderThrottle"
             android:enabled="@bool/atLeastHoneycomb" />
 

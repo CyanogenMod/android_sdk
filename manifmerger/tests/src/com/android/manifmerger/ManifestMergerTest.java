@@ -70,6 +70,14 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
         processTestFiles();
     }
 
+    public void test16_fqcn_merge() throws Exception {
+        processTestFiles();
+    }
+
+    public void test17_fqcn_conflict() throws Exception {
+        processTestFiles();
+    }
+
     public void test20_uses_lib_merge() throws Exception {
         processTestFiles();
     }

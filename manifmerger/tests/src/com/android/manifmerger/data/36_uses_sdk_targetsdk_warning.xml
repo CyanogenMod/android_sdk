@@ -26,7 +26,9 @@
 
 @lib1
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
 
     <!-- This lib requires cupcake and targets 11 which is > 10 so it's a warning. -->
     <uses-sdk
@@ -39,7 +41,9 @@
 
 @lib2
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
 
     <!-- This is not an error nor a warning. -->
     <uses-sdk
