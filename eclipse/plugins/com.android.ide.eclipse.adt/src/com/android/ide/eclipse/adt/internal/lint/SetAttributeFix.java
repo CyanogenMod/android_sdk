@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.SdkConstants.ATTR_ALLOW_BACKUP;
 import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
 import static com.android.SdkConstants.ATTR_INPUT_TYPE;
@@ -24,6 +25,7 @@ import static com.android.SdkConstants.VALUE_FALSE;
 
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
+import com.android.tools.lint.checks.ManifestOrderDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TranslationDetector;
@@ -48,6 +50,8 @@ final class SetAttributeFix extends SetPropertyFix {
             return ATTR_INPUT_TYPE;
         } else if (mId.equals(TranslationDetector.MISSING.getId())) {
             return ATTR_TRANSLATABLE;
+        } else if (mId.equals(ManifestOrderDetector.ALLOW_BACKUP.getId())) {
+            return ATTR_ALLOW_BACKUP;
         } else {
             assert false : mId;
             return "";
@@ -75,6 +79,8 @@ final class SetAttributeFix extends SetPropertyFix {
             return "Add permission attribute";
         } else if (mId.equals(TranslationDetector.MISSING.getId())) {
             return "Mark this as a non-translatable resource";
+        } else if (mId.equals(ManifestOrderDetector.ALLOW_BACKUP.getId())) {
+            return "Set the allowBackup attribute to true or false";
         } else {
             assert false : mId;
             return "";
@@ -95,7 +101,8 @@ final class SetAttributeFix extends SetPropertyFix {
     @Override
     protected boolean invokeCodeCompletion() {
         return mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())
-                || mId.equals(TextFieldDetector.ISSUE.getId());
+                || mId.equals(TextFieldDetector.ISSUE.getId())
+                || mId.equals(ManifestOrderDetector.ALLOW_BACKUP.getId());
     }
 
     @Override
@@ -117,5 +124,4 @@ final class SetAttributeFix extends SetPropertyFix {
 
         return super.getProposal();
     }
-
 }

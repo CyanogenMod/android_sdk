@@ -31,6 +31,7 @@ import static com.android.SdkConstants.TAG_USES_LIBRARY;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -167,6 +168,40 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             Severity.ERROR,
             ManifestOrderDetector.class,
             EnumSet.of(Scope.MANIFEST));
+
+    /** Not explicitly defining allowBackup */
+    public static final Issue ALLOW_BACKUP = Issue.create(
+            "AllowBackup", //$NON-NLS-1$
+            "Ensure that allowBackup is explicitly set in the application's manifest",
+
+            "The allowBackup attribute determines if an application's data can be backed up " +
+            "and restored. It is documented at " +
+            "http://developer.android.com/reference/android/R.attr.html#allowBackup\n" +
+            "\n" +
+            "By default, this flag is set to `true`. When this flag is set to `true`, " +
+            "application data can be backed up and restored by the user using `adb backup` " +
+            "and `adb restore`.\n" +
+            "\n" +
+            "This may have security consequences for an application. `adb backup` allows " +
+            "users who have enabled USB debugging to copy application data off of the " +
+            "device. Once backed up, all application data can be read by the user. " +
+            "`adb restore` allows creation of application data from a source specified " +
+            "by the user. Following a restore, applications should not assume that the " +
+            "data, file permissions, and directory permissions were created by the " +
+            "application itself.\n" +
+            "\n" +
+            "Setting `allowBackup=\"false\"` opts an application out of both backup and " +
+            "restore.\n" +
+            "\n" +
+            "To fix this warning, decide whether your application should support backup, " +
+            "and explicitly set `android:allowBackup=(true|false)\"`",
+
+            Category.SECURITY,
+            3,
+            Severity.WARNING,
+            ManifestOrderDetector.class,
+            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+                    "http://developer.android.com/reference/android/R.attr.html#allowBackup");
 
     /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
@@ -347,6 +382,13 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
+            if (!element.hasAttributeNS(ANDROID_URI, SdkConstants.ATTR_ALLOW_BACKUP)
+                    && context.isEnabled(ALLOW_BACKUP)) {
+                context.report(ALLOW_BACKUP, element, context.getLocation(element),
+                        String.format("Should explicitly set android:allowBackup to true or " +
+                            "false (it's true by default, and that can have some security " +
+                            "implications for the application's data)", tag), null);
+            }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {
                 context.report(ORDER, element, context.getLocation(element),

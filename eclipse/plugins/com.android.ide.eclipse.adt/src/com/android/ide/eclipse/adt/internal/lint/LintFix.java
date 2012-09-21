@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
+import com.android.tools.lint.checks.ManifestOrderDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
@@ -148,6 +149,7 @@ abstract class LintFix implements ICompletionProposal {
                 LinearLayoutWeightFix.class);
         sFixes.put(AccessibilityDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(InefficientWeightDetector.BASELINE_WEIGHTS.getId(), SetAttributeFix.class);
+        sFixes.put(ManifestOrderDetector.ALLOW_BACKUP.getId(), SetAttributeFix.class);
         sFixes.put(HardcodedValuesDetector.ISSUE.getId(), ExtractStringFix.class);
         sFixes.put(UselessViewDetector.USELESS_LEAF.getId(), RemoveUselessViewFix.class);
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
