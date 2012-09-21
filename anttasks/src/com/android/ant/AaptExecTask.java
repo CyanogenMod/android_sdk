@@ -675,8 +675,9 @@ public final class AaptExecTask extends SingleDependencyTask {
         task.execute();
 
         // now if the project has libraries, R needs to be created for each libraries
+        // but only if the project is not a library.
         try {
-            if (libPkgProp != null && !libPkgProp.isEmpty()) {
+            if (!mNonConstantId && libPkgProp != null && !libPkgProp.isEmpty()) {
                 SymbolLoader symbolValues = new SymbolLoader(new File(mBinFolder, "R.txt"));
                 symbolValues.load();
 
