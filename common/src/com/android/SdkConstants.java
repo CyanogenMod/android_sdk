@@ -816,6 +816,9 @@ public final class SdkConstants {
     public static final String UNIT_DIP = "dip";                       //$NON-NLS-1$
     public static final String UNIT_SP = "sp";                         //$NON-NLS-1$
     public static final String UNIT_PX = "px";                         //$NON-NLS-1$
+    public static final String UNIT_IN = "in";                         //$NON-NLS-1$
+    public static final String UNIT_MM = "mm";                         //$NON-NLS-1$
+    public static final String UNIT_PT = "pt";                         //$NON-NLS-1$
 
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$

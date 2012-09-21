@@ -129,15 +129,17 @@ public final class AndroidTargetParser {
             progress.subTask("Attributes definitions");
             AttrsXmlParser attrsXmlParser = new AttrsXmlParser(
                     mAndroidTarget.getPath(IAndroidTarget.ATTRIBUTES),
-                    AdtPlugin.getDefault());
+                    AdtPlugin.getDefault(),
+                    1000);
             attrsXmlParser.preload();
+
             progress.worked(1);
 
             progress.subTask("Manifest definitions");
             AttrsXmlParser attrsManifestXmlParser = new AttrsXmlParser(
                     mAndroidTarget.getPath(IAndroidTarget.MANIFEST_ATTRIBUTES),
                     attrsXmlParser,
-                    AdtPlugin.getDefault());
+                    AdtPlugin.getDefault(), 1100);
             attrsManifestXmlParser.preload();
             progress.worked(1);
 
@@ -289,6 +291,8 @@ public final class AndroidTargetParser {
                     mAndroidTarget.getOptionalLibraries(),
                     frameworkResources,
                     layoutBridge);
+
+            targetData.setAttributeMap(attrsXmlParser.getAttributeMap());
 
             Sdk.getCurrent().setTargetData(mAndroidTarget, targetData);
 

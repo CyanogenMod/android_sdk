@@ -325,7 +325,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                     if (ResourceManager.isAutoBuilding()) {
                         IdeScanningContext context = new IdeScanningContext(projectResources,
-                                project);
+                                project, true);
 
                         resManager.processDelta(delta, context);
 

@@ -17,9 +17,6 @@
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
-import com.android.resources.ResourceType;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
@@ -31,45 +28,47 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Parser for scanning an id-generating resource file such as a layout or a menu
- * file, which registers any ids it encounters with an
- * {@link IValueResourceRepository}, and which registers errors with a
- * {@link ScanningContext}.
+ * Parser for scanning an XML resource file and validating all framework
+ * attribute references in it. If an error is found, the associated context
+ * is marked as needing a full AAPT run.
  */
-public class IdResourceParser {
-    private final IValueResourceRepository mRepository;
+public class ValidatingResourceParser {
     private final boolean mIsFramework;
     private ScanningContext mContext;
 
     /**
-     * Creates a new {@link IdResourceParser}
+     * Creates a new {@link ValidatingResourceParser}
      *
-     * @param repository value repository for registering resource declaration
      * @param context a context object with state for the current update, such
      *            as a place to stash errors encountered
      * @param isFramework true if scanning a framework resource
      */
-    public IdResourceParser(
-            @NonNull IValueResourceRepository repository,
+    public ValidatingResourceParser(
             @NonNull ScanningContext context,
             boolean isFramework) {
-        mRepository = repository;
         mContext = context;
         mIsFramework = isFramework;
     }
 
     /**
-     * Parse the given input and register ids with the given
-     * {@link IValueResourceRepository}.
+     * Parse the given input and return false if it contains errors, <b>or</b> if
+     * the context is already tagged as needing a full aapt run.
      *
-     * @param type the type of resource being scanned
      * @param path the full OS path to the file being parsed
      * @param input the input stream of the XML to be parsed
      * @return true if parsing succeeds and false if it fails
      * @throws IOException if reading the contents fails
      */
-    public boolean parse(ResourceType type, final String path, InputStream input)
+    public boolean parse(final String path, InputStream input)
             throws IOException {
+        // No need to validate framework files
+        if (mIsFramework) {
+            return true;
+        }
+        if (mContext.needsFullAapt()) {
+            return false;
+        }
+
         KXmlParser parser = new KXmlParser();
         try {
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
@@ -79,7 +78,7 @@ public class IdResourceParser {
             }
             parser.setInput(input, "UTF-8"); //$NON-NLS-1$
 
-            return parse(type, path, parser);
+            return parse(path, parser);
         } catch (XmlPullParserException e) {
             String message = e.getMessage();
 
@@ -107,9 +106,8 @@ public class IdResourceParser {
         }
     }
 
-    private boolean parse(ResourceType type, String path, KXmlParser parser)
+    private boolean parse(String path, KXmlParser parser)
             throws XmlPullParserException, IOException {
-        boolean valid = true;
         boolean checkForErrors = !mIsFramework && !mContext.needsFullAapt();
 
         while (true) {
@@ -124,17 +122,8 @@ public class IdResourceParser {
                         String uri = parser.getAttributeNamespace(i);
                         if (!mContext.checkValue(uri, attribute, value)) {
                             mContext.requestFullAapt();
-                            checkForErrors = false;
-                            valid = false;
+                            return false;
                         }
-                    }
-
-                    if (value.startsWith("@+")) {       //$NON-NLS-1$
-                        // Strip out the @+id/ or @+android:id/ section
-                        String id = value.substring(value.indexOf('/') + 1);
-                        ResourceValue newId = new ResourceValue(ResourceType.ID, id,
-                                mIsFramework);
-                        mRepository.addResourceValue(newId);
                     }
                 }
             } else if (event == XmlPullParser.END_DOCUMENT) {
@@ -142,6 +131,6 @@ public class IdResourceParser {
             }
         }
 
-        return valid;
+        return true;
     }
 }

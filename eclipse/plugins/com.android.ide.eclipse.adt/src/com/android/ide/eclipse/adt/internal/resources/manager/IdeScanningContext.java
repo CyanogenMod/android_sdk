@@ -15,15 +15,20 @@
  */
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_AAPT_COMPILE;
-
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ScanningContext;
+import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFolder;
@@ -36,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -50,20 +56,36 @@ public class IdeScanningContext extends ScanningContext {
     private IResource mCurrentFile;
     private List<Pair<IResource, String>> mErrors;
     private Set<IProject> mFullAaptProjects;
+    private boolean mValidate;
+    private Map<String, AttributeInfo> mAttributeMap;
+    private ResourceRepository mFrameworkResources;
 
     /**
      * Constructs a new {@link IdeScanningContext}
      *
      * @param repository the associated {@link ResourceRepository}
      * @param project the associated project
+     * @param validate if true, check that the attributes and resources are
+     *            valid and if not request a full AAPT check
      */
-    public IdeScanningContext(ResourceRepository repository, IProject project) {
+    public IdeScanningContext(@NonNull ResourceRepository repository, @NonNull IProject project,
+            boolean validate) {
         super(repository);
         mProject = project;
+        mValidate = validate;
+
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            AndroidTargetData targetData = sdk.getTargetData(project);
+            if (targetData != null) {
+                mAttributeMap = targetData.getAttributeMap();
+                mFrameworkResources = targetData.getFrameworkResources();
+            }
+        }
     }
 
     @Override
-    public void addError(String error) {
+    public void addError(@NonNull String error) {
         super.addError(error);
 
         if (mErrors == null) {
@@ -77,7 +99,7 @@ public class IdeScanningContext extends ScanningContext {
      *
      * @param resource the resource about to be scanned
      */
-    public void startScanning(IResource resource) {
+    public void startScanning(@NonNull IResource resource) {
         assert mCurrentFile == null : mCurrentFile;
         mCurrentFile = resource;
         mScannedResources.add(resource);
@@ -88,7 +110,7 @@ public class IdeScanningContext extends ScanningContext {
      *
      * @param resource the resource that was scanned
      */
-    public void finishScanning(IResource resource) {
+    public void finishScanning(@NonNull IResource resource) {
         assert mCurrentFile != null;
         mCurrentFile = null;
     }
@@ -192,5 +214,21 @@ public class IdeScanningContext extends ScanningContext {
      */
     public Collection<IProject> getAaptRequestedProjects() {
         return mFullAaptProjects;
+    }
+
+    @Override
+    public boolean checkValue(@Nullable String uri, @NonNull String name, @NonNull String value) {
+        if (!mValidate) {
+            return true;
+        }
+
+        if (!needsFullAapt() && mAttributeMap != null && ANDROID_URI.equals(uri)) {
+            AttributeInfo info = mAttributeMap.get(name);
+            if (info != null && !info.isValid(value, mRepository, mFrameworkResources)) {
+                return false;
+            }
+        }
+
+        return super.checkValue(uri, name, value);
     }
 }

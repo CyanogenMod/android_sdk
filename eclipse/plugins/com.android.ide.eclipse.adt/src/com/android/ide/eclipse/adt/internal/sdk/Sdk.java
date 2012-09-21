@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
-import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.EXT_JAR;
+import static com.android.SdkConstants.FD_RES;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -215,6 +215,7 @@ public final class Sdk  {
      * Returns the lock object used to synchronize all operations dealing with SDK, targets and
      * projects.
      */
+    @NonNull
     public static final Object getLock() {
         return LOCK;
     }
@@ -224,6 +225,7 @@ public final class Sdk  {
      * <p/>If the SDK failed to load, it displays an error to the user.
      * @param sdkLocation the OS path to the SDK.
      */
+    @Nullable
     public static Sdk loadSdk(String sdkLocation) {
         synchronized (LOCK) {
             if (sCurrentSdk != null) {
@@ -298,6 +300,7 @@ public final class Sdk  {
     /**
      * Returns the current {@link Sdk} object.
      */
+    @Nullable
     public static Sdk getCurrent() {
         synchronized (LOCK) {
             return sCurrentSdk;
@@ -336,6 +339,7 @@ public final class Sdk  {
      *
      * @return A file:// URL on the local documentation folder if it exists or null.
      */
+    @Nullable
     public String getDocumentationBaseUrl() {
         return mDocBaseUrl;
     }
@@ -367,7 +371,8 @@ public final class Sdk  {
      * @param hash the {@link IAndroidTarget} hash string.
      * @return The matching {@link IAndroidTarget} or null.
      */
-    public IAndroidTarget getTargetFromHashString(String hash) {
+    @Nullable
+    public IAndroidTarget getTargetFromHashString(@NonNull String hash) {
         return mManager.getTargetFromHashString(hash);
     }
 
@@ -377,9 +382,9 @@ public final class Sdk  {
      * @param project the project to initialize
      * @param target the project's target.
      * @throws IOException if creating the file failed in any way.
-     * @throws StreamException
+     * @throws StreamException if processing the project property file fails
      */
-    public void initProject(IProject project, IAndroidTarget target)
+    public void initProject(@Nullable IProject project, @Nullable IAndroidTarget target)
             throws IOException, StreamException {
         if (project == null || target == null) {
             return;
@@ -423,6 +428,7 @@ public final class Sdk  {
      * @param project the request project
      * @return the ProjectState for the project.
      */
+    @Nullable
     @SuppressWarnings("deprecation")
     public static ProjectState getProjectState(IProject project) {
         if (project == null) {
@@ -492,6 +498,7 @@ public final class Sdk  {
     /**
      * Returns the {@link IAndroidTarget} object associated with the given {@link IProject}.
      */
+    @Nullable
     public IAndroidTarget getTarget(IProject project) {
         if (project == null) {
             return null;
@@ -512,6 +519,7 @@ public final class Sdk  {
      * @param state the state representing the project to load.
      * @return the target that was loaded.
      */
+    @Nullable
     public IAndroidTarget loadTarget(ProjectState state) {
         IAndroidTarget target = null;
         if (state != null) {
@@ -537,6 +545,7 @@ public final class Sdk  {
      * If the target is already loaded, nothing happens.
      * @return The load status if the target data is already loaded.
      */
+    @NonNull
     public LoadStatus checkAndLoadTargetData(final IAndroidTarget target, IJavaProject project) {
         boolean loadData = false;
 
@@ -633,6 +642,7 @@ public final class Sdk  {
     /**
      * Return the {@link AndroidTargetData} for a given {@link IAndroidTarget}.
      */
+    @Nullable
     public AndroidTargetData getTargetData(IAndroidTarget target) {
         synchronized (LOCK) {
             return mTargetDataMap.get(target);
@@ -642,6 +652,7 @@ public final class Sdk  {
     /**
      * Return the {@link AndroidTargetData} for a given {@link IProject}.
      */
+    @Nullable
     public AndroidTargetData getTargetData(IProject project) {
         synchronized (LOCK) {
             IAndroidTarget target = getTarget(project);
@@ -665,11 +676,13 @@ public final class Sdk  {
      * Returns the {@link AvdManager}. If the AvdManager failed to parse the AVD folder, this could
      * be <code>null</code>.
      */
+    @Nullable
     public AvdManager getAvdManager() {
         return mAvdManager;
     }
 
-    public static AndroidVersion getDeviceVersion(IDevice device) {
+    @Nullable
+    public static AndroidVersion getDeviceVersion(@NonNull IDevice device) {
         try {
             Map<String, String> props = device.getProperties();
             String apiLevel = props.get(IDevice.PROP_BUILD_API_LEVEL);
@@ -684,11 +697,13 @@ public final class Sdk  {
         }
     }
 
+    @NonNull
     public DeviceManager getDeviceManager() {
         return mDeviceManager;
     }
 
     /** Returns the devices provided by the SDK, including user created devices */
+    @NonNull
     public List<Device> getDevices() {
         return mDeviceManager.getDevices(getSdkLocation());
     }
@@ -699,10 +714,11 @@ public final class Sdk  {
      * @param project the library project.
      * @return a possibly empty list of ProjectState.
      */
+    @NonNull
     public static Set<ProjectState> getMainProjectsFor(IProject project) {
         synchronized (LOCK) {
             // first get the project directly depending on this.
-            HashSet<ProjectState> list = new HashSet<ProjectState>();
+            Set<ProjectState> list = new HashSet<ProjectState>();
 
             // loop on all project and see if ProjectState.getLibrary returns a non null
             // project.

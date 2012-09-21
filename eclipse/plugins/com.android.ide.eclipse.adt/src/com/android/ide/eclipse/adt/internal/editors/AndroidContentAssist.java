@@ -19,6 +19,9 @@ package com.android.ide.eclipse.adt.internal.editors;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.UNIT_DP;
+import static com.android.SdkConstants.UNIT_IN;
+import static com.android.SdkConstants.UNIT_MM;
+import static com.android.SdkConstants.UNIT_PT;
 import static com.android.SdkConstants.UNIT_PX;
 import static com.android.SdkConstants.UNIT_SP;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
@@ -1149,13 +1152,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         "<b>Scale-independent Pixels</b> - this is like the dp unit, but it is also scaled by "
                 + "the user's font size preference.",
 
-        "pt", //$NON-NLS-1$
+        UNIT_PT,
         "<b>Points</b> - 1/72 of an inch based on the physical size of the screen.",
 
-        "mm", //$NON-NLS-1$
+        UNIT_MM,
         "<b>Millimeters</b> - based on the physical size of the screen.",
 
-        "in", //$NON-NLS-1$
+        UNIT_IN,
         "<b>Inches</b> - based on the physical size of the screen.",
 
         UNIT_PX,

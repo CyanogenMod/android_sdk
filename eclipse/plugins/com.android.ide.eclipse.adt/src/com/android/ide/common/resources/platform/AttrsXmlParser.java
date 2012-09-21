@@ -23,6 +23,7 @@ import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.ViewClassInfo.LayoutParamsInfo;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.utils.ILogger;
+import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -54,7 +55,7 @@ public final class AttrsXmlParser {
 
     // all attributes that have the same name are supposed to have the same
     // parameters so we'll keep a cache of them to avoid processing them twice.
-    private HashMap<String, AttributeInfo> mAttributeMap;
+    private Map<String, AttributeInfo> mAttributeMap;
 
     /** Map of all attribute names for a given element */
     private final Map<String, DeclareStyleableInfo> mStyleMap =
@@ -75,7 +76,6 @@ public final class AttrsXmlParser {
      */
     private final ILogger mLog;
 
-
     /**
      * Creates a new {@link AttrsXmlParser}, set to load things from the given
      * XML file. Nothing has been parsed yet. Callers should call {@link #preload()}
@@ -84,9 +84,19 @@ public final class AttrsXmlParser {
      * @param osAttrsXmlPath The path of the <code>attrs.xml</code> file to parse.
      *              Must not be null. Should point to an existing valid XML document.
      * @param log A logger object. Must not be null.
+     * @param expectedAttributeCount expected number of attributes in the file
      */
-    public AttrsXmlParser(String osAttrsXmlPath, ILogger log) {
-        this(osAttrsXmlPath, null /* inheritableAttributes */, log);
+    public AttrsXmlParser(String osAttrsXmlPath, ILogger log, int expectedAttributeCount) {
+        this(osAttrsXmlPath, null /* inheritableAttributes */, log, expectedAttributeCount);
+    }
+
+    /**
+     * Returns the parsed map of attribute infos
+     *
+     * @return a map from string name to {@link AttributeInfo}
+     */
+    public Map<String, AttributeInfo> getAttributeMap() {
+        return mAttributeMap;
     }
 
     /**
@@ -103,24 +113,26 @@ public final class AttrsXmlParser {
      *              If not null, the parser must have had its {@link #preload()} method
      *              invoked prior to being used here.
      * @param log A logger object. Must not be null.
+     * @param expectedAttributeCount expected number of attributes in the file
      */
     public AttrsXmlParser(
             String osAttrsXmlPath,
             AttrsXmlParser inheritableAttributes,
-            ILogger log) {
+            ILogger log,
+            int expectedAttributeCount) {
         mOsAttrsXmlPath = osAttrsXmlPath;
         mLog = log;
 
         assert osAttrsXmlPath != null;
         assert log != null;
 
+        mAttributeMap = Maps.newHashMapWithExpectedSize(expectedAttributeCount);
         if (inheritableAttributes == null) {
-            mAttributeMap = new HashMap<String, AttributeInfo>();
             mEnumFlagValues = new HashMap<String, Map<String,Integer>>();
         } else {
-            mAttributeMap = new HashMap<String, AttributeInfo>(inheritableAttributes.mAttributeMap);
+            mAttributeMap.putAll(inheritableAttributes.mAttributeMap);
             mEnumFlagValues = new HashMap<String, Map<String,Integer>>(
-                                                             inheritableAttributes.mEnumFlagValues);
+                                                         inheritableAttributes.mEnumFlagValues);
         }
 
         // Pre-compute the set of format names such that we don't have to compute the uppercase

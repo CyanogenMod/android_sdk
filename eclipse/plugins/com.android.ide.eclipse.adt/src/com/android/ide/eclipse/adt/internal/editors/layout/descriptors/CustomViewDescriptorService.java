@@ -265,7 +265,7 @@ public final class CustomViewDescriptorService {
         if (parser == null) {
             parser = new AttrsXmlParser(
                     file.getFile().getOsLocation(),
-                    AdtPlugin.getDefault());
+                    AdtPlugin.getDefault(), 20);
             parser.preload();
             mParserCache.put(file, parser);
         }

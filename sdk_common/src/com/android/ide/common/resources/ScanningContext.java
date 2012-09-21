@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.resources;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +27,7 @@ import java.util.List;
  * so on.
  */
 public class ScanningContext {
-    private final ResourceRepository mRepository;
+    protected final ResourceRepository mRepository;
     private boolean mNeedsFullAapt;
     private List<String> mErrors = null;
 
@@ -33,7 +36,7 @@ public class ScanningContext {
      *
      * @param repository the associated resource repository
      */
-    public ScanningContext(ResourceRepository repository) {
+    public ScanningContext(@NonNull ResourceRepository repository) {
         super();
         mRepository = repository;
     }
@@ -43,6 +46,7 @@ public class ScanningContext {
      *
      * @return a list of errors encountered during scanning (or null)
      */
+    @Nullable
     public List<String> getErrors() {
         return mErrors;
     }
@@ -55,7 +59,7 @@ public class ScanningContext {
      * @param error the error message, including file name and line number at
      *            the beginning
      */
-    public void addError(String error) {
+    public void addError(@NonNull String error) {
         if (mErrors == null) {
             mErrors = new ArrayList<String>();
         }
@@ -67,6 +71,7 @@ public class ScanningContext {
      *
      * @return the associated repository, never null
      */
+    @NonNull
     public ResourceRepository getRepository() {
         return mRepository;
     }
@@ -88,5 +93,18 @@ public class ScanningContext {
      */
     public boolean needsFullAapt() {
         return mNeedsFullAapt;
+    }
+
+    /**
+     * Asks the context to check whether the given attribute name and value is valid
+     * in this context.
+     *
+     * @param uri the XML namespace URI
+     * @param name the attribute local name
+     * @param value the attribute value
+     * @return true if the attribute is valid
+     */
+    public boolean checkValue(@Nullable String uri, @NonNull String name, @NonNull String value) {
+        return true;
     }
 }

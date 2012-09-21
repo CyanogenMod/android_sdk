@@ -62,7 +62,7 @@ public class LayoutParamsParserTest extends TestCase {
             super(new MockFrameworkClassLoader(),
                   new AttrsXmlParser(
                           AdtTestData.getInstance().getTestFilePath(MOCK_DATA_PATH),
-                          new TestLogger()).preload());
+                          new TestLogger(), 100).preload());
 
             mTopViewClass = new ClassWrapper(mock_android.view.View.class);
             mTopGroupClass = new ClassWrapper(mock_android.view.ViewGroup.class);
