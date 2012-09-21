@@ -27,8 +27,6 @@ import com.android.ide.eclipse.gltrace.state.transforms.StateTransformFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,10 +46,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     private static final GLMessageFormatter sGLMessageFormatter =
             new GLMessageFormatter(GLAPISpec.getSpecs());
 
-    private final Display mDisplay;
-    private final int mThumbHeight;
-    private final int mThumbWidth;
-
     private String mTraceFilePath;
     private RandomAccessFile mFile;
 
@@ -63,21 +57,13 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     /**
      * Construct a GL Trace file parser.
      * @param path path to trace file
-     * @param thumbDisplay display to use to create thumbnail images
-     * @param thumbWidth width of thumbnail images
-     * @param thumbHeight height of thumbnail images
      */
-    public TraceFileParserTask(String path, Display thumbDisplay, int thumbWidth,
-            int thumbHeight) {
+    public TraceFileParserTask(String path) {
         try {
             mFile = new RandomAccessFile(path, "r"); //$NON-NLS-1$
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e);
         }
-
-        mDisplay = thumbDisplay;
-        mThumbWidth = thumbWidth;
-        mThumbHeight = thumbHeight;
 
         mTraceFilePath = path;
         mGLCalls = new ArrayList<GLCall>();
@@ -85,11 +71,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     }
 
     private void addMessage(int index, long traceFileOffset, GLMessage msg, long startTime) {
-        Image previewImage = null;
-        if (mDisplay != null) {
-            previewImage = ProtoBufUtils.getScaledImage(mDisplay, msg, mThumbWidth, mThumbHeight);
-        }
-
         String formattedMsg;
         try {
             formattedMsg = sGLMessageFormatter.formatGLMessage(msg);
@@ -101,7 +82,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 startTime,
                                 traceFileOffset,
                                 formattedMsg,
-                                previewImage,
                                 msg.getFunction(),
                                 msg.hasFb(),
                                 msg.getContextId(),

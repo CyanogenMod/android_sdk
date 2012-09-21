@@ -105,12 +105,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
     private static final String NEWLINE = System.getProperty("line.separator"); //$NON-NLS-1$
 
-    /** Width of thumbnail images of the framebuffer. */
-    private static final int THUMBNAIL_WIDTH = 50;
-
-    /** Height of thumbnail images of the framebuffer. */
-    private static final int THUMBNAIL_HEIGHT = 50;
-
     private static Image sExpandAllIcon;
 
     private static String sLastExportedToFolder;
@@ -231,8 +225,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     public void setInput(Shell shell, String tracePath) {
         ProgressMonitorDialog dlg = new ProgressMonitorDialog(shell);
-        TraceFileParserTask parser = new TraceFileParserTask(mFilePath, shell.getDisplay(),
-                THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+        TraceFileParserTask parser = new TraceFileParserTask(mFilePath);
         try {
             dlg.run(true, true, parser);
         } catch (InvocationTargetException e) {

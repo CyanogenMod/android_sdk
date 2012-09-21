@@ -78,29 +78,4 @@ public class ProtoBufUtils {
 
         return new Image(display, imageData);
     }
-
-    /**
-     * Obtains the image stored in provided protocol buffer message scaled to the
-     * provided dimensions.
-     */
-    public static Image getScaledImage(Display display, GLMessage glMsg, int width, int height) {
-        if (!glMsg.hasFb()) {
-            return null;
-        }
-
-        ImageData imageData = null;
-        try {
-            imageData = getImageData(glMsg);
-        } catch (Exception e) {
-            GlTracePlugin.getDefault().logMessage(
-                    "Unexpected error while retrieving framebuffer image: " + e);
-            return null;
-        }
-
-        if (imageData == null) {
-            return null;
-        }
-
-        return new Image(display, imageData.scaledTo(width, height));
-    }
 }
