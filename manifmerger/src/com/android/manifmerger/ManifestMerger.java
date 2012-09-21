@@ -374,6 +374,7 @@ public class ManifestMerger {
         if (pkg == null || pkg.length() == 0) {
             // We can't adjust FQCNs if we don't know the root package name.
             // It's not a proper manifest if this is missing anyway.
+            assert manifest != null;
             mLog.error(Severity.WARNING,
                        xmlFileAndLine(manifest),
                        "Missing 'package' attribute in manifest.");
@@ -444,6 +445,7 @@ public class ManifestMerger {
             // The main doc does not have to have an application node.
             String mainValue = mainApp == null ? "" : getAttributeValue(mainApp, attrName);
             if (!libValue.equals(mainValue)) {
+                assert mainApp != null;
                 mLog.conflict(Severity.WARNING,
                         xmlFileAndLine(mainApp),
                         xmlFileAndLine(libApp),
