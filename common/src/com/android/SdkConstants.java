@@ -683,6 +683,7 @@ public final class SdkConstants {
     public static final String ATTR_PATH = "path";                     //$NON-NLS-1$
     public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
     public static final String ATTR_PATH_PATTERN = "pathPattern";      //$NON-NLS-1$
+    public static final String ATTR_ALLOW_BACKUP = "allowBackup";      //$NON_NLS-1$
     public static final String ATTR_DEBUGGABLE = "debuggable";         //$NON-NLS-1$
     public static final String ATTR_READ_PERMISSION = "readPermission"; //$NON_NLS-1$
     public static final String ATTR_WRITE_PERMISSION = "writePermission"; //$NON_NLS-1$

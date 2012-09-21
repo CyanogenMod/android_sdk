@@ -199,4 +199,37 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                     "duplicate-manifest-ignore.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
+
+    public void testAllowBackup() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.ALLOW_BACKUP);
+        assertEquals(
+                "AndroidManifest.xml:9: Warning: Should explicitly set android:allowBackup to " +
+                "true or false (it's true by default, and that can have some security " +
+                "implications for the application's data) [AllowBackup]\n" +
+                "    <application\n" +
+                "    ^\n" +
+                "0 errors, 1 warnings\n",
+                lintProject(
+                        "AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    public void testAllowBackupOk() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.ALLOW_BACKUP);
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        "allowbackup.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    public void testAllowIgnore() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.ALLOW_BACKUP);
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        "allowbackup_ignore.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
 }
