@@ -25,6 +25,8 @@ import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.ResourceItem;
@@ -36,6 +38,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDes
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.resources.ResourceType;
@@ -57,11 +61,14 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -212,25 +219,89 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         return computeResourceStringMatches(getUiParent().getEditor(), getDescriptor(), prefix);
     }
 
-    public static String[] computeResourceStringMatches(AndroidXmlEditor editor,
-            AttributeDescriptor attributeDescriptor, String prefix) {
-        ResourceRepository repository = null;
-        boolean isSystem = false;
+    /**
+     * Computes the set of resource string matches for a given resource prefix in a given editor
+     *
+     * @param editor the editor context
+     * @param descriptor the attribute descriptor, if any
+     * @param prefix the prefix, if any
+     * @return an array of resource string matches
+     */
+    @Nullable
+    public static String[] computeResourceStringMatches(
+            @NonNull AndroidXmlEditor editor,
+            @Nullable AttributeDescriptor descriptor,
+            @Nullable String prefix) {
 
         if (prefix == null || !prefix.regionMatches(1, ANDROID_PKG, 0, ANDROID_PKG.length())) {
             IProject project = editor.getProject();
             if (project != null) {
                 // get the resource repository for this project and the system resources.
-                repository = ResourceManager.getInstance().getProjectResources(project);
+                ResourceManager resourceManager = ResourceManager.getInstance();
+                ResourceRepository repository = resourceManager.getProjectResources(project);
+
+                List<IProject> libraries = null;
+                ProjectState projectState = Sdk.getProjectState(project);
+                if (projectState != null) {
+                    libraries = projectState.getFullLibraryProjects();
+                }
+
+                String[] projectMatches = computeResourceStringMatches(descriptor, prefix,
+                        repository, false);
+
+                if (libraries == null || libraries.isEmpty()) {
+                    return projectMatches;
+                }
+
+                // Also compute matches for each of the libraries, and combine them
+                Set<String> matches = new HashSet<String>(200);
+                for (String s : projectMatches) {
+                    matches.add(s);
+                }
+
+                for (IProject library : libraries) {
+                    repository = resourceManager.getProjectResources(library);
+                    projectMatches = computeResourceStringMatches(descriptor, prefix,
+                            repository, false);
+                    for (String s : projectMatches) {
+                        matches.add(s);
+                    }
+                }
+
+                String[] sorted = matches.toArray(new String[matches.size()]);
+                Arrays.sort(sorted);
+                return sorted;
             }
         } else {
             // If there's a prefix with "android:" in it, use the system resources
             // Non-public framework resources are filtered out later.
             AndroidTargetData data = editor.getTargetData();
-            repository = data.getFrameworkResources();
-            isSystem = true;
+            if (data != null) {
+                ResourceRepository repository = data.getFrameworkResources();
+                return computeResourceStringMatches(descriptor, prefix, repository, true);
+            }
         }
 
+        return null;
+    }
+
+    /**
+     * Computes the set of resource string matches for a given prefix and a
+     * given resource repository
+     *
+     * @param attributeDescriptor the attribute descriptor, if any
+     * @param prefix the prefix, if any
+     * @param repository the repository to seaerch in
+     * @param isSystem if true, the repository contains framework repository,
+     *            otherwise it contains project repositories
+     * @return an array of resource string matches
+     */
+    @NonNull
+    public static String[] computeResourceStringMatches(
+            @Nullable AttributeDescriptor attributeDescriptor,
+            @Nullable String prefix,
+            @NonNull ResourceRepository repository,
+            boolean isSystem) {
         // Get list of potential resource types, either specific to this project
         // or the generic list.
         Collection<ResourceType> resTypes = (repository != null) ?

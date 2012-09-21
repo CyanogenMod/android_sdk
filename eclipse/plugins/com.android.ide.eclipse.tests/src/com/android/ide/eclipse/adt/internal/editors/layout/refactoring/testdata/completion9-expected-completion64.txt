@@ -15,6 +15,7 @@ Code completion in completion9.xml for ^<Button:
 <ExpandableListView ></ExpandableListView>
 <FrameLayout ></FrameLayout>
 <Gallery />
+<GridLayout ></GridLayout>
 <GridView ></GridView>
 <HorizontalScrollView ></HorizontalScrollView>
 <ImageButton />
@@ -35,15 +36,18 @@ Code completion in completion9.xml for ^<Button:
 <SearchView ></SearchView>
 <SeekBar />
 <SlidingDrawer ></SlidingDrawer> : SlidingDrawer specific attributes.
+<Space />
 <Spinner />
 <StackView ></StackView>
 <SurfaceView />
+<Switch />
 <TabHost ></TabHost>
 <TabWidget ></TabWidget>
 <TableLayout ></TableLayout>
 <TableRow ></TableRow>
 <TextSwitcher ></TextSwitcher>
 <TextView />
+<TextureView />
 <TimePicker />
 <ToggleButton />
 <TwoLineListItem />

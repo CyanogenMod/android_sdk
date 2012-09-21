@@ -11,3 +11,5 @@ center
 fill
 clip_vertical
 clip_horizontal
+start
+end

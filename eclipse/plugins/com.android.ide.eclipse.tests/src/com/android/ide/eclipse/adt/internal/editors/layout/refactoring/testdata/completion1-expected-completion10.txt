@@ -5,6 +5,7 @@ TableLayout
 TableRow
 TextSwitcher
 TextView
+TextureView
 TimePicker
 ToggleButton
 TwoLineListItem
