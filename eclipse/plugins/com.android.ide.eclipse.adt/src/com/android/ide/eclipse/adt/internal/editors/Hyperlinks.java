@@ -61,6 +61,7 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
@@ -1141,6 +1142,22 @@ public class Hyperlinks {
         }
         List<ResourceFile> sourceFiles = resources.getSourceFiles(type, name,
                 null /*configuration*/);
+        if (sourceFiles == null) {
+            ProjectState projectState = Sdk.getProjectState(project);
+            if (projectState != null) {
+                List<IProject> libraries = projectState.getFullLibraryProjects();
+                if (libraries != null && !libraries.isEmpty()) {
+                    for (IProject library : libraries) {
+                        resources = ResourceManager.getInstance().getProjectResources(library);
+                        sourceFiles = resources.getSourceFiles(type, name, null /*configuration*/);
+                        if (sourceFiles != null && !sourceFiles.isEmpty()) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         ResourceFile best = null;
         if (configuration != null && sourceFiles != null && sourceFiles.size() > 0) {
             List<ResourceFile> bestFiles = resources.getSourceFiles(type, name, configuration);

@@ -28,16 +28,19 @@ import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.OpenCreateAssetSetWizardAction;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
+import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -71,11 +74,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.AbstractElementListSelectionDialog;
 import org.eclipse.ui.dialogs.SelectionStatusDialog;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,7 +95,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
 
     private Pattern mProjectResourcePattern;
     private ResourceType mResourceType;
-    private final ResourceRepository mProjectResources;
+    private final List<ResourceRepository> mProjectResources;
     private final ResourceRepository mFrameworkResources;
     private Pattern mSystemResourcePattern;
     private Button mProjectButton;
@@ -140,10 +145,12 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
      * @param frameworkResources The Framework resource repository
      * @param parent the parent shell
      */
-    public ResourceChooser(IProject project, ResourceType type,
-            ResourceRepository projectResources,
-            ResourceRepository frameworkResources,
-            Shell parent) {
+    private ResourceChooser(
+            @NonNull IProject project,
+            @NonNull ResourceType type,
+            @NonNull List<ResourceRepository> projectResources,
+            @Nullable ResourceRepository frameworkResources,
+            @NonNull Shell parent) {
         super(parent, new ResourceLabelProvider());
         mProject = project;
 
@@ -163,14 +170,85 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
     }
 
     /**
+     * Creates a new {@link ResourceChooser}
+     *
+     * @param editor the associated layout editor
+     * @param type the resource type to choose
+     * @return a new {@link ResourceChooser}
+     */
+    @NonNull
+    public static ResourceChooser create(
+            @NonNull GraphicalEditorPart editor,
+            @NonNull ResourceType type) {
+        IProject project = editor.getProject();
+        Shell parent = editor.getCanvasControl().getShell();
+        AndroidTargetData targetData = editor.getEditorDelegate().getEditor().getTargetData();
+        ResourceChooser chooser = create(project, type, targetData, parent);
+
+        // When editing Strings, allow editing the value text directly. When we
+        // get inline editing support (where values entered directly into the
+        // textual widget are translated automatically into a resource) this can
+        // go away.
+        if (type == ResourceType.STRING) {
+            chooser.setResourceResolver(editor.getResourceResolver());
+            chooser.setShowValueText(true);
+        } else if (type == ResourceType.DIMEN || type == ResourceType.INTEGER) {
+            chooser.setResourceResolver(editor.getResourceResolver());
+        }
+
+        chooser.setPreviewHelper(new ResourcePreviewHelper(chooser, editor));
+        return chooser;
+    }
+
+    /**
+     * Creates a new {@link ResourceChooser}
+     *
+     * @param project the associated project
+     * @param type the resource type to choose
+     * @param targetData the associated framework target data
+     * @param parent the target shell
+     * @return a new {@link ResourceChooser}
+     */
+    @NonNull
+    public static ResourceChooser create(
+            @NonNull IProject project,
+            @NonNull ResourceType type,
+            @Nullable AndroidTargetData targetData,
+            @NonNull Shell parent) {
+        ResourceManager manager = ResourceManager.getInstance();
+
+        List<ResourceRepository> projectResources = new ArrayList<ResourceRepository>();
+        ProjectResources resources = manager.getProjectResources(project);
+        projectResources.add(resources);
+
+        // Add in library project resources
+        ProjectState projectState = Sdk.getProjectState(project);
+        if (projectState != null) {
+            List<IProject> libraries = projectState.getFullLibraryProjects();
+            if (libraries != null && !libraries.isEmpty()) {
+                for (IProject library : libraries) {
+                    projectResources.add(manager.getProjectResources(library));
+                }
+            }
+        }
+
+        ResourceRepository frameworkResources =
+                targetData != null ? targetData.getFrameworkResources() : null;
+        return new ResourceChooser(project, type, projectResources, frameworkResources, parent);
+    }
+
+    /**
      * Sets whether this dialog should show the value field as a separate text
      * value (and take the resulting value of the dialog from this text field
      * rather than from the selection)
      *
      * @param showValueText if true, show the value text field
+     * @return this, for constructor chaining
      */
-    public void setShowValueText(boolean showValueText) {
+    public ResourceChooser setShowValueText(boolean showValueText) {
         mShowValueText = showValueText;
+
+        return this;
     }
 
     /**
@@ -178,9 +256,12 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
      * selection
      *
      * @param resourceResolver the resource resolver to use
+     * @return this, for constructor chaining
      */
-    public void setResourceResolver(ResourceResolver resourceResolver) {
+    public ResourceChooser setResourceResolver(ResourceResolver resourceResolver) {
         mResourceResolver = resourceResolver;
+
+        return this;
     }
 
     /**
@@ -188,9 +269,25 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
      * resources, if any
      *
      * @param previewHelper the helper to use
+     * @return this, for constructor chaining
      */
-    public void setPreviewHelper(ResourcePreviewHelper previewHelper) {
+    public ResourceChooser setPreviewHelper(ResourcePreviewHelper previewHelper) {
         mPreviewHelper = previewHelper;
+
+        return this;
+    }
+
+    /**
+     * Sets the initial dialog size
+     *
+     * @param width the initial width
+     * @param height the initial height
+     * @return this, for constructor chaining
+     */
+    public ResourceChooser setInitialSize(int width, int height) {
+        setSize(width, height);
+
+        return this;
     }
 
     @Override
@@ -220,20 +317,42 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
         }
     }
 
-    public void setCurrentResource(String resource) {
+    /**
+     * Sets the currently selected item
+     *
+     * @param resource the resource url for the currently selected item
+     * @return this, for constructor chaining
+     */
+    public ResourceChooser setCurrentResource(@Nullable String resource) {
         mCurrentResource = resource;
 
         if (mShowValueText && mEditValueText != null) {
             mEditValueText.setText(resource);
         }
+
+        return this;
     }
 
+    /**
+     * Returns the currently selected url
+     *
+     * @return the currently selected url
+     */
+    @Nullable
     public String getCurrentResource() {
         return mCurrentResource;
     }
 
-    public void setInputValidator(IInputValidator inputValidator) {
+    /**
+     * Sets the input validator to use, if any
+     *
+     * @param inputValidator the validator
+     * @return this, for constructor chaining
+     */
+    public ResourceChooser setInputValidator(@Nullable IInputValidator inputValidator) {
         mInputValidator = inputValidator;
+
+        return this;
     }
 
     @Override
@@ -328,6 +447,9 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
                 }
             }
         });
+        if (mFrameworkResources == null) {
+            mSystemButton.setVisible(false);
+        }
     }
 
     /**
@@ -593,7 +715,19 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
     private ResourceItem[] setupResourceList() {
         Collection<ResourceItem> items = null;
         if (mProjectButton.getSelection()) {
-            items = mProjectResources.getResourceItemsOfType(mResourceType);
+            if (mProjectResources.size() == 1) {
+                items = mProjectResources.get(0).getResourceItemsOfType(mResourceType);
+            } else {
+                Map<String, ResourceItem> merged = Maps.newHashMapWithExpectedSize(200);
+                for (ResourceRepository repository : mProjectResources) {
+                    for (ResourceItem item : repository.getResourceItemsOfType(mResourceType)) {
+                        if (!merged.containsKey(item.getName())) {
+                            merged.put(item.getName(), item);
+                        }
+                    }
+                }
+                items = merged.values();
+            }
         } else if (mSystemButton.getSelection()) {
             items = mFrameworkResources.getResourceItemsOfType(mResourceType);
         }
@@ -799,50 +933,18 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
             @NonNull GraphicalEditorPart graphicalEditor,
             @NonNull ResourceType type,
             String currentValue, IInputValidator validator) {
-        AndroidXmlEditor editor = graphicalEditor.getEditorDelegate().getEditor();
-        IProject project = editor.getProject();
-        if (project != null) {
-            // get the resource repository for this project and the system resources.
-            ResourceRepository projectRepository = ResourceManager.getInstance()
-                    .getProjectResources(project);
-            Shell shell = AdtPlugin.getDisplay().getActiveShell();
-            if (shell == null) {
-                return null;
-            }
-
-            AndroidTargetData data = editor.getTargetData();
-            ResourceRepository systemRepository = data.getFrameworkResources();
-
-            // open a resource chooser dialog for specified resource type.
-            ResourceChooser dlg = new ResourceChooser(project, type, projectRepository,
-                    systemRepository, shell);
-            dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
-
-            // When editing Strings, allow editing the value text directly. When we
-            // get inline editing support (where values entered directly into the
-            // textual widget are translated automatically into a resource) this can
-            // go away.
-            if (type == ResourceType.STRING) {
-                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
-                dlg.setShowValueText(true);
-            } else if (type == ResourceType.DIMEN || type == ResourceType.INTEGER) {
-                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
-            }
-
-            if (validator != null) {
-                // Ensure wide enough to accommodate validator error message
-                dlg.setSize(85, 10);
-                dlg.setInputValidator(validator);
-            }
-
-            dlg.setCurrentResource(currentValue);
-
-            int result = dlg.open();
-            if (result == ResourceChooser.CLEAR_RETURN_CODE) {
-                return ""; //$NON-NLS-1$
-            } else if (result == Window.OK) {
-                return dlg.getCurrentResource();
-            }
+        ResourceChooser chooser = create(graphicalEditor, type).
+                setCurrentResource(currentValue);
+        if (validator != null) {
+            // Ensure wide enough to accommodate validator error message
+            chooser.setSize(85, 10);
+            chooser.setInputValidator(validator);
+        }
+        int result = chooser.open();
+        if (result == ResourceChooser.CLEAR_RETURN_CODE) {
+            return ""; //$NON-NLS-1$
+        } else if (result == Window.OK) {
+            return chooser.getCurrentResource();
         }
 
         return null;

@@ -84,6 +84,13 @@ import java.util.regex.Pattern;
 public class UiResourceAttributeNode extends UiTextAttributeNode {
     private ResourceType mType;
 
+    /**
+     * Creates a new {@linkplain UiResourceAttributeNode}
+     *
+     * @param type the associated resource type
+     * @param attributeDescriptor the attribute descriptor for this attribute
+     * @param uiParent the parent ui node, if any
+     */
     public UiResourceAttributeNode(ResourceType type,
             AttributeDescriptor attributeDescriptor, UiElementNode uiParent) {
         super(attributeDescriptor, uiParent);
@@ -138,10 +145,15 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
     }
 
     /**
-     * Shows a dialog letting the user choose a set of enum, and returns a string
-     * containing the result.
+     * Shows a dialog letting the user choose a set of enum, and returns a
+     * string containing the result.
+     *
+     * @param shell the parent shell
+     * @param currentValue an initial value, if any
+     * @return the chosen string, or null
      */
-    public String showDialog(Shell shell, String currentValue) {
+    @Nullable
+    public String showDialog(@NonNull Shell shell, @Nullable String currentValue) {
         // we need to get the project of the file being edited.
         UiElementNode uiNode = getUiParent();
         AndroidXmlEditor editor = uiNode.getEditor();
@@ -154,17 +166,8 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             if (mType != null) {
                 // get the Target Data to get the system resources
                 AndroidTargetData data = editor.getTargetData();
-                ResourceRepository frameworkRepository = data.getFrameworkResources();
-
-                // open a resource chooser dialog for specified resource type.
-                ResourceChooser dlg = new ResourceChooser(project,
-                        mType,
-                        projectRepository,
-                        frameworkRepository,
-                        shell);
-
-                dlg.setCurrentResource(currentValue);
-
+                ResourceChooser dlg = ResourceChooser.create(project, mType, data, shell)
+                    .setCurrentResource(currentValue);
                 if (dlg.open() == Window.OK) {
                     return dlg.getCurrentResource();
                 }

@@ -16,28 +16,24 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.SdkConstants.ANDROID_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata.KEY_FRAGMENT_LAYOUT;
 
-
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
@@ -46,10 +42,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -292,33 +286,12 @@ public class FragmentMenu extends SubmenuAction {
         @Override
         public void run() {
             LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
-            IProject project = delegate.getEditor().getProject();
-            // get the resource repository for this project and the system resources.
-            ResourceRepository projectRepository = ResourceManager.getInstance()
-                    .getProjectResources(project);
-            Shell shell = mCanvas.getShell();
-
-            AndroidTargetData data = delegate.getEditor().getTargetData();
-            ResourceRepository systemRepository = data.getFrameworkResources();
-
-            ResourceChooser dlg = new ResourceChooser(project,
-                    ResourceType.LAYOUT, projectRepository,
-                    systemRepository, shell);
-
-            IInputValidator validator =
-                CyclicDependencyValidator.create(delegate.getEditor().getInputFile());
-
-            if (validator != null) {
-                // Ensure wide enough to accommodate validator error message
-                dlg.setSize(85, 10);
-                dlg.setInputValidator(validator);
-            }
-
-            String layout = getSelectedLayout();
-            if (layout != null) {
-                dlg.setCurrentResource(layout);
-            }
-
+            IFile file = delegate.getEditor().getInputFile();
+            GraphicalEditorPart editor = delegate.getGraphicalEditor();
+            ResourceChooser dlg = ResourceChooser.create(editor, ResourceType.LAYOUT)
+                .setInputValidator(CyclicDependencyValidator.create(file))
+                .setInitialSize(85, 10)
+                .setCurrentResource(getSelectedLayout());
             int result = dlg.open();
             if (result == ResourceChooser.CLEAR_RETURN_CODE) {
                 setNewLayout(null);
