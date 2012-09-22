@@ -3,7 +3,7 @@ android:name : Required name of the class implementing the activity, deriving  f
 android:theme : The overall theme to use for an activity.  [reference]
 android:label : A user-legible name for the given item.  [string, reference]
 android:description : Descriptive text for the associated data.  [reference]
-android:icon : A Drawable resource providing a graphical representation of its  associated item.  [reference]
+android:icon : [reference]
 android:logo : A Drawable resource providing an extended graphical logo for  its associated item.  [reference]
 android:launchMode : Specify how an activity should be launched.  [enum]
 android:screenOrientation : Specify the orientation an activity should be run in.  [enum]
@@ -25,3 +25,4 @@ android:exported : Flag indicating whether the given application component is av
 android:windowSoftInputMode : Specify the default soft-input mode for the main window of this  activity.  [flag]
 android:immersive : Flag declaring this activity to be 'immersive'; immersive activities  should not be interrupted with other activities or notifications.  [boolean]
 android:hardwareAccelerated : <p>Flag indicating whether the application's rendering should  be hardware accelerated if possible.  [boolean]
+android:uiOptions : Extra options for an activity's UI.  [flag]

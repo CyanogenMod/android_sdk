@@ -10,3 +10,5 @@ bottom|center
 bottom|fill
 bottom|clip_vertical
 bottom|clip_horizontal
+bottom|start
+bottom|end
