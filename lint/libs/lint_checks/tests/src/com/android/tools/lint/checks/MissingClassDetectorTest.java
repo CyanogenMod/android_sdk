@@ -60,12 +60,24 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
 
             lintProject(
                 "bytecode/AndroidManifestWrongRegs.xml=>AndroidManifest.xml",
+                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class",
                 "bytecode/.classpath=>.classpath"
             ));
     }
 
     public void testIncrementalInManifest() throws Exception {
         mScopes = Scope.MANIFEST_SCOPE;
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                    "bytecode/AndroidManifestWrongRegs.xml=>AndroidManifest.xml",
+                    "bytecode/.classpath=>.classpath"
+                ));
+    }
+
+    public void testNoWarningBeforeBuild() throws Exception {
+        mScopes = null;
         assertEquals(
             "No warnings.",
 
@@ -187,6 +199,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             lintProject(
                 "registration/AndroidManifest.xml=>AndroidManifest.xml",
                 "bytecode/.classpath=>.classpath",
+                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class",
                 "registration/Foo.java.txt=>src/test/pkg/Foo.java"
             ));
     }
@@ -202,6 +215,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             lintProject(
                 "registration/AndroidManifestInner.xml=>AndroidManifest.xml",
                 "bytecode/.classpath=>.classpath",
+                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class",
                 "registration/Bar.java.txt=>src/test/pkg/Foo/Bar.java"
             ));
     }
@@ -217,6 +231,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             lintProject(
                 "registration/AndroidManifestWrong.xml=>AndroidManifest.xml",
                 "bytecode/.classpath=>.classpath",
+                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class",
                 "registration/Bar.java.txt=>src/test/pkg/Foo/Bar.java"
             ));
     }
@@ -235,6 +250,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             lintProject(
                 "registration/AndroidManifestWrong2.xml=>AndroidManifest.xml",
                 "bytecode/.classpath=>.classpath",
+                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class",
                 "registration/Bar.java.txt=>src/test/pkg/Foo/Bar.java"
             ));
     }
