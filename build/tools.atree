@@ -177,6 +177,7 @@ external/chromium-trace/script.js      tools/systrace/script.js
 external/chromium-trace/style.css      tools/systrace/style.css
 external/chromium-trace/LICENSE        tools/systrace/LICENSE
 external/chromium-trace/AUTHORS        tools/systrace/AUTHORS
+external/chromium-trace/NOTICE         tools/systrace/NOTICE
 
 # Misspelling databases for lint
 sdk/files/typos                        tools/support
