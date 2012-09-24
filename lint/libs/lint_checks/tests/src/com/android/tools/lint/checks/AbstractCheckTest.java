@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
@@ -46,6 +47,7 @@ import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -304,6 +306,10 @@ public abstract class AbstractCheckTest extends TestCase {
         return result;
     }
 
+    protected EnumSet<Scope> getLintScope(List<File> file) {
+        return null;
+    }
+
     public class TestLintClient extends Main {
         private StringWriter mWriter = new StringWriter();
 
@@ -313,7 +319,7 @@ public abstract class AbstractCheckTest extends TestCase {
 
         public String analyze(List<File> files) throws Exception {
             mDriver = new LintDriver(new CustomIssueRegistry(), this);
-            mDriver.analyze(files, null /* scope */);
+            mDriver.analyze(files, getLintScope(files));
 
             Collections.sort(mWarnings);
 
