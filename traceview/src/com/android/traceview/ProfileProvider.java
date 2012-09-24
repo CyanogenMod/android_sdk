@@ -16,6 +16,8 @@
 
 package com.android.traceview;
 
+import com.android.utils.SdkUtils;
+
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -34,7 +36,6 @@ import org.eclipse.swt.widgets.TreeItem;
 
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 class ProfileProvider implements ITreeContentProvider {
 
@@ -70,7 +71,6 @@ class ProfileProvider implements ITreeContentProvider {
     private static final int COL_REAL_TIME_PER_CALL = 11;
     private long mTotalCpuTime;
     private long mTotalRealTime;
-    private Pattern mUppercase;
     private int mPrevMatchIndex = -1;
 
     public ProfileProvider(TraceReader reader) {
@@ -85,12 +85,11 @@ class ProfileProvider implements ITreeContentProvider {
         in = getClass().getClassLoader().getResourceAsStream(
                 "icons/sort_down.png");
         mSortDown = new Image(display, in);
-        mUppercase = Pattern.compile("[A-Z]");
     }
 
     private MethodData doMatchName(String name, int startIndex) {
         // Check if the given "name" has any uppercase letters
-        boolean hasUpper = mUppercase.matcher(name).matches();
+        boolean hasUpper = SdkUtils.hasUpperCaseCharacter(name);
         for (int ii = startIndex; ii < mRoots.length; ++ii) {
             MethodData md = mRoots[ii];
             String fullName = md.getName();

@@ -111,6 +111,17 @@ public class SdkUtils {
         return sb.toString();
     }
 
+    /** Returns true if the given string has an upper case character. */
+    public static boolean hasUpperCaseCharacter(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.isUpperCase(s.charAt(i))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** For use by {@link #getLineSeparator()} */
     private static String sLineSeparator;
 
