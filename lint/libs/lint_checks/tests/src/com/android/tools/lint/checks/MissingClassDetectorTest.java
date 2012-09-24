@@ -17,18 +17,29 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Scope;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class MissingClassDetectorTest extends AbstractCheckTest {
+    private EnumSet<Scope> mScopes;
+
     @Override
     protected Detector getDetector() {
         return new MissingClassDetector();
     }
 
+    @Override
+    protected EnumSet<Scope> getLintScope(List<File> file) {
+        return mScopes;
+    }
+
     public void test() throws Exception {
+        mScopes = null;
         assertEquals(
             "AndroidManifest.xml:13: Error: Class referenced in the manifest, test.pkg.TestProvider, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity android:name=\".TestProvider\" />\n" +
@@ -53,7 +64,19 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testIncrementalInManifest() throws Exception {
+        mScopes = Scope.MANIFEST_SCOPE;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/AndroidManifestWrongRegs.xml=>AndroidManifest.xml",
+                "bytecode/.classpath=>.classpath"
+            ));
+    }
+
     public void testOkClasses() throws Exception {
+        mScopes = null;
         assertEquals(
             "No warnings.",
 
@@ -74,6 +97,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testOkLibraries() throws Exception {
+        mScopes = null;
         assertEquals(
             "No warnings.",
 
@@ -85,6 +109,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testLibraryProjects() throws Exception {
+        mScopes = null;
         File master = getProjectDir("MasterProject",
                 // Master project
                 "bytecode/AndroidManifestWrongRegs.xml=>AndroidManifest.xml",
@@ -115,6 +140,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testInnerClassStatic() throws Exception {
+        mScopes = null;
         assertEquals(
             "src/test/pkg/Foo.java:8: Warning: This inner class should be static (test.pkg.Foo.Baz) [Instantiatable]\n" +
             "    public class Baz extends Activity {\n" +
@@ -132,6 +158,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testInnerClassPublic() throws Exception {
+        mScopes = null;
         assertEquals(
             "src/test/pkg/Foo/Bar.java:6: Warning: The default constructor must be public [Instantiatable]\n" +
             "    private Bar() {\n" +
@@ -147,6 +174,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testInnerClass() throws Exception {
+        mScopes = null;
         assertEquals(
             "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity\n" +
@@ -164,6 +192,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testInnerClass2() throws Exception {
+        mScopes = null;
         assertEquals(
             "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity\n" +
@@ -178,6 +207,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testWrongSeparator1() throws Exception {
+        mScopes = null;
         assertEquals(
             "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity\n" +
@@ -192,6 +222,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testWrongSeparator2() throws Exception {
+        mScopes = null;
         assertEquals(
             "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n" +
             "        <activity\n" +
