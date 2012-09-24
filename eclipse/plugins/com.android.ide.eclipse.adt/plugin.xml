@@ -535,8 +535,11 @@
     <extension point="org.eclipse.ui.perspectiveExtensions">
         <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
             <newWizardShortcut id="com.android.ide.eclipse.adt.project.NewProjectWizard" />
-            <newWizardShortcut id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard">
-            </newWizardShortcut>
+            <newWizardShortcut id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard" />
+            <actionSet id="adt.actionSet.wizards" />
+            <actionSet id="adt.actionSet.avdManager" />
+            <actionSet id="adt.actionSet.lint" />
+            <actionSet id="adt.actionSet.refactorings" />
         </perspectiveExtension>
         <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
             <viewShortcut id="com.android.ide.eclipse.ddms.views.LogCatView" />
@@ -804,7 +807,7 @@
             description="Android Wizards"
             id="adt.actionSet.wizards"
             label="Android Wizards"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.wizards.actions.NewXmlFileAction"
                 icon="icons/new_xml.png"
@@ -813,29 +816,12 @@
                 style="push"
                 toolbarPath="android_project">
             </action>
-            <action
-                class="com.android.ide.eclipse.adt.internal.wizards.actions.NewTestProjectAction"
-                icon="icons/androidjunit.png"
-                id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
-                label="New Android Test Project"
-                style="push"
-                toolbarPath="android_project"
-                >
-            </action>
-            <action
-                class="com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction"
-                icon="icons/new_adt_project.png"
-                id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-                label="New Android Application"
-                style="push"
-                toolbarPath="android_project">
-            </action>
         </actionSet>
         <actionSet
             description="Refactorings for Android"
             id="adt.actionSet.refactorings"
             label="Android Refactorings"
-            visible="true">
+            visible="false">
 
          <!-- This duplicates the Refactoring Menu definition from the jdt.ui plugin.xml,
               which allows us to insert our contribution even if the JDT is not loaded.
@@ -933,7 +919,7 @@
             description="Android AVD and SDK Manager"
             id="adt.actionSet.avdManager"
             label="Android SDK and AVD Manager"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.actions.AvdManagerAction"
                 icon="icons/avd_manager.png"
@@ -957,7 +943,7 @@
             description="Android Lint"
             id="adt.actionSet.lint"
             label="Android Lint"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
                 style="pulldown"
