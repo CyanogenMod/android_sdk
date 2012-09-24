@@ -23,24 +23,19 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.Capability;
-import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.resources.ResourceType;
 
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.w3c.dom.Node;
 
 /**
@@ -171,33 +166,12 @@ public class ListViewTypeMenu extends SubmenuAction {
         @Override
         public void run() {
             LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
-            IProject project = delegate.getEditor().getProject();
-            // get the resource repository for this project and the system resources.
-            ResourceRepository projectRepository = ResourceManager.getInstance()
-                    .getProjectResources(project);
-            Shell shell = mCanvas.getShell();
-
-            AndroidTargetData data = delegate.getEditor().getTargetData();
-            ResourceRepository systemRepository = data.getFrameworkResources();
-
-            ResourceChooser dlg = new ResourceChooser(project,
-                    ResourceType.LAYOUT, projectRepository,
-                    systemRepository, shell);
-
-            IInputValidator validator =
-                CyclicDependencyValidator.create(delegate.getEditor().getInputFile());
-
-            if (validator != null) {
-                // Ensure wide enough to accommodate validator error message
-                dlg.setSize(85, 10);
-                dlg.setInputValidator(validator);
-            }
-
-            String layout = getSelectedLayout();
-            if (layout != null) {
-                dlg.setCurrentResource(layout);
-            }
-
+            IFile file = delegate.getEditor().getInputFile();
+            GraphicalEditorPart editor = delegate.getGraphicalEditor();
+            ResourceChooser dlg = ResourceChooser.create(editor, ResourceType.LAYOUT)
+                .setInputValidator(CyclicDependencyValidator.create(file))
+                .setInitialSize(85, 10)
+                .setCurrentResource(getSelectedLayout());
             int result = dlg.open();
             if (result == ResourceChooser.CLEAR_RETURN_CODE) {
                 setNewType(mType, null);

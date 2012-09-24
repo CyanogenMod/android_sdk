@@ -44,7 +44,9 @@ import org.eclipse.wst.xml.ui.internal.tabletree.XMLMultiPageEditorPart;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({
+        "restriction", "javadoc"
+})
 public class HyperlinksTest extends AdtProjectTest {
     @Override
     protected boolean testCaseNeedsUniqueProject() {
