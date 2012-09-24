@@ -114,6 +114,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
         Scope.MANIFEST_SCOPE);
 
     private Map<String, Location.Handle> mReferencedClasses;
+    private boolean mHaveClasses;
 
     /** Constructs a new {@link MissingClassDetector} */
     public MissingClassDetector() {
@@ -209,7 +210,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (!context.getProject().isLibrary()
+        if (!context.getProject().isLibrary() && mHaveClasses
                 && mReferencedClasses != null && !mReferencedClasses.isEmpty()
                 && context.getDriver().getScope().contains(Scope.CLASS_FILE)) {
             List<String> classes = new ArrayList<String>(mReferencedClasses.keySet());
@@ -244,6 +245,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
+        mHaveClasses = true;
         String curr = classNode.name;
         if (mReferencedClasses != null && mReferencedClasses.containsKey(curr)) {
             mReferencedClasses.remove(curr);
