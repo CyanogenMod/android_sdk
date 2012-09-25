@@ -53,6 +53,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -930,7 +931,19 @@ public class LintDriver {
             throw new IllegalStateException("Only callable during ClassScanner#checkClass");
         }
         assert name.indexOf('.') == -1 : "Use VM signatures, e.g. java/lang/Integer";
-        return mSuperClassMap.get(name);
+
+        String superClass = mSuperClassMap.get(name);
+        if (superClass == null && mCurrentProject != null) {
+            if ("java/lang/Object".equals(name)) {  //$NON-NLS-1$
+                return null;
+            }
+            superClass = mClient.getSuperClass(mCurrentProject, name);
+            if (superClass != null) {
+                mSuperClassMap.put(name, superClass);
+            }
+        }
+
+        return superClass;
     }
 
     /**
@@ -945,6 +958,13 @@ public class LintDriver {
     public boolean isSubclassOf(@NonNull ClassNode classNode, @NonNull String superClassName) {
         if (superClassName.equals(classNode.superName)) {
             return true;
+        }
+
+        if (mCurrentProject != null) {
+            Boolean isSub = mClient.isSubclassOf(mCurrentProject, classNode.name, superClassName);
+            if (isSub != null) {
+                return isSub.booleanValue();
+            }
         }
 
         String className = classNode.name;
@@ -1071,8 +1091,9 @@ public class LintDriver {
 
             if (entries.size() > 0) {
                 Collections.sort(entries);
-                // No superclass info available on individual lint runs
-                mSuperClassMap = Collections.emptyMap();
+                // No superclass info available on individual lint runs, unless
+                // the client can provide it
+                mSuperClassMap = Maps.newHashMap();
                 runClassDetectors(Scope.CLASS_FILE, entries, project, main);
             }
         }
@@ -1710,6 +1731,19 @@ public class LintDriver {
         @Override
         public int getHighestKnownApiLevel() {
             return mDelegate.getHighestKnownApiLevel();
+        }
+
+        @Override
+        @Nullable
+        public String getSuperClass(@NonNull Project project, @NonNull String name) {
+            return mDelegate.getSuperClass(project, name);
+        }
+
+        @Override
+        @Nullable
+        public Boolean isSubclassOf(@NonNull Project project, @NonNull String name,
+                @NonNull String superClassName) {
+            return mDelegate.isSubclassOf(project, name, superClassName);
         }
     }
 

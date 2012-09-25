@@ -37,6 +37,7 @@ import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
@@ -59,9 +60,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -870,6 +875,125 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     @NonNull
     public IAndroidTarget[] getTargets() {
         return Sdk.getCurrent().getTargets();
+    }
+
+    private boolean mSearchForSuperClasses;
+
+    /**
+     * Sets whether this client should search for super types on its own. This
+     * is typically not needed when doing a full lint run (because lint will
+     * look at all classes and libraries), but is useful during incremental
+     * analysis when lint is only looking at a subset of classes. In that case,
+     * we want to use Eclipse's data structures for super classes.
+     *
+     * @param search whether to use a custom Eclipse search for super class
+     *            names
+     */
+    public void setSearchForSuperClasses(boolean search) {
+        mSearchForSuperClasses = search;
+    }
+
+    /**
+     * Whether this lint client is searching for super types. See
+     * {@link #setSearchForSuperClasses(boolean)} for details.
+     *
+     * @return whether the client will search for super types
+     */
+    public boolean getSearchForSuperClasses() {
+        return mSearchForSuperClasses;
+    }
+
+    @Override
+    @Nullable
+    public String getSuperClass(@NonNull Project project, @NonNull String name) {
+        if (!mSearchForSuperClasses) {
+            // Super type search using the Eclipse index is potentially slow, so
+            // only do this when necessary
+            return null;
+        }
+
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject == null) {
+            return null;
+        }
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(eclipseProject);
+            if (javaProject == null) {
+                return null;
+            }
+
+            String typeFqcn = ClassContext.getFqcn(name);
+            IType type = javaProject.findType(typeFqcn);
+            if (type != null) {
+                ITypeHierarchy hierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+                IType superType = hierarchy.getSuperclass(type);
+                if (superType != null) {
+                    String key = superType.getKey();
+                    if (!key.isEmpty()
+                            && key.charAt(0) == 'L'
+                            && key.charAt(key.length() - 1) == ';') {
+                        return key.substring(1, key.length() - 1);
+                    } else {
+                        String fqcn = superType.getFullyQualifiedName();
+                        return ClassContext.getInternalName(fqcn);
+                    }
+                }
+            }
+        } catch (JavaModelException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        } catch (CoreException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        }
+
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public Boolean isSubclassOf(
+            @NonNull Project project,
+            @NonNull String name, @NonNull
+            String superClassName) {
+        if (!mSearchForSuperClasses) {
+            // Super type search using the Eclipse index is potentially slow, so
+            // only do this when necessary
+            return null;
+        }
+
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject == null) {
+            return null;
+        }
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(eclipseProject);
+            if (javaProject == null) {
+                return null;
+            }
+
+            String typeFqcn = ClassContext.getFqcn(name);
+            IType type = javaProject.findType(typeFqcn);
+            if (type != null) {
+                ITypeHierarchy hierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+                IType[] allSupertypes = hierarchy.getAllSuperclasses(type);
+                if (allSupertypes != null) {
+                    String target = 'L' + superClassName + ';';
+                    for (IType superType : allSupertypes) {
+                        if (target.equals(superType.getKey())) {
+                            return Boolean.TRUE;
+                        }
+                    }
+                    return Boolean.FALSE;
+                }
+            }
+        } catch (JavaModelException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        } catch (CoreException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        }
+
+        return null;
     }
 
     private static class LazyLocation extends Location implements Location.Handle {
