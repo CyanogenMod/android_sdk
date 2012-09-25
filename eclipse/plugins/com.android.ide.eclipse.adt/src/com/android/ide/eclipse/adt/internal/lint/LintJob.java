@@ -144,6 +144,7 @@ final class LintJob extends Job {
                         marker.delete();
                     }
                 }
+                mClient.setSearchForSuperClasses(true);
             } else {
                 EclipseLintClient.clearMarkers(mResources);
             }

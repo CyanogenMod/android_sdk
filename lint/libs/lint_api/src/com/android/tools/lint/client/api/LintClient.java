@@ -599,4 +599,46 @@ public abstract class LintClient {
 
         return max;
     }
+
+    /**
+     * Returns the super class for the given class name, which should be in VM
+     * format (e.g. java/lang/Integer, not java.lang.Integer, and using $ rather
+     * than . for inner classes). If the super class is not known, returns null.
+     * <p>
+     * This is typically not necessary, since lint analyzes all the available
+     * classes. However, if this lint client is invoking lint in an incremental
+     * context (for example, an IDE offering incremental analysis of a single
+     * source file), then lint may not see all the classes, and the client can
+     * provide its own super class lookup.
+     *
+     * @param project the project containing the class
+     * @param name the fully qualified class name
+     * @return the corresponding super class name (in VM format), or null if not
+     *         known
+     */
+    @Nullable
+    public String getSuperClass(@NonNull Project project, @NonNull String name) {
+        return null;
+    }
+
+    /**
+     * Checks whether the given name is a subclass of the given super class. If
+     * the method does not know, it should return null, and otherwise return
+     * {@link Boolean#TRUE} or {@link Boolean#FALSE}.
+     * <p>
+     * Note that the class names are in internal VM format (java/lang/Integer,
+     * not java.lang.Integer, and using $ rather than . for inner classes).
+     *
+     * @param project the project context to look up the class in
+     * @param name the name of the class to be checked
+     * @param superClassName the name of the super class to compare to
+     * @return true if the class of the given name extends the given super class
+     */
+    @Nullable
+    public Boolean isSubclassOf(
+            @NonNull Project project,
+            @NonNull String name, @NonNull
+            String superClassName) {
+        return null;
+    }
 }
