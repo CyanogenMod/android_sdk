@@ -106,7 +106,7 @@ class ThemeMenuAction extends SubmenuAction {
             manager.add(new Separator());
         }
 
-        String preferred = configChooser.computePreferredTheme();
+        String preferred = configuration.computePreferredTheme();
         if (preferred != null && !preferred.equals(currentTheme)) {
             manager.add(new SelectThemeAction(configChooser,
                     ResourceHelper.styleToTheme(preferred),

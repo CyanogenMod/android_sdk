@@ -137,7 +137,7 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                             // TODO: do I have to strip off the @ too?
                             isFramework = isFramework
                                     || value.startsWith(ANDROID_PREFIX)
-                                    || value.startsWith(ANDROID_THEME_PREFIX);;
+                                    || value.startsWith(ANDROID_THEME_PREFIX);
                             ResourceValue v = resolver.findResValue(text, isFramework);
                             if (v != null && !value.equals(v.getValue())) {
                                 resValue = v;

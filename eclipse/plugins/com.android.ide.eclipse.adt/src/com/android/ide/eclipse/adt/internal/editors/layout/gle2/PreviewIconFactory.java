@@ -377,11 +377,15 @@ public class PreviewIconFactory {
      *
      * @return a pair of possibly null color descriptions
      */
+    @NonNull
     private Pair<RGB, RGB> getColorsFromTheme() {
         RGB background = null;
         RGB foreground = null;
 
         ResourceResolver resources = mPalette.getEditor().getResourceResolver();
+        if (resources == null) {
+            return Pair.of(background, foreground);
+        }
         StyleResourceValue theme = resources.getCurrentTheme();
         if (theme != null) {
             background = resolveThemeColor(resources, "windowBackground"); //$NON-NLS-1$
