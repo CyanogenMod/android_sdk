@@ -35,6 +35,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -78,7 +80,9 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             ArraySizeDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
-    private Map<File, Pair<String, Integer>> mFileToArrayCount;
+    //private Map<File, List<Pair<String, Integer>>> mFileToArrayCount;
+    //private Map<File, List<Pair<String, Integer>>> mFileToArrayCount;
+    private Multimap<File, Pair<String, Integer>> mFileToArrayCount;
 
     /** Locations for each array name. Populated during phase 2, if necessary */
     private Map<String, Location> mLocations;
@@ -107,7 +111,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     @Override
     public void beforeCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
-            mFileToArrayCount = new HashMap<File, Pair<String,Integer>>(30);
+            mFileToArrayCount = ArrayListMultimap.create(30, 5);
         }
     }
 
@@ -125,35 +129,38 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             Collections.sort(keys);
 
             for (File file : keys) {
-                Pair<String, Integer> pair = mFileToArrayCount.get(file);
-                String name = pair.getFirst();
-                if (alreadyReported.contains(name)) {
-                    continue;
-                }
-                Integer count = pair.getSecond();
+                Collection<Pair<String, Integer>> pairs = mFileToArrayCount.get(file);
+                for (Pair<String, Integer> pair : pairs) {
+                    String name = pair.getFirst();
 
-                Integer current = countMap.get(name);
-                if (current == null) {
-                    countMap.put(name, count);
-                    fileMap.put(name, file);
-                } else if (!count.equals(current)) {
-                    alreadyReported.add(name);
-
-                    if (mLocations == null) {
-                        mLocations = new HashMap<String, Location>();
-                        mDescriptions = new HashMap<String, String>();
+                    if (alreadyReported.contains(name)) {
+                        continue;
                     }
-                    mLocations.put(name, null);
+                    Integer count = pair.getSecond();
 
-                    String thisName = file.getParentFile().getName() + File.separator
-                            + file.getName();
-                    File otherFile = fileMap.get(name);
-                    String otherName = otherFile.getParentFile().getName() + File.separator
-                            + otherFile.getName();
-                    String message = String.format(
-                         "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
-                         name, count, thisName, current, otherName);
-                     mDescriptions.put(name,  message);
+                    Integer current = countMap.get(name);
+                    if (current == null) {
+                        countMap.put(name, count);
+                        fileMap.put(name, file);
+                    } else if (!count.equals(current)) {
+                        alreadyReported.add(name);
+
+                        if (mLocations == null) {
+                            mLocations = new HashMap<String, Location>();
+                            mDescriptions = new HashMap<String, String>();
+                        }
+                        mLocations.put(name, null);
+
+                        String thisName = file.getParentFile().getName() + File.separator
+                                + file.getName();
+                        File otherFile = fileMap.get(name);
+                        String otherName = otherFile.getParentFile().getName() + File.separator
+                                + otherFile.getName();
+                        String message = String.format(
+                             "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
+                             name, count, thisName, current, otherName);
+                         mDescriptions.put(name,  message);
+                    }
                 }
             }
 
