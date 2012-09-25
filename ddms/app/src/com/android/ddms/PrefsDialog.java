@@ -461,6 +461,12 @@ public final class PrefsDialog {
                         "Maximum number of logcat messages to buffer",
                         getFieldEditorParent());
                 addField(maxMessages);
+
+                BooleanFieldEditor autoScrollLock = new BooleanFieldEditor(
+                        LogCatPanel.AUTO_SCROLL_LOCK_PREFKEY,
+                        "Automatically enable/disable scroll lock based on the scrollbar position",
+                        getFieldEditorParent());
+                addField(autoScrollLock);
             }
         }
     }
