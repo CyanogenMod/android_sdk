@@ -1109,7 +1109,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             }
 
             // now if the project has libraries, R needs to be created for each libraries
-            if (!libRFiles.isEmpty()) {
+            // unless this is a library.
+            if (isLibrary == false && !libRFiles.isEmpty()) {
                 SymbolLoader symbolValues = new SymbolLoader(new File(outputFolder, "R.txt"));
                 symbolValues.load();
 
