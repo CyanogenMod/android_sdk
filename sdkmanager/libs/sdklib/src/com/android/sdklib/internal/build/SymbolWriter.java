@@ -46,6 +46,7 @@ public class SymbolWriter {
         mValues = values;
     }
 
+    @SuppressWarnings("resource") // Eclipse does handle Closeables.closeQuietly; see E#381445
     public void write() throws IOException {
         Splitter splitter = Splitter.on('.');
         Iterable<String> folders = splitter.split(mPackageName);
