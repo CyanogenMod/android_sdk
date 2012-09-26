@@ -22,6 +22,8 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.UNIT_DIP;
 import static com.android.SdkConstants.UNIT_DP;
+import static com.android.SdkConstants.UNIT_IN;
+import static com.android.SdkConstants.UNIT_MM;
 import static com.android.SdkConstants.UNIT_PX;
 
 import com.android.annotations.NonNull;
@@ -48,7 +50,7 @@ import java.util.Collections;
  * Also look for non-"sp" text sizes.
  */
 public class PxUsageDetector extends LayoutDetector {
-    /** The main issue discovered by this detector */
+    /** Using px instead of dp */
     public static final Issue PX_ISSUE = Issue.create(
             "PxUsage", //$NON-NLS-1$
             "Looks for use of the \"px\" dimension",
@@ -69,7 +71,24 @@ public class PxUsageDetector extends LayoutDetector {
             Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html#screen-independence"); //$NON-NLS-1$
 
-    /** The main issue discovered by this detector */
+    /** Using mm/in instead of dp */
+    public static final Issue IN_MM_ISSUE = Issue.create(
+            "InOrMmUsage", //$NON-NLS-1$
+            "Looks for use of the \"mm\" or \"in\" dimensions",
+
+            "Avoid using `mm` (millimeters) or `in` (inches) as the unit for dimensions.\n" +
+            "\n" +
+            "While it should work in principle, unfortunately many devices do not report " +
+            "the correct true physical density, which means that the dimension calculations " +
+            "won't work correctly. You are better off using `dp` (and for font sizes, `sp`.)",
+
+            Category.CORRECTNESS,
+            4,
+            Severity.WARNING,
+            PxUsageDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
+    /** Using sp instead of dp */
     public static final Issue DP_ISSUE = Issue.create(
             "SpUsage", //$NON-NLS-1$
             "Looks for uses of \"dp\" instead of \"sp\" dimensions for text sizes",
@@ -86,7 +105,7 @@ public class PxUsageDetector extends LayoutDetector {
             "font size settings are not respected, so consider adjusting the layout itself " +
             "to be more flexible.",
             Category.CORRECTNESS,
-            2,
+            3,
             Severity.WARNING,
             PxUsageDetector.class,
             Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
@@ -133,6 +152,19 @@ public class PxUsageDetector extends LayoutDetector {
             if (context.isEnabled(PX_ISSUE)) {
                 context.report(PX_ISSUE, attribute, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead", null);
+            }
+        } else if (value.endsWith(UNIT_MM) && value.matches("\\d+mm") //$NON-NLS-1$
+                       || value.endsWith(UNIT_IN) && value.matches("\\d+in")) { //$NON-NLS-1$
+            if (value.charAt(0) == '0') {
+                // 0mm == 0in == 0dp
+                return;
+            }
+            if (context.isEnabled(IN_MM_ISSUE)) {
+                String unit = value.substring(value.length() - 2);
+                context.report(IN_MM_ISSUE, attribute, context.getLocation(attribute), String.format(
+                    "Avoid using \"%1$s\" as units " +
+                    "(it does not work accurately on all devices); use \"dp\" instead", unit),
+                    null);
             }
         } else if (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
                 && (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP))
@@ -181,6 +213,18 @@ public class PxUsageDetector extends LayoutDetector {
                         if (context.isEnabled(PX_ISSUE)) {
                             context.report(PX_ISSUE, item, context.getLocation(textNode),
                                 "Avoid using \"px\" as units; use \"dp\" instead", null);
+                        }
+                    }
+                } else if (c == 'm' && text.charAt(j - 1) == 'm' ||
+                            c == 'n' && text.charAt(j - 1) == 'i') {
+                    text = text.trim();
+                    String unit = text.substring(text.length() - 2);
+                    if (text.matches("\\d+" + unit)) { //$NON-NLS-1$
+                        if (context.isEnabled(IN_MM_ISSUE)) {
+                            context.report(IN_MM_ISSUE, item, context.getLocation(textNode),
+                                String.format("Avoid using \"%1$s\" as units "
+                                        + "(it does not work accurately on all devices); "
+                                        + "use \"dp\" instead", unit), null);
                         }
                     }
                 } else if (c == 'p' && (text.charAt(j - 1) == 'd'

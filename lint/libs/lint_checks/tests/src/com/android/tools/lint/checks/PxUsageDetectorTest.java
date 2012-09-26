@@ -27,11 +27,16 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
 
     public void testPx() throws Exception {
         assertEquals(
+            "res/layout/now_playing_after.xml:49: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n" +
+            "        android:layout_width=\"100mm\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/now_playing_after.xml:50: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n" +
+            "        android:layout_height=\"120in\"\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "res/layout/now_playing_after.xml:41: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
             "        android:layout_width=\"1px\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 1 warnings\n" +
-            "",
+            "0 errors, 3 warnings\n",
             lintFiles("res/layout/now_playing_after.xml"));
     }
 
@@ -43,13 +48,25 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
             "res/layout/textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
             "        android:textSize=\"14dip\" />\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 2 warnings\n" +
-            "",
+            "0 errors, 2 warnings\n",
+
             lintFiles("res/layout/textsize.xml"));
     }
 
     public void testStyles() throws Exception {
         assertEquals(
+            "res/values/pxsp.xml:23: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n" +
+            "        <item name=\"android:textSize\">50mm</item>\n" +
+            "                                      ^\n" +
+            "res/values/pxsp.xml:25: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n" +
+            "            50in \n" +
+            "            ^\n" +
+            "res/values/pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        <item name=\"android:textSize\">50dp</item>\n" +
+            "                                      ^\n" +
+            "res/values/pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
+            "        <item name=\"android:textSize\"> 50dip </item>\n" +
+            "                                       ^\n" +
             "res/values/pxsp.xml:9: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
             "        <item name=\"android:textSize\">50px</item>\n" +
             "                                      ^\n" +
@@ -59,14 +76,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
             "res/values/pxsp.xml:18: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n" +
             "        <item name=\"android:paddingTop\">50px</item>\n" +
             "                                        ^\n" +
-            "res/values/pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
-            "        <item name=\"android:textSize\">50dp</item>\n" +
-            "                                      ^\n" +
-            "res/values/pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
-            "        <item name=\"android:textSize\"> 50dip </item>\n" +
-            "                                       ^\n" +
-            "0 errors, 5 warnings\n" +
-            "",
+            "0 errors, 7 warnings\n",
 
             lintFiles("res/values/pxsp.xml"));
     }
