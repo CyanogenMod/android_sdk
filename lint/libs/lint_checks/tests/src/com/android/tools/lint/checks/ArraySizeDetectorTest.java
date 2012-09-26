@@ -47,6 +47,19 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
                  "res/values-es/strings.xml"));
     }
 
+    public void testMultipleArrays() throws Exception {
+        assertEquals(
+            "res/values/stringarrays.xml:3: Warning: Array map_density_desc has an inconsistent number of items (5 in values/stringarrays.xml, 1 in values-it/stringarrays.xml) [InconsistentArrays]\n" +
+            "    <string-array name=\"map_density_desc\">\n" +
+            "    ^\n" +
+            "    res/values-it/stringarrays.xml:6: Declaration with array size (1)\n" +
+            "0 errors, 1 warnings\n",
+
+            lintProject(
+                 "res/values-it/stringarrays.xml",
+                 "res/values/stringarrays.xml"));
+    }
+
     public void testArraySizesSuppressed() throws Exception {
         assertEquals(
             "No warnings.",
