@@ -58,6 +58,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
@@ -66,6 +67,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.NullChange;
@@ -856,7 +858,7 @@ class TemplateHandler {
 
             contents = format(mProject, contents, to);
             IFile targetFile = getTargetFile(to);
-            TextFileChange change = createTextChange(targetFile);
+            TextFileChange change = createNewFileChange(targetFile);
             MultiTextEdit rootEdit = new MultiTextEdit();
             rootEdit.addChild(new InsertEdit(0, contents));
             change.setEdit(rootEdit);
@@ -908,7 +910,7 @@ class TemplateHandler {
         return contents;
     }
 
-    private static TextFileChange createTextChange(IFile targetFile) {
+    private static TextFileChange createNewFileChange(IFile targetFile) {
         String fileName = targetFile.getName();
         String message;
         if (targetFile.exists()) {
@@ -917,7 +919,29 @@ class TemplateHandler {
             message = String.format("Create %1$s", fileName);
         }
 
-        TextFileChange change = new TextFileChange(message, targetFile);
+        TextFileChange change = new TextFileChange(message, targetFile) {
+            @Override
+            protected IDocument acquireDocument(IProgressMonitor pm) throws CoreException {
+                IDocument document = super.acquireDocument(pm);
+
+                // In our case, we know we *always* use this TextFileChange
+                // to *create* files, we're not appending to existing files.
+                // However, due to the following bug we can end up with cached
+                // contents of previously deleted files that happened to have the
+                // same file name:
+                //   https://bugs.eclipse.org/bugs/show_bug.cgi?id=390402
+                // Therefore, as a workaround, wipe out the cached contents here
+                if (document.getLength() > 0) {
+                    try {
+                        document.replace(0, document.getLength(), "");
+                    } catch (BadLocationException e) {
+                        // pass
+                    }
+                }
+
+                return document;
+            }
+        };
         change.setTextType(fileName.substring(fileName.lastIndexOf('.') + 1));
         return change;
     }
@@ -989,7 +1013,7 @@ class TemplateHandler {
                 String newFile = Files.toString(src, Charsets.UTF_8);
                 newFile = format(mProject, newFile, path);
 
-                TextFileChange addFile = createTextChange(file);
+                TextFileChange addFile = createNewFileChange(file);
                 addFile.setEdit(new InsertEdit(0, newFile));
                 mTextChanges.add(addFile);
             } else {
