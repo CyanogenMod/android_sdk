@@ -145,4 +145,8 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
     public void test56_support_gltext_warning() throws Exception {
         processTestFiles();
     }
+
+    public void test60_merge_order() throws Exception {
+        processTestFiles();
+    }
 }

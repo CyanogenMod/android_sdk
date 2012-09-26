@@ -146,10 +146,22 @@
 
 P [ManifestMergerTest0_main.xml:6, ManifestMergerTest1_lib1.xml:6] Skipping identical /manifest/application/service[@name=com.example.AppService1] element.
 E [ManifestMergerTest0_main.xml:8, ManifestMergerTest1_lib1.xml:9] Trying to merge incompatible /manifest/application/service[@name=com.example.AppService2] element:
-  <service android:name=com.example.AppService2>
---  <intent-filter>
-++  (end reached)
+  <service
+      @android:name="com.example.AppService2">
+--</service>
+--(end reached)
+  <service
+      @android:name="com.example.AppService2">
+++    <intent-filter>
+++        <action
+++            @android:name="android.intent.action.MAIN">
 E [ManifestMergerTest0_main.xml, ManifestMergerTest2_lib2.xml:6] Trying to merge incompatible /manifest/application/service[@name=com.example.AppService3] element:
-  <service android:name=com.example.AppService3>
---  (end reached)
-++  <intent-filter>
+  <service
+      @android:name="com.example.AppService3">
+--    <intent-filter>
+--        <action
+--            @android:name="android.intent.action.MAIN">
+  <service
+      @android:name="com.example.AppService3">
+++</service>
+++(end reached)
