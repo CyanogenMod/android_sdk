@@ -18,19 +18,26 @@ package com.android.ide.eclipse.adt.internal.lint;
 import static com.android.SdkConstants.ATTR_ALLOW_BACKUP;
 import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_INPUT_TYPE;
 import static com.android.SdkConstants.ATTR_PERMISSION;
 import static com.android.SdkConstants.ATTR_TRANSLATABLE;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.VALUE_FALSE;
 
+import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.ManifestOrderDetector;
+import com.android.tools.lint.checks.MissingIdDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TranslationDetector;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.ui.IEditorPart;
 
 /** Shared fix class for various builtin attributes */
 final class SetAttributeFix extends SetPropertyFix {
@@ -52,6 +59,8 @@ final class SetAttributeFix extends SetPropertyFix {
             return ATTR_TRANSLATABLE;
         } else if (mId.equals(ManifestOrderDetector.ALLOW_BACKUP.getId())) {
             return ATTR_ALLOW_BACKUP;
+        } else if (mId.equals(MissingIdDetector.ISSUE.getId())) {
+            return ATTR_ID;
         } else {
             assert false : mId;
             return "";
@@ -81,6 +90,8 @@ final class SetAttributeFix extends SetPropertyFix {
             return "Mark this as a non-translatable resource";
         } else if (mId.equals(ManifestOrderDetector.ALLOW_BACKUP.getId())) {
             return "Set the allowBackup attribute to true or false";
+        } else if (mId.equals(MissingIdDetector.ISSUE.getId())) {
+            return "Set the ID attribute";
         } else {
             assert false : mId;
             return "";
@@ -120,6 +131,15 @@ final class SetAttributeFix extends SetPropertyFix {
             return VALUE_FALSE;
         } else if (mId.equals(TranslationDetector.MISSING.getId())) {
             return VALUE_FALSE;
+        } else if (mId.equals(MissingIdDetector.ISSUE.getId())) {
+            IEditorPart editor = AdtUtils.getActiveEditor();
+            if (editor instanceof AndroidXmlEditor) {
+                AndroidXmlEditor xmlEditor = (AndroidXmlEditor) editor;
+                return DescriptorsUtils.getFreeWidgetId(xmlEditor.getUiRootNode(),
+                        "fragment"); //$NON-NLS-1$
+            } else {
+                return NEW_ID_PREFIX;
+            }
         }
 
         return super.getProposal();

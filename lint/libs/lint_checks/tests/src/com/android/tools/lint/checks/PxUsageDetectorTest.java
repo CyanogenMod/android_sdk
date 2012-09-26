@@ -59,7 +59,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
             "        <item name=\"android:textSize\">50mm</item>\n" +
             "                                      ^\n" +
             "res/values/pxsp.xml:25: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n" +
-            "            50in \n" +
+            "            50in\n" +
             "            ^\n" +
             "res/values/pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
             "        <item name=\"android:textSize\">50dp</item>\n" +

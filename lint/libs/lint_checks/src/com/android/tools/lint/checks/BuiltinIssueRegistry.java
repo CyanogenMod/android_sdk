@@ -55,7 +55,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 112;
+        final int initialCapacity = 113;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -94,6 +94,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MissingClassDetector.MISSING);
         issues.add(MissingClassDetector.INSTANTIATABLE);
         issues.add(MissingClassDetector.INNERCLASS);
+        issues.add(MissingIdDetector.ISSUE);
         issues.add(HandlerDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(TranslationDetector.EXTRA);
