@@ -30,7 +30,7 @@ import java.util.List;
 public class SymbolLoader {
 
     private final File mSymbolFile;
-    private HashBasedTable<String, String, SymbolEntry> mSymbols;
+    private Table<String, String, SymbolEntry> mSymbols;
 
     public static class SymbolEntry {
         private final String mName;
