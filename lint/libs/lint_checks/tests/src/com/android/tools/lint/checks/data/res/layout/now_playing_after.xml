@@ -46,8 +46,8 @@
         android:id="@+id/now_playing_more"
         android:src="@drawable/ic_now_playing_logo"
         android:padding="12dip"
-        android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_width="100mm"
+        android:layout_height="120in"
         android:onClick="onNowPlayingLogoClick"
         android:scaleType="center" />
 </LinearLayout>
