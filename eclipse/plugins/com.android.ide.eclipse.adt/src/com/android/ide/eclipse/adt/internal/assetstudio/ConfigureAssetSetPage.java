@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.DEFAULT_LAUNCHER_ICON;
-
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.annotations.NonNull;
@@ -481,7 +480,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             // Initial image - use the most recently used image, or the default launcher
             // icon created in our default projects, if there
             if (mValues.imagePath != null) {
-                sImagePath = mValues.imagePath.getPath();;
+                sImagePath = mValues.imagePath.getPath();
             }
             if (sImagePath == null) {
                 IProject project = mValues.project;

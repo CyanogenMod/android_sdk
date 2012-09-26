@@ -560,8 +560,8 @@ public final class ProjectCallback extends LegacyCallback {
     }
 
     @Override
-    public AdapterBinding getAdapterBinding(final ResourceReference adapterView, final Object adapterCookie,
-            final Object viewObject) {
+    public AdapterBinding getAdapterBinding(final ResourceReference adapterView,
+            final Object adapterCookie, final Object viewObject) {
         // Look for user-recorded preference for layout to be used for previews
         if (adapterCookie instanceof UiViewElementNode) {
             UiViewElementNode uiNode = (UiViewElementNode) adapterCookie;

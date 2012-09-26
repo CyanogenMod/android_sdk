@@ -17,11 +17,13 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -30,13 +32,17 @@ import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
 import com.android.resources.ScreenOrientation;
+import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -49,6 +55,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@linkplain Configuration} is a selection of device, orientation, theme,
@@ -397,6 +404,7 @@ public class Configuration {
      */
     public void setTheme(String theme) {
         mTheme = theme;
+        checkThemePrefix();
     }
 
     /**
@@ -507,6 +515,67 @@ public class Configuration {
         return sb.toString();
     }
 
+    /** Returns the preferred theme, or null */
+    @Nullable
+    String computePreferredTheme() {
+        IProject project = mConfigChooser.getProject();
+        ManifestInfo manifest = ManifestInfo.get(project);
+
+        // Look up the screen size for the current state
+        ScreenSize screenSize = null;
+        Device device = getDevice();
+        if (device != null) {
+            List<State> states = device.getAllStates();
+            for (State state : states) {
+                FolderConfiguration folderConfig = DeviceConfigHelper.getFolderConfig(state);
+                if (folderConfig != null) {
+                    ScreenSizeQualifier qualifier = folderConfig.getScreenSizeQualifier();
+                    screenSize = qualifier.getValue();
+                    break;
+                }
+            }
+        }
+
+        // Look up the default/fallback theme to use for this project (which
+        // depends on the screen size when no particular theme is specified
+        // in the manifest)
+        String defaultTheme = manifest.getDefaultTheme(getTarget(), screenSize);
+
+        String preferred = defaultTheme;
+        if (getTheme() == null) {
+            // If we are rendering a layout in included context, pick the theme
+            // from the outer layout instead
+
+            String activity = getActivity();
+            if (activity != null) {
+                Map<String, String> activityThemes = manifest.getActivityThemes();
+                preferred = activityThemes.get(activity);
+            }
+            if (preferred == null) {
+                preferred = defaultTheme;
+            }
+            setTheme(preferred);
+        }
+
+        return preferred;
+    }
+
+    private void checkThemePrefix() {
+        if (mTheme != null && !mTheme.startsWith(PREFIX_RESOURCE_REF)) {
+            if (mTheme.isEmpty()) {
+                computePreferredTheme();
+                return;
+            }
+            ResourceRepository frameworkRes = mConfigChooser.getClient().getFrameworkResources();
+            if (frameworkRes != null
+                    && frameworkRes.hasResourceItem(ANDROID_STYLE_RESOURCE_PREFIX + mTheme)) {
+                mTheme = ANDROID_STYLE_RESOURCE_PREFIX + mTheme;
+            } else {
+                mTheme = STYLE_RESOURCE_PREFIX + mTheme;
+            }
+        }
+    }
+
     /**
      * Initializes a string previously created with
      * {@link #toPersistentString()}
@@ -555,6 +624,8 @@ public class Configuration {
                         } else if (mTheme.startsWith(MARKER_PROJECT)) {
                             mTheme = STYLE_RESOURCE_PREFIX
                                     + mTheme.substring(MARKER_PROJECT.length());
+                        } else {
+                            checkThemePrefix();
                         }
 
                         mUiMode = UiMode.getEnum(values[4]);
@@ -604,7 +675,7 @@ public class Configuration {
     @Nullable
     static Pair<Locale, IAndroidTarget> loadRenderState(ConfigurationChooser chooser) {
         IProject project = chooser.getProject();
-        if (!project.isAccessible()) {
+        if (project == null || !project.isAccessible()) {
             return null;
         }
 
@@ -668,6 +739,9 @@ public class Configuration {
      */
     void saveRenderState() {
         IProject project = mConfigChooser.getProject();
+        if (project == null) {
+            return;
+        }
         try {
             // Generate a persistent string from locale+target
             StringBuilder sb = new StringBuilder();
@@ -700,7 +774,7 @@ public class Configuration {
      * @return an id for the given target; never null
      */
     @NonNull
-    private static String targetToString(@NonNull IAndroidTarget target) {
+    public static String targetToString(@NonNull IAndroidTarget target) {
         return target.getFullName().replace(SEP, "");  //$NON-NLS-1$
     }
 
@@ -715,12 +789,36 @@ public class Configuration {
      * @return an {@link IAndroidTarget} that matches the given id, or null
      */
     @Nullable
-    private static IAndroidTarget stringToTarget(
+    public static IAndroidTarget stringToTarget(
             @NonNull ConfigurationChooser chooser,
             @NonNull String id) {
         List<IAndroidTarget> targetList = chooser.getTargetList();
         if (targetList != null && targetList.size() > 0) {
             for (IAndroidTarget target : targetList) {
+                if (id.equals(targetToString(target))) {
+                    return target;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns an {@link IAndroidTarget} that corresponds to the given id that was
+     * originally returned by {@link #targetToString}. May be null, if the platform is no
+     * longer available, or if the platform list has not yet been initialized.
+     *
+     * @param id the id that corresponds to the desired platform
+     * @return an {@link IAndroidTarget} that matches the given id, or null
+     */
+    @Nullable
+    public static IAndroidTarget stringToTarget(
+            @NonNull String id) {
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget[] targets = currentSdk.getTargets();
+            for (IAndroidTarget target : targets) {
                 if (id.equals(targetToString(target))) {
                     return target;
                 }

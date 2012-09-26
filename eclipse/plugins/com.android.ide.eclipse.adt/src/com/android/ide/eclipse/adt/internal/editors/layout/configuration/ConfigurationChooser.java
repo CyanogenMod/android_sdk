@@ -44,7 +44,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -58,7 +57,6 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
-import com.android.resources.ScreenSize;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
@@ -298,19 +296,42 @@ public class ConfigurationChooser extends Composite
         addDisposeListener(this);
     }
 
-    IFile getEditedFile() {
+    /**
+     * Returns the edited file
+     *
+     * @return the file
+     */
+    @Nullable
+    public IFile getEditedFile() {
         return mEditedFile;
     }
 
-    IProject getProject() {
-        return mEditedFile.getProject();
+    /**
+     * Returns the project of the edited file
+     *
+     * @return the project
+     */
+    @Nullable
+    public IProject getProject() {
+        if (mEditedFile != null) {
+            return mEditedFile.getProject();
+        } else {
+            return null;
+        }
     }
 
     ConfigurationClient getClient() {
         return mClient;
     }
 
-    ProjectResources getResources() {
+    /**
+     * Returns the project resources for the project being configured by this
+     * chooser
+     *
+     * @return the project resources
+     */
+    @Nullable
+    public ProjectResources getResources() {
         return mResources;
     }
 
@@ -328,7 +349,7 @@ public class ConfigurationChooser extends Composite
      *
      * @return the project target
      */
-    IAndroidTarget getProjectTarget() {
+    public IAndroidTarget getProjectTarget() {
         return mProjectTarget;
     }
 
@@ -746,6 +767,7 @@ public class ConfigurationChooser extends Composite
                         if (target != null) {
                             targetData = Sdk.getCurrent().getTargetData(target);
                             selectTarget(target);
+                            mConfiguration.setTarget(target, true);
                         }
                     }
 
@@ -1588,7 +1610,7 @@ public class ConfigurationChooser extends Composite
                 String theme = mConfiguration.getTheme();
                 if (theme == null || theme.isEmpty() || mClient.getIncludedWithin() != null) {
                     mConfiguration.setTheme(null);
-                    computePreferredTheme();
+                    mConfiguration.computePreferredTheme();
                 }
                 assert mConfiguration.getTheme() != null;
             }
@@ -1680,6 +1702,14 @@ public class ConfigurationChooser extends Composite
                         break;
                     }
                 }
+                if (!theme.startsWith(PREFIX_RESOURCE_REF)) {
+                    // Arbitrary guess
+                    if (theme.startsWith("Theme.")) {
+                        theme = ANDROID_STYLE_RESOURCE_PREFIX + theme;
+                    } else {
+                        theme = STYLE_RESOURCE_PREFIX + theme;
+                    }
+                }
             }
 
             // TODO: Handle the case where you have a theme persisted that isn't available??
@@ -1746,55 +1776,6 @@ public class ConfigurationChooser extends Composite
         } finally {
             mDisableUpdates--;
         }
-    }
-
-    /** Returns the preferred theme, or null */
-    @Nullable
-    String computePreferredTheme() {
-        if (mClient == null) {
-            return null;
-        }
-
-        IProject project = mEditedFile.getProject();
-        ManifestInfo manifest = ManifestInfo.get(project);
-
-        // Look up the screen size for the current state
-        ScreenSize screenSize = null;
-        Device device = mConfiguration.getDevice();
-        if (device != null) {
-            List<State> states = device.getAllStates();
-            for (State state : states) {
-                FolderConfiguration folderConfig = DeviceConfigHelper.getFolderConfig(state);
-                if (folderConfig != null) {
-                    ScreenSizeQualifier qualifier = folderConfig.getScreenSizeQualifier();
-                    screenSize = qualifier.getValue();
-                    break;
-                }
-            }
-        }
-
-        // Look up the default/fallback theme to use for this project (which
-        // depends on the screen size when no particular theme is specified
-        // in the manifest)
-        String defaultTheme = manifest.getDefaultTheme(mConfiguration.getTarget(), screenSize);
-
-        String preferred = defaultTheme;
-        if (mConfiguration.getTheme() == null) {
-            // If we are rendering a layout in included context, pick the theme
-            // from the outer layout instead
-
-            String activity = mConfiguration.getActivity();
-            if (activity != null) {
-                Map<String, String> activityThemes = manifest.getActivityThemes();
-                preferred = activityThemes.get(activity);
-            }
-            if (preferred == null) {
-                preferred = defaultTheme;
-            }
-            mConfiguration.setTheme(preferred);
-        }
-
-        return preferred;
     }
 
     @Nullable
