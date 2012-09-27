@@ -70,7 +70,9 @@
 @lib4_not_package
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- It's an error for the manifest to lack a 'package' attribute. -->
+    <!-- It's an error for the manifest to lack a 'package' attribute.
+         We just emit a warning in this case.
+    -->
 
     <application>
         <!-- These class name can't be expanded due to the lack of 'package' attribute. -->

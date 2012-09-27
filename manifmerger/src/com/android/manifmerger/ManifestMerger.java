@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.manifmerger.IMergerLog.FileAndLine;
 import com.android.manifmerger.IMergerLog.Severity;
+import com.android.utils.XmlUtils;
 import com.android.xml.AndroidXPathFactory;
 
 import org.w3c.dom.Attr;
@@ -128,9 +129,20 @@ public class ManifestMerger {
     private XPath mXPath;
     private Document mMainDoc;
 
-    private String NS_URI = SdkConstants.NS_RESOURCES;
-    private String NS_PREFIX = AndroidXPathFactory.DEFAULT_NS_PREFIX;
-    private int destMinSdk;
+    /** Namespace for Android attributes in an AndroidManifest.xml */
+    private static final String NS_URI    = SdkConstants.NS_RESOURCES;
+    /** Prefix for the Android namespace to use in XPath expressions. */
+    private static final String NS_PREFIX = AndroidXPathFactory.DEFAULT_NS_PREFIX;
+    /** Namespace used in XML files for Android Tooling attributes */
+    private static final String TOOLS_URI = SdkConstants.TOOLS_URI;
+    /** The name of the tool:merge attribute, to either override or ignore merges. */
+    private static final String MERGE_ATTR     = "merge";                           //$NON-NLS-1$
+    /** tool:merge="override" means to ignore what comes from libraries and only keep the
+     *  version from the main manifest. No conflict can be generated. */
+    private static final String MERGE_OVERRIDE = "override";                        //$NON-NLS-1$
+    /** tool:merge="remove" means to remove a node and prevent merging -- not only is the
+     *  node from the libraries not merged, but the element is removed from the main manifest. */
+    private static final String MERGE_REMOVE   = "remove";                          //$NON-NLS-1$
 
     /**
      * Sets of element/attribute that need to be treated as class names.
@@ -141,6 +153,7 @@ public class ManifestMerger {
             "application/name",
             "application/backupAgent",
             "activity/name",
+            "activity-alias/name",
             "receiver/name",
             "service/name",
             "provider/name",
@@ -183,14 +196,14 @@ public class ManifestMerger {
             File mainFile,
             File[] libraryFiles,
             Map<String, String> injectAttributes) {
-        Document mainDoc = XmlUtils.parseDocument(mainFile, mLog);
+        Document mainDoc = MergerXmlUtils.parseDocument(mainFile, mLog);
         if (mainDoc == null) {
             return false;
         }
 
         boolean success = process(mainDoc, libraryFiles, injectAttributes);
 
-        if (!XmlUtils.printXmlFile(mainDoc, outputFile, mLog)) {
+        if (!MergerXmlUtils.printXmlFile(mainDoc, outputFile, mLog)) {
             success = false;
         }
         return success;
@@ -222,20 +235,21 @@ public class ManifestMerger {
 
         boolean success = true;
         mMainDoc = mainDoc;
-        XmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
-        XmlUtils.injectAttributes(mainDoc, injectAttributes, mLog);
+        MergerXmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
+        MergerXmlUtils.injectAttributes(mainDoc, injectAttributes, mLog);
 
-        String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
+        String prefix = XmlUtils.lookupNamespacePrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
         expandFqcns(mainDoc);
         for (File libFile : libraryFiles) {
-            Document libDoc = XmlUtils.parseDocument(libFile, mLog);
-            if (libDoc == null || !mergeLibDoc(libDoc)) {
+            Document libDoc = MergerXmlUtils.parseDocument(libFile, mLog);
+            if (libDoc == null || !mergeLibDoc(cleanupToolsAttributes(libDoc))) {
                 success = false;
             }
         }
 
+        cleanupToolsAttributes(mainDoc);
         mXPath = null;
         mMainDoc = null;
         return success;
@@ -258,19 +272,20 @@ public class ManifestMerger {
 
         boolean success = true;
         mMainDoc = mainDoc;
-        XmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
+        MergerXmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
 
-        String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
+        String prefix = XmlUtils.lookupNamespacePrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
 
         expandFqcns(mainDoc);
         for (Document libDoc : libraryDocs) {
-            XmlUtils.decorateDocument(libDoc, IMergerLog.LIBRARY);
-            if (!mergeLibDoc(libDoc)) {
+            MergerXmlUtils.decorateDocument(libDoc, IMergerLog.LIBRARY);
+            if (!mergeLibDoc(cleanupToolsAttributes(libDoc))) {
                 success = false;
             }
         }
 
+        cleanupToolsAttributes(mainDoc);
         mXPath = null;
         mMainDoc = null;
         return success;
@@ -300,32 +315,37 @@ public class ManifestMerger {
         err |= !doNotMergeCheckEqual("/manifest/compatible-screens",  libDoc);     //$NON-NLS-1$
         err |= !doNotMergeCheckEqual("/manifest/supports-gl-texture", libDoc);     //$NON-NLS-1$
 
+        boolean skipApplication = hasOverrideOrRemoveTag(
+                findFirstElement(mMainDoc, "/manifest/application"));  //$NON-NLS-1$
+
         // Strategy C
-        err |= !mergeNewOrEqual(
-                    "/manifest/application/activity",                               //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    libDoc,
-                    true);
-        err |= !mergeNewOrEqual(
-                    "/manifest/application/activity-alias",                         //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    libDoc,
-                    true);
-        err |= !mergeNewOrEqual(
-                    "/manifest/application/service",                                //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    libDoc,
-                    true);
-        err |= !mergeNewOrEqual(
-                    "/manifest/application/receiver",                               //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    libDoc,
-                    true);
-        err |= !mergeNewOrEqual(
-                    "/manifest/application/provider",                               //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    libDoc,
-                    true);
+        if (!skipApplication) {
+            err |= !mergeNewOrEqual(
+                        "/manifest/application/activity",                           //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        libDoc,
+                        true);
+            err |= !mergeNewOrEqual(
+                        "/manifest/application/activity-alias",                     //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        libDoc,
+                        true);
+            err |= !mergeNewOrEqual(
+                        "/manifest/application/service",                            //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        libDoc,
+                        true);
+            err |= !mergeNewOrEqual(
+                        "/manifest/application/receiver",                           //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        libDoc,
+                        true);
+            err |= !mergeNewOrEqual(
+                        "/manifest/application/provider",                           //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        libDoc,
+                        true);
+        }
         err |= !mergeNewOrEqual(
                     "/manifest/permission",                                         //$NON-NLS-1$
                     "name",                                                         //$NON-NLS-1$
@@ -348,12 +368,14 @@ public class ManifestMerger {
                     false);
 
         // Strategy D
-        err |= !mergeAdjustRequired(
-                    "/manifest/application/uses-library",                           //$NON-NLS-1$
-                    "name",                                                         //$NON-NLS-1$
-                    "required",                                                     //$NON-NLS-1$
-                    libDoc,
-                    null /*alternateKeyAttr*/);
+        if (!skipApplication) {
+            err |= !mergeAdjustRequired(
+                        "/manifest/application/uses-library",                       //$NON-NLS-1$
+                        "name",                                                     //$NON-NLS-1$
+                        "required",                                                 //$NON-NLS-1$
+                        libDoc,
+                        null /*alternateKeyAttr*/);
+        }
         err |= !mergeAdjustRequired(
                     "/manifest/uses-feature",                                       //$NON-NLS-1$
                     "name",                                                         //$NON-NLS-1$
@@ -455,6 +477,10 @@ public class ManifestMerger {
         if (libApp == null) {
             return true;
         }
+        if (hasOverrideOrRemoveTag(mainApp)) {
+            // Don't check the <application> element since it is tagged with override or remove.
+            return true;
+        }
 
         for (String attrName : new String[] { "name", "backupAgent" }) {
             String libValue  = getAttributeValue(libApp, attrName);
@@ -506,6 +532,9 @@ public class ManifestMerger {
             boolean found = false;
 
             for (Element dest : findElements(mMainDoc, path)) {
+                if (hasOverrideOrRemoveTag(dest)) {
+                    continue;
+                }
                 if (compareElements(dest, src, false, null /*diff*/, null /*keyAttr*/)) {
                     found = true;
                     break;
@@ -518,7 +547,7 @@ public class ManifestMerger {
                         xmlFileAndLine(src),
                         "%1$s defined in library, missing from main manifest:\n%2$s",
                         path,
-                        XmlUtils.dump(src, false /*nextSiblings*/));
+                        MergerXmlUtils.dump(src, false /*nextSiblings*/));
             }
         }
 
@@ -583,7 +612,13 @@ public class ManifestMerger {
                         "Manifest has more than one %1$s[@%2$s=%3$s] element.",
                         path, keyAttr, name);
             }
+            boolean doMerge = true;
             for (Element dest : dests) {
+                // Don't try to merge this element since it has tools:merge=override|remove.
+                if (hasOverrideOrRemoveTag(dest)) {
+                    doMerge = false;
+                    continue;
+                }
                 // If there's already a similar node in the destination, check it's identical.
                 StringBuilder diff = new StringBuilder();
                 if (compareElements(dest, src, false, diff, keyAttr)) {
@@ -608,10 +643,12 @@ public class ManifestMerger {
                 }
             }
 
-            // Ready to merge element src. Select which previous siblings to merge.
-            Node start = selectPreviousSiblings(src);
+            if (doMerge) {
+                // Ready to merge element src. Select which previous siblings to merge.
+                Node start = selectPreviousSiblings(src);
 
-            insertAtEndOf(parent, start, src);
+                insertAtEndOf(parent, start, src);
+            }
         }
 
         return success;
@@ -634,7 +671,7 @@ public class ManifestMerger {
     /**
      * Merge elements as identified by their key name attribute.
      * The element must have an option boolean "required" attribute which can be either "true" or
-     * "false". Default is true if the attribute is misisng. When merging, a "false" is superseded
+     * "false". Default is true if the attribute is missisng. When merging, a "false" is superseded
      * by a "true" (explicit or implicit).
      * <p/>
      * When merging, this does NOT merge any other attributes than {@code keyAttr} and
@@ -705,6 +742,7 @@ public class ManifestMerger {
                         path, keyAttr, name);
             }
             if (dests.size() > 0) {
+
                 attr = src.getAttributeNodeNS(NS_URI, requiredAttr);
                 String value = attr == null ? "true" : attr.getNodeValue();    //$NON-NLS-1$
                 if (value == null || !(value.equals("true") || value.equals("false"))) {
@@ -717,8 +755,12 @@ public class ManifestMerger {
                 boolean boolE = Boolean.parseBoolean(value);
 
                 for (Element dest : dests) {
-                    // Destination node exists. Compare the required attributes.
+                    // Don't try to merge this element since it has tools:merge=override|remove.
+                    if (hasOverrideOrRemoveTag(dest)) {
+                        continue;
+                    }
 
+                    // Compare the required attributes.
                     attr = dest.getAttributeNodeNS(NS_URI, requiredAttr);
                     value = attr == null ? "true" : attr.getNodeValue();    //$NON-NLS-1$
                     if (value == null || !(value.equals("true") || value.equals("false"))) {
@@ -927,6 +969,12 @@ public class ManifestMerger {
         boolean result = true;
 
         Element destUsesSdk = findFirstElement(mMainDoc, "/manifest/uses-sdk");  //$NON-NLS-1$
+
+        if (hasOverrideOrRemoveTag(destUsesSdk)) {
+            // Don't try to check this element since it has tools:merge=override|remove.
+            return true;
+        }
+
         Element srcUsesSdk  = findFirstElement(libDoc,   "/manifest/uses-sdk");  //$NON-NLS-1$
 
         AtomicInteger destValue = new AtomicInteger(1);
@@ -935,7 +983,7 @@ public class ManifestMerger {
         AtomicBoolean srcImplied = new AtomicBoolean(true);
 
         // Check minSdkVersion
-        destMinSdk = 1;
+        int destMinSdk = 1;
         result = extractSdkVersionAttribute(
                     libDoc,
                     destUsesSdk, srcUsesSdk,
@@ -1144,8 +1192,8 @@ public class ManifestMerger {
      */
     private Node insertAtEndOf(Element dest, Node start, Node end) {
         // Check whether we'll need to adjust URI prefixes
-        String destPrefix = XmlUtils.lookupNsPrefix(mMainDoc, NS_URI);
-        String srcPrefix  = XmlUtils.lookupNsPrefix(start.getOwnerDocument(), NS_URI);
+        String destPrefix = XmlUtils.lookupNamespacePrefix(mMainDoc, NS_URI);
+        String srcPrefix  = XmlUtils.lookupNamespacePrefix(start.getOwnerDocument(), NS_URI);
         boolean needPrefixChange = destPrefix != null && !destPrefix.equals(srcPrefix);
 
         // First let's figure out the insertion point.
@@ -1233,13 +1281,13 @@ public class ManifestMerger {
             @Nullable String keyAttr) {
         Map<String, String> nsPrefixE = new HashMap<String, String>();
         Map<String, String> nsPrefixA = new HashMap<String, String>();
-        String sE = XmlUtils.printElement(expected, nsPrefixE, "");                 //$NON-NLS-1$
-        String sA = XmlUtils.printElement(actual,   nsPrefixA, "");                 //$NON-NLS-1$
+        String sE = MergerXmlUtils.printElement(expected, nsPrefixE, "");           //$NON-NLS-1$
+        String sA = MergerXmlUtils.printElement(actual,   nsPrefixA, "");           //$NON-NLS-1$
         if (sE.equals(sA)) {
             return true;
         } else {
             if (diff != null) {
-                XmlUtils.printXmlDiff(diff, sE, sA, nsPrefixE, nsPrefixA, NS_URI + ':' + keyAttr);
+                MergerXmlUtils.printXmlDiff(diff, sE, sA, nsPrefixE, nsPrefixA, NS_URI + ':' + keyAttr);
             }
             return false;
         }
@@ -1363,8 +1411,86 @@ public class ManifestMerger {
      * @return A new non-null {@link FileAndLine} combining the file name and line number.
      */
     private @NonNull FileAndLine xmlFileAndLine(@NonNull Node node) {
-        return XmlUtils.xmlFileAndLine(node);
+        return MergerXmlUtils.xmlFileAndLine(node);
     }
 
+    /**
+     * Checks whether the given element has a tools:merge=override or tools:merge=remove attribute.
+     * @param node The node to check.
+     * @return True if the element has a tools:merge=override or tools:merge=remove attribute.
+     */
+    private boolean hasOverrideOrRemoveTag(@Nullable Node node) {
+        if (node == null || node.getNodeType() != Node.ELEMENT_NODE) {
+            return false;
+        }
+        NamedNodeMap attrs = node.getAttributes();
+        Node merge = attrs.getNamedItemNS(TOOLS_URI, MERGE_ATTR);
+        String value = merge == null ? null : merge.getNodeValue();
+        return MERGE_OVERRIDE.equals(value) || MERGE_REMOVE.equals(value);
+    }
 
+    /**
+     * Cleans up all tools attributes from the given node hierarchy.
+     * <p/>
+     * If an element is marked with tools:merge=override, this attribute is removed.
+     * If an element is marked with tools:merge=remove, the <em>whole</em> element is removed.
+     *
+     * @param root The root node to parse and edit, recursively.
+     */
+    private void cleanupToolsAttributes(@Nullable Node root) {
+        if (root == null) {
+            return;
+        }
+        NamedNodeMap attrs = root.getAttributes();
+        if (attrs != null) {
+            for (int i = attrs.getLength() - 1; i >= 0; i--) {
+                Node attr = attrs.item(i);
+                if (SdkConstants.XMLNS_URI.equals(attr.getNamespaceURI()) &&
+                        TOOLS_URI.equals(attr.getNodeValue())) {
+                    attrs.removeNamedItem(attr.getNodeName());
+                } else if (TOOLS_URI.equals(attr.getNamespaceURI()) &&
+                        MERGE_ATTR.equals(attr.getLocalName())) {
+                    attrs.removeNamedItem(attr.getNodeName());
+                }
+            }
+            assert attrs.getNamedItemNS(TOOLS_URI, MERGE_ATTR) == null;
+        }
+
+        for (Node child = root.getFirstChild(); child != null; ) {
+            if (child.getNodeType() != Node.ELEMENT_NODE) {
+                child = child.getNextSibling();
+                continue;
+            }
+            attrs = child.getAttributes();
+            Node merge = attrs == null ? null : attrs.getNamedItemNS(TOOLS_URI, MERGE_ATTR);
+            String value = merge == null ? null : merge.getNodeValue();
+            Node sibling = child.getNextSibling();
+            if (MERGE_REMOVE.equals(value)) {
+                // Note: save the previous sibling since removing the child will clear its siblings.
+                Node prev = child.getPreviousSibling();
+                root.removeChild(child);
+                // If there's some whitespace just before that element, clean it up too.
+                while (prev != null && prev.getNodeType() == Node.TEXT_NODE) {
+                    if (prev.getNodeValue().trim().length() == 0) {
+                        Node prevPrev = prev.getPreviousSibling();
+                        root.removeChild(prev);
+                        prev = prevPrev;
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                cleanupToolsAttributes(child);
+            }
+            child = sibling;
+        }
+    }
+
+    /**
+     * @see #cleanupToolsAttributes(Node)
+     */
+    private Document cleanupToolsAttributes(@NonNull Document doc) {
+        cleanupToolsAttributes(doc.getFirstChild());
+        return doc;
+    }
 }

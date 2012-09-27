@@ -157,4 +157,24 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
     public void test60_merge_order() throws Exception {
         processTestFiles();
     }
+
+    public void test65_override_app() throws Exception {
+        processTestFiles();
+    }
+
+    public void test66_remove_app() throws Exception {
+        processTestFiles();
+    }
+
+    public void test67_override_activities() throws Exception {
+        processTestFiles();
+    }
+
+    public void test68_override_uses() throws Exception {
+        processTestFiles();
+    }
+
+    public void test69_remove_uses() throws Exception {
+        processTestFiles();
+    }
 }

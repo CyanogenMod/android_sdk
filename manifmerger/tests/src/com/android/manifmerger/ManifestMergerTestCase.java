@@ -435,19 +435,19 @@ abstract class ManifestMergerTestCase extends TestCase {
         // Test result XML. There should always be one created
         // since the process action does not stop on errors.
         log.clear();
-        Document document = XmlUtils.parseDocument(testFiles.getActualResult(), mergerLog);
+        Document document = MergerXmlUtils.parseDocument(testFiles.getActualResult(), mergerLog);
         assertNotNull(document);
         assert document != null; // for Eclipse null analysis
-        String actual = XmlUtils.printXmlString(document, mergerLog);
+        String actual = MergerXmlUtils.printXmlString(document, mergerLog);
         assertEquals("Error parsing actual result XML", "[]", log.toString());
         log.clear();
-        document = XmlUtils.parseDocument(
+        document = MergerXmlUtils.parseDocument(
                 testFiles.getExpectedResult(),
                 mergerLog,
                 new FileAndLine("<expected-result>", 0));
-        assertNotNull(document);
+        assertNotNull("Failed to parse result document: " + testFiles.getExpectedResult(),document);
         assert document != null;
-        String expected = XmlUtils.printXmlString(document, mergerLog);
+        String expected = MergerXmlUtils.printXmlString(document, mergerLog);
         assertEquals("Error parsing expected result XML", "[]", log.toString());
         assertEquals("Error comparing expected to actual result", expected, actual);
 
