@@ -65,8 +65,10 @@ public class SymbolLoader {
 
         mSymbols = HashBasedTable.create();
 
+        String currentLine = "";
         try {
             for (String line : lines) {
+                currentLine = line;
                 // format is "<type> <class> <name> <value>"
                 // don't want to split on space as value could contain spaces.
                 int pos = line.indexOf(' ');
@@ -79,8 +81,10 @@ public class SymbolLoader {
 
                 mSymbols.put(className, name, new SymbolEntry(name, type, value));
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IOException("File format error reading " + mSymbolFile.getAbsolutePath());
+        } catch (Exception e) {
+            // Catch both ArrayIndexOutOfBoundsException and StringIndexOutOfBoundsException
+            throw new IOException("File format error reading " + mSymbolFile.getAbsolutePath()
+                    + ": " + currentLine, e);
         }
     }
 

@@ -1127,7 +1127,18 @@ public class PreCompilerBuilder extends BaseBuilder {
         } catch (IOException e1) {
             // something happen while executing the process,
             // mark the project and exit
-            String msg = String.format(Messages.AAPT_Exec_Error_s, array.get(0));
+            String msg;
+            String path = array.get(0);
+            if (!new File(path).exists()) {
+                msg = String.format(Messages.AAPT_Exec_Error_s, path);
+            } else {
+                String description = e1.getLocalizedMessage();
+                if (e1.getCause() != null && e1.getCause() != e1) {
+                    description = description + ": " + e1.getCause().getLocalizedMessage();
+                }
+                msg = String.format(Messages.AAPT_Exec_Error_Other_s, description);
+            }
+
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // Add workaround for the Linux problem described here:
