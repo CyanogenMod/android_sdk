@@ -258,6 +258,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 return null;
             }
 
+            boolean isLibrary = projectState.isLibrary();
+
             IAndroidTarget projectTarget = projectState.getTarget();
 
             // get the libraries
@@ -362,7 +364,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // if the main manifest didn't change, then we check for the library
             // ones (will trigger manifest merging too)
-            if (mMustMergeManifest == false && libProjects.size() > 0) {
+            if (libProjects.size() > 0) {
                 for (IProject libProject : libProjects) {
                     IResourceDelta delta = getDelta(libProject);
                     if (delta != null) {
@@ -371,12 +373,24 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 "PRE:LibManifest"); //$NON-NLS-1$
                         visitor.addSet(ChangedFileSetHelper.MANIFEST);
 
+                        ChangedFileSet textSymbolCFS = null;
+                        if (isLibrary == false) {
+                            textSymbolCFS = ChangedFileSetHelper.getTextSymbols(
+                                    libProject);
+                            visitor.addSet(textSymbolCFS);
+                        }
+
                         delta.accept(visitor);
 
                         mMustMergeManifest |= visitor.checkSet(ChangedFileSetHelper.MANIFEST);
 
-                        // no need to test others.
-                        if (mMustMergeManifest) {
+                        if (textSymbolCFS != null) {
+                            mMustCompileResources |= visitor.checkSet(textSymbolCFS);
+                        }
+
+                        // no need to test others if we have all flags at true.
+                        if (mMustMergeManifest &&
+                                (mMustCompileResources || textSymbolCFS == null)) {
                             break;
                         }
                     }
@@ -665,7 +679,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 }
 
                 handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
-                        projectState.isLibrary(), proguardFile);
+                        isLibrary, proguardFile);
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
@@ -1111,16 +1125,23 @@ public class PreCompilerBuilder extends BaseBuilder {
             // now if the project has libraries, R needs to be created for each libraries
             // unless this is a library.
             if (isLibrary == false && !libRFiles.isEmpty()) {
-                SymbolLoader symbolValues = new SymbolLoader(new File(outputFolder, "R.txt"));
-                symbolValues.load();
+                File rFile = new File(outputFolder, SdkConstants.FN_RESOURCE_TEXT);
+                // if the project has no resources, the file could not exist.
+                if (rFile.isFile()) {
+                    SymbolLoader symbolValues = new SymbolLoader(rFile);
+                    symbolValues.load();
 
-                for (Pair<File, String> libData : libRFiles) {
-                    SymbolLoader symbols = new SymbolLoader(libData.getFirst());
-                    symbols.load();
+                    for (Pair<File, String> libData : libRFiles) {
+                        File libRFile = libData.getFirst();
+                        if (libRFile.isFile()) {
+                            SymbolLoader symbols = new SymbolLoader(libRFile);
+                            symbols.load();
 
-                    SymbolWriter writer = new SymbolWriter(osOutputPath, libData.getSecond(),
-                            symbols, symbolValues);
-                    writer.write();
+                            SymbolWriter writer = new SymbolWriter(osOutputPath,
+                                    libData.getSecond(), symbols, symbolValues);
+                            writer.write();
+                        }
+                    }
                 }
             }
 
