@@ -111,6 +111,22 @@ class ChangedFileSetHelper {
     }
 
     /**
+     * Returns a {@link ChangedFileSet} for the generated R.txt file
+     * @param project the project
+     * @return a ChangeFileSet
+     */
+    static ChangedFileSet getTextSymbols(@NonNull IProject project) {
+        // input path is inside the project's android output folder
+        String path = getRelativeAndroidOut(project);
+
+        ChangedFileSet set = new ChangedFileSet(
+                "textSymbols",                                                   //$NON-NLS-1$
+                path + '/' + SdkConstants.FN_RESOURCE_TEXT);
+
+        return set;
+    }
+
+    /**
      * Returns a {@link ChangedFileSet} for a project's javac output.
      * @param project the project
      * @return a ChangedFileSet

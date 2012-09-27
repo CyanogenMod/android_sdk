@@ -897,6 +897,8 @@ public final class SdkConstants {
     public static final String FN_RESOURCE_CLASS = FN_RESOURCE_BASE + DOT_JAVA;
     /** Resource class file  filename, i.e. "R.class" */
     public static final String FN_COMPILED_RESOURCE_CLASS = FN_RESOURCE_BASE + DOT_CLASS;
+    /** Resource text filename, i.e. "R.txt" */
+    public static final String FN_RESOURCE_TEXT = FN_RESOURCE_BASE + DOT_TXT;
     /** Manifest java class filename, i.e. "Manifest.java" */
     public static final String FN_MANIFEST_CLASS = "Manifest.java"; //$NON-NLS-1$
 

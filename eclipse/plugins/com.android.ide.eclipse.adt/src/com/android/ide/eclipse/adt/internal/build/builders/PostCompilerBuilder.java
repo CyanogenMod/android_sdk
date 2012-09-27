@@ -342,6 +342,15 @@ public class PostCompilerBuilder extends BaseBuilder {
             // delta changes.
             abortOnBadSetup(javaProject);
 
+            // Get the output stream. Since the builder is created for the life of the
+            // project, they can be kept around.
+            if (mOutStream == null) {
+                mOutStream = new AndroidPrintStream(project, null /*prefix*/,
+                        AdtPlugin.getOutStream());
+                mErrStream = new AndroidPrintStream(project, null /*prefix*/,
+                        AdtPlugin.getOutStream());
+            }
+
             // remove older packaging markers.
             removeMarkersFromContainer(javaProject.getProject(), AdtConstants.MARKER_PACKAGING);
 
@@ -466,15 +475,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             IContainer ic = androidOutputFolder.getParent();
             if (ic != null) {
                 ic.refreshLocal(IResource.DEPTH_ONE, monitor);
-            }
-
-            // Get the DX output stream. Since the builder is created for the life of the
-            // project, they can be kept around.
-            if (mOutStream == null) {
-                mOutStream = new AndroidPrintStream(project, null /*prefix*/,
-                        AdtPlugin.getOutStream());
-                mErrStream = new AndroidPrintStream(project, null /*prefix*/,
-                        AdtPlugin.getOutStream());
             }
 
             // we need to test all three, as we may need to make the final package

@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -132,9 +133,10 @@ public class BuildHelper {
      * @param verbose
      * @throws CoreException
      */
-    public BuildHelper(IProject project, AndroidPrintStream outStream,
-            AndroidPrintStream errStream, boolean debugMode, boolean verbose,
-            ResourceMarker resMarker) throws CoreException {
+    public BuildHelper(@NonNull IProject project,
+            @NonNull AndroidPrintStream outStream,
+            @NonNull AndroidPrintStream errStream,
+            boolean debugMode, boolean verbose, ResourceMarker resMarker) throws CoreException {
         mProject = project;
         mOutStream = outStream;
         mErrStream = errStream;
