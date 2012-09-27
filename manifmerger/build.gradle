@@ -1,16 +1,21 @@
-apply plugin: 'java'
-
 dependencies {
     compile project(':common')
-    compile project(':sdkmanager:libs:sdklib')
+    compile project(':sdklib')
     compile 'kxml2:kxml2:2.3.0'
 
-// not sure why the following line works in sdklib but not here...
-//    testCompile project(':sdkmanager:libs:sdklib').sourceSets.test.output
+    testCompile project(':sdklib').sourceSets.test.output
     testCompile 'junit:junit:3.8.1'
 }
 
-group = 'com.android.tools'
+def getVersion() {
+    if (project.has("release")) {
+        return project.ext.baseVersion
+    }
+
+    return project.ext.baseVersion + '-SNAPSHOT'
+}
+
+version = getVersion()
 archivesBaseName = 'manifest-merger'
 
 sourceSets {
@@ -28,6 +33,49 @@ sourceSets {
         }
         resources {
             srcDir 'tests/src'
+        }
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment ->
+                if (!project.has("release")) {
+                    throw new StopExecutionException("uploadArchives must be called with the release.gradle init script")
+                }
+
+                signing.signPom(deployment)
+            }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'Android Tools Manifest Merger library'
+                description 'A Library to merge Android manifests.'
+                url 'http://tools.android.com'
+                inceptionYear '2007'
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                scm {
+                    url "https://android.googlesource.com/platform/sdk"
+                    connection "git://android.googlesource.com/platform/sdk.git"
+                }
+                developers {
+                    developer {
+                        name 'The Android Open Source Project'
+                    }
+                }
+            }
         }
     }
 }
