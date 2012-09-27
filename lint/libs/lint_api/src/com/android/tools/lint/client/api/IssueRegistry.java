@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +45,7 @@ import java.util.Set;
 public abstract class IssueRegistry {
     private static List<Category> sCategories;
     private static Map<String, Issue> sIdToIssue;
+    private static Map<EnumSet<Scope>, List<Issue>> sScopeIssues = Maps.newHashMap();
 
     /**
      * Issue reported by lint (not a specific detector) when it cannot even
@@ -92,7 +94,46 @@ public abstract class IssueRegistry {
     public abstract List<Issue> getIssues();
 
     /**
-     * Creates a list of detectors applicable to the given cope, and with the
+     * Returns all available issues of a given scope (regardless of whether
+     * they are actually enabled for a given configuration etc)
+     *
+     * @param scope the applicable scope set
+     * @return a list of issues
+     */
+    @NonNull
+    private List<Issue> getIssuesForScope(@NonNull EnumSet<Scope> scope) {
+        List<Issue> list = sScopeIssues.get(scope);
+        if (list == null) {
+            List<Issue> issues = getIssues();
+            if (scope.equals(Scope.ALL)) {
+                list = issues;
+            } else {
+                int initialSize = 12;
+                if (scope.contains(Scope.RESOURCE_FILE)) {
+                    initialSize += 50;
+                }
+                if (scope.contains(Scope.JAVA_FILE)) {
+                    initialSize += 12;
+                }
+                if (scope.contains(Scope.CLASS_FILE)) {
+                    initialSize += 12;
+                }
+                list = new ArrayList<Issue>(initialSize);
+                for (Issue issue : issues) {
+                    // Determine if the scope matches
+                    if (issue.isAdequate(scope)) {
+                        list.add(issue);
+                    }
+                }
+            }
+            sScopeIssues.put(scope, list);
+        }
+
+        return list;
+    }
+
+    /**
+     * Creates a list of detectors applicable to the given scope, and with the
      * given configuration.
      *
      * @param client the client to report errors to
@@ -111,10 +152,16 @@ public abstract class IssueRegistry {
             @NonNull Configuration configuration,
             @NonNull EnumSet<Scope> scope,
             @Nullable Map<Scope, List<Detector>> scopeToDetectors) {
-        List<Issue> issues = getIssues();
+
+        List<Issue> issues = getIssuesForScope(scope);
+        if (issues.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         Set<Class<? extends Detector>> detectorClasses = new HashSet<Class<? extends Detector>>();
         Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
                 new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
+
         for (Issue issue : issues) {
             Class<? extends Detector> detectorClass = issue.getDetectorClass();
             EnumSet<Scope> issueScope = issue.getScope();
@@ -124,10 +171,7 @@ public abstract class IssueRegistry {
                     continue;
                 }
 
-                // Determine if the scope matches
-                if (!issue.isAdequate(scope)) {
-                    continue;
-                }
+                assert issue.isAdequate(scope); // Ensured by getIssuesForScope above
 
                 detectorClass = client.replaceDetector(detectorClass);
 
@@ -249,5 +293,6 @@ public abstract class IssueRegistry {
     protected static void reset() {
         sIdToIssue = null;
         sCategories = null;
+        sScopeIssues = Maps.newHashMap();
     }
 }

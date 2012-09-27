@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ICON;
 import static com.android.SdkConstants.DOT_9PNG;
 import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
@@ -60,6 +61,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -251,6 +253,20 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             IconDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
+    /** Wrong filename according to the format */
+    public static final Issue ICON_EXTENSION = Issue.create(
+            "IconExtension", //$NON-NLS-1$
+            "Checks that the icon file extension matches the actual image format in the file",
+
+            "Ensures that icons have the correct file extension (e.g. a .png file is " +
+            "really in the PNG format and not for example a GIF file named .png.)",
+            Category.ICONS,
+            3,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
+
+
     private String mApplicationIcon;
 
     /** Constructs a new {@link IconDetector} check */
@@ -308,7 +324,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                                 for (File f : files) {
                                     String name = f.getName();
                                     if (isDrawableFile(name)) {
-                                        names.add(f.getName());
+                                        names.add(name);
                                     }
                                 }
                                 folderToNames.put(folder, names);
@@ -334,8 +350,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
 
     private static boolean isDrawableFile(String name) {
         // endsWith(name, DOT_PNG) is also true for endsWith(name, DOT_9PNG)
-        return endsWith(name, DOT_PNG)|| endsWith(name, DOT_JPG) || endsWith(name, DOT_GIF) ||
-                endsWith(name, DOT_XML);
+        return endsWith(name, DOT_PNG)|| endsWith(name, DOT_JPG) || endsWith(name, DOT_GIF)
+                || endsWith(name, DOT_XML) || endsWith(name, DOT_JPEG);
     }
 
     // This method looks for duplicates in the assets. This uses two pieces of information
@@ -948,6 +964,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     // pass - most common case, avoids checking other extensions
                 } else if (endsWith(name, DOT_PNG)
                         || endsWith(name, DOT_JPG)
+                        || endsWith(name, DOT_JPEG)
                         || endsWith(name, DOT_GIF)) {
                     context.report(ICON_LOCATION,
                         Location.create(file),
@@ -970,6 +987,15 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             }
         }
 
+        if (context.isEnabled(ICON_EXTENSION)) {
+            for (File file : files) {
+                String path = file.getPath();
+                if (isDrawableFile(path) && !endsWith(path, DOT_XML)) {
+                    checkExtension(context, file);
+                }
+            }
+        }
+
         // Check icon sizes
         if (context.isEnabled(ICON_EXPECTED_SIZE)) {
             checkExpectedSizes(context, folder, files);
@@ -981,7 +1007,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 // I don't check file sizes twice!
                 String fileName = file.getName();
 
-                if (endsWith(fileName, DOT_PNG) || endsWith(fileName, DOT_JPG)) {
+                if (endsWith(fileName, DOT_PNG) || endsWith(fileName, DOT_JPG)
+                        || endsWith(fileName, DOT_JPEG)) {
                     // Only scan .png files (except 9-patch png's) and jpg files for
                     // dip sizes. Duplicate checks can also be performed on ninepatch files.
                     if (pixelSizes != null && !endsWith(fileName, DOT_9PNG)) {
@@ -993,6 +1020,52 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     }
                 }
             }
+        }
+    }
+
+    private void checkExtension(Context context, File file) {
+        try {
+            ImageInputStream input = ImageIO.createImageInputStream(file);
+            if (input != null) {
+                try {
+                    Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+                    while (readers.hasNext()) {
+                        ImageReader reader = readers.next();
+                        try {
+                            reader.setInput(input);
+
+                            // Check file extension
+                            String formatName = reader.getFormatName();
+                            if (formatName != null && !formatName.isEmpty()) {
+                                String path = file.getPath();
+                                int index = path.lastIndexOf('.');
+                                String extension = path.substring(index+1).toLowerCase(Locale.US);
+
+                                if (!formatName.equalsIgnoreCase(extension)) {
+                                    if (endsWith(path, DOT_JPG)
+                                            && formatName.equals("JPEG")) { //$NON-NLS-1$
+                                        return;
+                                    }
+                                    String message = String.format(
+                                            "Misleading file extension; named .%1$s but the " +
+                                            "file format is %2$s", extension, formatName);
+                                    Location location = Location.create(file);
+                                    context.report(ICON_EXTENSION, location, message, null);
+                                }
+                                break;
+                            }
+                        } finally {
+                            reader.dispose();
+                        }
+                    }
+                } finally {
+                    if (input != null) {
+                        input.close();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // Pass -- we can't handle all image types, warn about those we can
         }
     }
 
@@ -1119,7 +1192,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
         String fileName = file.getName();
         // Only scan .png files (except 9-patch png's) and jpg files
         if (!((endsWith(fileName, DOT_PNG) && !endsWith(fileName, DOT_9PNG)) ||
-                endsWith(fileName, DOT_JPG))) {
+                endsWith(fileName, DOT_JPG) || endsWith(fileName, DOT_JPEG))) {
             return;
         }
 
