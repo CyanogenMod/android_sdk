@@ -55,6 +55,12 @@ import junit.framework.TestCase;
 /** Common utility methods for the various lint check tests */
 @SuppressWarnings("javadoc")
 public abstract class AbstractCheckTest extends TestCase {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        BuiltinIssueRegistry.reset();
+    }
+
     protected abstract Detector getDetector();
 
     private Detector mDetector;

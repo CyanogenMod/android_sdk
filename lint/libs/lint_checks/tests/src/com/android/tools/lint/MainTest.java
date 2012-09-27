@@ -18,7 +18,6 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.detector.api.Detector;
 
 import java.io.ByteArrayOutputStream;
@@ -29,12 +28,6 @@ import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class MainTest extends AbstractCheckTest {
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        BuiltinIssueRegistry.reset();
-    }
-
     public void testWrap() {
         String s =
             "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
