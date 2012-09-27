@@ -54,6 +54,7 @@ class SdkCommandLine extends CommandLineParser {
     public static final String OBJECT_TARGETS        = "targets";                   //$NON-NLS-1$
     public static final String OBJECT_PROJECT        = "project";                   //$NON-NLS-1$
     public static final String OBJECT_TEST_PROJECT   = "test-project";              //$NON-NLS-1$
+    public static final String OBJECT_UITEST_PROJECT = "uitest-project";            //$NON-NLS-1$
     public static final String OBJECT_LIB_PROJECT    = "lib-project";               //$NON-NLS-1$
     public static final String OBJECT_ADB            = "adb";                       //$NON-NLS-1$
 
@@ -149,6 +150,9 @@ class SdkCommandLine extends CommandLineParser {
                 "Creates a new Android library project." },
             { VERB_UPDATE, OBJECT_LIB_PROJECT,
                 "Updates an Android library project (must already have an AndroidManifest.xml)." },
+
+            { VERB_CREATE, OBJECT_UITEST_PROJECT,
+                "Creates a new UI test project." },
 
             { VERB_UPDATE, OBJECT_ADB,
                 "Updates adb to support the USB devices declared in the SDK add-ons." },
@@ -362,6 +366,18 @@ class SdkCommandLine extends CommandLineParser {
                 VERB_CREATE, OBJECT_TEST_PROJECT, "m", KEY_MAIN_PROJECT,            //$NON-NLS-1$
                 "Path to directory of the app under test, relative to the test project directory.",
                 null);
+
+        // --- create uitest-project ---
+
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_UITEST_PROJECT, "p", KEY_PATH,                  //$NON-NLS-1$
+                "The new project's directory.", null);
+        define(Mode.STRING, false,
+                VERB_CREATE, OBJECT_UITEST_PROJECT, "n", KEY_NAME,                    //$NON-NLS-1$
+                "Project name.", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_UITEST_PROJECT, "t", KEY_TARGET_ID,               //$NON-NLS-1$
+                "Target ID of the new project.", null);
 
         // --- create lib-project ---
 

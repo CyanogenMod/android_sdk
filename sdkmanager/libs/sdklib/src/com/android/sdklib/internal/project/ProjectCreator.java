@@ -77,7 +77,7 @@ public class ProjectCreator {
      * "ACTIVITY_TESTED_CLASS_NAME".*/
     private final static String PH_ACTIVITY_TESTED_CLASS_NAME = "ACTIVITY_TESTED_CLASS_NAME";
     /** Project name substitution string used in template files, i.e. "PROJECT_NAME". */
-    private final static String PH_PROJECT_NAME = "PROJECT_NAME";
+    public final static String PH_PROJECT_NAME = "PROJECT_NAME";
     /** Application icon substitution string used in the manifest template */
     private final static String PH_ICON = "ICON";
     /** Version tag name substitution string used in template files, i.e. "VERSION_TAG". */
@@ -202,25 +202,25 @@ public class ProjectCreator {
             localProperties.setProperty(ProjectProperties.PROPERTY_SDK, mSdkFolder);
             localProperties.save();
 
-            // target goes in default properties
-            ProjectPropertiesWorkingCopy defaultProperties = ProjectProperties.create(folderPath,
+            // target goes in project properties
+            ProjectPropertiesWorkingCopy projectProperties = ProjectProperties.create(folderPath,
                     PropertyType.PROJECT);
-            defaultProperties.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
+            projectProperties.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
             if (library) {
-                defaultProperties.setProperty(ProjectProperties.PROPERTY_LIBRARY, "true");
+                projectProperties.setProperty(ProjectProperties.PROPERTY_LIBRARY, "true");
             }
-            defaultProperties.save();
+            projectProperties.save();
 
-            // create a build.properties file with just the application package
-            ProjectPropertiesWorkingCopy buildProperties = ProjectProperties.create(folderPath,
+            // create a ant.properties file with just the application package
+            ProjectPropertiesWorkingCopy antProperties = ProjectProperties.create(folderPath,
                     PropertyType.ANT);
 
             if (isTestProject) {
-                buildProperties.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT,
+                antProperties.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT,
                         pathToMainProject);
             }
 
-            buildProperties.save();
+            antProperties.save();
 
             // create the map for place-holders of values to replace in the templates
             final HashMap<String, String> keywords = new HashMap<String, String>();
@@ -1095,7 +1095,7 @@ public class ProjectCreator {
      * @param placeholderMap a map of (place-holder, value) to create the file from the template.
      * @throws ProjectCreateException
      */
-    private void installTemplate(String templateName, File destFile,
+    public void installTemplate(String templateName, File destFile,
             Map<String, String> placeholderMap)
             throws ProjectCreateException {
         // query the target for its template directory

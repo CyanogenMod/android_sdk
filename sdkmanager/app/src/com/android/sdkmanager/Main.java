@@ -24,17 +24,18 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
-import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.DownloadCache.Strategy;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
@@ -44,8 +45,8 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
-import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -274,6 +275,9 @@ public class Main {
 
             } else if (SdkCommandLine.OBJECT_LIB_PROJECT.equals(directObject)) {
                 createProject(true /*library*/);
+
+            } else if (SdkCommandLine.OBJECT_UITEST_PROJECT.equals(directObject)) {
+                createUiTestProject();
 
             }
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb)) {
@@ -688,6 +692,66 @@ public class Main {
                 target,
                 false /* library*/,
                 pathToMainProject);
+    }
+
+    /**
+     * Creates a new Android UI test project based on command-line parameters
+     */
+    private void createUiTestProject() {
+
+        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
+
+        // get the target and try to resolve it.
+        int targetId = resolveTargetName(mSdkCommandLine.getParamTargetId());
+        IAndroidTarget[] targets = mSdkManager.getTargets();
+        if (targetId == INVALID_TARGET_ID || targetId > targets.length) {
+            errorAndExit("Target id is not valid. Use '%s list targets' to get the target ids.",
+                    SdkConstants.androidCmdName());
+        }
+        IAndroidTarget target = targets[targetId - 1];  // target id is 1-based
+
+        if (target.getVersion().getApiLevel() < 16) {
+            errorAndExit("UI test projects can only target API 16 and above");
+        }
+
+        // get the project name
+        String projectName = mSdkCommandLine.getParamName();
+        // if none, use the folder name.
+        if (projectName == null) {
+            File f = new File(projectDir);
+            projectName = f.getName();
+        }
+
+        try {
+            // create src folder
+            File srcFolder = new File(projectDir, SdkConstants.FD_SOURCES);
+            srcFolder.mkdir();
+
+            // create the local.prop file.
+            // location of the SDK goes in localProperty
+            ProjectPropertiesWorkingCopy localProperties = ProjectProperties.create(projectDir,
+                    PropertyType.LOCAL);
+            localProperties.setProperty(ProjectProperties.PROPERTY_SDK, mOsSdkFolder);
+            localProperties.save();
+
+            // target goes in project properties
+            ProjectPropertiesWorkingCopy projectProperties = ProjectProperties.create(projectDir,
+                    PropertyType.PROJECT);
+            projectProperties.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
+            projectProperties.save();
+
+            // copy the build file using the keywords replacement.
+            final Map<String, String> keywords = new HashMap<String, String>();
+            keywords.put(ProjectCreator.PH_PROJECT_NAME, projectName);
+
+            ProjectCreator creator = getProjectCreator();
+
+            creator.installTemplate("uibuild.template",
+                    new File(projectDir, SdkConstants.FN_BUILD_XML),
+                    keywords);
+        } catch (Exception e) {
+            mSdkLog.error(e, null);
+        }
     }
 
     /**
