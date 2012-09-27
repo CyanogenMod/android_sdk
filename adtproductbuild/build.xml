@@ -7,7 +7,7 @@
 
     <!-- Source for target prebuilts -->
     <property name="deltaPackTargetSrcDir" value="${ANDROID_SRC}/prebuilts/eclipse/" />
-    <property name="targetSrcDir" value="${ANDROID_SRC}/prebuilts/eclipse-build-deps/" />
+    <property name="targetSrcDir" value="${ANDROID_SRC}/prebuilts/eclipse/" />
 
     <!-- Location where build happens and resulting binaries are generated -->
     <property name="outDir" value="${ANDROID_SRC}/out/host/eclipse/adtproduct/" />
