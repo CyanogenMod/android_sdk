@@ -20,6 +20,7 @@ import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Command-line entry point of the Manifest Merger.
@@ -33,7 +34,8 @@ import java.io.File;
  * Usage: <br/>
  * {@code $ manifmerger merge --main main_manifest.xml --libs lib1.xml lib2.xml --out result.xml}
  * <p/>
- * When used as a library, please call {@link ManifestMerger#process(File, File, File[])} directly.
+ * When used as a library, please call {@link ManifestMerger#process(File, File, File[], Map)}
+ * directly.
  */
 public class Main {
 
@@ -68,7 +70,8 @@ public class Main {
         boolean ok = mm.process(
                 new File(mArgvParser.getParamOut()),
                 new File(mArgvParser.getParamMain()),
-                libFiles
+                libFiles,
+                null /*injectAttributes*/
                 );
         System.exit(ok ? 0 : 1);
     }

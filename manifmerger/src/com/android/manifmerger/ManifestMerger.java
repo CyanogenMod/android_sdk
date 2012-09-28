@@ -46,7 +46,7 @@ import javax.xml.xpath.XPathExpressionException;
  * Merges a library manifest into a main application manifest.
  * <p/>
  * To use, create with {@link ManifestMerger#ManifestMerger(IMergerLog, ICallback)} then
- * call {@link ManifestMerger#process(File, File, File[])}.
+ * call {@link ManifestMerger#process(File, File, File[], Map)}.
  * <p/>
  * <pre> Merge operations:
  * - root manifest: attributes ignored, warn if defined.
@@ -170,15 +170,25 @@ public class ManifestMerger {
      * @param outputFile The output path to generate. Can be the same as the main path.
      * @param mainFile The main manifest paths to read. What we merge into.
      * @param libraryFiles The library manifest paths to read. Must not be null.
+     * @param injectAttributes A map of attributes to inject in the form [pseudo-xpath] => value.
+     *   The key is "/manifest/elements...|attribute-ns-uri attribute-local-name",
+     *   for example "/manifest/uses-sdk|http://schemas.android.com/apk/res/android minSdkVersion".
+     *   (note the space separator between the attribute URI and its local name.)
+     *   The elements will be created if they don't exists. Existing attributes will be modified.
+     *   The replacement is done on the main document <em>before</em> merging.
      * @return True if the merge was completed, false otherwise.
      */
-    public boolean process(File outputFile, File mainFile, File[] libraryFiles) {
+    public boolean process(
+            File outputFile,
+            File mainFile,
+            File[] libraryFiles,
+            Map<String, String> injectAttributes) {
         Document mainDoc = XmlUtils.parseDocument(mainFile, mLog);
         if (mainDoc == null) {
             return false;
         }
 
-        boolean success = process(mainDoc, libraryFiles);
+        boolean success = process(mainDoc, libraryFiles, injectAttributes);
 
         if (!XmlUtils.printXmlFile(mainDoc, outputFile, mLog)) {
             success = false;
@@ -197,13 +207,23 @@ public class ManifestMerger {
      * @param mainDoc The document to merge into. Will be modified in-place.
      * @param libraryFiles The library manifest paths to read. Must not be null.
      *                     These will be modified in-place.
+     * @param injectAttributes A map of attributes to inject in the form [pseudo-xpath] => value.
+     *   The key is "/manifest/elements...|attribute-ns-uri attribute-local-name",
+     *   for example "/manifest/uses-sdk|http://schemas.android.com/apk/res/android minSdkVersion".
+     *   (note the space separator between the attribute URI and its local name.)
+     *   The elements will be created if they don't exists. Existing attributes will be modified.
+     *   The replacement is done on the main document <em>before</em> merging.
      * @return True on success, false if any error occurred (printed to the {@link IMergerLog}).
      */
-    public boolean process(Document mainDoc, File[] libraryFiles) {
+    public boolean process(
+            Document mainDoc,
+            File[] libraryFiles,
+            Map<String, String> injectAttributes) {
 
         boolean success = true;
         mMainDoc = mainDoc;
         XmlUtils.decorateDocument(mainDoc, IMergerLog.MAIN_MANIFEST);
+        XmlUtils.injectAttributes(mainDoc, injectAttributes, mLog);
 
         String prefix = XmlUtils.lookupNsPrefix(mainDoc, SdkConstants.NS_RESOURCES);
         mXPath = AndroidXPathFactory.newXPath(prefix);
@@ -1343,9 +1363,7 @@ public class ManifestMerger {
      * @return A new non-null {@link FileAndLine} combining the file name and line number.
      */
     private @NonNull FileAndLine xmlFileAndLine(@NonNull Node node) {
-        String name = XmlUtils.extractXmlFilename(node);
-        int line = XmlUtils.extractLineNumber(node); // 0 in case of error or unknown
-        return new FileAndLine(name, line);
+        return XmlUtils.xmlFileAndLine(node);
     }
 
 

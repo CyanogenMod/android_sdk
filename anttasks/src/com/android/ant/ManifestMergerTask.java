@@ -152,7 +152,8 @@ public class ManifestMergerTask extends SingleDependencyTask {
             if (merger.process(
                     new File(mOutManifest),
                     appManifestFile,
-                    libraries.toArray(new File[libraries.size()])) == false) {
+                    libraries.toArray(new File[libraries.size()]),
+                    null /*injectAttributes*/) == false) {
                 throw new BuildException();
             }
         }
