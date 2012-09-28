@@ -20,6 +20,8 @@ import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_RESOURCES;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_LAYOUTS;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
@@ -29,6 +31,8 @@ import static org.eclipse.core.resources.IResourceDelta.CHANGED;
 import static org.eclipse.core.resources.IResourceDelta.CONTENT;
 import static org.eclipse.core.resources.IResourceDelta.REMOVED;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
@@ -56,6 +60,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
@@ -117,8 +122,9 @@ public class IncludeFinder {
      * Returns the {@link IncludeFinder} for the given project
      *
      * @param project the project the finder is associated with
-     * @return an {@IncludeFinder} for the given project, never null
+     * @return an {@link IncludeFinder} for the given project, never null
      */
+    @NonNull
     public static IncludeFinder get(IProject project) {
         IncludeFinder finder = null;
         try {
@@ -157,6 +163,7 @@ public class IncludeFinder {
      * @param included the file that is included
      * @return the files that are including the given file, or null or empty
      */
+    @Nullable
     public List<Reference> getIncludedBy(IResource included) {
         ensureInitialized();
         String mapKey = getMapKey(included);
@@ -503,8 +510,10 @@ public class IncludeFinder {
      * empty if the file does not include any include tags; it does this by only parsing
      * if it detects the string &lt;include in the file.
      */
-    private List<String> findIncludes(String xml) {
-        int index = xml.indexOf("<include"); //$NON-NLS-1$
+    @VisibleForTesting
+    @NonNull
+    static List<String> findIncludes(@NonNull String xml) {
+        int index = xml.indexOf(ATTR_LAYOUT);
         if (index != -1) {
             return findIncludesInXml(xml);
         }
@@ -518,7 +527,9 @@ public class IncludeFinder {
      * @param xml layout XML content to be parsed for includes
      * @return a list of included urls, or null
      */
-    private List<String> findIncludesInXml(String xml) {
+    @VisibleForTesting
+    @NonNull
+    static List<String> findIncludesInXml(@NonNull String xml) {
         Document document = DomUtilities.parseDocument(xml, false /*logParserErrors*/);
         if (document != null) {
             return findIncludesInDocument(document);
@@ -528,26 +539,51 @@ public class IncludeFinder {
     }
 
     /** Searches the given DOM document and returns the list of includes, if any */
-    private List<String> findIncludesInDocument(Document document) {
-        NodeList includes = document.getElementsByTagName(VIEW_INCLUDE);
-        if (includes.getLength() > 0) {
-            List<String> urls = new ArrayList<String>();
-            for (int i = 0; i < includes.getLength(); i++) {
-                Element element = (Element) includes.item(i);
-                String url = element.getAttribute(ATTR_LAYOUT);
+    @NonNull
+    private static List<String> findIncludesInDocument(@NonNull Document document) {
+        List<String> includes = findIncludesInDocument(document, null);
+        if (includes == null) {
+            includes = Collections.emptyList();
+        }
+        return includes;
+    }
+
+    @Nullable
+    private static List<String> findIncludesInDocument(@NonNull Node node,
+            @Nullable List<String> urls) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            String tag = node.getNodeName();
+            boolean isInclude = tag.equals(VIEW_INCLUDE);
+            boolean isFragment = tag.equals(VIEW_FRAGMENT);
+            if (isInclude || isFragment) {
+                Element element = (Element) node;
+                String url;
+                if (isInclude) {
+                    url = element.getAttribute(ATTR_LAYOUT);
+                } else {
+                    url = element.getAttributeNS(TOOLS_URI, ATTR_LAYOUT);
+                }
                 if (url.length() > 0) {
                     String resourceName = urlToLocalResource(url);
                     if (resourceName != null) {
+                        if (urls == null) {
+                            urls = new ArrayList<String>();
+                        }
                         urls.add(resourceName);
                     }
                 }
-            }
 
-            return urls;
+            }
         }
 
-        return Collections.emptyList();
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            urls = findIncludesInDocument(children.item(i), urls);
+        }
+
+        return urls;
     }
+
 
     /**
      * Returns the layout URL to a local resource name (provided the URL is a local
@@ -628,6 +664,7 @@ public class IncludeFinder {
         ResourceManager.getInstance().addListener(sListener);
     }
 
+    /** Stop listening on project resources */
     public static void stop() {
         assert sListener != null;
         ResourceManager.getInstance().addListener(sListener);

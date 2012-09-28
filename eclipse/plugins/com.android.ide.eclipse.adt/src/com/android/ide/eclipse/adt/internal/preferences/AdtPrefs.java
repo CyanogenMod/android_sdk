@@ -17,9 +17,11 @@
 package com.android.ide.eclipse.adt.internal.preferences;
 
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -30,6 +32,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
 import java.io.File;
+import java.util.Locale;
 
 public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_SDK_DIR = AdtPlugin.PLUGIN_ID + ".sdk"; //$NON-NLS-1$
@@ -69,6 +72,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_LINT_SEVERITIES = AdtPlugin.PLUGIN_ID + ".lintSeverities"; //$NON-NLS-1$
     public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
     public final static String PREFS_SHARED_LAYOUT_EDITOR = AdtPlugin.PLUGIN_ID + ".sharedLayoutEditor"; //$NON-NLS-1$
+    public final static String PREFS_PREVIEWS = AdtPlugin.PLUGIN_ID + ".previews"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -99,6 +103,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mLintOnExport;
     private AttributeSortOrder mAttributeSort;
     private boolean mSharedLayoutEditor;
+    private RenderPreviewMode mPreviewMode = RenderPreviewMode.NONE;
     private int mPreferXmlEditor;
 
     public static enum BuildVerbosity {
@@ -254,6 +259,17 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             mSharedLayoutEditor = mStore.getBoolean(PREFS_SHARED_LAYOUT_EDITOR);
         }
 
+        if (property == null || PREFS_PREVIEWS.equals(property)) {
+            mPreviewMode = RenderPreviewMode.NONE;
+            String previewMode = mStore.getString(PREFS_PREVIEWS);
+            if (previewMode != null && !previewMode.isEmpty()) {
+                try {
+                    mPreviewMode = RenderPreviewMode.valueOf(previewMode.toUpperCase(Locale.US));
+                } catch (IllegalArgumentException iae) {
+                    // Ignore: Leave it as RenderPreviewMode.NONE
+                }
+            }
+        }
     }
 
     /**
@@ -536,6 +552,31 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             assert ((mPreferXmlEditor & editorType) != 0) == xml;
             IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
             store.setValue(PREFS_PREFER_XML, xml);
+        }
+    }
+
+    /**
+     * Gets the {@link RenderPreviewMode}
+     *
+     * @return the preview mode
+     */
+    @NonNull
+    public RenderPreviewMode getRenderPreviewMode() {
+        return mPreviewMode;
+    }
+
+    /**
+     * Sets the {@link RenderPreviewMode}
+     *
+     * @param previewMode the preview mode
+     */
+    public void setPreviewMode(@NonNull RenderPreviewMode previewMode) {
+        mPreviewMode = previewMode;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        if (previewMode != RenderPreviewMode.NONE) {
+            store.setValue(PREFS_PREVIEWS, previewMode.name().toLowerCase(Locale.US));
+        } else {
+            store.setToDefault(PREFS_PREVIEWS);
         }
     }
 }

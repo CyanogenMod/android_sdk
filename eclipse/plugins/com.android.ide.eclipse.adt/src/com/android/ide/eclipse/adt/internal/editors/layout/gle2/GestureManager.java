@@ -39,6 +39,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.TypedEvent;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Device;
@@ -433,7 +434,8 @@ public class GestureManager {
      * Helper class which implements the {@link MouseMoveListener},
      * {@link MouseListener} and {@link KeyListener} interfaces.
      */
-    private class Listener implements MouseMoveListener, MouseListener, KeyListener {
+    private class Listener implements MouseMoveListener, MouseListener, MouseTrackListener,
+            KeyListener {
 
         // --- MouseMoveListener ---
 
@@ -443,15 +445,16 @@ public class GestureManager {
             mLastMouseY = e.y;
             mLastStateMask = e.stateMask;
 
+            ControlPoint controlPoint = ControlPoint.create(mCanvas, e);
             if ((e.stateMask & SWT.BUTTON_MASK) != 0) {
                 if (mCurrentGesture != null) {
-                    ControlPoint controlPoint = ControlPoint.create(mCanvas, e);
                     updateMouse(controlPoint, e);
                     mCanvas.redraw();
                 }
             } else {
-                updateCursor(ControlPoint.create(mCanvas, e));
+                updateCursor(controlPoint);
                 mCanvas.hover(e);
+                mCanvas.getPreviewManager().moved(controlPoint);
             }
         }
 
@@ -460,7 +463,13 @@ public class GestureManager {
         @Override
         public void mouseUp(MouseEvent e) {
             ControlPoint mousePos = ControlPoint.create(mCanvas, e);
+
             if (mCurrentGesture == null) {
+                // If clicking on a configuration preview, just process it there
+                if (mCanvas.getPreviewManager().click(mousePos)) {
+                    return;
+                }
+
                 // Just a click, select
                 Pair<SelectionItem, SelectionHandle> handlePair =
                     mCanvas.getSelectionManager().findHandle(mousePos);
@@ -505,6 +514,24 @@ public class GestureManager {
                     mCanvas.show(vi);
                 }
             }
+        }
+
+        // --- MouseTrackListener ---
+
+        @Override
+        public void mouseEnter(MouseEvent e) {
+            ControlPoint mousePos = ControlPoint.create(mCanvas, e);
+            mCanvas.getPreviewManager().enter(mousePos);
+        }
+
+        @Override
+        public void mouseExit(MouseEvent e) {
+            ControlPoint mousePos = ControlPoint.create(mCanvas, e);
+            mCanvas.getPreviewManager().exit(mousePos);
+        }
+
+        @Override
+        public void mouseHover(MouseEvent e) {
         }
 
         // --- KeyListener ---

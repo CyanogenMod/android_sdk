@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.Density;
 import com.android.utils.Pair;
+import com.google.common.io.Closeables;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -140,6 +141,8 @@ public class ViewMetadataRepository {
         } catch (Exception e) {
             AdtPlugin.log(e, "Parsing palette file failed");
             return null;
+        } finally {
+            Closeables.closeQuietly(paletteStream);
         }
     }
 

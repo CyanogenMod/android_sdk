@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
@@ -150,10 +151,10 @@ public class LayoutCanvas extends Canvas {
     private final NodeFactory mNodeFactory = new NodeFactory(this);
 
     /** Vertical scaling & scrollbar information. */
-    private CanvasTransform mVScale;
+    private final CanvasTransform mVScale;
 
     /** Horizontal scaling & scrollbar information. */
-    private CanvasTransform mHScale;
+    private final CanvasTransform mHScale;
 
     /** Drag source associated with this canvas. */
     private DragSource mDragSource;
@@ -218,6 +219,9 @@ public class LayoutCanvas extends Canvas {
     /** The overlay which paints masks hiding everything but included content. */
     private IncludeOverlay mIncludeOverlay;
 
+    /** Configuration previews shown next to the layout */
+    private final RenderPreviewManager mPreviewManager;
+
     /**
      * Gesture Manager responsible for identifying mouse, keyboard and drag and
      * drop events.
@@ -239,6 +243,14 @@ public class LayoutCanvas extends Canvas {
 
     private Color mBackgroundColor;
 
+    /**
+     * Creates a new {@link LayoutCanvas} widget
+     *
+     * @param editorDelegate the associated editor delegate
+     * @param rulesEngine the rules engine
+     * @param parent parent SWT widget
+     * @param style the SWT style
+     */
     public LayoutCanvas(LayoutEditorDelegate editorDelegate,
             RulesEngine rulesEngine,
             Composite parent,
@@ -253,6 +265,7 @@ public class LayoutCanvas extends Canvas {
         mClipboardSupport = new ClipboardSupport(this, parent);
         mHScale = new CanvasTransform(this, getHorizontalBar());
         mVScale = new CanvasTransform(this, getVerticalBar());
+        mPreviewManager = new RenderPreviewManager(this);
 
         // Unit test suite passes a null here; TODO: Replace with mocking
         IFile file = editorDelegate != null ? editorDelegate.getEditor().getInputFile() : null;
@@ -314,9 +327,7 @@ public class LayoutCanvas extends Canvas {
                     }
                 }
 
-                Rectangle clientArea = getClientArea();
-                mHScale.setClientSize(clientArea.width);
-                mVScale.setClientSize(clientArea.height);
+                updateScrollBars();
 
                 // Update the zoom level in the canvas when you toggle the zoom
                 if (coordinator != null) {
@@ -355,6 +366,37 @@ public class LayoutCanvas extends Canvas {
         mLintTooltipManager.register();
     }
 
+    void updateScrollBars() {
+        Rectangle clientArea = getClientArea();
+        Image image = mImageOverlay.getImage();
+        if (image != null) {
+            ImageData imageData = image.getImageData();
+            int clientWidth = clientArea.width;
+            int clientHeight = clientArea.height;
+
+            int imageWidth = imageData.width;
+            int imageHeight = imageData.height;
+
+            int fullWidth = imageWidth;
+            int fullHeight = imageHeight;
+
+            if (mPreviewManager.hasPreviews()) {
+                fullHeight = Math.max(fullHeight,
+                        (int) (mPreviewManager.getHeight() / mHScale.getScale()));
+            }
+
+            if (clientWidth == 0) {
+                clientWidth = imageWidth;
+            }
+            if (clientHeight == 0) {
+                clientHeight = imageHeight;
+            }
+
+            mHScale.setSize(imageWidth, fullWidth, clientWidth);
+            mVScale.setSize(imageHeight, fullHeight, clientHeight);
+        }
+    }
+
     private Runnable mZoomCheck = new Runnable() {
         private Boolean mWasZoomed;
 
@@ -375,7 +417,7 @@ public class LayoutCanvas extends Canvas {
                             LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
                                     .getLayoutActionBar();
                             if (actionBar.isZoomingAllowed()) {
-                                setFitScale(true /*onlyZoomOut*/);
+                                setFitScale(true /*onlyZoomOut*/, true /*allowZoomIn*/);
                             }
                         }
                         mWasZoomed = zoomed;
@@ -419,14 +461,22 @@ public class LayoutCanvas extends Canvas {
             if (c == '1' && actionBar.isZoomingAllowed()) {
                 setScale(1, true);
             } else if (c == '0' && actionBar.isZoomingAllowed()) {
-                setFitScale(true);
+                setFitScale(true, true /*allowZoomIn*/);
             } else if (e.keyCode == '0' && (e.stateMask & SWT.MOD2) != 0
                     && actionBar.isZoomingAllowed()) {
-                setFitScale(false);
-            } else if (c == '+' && actionBar.isZoomingAllowed()) {
-                actionBar.rescale(1);
+                setFitScale(false, true /*allowZoomIn*/);
+            } else if ((c == '+' || c == '=') && actionBar.isZoomingAllowed()) {
+                if ((e.stateMask & SWT.MOD1) != 0) {
+                    mPreviewManager.zoomIn();
+                } else {
+                    actionBar.rescale(1);
+                }
             } else if (c == '-' && actionBar.isZoomingAllowed()) {
-                actionBar.rescale(-1);
+                if ((e.stateMask & SWT.MOD1) != 0) {
+                    mPreviewManager.zoomOut();
+                } else {
+                    actionBar.rescale(-1);
+                }
             }
         }
     }
@@ -507,7 +557,18 @@ public class LayoutCanvas extends Canvas {
             mBackgroundColor = null;
         }
 
+        mPreviewManager.disposePreviews();
         mViewHierarchy.dispose();
+    }
+
+    /**
+     * Returns the configuration preview manager for this canvas
+     *
+     * @return the configuration preview manager for this canvas
+     */
+    @NonNull
+    public RenderPreviewManager getPreviewManager() {
+        return mPreviewManager;
     }
 
     /** Returns the Rules Engine, associated with the current project. */
@@ -539,6 +600,8 @@ public class LayoutCanvas extends Canvas {
 
     /**
      * Returns the {@link LayoutEditorDelegate} associated with this canvas.
+     *
+     * @return the delegate
      */
     public LayoutEditorDelegate getEditorDelegate() {
         return mEditorDelegate;
@@ -670,15 +733,14 @@ public class LayoutCanvas extends Canvas {
 
         mViewHierarchy.setSession(session, explodedNodes, layoutlib5);
         if (mViewHierarchy.isValid() && session != null) {
-            Image image = mImageOverlay.setImage(session.getImage(), session.isAlphaChannelImage());
+            Image image = mImageOverlay.setImage(session.getImage(),
+                    session.isAlphaChannelImage());
 
             mOutlinePage.setModel(mViewHierarchy.getRoot());
             mEditorDelegate.getGraphicalEditor().setModel(mViewHierarchy.getRoot());
 
             if (image != null) {
-                Rectangle clientArea = getClientArea();
-                mHScale.setSize(image.getImageData().width, clientArea.width);
-                mVScale.setSize(image.getImageData().height, clientArea.height);
+                updateScrollBars();
                 if (mZoomFitNextImage) {
                     // Must be run asynchronously because getClientArea() returns 0 bounds
                     // when the editor is being initialized
@@ -691,6 +753,9 @@ public class LayoutCanvas extends Canvas {
                         }
                     });
                 }
+
+                // Ensure that if we have a a preview mode enabled, it's shown
+                syncPreviewMode();
             }
         }
 
@@ -703,7 +768,7 @@ public class LayoutCanvas extends Canvas {
             LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
                     .getLayoutActionBar();
             if (actionBar.isZoomingAllowed()) {
-                setFitScale(true);
+                setFitScale(true, true /*allowZoomIn*/);
             }
         }
     }
@@ -713,6 +778,13 @@ public class LayoutCanvas extends Canvas {
         redraw();
     }
 
+    /**
+     * Returns the zoom scale factor of the canvas (the amount the full
+     * resolution render of the device is zoomed before being shown on the
+     * canvas)
+     *
+     * @return the image scale
+     */
     public double getScale() {
         return mHScale.getScale();
     }
@@ -746,8 +818,13 @@ public class LayoutCanvas extends Canvas {
      * @param onlyZoomOut if true, then the zooming factor will never be larger than 1,
      *            which means that this function will zoom out if necessary to show the
      *            rendered image, but it will never zoom in.
+     *            TODO: Rename this, it sounds like it conflicts with allowZoomIn,
+     *            even though one is referring to the zoom level and one is referring
+     *            to the overall act of scaling above/below 1.
+     * @param allowZoomIn if false, then if the computed zoom factor is smaller than
+     *            the current zoom factor, it will be ignored.
      */
-    void setFitScale(boolean onlyZoomOut) {
+    public void setFitScale(boolean onlyZoomOut, boolean allowZoomIn) {
         ImageOverlay imageOverlay = getImageOverlay();
         if (imageOverlay == null) {
             return;
@@ -757,6 +834,13 @@ public class LayoutCanvas extends Canvas {
             Rectangle canvasSize = getClientArea();
             int canvasWidth = canvasSize.width;
             int canvasHeight = canvasSize.height;
+
+            if (mPreviewManager.hasPreviews()) {
+                canvasWidth = 2 * canvasWidth / 3;
+            } else {
+                canvasWidth -= 4;
+                canvasHeight -= 4;
+            }
 
             ImageData imageData = image.getImageData();
             int sceneWidth = imageData.width;
@@ -794,6 +878,10 @@ public class LayoutCanvas extends Canvas {
 
             if (onlyZoomOut) {
                 scale = Math.min(1.0, scale);
+            }
+
+            if (!allowZoomIn && scale > getScale()) {
+                return;
             }
 
             setScale(scale, true);
@@ -856,6 +944,8 @@ public class LayoutCanvas extends Canvas {
             if (!mImageOverlay.isHiding()) {
                 mImageOverlay.paint(gc);
             }
+
+            mPreviewManager.paint(gc);
 
             if (mShowOutline) {
                 if (mOutlineOverlay == null) {
@@ -1550,6 +1640,48 @@ public class LayoutCanvas extends Canvas {
         // to a Java editor with the keyboard, the tooltip can stay open.
         if (mLintTooltipManager != null) {
             mLintTooltipManager.hide();
+        }
+    }
+
+    /** @see #setPreview(RenderPreview) */
+    private RenderPreview mPreview;
+
+    /**
+     * Sets the {@link RenderPreview} associated with the currently rendering
+     * configuration.
+     * <p>
+     * A {@link RenderPreview} has various additional state beyond its rendering,
+     * such as its display name (which can be edited by the user). When you click on
+     * previews, the layout editor switches to show the given configuration preview.
+     * The preview is then no longer shown in the list of previews and is instead rendered
+     * in the main editor. However, when you then switch away to some other preview, we
+     * want to be able to restore the preview with all its state.
+     *
+     * @param preview the preview associated with the current canvas
+     */
+    public void setPreview(@Nullable RenderPreview preview) {
+        mPreview = preview;
+    }
+
+    /**
+     * Returns the {@link RenderPreview} associated with this layout canvas.
+     *
+     * @see #setPreview(RenderPreview)
+     * @return the {@link RenderPreview}
+     */
+    @Nullable
+    public RenderPreview getPreview() {
+        return mPreview;
+    }
+
+    /** Ensures that the configuration previews are up to date for this canvas */
+    public void syncPreviewMode() {
+        if (mImageOverlay != null && mImageOverlay.getImage() != null) {
+            if (mPreviewManager.recomputePreviews(false)) {
+                // Zoom when syncing modes
+                mZoomFitNextImage = true;
+                ensureZoomed();
+            }
         }
     }
 }

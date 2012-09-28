@@ -660,7 +660,9 @@ class TemplateHandler {
         }
 
         Document currentManifest = DomUtilities.parseStructuredDocument(currentXml);
+        assert currentManifest != null : currentXml;
         Document fragment = DomUtilities.parseStructuredDocument(xml);
+        assert fragment != null : xml;
 
         XmlFormatStyle formatStyle = XmlFormatStyle.MANIFEST;
         boolean modified;
@@ -686,11 +688,8 @@ class TemplateHandler {
         String contents = null;
         if (ok) {
             if (modified) {
-                XmlPrettyPrinter printer = new XmlPrettyPrinter(
+                contents = XmlPrettyPrinter.prettyPrint(currentManifest,
                         XmlFormatPreferences.create(), formatStyle, null);
-                StringBuilder sb = new StringBuilder(2 );
-                printer.prettyPrint(-1, currentManifest, null, null, sb, false /*openTagOnly*/);
-                contents = sb.toString();
             }
         } else {
             // Just insert into file along with comment, using the "standard" conflict

@@ -22,6 +22,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -85,6 +86,52 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         for (int i = 1 ; i < folderSegments.length; i++) {
             String seg = folderSegments[i];
+            if (seg.length() > 0) {
+                while (qualifierIndex < qualifierCount &&
+                        DEFAULT_QUALIFIERS[qualifierIndex].checkAndSet(seg, config) == false) {
+                    qualifierIndex++;
+                }
+
+                // if we reached the end of the qualifier we didn't find a matching qualifier.
+                if (qualifierIndex == qualifierCount) {
+                    return null;
+                }
+
+            } else {
+                return null;
+            }
+        }
+
+        return config;
+    }
+
+    /**
+     * Creates a {@link FolderConfiguration} matching the folder segments.
+     * @param folderSegments The segments of the folder name. The first segments should contain
+     * the name of the folder
+     * @return a FolderConfiguration object, or null if the folder name isn't valid..
+     * @see FolderConfiguration#getConfig(String[])
+     */
+    public static FolderConfiguration getConfig(Iterable<String>folderSegments) {
+        FolderConfiguration config = new FolderConfiguration();
+
+        // we are going to loop through the segments, and match them with the first
+        // available qualifier. If the segment doesn't match we try with the next qualifier.
+        // Because the order of the qualifier is fixed, we do not reset the first qualifier
+        // after each successful segment.
+        // If we run out of qualifier before processing all the segments, we fail.
+
+        int qualifierIndex = 0;
+        int qualifierCount = DEFAULT_QUALIFIERS.length;
+
+        Iterator<String> iterator = folderSegments.iterator();
+        if (iterator.hasNext()) {
+            // Skip the first segment: it should be just the base folder, such as "values" or
+            // "layout"
+            iterator.next();
+        }
+        while (iterator.hasNext()) {
+            String seg = iterator.next();
             if (seg.length() > 0) {
                 while (qualifierIndex < qualifierCount &&
                         DEFAULT_QUALIFIERS[qualifierIndex].checkAndSet(seg, config) == false) {
