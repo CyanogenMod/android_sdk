@@ -881,7 +881,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             if (merger.process(
                     outFile.getLocation().toFile(),
                     manifest.getLocation().toFile(),
-                    libManifests) == false) {
+                    libManifests,
+                    null /*injectAttributes*/) == false) {
                 if (errors.size() > 1) {
                     StringBuilder sb = new StringBuilder();
                     for (String s : errors) {

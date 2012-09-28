@@ -24,6 +24,7 @@ import com.android.utils.ILogger;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
@@ -174,6 +175,23 @@ class XmlUtils {
     static void decorateDocument(@NonNull Document doc, @NonNull String fileName) {
         doc.setUserData(DATA_FILE_NAME, fileName, null /*handler*/);
         findLineNumbers(doc, 1);
+    }
+
+    /**
+     * Returns a new {@link FileAndLine} structure that identifies
+     * the base filename & line number from which the XML node was parsed.
+     * <p/>
+     * When the line number is unknown (e.g. if a {@link Document} instance is given)
+     * then line number 0 will be used.
+     *
+     * @param node The node or document where the error occurs. Must not be null.
+     * @return A new non-null {@link FileAndLine} combining the file name and line number.
+     */
+    @NonNull
+    static FileAndLine xmlFileAndLine(@NonNull Node node) {
+        String name = extractXmlFilename(node);
+        int line = extractLineNumber(node); // 0 in case of error or unknown
+        return new FileAndLine(name, line);
     }
 
     /**
@@ -504,6 +522,111 @@ class XmlUtils {
         };
     }
 
+    /**
+     * Inject attributes into an existing document.
+     * <p/>
+     * The map keys are "/manifest/elements...|attribute-ns-uri attribute-local-name",
+     * for example "/manifest/uses-sdk|http://schemas.android.com/apk/res/android minSdkVersion".
+     * (note the space separator between the attribute URI and its local name.)
+     * The elements will be created if they don't exists. Existing attributes will be modified.
+     * The replacement is done on the main document <em>before</em> merging.
+     * The value can be null to remove an existing attribute.
+     *
+     * @param doc The document to modify in-place.
+     * @param attributeMap A map of attributes to inject in the form [pseudo-xpath] => value.
+     * @param log A log in case of error.
+     */
+    static void injectAttributes(
+            @Nullable Document doc,
+            @Nullable Map<String, String> attributeMap,
+            @NonNull IMergerLog log) {
+        if (doc == null || attributeMap == null || attributeMap.isEmpty()) {
+            return;
+        }
+
+        //                                        1=path  2=URI    3=local name
+        final Pattern keyRx = Pattern.compile("^/([^\\|]+)\\|([^ ]*) +(.+)$");      //$NON-NLS-1$
+        final FileAndLine docInfo = xmlFileAndLine(doc);
+
+        nextAttribute: for (Entry<String, String> entry : attributeMap.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (key == null || key.isEmpty()) {
+                continue;
+            }
+
+            Matcher m = keyRx.matcher(key);
+            if (!m.matches()) {
+                log.error(Severity.WARNING, docInfo, "Invalid injected attribute key: %s", key);
+                continue;
+            }
+            String path = m.group(1);
+            String attrNsUri = m.group(2);
+            String attrName  = m.group(3);
+
+            String[] segment = path.split(Pattern.quote("/"));                      //$NON-NLS-1$
+
+            // Get the path elements. Create them as needed if they don't exist.
+            Node element = doc;
+            nextSegment: for (int i = 0; i < segment.length; i++) {
+                // Find a child with the segment's name
+                String name = segment[i];
+                for (Node child = element.getFirstChild();
+                        child != null;
+                        child = child.getNextSibling()) {
+                    if (child.getNodeType() == Node.ELEMENT_NODE &&
+                            child.getNamespaceURI() == null &&
+                            child.getNodeName().equals(name)) {
+                        // Found it. Continue to the next inner segment.
+                        element = child;
+                        continue nextSegment;
+                    }
+                }
+                // No such element. Create it.
+                if (value == null) {
+                    // If value is null, we want to remove, not create and if can't find the
+                    // element, then we're done: there's no such attribute to remove.
+                    break nextAttribute;
+                }
+
+                Element child = doc.createElement(name);
+                element = element.insertBefore(child, element.getFirstChild());
+            }
+
+            if (element == null) {
+                log.error(Severity.WARNING, docInfo, "Invalid injected attribute path: %s", path);
+                return;
+            }
+
+            NamedNodeMap attrs = element.getAttributes();
+            if (attrs != null) {
+
+
+                if (attrNsUri != null && attrNsUri.isEmpty()) {
+                    attrNsUri = null;
+                }
+                Node attr = attrs.getNamedItemNS(attrNsUri, attrName);
+
+                if (value == null) {
+                    // We want to remove the attribute from the attribute map.
+                    if (attr != null) {
+                        attrs.removeNamedItemNS(attrNsUri, attrName);
+                    }
+
+                } else {
+                    // We want to add or replace the attribute.
+                    if (attr == null) {
+                        attr = doc.createAttributeNS(attrNsUri, attrName);
+                        attr.setPrefix(
+                             com.android.utils.XmlUtils.lookupNamespacePrefix(element, attrNsUri));
+                        attrs.setNamedItemNS(attr);
+                    }
+                    attr.setNodeValue(value);
+                }
+            }
+        }
+    }
+
     // -------
 
     /**
@@ -534,7 +657,7 @@ class XmlUtils {
         sb.append(node.getLocalName());
         printAttributes(sb, node, nsPrefix, prefix);
         sb.append(">\n");                                                           //$NON-NLS-1$
-        printChildren(sb, node.getFirstChild(), true, nsPrefix, prefix + "    "); //$NON-NLS-1$
+        printChildren(sb, node.getFirstChild(), true, nsPrefix, prefix + "    ");   //$NON-NLS-1$
 
         sb.append(prefix).append("</");                                             //$NON-NLS-1$
         if (uri != null) {

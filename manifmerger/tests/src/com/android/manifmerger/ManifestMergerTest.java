@@ -46,6 +46,14 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
         processTestFiles();
     }
 
+    public void test03_inject_attributes() throws Exception {
+        processTestFiles();
+    }
+
+    public void test04_inject_attributes() throws Exception {
+        processTestFiles();
+    }
+
     public void test10_activity_merge() throws Exception {
         processTestFiles();
     }
