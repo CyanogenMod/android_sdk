@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Project;
 
 @SuppressWarnings("javadoc")
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -583,6 +584,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/minsdk4.xml=>AndroidManifest.xml",
                     "apicheck/TestEnum.java.txt=>src/test/pkg/TestEnum.java",
                     "apicheck/TestEnum.class.data=>bin/classes/test/pkg/TestEnum.class"
+                ));
+    }
+
+    @Override
+    public String getSuperClass(Project project, String name) {
+        // For testInterfaceInheritance
+        if (name.equals("android/database/sqlite/SQLiteStatement")) {
+            return "android/database/sqlite/SQLiteProgram";
+        } else if (name.equals("android/database/sqlite/SQLiteProgram")) {
+            return "android/database/sqlite/SQLiteClosable";
+        } else if (name.equals("android/database/sqlite/SQLiteClosable")) {
+            return "java/lang/Object";
+        }
+        return null;
+    }
+
+    public void testInterfaceInheritance() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=38004
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/CloseTest.java.txt=>src/test/pkg/CloseTest.java",
+                    "apicheck/CloseTest.class.data=>bin/classes/test/pkg/CloseTest.class"
                 ));
     }
 }

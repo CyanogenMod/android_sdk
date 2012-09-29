@@ -389,7 +389,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
                         // For virtual dispatch, walk up the inheritance chain checking
                         // each inherited method
-                        if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+                        if (owner.startsWith("android/")           //$NON-NLS-1$
+                                || owner.startsWith("java/")       //$NON-NLS-1$
+                                || owner.startsWith("javax/")) {   //$NON-NLS-1$
+                            // The API map has already inlined all inherited methods
+                            // so no need to keep checking up the chain
+                            owner = null;
+                        } else if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                             owner = context.getDriver().getSuperClass(owner);
                         } else if (node.getOpcode() == Opcodes.INVOKESTATIC && api == -1) {
                             // Inherit through static classes as well
