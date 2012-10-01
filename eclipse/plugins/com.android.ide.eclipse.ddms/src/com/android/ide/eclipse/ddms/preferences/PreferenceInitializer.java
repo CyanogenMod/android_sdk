@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
+import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.LogCatMonitor;
 import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
 import com.android.ide.eclipse.ddms.views.LogCatView;
-import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.DdmUiPreferences;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
@@ -81,6 +81,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     public final static String ATTR_PERSPECTIVE_ID =
         DdmsPlugin.PLUGIN_ID + ".perspectiveId"; //$NON-NLS-1$
 
+    public static final String ATTR_PROFILER_BUFSIZE_MB =
+        DdmsPlugin.PLUGIN_ID + ".profilerBufferSizeMb"; //$NON-NLS-1$
+
     /*
      * (non-Javadoc)
      *
@@ -98,6 +101,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(ATTR_DEFAULT_THREAD_UPDATE, DdmPreferences.DEFAULT_INITIAL_THREAD_UPDATE);
         store.setDefault(ATTR_DEFAULT_HEAP_UPDATE,
                 DdmPreferences.DEFAULT_INITIAL_HEAP_UPDATE);
+
+        store.setDefault(ATTR_PROFILER_BUFSIZE_MB, DdmPreferences.DEFAULT_PROFILER_BUFFER_SIZE_MB);
 
         store.setDefault(ATTR_THREAD_INTERVAL, DdmUiPreferences.DEFAULT_THREAD_REFRESH_INTERVAL);
 
@@ -141,6 +146,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         DdmPreferences.setLogLevel(store.getString(ATTR_LOG_LEVEL));
         DdmPreferences.setInitialThreadUpdate(store.getBoolean(ATTR_DEFAULT_THREAD_UPDATE));
         DdmPreferences.setInitialHeapUpdate(store.getBoolean(ATTR_DEFAULT_HEAP_UPDATE));
+        DdmPreferences.setProfilerBufferSizeMb(store.getInt(ATTR_PROFILER_BUFSIZE_MB));
         DdmUiPreferences.setThreadRefreshInterval(store.getInt(ATTR_THREAD_INTERVAL));
         DdmPreferences.setTimeOut(store.getInt(ATTR_TIME_OUT));
         DdmPreferences.setUseAdbHost(store.getBoolean(ATTR_USE_ADBHOST));
