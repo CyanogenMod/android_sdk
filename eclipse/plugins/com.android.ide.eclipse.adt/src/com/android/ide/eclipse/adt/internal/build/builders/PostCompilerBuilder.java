@@ -314,14 +314,15 @@ public class PostCompilerBuilder extends BaseBuilder {
                     IJavaProject referencedJavaProject = referencedJavaProjects.get(i);
                     delta = getDelta(referencedJavaProject.getProject());
                     if (delta != null) {
+                        IProject referencedProject = referencedJavaProject.getProject();
                         PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
-                                project, referencedJavaProject.getProject(),
+                                project, referencedProject,
                                 "POST:RefedProject");
 
-                        ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(project);
+                        ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(referencedProject);
                         visitor.addSet(javaResCfs);
 
-                        ChangedFileSet bytecodeCfs = ChangedFileSetHelper.getByteCodeCfs(project);
+                        ChangedFileSet bytecodeCfs = ChangedFileSetHelper.getByteCodeCfs(referencedProject);
                         visitor.addSet(bytecodeCfs);
 
                         delta.accept(visitor);
