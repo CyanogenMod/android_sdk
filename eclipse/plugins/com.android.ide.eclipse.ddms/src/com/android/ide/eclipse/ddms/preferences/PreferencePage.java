@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.PortFieldEditor;
 import com.android.ide.eclipse.base.InstallDetails;
@@ -38,6 +39,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements
 
     private BooleanFieldEditor mUseAdbHost;
     private StringFieldEditor mAdbHostValue;
+    private IntegerFieldEditor mProfilerBufsize;
 
     public PreferencePage() {
         super(GRID);
@@ -85,6 +87,11 @@ public class PreferencePage extends FieldEditorPreferencePage implements
             addField(cfe);
         }
 
+        mProfilerBufsize = new IntegerFieldEditor(PreferenceInitializer.ATTR_PROFILER_BUFSIZE_MB,
+                "Method Profiler buffer size (MB):",
+                getFieldEditorParent());
+        addField(mProfilerBufsize);
+
         ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_TIME_OUT,
                 Messages.PreferencePage_ADB_Connection_Time_Out, getFieldEditorParent());
         addField(ife);
@@ -129,9 +136,10 @@ public class PreferencePage extends FieldEditorPreferencePage implements
 
     @Override
     public void propertyChange(PropertyChangeEvent event) {
-        // TODO Auto-generated method stub
         if (event.getSource().equals(mUseAdbHost)) {
             mAdbHostValue.setEnabled(mUseAdbHost.getBooleanValue(), getFieldEditorParent());
+        } else if (event.getSource().equals(mProfilerBufsize)) {
+            DdmPreferences.setProfilerBufferSizeMb(mProfilerBufsize.getIntValue());
         }
     }
 
