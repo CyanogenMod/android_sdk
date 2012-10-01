@@ -40,7 +40,8 @@ public class ShaderSourceDetailsProvider implements IStateDetailProvider {
 
     @Override
     public void createControl(Composite parent) {
-        mTextControl = new Text(parent, SWT.BORDER | SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+        mTextControl = new Text(parent, SWT.BORDER| SWT.READ_ONLY
+                | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.H_SCROLL);
         mTextControl.setEditable(false);
     }
 
