@@ -26,7 +26,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
     private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
 

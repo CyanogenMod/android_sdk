@@ -49,7 +49,8 @@ public class ${activityClass} extends Activity {
      */
     private SystemUiHider mSystemUiHider;
 
-    public void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.${layoutName});
