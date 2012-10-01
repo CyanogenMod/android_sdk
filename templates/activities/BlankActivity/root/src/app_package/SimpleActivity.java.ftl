@@ -11,7 +11,7 @@ import android.support.v4.app.NavUtils;
 public class ${activityClass} extends Activity {
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
         <#if parentActivityClass != "">

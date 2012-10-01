@@ -35,7 +35,7 @@ public class ${activityClass} extends FragmentActivity<#if navType?contains("tab
     ViewPager mViewPager;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
 
