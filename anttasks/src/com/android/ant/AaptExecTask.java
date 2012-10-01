@@ -684,8 +684,8 @@ public final class AaptExecTask extends SingleDependencyTask {
                     SymbolLoader symbolValues = new SymbolLoader(rFile);
                     symbolValues.load();
 
-                    // we have two props which contains list of items. Both items reprensent 2 data of
-                    // a single property.
+                    // we have two props which contains list of items. Both items represent
+                    // 2 data of a single property.
                     // Don't want to use guava's splitter because it doesn't provide a list of the
                     // result. but we know the list starts with a ; so strip it.
                     if (libPkgProp.startsWith(";")) {
