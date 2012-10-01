@@ -185,7 +185,11 @@ public class ControlFlowGraph {
                     // debug not installed: just do toString() on the instructions
                 }
                 if (!printed) {
-                    sb.append(instruction.toString());
+                    if (instruction.getType() == AbstractInsnNode.METHOD_INSN) {
+                        sb.append("(" + ((MethodInsnNode)instruction).name + ")");
+                    } else {
+                        sb.append(instruction.toString());
+                    }
                 }
             }
 
@@ -239,9 +243,8 @@ public class ControlFlowGraph {
                 if (tcb.type == null) {
                     // finally block: not an exception path
                     getNode(curr).addSuccessor(handlerNode);
-                } else {
-                    getNode(curr).addExceptionPath(handlerNode);
                 }
+                getNode(curr).addExceptionPath(handlerNode);
             }
             curr = curr.getNext();
         }
