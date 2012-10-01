@@ -316,12 +316,27 @@ public abstract class AbstractCheckTest extends TestCase {
         return null;
     }
 
+    public String getSuperClass(Project project, String name) {
+        return null;
+    }
+
     public class TestLintClient extends Main {
         private StringWriter mWriter = new StringWriter();
 
         TestLintClient() {
             mReporters.add(new TextReporter(this, mWriter, false));
         }
+
+        @Override
+        public String getSuperClass(Project project, String name) {
+            String superClass = AbstractCheckTest.this.getSuperClass(project, name);
+            if (superClass != null) {
+                return superClass;
+            }
+
+            return super.getSuperClass(project, name);
+        }
+
 
         public String analyze(List<File> files) throws Exception {
             mDriver = new LintDriver(new CustomIssueRegistry(), this);
