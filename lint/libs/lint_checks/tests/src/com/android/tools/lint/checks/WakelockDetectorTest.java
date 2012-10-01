@@ -132,4 +132,17 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 "bytecode/WakelockActivity6.class.data=>bin/classes/test/pkg/WakelockActivity6.class"
                 ));
     }
+
+    public void test7() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/.classpath=>.classpath",
+                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
+                "res/layout/onclick.xml=>res/layout/onclick.xml",
+                "bytecode/WakelockActivity7.java.txt=>src/test/pkg/WakelockActivity7.java",
+                "bytecode/WakelockActivity7.class.data=>bin/classes/test/pkg/WakelockActivity7.class"
+                ));
+    }
 }
