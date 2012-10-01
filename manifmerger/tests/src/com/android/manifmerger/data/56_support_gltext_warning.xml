@@ -1,7 +1,6 @@
 #
 # Test supports-gl-texture:
-# - it's OK if a library defines one or multiple times an element already in the application.
-# - it's a warning if the library defines an element not in the application.
+# - it's a warning if the library defines a supports-gl-texture not in the application.
 # - this does not actually merge anything. The XML is not changed at all.
 #
 

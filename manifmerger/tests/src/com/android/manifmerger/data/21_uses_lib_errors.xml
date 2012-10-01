@@ -75,7 +75,7 @@
             android:name="com.example.SomeLibrary2_RequiredTrue"
             android:required="true" />
 
-        <!-- Same as 3 from main. Warning because destination as a duplicate. -->
+        <!-- Same as 3 from main. Warning because destination has a duplicate. -->
         <uses-library
             android:name="com.example.SomeLibrary3_RequiredFalse"
             android:required="false" />

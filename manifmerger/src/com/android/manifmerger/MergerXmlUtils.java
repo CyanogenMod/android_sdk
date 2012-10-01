@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.manifmerger.IMergerLog.FileAndLine;
 import com.android.manifmerger.IMergerLog.Severity;
 import com.android.utils.ILogger;
+import com.android.utils.XmlUtils;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -57,7 +58,7 @@ import javax.xml.transform.stream.StreamResult;
 /**
  * A few XML handling utilities.
  */
-class XmlUtils {
+class MergerXmlUtils {
 
     private static final String DATA_ORIGIN_FILE = "manif.merger.file";         //$NON-NLS-1$
     private static final String DATA_FILE_NAME   = "manif.merger.filename";     //$NON-NLS-1$
@@ -267,17 +268,6 @@ class XmlUtils {
         }
 
         return 0;
-    }
-
-    /**
-     * Find the prefix for the given NS_URI in the document.
-     *
-     * @param doc The document root.
-     * @param nsUri The Namespace URI to look for.
-     * @return The namespace prefix if found or null.
-     */
-    static String lookupNsPrefix(Document doc, String nsUri) {
-        return com.android.utils.XmlUtils.lookupNamespacePrefix(doc, nsUri);
     }
 
     /**
@@ -617,8 +607,9 @@ class XmlUtils {
                     // We want to add or replace the attribute.
                     if (attr == null) {
                         attr = doc.createAttributeNS(attrNsUri, attrName);
-                        attr.setPrefix(
-                             com.android.utils.XmlUtils.lookupNamespacePrefix(element, attrNsUri));
+                        if (attrNsUri != null) {
+                            attr.setPrefix(XmlUtils.lookupNamespacePrefix(element, attrNsUri));
+                        }
                         attrs.setNamedItemNS(attr);
                     }
                     attr.setNodeValue(value);
@@ -703,7 +694,7 @@ class XmlUtils {
                     hasText = true;
                 }
             } else if (t == Node.ELEMENT_NODE) {
-                children.add(printElement(child, nsPrefix, prefix)); //$NON-NLS-1$
+                children.add(printElement(child, nsPrefix, prefix));
                 if (!nextSiblings) {
                     break;
                 }

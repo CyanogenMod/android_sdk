@@ -1,8 +1,9 @@
 #
-# Test:
+# Test merge order:
 # - When activity / activity-alias / service / receiver / provider are merged,
 #   we do a comparison to check whether the elements are already present in the
-#   main manifest.
+#   main manifest. The order of the elements must NOT matter in the comparison,
+#   nor does the whitespace between them.
 # - What this checks is that the order of the elements or attributes within
 #   the elements should not matter.
 #
