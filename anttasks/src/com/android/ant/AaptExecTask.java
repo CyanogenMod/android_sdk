@@ -16,6 +16,7 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
 import com.android.sdklib.internal.build.SymbolLoader;
 import com.android.sdklib.internal.build.SymbolWriter;
 
@@ -678,32 +679,38 @@ public final class AaptExecTask extends SingleDependencyTask {
         // but only if the project is not a library.
         try {
             if (!mNonConstantId && libPkgProp != null && !libPkgProp.isEmpty()) {
-                SymbolLoader symbolValues = new SymbolLoader(new File(mBinFolder, "R.txt"));
-                symbolValues.load();
+                File rFile = new File(mBinFolder, SdkConstants.FN_RESOURCE_TEXT);
+                if (rFile.isFile()) {
+                    SymbolLoader symbolValues = new SymbolLoader(rFile);
+                    symbolValues.load();
 
-                // we have two props which contains list of items. Both items reprensent 2 data of
-                // a single property.
-                // Don't want to use guava's splitter because it doesn't provide a list of the
-                // result. but we know the list starts with a ; so strip it.
-                if (libPkgProp.startsWith(";")) {
-                    libPkgProp = libPkgProp.substring(1).trim();
-                }
-                String[] packages = libPkgProp.split(";");
-                String[] rFiles = libRFileProp.list();
+                    // we have two props which contains list of items. Both items reprensent 2 data of
+                    // a single property.
+                    // Don't want to use guava's splitter because it doesn't provide a list of the
+                    // result. but we know the list starts with a ; so strip it.
+                    if (libPkgProp.startsWith(";")) {
+                        libPkgProp = libPkgProp.substring(1).trim();
+                    }
+                    String[] packages = libPkgProp.split(";");
+                    String[] rFiles = libRFileProp.list();
 
-                if (packages.length != rFiles.length) {
-                    throw new BuildException(String.format(
-                            "%1$s and %2$s must contain the same number of items.",
-                            mLibraryPackagesRefid, mLibraryRFileRefid));
-                }
+                    if (packages.length != rFiles.length) {
+                        throw new BuildException(String.format(
+                                "%1$s and %2$s must contain the same number of items.",
+                                mLibraryPackagesRefid, mLibraryRFileRefid));
+                    }
 
-                for (int i = 0 ; i < packages.length ; i++) {
-                    SymbolLoader symbols = new SymbolLoader(new File(rFiles[i]));
-                    symbols.load();
+                    for (int i = 0 ; i < packages.length ; i++) {
+                        File libRFile = new File(rFiles[i]);
+                        if (libRFile.isFile()) {
+                            SymbolLoader symbols = new SymbolLoader(libRFile);
+                            symbols.load();
 
-                    SymbolWriter writer = new SymbolWriter(mRFolder, packages[i],
-                            symbols, symbolValues);
-                    writer.write();
+                            SymbolWriter writer = new SymbolWriter(mRFolder, packages[i],
+                                    symbols, symbolValues);
+                            writer.write();
+                        }
+                    }
                 }
             }
         } catch (IOException e) {
