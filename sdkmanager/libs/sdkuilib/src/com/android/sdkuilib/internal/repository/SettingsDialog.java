@@ -27,6 +27,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -71,6 +72,14 @@ public class SettingsDialog extends UpdaterBaseDialog implements ISettingsPage {
         super(parentShell, updaterData, "Settings" /*title*/);
         assert updaterData != null;
         mSettingsController = updaterData.getSettingsController();
+    }
+
+    @Override
+    protected void createShell() {
+        super.createShell();
+        Shell shell = getShell();
+        shell.setMinimumSize(new Point(450, 370));
+        shell.setSize(450, 400);
     }
 
     @Override
