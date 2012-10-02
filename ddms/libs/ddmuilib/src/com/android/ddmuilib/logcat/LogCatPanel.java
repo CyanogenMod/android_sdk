@@ -51,6 +51,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -176,6 +177,11 @@ public final class LogCatPanel extends SelectionDependentPanel
     private boolean mShouldScrollToLatestLog = true;
     private ToolItem mScrollLockCheckBox;
     private boolean mAutoScrollLock;
+
+    // Lock under which the vertical scroll bar listener should be added
+    private final Object mScrollBarSelectionListenerLock = new Object();
+    private SelectionListener mScrollBarSelectionListener;
+    private boolean mScrollBarListenerSet = false;
 
     private String mLogFileExportFolder;
 
@@ -916,18 +922,28 @@ public final class LogCatPanel extends SelectionDependentPanel
         });
 
         final ScrollBar vbar = mTable.getVerticalBar();
-        vbar.addSelectionListener(new SelectionAdapter() {
+        mScrollBarSelectionListener = new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (!mAutoScrollLock) {
                     return;
                 }
 
-                boolean isAtBottom = (vbar.getThumb() + vbar.getSelection()) == vbar.getMaximum();
-                setScrollToLatestLog(isAtBottom);
-                mScrollLockCheckBox.setSelection(isAtBottom);
+                // thumb + selection < max => bar is not at the bottom.
+                // We subtract an arbitrary amount (thumbSize/2) from this difference to allow
+                // for cases like half a line being displayed at the end from affecting this
+                // calculation. The thumbSize/2 number seems to work experimentally across
+                // Linux/Mac & Windows, but might possibly need tweaking.
+                int diff = vbar.getThumb() + vbar.getSelection() - vbar.getMaximum();
+                boolean isAtBottom = Math.abs(diff) < vbar.getThumb() / 2;
+
+                if (isAtBottom != mShouldScrollToLatestLog) {
+                    setScrollToLatestLog(isAtBottom);
+                    mScrollLockCheckBox.setSelection(isAtBottom);
+                }
             }
-        });
+        };
+        startScrollBarMonitor(vbar);
 
         // Explicitly set the values to use for the scroll bar. In particular, we want these values
         // to have a high enough accuracy that even small movements of the scroll bar have an
@@ -941,6 +957,24 @@ public final class LogCatPanel extends SelectionDependentPanel
                 THUMB,              // thumb
                 1,                  // increment
                 THUMB);             // page increment
+    }
+
+    private void startScrollBarMonitor(ScrollBar vbar) {
+        synchronized (mScrollBarSelectionListenerLock) {
+            if (!mScrollBarListenerSet) {
+                mScrollBarListenerSet = true;
+                vbar.addSelectionListener(mScrollBarSelectionListener);
+            }
+        }
+    }
+
+    private void stopScrollBarMonitor(ScrollBar vbar) {
+        synchronized (mScrollBarSelectionListenerLock) {
+            if (mScrollBarListenerSet) {
+                mScrollBarListenerSet = false;
+                vbar.removeSelectionListener(mScrollBarSelectionListener);
+            }
+        }
     }
 
     /** Setup menu to be displayed when right clicking a log message. */
@@ -1013,7 +1047,6 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void setScrollToLatestLog(boolean scroll) {
         mShouldScrollToLatestLog = scroll;
-
         if (scroll) {
             scrollToLatestLog();
         }
@@ -1209,6 +1242,10 @@ public final class LogCatPanel extends SelectionDependentPanel
 
             mTable.setRedraw(false);
 
+            // the scroll bar should only listen to user generated scroll events, not the
+            // scroll events that happen due to the addition of logs
+            stopScrollBarMonitor(mTable.getVerticalBar());
+
             // Obtain the list of new messages, and the number of deleted messages.
             List<LogCatMessage> newMessages;
             int deletedMessageCount;
@@ -1285,6 +1322,15 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
 
             mTable.setRedraw(true);
+
+            // re-enable listening to scroll bar events, but do so in a separate thread to make
+            // sure that the current task (LogCatRefresherTask) has completed first
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    startScrollBarMonitor(mTable.getVerticalBar());
+                }
+            });
         }
 
         /**
