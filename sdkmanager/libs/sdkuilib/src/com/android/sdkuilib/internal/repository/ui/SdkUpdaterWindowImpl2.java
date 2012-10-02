@@ -181,7 +181,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         glShell.marginHeight = 0;
         mShell.setLayout(glShell);
 
-        mShell.setMinimumSize(new Point(500, 300));
+        mShell.setMinimumSize(new Point(600, 300));
         mShell.setSize(700, 500);
         mShell.setText(APP_NAME);
 

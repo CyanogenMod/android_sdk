@@ -134,7 +134,7 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
         GridLayoutBuilder.create(root).columns(3);
 
         Label label = new Label(root, SWT.NONE);
-        GridDataBuilder.create(label).hLeft().vCenter().hSpan(3);
+        GridDataBuilder.create(label).hGrab().vCenter().hSpan(3);
         label.setText(
             "This lets select which official 3rd-party sites you want to load.\n" +
             "\n" +
