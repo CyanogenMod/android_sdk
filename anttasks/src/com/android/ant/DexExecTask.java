@@ -16,6 +16,10 @@
 
 package com.android.ant;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.FileSet;
@@ -121,19 +125,26 @@ public class DexExecTask extends SingleDependencyTask {
             File input = inputs.get(i);
             if (input.isFile()) {
                 // check if this libs needs to be pre-dexed
-                File dexedLib = new File(mDexedLibs, input.getName());
+                String fileName = getDexFileName(input);
+                File dexedLib = new File(mDexedLibs, fileName);
                 String dexedLibPath = dexedLib.getAbsolutePath();
 
                 if (dexedLib.isFile() == false ||
                         dexedLib.lastModified() < input.lastModified()) {
 
-                    System.out.println("Pre-Dexing " + input);
+                    System.out.println(
+                            String.format("Pre-Dexing %1$s -> %2$s",
+                                    input.getAbsolutePath(), fileName));
 
                     if (dexedLib.isFile()) {
                         dexedLib.delete();
                     }
 
                     runDx(input, dexedLibPath, false /*showInput*/);
+                } else {
+                    System.out.println(
+                            String.format("Using Pre-Dexed %1$s <- %2$s",
+                                    fileName, input.getAbsolutePath()));
                 }
 
                 // replace the input with the pre-dex libs.
@@ -141,6 +152,23 @@ public class DexExecTask extends SingleDependencyTask {
             }
         }
     }
+
+    private String getDexFileName(File inputFile) {
+        // get the filename
+        String name = inputFile.getName();
+        // remove the extension
+        int pos = name.lastIndexOf('.');
+        if (pos != -1) {
+            name = name.substring(0, pos);
+        }
+
+        // add a hash of the original file path
+        HashFunction hashFunction = Hashing.md5();
+        HashCode hashCode = hashFunction.hashString(inputFile.getAbsolutePath());
+
+        return name + "-" + hashCode.toString() + ".jar";
+    }
+
 
     @Override
     public void execute() throws BuildException {
