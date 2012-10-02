@@ -289,9 +289,9 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
 
         mGroupOptions = new Composite(groupPackages, SWT.NONE);
         GridDataBuilder.create(mGroupOptions).hFill().vCenter().hGrab();
-        GridLayoutBuilder.create(mGroupOptions).columns(6).noMargins();
+        GridLayoutBuilder.create(mGroupOptions).columns(7).noMargins();
 
-        // Options line 1, 6 columns
+        // Options line 1, 7 columns
 
         Label label3 = new Label(mGroupOptions, SWT.NONE);
         label3.setText("Show:");
@@ -337,7 +337,7 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
         linkSelectNew.setText(
                 String.format("Select <a>%1$s</a> or <a>%2$s</a>", strLinkNew, strLinkUpdates));
         linkSelectNew.setToolTipText("Selects all items that are either new or updates.");
-        GridDataBuilder.create(linkSelectNew).hFill().hGrab();
+        GridDataBuilder.create(linkSelectNew).hFill();
         linkSelectNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -347,10 +347,14 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
             }
         });
 
+        // placeholder between "select all" and "install"
+        Label placeholder = new Label(mGroupOptions, SWT.NONE);
+        GridDataBuilder.create(placeholder).hFill().hGrab();
+
         mButtonInstall = new Button(mGroupOptions, SWT.NONE);
         mButtonInstall.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
         mButtonInstall.setToolTipText("Install one or more packages");
-        GridDataBuilder.create(mButtonInstall).hFill().vCenter().hGrab();
+        GridDataBuilder.create(mButtonInstall).vCenter().wHint(150);
         mButtonInstall.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -358,7 +362,7 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
             }
         });
 
-        // Options line 2, 6 columns
+        // Options line 2, 7 columns
 
         Label label2 = new Label(mGroupOptions, SWT.NONE);
         label2.setText("Sort by:");
@@ -392,12 +396,13 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
             }
         });
 
+        // placeholder between "repository" and "deselect"
         new Label(mGroupOptions, SWT.NONE);
 
         Link linkDeselect = new Link(mGroupOptions, SWT.NONE);
         linkDeselect.setText("<a>Deselect All</a>");
         linkDeselect.setToolTipText("Deselects all the currently selected items");
-        GridDataBuilder.create(linkDeselect).hFill().hGrab();
+        GridDataBuilder.create(linkDeselect).hFill();
         linkDeselect.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -406,10 +411,14 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
             }
         });
 
+        // placeholder between "deselect" and "delete"
+        placeholder = new Label(mGroupOptions, SWT.NONE);
+        GridDataBuilder.create(placeholder).hFill().hGrab();
+
         mButtonDelete = new Button(mGroupOptions, SWT.NONE);
         mButtonDelete.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
         mButtonDelete.setToolTipText("Delete one ore more installed packages");
-        GridDataBuilder.create(mButtonDelete).hFill().vCenter().hGrab();
+        GridDataBuilder.create(mButtonDelete).vCenter().wHint(150);
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
