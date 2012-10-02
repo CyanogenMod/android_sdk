@@ -61,7 +61,6 @@ public abstract class UpdaterBaseDialog extends SwtBaseDialog {
         setWindowImage(shell);
 
         GridLayoutBuilder.create(shell).columns(2);
-
     }
 
     protected void createCloseButton() {
