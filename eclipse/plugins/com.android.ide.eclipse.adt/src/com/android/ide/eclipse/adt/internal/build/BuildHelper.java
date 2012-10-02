@@ -40,6 +40,9 @@ import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -711,19 +714,24 @@ public class BuildHelper {
                 // just a jar file (case for proguard'ed builds)
                 finalInputPaths.addAll(inputPaths);
             } else {
+
+
                 for (String input : inputPaths) {
                     File inputFile = new File(input);
                     if (inputFile.isDirectory()) {
                         finalInputPaths.add(input);
                     } else if (inputFile.isFile()) {
-                        File dexedLib = new File(dexedLibs, inputFile.getName());
+                        String fileName = getDexFileName(inputFile);
+
+                        File dexedLib = new File(dexedLibs, fileName);
                         String dexedLibPath = dexedLib.getAbsolutePath();
 
                         if (dexedLib.isFile() == false ||
                                 dexedLib.lastModified() < inputFile.lastModified()) {
 
                             if (mVerbose) {
-                                mOutStream.println("Pre-Dexing " + input);
+                                mOutStream.println(
+                                        String.format("Pre-Dexing %1$s -> %2$s", input, fileName));
                             }
 
                             if (dexedLib.isFile()) {
@@ -737,6 +745,12 @@ public class BuildHelper {
                                 // output error message and mark the project.
                                 String message = String.format(Messages.Dalvik_Error_d, res);
                                 throw new DexException(message);
+                            }
+                        } else {
+                            if (mVerbose) {
+                                mOutStream.println(
+                                        String.format("Using Pre-Dexed %1$s <- %2$s",
+                                                fileName, input));
                             }
                         }
 
@@ -775,6 +789,22 @@ public class BuildHelper {
 
             throw new DexException(message, t);
         }
+    }
+
+    private String getDexFileName(File inputFile) {
+        // get the filename
+        String name = inputFile.getName();
+        // remove the extension
+        int pos = name.lastIndexOf('.');
+        if (pos != -1) {
+            name = name.substring(0, pos);
+        }
+
+        // add a hash of the original file path
+        HashFunction hashFunction = Hashing.md5();
+        HashCode hashCode = hashFunction.hashString(inputFile.getAbsolutePath());
+
+        return name + "-" + hashCode.toString() + ".jar";
     }
 
     /**
