@@ -6,7 +6,7 @@
 # $2: Optional build number. If present, will be appended to the date qualifier.
 #     The build number cannot contain spaces *nor* periods (dashes are ok.)
 # -z: Optional, prevents the final zip and leaves the udate-site directory intact.
-# -i: Optional, if present, the Google internal update site will be built. Otherwise, 
+# -i: Optional, if present, the Google internal update site will be built. Otherwise,
 #     the external site will be built
 # Workflow:
 # - make dx, ddms, ping
@@ -57,16 +57,16 @@ function check_params() {
   # Check dest dir exists
   [ -n "$DEST_DIR" ] || die "Usage: $0 <destination-directory> [build-number]"
   [ -d "$DEST_DIR" ] || die "Destination directory $DEST_DIR must exist."
-}
-
-function build_plugin {
-  sdk/eclipse/scripts/create_all_symlinks.sh
 
   # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format and the optional
   # build number.
   DATE=`date +v%Y%m%d%H%M`
   QUALIFIER="$DATE"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
+}
+
+function build_plugin() {
+  sdk/eclipse/scripts/create_all_symlinks.sh
 
   # Compute the final directory name and remove any leftovers from previous
   # runs if any.
@@ -106,6 +106,16 @@ function build_plugin {
   fi
 }
 
+function build_adt_ide() {
+  ADT_IDE_DEST_DIR="$DEST_DIR" \
+  ADT_IDE_QUALIFIER="$QUALIFIER" \
+  make PRODUCT-sdk-adt_eclipse_ide
+}
+
 get_params "$@"
 check_params
-build_plugin
+( build_plugin )
+if [[ -z $INTERNAL_BUILD ]]; then
+  ( build_adt_ide )
+fi
+
