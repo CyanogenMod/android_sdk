@@ -86,7 +86,7 @@ public class NinePatchChunk implements Serializable {
                 graphics2D = (Graphics2D) graphics2D.create();
 
                 // scale and transform
-                float densityScale = (float) destDensity / srcDensity;
+                float densityScale = ((float) destDensity) / (float) srcDensity;
 
                 // translate/rotate the canvas.
                 graphics2D.translate(x, y);
