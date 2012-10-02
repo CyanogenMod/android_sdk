@@ -505,23 +505,37 @@ public class SdkStatsService {
      */
     protected String normalizeVersion(String version) {
 
-        // Version must be between 1 and 4 dotted numbers
-        String[] numbers = version.split("\\.");                                //$NON-NLS-1$
-        if (numbers.length > 4) {
-            throw new IllegalArgumentException("Bad version: " + version);      //$NON-NLS-1$
-        }
-        for (String part: numbers) {
-            if (!part.matches("\\d+")) {                                        //$NON-NLS-1$
-                throw new IllegalArgumentException("Bad version: " + version);  //$NON-NLS-1$
+        Pattern regex = Pattern.compile(
+                //1=major     2=minor       3=micro       4=build |  5=rc
+                "^(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:\\.(\\d+)| +rc(\\d+))?"); //$NON-NLS-1$
+
+        Matcher m = regex.matcher(version);
+        if (m != null && m.lookingAt()) {
+            StringBuilder normal = new StringBuilder();
+            for (int i = 1; i <= 4; i++) {
+                int v = 0;
+                // If build is null but we have an rc, take that number instead as the 4th part.
+                if (i == 4 &&
+                        i < m.groupCount() &&
+                        m.group(i) == null &&
+                        m.group(i+1) != null) {
+                    i++;
+                }
+                if (m.group(i) != null) {
+                    try {
+                        v = Integer.parseInt(m.group(i));
+                    } catch (Exception ignore) {
+                    }
+                }
+                if (i > 1) {
+                    normal.append('.');
+                }
+                normal.append(v);
             }
+            return normal.toString();
         }
 
-        // Always output 4 numbers, even if fewer were supplied (pad with .0)
-        StringBuffer normal = new StringBuffer(numbers[0]);
-        for (int i = 1; i < 4; i++) {
-            normal.append('.').append(i < numbers.length ? numbers[i] : "0");   //$NON-NLS-1$
-        }
-        return normal.toString();
+        throw new IllegalArgumentException("Bad version: " + version);          //$NON-NLS-1$
     }
 
     /**

@@ -306,6 +306,139 @@ public class SdkStatsServiceTest extends TestCase {
         assertEquals("one3456789ten3456789twenty6789th", m.getOsName());
     }
 
+    public void testSdkStatsService_parseVersion() {
+        // Tests that the version parses supports the new "major.minor.micro rcPreview" format
+        // as well as "x.y.z.t" formats as well as Eclipse's "x.y.z.v2012somedate" formats.
+
+        MockSdkStatsService m;
+        m = new MockSdkStatsService("Windows", "6.2", "x86_64", "1.7.8_09");
+
+        m.ping("monitor", "21");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.0.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.1");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.1.0.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.2.03");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.2.3.4");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.4&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // More than 4 parts or extra stuff that is not an "rc" preview are ignored.
+        m.ping("monitor", "21.2.3.4.5.6.7.8");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.4&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.2.3.4.v20120101 the rest is ignored");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.4&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // If the "rc" preview integer is present, it's equivalent to a 4th number.
+        m.ping("monitor", "21 rc4");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.0.0.4&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.01 rc5");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.1.0.5&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        m.ping("monitor", "21.02.03 rc6");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.6&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // If there's a 4-part version number, the rc preview number isn't used.
+        m.ping("monitor", "21.2.3.4 rc7");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_monitor&" +
+                "id=42&" +
+                "version=21.2.3.4&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+
+        // For Eclipse plugins, the 4th part might be a date. It is ignored.
+        m.ping("eclipse", "21.2.3.v20120102235958");
+        assertEquals(
+                "http://tools.google.com/service/update?" +
+                "as=androidsdk_eclipse&" +
+                "id=42&" +
+                "version=21.2.3.0&" +
+                "os=win-6.2&" +
+                "osa=x86_64&" +
+                "vma=1.7-x86_64",
+                m.getPingUrlResult().toString());
+    }
+
     public void testSdkStatsService_glPing() {
         MockSdkStatsService m;
         m = new MockSdkStatsService("Windows", "6.2", "x86_64", "1.7.8_09");
