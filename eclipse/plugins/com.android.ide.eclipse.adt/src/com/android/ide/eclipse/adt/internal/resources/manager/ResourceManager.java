@@ -422,6 +422,15 @@ public final class ResourceManager {
             for (IResourceDelta delta : projectDeltas) {
                 if (delta.getResource() instanceof IProject) {
                     IProject project = (IProject) delta.getResource();
+
+                    try {
+                        if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                            continue;
+                        }
+                    } catch (CoreException e) {
+                        // only happens if the project is closed or doesn't exist.
+                    }
+
                     IdeScanningContext context =
                             new IdeScanningContext(getProjectResources(project), project, true);
 

@@ -175,7 +175,7 @@ public final class LayoutReloadMonitor {
          */
         @Override
         public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                int kind, @Nullable String extension, int flags) {
+                int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
             // This listener only cares about .class files and AndroidManifest.xml files
             if (!(SdkConstants.EXT_CLASS.equals(extension)
                     || SdkConstants.EXT_XML.equals(extension)
@@ -186,15 +186,7 @@ public final class LayoutReloadMonitor {
             // get the file's project
             IProject project = file.getProject();
 
-            boolean hasAndroidNature = false;
-            try {
-                hasAndroidNature = project.hasNature(AdtConstants.NATURE_DEFAULT);
-            } catch (CoreException e) {
-                // do nothing if the nature cannot be queried.
-                return;
-            }
-
-            if (hasAndroidNature) {
+            if (isAndroidProject) {
                 // project is an Android project, it's the one being affected
                 // directly by its own file change.
                 processFileChanged(file, project, extension);
@@ -204,16 +196,14 @@ public final class LayoutReloadMonitor {
 
                 for (IProject p : referencingProjects) {
                     try {
-                        hasAndroidNature = p.hasNature(AdtConstants.NATURE_DEFAULT);
+                        boolean hasAndroidNature = p.hasNature(AdtConstants.NATURE_DEFAULT);
+                        if (hasAndroidNature) {
+                            // the changed project is a dependency on an Android project,
+                            // update the main project.
+                            processFileChanged(file, p, extension);
+                        }
                     } catch (CoreException e) {
                         // do nothing if the nature cannot be queried.
-                        continue;
-                    }
-
-                    if (hasAndroidNature) {
-                        // the changed project is a dependency on an Android project,
-                        // update the main project.
-                        processFileChanged(file, p, extension);
                     }
                 }
             }

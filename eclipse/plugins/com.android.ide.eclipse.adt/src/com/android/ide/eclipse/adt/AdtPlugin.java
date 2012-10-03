@@ -1580,7 +1580,10 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         monitor.addFileListener(new IFileListener() {
             @Override
             public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                    int kind, @Nullable String extension, int flags) {
+                    int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
+                if (!isAndroidProject) {
+                    return;
+                }
                 if (flags == IResourceDelta.MARKERS || !SdkConstants.EXT_XML.equals(extension)) {
                     // ONLY the markers changed, or not XML file: not relevant to this listener
                     return;
