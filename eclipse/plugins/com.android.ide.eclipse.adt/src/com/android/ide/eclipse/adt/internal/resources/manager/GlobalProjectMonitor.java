@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
@@ -76,9 +77,10 @@ public final class GlobalProjectMonitor {
          *            not have an extension
          * @param flags the {@link IResourceDelta#getFlags()} value with details
          *            on what changed in the file
+         * @param isAndroidProject whether the parent project is an Android Project
          */
         public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                int kind, @Nullable String extension, int flags);
+                int kind, @Nullable String extension, int flags, boolean isAndroidProject);
     }
 
     /**
@@ -138,8 +140,9 @@ public final class GlobalProjectMonitor {
          * Sent when a folder changed.
          * @param folder The file that was changed
          * @param kind The change kind. This is equivalent to {@link IResourceDelta#getKind()}
+         * @param isAndroidProject whether the parent project is an Android Project
          */
-        public void folderChanged(IFolder folder, int kind);
+        public void folderChanged(IFolder folder, int kind, boolean isAndroidProject);
     }
 
     /**
@@ -208,6 +211,8 @@ public final class GlobalProjectMonitor {
 
     private IWorkspace mWorkspace;
 
+    private boolean mIsAndroidProject;
+
     /**
      * Delta visitor for resource changes.
      */
@@ -226,7 +231,7 @@ public final class GlobalProjectMonitor {
                             || (bundle.kindMask & kind) != 0) {
                         try {
                             bundle.listener.fileChanged((IFile)r, delta.getMarkerDeltas(), kind,
-                                    r.getFileExtension(), delta.getFlags());
+                                    r.getFileExtension(), delta.getFlags(), mIsAndroidProject);
                         } catch (Throwable t) {
                             AdtPlugin.log(t,"Failed to call IFileListener.fileChanged");
                         }
@@ -240,7 +245,7 @@ public final class GlobalProjectMonitor {
                     if (bundle.kindMask == ListenerBundle.MASK_NONE
                             || (bundle.kindMask & kind) != 0) {
                         try {
-                            bundle.listener.folderChanged((IFolder)r, kind);
+                            bundle.listener.folderChanged((IFolder)r, kind, mIsAndroidProject);
                         } catch (Throwable t) {
                             AdtPlugin.log(t,"Failed to call IFileListener.folderChanged");
                         }
@@ -248,11 +253,27 @@ public final class GlobalProjectMonitor {
                 }
                 return true;
             } else if (type == IResource.PROJECT) {
+                IProject project = (IProject)r;
+
+                try {
+                    mIsAndroidProject = project.hasNature(AdtConstants.NATURE_DEFAULT);
+                } catch (CoreException e) {
+                    // this can only happen if the project does not exist or is not open, neither
+                    // of which can happen here since we are processing changes in the project
+                    // or at worst a project post-open event.
+                    return false;
+                }
+
+                if (mIsAndroidProject == false) {
+                    // for non android project, skip the project listeners but return true
+                    // to visit the children and notify the IFileListeners
+                    return true;
+                }
+
                 int flags = delta.getFlags();
 
                 if ((flags & IResourceDelta.OPEN) != 0) {
                     // the project is opening or closing.
-                    IProject project = (IProject)r;
 
                     if (project.isOpen()) {
                         // notify the listeners.
@@ -491,9 +512,15 @@ public final class GlobalProjectMonitor {
                 // notify the listeners.
                 for (IProjectListener pl : mProjectListeners) {
                     try {
-                        pl.projectDeleted(project);
-                    } catch (Throwable t) {
-                        AdtPlugin.log(t,"Failed to call IProjectListener.projectDeleted");
+                        if (project.hasNature(AdtConstants.NATURE_DEFAULT)) {
+                            try {
+                                pl.projectDeleted(project);
+                            } catch (Throwable t) {
+                                AdtPlugin.log(t,"Failed to call IProjectListener.projectDeleted");
+                            }
+                        }
+                    } catch (CoreException e) {
+                        // just ignore this project.
                     }
                 }
             } else {

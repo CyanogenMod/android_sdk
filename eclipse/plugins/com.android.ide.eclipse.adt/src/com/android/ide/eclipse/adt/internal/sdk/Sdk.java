@@ -880,16 +880,6 @@ public final class Sdk  {
         }
 
         private void onProjectRemoved(IProject removedProject, boolean deleted) {
-            try {
-                if (removedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // this can only happen if the project does not exist or is not open, neither
-                // of which can happen here since we're processing a Project removed/deleted event
-                // which is processed before the project is actually removed/closed.
-            }
-
             if (DEBUG) {
                 System.out.println(">>> CLOSED: " + removedProject.getName());
             }
@@ -963,15 +953,6 @@ public final class Sdk  {
         }
 
         private void onProjectOpened(final IProject openedProject) {
-            try {
-                if (openedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // this can only happen if the project does not exist or is not open, neither
-                // of which can happen here since we're processing a Project opened event.
-            }
-
 
             ProjectState openedState = getProjectState(openedProject);
             if (openedState != null) {
@@ -1052,17 +1033,17 @@ public final class Sdk  {
     private IFileListener mFileListener = new IFileListener() {
         @Override
         public void fileChanged(final @NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                int kind, @Nullable String extension, int flags) {
+                int kind, @Nullable String extension, int flags, boolean isAndroidPRoject) {
+            if (!isAndroidPRoject) {
+                return;
+            }
+
             if (SdkConstants.FN_PROJECT_PROPERTIES.equals(file.getName()) &&
                     file.getParent() == file.getProject()) {
                 try {
                     // reload the content of the project.properties file and update
                     // the target.
                     IProject iProject = file.getProject();
-
-                    if (iProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                        return;
-                    }
 
                     ProjectState state = Sdk.getProjectState(iProject);
 

@@ -321,8 +321,8 @@ public final class ManifestEditor extends AndroidXmlEditor {
             mMarkerMonitor = new IFileListener() {
                 @Override
                 public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                        int kind, @Nullable String extension, int flags) {
-                    if (file.equals(inputFile)) {
+                        int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
+                    if (isAndroidProject && file.equals(inputFile)) {
                         processMarkerChanges(markerDeltas);
                     }
                 }
