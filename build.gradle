@@ -1,18 +1,46 @@
-allprojects {
+project.buildDir = 'gradle_build'
+
+subprojects {
+    apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'signing'
 
     repositories {
         mavenCentral()
     }
 
-    version = '21.0-SNAPSHOT'
+    group = 'com.android.tools'
 
-	uploadArchives {
-	    repositories {
-	        mavenDeployer {
-	            repository(url: uri("$rootDir/../out/host/repo"))
-	        }
-	    }
-	}
+    project.ext {
+        baseVersion = '21.0'
+    }
+
+    // custom tasks for creating source/javadoc jars
+    task sourcesJar(type: Jar, dependsOn:classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn:javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    // add javadoc/source jar tasks as artifacts
+    artifacts {
+        archives jar
+
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    task publishLocal(type: Upload) {
+        configuration = configurations.archives
+        repositories {
+            mavenDeployer {
+                repository(url: uri("$rootDir/../out/host/repo"))
+            }
+        }
+    }
 
 }

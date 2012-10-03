@@ -1,5 +1,10 @@
 include 'common'
 include 'layoutlib_api'
-include 'device_validator:dvlib'
-include 'sdkmanager:libs:sdklib'
+include 'dvlib'
+include 'sdklib'
+include 'ddmlib'
 include 'manifmerger'
+
+project(':dvlib').projectDir = new File('device_validator/dvlib')
+project(':sdklib').projectDir = new File('sdkmanager/libs/sdklib')
+project(':ddmlib').projectDir = new File('ddms/libs/ddmlib')
