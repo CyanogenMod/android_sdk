@@ -20,7 +20,7 @@ import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Extended version of {@link XmlPullParser} to use with
- * {@link Bridge#createScene(SceneParams)}
+ * {@link Bridge#createSession(SessionParams)}
  */
 public interface ILayoutPullParser extends XmlPullParser {
 

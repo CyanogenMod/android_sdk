@@ -27,7 +27,7 @@ import java.util.Map;
  * {@link #getValue()} will return null, instead use {@link #getAttributeValues(String)} to
  * get the enum/flag value associated with an attribute defined in the declare-styleable.
  *
- * @Deprecated This class is broken as it does not handle the namespace for each attribute.
+ * @deprecated This class is broken as it does not handle the namespace for each attribute.
  * Thankfully, newer versions of layoutlib don't actually use it, so we just keep it as is for
  * backward compatibility on older layoutlibs.
  *

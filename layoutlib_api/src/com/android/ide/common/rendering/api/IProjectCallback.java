@@ -126,7 +126,7 @@ public interface IProjectCallback {
      *     of the same type. This is only valid if the adapter view is an ExpandableListView.
      *     If there is only one type of items, this is the same as <var>fullParentPosition</var>.
      * @param viewRef The {@link ResourceReference} for the view we're trying to fill.
-     * @param ViewAttribute the attribute being queried.
+     * @param viewAttribute the attribute being queried.
      * @param defaultValue the default value for this attribute. The object class matches the
      *      class associated with the {@link ViewAttribute}.
      * @return the item value or null if there's no value.

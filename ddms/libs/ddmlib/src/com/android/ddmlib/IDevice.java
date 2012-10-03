@@ -351,7 +351,6 @@ public interface IDevice {
      *
      * @param localPort the local port to forward
      * @param remotePort the remote port.
-     * @return <code>true</code> if success.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
@@ -365,7 +364,6 @@ public interface IDevice {
      * @param localPort the local port to forward
      * @param remoteSocketName name of the unix domain socket created on the device
      * @param namespace namespace in which the unix domain socket was created
-     * @return <code>true</code> if success.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
@@ -379,7 +377,6 @@ public interface IDevice {
      *
      * @param localPort the local port to forward
      * @param remotePort the remote port.
-     * @return <code>true</code> if success.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
@@ -393,7 +390,6 @@ public interface IDevice {
      * @param localPort the local port to forward
      * @param remoteSocketName the remote unix domain socket name.
      * @param namespace namespace in which the unix domain socket was created
-     * @return <code>true</code> if success.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.

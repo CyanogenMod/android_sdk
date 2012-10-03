@@ -103,7 +103,7 @@ public class StdLogger implements ILogger {
      * <p/>
      * This is displayed only if the logging {@link Level} is {@link Level#WARNING} or higher.
      *
-     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * @param warningFormat is a string format to be used with a {@link Formatter}. Cannot be null.
      * @param args provides the arguments for warningFormat.
      */
     @Override

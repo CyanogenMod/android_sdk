@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Receives event notifications during instrumentation test runs.
  * <p/>
- * Patterned after {@link junit.runner.TestRunListener}.
+ * Patterned after junit.runner.TestRunListener.
  * <p/>
  * The sequence of calls will be:
  * <ul>
