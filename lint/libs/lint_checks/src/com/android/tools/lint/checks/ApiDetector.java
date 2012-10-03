@@ -664,6 +664,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 hints = hints.matchConstructor();
             }
             patternStart = ((MethodInsnNode) node).owner;
+        }
+
+        if (patternStart != null) {
             int index = patternStart.lastIndexOf('$');
             if (index != -1) {
                 patternStart = patternStart.substring(index + 1);
