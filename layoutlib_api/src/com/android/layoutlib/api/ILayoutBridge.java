@@ -104,7 +104,7 @@ public interface ILayoutBridge {
      * the project.
      * @param logger the object responsible for displaying warning/errors to the user.
      * @return a new {@link ILayoutResult} object that contains the result of the layout.
-     * @deprecated use {@link Bridge#createScene(SceneParams)}
+     * @deprecated use {@link Bridge#createSession(com.android.ide.common.rendering.api.SessionParams)}
      * @since 4
      */
     @Deprecated
@@ -141,7 +141,7 @@ public interface ILayoutBridge {
      * the project.
      * @param logger the object responsible for displaying warning/errors to the user.
      * @return a new {@link ILayoutResult} object that contains the result of the layout.
-     * @deprecated use {@link Bridge#createScene(SceneParams)}
+     * @deprecated use {@link Bridge#createSession(com.android.ide.common.rendering.api.SessionParams)}
      * @since 3
      */
     @Deprecated
@@ -174,7 +174,7 @@ public interface ILayoutBridge {
      * the project.
      * @param logger the object responsible for displaying warning/errors to the user.
      * @return a new {@link ILayoutResult} object that contains the result of the layout.
-     * @deprecated use {@link Bridge#createScene(SceneParams)}
+     * @deprecated use {@link Bridge#createSession(com.android.ide.common.rendering.api.SessionParams)}
      * @since 2
      */
     @Deprecated
@@ -206,7 +206,7 @@ public interface ILayoutBridge {
      * the project.
      * @param logger the object responsible for displaying warning/errors to the user.
      * @return a new {@link ILayoutResult} object that contains the result of the layout.
-     * @deprecated use {@link Bridge#createScene(SceneParams)}
+     * @deprecated use {@link Bridge#createSession(com.android.ide.common.rendering.api.SessionParams)}
      * @since 1
      */
     @Deprecated

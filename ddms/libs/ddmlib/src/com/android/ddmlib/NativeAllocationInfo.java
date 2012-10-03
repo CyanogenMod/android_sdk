@@ -18,7 +18,6 @@ package com.android.ddmlib;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -146,7 +145,7 @@ public final class NativeAllocationInfo {
      * Returns the resolved stack call.
      * @return An array of {@link NativeStackCallInfo} or <code>null</code> if the stack call
      * was not resolved.
-     * @see #setResolvedStackCall(ArrayList)
+     * @see #setResolvedStackCall(List)
      * @see #isStackCallResolved()
      */
     public synchronized List<NativeStackCallInfo> getResolvedStackCall() {
@@ -263,7 +262,7 @@ public final class NativeAllocationInfo {
      * lower level of the libc, but the actual method that performed the allocation.
      * @return a <code>NativeStackCallInfo</code> or <code>null</code> if the stack call has not
      * been processed from the raw addresses.
-     * @see #setResolvedStackCall(ArrayList)
+     * @see #setResolvedStackCall(List)
      * @see #isStackCallResolved()
      */
     public synchronized NativeStackCallInfo getRelevantStackCallInfo() {

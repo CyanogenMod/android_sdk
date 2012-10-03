@@ -60,16 +60,7 @@ public abstract class RenderParams {
      * @param density the density factor for the screen.
      * @param xdpi the screen actual dpi in X
      * @param ydpi the screen actual dpi in Y
-     * @param themeName The name of the theme to use.
-     * @param isProjectTheme true if the theme is a project theme, false if it is a framework theme.
-     * @param projectResources the resources of the project. The map contains (String, map) pairs
-     * where the string is the type of the resource reference used in the layout file, and the
-     * map contains (String, {@link ResourceValue}) pairs where the key is the resource name,
-     * and the value is the resource value.
-     * @param frameworkResources the framework resources. The map contains (String, map) pairs
-     * where the string is the type of the resource reference used in the layout file, and the map
-     * contains (String, {@link ResourceValue}) pairs where the key is the resource name, and the
-     * value is the resource value.
+    * @param renderResources a {@link RenderResources} object providing access to the resources.
      * @param projectCallback The {@link IProjectCallback} object to get information from
      * the project.
      * @param minSdkVersion the minSdkVersion of the project

@@ -88,7 +88,7 @@ public class ViewInfo {
     /**
      * Returns the cookie associated with the XML node. Can be null.
      *
-     * @see ILayoutPullParser#getViewKey()
+     * @see ILayoutPullParser#getViewCookie()
      */
     public Object getCookie() {
         return mCookie;
@@ -131,8 +131,8 @@ public class ViewInfo {
 
     /**
      * Returns the actual android.view.View (or child class) object. This can be used
-     * to query the object properties that are not in the XML and not in the map returned
-     * by {@link #getDefaultPropertyValues()}.
+     * to query the object properties that are not in the XML and not available through
+     * {@link RenderSession#getProperty(Object, String)}.
      */
     public Object getViewObject() {
         return mViewObject;
@@ -140,8 +140,8 @@ public class ViewInfo {
 
     /**
      * Returns the actual  android.view.ViewGroup$LayoutParams (or child class) object.
-     * This can be used to query the object properties that are not in the XML and not in
-     * the map returned by {@link #getDefaultPropertyValues()}.
+     * This can be used to query the object properties that are not in the XML and not available
+     * through {@link RenderSession#getProperty(Object, String)}.
      */
     public Object getLayoutParamsObject() {
         return mLayoutParamsObject;

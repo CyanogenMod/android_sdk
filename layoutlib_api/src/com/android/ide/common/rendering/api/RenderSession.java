@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * An object allowing interaction with an Android layout.
  *
- * This is returned by {@link Bridge#createScene(RenderParams)}.
+ * This is returned by {@link Bridge#createSession(SessionParams)}.
  * and can then be used for subsequent actions on the layout.
  *
  * @since 5
@@ -94,7 +94,7 @@ public class RenderSession {
 
     /**
      * Re-renders the layout as-is.
-     * In case of success, this should be followed by calls to {@link #getRootView()} and
+     * In case of success, this should be followed by calls to {@link #getRootViews()} and
      * {@link #getImage()} to access the result of the rendering.
      *
      * This is equivalent to calling <code>render(SceneParams.DEFAULT_TIMEOUT)</code>
@@ -107,7 +107,7 @@ public class RenderSession {
 
     /**
      * Re-renders the layout as-is, with a given timeout in case other renderings are being done.
-     * In case of success, this should be followed by calls to {@link #getRootView()} and
+     * In case of success, this should be followed by calls to {@link #getRootViews()} and
      * {@link #getImage()} to access the result of the rendering.
      *
      * The {@link Bridge} is only able to inflate or render one layout at a time. There

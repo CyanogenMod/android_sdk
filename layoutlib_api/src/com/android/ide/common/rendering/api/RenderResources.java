@@ -134,7 +134,7 @@ public class RenderResources {
      * @param attrName the name of the attribute to search for.
      * @return the {@link ResourceValue} object or <code>null</code>
      *
-     * @Deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)} since this
+     * @deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)} since this
      * method doesn't know the item namespace.
      */
     @Deprecated

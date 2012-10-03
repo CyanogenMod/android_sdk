@@ -50,8 +50,6 @@ import javax.xml.xpath.XPathFactory;
 
 /**
  * Creates the basic files needed to get an Android project up and running.
- *
- * @hide
  */
 public class ProjectCreator {
 

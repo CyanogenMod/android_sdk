@@ -25,8 +25,9 @@ import java.awt.image.BufferedImage;
  * The result of a layout computation through {@link ILayoutBridge}.
  *
  * @since 1
- * @deprecated use {@link RenderSession} as returned by {@link Bridge#createScene(SceneParams)}
+ * @deprecated use {@link RenderSession} as returned by {@link Bridge#createSession(com.android.ide.common.rendering.api.SessionParams)}
  */
+@Deprecated
 public interface ILayoutResult {
     /**
      * Success return code
@@ -66,6 +67,7 @@ public interface ILayoutResult {
      * Layout information for a specific view.
      * @deprecated
      */
+    @Deprecated
     public interface ILayoutViewInfo {
 
         /**

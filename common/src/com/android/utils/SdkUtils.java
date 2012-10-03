@@ -128,8 +128,8 @@ public class SdkUtils {
     /**
      * Returns the default line separator to use.
      * <p>
-     * NOTE: If you have an associated {@link IDocument}, it is better to call
-     * {@link TextUtilities#getDefaultLineDelimiter(IDocument)} since that will
+     * NOTE: If you have an associated IDocument (Eclipse), it is better to call
+     * TextUtilities#getDefaultLineDelimiter(IDocument) since that will
      * allow (for example) editing a \r\n-delimited document on a \n-delimited
      * platform and keep a consistent usage of delimiters in the file.
      *
