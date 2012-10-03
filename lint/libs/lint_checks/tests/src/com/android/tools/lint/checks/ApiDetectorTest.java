@@ -137,7 +137,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "                         ~~~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -150,8 +150,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
             " private ApplicationErrorReport getReport() {\n" +
             "                                ~~~~~~~~~\n" +
-            "12 errors, 0 warnings\n" +
-            "",
+            "12 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -186,7 +185,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "                         ~~~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -199,8 +198,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport [NewApi]\n" +
             " private ApplicationErrorReport getReport() {\n" +
             "                                ~~~~~~~~~\n" +
-            "12 errors, 0 warnings\n" +
-            "",
+            "12 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -232,7 +230,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "                         ~~~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -245,8 +243,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport [NewApi]\n" +
             " private ApplicationErrorReport getReport() {\n" +
             "                                ~~~~~~~~~\n" +
-            "11 errors, 0 warnings\n" +
-            "",
+            "11 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -269,7 +266,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "                         ~~~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -282,8 +279,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport [NewApi]\n" +
             " private ApplicationErrorReport getReport() {\n" +
             "                                ~~~~~~~~~\n" +
-            "8 errors, 0 warnings\n" +
-            "",
+            "8 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -421,7 +417,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "                         ~~~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest1.java:94: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest1.java:94: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -432,12 +428,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // Note: These annotations are within the methods, not ON the methods, so they have
             // no effect (because they don't end up in the bytecode)
 
+
             "src/foo/bar/SuppressTest4.java:16: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
             "  ApplicationErrorReport report = null;\n" +
             "  ~~~~~~~~~~~~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest4.java:19: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
-            "  ^\n" +
+            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest4.java:19: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -571,9 +568,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/test/pkg/TestEnum.java:37: Error: Enum value requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "            case OVERLAY: {\n" +
             "                 ~~~~~~~\n" +
-            "src/test/pkg/TestEnum.java:61: Error: Class requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
-            "        switch (type) {\n" +
-            "        ^\n" +
+            "src/test/pkg/TestEnum.java:58: Error: Class requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
+            "    public static void test4(final android.renderscript.Element.DataType type) {\n" +
+            "                                                                ~~~~~~~~\n" +
             "src/test/pkg/TestEnum.java:61: Error: Enum for switch requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
             "        switch (type) {\n" +
             "        ^\n" +
@@ -612,4 +609,21 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/CloseTest.class.data=>bin/classes/test/pkg/CloseTest.class"
                 ));
     }
+
+    public void testInnerClassPositions() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=38113
+        assertEquals(
+            "src/test/pkg/ApiCallTest8.java:8: Error: Class requires API level 8 (current min is 4): android.text.style.LeadingMarginSpan.LeadingMarginSpan2 [NewApi]\n" +
+            "        LeadingMarginSpan.LeadingMarginSpan2 span = null;        \n" +
+            "                          ~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/ApiCallTest8.java.txt=>src/test/pkg/ApiCallTest8.java",
+                    "apicheck/ApiCallTest8.class.data=>bin/classes/test/pkg/ApiCallTest8.class"
+                ));
+    }
+
 }
