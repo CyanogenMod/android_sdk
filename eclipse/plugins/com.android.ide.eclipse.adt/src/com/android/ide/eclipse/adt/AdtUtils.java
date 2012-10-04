@@ -80,6 +80,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -1233,6 +1234,62 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns all resource variations for the given file
+     *
+     * @param file resource file, which should be an XML file in one of the
+     *            various resource folders, e.g. res/layout, res/values-xlarge, etc.
+     * @param includeSelf if true, include the file itself in the list,
+     *            otherwise exclude it
+     * @return a list of all the resource variations
+     */
+    public static List<IFile> getResourceVariations(@Nullable IFile file, boolean includeSelf) {
+        if (file == null) {
+            return Collections.emptyList();
+        }
+
+        // Compute the set of layout files defining this layout resource
+        List<IFile> variations = new ArrayList<IFile>();
+        String name = file.getName();
+        IContainer parent = file.getParent();
+        if (parent != null) {
+            IContainer resFolder = parent.getParent();
+            if (resFolder != null) {
+                String parentName = parent.getName();
+                String prefix = parentName;
+                int qualifiers = prefix.indexOf('-');
+
+                if (qualifiers != -1) {
+                    parentName = prefix.substring(0, qualifiers);
+                    prefix = prefix.substring(0, qualifiers + 1);
+                } else {
+                    prefix = prefix + '-';
+                }
+                try {
+                    for (IResource resource : resFolder.members()) {
+                        String n = resource.getName();
+                        if ((n.startsWith(prefix) || n.equals(parentName))
+                                && resource instanceof IContainer) {
+                            IContainer layoutFolder = (IContainer) resource;
+                            IResource r = layoutFolder.findMember(name);
+                            if (r instanceof IFile) {
+                                IFile variation = (IFile) r;
+                                if (!includeSelf && file.equals(variation)) {
+                                    continue;
+                                }
+                                variations.add(variation);
+                            }
+                        }
+                    }
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+        }
+
+        return variations;
     }
 
     /**

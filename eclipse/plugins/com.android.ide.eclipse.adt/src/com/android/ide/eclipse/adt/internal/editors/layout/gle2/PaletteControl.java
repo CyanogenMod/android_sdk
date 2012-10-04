@@ -378,6 +378,9 @@ public class PaletteControl extends Composite {
         ConfigurationChooser configChooser = mEditor.getConfigurationChooser();
         String theme = configChooser.getThemeName();
         String device = configChooser.getDeviceName();
+        if (device == null) {
+            return;
+        }
         AndroidTargetData targetData =
             target != null ? Sdk.getCurrent().getTargetData(target) : null;
         if (target == mCurrentTarget && targetData == mCurrentTargetData

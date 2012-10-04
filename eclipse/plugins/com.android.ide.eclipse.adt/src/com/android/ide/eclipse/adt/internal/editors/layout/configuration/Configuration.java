@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -38,6 +39,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
@@ -50,6 +52,7 @@ import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
 import com.android.utils.Pair;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
@@ -120,6 +123,9 @@ public class Configuration {
     @NonNull
     private NightMode mNightMode = NightMode.NOTNIGHT;
 
+    /** The display name */
+    private String mDisplayName;
+
     /**
      * Creates a new {@linkplain Configuration}
      *
@@ -138,6 +144,58 @@ public class Configuration {
     @NonNull
     public static Configuration create(@NonNull ConfigurationChooser chooser) {
         return new Configuration(chooser);
+    }
+
+    /**
+     * Creates a configuration
+     * @param chooser the configuration chooser with device info, render target info, etc
+     * @param file the file to look up a configuration for
+     * @return a suitable configuration
+     */
+    @NonNull
+    public static Configuration create(@NonNull ConfigurationChooser chooser,
+            @NonNull IFile file) {
+        Configuration configuration = copy(chooser.getConfiguration());
+        String data = AdtPlugin.getFileProperty(file, NAME_CONFIG_STATE);
+        if (data != null) {
+            configuration.initialize(data);
+        } else {
+            ProjectResources resources = chooser.getResources();
+            ConfigurationMatcher matcher = new ConfigurationMatcher(chooser, configuration, file,
+                    resources, false);
+            if (configuration.mEditedConfig == null) {
+                configuration.mEditedConfig = new FolderConfiguration();
+            }
+            matcher.adaptConfigSelection(true /*needBestMatch*/);
+        }
+
+        return configuration;
+    }
+
+    /**
+     * Creates a new {@linkplain Configuration} that is a copy from a different configuration
+     *
+     * @param original the original to copy from
+     * @return a new configuration copied from the original
+     */
+    @NonNull
+    public static Configuration copy(@NonNull Configuration original) {
+        Configuration copy = create(original.mConfigChooser);
+        copy.mFullConfig.set(original.mFullConfig);
+        if (original.mEditedConfig != null) {
+            copy.mEditedConfig = new FolderConfiguration();
+            copy.mEditedConfig.set(original.mEditedConfig);
+        }
+        copy.mTarget = original.getTarget();
+        copy.mTheme = original.getTheme();
+        copy.mDevice = original.getDevice();
+        copy.mState = original.getDeviceState();
+        copy.mActivity = original.getActivity();
+        copy.mLocale = original.getLocale();
+        copy.mUiMode = original.getUiMode();
+        copy.mNightMode = original.getNightMode();
+
+        return copy;
     }
 
     /**
@@ -218,6 +276,16 @@ public class Configuration {
     @Nullable
     public IAndroidTarget getTarget() {
         return mTarget;
+    }
+
+    /**
+     * Returns the display name to show for this configuration
+     *
+     * @return the display name, or null if none has been assigned
+     */
+    @Nullable
+    public String getDisplayName() {
+        return mDisplayName;
     }
 
     /**
@@ -363,6 +431,15 @@ public class Configuration {
         if (!skipSync) {
             syncFolderConfig();
         }
+    }
+
+    /**
+     * Sets the display name to be shown for this configuration.
+     *
+     * @param displayName the new display name
+     */
+    public void setDisplayName(@Nullable String displayName) {
+        mDisplayName = displayName;
     }
 
     /**

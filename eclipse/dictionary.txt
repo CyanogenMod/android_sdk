@@ -348,6 +348,7 @@ wildcard
 workflow
 xdpi
 xhdpi
+xlarge
 xml
 xmlns
 ydpi

@@ -101,4 +101,37 @@ public class ConfigurationTest extends TestCase {
         assertEquals(145.0f, configuration.getYDpi(), 0.001);
         assertEquals(new Rect(0, 0, 320, 480), configuration.getScreenBounds());
     }
+
+    public void testCopy() throws Exception {
+        Configuration configuration = createConfiguration();
+        assertNotNull(configuration);
+        configuration.setTheme("@style/Theme");
+        assertEquals("@style/Theme", configuration.getTheme());
+        DeviceManager deviceManager = new DeviceManager(new StdLogger(StdLogger.Level.VERBOSE));
+        List<Device> devices = deviceManager.getDefaultDevices();
+        assertNotNull(devices);
+        assertTrue(devices.size() > 0);
+        configuration.setDevice(devices.get(0), false);
+        configuration.setActivity("foo.bar.FooActivity");
+        configuration.setTheme("@android:style/Theme.Holo.Light");
+        Locale locale = Locale.create(new LanguageQualifier("nb"));
+        configuration.setLocale(locale, false /* skipSync */);
+
+        Configuration copy = Configuration.copy(configuration);
+        assertEquals(locale, copy.getLocale());
+        assertEquals("foo.bar.FooActivity", copy.getActivity());
+        assertEquals("@android:style/Theme.Holo.Light", copy.getTheme());
+        assertEquals(devices.get(0), copy.getDevice());
+
+        // Make sure edits to master does not affect the child
+        configuration.setLocale(Locale.ANY, false);
+        configuration.setTheme("@android:style/Theme.Holo");
+        configuration.setDevice(devices.get(1), true);
+
+        assertTrue(copy.getFullConfig().getLanguageQualifier().equals(locale.language));
+        assertEquals(locale, copy.getLocale());
+        assertEquals("foo.bar.FooActivity", copy.getActivity());
+        assertEquals("@android:style/Theme.Holo.Light", copy.getTheme());
+        assertEquals(devices.get(0), copy.getDevice());
+    }
 }

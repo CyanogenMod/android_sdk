@@ -133,6 +133,44 @@ public class XmlPrettyPrinter {
     }
 
     /**
+     * Pretty prints the given node
+     *
+     * @param node the node, usually a document, to be printed
+     * @param prefs the formatting preferences
+     * @param style the formatting style to use
+     * @param lineSeparator the line separator to use, or null to use the
+     *            default
+     * @return a formatted string
+     */
+    @NonNull
+    public static String prettyPrint(
+            @NonNull Node node,
+            @NonNull XmlFormatPreferences prefs,
+            @NonNull XmlFormatStyle style,
+            @Nullable String lineSeparator) {
+        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, lineSeparator);
+        StringBuilder sb = new StringBuilder(1000);
+        printer.prettyPrint(-1, node, null, null, sb, false /*openTagOnly*/);
+        String xml = sb.toString();
+        if (node.getNodeType() == Node.DOCUMENT_NODE && !xml.startsWith("<?")) { //$NON-NLS-1$
+            xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + xml; //$NON-NLS-1$
+        }
+        return xml;
+    }
+
+    /**
+     * Pretty prints the given node using default styles
+     *
+     * @param node the node, usually a document, to be printed
+     * @return the resulting formatted string
+     */
+    @NonNull
+    public static String prettyPrint(@NonNull Node node) {
+        return prettyPrint(node, XmlFormatPreferences.create(), XmlFormatStyle.FILE,
+                SdkUtils.getLineSeparator());
+    }
+
+    /**
      * Start pretty-printing at the given node, which must either be the
      * startNode or contain it as a descendant.
      *

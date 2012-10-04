@@ -691,7 +691,7 @@ public class LayoutActionBar extends Composite {
      * Reset the canvas scale to best fit (so content is as large as possible without scrollbars)
      */
     void rescaleToFit(boolean onlyZoomOut) {
-        mEditor.getCanvasControl().setFitScale(onlyZoomOut);
+        mEditor.getCanvasControl().setFitScale(onlyZoomOut, true /*allowZoomIn*/);
     }
 
     boolean rescaleToReal(boolean real) {

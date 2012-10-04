@@ -30,7 +30,6 @@ import static com.android.SdkConstants.STRING_PREFIX;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.AdtUtils.isUiThread;
 import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
@@ -658,6 +657,8 @@ public class GraphicalEditorPart extends EditorPart
             return true;
         }
 
+        getCanvasControl().getPreviewManager().configurationChanged(flags);
+
         // Before doing the normal process, test for the following case.
         // - the editor is being opened (or reset for a new input)
         // - the file being opened is not the best match for any possible configuration
@@ -746,7 +747,7 @@ public class GraphicalEditorPart extends EditorPart
             // out to fit the content, or zoom back in if we were zoomed out more from the
             // previous view, but only up to 100% such that we never blow up pixels
             if (mActionBar.isZoomingAllowed()) {
-                getCanvasControl().setFitScale(true);
+                getCanvasControl().setFitScale(true,  true /*allowZoomIn*/);
             }
         }
 
@@ -1039,6 +1040,8 @@ public class GraphicalEditorPart extends EditorPart
             if (mNeedsRecompute) {
                 recomputeLayout();
             }
+
+            mCanvasViewer.getCanvas().syncPreviewMode();
         }
     }
 
@@ -1253,6 +1256,7 @@ public class GraphicalEditorPart extends EditorPart
             }
 
             UiDocumentNode model = getModel();
+            LayoutCanvas canvas = mCanvasViewer.getCanvas();
             if (!ensureModelValid(model)) {
                 // Although we display an error, we still treat an empty document as a
                 // successful layout result so that we can drop new elements in it.
@@ -1260,7 +1264,7 @@ public class GraphicalEditorPart extends EditorPart
                 // For that purpose, create a special LayoutScene that has no image,
                 // no root view yet indicates success and then update the canvas with it.
 
-                mCanvasViewer.getCanvas().setSession(
+                canvas.setSession(
                         new StaticRenderSession(
                                 Result.Status.SUCCESS.createResult(),
                                 null /*rootViewInfo*/, null /*image*/),
@@ -1278,6 +1282,8 @@ public class GraphicalEditorPart extends EditorPart
 
                 IProject project = mEditedFile.getProject();
                 renderWithBridge(project, model, layoutLib);
+
+                canvas.getPreviewManager().renderPreviews();
             }
         } finally {
             // no matter the result, we are done doing the recompute based on the latest
@@ -1462,11 +1468,6 @@ public class GraphicalEditorPart extends EditorPart
             return null;
         }
 
-        if (mConfigChooser.isDisposed()) {
-            return null;
-        }
-        assert isUiThread();
-
         // attempt to get a target from the configuration selector.
         IAndroidTarget renderingTarget = mConfigChooser.getConfiguration().getTarget();
         if (renderingTarget != null) {
@@ -1501,6 +1502,10 @@ public class GraphicalEditorPart extends EditorPart
     private boolean ensureModelValid(UiDocumentNode model) {
         // check there is actually a model (maybe the file is empty).
         if (model.getUiChildren().size() == 0) {
+            if (mEditorDelegate.getEditor().isCreatingPages()) {
+                displayError("Loading editor");
+                return false;
+            }
             displayError(
                     "No XML content. Please add a root view or layout to your document.");
             return false;
@@ -1565,7 +1570,7 @@ public class GraphicalEditorPart extends EditorPart
         } else if (missingClasses.size() > 0 || brokenClasses.size() > 0) {
             displayFailingClasses(missingClasses, brokenClasses, false);
             displayUserStackTrace(logger, true);
-        } else {
+        } else if (session != null) {
             // Nope, no missing or broken classes. Clear success, congrats!
             hideError();
 
@@ -2798,7 +2803,7 @@ public class GraphicalEditorPart extends EditorPart
         // Auto zoom the surface if you open or close flyout windows such as the palette
         // or the property/outline views
         if (newState == STATE_OPEN || newState == STATE_COLLAPSED && oldState == STATE_OPEN) {
-            getCanvasControl().setFitScale(true /*onlyZoomOut*/);
+            getCanvasControl().setFitScale(true /*onlyZoomOut*/, true /*allowZoomIn*/);
         }
 
         sDockingStateVersion++;

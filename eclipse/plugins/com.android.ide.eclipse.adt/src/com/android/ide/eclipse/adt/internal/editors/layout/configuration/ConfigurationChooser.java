@@ -37,6 +37,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
@@ -55,6 +56,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.AndroidVersion;
@@ -203,8 +205,8 @@ public class ConfigurationChooser extends Composite
         ToolBar toolBar = new ToolBar(this, SWT.WRAP | SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
         toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-        mConfigCombo = new ToolItem(toolBar, SWT.DROP_DOWN | SWT.BOLD);
-        mConfigCombo.setImage(null);
+        mConfigCombo = new ToolItem(toolBar, SWT.DROP_DOWN );
+        mConfigCombo.setImage(icons.getIcon("android_file")); //$NON-NLS-1$
         mConfigCombo.setToolTipText("Configuration to render this layout with in Eclipse");
 
         @SuppressWarnings("unused")
@@ -294,6 +296,9 @@ public class ConfigurationChooser extends Composite
         mOrientationCombo.addSelectionListener(listener);
 
         addDisposeListener(this);
+
+        initDevices();
+        initTargets();
     }
 
     /**
@@ -483,6 +488,7 @@ public class ConfigurationChooser extends Composite
      */
     public void setFile(IFile file) {
         mEditedFile = file;
+        initializeConfiguration();
     }
 
     /**
@@ -499,7 +505,7 @@ public class ConfigurationChooser extends Composite
             return;
         }
 
-        mEditedFile = file;
+        setFile(file);
         IProject project = mEditedFile.getProject();
         mResources = ResourceManager.getInstance().getProjectResources(project);
 
@@ -543,7 +549,7 @@ public class ConfigurationChooser extends Composite
      * @see #replaceFile(IFile)
      */
     public void changeFileOnNewConfig(IFile file) {
-        mEditedFile = file;
+        setFile(file);
         IProject project = mEditedFile.getProject();
         mResources = ResourceManager.getInstance().getProjectResources(project);
 
@@ -648,10 +654,8 @@ public class ConfigurationChooser extends Composite
         mDisableUpdates++; // we do not want to trigger onXXXChange when setting
                            // new values in the widgets.
         try {
-            // this is going to be followed by a call to onTargetLoaded.
-            // So we can only care about the layout devices in this case.
-            initDevices();
-            initTargets();
+            updateDevices();
+            updateTargets();
         } finally {
             mDisableUpdates--;
         }
@@ -689,8 +693,8 @@ public class ConfigurationChooser extends Composite
             try {
                 // init the devices if needed (new SDK or first time going through here)
                 if (mSdkChanged) {
-                    initDevices();
-                    initTargets();
+                    updateDevices();
+                    updateTargets();
                     mSdkChanged = false;
                 }
 
@@ -704,7 +708,7 @@ public class ConfigurationChooser extends Composite
                 LoadStatus targetStatus = LoadStatus.FAILED;
                 if (mProjectTarget != null) {
                     targetStatus = Sdk.getCurrent().checkAndLoadTargetData(mProjectTarget, null);
-                    initTargets();
+                    updateTargets();
                 }
 
                 if (targetStatus == LoadStatus.LOADED) {
@@ -726,16 +730,9 @@ public class ConfigurationChooser extends Composite
                     targetData = Sdk.getCurrent().getTargetData(mProjectTarget);
 
                     // get the file stored state
-                    boolean loadedConfigData = false;
-                    String data = AdtPlugin.getFileProperty(mEditedFile, NAME_CONFIG_STATE);
-                    if (mInitialState != null) {
-                        data = mInitialState;
-                        mInitialState = null;
-                    }
-
-                    if (data != null) {
-                        loadedConfigData = mConfiguration.initialize(data);
-                    }
+                    initializeConfiguration();
+                    boolean loadedConfigData = mConfiguration.getDevice() != null &&
+                            mConfiguration.getDeviceState() != null;
 
                     // Load locale list. This must be run after we initialize the
                     // configuration above, since it attempts to sync the UI with
@@ -831,59 +828,81 @@ public class ConfigurationChooser extends Composite
         } else {
             mDeviceList = new ArrayList<Device>();
         }
-
-        // fill with the devices
-        if (!mDeviceList.isEmpty()) {
-            Device first = mDeviceList.get(0);
-            selectDevice(first);
-            List<State> states = first.getAllStates();
-            selectDeviceState(states.get(0));
-        } else {
-            selectDevice(null);
-        }
     }
 
     /**
      * Loads the list of {@link IAndroidTarget} and inits the UI with it.
      */
-    private void initTargets() {
+    private boolean initTargets() {
         mTargetList.clear();
-
-        IAndroidTarget renderingTarget = mConfiguration.getTarget();
 
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
             IAndroidTarget[] targets = currentSdk.getTargets();
-            IAndroidTarget match = null;
             for (int i = 0 ; i < targets.length; i++) {
-                // FIXME: add check based on project minSdkVersion
                 if (targets[i].hasRenderingLibrary()) {
                     mTargetList.add(targets[i]);
-
-                    if (renderingTarget != null) {
-                        // use equals because the rendering could be from a previous SDK, so
-                        // it may not be the same instance.
-                        if (renderingTarget.equals(targets[i])) {
-                            match = targets[i];
-                        }
-                    } else if (mProjectTarget == targets[i]) {
-                        match = targets[i];
-                    }
                 }
             }
 
-            if (match == null) {
-                selectTarget(null);
+            return true;
+        }
 
-                // the rendering target is the same as the project.
-                renderingTarget = mProjectTarget;
-            } else {
-                selectTarget(match);
+        return false;
+    }
 
-                // set the rendering target to the new object.
-                renderingTarget = match;
+    private void initializeConfiguration() {
+        if (mConfiguration.getDevice() == null) {
+            String data = AdtPlugin.getFileProperty(mEditedFile, NAME_CONFIG_STATE);
+            if (mInitialState != null) {
+                data = mInitialState;
+                mInitialState = null;
+            }
+            if (data != null) {
+                mConfiguration.initialize(data);
             }
         }
+    }
+
+    private void updateDevices() {
+        if (mDeviceList.size() == 0) {
+            initDevices();
+        }
+    }
+
+    private void updateTargets() {
+        if (mTargetList.size() == 0) {
+            if (!initTargets()) {
+                return;
+            }
+        }
+
+        IAndroidTarget renderingTarget = mConfiguration.getTarget();
+
+        IAndroidTarget match = null;
+        for (IAndroidTarget target : mTargetList) {
+            if (renderingTarget != null) {
+                // use equals because the rendering could be from a previous SDK, so
+                // it may not be the same instance.
+                if (renderingTarget.equals(target)) {
+                    match = target;
+                }
+            } else if (mProjectTarget == target) {
+                match = target;
+            }
+
+        }
+
+        if (match == null) {
+            // the rendering target is the same as the project.
+            renderingTarget = mProjectTarget;
+        } else {
+            // set the rendering target to the new object.
+            renderingTarget = match;
+        }
+
+        mConfiguration.setTarget(renderingTarget, true);
+        selectTarget(renderingTarget);
     }
 
     /** Update the toolbar whenever a label has changed, to not only
@@ -947,7 +966,9 @@ public class ConfigurationChooser extends Composite
      */
     public void saveConstraints() {
         String description = mConfiguration.toPersistentString();
-        AdtPlugin.setFileProperty(mEditedFile, NAME_CONFIG_STATE, description);
+        if (description != null && !description.isEmpty()) {
+            AdtPlugin.setFileProperty(mEditedFile, NAME_CONFIG_STATE, description);
+        }
     }
 
     // ---- Setting the current UI state ----
@@ -1919,6 +1940,24 @@ public class ConfigurationChooser extends Composite
                     }
                 }
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if this configuration chooser represents the best match for
+     * the given file
+     *
+     * @param file the file to test
+     * @param config the config to test
+     * @return true if the given config is the best match for the given file
+     */
+    public boolean isBestMatchFor(IFile file, FolderConfiguration config) {
+        ResourceFile match = mResources.getMatchingFile(mEditedFile.getName(),
+                ResourceFolderType.LAYOUT, config);
+        if (match != null) {
+            return match.getFile().equals(mEditedFile);
         }
 
         return false;

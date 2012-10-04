@@ -32,6 +32,8 @@ import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.resources.ResourceResolver;
+import com.android.ide.common.resources.configuration.DensityQualifier;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.ContextPullParser;
@@ -82,9 +84,9 @@ public class RenderService {
     private final LayoutLibrary mLayoutLib;
     private final IImageFactory mImageFactory;
     private final Density mDensity;
-    private final float mXdpi;
-    private final float mYdpi;
-    private final ScreenSizeQualifier mScreenSize;
+    private float mXdpi;
+    private float mYdpi;
+    private ScreenSizeQualifier mScreenSize;
 
     // The following fields are optional or configurable using the various chained
     // setters:
@@ -120,6 +122,51 @@ public class RenderService {
         mTargetSdkVersion = editor.getTargetSdkVersion();
     }
 
+    private RenderService(GraphicalEditorPart editor, FolderConfiguration configuration,
+            ResourceResolver resourceResolver) {
+        mEditor = editor;
+
+        mProject = editor.getProject();
+        LayoutCanvas canvas = editor.getCanvasControl();
+        mImageFactory = canvas.getImageOverlay();
+        Configuration config = editor.getConfigurationChooser().getConfiguration();
+        mXdpi = config.getXDpi();
+        mYdpi = config.getYDpi();
+        mLayoutLib = editor.getReadyLayoutLib(true /*displayError*/);
+        mResourceResolver =  resourceResolver != null ? resourceResolver : editor.getResourceResolver();
+        mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
+        mMinSdkVersion = editor.getMinSdkVersion();
+        mTargetSdkVersion = editor.getTargetSdkVersion();
+
+        // TODO: Look up device etc and offer additional configuration options here?
+        Density density = Density.MEDIUM;
+        DensityQualifier densityQualifier = configuration.getDensityQualifier();
+        if (densityQualifier != null) {
+            // just a sanity check
+            Density d = densityQualifier.getValue();
+            if (d != Density.NODPI) {
+                density = d;
+            }
+        }
+        mDensity = density;
+        mScreenSize = configuration.getScreenSizeQualifier();
+    }
+
+    /**
+     * Sets the screen size and density to use for rendering
+     *
+     * @param screenSize the screen size
+     * @param xdpi the x density
+     * @param ydpi the y density
+     * @return this, for constructor chaining
+     */
+    public RenderService setScreen(ScreenSizeQualifier screenSize, float xdpi, float ydpi) {
+        mXdpi = xdpi;
+        mYdpi = ydpi;
+        mScreenSize = screenSize;
+        return this;
+    }
+
     /**
      * Creates a new {@link RenderService} associated with the given editor.
      *
@@ -128,6 +175,21 @@ public class RenderService {
      */
     public static RenderService create(GraphicalEditorPart editor) {
         RenderService renderService = new RenderService(editor);
+
+        return renderService;
+    }
+
+    /**
+     * Creates a new {@link RenderService} associated with the given editor.
+     *
+     * @param editor the editor to provide configuration data such as the render target
+     * @param configuration the configuration to use (and fallback to editor for the rest)
+     * @param resolver a resource resolver to use to look up resources
+     * @return a {@link RenderService} which can perform rendering services
+     */
+    public static RenderService create(GraphicalEditorPart editor,
+            FolderConfiguration configuration, ResourceResolver resolver) {
+        RenderService renderService = new RenderService(editor, configuration, resolver);
 
         return renderService;
     }
