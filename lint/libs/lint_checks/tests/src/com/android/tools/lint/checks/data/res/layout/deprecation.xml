@@ -23,4 +23,7 @@
         android:phoneNumber="true"
         android:singleLine="true" />
 
+    <EditText android:editable="true" />
+    <EditText android:editable="false" />
+
 </AbsoluteLayout>

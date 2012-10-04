@@ -27,6 +27,8 @@ import static com.android.SdkConstants.ATTR_NUMERIC;
 import static com.android.SdkConstants.ATTR_PASSWORD;
 import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
 import static com.android.SdkConstants.ATTR_SINGLE_LINE;
+import static com.android.SdkConstants.EDIT_TEXT;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -135,7 +137,15 @@ public class DeprecationDetector extends LayoutDetector {
         String fix;
         int minSdk = 1;
         if (name.equals(ATTR_EDITABLE)) {
-            fix = "Use an <EditText> to make it editable";
+            if (!EDIT_TEXT.equals(attribute.getOwnerElement().getTagName())) {
+                fix = "Use an <EditText> to make it editable";
+            } else {
+                if (VALUE_TRUE.equals(attribute.getValue())) {
+                    fix = "<EditText> is already editable";
+                } else {
+                    fix = "Use inputType instead";
+                }
+            }
         } else if (name.equals(ATTR_ENABLED)) {
             fix = "Use state_enabled instead";
         } else if (name.equals(ATTR_SINGLE_LINE)) {
