@@ -82,6 +82,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -120,7 +121,7 @@ public class LayoutCanvas extends Canvas {
 
     private static final boolean DEBUG = false;
 
-    /* package */ static final String PREFIX_CANVAS_ACTION = "canvas_action_";
+    static final String PREFIX_CANVAS_ACTION = "canvas_action_"; //$NON-NLS-1$
 
     /** The layout editor that uses this layout canvas. */
     private final LayoutEditorDelegate mEditorDelegate;
@@ -387,9 +388,23 @@ public class LayoutCanvas extends Canvas {
 
             if (clientWidth == 0) {
                 clientWidth = imageWidth;
+                Shell shell = getShell();
+                if (shell != null) {
+                    org.eclipse.swt.graphics.Point size = shell.getSize();
+                    if (size.x > 0) {
+                        clientWidth = size.x * 70 / 100;
+                    }
+                }
             }
             if (clientHeight == 0) {
                 clientHeight = imageHeight;
+                Shell shell = getShell();
+                if (shell != null) {
+                    org.eclipse.swt.graphics.Point size = shell.getSize();
+                    if (size.y > 0) {
+                        clientWidth = size.y * 80 / 100;
+                    }
+                }
             }
 
             mHScale.setSize(imageWidth, fullWidth, clientWidth);
@@ -414,8 +429,7 @@ public class LayoutCanvas extends Canvas {
                     Boolean zoomed = coordinator.isEditorMaximized();
                     if (mWasZoomed != zoomed) {
                         if (mWasZoomed != null) {
-                            LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
-                                    .getLayoutActionBar();
+                            LayoutActionBar actionBar = getGraphicalEditor().getLayoutActionBar();
                             if (actionBar.isZoomingAllowed()) {
                                 setFitScale(true /*onlyZoomOut*/, true /*allowZoomIn*/);
                             }
@@ -457,7 +471,7 @@ public class LayoutCanvas extends Canvas {
         } else {
             // Zooming actions
             char c = e.character;
-            LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor().getLayoutActionBar();
+            LayoutActionBar actionBar = getGraphicalEditor().getLayoutActionBar();
             if (c == '1' && actionBar.isZoomingAllowed()) {
                 setScale(1, true);
             } else if (c == '0' && actionBar.isZoomingAllowed()) {
@@ -572,12 +586,12 @@ public class LayoutCanvas extends Canvas {
     }
 
     /** Returns the Rules Engine, associated with the current project. */
-    /* package */ RulesEngine getRulesEngine() {
+    RulesEngine getRulesEngine() {
         return mRulesEngine;
     }
 
     /** Sets the Rules Engine, associated with the current project. */
-    /* package */ void setRulesEngine(RulesEngine rulesEngine) {
+    void setRulesEngine(RulesEngine rulesEngine) {
         mRulesEngine = rulesEngine;
     }
 
@@ -585,7 +599,7 @@ public class LayoutCanvas extends Canvas {
      * Returns the factory to use to convert from {@link CanvasViewInfo} or from
      * {@link UiViewElementNode} to {@link INode} proxies.
      */
-    /* package */ NodeFactory getNodeFactory() {
+    NodeFactory getNodeFactory() {
         return mNodeFactory;
     }
 
@@ -594,7 +608,7 @@ public class LayoutCanvas extends Canvas {
      *
      * @return The GCWrapper used to paint view rules
      */
-    /* package */ GCWrapper getGcWrapper() {
+    GCWrapper getGcWrapper() {
         return mGCWrapper;
     }
 
@@ -652,7 +666,7 @@ public class LayoutCanvas extends Canvas {
      * @return A {@link CanvasTransform} for mapping between layout and control
      *         coordinates in the horizontal dimension.
      */
-    /* package */ CanvasTransform getHorizontalTransform() {
+    CanvasTransform getHorizontalTransform() {
         return mHScale;
     }
 
@@ -663,7 +677,7 @@ public class LayoutCanvas extends Canvas {
      * @return A {@link CanvasTransform} for mapping between layout and control
      *         coordinates in the vertical dimension.
      */
-    /* package */ CanvasTransform getVerticalTransform() {
+    CanvasTransform getVerticalTransform() {
         return mVScale;
     }
 
@@ -711,6 +725,11 @@ public class LayoutCanvas extends Canvas {
         return mSelectAllAction;
     }
 
+    /** Returns the associated {@link GraphicalEditorPart} */
+    GraphicalEditorPart getGraphicalEditor() {
+        return mEditorDelegate.getGraphicalEditor();
+    }
+
     /**
      * Sets the result of the layout rendering. The result object indicates if the layout
      * rendering succeeded. If it did, it contains a bitmap and the objects rectangles.
@@ -726,7 +745,7 @@ public class LayoutCanvas extends Canvas {
      *            {@link #showInvisibleViews(boolean)}) where individual invisible nodes
      *            are padded during certain interactions.
      */
-    /* package */ void setSession(RenderSession session, Set<UiElementNode> explodedNodes,
+    void setSession(RenderSession session, Set<UiElementNode> explodedNodes,
             boolean layoutlib5) {
         // disable any hover
         clearHover();
@@ -737,7 +756,7 @@ public class LayoutCanvas extends Canvas {
                     session.isAlphaChannelImage());
 
             mOutlinePage.setModel(mViewHierarchy.getRoot());
-            mEditorDelegate.getGraphicalEditor().setModel(mViewHierarchy.getRoot());
+            getGraphicalEditor().setModel(mViewHierarchy.getRoot());
 
             if (image != null) {
                 updateScrollBars();
@@ -765,8 +784,7 @@ public class LayoutCanvas extends Canvas {
     void ensureZoomed() {
         if (mZoomFitNextImage && getClientArea().height > 0) {
             mZoomFitNextImage = false;
-            LayoutActionBar actionBar = mEditorDelegate.getGraphicalEditor()
-                    .getLayoutActionBar();
+            LayoutActionBar actionBar = getGraphicalEditor().getLayoutActionBar();
             if (actionBar.isZoomingAllowed()) {
                 setFitScale(true, true /*allowZoomIn*/);
             }
@@ -789,7 +807,7 @@ public class LayoutCanvas extends Canvas {
         return mHScale.getScale();
     }
 
-    /* package */ void setScale(double scale, boolean redraw) {
+    void setScale(double scale, boolean redraw) {
         if (scale <= 0.0) {
             scale = 1.0;
         }
@@ -896,7 +914,7 @@ public class LayoutCanvas extends Canvas {
      * @param canvasY Y in the canvas coordinates
      * @return A new {@link Point} in control client coordinates (not display coordinates)
      */
-    /* package */ Point layoutToControlPoint(int canvasX, int canvasY) {
+    Point layoutToControlPoint(int canvasX, int canvasY) {
         int x = mHScale.translate(canvasX);
         int y = mVScale.translate(canvasY);
         return new Point(x, y);
@@ -911,7 +929,7 @@ public class LayoutCanvas extends Canvas {
      * <p/>
      * Returns null if there's no action for the given id.
      */
-    /* package */ IAction getAction(String actionId) {
+    IAction getAction(String actionId) {
         String prefix = PREFIX_CANVAS_ACTION;
         if (mMenuManager == null ||
                 actionId == null ||
@@ -997,7 +1015,7 @@ public class LayoutCanvas extends Canvas {
      * @param show When true, any invisible parent nodes are padded and highlighted
      *            ("exploded"), and when false any formerly exploded nodes are hidden.
      */
-    /* package */ void showInvisibleViews(boolean show) {
+    void showInvisibleViews(boolean show) {
         if (mShowInvisible == show) {
             return;
         }
@@ -1058,14 +1076,14 @@ public class LayoutCanvas extends Canvas {
     /**
      * Clears the hover.
      */
-    /* package */ void clearHover() {
+    void clearHover() {
         mHoverOverlay.clearHover();
     }
 
     /**
      * Hover on top of a known child.
      */
-    /* package */ void hover(MouseEvent e) {
+    void hover(MouseEvent e) {
         // Check if a button is pressed; no hovers during drags
         if ((e.stateMask & SWT.BUTTON_MASK) != 0) {
             clearHover();
@@ -1117,7 +1135,7 @@ public class LayoutCanvas extends Canvas {
      * @param url The layout attribute url of the form @layout/foo
      */
     private void showInclude(String url) {
-        GraphicalEditorPart graphicalEditor = mEditorDelegate.getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = getGraphicalEditor();
         IPath filePath = graphicalEditor.findResourceFile(url);
         if (filePath == null) {
             // Should not be possible - if the URL had been bad, then we wouldn't
@@ -1217,7 +1235,7 @@ public class LayoutCanvas extends Canvas {
      * @return the layout resource name of this layout
      */
     public String getLayoutResourceName() {
-        GraphicalEditorPart graphicalEditor = mEditorDelegate.getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = getGraphicalEditor();
         return graphicalEditor.getLayoutResourceName();
     }
 
@@ -1228,7 +1246,7 @@ public class LayoutCanvas extends Canvas {
      */
     /*
     public String getMe() {
-        GraphicalEditorPart graphicalEditor = mEditorDelegate.getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = getGraphicalEditor();
         IFile editedFile = graphicalEditor.getEditedFile();
         return editedFile.getProjectRelativePath().toOSString();
     }
@@ -1355,11 +1373,11 @@ public class LayoutCanvas extends Canvas {
         copyActionAttributes(mSelectAllAction, ActionFactory.SELECT_ALL);
     }
 
-    /* package */ String getCutLabel() {
+    String getCutLabel() {
         return mCutAction.getText();
     }
 
-    /* package */ String getDeleteLabel() {
+    String getDeleteLabel() {
         // verb "Delete" from the DELETE action's title
         return mDeleteAction.getText();
     }
@@ -1374,7 +1392,7 @@ public class LayoutCanvas extends Canvas {
             hasSelection = false;
         }
 
-        StyledText errorLabel = mEditorDelegate.getGraphicalEditor().getErrorLabel();
+        StyledText errorLabel = getGraphicalEditor().getErrorLabel();
         mCutAction.setEnabled(hasSelection);
         mCopyAction.setEnabled(hasSelection || errorLabel.getSelectionCount() > 0);
         mDeleteAction.setEnabled(hasSelection);
@@ -1517,7 +1535,7 @@ public class LayoutCanvas extends Canvas {
     private void setupStaticMenuActions(IMenuManager manager) {
         manager.removeAll();
 
-        manager.add(new SelectionManager.SelectionMenu(mEditorDelegate.getGraphicalEditor()));
+        manager.add(new SelectionManager.SelectionMenu(getGraphicalEditor()));
         manager.add(new Separator());
         manager.add(mCutAction);
         manager.add(mCopyAction);
@@ -1545,7 +1563,7 @@ public class LayoutCanvas extends Canvas {
     /**
      * Deletes the selection. Equivalent to pressing the Delete key.
      */
-    /* package */ void delete() {
+    void delete() {
         mDeleteAction.run();
     }
 
@@ -1564,7 +1582,7 @@ public class LayoutCanvas extends Canvas {
      *            {@link ViewElementDescriptor} to add as root to the current
      *            empty XML document.
      */
-    /* package */ void createDocumentRoot(String rootFqcn) {
+    void createDocumentRoot(String rootFqcn) {
 
         // Need a valid empty document to create the new root
         final UiDocumentNode uiDoc = mEditorDelegate.getUiRootNode();
@@ -1618,8 +1636,7 @@ public class LayoutCanvas extends Canvas {
      */
     public Margins getInsets(String fqcn) {
         if (ViewMetadataRepository.INSETS_SUPPORTED) {
-            ConfigurationChooser configComposite =
-                    mEditorDelegate.getGraphicalEditor().getConfigurationChooser();
+            ConfigurationChooser configComposite = getGraphicalEditor().getConfigurationChooser();
             String theme = configComposite.getThemeName();
             Density density = configComposite.getConfiguration().getDensity();
             return ViewMetadataRepository.getInsets(fqcn, density, theme);
@@ -1676,7 +1693,8 @@ public class LayoutCanvas extends Canvas {
 
     /** Ensures that the configuration previews are up to date for this canvas */
     public void syncPreviewMode() {
-        if (mImageOverlay != null && mImageOverlay.getImage() != null) {
+        if (mImageOverlay != null && mImageOverlay.getImage() != null &&
+            getGraphicalEditor().getConfigurationChooser().getResources() != null) {
             if (mPreviewManager.recomputePreviews(false)) {
                 // Zoom when syncing modes
                 mZoomFitNextImage = true;

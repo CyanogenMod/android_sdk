@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceType;
@@ -403,6 +404,7 @@ public class AddTranslationDialog extends Dialog implements ControlListener, Sel
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
             IFolder folder = root.getFolder(parent.getFullPath());
             manager.getResourceFolder(folder);
+            RenderPreviewManager.bumpRevision();
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
         }

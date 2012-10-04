@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
@@ -275,6 +276,15 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             }
             file.create(stream, true /*force*/, null /*progress*/);
             IRegion region = caretOffset != -1 ? new Region(caretOffset, 0) : null;
+
+            // If you introduced a new locale, or new screen variations etc, ensure that
+            // the list of render previews is updated if necessary
+            if (file.getParent().getName().indexOf('-') != -1
+                    && (folderType == ResourceFolderType.LAYOUT
+                        || folderType == ResourceFolderType.VALUES)) {
+                RenderPreviewManager.bumpRevision();
+            }
+
             return Pair.of(file, region);
         } catch (UnsupportedEncodingException e) {
             error = e.getMessage();

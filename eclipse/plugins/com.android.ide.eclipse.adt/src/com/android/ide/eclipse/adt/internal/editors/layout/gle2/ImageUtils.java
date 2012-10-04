@@ -642,6 +642,7 @@ public class ImageUtils {
             sShadow2Right       = readImage("shadow2-r.png");  //$NON-NLS-1$
             sShadow2TopRight    = readImage("shadow2-tr.png"); //$NON-NLS-1$
             assert sShadow2BottomLeft != null;
+            assert sShadow2TopRight != null;
             assert sShadow2BottomRight.getWidth() == SMALL_SHADOW_SIZE;
             assert sShadow2BottomRight.getHeight() == SMALL_SHADOW_SIZE;
         }

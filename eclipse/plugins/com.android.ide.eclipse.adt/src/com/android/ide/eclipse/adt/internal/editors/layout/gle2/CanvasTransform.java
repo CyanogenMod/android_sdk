@@ -134,12 +134,6 @@ public class CanvasTransform {
         resizeScrollbar();
     }
 
-    public void setClientSize(int clientSize) {
-        mClientSize = clientSize;
-        mScrollbar.setPageIncrement(clientSize);
-        resizeScrollbar();
-    }
-
     private void resizeScrollbar() {
         // scaled image size
         int sx = (int) (mScale * mFullSize);
