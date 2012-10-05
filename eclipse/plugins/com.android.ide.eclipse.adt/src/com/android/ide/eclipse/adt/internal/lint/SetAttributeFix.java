@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ALLOW_BACKUP;
 import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
@@ -38,6 +39,7 @@ import com.android.tools.lint.checks.TranslationDetector;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IEditorPart;
+import org.w3c.dom.Element;
 
 /** Shared fix class for various builtin attributes */
 final class SetAttributeFix extends SetPropertyFix {
@@ -126,11 +128,13 @@ final class SetAttributeFix extends SetPropertyFix {
     }
 
     @Override
-    protected String getProposal() {
+    protected String getProposal(Element element) {
         if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
             return VALUE_FALSE;
         } else if (mId.equals(TranslationDetector.MISSING.getId())) {
             return VALUE_FALSE;
+        } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
+            return element.getAttributeNS(ANDROID_URI, ATTR_INPUT_TYPE);
         } else if (mId.equals(MissingIdDetector.ISSUE.getId())) {
             IEditorPart editor = AdtUtils.getActiveEditor();
             if (editor instanceof AndroidXmlEditor) {
@@ -142,6 +146,6 @@ final class SetAttributeFix extends SetPropertyFix {
             }
         }
 
-        return super.getProposal();
+        return super.getProposal(element);
     }
 }

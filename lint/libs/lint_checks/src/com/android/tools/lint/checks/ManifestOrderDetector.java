@@ -51,7 +51,6 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -150,7 +149,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             6,
             Severity.FATAL,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            Scope.MANIFEST_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/manifest/manifest-intro.html"); //$NON-NLS-1$
 
     /** Missing a {@code <uses-sdk>} element */
@@ -167,7 +166,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             5,
             Severity.ERROR,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST));
+            Scope.MANIFEST_SCOPE);
 
     /** Not explicitly defining allowBackup */
     public static final Issue ALLOW_BACKUP = Issue.create(
@@ -200,7 +199,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             3,
             Severity.WARNING,
             ManifestOrderDetector.class,
-            EnumSet.of(Scope.MANIFEST)).setMoreInfo(
+            Scope.MANIFEST_SCOPE).setMoreInfo(
                     "http://developer.android.com/reference/android/R.attr.html#allowBackup");
 
     /** Constructs a new {@link ManifestOrderDetector} check */

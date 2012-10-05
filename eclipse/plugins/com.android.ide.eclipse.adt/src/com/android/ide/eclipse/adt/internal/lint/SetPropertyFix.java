@@ -51,7 +51,7 @@ abstract class SetPropertyFix extends DocumentFix {
     /** Whether it's in the android: namespace */
     protected abstract boolean isAndroidAttribute();
 
-    protected String getProposal() {
+    protected String getProposal(Element element) {
         return invokeCodeCompletion() ? "" : "TODO"; //$NON-NLS-1$
     }
 
@@ -71,7 +71,7 @@ abstract class SetPropertyFix extends DocumentFix {
 
         if (node instanceof Element) {
             Element element = (Element) node;
-            String proposal = getProposal();
+            String proposal = getProposal(element);
             String localAttribute = getAttribute();
             String prefix = null;
             if (isAndroidAttribute()) {
