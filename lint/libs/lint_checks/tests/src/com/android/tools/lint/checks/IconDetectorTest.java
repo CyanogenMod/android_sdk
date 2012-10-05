@@ -39,11 +39,11 @@ public class IconDetectorTest extends AbstractCheckTest {
         ALL.add(IconDetector.GIF_USAGE);
         ALL.add(IconDetector.ICON_DENSITIES);
         ALL.add(IconDetector.ICON_DIP_SIZE);
-        ALL.add(IconDetector.ICON_EXPECTED_SIZE);
         ALL.add(IconDetector.ICON_EXTENSION);
         ALL.add(IconDetector.ICON_LOCATION);
         ALL.add(IconDetector.ICON_MISSING_FOLDER);
         ALL.add(IconDetector.ICON_NODPI);
+        ALL.add(IconDetector.ICON_COLORS);
     }
 
     @Override
@@ -204,5 +204,129 @@ public class IconDetectorTest extends AbstractCheckTest {
                 "res/drawable-mdpi/sample_icon.gif=>res/drawable-mdpi/sample_icon.jpg",
                 "res/drawable-mdpi/sample_icon.gif=>res/drawable-mdpi/sample_icon.jpeg",
                 "res/drawable-mdpi/sample_icon.gif=>res/drawable-mdpi/sample_icon.png"));
+    }
+
+    public void testColors() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "res/drawable-mdpi/ic_menu_my_action.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n" +
+            "res/drawable-mdpi-v11/ic_stat_my_notification.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "res/drawable-mdpi-v9/ic_stat_my_notification2.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "0 errors, 3 warnings\n",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_menu_my_action.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi-v11/ic_stat_my_notification.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi-v9/ic_stat_my_notification2.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png")); // OK
+    }
+
+    public void testNotActionBarIcons() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "No warnings.",
+
+            // No Java code designates the menu as an action bar menu
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "res/menu/menu.xml",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon2.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon3.png", // Not action bar
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png")); // OK
+    }
+
+    public void testActionBarIcons() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "res/drawable-mdpi/icon1.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n" +
+            "res/drawable-mdpi/icon2.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n" +
+            "0 errors, 2 warnings\n",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "res/menu/menu.xml",
+                "src/test/pkg/ActionBarTest.java.txt=>src/test/pkg/ActionBarTest.java",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon2.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon3.png", // Not action bar
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png")); // OK
+    }
+
+    public void testOkActionBarIcons() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "res/menu/menu.xml",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon2.png"));
+    }
+
+    public void testNotificationIcons() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "res/drawable-mdpi/icon1.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "res/drawable-mdpi/icon2.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "res/drawable-mdpi/icon3.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "res/drawable-mdpi/icon4.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "res/drawable-mdpi/icon5.png: Warning: Notification icons must be entirely white [IconColors]\n" +
+            "0 errors, 5 warnings\n",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "src/test/pkg/NotificationTest.java.txt=>src/test/pkg/NotificationTest.java",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon2.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon3.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon4.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon5.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon6.png", // not a notification
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon7.png", // ditto
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png")); // OK
+    }
+
+    public void testOkNotificationIcons() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_COLORS);
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "src/test/pkg/NotificationTest.java.txt=>src/test/pkg/NotificationTest.java",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon2.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon3.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon4.png",
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon5.png"));
+    }
+
+    public void testExpectedSize() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_EXPECTED_SIZE);
+        assertEquals(
+            "res/drawable-mdpi/ic_launcher.png: Warning: Incorrect icon size for drawable-mdpi/ic_launcher.png: expected 48x48, but was 24x24 [IconExpectedSize]\n" +
+            "res/drawable-mdpi/icon1.png: Warning: Incorrect icon size for drawable-mdpi/icon1.png: expected 32x32, but was 48x48 [IconExpectedSize]\n" +
+            "res/drawable-mdpi/icon3.png: Warning: Incorrect icon size for drawable-mdpi/icon3.png: expected 24x24, but was 48x48 [IconExpectedSize]\n" +
+            "0 errors, 3 warnings\n",
+
+            lintProject(
+                "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                "src/test/pkg/NotificationTest.java.txt=>src/test/pkg/NotificationTest.java",
+                "res/menu/menu.xml",
+                "src/test/pkg/ActionBarTest.java.txt=>src/test/pkg/ActionBarTest.java",
+
+                // 3 wrong-sized icons:
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon1.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/icon3.png",
+                "res/drawable-mdpi/stat_notify_alarm.png=>res/drawable-mdpi/ic_launcher.png",
+
+                // OK sizes
+                "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon2.png",
+                "res/drawable-mdpi/stat_notify_alarm.png=>res/drawable-mdpi/icon4.png",
+                "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher2.png"
+            ));
     }
 }

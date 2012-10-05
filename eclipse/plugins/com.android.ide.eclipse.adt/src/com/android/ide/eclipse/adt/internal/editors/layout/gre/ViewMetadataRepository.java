@@ -37,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.Density;
 import com.android.utils.Pair;
+import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 
 import org.w3c.dom.Document;
@@ -539,13 +540,12 @@ public class ViewMetadataRepository {
             if (mRelatedTo == null || mRelatedTo.length() == 0) {
                 return Collections.emptyList();
             } else {
-                String[] basenames = mRelatedTo.split(","); //$NON-NLS-1$
                 List<String> result = new ArrayList<String>();
                 ViewMetadataRepository repository = ViewMetadataRepository.get();
                 Map<String, ViewData> classToView = repository.getClassToView();
 
                 List<String> fqns = new ArrayList<String>(classToView.keySet());
-                for (String basename : basenames) {
+                for (String basename : Splitter.on(',').split(mRelatedTo)) {
                     boolean found = false;
                     for (String fqcn : fqns) {
                         String suffix = '.' + basename;

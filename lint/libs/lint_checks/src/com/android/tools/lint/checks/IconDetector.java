@@ -31,21 +31,36 @@ import static com.android.SdkConstants.DRAWABLE_LDPI;
 import static com.android.SdkConstants.DRAWABLE_MDPI;
 import static com.android.SdkConstants.DRAWABLE_PREFIX;
 import static com.android.SdkConstants.DRAWABLE_XHDPI;
+import static com.android.SdkConstants.MENU_TYPE;
 import static com.android.SdkConstants.RES_FOLDER;
+import static com.android.SdkConstants.R_CLASS;
+import static com.android.SdkConstants.R_DRAWABLE_PREFIX;
+import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_PROVIDER;
+import static com.android.SdkConstants.TAG_RECEIVER;
+import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 import org.w3c.dom.Element;
 
@@ -54,9 +69,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -65,18 +82,30 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import lombok.ast.AstVisitor;
+import lombok.ast.ConstructorInvocation;
+import lombok.ast.Expression;
+import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.MethodDeclaration;
+import lombok.ast.MethodInvocation;
+import lombok.ast.Node;
+import lombok.ast.Select;
+import lombok.ast.StrictListAccessor;
+import lombok.ast.TypeReference;
+import lombok.ast.TypeReferencePart;
+import lombok.ast.VariableReference;
+
 /**
  * Checks for common icon problems, such as wrong icon sizes, placing icons in the
  * density independent drawable folder, etc.
  */
-public class IconDetector extends Detector implements Detector.XmlScanner {
+public class IconDetector extends ResourceXmlDetector implements Detector.JavaScanner {
 
     private static final boolean INCLUDE_LDPI;
     static {
@@ -94,9 +123,6 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "^drawable-(nodpi|xhdpi|hdpi|mdpi"            //$NON-NLS-1$
                 + (INCLUDE_LDPI ? "|ldpi" : "") + ")$");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-    /** Pattern for version qualifiers */
-    private final static Pattern VERSION_PATTERN = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
-
     private static final String[] REQUIRED_DENSITIES = INCLUDE_LDPI
             ? new String[] { DRAWABLE_LDPI, DRAWABLE_MDPI, DRAWABLE_HDPI, DRAWABLE_XHDPI }
             : new String[] { DRAWABLE_MDPI, DRAWABLE_HDPI, DRAWABLE_XHDPI };
@@ -109,6 +135,12 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             "-xhdpi"  //$NON-NLS-1$
     };
 
+    /** Scope needed to detect the types of icons (which involves scanning .java files,
+     * the manifest, menu files etc to see how icons are used
+     */
+    private static final EnumSet<Scope> ICON_TYPE_SCOPE = EnumSet.of(Scope.ALL_RESOURCE_FILES,
+            Scope.JAVA_FILE, Scope.MANIFEST);
+
     /** Wrong icon size according to published conventions */
     public static final Issue ICON_EXPECTED_SIZE = Issue.create(
             "IconExpectedSize", //$NON-NLS-1$
@@ -120,7 +152,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             5,
             Severity.WARNING,
             IconDetector.class,
-            Scope.ALL_RESOURCES_SCOPE)
+            ICON_TYPE_SCOPE)
             // Still some potential false positives:
             .setEnabledByDefault(false)
             .setMoreInfo(
@@ -266,8 +298,24 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             IconDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
+    /** Wrong filename according to the format */
+    public static final Issue ICON_COLORS = Issue.create(
+            "IconColors", //$NON-NLS-1$
+            "Checks that icons follow the recommended visual style",
 
-    private String mApplicationIcon;
+            "Notification icons and Action Bar icons should only white and shades of gray. " +
+            "See the Android Design Guide for more details. " +
+            "Note that the way Lint decides whether an icon is an action bar icon or " +
+            "a notification icon is based on the filename prefix: `ic_menu_` for " +
+            "action bar icons, `ic_stat_` for notification icons etc. These correspond " +
+            "to the naming conventions documented in " +
+            "http://developer.android.com/guide/practices/ui_guidelines/icon_design.html",
+            Category.ICONS,
+            6,
+            Severity.WARNING,
+            IconDetector.class,
+            ICON_TYPE_SCOPE).setMoreInfo(
+                "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link IconDetector} check */
     public IconDetector() {
@@ -280,7 +328,9 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
 
     @Override
     public void beforeCheckProject(@NonNull Context context) {
-        mApplicationIcon = null;
+        mLauncherIcons = null;
+        mActionBarIcons = null;
+        mNotificationIcons = null;
     }
 
     @Override
@@ -996,6 +1046,27 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             }
         }
 
+        if (context.isEnabled(ICON_COLORS)) {
+            for (File file : files) {
+                String name = file.getName();
+
+                if (isDrawableFile(name)
+                        && !endsWith(name, DOT_XML)
+                        && !endsWith(name, DOT_9PNG)) {
+                    String baseName = getBaseName(name);
+                    boolean isActionBarIcon = isActionBarIcon(context, baseName, file);
+                    if (isActionBarIcon || isNotificationIcon(baseName)) {
+                        Dimension size = checkColor(context, file, isActionBarIcon);
+
+                        // Store dimension for size check if we went to the trouble of reading image
+                        if (size != null && pixelSizes != null) {
+                            pixelSizes.put(file, size);
+                        }
+                    }
+                }
+            }
+        }
+
         // Check icon sizes
         if (context.isEnabled(ICON_EXPECTED_SIZE)) {
             checkExpectedSizes(context, folder, files);
@@ -1011,7 +1082,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                         || endsWith(fileName, DOT_JPEG)) {
                     // Only scan .png files (except 9-patch png's) and jpg files for
                     // dip sizes. Duplicate checks can also be performed on ninepatch files.
-                    if (pixelSizes != null && !endsWith(fileName, DOT_9PNG)) {
+                    if (pixelSizes != null && !endsWith(fileName, DOT_9PNG)
+                            && !pixelSizes.containsKey(file)) { // already read by checkColor?
                         Dimension size = getSize(file);
                         pixelSizes.put(file, size);
                     }
@@ -1021,6 +1093,122 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 }
             }
         }
+    }
+
+    /**
+     * Check whether the icons in the file are okay. Also return the image size
+     * if known (for use by other checks)
+     */
+    private Dimension checkColor(Context context, File file, boolean isActionBarIcon) {
+        int folderVersion = Context.getFolderVersion(file);
+        if (isActionBarIcon) {
+            if (folderVersion != -1 && folderVersion < 11
+                    || !isAndroid30(context, folderVersion)) {
+                return null;
+            }
+        } else {
+            if (folderVersion != -1 && folderVersion < 9
+                    || !isAndroid23(context, folderVersion)
+                        && !isAndroid30(context, folderVersion)) {
+                return null;
+            }
+        }
+
+        // TODO: This only checks icons that are known to be using the Holo style.
+        // However, if the user has minSdk < 11 as well as targetSdk > 11, we should
+        // also check that they actually include a -v11 or -v14 folder with proper
+        // icons, since the below won't flag the older icons.
+        try {
+            BufferedImage image = ImageIO.read(file);
+            if (image != null) {
+                if (isActionBarIcon) {
+                    checkPixels:
+                    for (int y = 0, height = image.getHeight(); y < height; y++) {
+                        for (int x = 0, width = image.getWidth(); x < width; x++) {
+                            int rgb = image.getRGB(x, y);
+                            if ((rgb & 0xFF000000) != 0) { // else: transparent
+                                int r = (rgb & 0xFF0000) >>> 16;
+                                int g = (rgb & 0x00FF00) >>> 8;
+                                int b = (rgb & 0x0000FF);
+                                if (r != g || r != b) {
+                                    String message = "Action Bar icons should use a single gray "
+                                        + "color (#333333 for light themes (with 60%/30% "
+                                        + "opacity for enabled/disabled), and #FFFFFF with "
+                                        + "opacity 80%/30% for dark themes";
+                                    context.report(ICON_COLORS, Location.create(file),
+                                            message, null);
+                                    break checkPixels;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (folderVersion >= 11 || isAndroid30(context, folderVersion)) {
+                        // Notification icons. Should be white as of API 14
+                        checkPixels:
+                        for (int y = 0, height = image.getHeight(); y < height; y++) {
+                            for (int x = 0, width = image.getWidth(); x < width; x++) {
+                                int rgb = image.getRGB(x, y);
+                                if ((rgb & 0xFF000000) != 0
+                                        && rgb != 0xFFFFFFFF) {
+                                    int r = (rgb & 0xFF0000) >>> 16;
+                                    int g = (rgb & 0x00FF00) >>> 8;
+                                    int b = (rgb & 0x0000FF);
+                                    if (r == g && r == b) {
+                                        // If the pixel is not white, it might be because of
+                                        // anti-aliasing. In that case, at least one neighbor
+                                        // should be of a different color
+                                        if (x < width - 1 && rgb != image.getRGB(x + 1, y)) {
+                                            continue;
+                                        }
+                                        if (x > 0 && rgb != image.getRGB(x - 1, y)) {
+                                            continue;
+                                        }
+                                        if (y < height - 1 && rgb != image.getRGB(x, y + 1)) {
+                                            continue;
+                                        }
+                                        if (y > 0 && rgb != image.getRGB(x, y - 1)) {
+                                            continue;
+                                        }
+                                    }
+
+                                    String message = "Notification icons must be entirely white";
+                                    context.report(ICON_COLORS, Location.create(file),
+                                            message, null);
+                                    break checkPixels;
+                                }
+                            }
+                        }
+                    } else {
+                        // As of API 9, should be gray.
+                        checkPixels:
+                            for (int y = 0, height = image.getHeight(); y < height; y++) {
+                                for (int x = 0, width = image.getWidth(); x < width; x++) {
+                                    int rgb = image.getRGB(x, y);
+                                    if ((rgb & 0xFF000000) != 0) { // else: transparent
+                                        int r = (rgb & 0xFF0000) >>> 16;
+                                        int g = (rgb & 0x00FF00) >>> 8;
+                                        int b = (rgb & 0x0000FF);
+                                        if (r != g || r != b) {
+                                            String message = "Notification icons should not use "
+                                                    + "colors";
+                                            context.report(ICON_COLORS, Location.create(file),
+                                                    message, null);
+                                            break checkPixels;
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+
+                return new Dimension(image.getWidth(), image.getHeight());
+            }
+        } catch (IOException e) {
+            // Pass: ignore files we can't read
+        }
+
+        return null;
     }
 
     private void checkExtension(Context context, File file) {
@@ -1069,19 +1257,23 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    private void checkExpectedSizes(Context context, File folder, File[] files) {
-        String folderName = folder.getName();
-
-        int folderVersion = -1;
-        String[] qualifiers = folderName.split("-"); //$NON-NLS-1$
-        for (String qualifier : qualifiers) {
-            if (qualifier.startsWith("v")) {
-                Matcher matcher = VERSION_PATTERN.matcher(qualifier);
-                if (matcher.matches()) {
-                    folderVersion = Integer.parseInt(matcher.group(1));
-                }
-            }
+    private static String getBaseName(String name) {
+        String baseName = name;
+        int index = baseName.indexOf('.');
+        if (index != -1) {
+            baseName = baseName.substring(0, index);
         }
+
+        return baseName;
+    }
+
+    private void checkExpectedSizes(Context context, File folder, File[] files) {
+        if (files == null || files.length == 0) {
+            return;
+        }
+
+        String folderName = folder.getName();
+        int folderVersion = Context.getFolderVersion(files[0]);
 
         for (File file : files) {
             String name = file.getName();
@@ -1091,17 +1283,12 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             //  http://developer.android.com/guide/practices/ui_guidelines/icon_design.html#design-tips
             // See if we can figure out other types of icons from usage too.
 
-            String baseName = name;
-            int index = baseName.indexOf('.');
-            if (index != -1) {
-                baseName = baseName.substring(0, index);
-            }
+            String baseName = getBaseName(name);
 
-            if (baseName.equals(mApplicationIcon) || name.startsWith("ic_launcher")) { //$NON-NLS-1$
+            if (isLauncherIcon(baseName)) {
                 // Launcher icons
                 checkSize(context, folderName, file, 48, 48, true /*exact*/);
-            } else if (name.startsWith("ic_action_")) { //$NON-NLS-1$
-                // Action Bar
+            } else if (isActionBarIcon(baseName)) {
                 checkSize(context, folderName, file, 32, 32, true /*exact*/);
             } else if (name.startsWith("ic_dialog_")) { //$NON-NLS-1$
                 // Dialog
@@ -1109,9 +1296,8 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             } else if (name.startsWith("ic_tab_")) { //$NON-NLS-1$
                 // Tab icons
                 checkSize(context, folderName, file, 32, 32, true /*exact*/);
-            } else if (name.startsWith("ic_stat_")) { //$NON-NLS-1$
+            } else if (isNotificationIcon(baseName)) {
                 // Notification icons
-
                 if (isAndroid30(context, folderVersion)) {
                     checkSize(context, folderName, file, 24, 24, true /*exact*/);
                 } else if (isAndroid23(context, folderVersion)) {
@@ -1278,7 +1464,62 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    // XML detector: Skim manifest
+
+    private Set<String> mActionBarIcons;
+    private Set<String> mNotificationIcons;
+    private Set<String> mLauncherIcons;
+    private Multimap<String, String> mMenuToIcons;
+
+    private boolean isLauncherIcon(String name) {
+        assert name.indexOf('.') == -1; // Should supply base name
+
+        // Naming convention
+        if (name.startsWith("ic_launcher")) { //$NON-NLS-1$
+            return true;
+        }
+        return mLauncherIcons != null && mLauncherIcons.contains(name);
+    }
+
+    private boolean isNotificationIcon(String name) {
+        assert name.indexOf('.') == -1; // Should supply base name
+
+        // Naming convention
+        if (name.startsWith("ic_stat_")) { //$NON-NLS-1$
+            return true;
+        }
+
+        return mNotificationIcons != null && mNotificationIcons.contains(name);
+    }
+
+    private boolean isActionBarIcon(String name) {
+        assert name.indexOf('.') == -1; // Should supply base name
+
+        // Naming convention
+        if (name.startsWith("ic_action_")) { //$NON-NLS-1$
+            return true;
+        }
+
+        // Naming convention
+
+        return mActionBarIcons != null && mActionBarIcons.contains(name);
+    }
+
+    private boolean isActionBarIcon(Context context, String name, File file) {
+        if (isActionBarIcon(name)) {
+            return true;
+        }
+
+        // As of Android 3.0 ic_menu_ are action icons
+        if (file != null && name.startsWith("ic_menu_") //$NON-NLS-1$
+                && isAndroid30(context, Context.getFolderVersion(file))) {
+            // Naming convention
+            return true;
+        }
+
+        return false;
+    }
+
+    // XML detector: Skim manifest and menu files
 
     @Override
     public boolean appliesTo(@NonNull Context context, @NonNull File file) {
@@ -1286,16 +1527,196 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     }
 
     @Override
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        return folderType == ResourceFolderType.MENU;
+    }
+
+    @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(TAG_APPLICATION);
+        return Arrays.asList(
+                // Manifest
+                TAG_APPLICATION,
+                TAG_ACTIVITY,
+                TAG_SERVICE,
+                TAG_PROVIDER,
+                TAG_RECEIVER,
+
+                // Menu
+                TAG_ITEM
+        );
     }
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        assert element.getTagName().equals(TAG_APPLICATION);
-        mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
-        if (mApplicationIcon.startsWith(DRAWABLE_PREFIX)) {
-            mApplicationIcon = mApplicationIcon.substring(DRAWABLE_PREFIX.length());
+        String icon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
+        if (icon != null && icon.startsWith(DRAWABLE_PREFIX)) {
+            icon = icon.substring(DRAWABLE_PREFIX.length());
+
+            String tagName = element.getTagName();
+            if (tagName.equals(TAG_ITEM)) {
+                if (mMenuToIcons == null) {
+                    mMenuToIcons = ArrayListMultimap.create();
+                }
+                String menu = getBaseName(context.file.getName());
+                mMenuToIcons.put(menu, icon);
+            } else {
+                // Manifest tags: launcher icons
+                if (mLauncherIcons == null) {
+                    mLauncherIcons = Sets.newHashSet();
+                }
+                mLauncherIcons.add(icon);
+            }
+        }
+    }
+
+
+    // ---- Implements JavaScanner ----
+
+    private static final String NOTIFICATION_CLASS = "Notification";              //$NON-NLS-1$
+    private static final String NOTIFICATION_COMPAT_CLASS = "NotificationCompat"; //$NON-NLS-1$
+    private static final String BUILDER_CLASS = "Builder";                        //$NON-NLS-1$
+    private static final String SET_SMALL_ICON = "setSmallIcon";                  //$NON-NLS-1$
+    private static final String ON_CREATE_OPTIONS_MENU = "onCreateOptionsMenu";   //$NON-NLS-1$
+
+    @Override
+    @Nullable
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
+        return new NotificationFinder();
+    }
+
+    @Override
+    @Nullable
+    public List<Class<? extends Node>> getApplicableNodeTypes() {
+        List<Class<? extends Node>> types = new ArrayList<Class<? extends Node>>(3);
+        types.add(MethodDeclaration.class);
+        types.add(ConstructorInvocation.class);
+        return types;
+    }
+
+    private final class NotificationFinder extends ForwardingAstVisitor {
+        @Override
+        public boolean visitMethodDeclaration(MethodDeclaration node) {
+            if (ON_CREATE_OPTIONS_MENU.equals(node.astMethodName().astValue())) {
+                // Gather any R.menu references found in this method
+                node.accept(new MenuFinder());
+            }
+
+            return super.visitMethodDeclaration(node);
+        }
+
+        @Override
+        public boolean visitConstructorInvocation(ConstructorInvocation node) {
+            TypeReference reference = node.astTypeReference();
+            StrictListAccessor<TypeReferencePart, TypeReference> parts = reference.astParts();
+            String typeName = parts.last().astIdentifier().astValue();
+            if (NOTIFICATION_CLASS.equals(typeName)) {
+                StrictListAccessor<Expression, ConstructorInvocation> args = node.astArguments();
+                if (args.size() == 3) {
+                    if (args.first() instanceof Select && handleSelect((Select) args.first())) {
+                        return super.visitConstructorInvocation(node);
+                    }
+
+                    Node method = getParentMethod(node);
+                    if (method != null) {
+                        // Must track local types
+                        String name = StringFormatDetector.getResourceForFirstArg(method, node);
+                        if (name != null) {
+                            if (mNotificationIcons == null) {
+                                mNotificationIcons = Sets.newHashSet();
+                            }
+                            mNotificationIcons.add(name);
+                        }
+                    }
+                }
+            } else if (BUILDER_CLASS.equals(typeName)) {
+                boolean isBuilder = false;
+                if (parts.size() == 1) {
+                    isBuilder = true;
+                } else if (parts.size() == 2) {
+                    String clz = parts.first().astIdentifier().astValue();
+                    if (NOTIFICATION_CLASS.equals(clz) || NOTIFICATION_COMPAT_CLASS.equals(clz)) {
+                        isBuilder = true;
+                    }
+                }
+                if (isBuilder) {
+                    Node method = getParentMethod(node);
+                    if (method != null) {
+                        SetIconFinder finder = new SetIconFinder();
+                        method.accept(finder);
+                    }
+                }
+            }
+
+            return super.visitConstructorInvocation(node);
+        }
+    }
+
+    @Nullable
+    private Node getParentMethod(@NonNull Node node) {
+        Node method = node;
+        while (method != null && !(method.getParent() instanceof MethodDeclaration)) {
+            method = method.getParent();
+        }
+
+        return method;
+    }
+
+    private boolean handleSelect(Select select) {
+        if (select.toString().startsWith(R_DRAWABLE_PREFIX)) {
+            String name = select.astIdentifier().astValue();
+            if (mNotificationIcons == null) {
+                mNotificationIcons = Sets.newHashSet();
+            }
+            mNotificationIcons.add(name);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private final class SetIconFinder extends ForwardingAstVisitor {
+        @Override
+        public boolean visitMethodInvocation(MethodInvocation node) {
+            if (SET_SMALL_ICON.equals(node.astName().astValue())) {
+                StrictListAccessor<Expression,MethodInvocation> arguments = node.astArguments();
+                if (arguments.size() == 1 && arguments.first() instanceof Select) {
+                    handleSelect((Select) arguments.first());
+                }
+            }
+            return super.visitMethodInvocation(node);
+        }
+    }
+
+    private final class MenuFinder extends ForwardingAstVisitor {
+        @Override
+        public boolean visitSelect(Select node) {
+            // R.type.name
+            if (node.astOperand() instanceof Select) {
+                Select select = (Select) node.astOperand();
+                if (select.astOperand() instanceof VariableReference) {
+                    VariableReference reference = (VariableReference) select.astOperand();
+                    if (reference.astIdentifier().astValue().equals(R_CLASS)) {
+                        String type = select.astIdentifier().astValue();
+
+                        if (type.equals(MENU_TYPE)) {
+                            String name = node.astIdentifier().astValue();
+                            // Reclassify icons in the given menu as action bar icons
+                            if (mMenuToIcons != null) {
+                                Collection<String> icons = mMenuToIcons.get(name);
+                                if (icons != null) {
+                                    if (mActionBarIcons == null) {
+                                        mActionBarIcons = Sets.newHashSet();
+                                    }
+                                    mActionBarIcons.addAll(icons);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return super.visitSelect(node);
         }
     }
 }

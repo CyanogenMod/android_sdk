@@ -65,6 +65,7 @@ import java.util.regex.Pattern;
 import lombok.ast.AstVisitor;
 import lombok.ast.CharLiteral;
 import lombok.ast.ConstructorDeclaration;
+import lombok.ast.ConstructorInvocation;
 import lombok.ast.Expression;
 import lombok.ast.FloatingPointLiteral;
 import lombok.ast.ForwardingAstVisitor;
@@ -1009,6 +1010,16 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
     }
 
+    /** Returns the resource name corresponding to the first argument in the given call */
+    static String getResourceForFirstArg(lombok.ast.Node method, lombok.ast.Node call) {
+        assert call instanceof MethodInvocation || call instanceof ConstructorInvocation;
+        StringTracker tracker = new StringTracker(method, call);
+        method.accept(tracker);
+        String name = tracker.getFormatStringName();
+
+        return name;
+    }
+
     /**
      * Given a variable reference, finds the original R.string value corresponding to it.
      * For example:
@@ -1038,7 +1049,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         /** Map from variable name to corresponding type */
         private final Map<String, Class<?>> mTypes = new HashMap<String, Class<?>>();
         /** The AST node for the String.format we're interested in */
-        private MethodInvocation mTargetNode;
+        private lombok.ast.Node mTargetNode;
         private boolean mDone;
         /**
          * Result: the name of the string resource being passed to the
@@ -1046,7 +1057,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
          */
         private String mName;
 
-        public StringTracker(lombok.ast.Node top, MethodInvocation targetNode) {
+        public StringTracker(lombok.ast.Node top, lombok.ast.Node targetNode) {
             mTop = top;
             mTargetNode = targetNode;
         }
@@ -1076,7 +1087,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
 
         public Expression getArgument(int argument) {
-            StrictListAccessor<Expression, MethodInvocation> args = mTargetNode.astArguments();
+            if (!(mTargetNode instanceof MethodInvocation)) {
+                return null;
+            }
+            MethodInvocation call = (MethodInvocation) mTargetNode;
+            StrictListAccessor<Expression, MethodInvocation> args = call.astArguments();
             if (argument >= args.size()) {
                 return null;
             }
@@ -1149,6 +1164,27 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             // Is this a getString() call? On a resource object? If so,
             // promote the resource argument up to the left hand side
             return super.visitMethodInvocation(node);
+        }
+
+        @Override
+        public boolean visitConstructorInvocation(ConstructorInvocation node) {
+            if (node == mTargetNode) {
+                StrictListAccessor<Expression, ConstructorInvocation> args = node.astArguments();
+                if (args.size() > 0) {
+                    Expression first = args.first();
+                    if (first instanceof VariableReference) {
+                          VariableReference reference = (VariableReference) first;
+                          String variable = reference.astIdentifier().astValue();
+                          mName = mMap.get(variable);
+                          mDone = true;
+                          return true;
+                    }
+                }
+            }
+
+            // Is this a getString() call? On a resource object? If so,
+            // promote the resource argument up to the left hand side
+            return super.visitConstructorInvocation(node);
         }
 
         @Override
