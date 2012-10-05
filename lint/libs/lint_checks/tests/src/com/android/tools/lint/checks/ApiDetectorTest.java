@@ -626,4 +626,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testManifestReferences() throws Exception {
+        assertEquals(
+            "AndroidManifest.xml:15: Error: @android:style/Theme.Holo requires API level 11 (current min is 4) [NewApi]\n" +
+            "            android:theme=\"@android:style/Theme.Holo\" >\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/holomanifest.xml=>AndroidManifest.xml"
+                ));
+    }
+
 }
