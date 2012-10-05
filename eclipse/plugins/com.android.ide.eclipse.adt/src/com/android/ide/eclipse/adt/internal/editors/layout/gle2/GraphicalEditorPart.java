@@ -1441,7 +1441,7 @@ public class GraphicalEditorPart extends EditorPart
                 }
 
             } else if (displayError) { // target == null
-                displayError("The project target is not set.");
+                displayError("The project target is not set. Right click project, choose Properties | Android.");
             }
         } else if (displayError) { // currentSdk == null
             displayError("Eclipse is loading the SDK.\n%1$s will refresh automatically once the process is finished.",

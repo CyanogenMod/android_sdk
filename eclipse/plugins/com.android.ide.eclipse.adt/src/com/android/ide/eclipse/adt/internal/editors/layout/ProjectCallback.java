@@ -23,6 +23,7 @@ import static com.android.SdkConstants.FQCN_GRID_VIEW;
 import static com.android.SdkConstants.FQCN_SPINNER;
 import static com.android.SdkConstants.GRID_VIEW;
 import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.SPINNER;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 
@@ -61,6 +62,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -569,6 +571,13 @@ public final class ProjectCallback extends LegacyCallback {
             if (binding != null) {
                 return binding;
             }
+        } else if (adapterCookie instanceof Map<?,?>) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> map = (Map<String, String>) adapterCookie;
+            AdapterBinding binding = LayoutMetadata.getNodeBinding(viewObject, map);
+            if (binding != null) {
+                return binding;
+            }
         }
 
         if (viewObject == null) {
@@ -598,7 +607,7 @@ public final class ProjectCallback extends LegacyCallback {
         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_EXPANDABLE_LIST_ITEM,
                     true /* isFramework */, 1));
-        } else if (listFqcn.equals(FQCN_SPINNER)) {
+        } else if (listFqcn.equals(SPINNER)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_SPINNER_ITEM,
                     true /* isFramework */, 1));
         } else {
