@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.core;
+package com.android.ide.eclipse.adt.internal.refactorings.core;
 
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.core;
+package com.android.ide.eclipse.adt.internal.refactorings.core;
 
 import com.android.SdkConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChange;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChangeDescription;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutFileChanges;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidTypeMoveChange;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChange;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChangeDescription;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutFileChanges;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidTypeRenameChange;
 import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.FileBuffers;
@@ -40,16 +40,12 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
-import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
-import org.eclipse.ltk.core.refactoring.participants.MoveParticipant;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
@@ -66,39 +62,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A participant to participate in refactorings that move a type in an Android project.
+ * A participant to participate in refactorings that rename a type in an Android project.
  * The class updates android manifest and the layout file
  * The user can suppress refactoring by disabling the "Update references" checkbox
  * <p>
  * Rename participants are registered via the extension point <code>
- * org.eclipse.ltk.core.refactoring.moveParticipants</code>.
- * Extensions to this extension point must therefore extend <code>org.eclipse.ltk.core.refactoring.participants.MoveParticipant</code>.
+ * org.eclipse.ltk.core.refactoring.renameParticipants</code>.
+ * Extensions to this extension point must therefore extend <code>org.eclipse.ltk.core.refactoring.participants.RenameParticipant</code>.
  * </p>
  */
 @SuppressWarnings("restriction")
-public class AndroidTypeMoveParticipant extends MoveParticipant {
-
-    protected IFile mAndroidManifest;
-
-    protected ITextFileBufferManager mManager;
-
-    protected String mOldName;
-
-    protected String mNewName;
-
-    protected IDocument mDocument;
-
-    protected String mJavaPackage;
-
-    protected Map<String, String> mAndroidElements;
+public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
 
     private Set<AndroidLayoutFileChanges> mFileChanges = new HashSet<AndroidLayoutFileChanges>();
 
-    @Override
-    public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context)
-            throws OperationCanceledException {
-        return new RefactoringStatus();
-    }
+    private String mLayoutNewName;
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException,
@@ -112,13 +90,13 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
         if (mAndroidManifest.exists()) {
             if (mAndroidElements.size() > 0) {
                 getDocument();
-                Change change = new AndroidTypeMoveChange(mAndroidManifest, mManager, mDocument,
+                Change change = new AndroidTypeRenameChange(mAndroidManifest, mManager, mDocument,
                         mAndroidElements, mNewName, mOldName);
                 if (change != null) {
                     result.add(change);
                 }
             }
-
+            // add layoutChange
             for (AndroidLayoutFileChanges fileChange : mFileChanges) {
                 IFile file = fileChange.getFile();
                 ITextFileBufferManager lManager = FileBuffers.getTextFileBufferManager();
@@ -138,32 +116,9 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
 
     }
 
-    /**
-     * @return the document
-     * @throws CoreException
-     */
-    public IDocument getDocument() throws CoreException {
-        if (mDocument == null) {
-            mManager = FileBuffers.getTextFileBufferManager();
-            mManager.connect(mAndroidManifest.getFullPath(), LocationKind.NORMALIZE,
-                    new NullProgressMonitor());
-            ITextFileBuffer buffer = mManager.getTextFileBuffer(mAndroidManifest.getFullPath(),
-                    LocationKind.NORMALIZE);
-            mDocument = buffer.getDocument();
-        }
-        return mDocument;
-    }
-
-    /**
-     * @return the android manifest file
-     */
-    public IFile getAndroidManifest() {
-        return mAndroidManifest;
-    }
-
     @Override
     public String getName() {
-        return "Android Type Move";
+        return "Android Type Rename";
     }
 
     @Override
@@ -189,15 +144,20 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
             if (manifestData == null) {
                 return false;
             }
-            mJavaPackage = manifestData.getPackage();
+            mAppPackage = manifestData.getPackage();
             mOldName = type.getFullyQualifiedName();
-            Object destination = getArguments().getDestination();
-            if (destination instanceof IPackageFragment) {
-                IPackageFragment packageFragment = (IPackageFragment) destination;
-                mNewName = packageFragment.getElementName() + "." + type.getElementName();
+            String packageName = type.getPackageFragment().getElementName();
+            mNewName = getArguments().getNewName();
+            if (packageName != null) {
+                mLayoutNewName = packageName + "." + getArguments().getNewName(); //$NON-NLS-1$
+            } else {
+                mLayoutNewName = getArguments().getNewName();
             }
             if (mOldName == null || mNewName == null) {
                 return false;
+            }
+            if (!RefactoringUtil.isRefactorAppPackage() && mNewName.indexOf(".") == -1) { //$NON-NLS-1$
+                mNewName = packageName + "." + mNewName; //$NON-NLS-1$
             }
             mAndroidElements = addAndroidElements();
             try {
@@ -216,6 +176,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                 }
             } catch (JavaModelException ignore) {
             }
+
             return mAndroidElements.size() > 0 || mFileChanges.size() > 0;
         }
         return false;
@@ -279,7 +240,8 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                 if (model != null) {
                     IDOMModel xmlModel = (IDOMModel) model;
                     IDOMDocument xmlDoc = xmlModel.getDocument();
-                    NodeList nodes = xmlDoc.getElementsByTagName(SdkConstants.VIEW);
+                    NodeList nodes = xmlDoc
+                            .getElementsByTagName(SdkConstants.VIEW);
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Node node = nodes.item(i);
                         NamedNodeMap attributes = node.getAttributes();
@@ -291,7 +253,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                                 String value = attribute.getValue();
                                 if (value != null && value.equals(className)) {
                                     AndroidLayoutChangeDescription layoutChange =
-                                        new AndroidLayoutChangeDescription(className, mNewName,
+                                        new AndroidLayoutChangeDescription(className, mLayoutNewName,
                                             AndroidLayoutChangeDescription.VIEW_TYPE);
                                     changes.add(layoutChange);
                                 }
@@ -301,8 +263,8 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                     nodes = xmlDoc.getElementsByTagName(className);
                     for (int i = 0; i < nodes.getLength(); i++) {
                         AndroidLayoutChangeDescription layoutChange =
-                            new AndroidLayoutChangeDescription(className, mNewName,
-                                    AndroidLayoutChangeDescription.STANDALONE_TYPE);
+                            new AndroidLayoutChangeDescription(className, mLayoutNewName,
+                                AndroidLayoutChangeDescription.STANDALONE_TYPE);
                         changes.add(layoutChange);
                     }
                 }
@@ -330,6 +292,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
      * which have to be renamed
      *
      * @return the android elements
+     *
      */
     private Map<String, String> addAndroidElements() {
         Map<String, String> androidElements = new HashMap<String, String>();
@@ -385,7 +348,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
     }
 
     /**
-     * Adds the element  (activity, receiver, service ...) to the map
+     * (non-Javadoc) Adds the element  (activity, receiver, service ...) to the map
      *
      * @param xmlDoc the document
      * @param androidElements the map
@@ -402,7 +365,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                 if (attribute != null) {
                     String value = attribute.getValue();
                     if (value != null) {
-                        String fullName = AndroidManifest.combinePackageAndClassName(mJavaPackage,
+                        String fullName = AndroidManifest.combinePackageAndClassName(mAppPackage,
                                 value);
                         if (fullName != null && fullName.equals(mOldName)) {
                             androidElements.put(element, value);
@@ -412,5 +375,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
             }
         }
     }
+
+
 
 }

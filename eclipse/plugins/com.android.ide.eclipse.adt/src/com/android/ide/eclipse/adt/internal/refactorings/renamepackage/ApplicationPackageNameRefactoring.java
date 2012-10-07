@@ -409,7 +409,6 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
 
         @Override
-        @SuppressWarnings("unused")
         public boolean visit(IResource resource) throws CoreException {
             if (resource instanceof IFile) {
                 IFile file = (IFile) resource;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.changes;
+package com.android.ide.eclipse.adt.internal.refactorings.changes;
 
 import org.eclipse.core.resources.IFile;
 

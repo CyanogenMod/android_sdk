@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.core;
+package com.android.ide.eclipse.adt.internal.refactorings.core;
 
 import com.android.SdkConstants;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChange;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChangeDescription;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutFileChanges;
-import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidPackageRenameChange;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChange;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChangeDescription;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutFileChanges;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidPackageRenameChange;
 import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.FileBuffers;

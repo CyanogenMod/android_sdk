@@ -1128,7 +1128,7 @@
     </extension>
     <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
         <renameParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeRenameParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidTypeRenameParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeRenameParticipant"
             name="Android Rename Type Participant">
             <enablement>
@@ -1144,7 +1144,7 @@
             </enablement>
         </renameParticipant>
         <renameParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidPackageRenameParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidPackageRenameParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidPackageRenameParticipant"
             name="Android Rename Package Participant">
             <enablement>
@@ -1162,7 +1162,7 @@
     </extension>
     <extension point="org.eclipse.ltk.core.refactoring.moveParticipants">
         <moveParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeMoveParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidTypeMoveParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.androidTypeMoveParticipant"
             name="Android Move Type Participant">
             <enablement>
