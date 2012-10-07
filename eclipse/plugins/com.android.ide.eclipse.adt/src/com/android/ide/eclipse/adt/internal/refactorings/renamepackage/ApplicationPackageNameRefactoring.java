@@ -100,8 +100,8 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                 IMarker.PROBLEM,
                 true,
                 IResource.DEPTH_INFINITE) == IMarker.SEVERITY_ERROR) {
-            return RefactoringStatus
-            .createFatalErrorStatus("Fix the errors in your project, first.");
+            return
+                RefactoringStatus.createFatalErrorStatus("Fix the errors in your project, first.");
         }
 
         return new RefactoringStatus();

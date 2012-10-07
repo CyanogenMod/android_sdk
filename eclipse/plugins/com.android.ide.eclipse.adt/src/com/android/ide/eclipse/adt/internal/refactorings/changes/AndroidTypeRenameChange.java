@@ -49,12 +49,12 @@ public class AndroidTypeRenameChange extends AndroidDocumentChange {
      * @param oldName the old name
      */
     public AndroidTypeRenameChange(IFile androidManifest, ITextFileBufferManager manager,
-            IDocument document, Map<String, String> elements, String newName, String oldName) {
+            IDocument document, Map<String, String> elements, String oldName, String newName) {
         super(document);
         this.mDocument = document;
         this.mElements = elements;
-        this.mNewName = newName;
         this.mOldName = oldName;
+        this.mNewName = newName;
         this.mManager = manager;
         this.mAndroidManifest = androidManifest;
         try {

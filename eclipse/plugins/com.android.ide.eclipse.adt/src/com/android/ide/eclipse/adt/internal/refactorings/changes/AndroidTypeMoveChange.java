@@ -38,8 +38,8 @@ public class AndroidTypeMoveChange extends AndroidTypeRenameChange {
      * @param oldName the old name
      */
     public AndroidTypeMoveChange(IFile androidManifest, ITextFileBufferManager manager,
-            IDocument document, Map<String, String> elements, String newName, String oldName) {
-        super(androidManifest, manager, document, elements, newName, oldName);
+            IDocument document, Map<String, String> elements, String oldName, String newName) {
+        super(androidManifest, manager, document, elements, oldName, newName);
     }
 
 }

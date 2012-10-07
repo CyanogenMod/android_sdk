@@ -230,10 +230,13 @@ public class AndroidDocumentChange extends DocumentChange {
 
         if (attribute instanceof IDOMAttr) {
             IDOMAttr domAttr = (IDOMAttr) attribute;
+            // Get the current "region" (the current attribute, including its quotes.)
             String region = domAttr.getValueRegionText();
             int offset = domAttr.getValueRegionStartOffset();
             if (region != null && region.length() >= 2) {
-                return new ReplaceEdit(offset + 1, region.length() - 2, newValue);
+                // Skip the quotes when replacing.
+                ReplaceEdit edit = new ReplaceEdit(offset + 1, region.length() - 2, newValue);
+                return edit;
             }
         }
         return null;
@@ -275,11 +278,16 @@ public class AndroidDocumentChange extends DocumentChange {
             name = attr.getValue();
         }
         if (name != null) {
-            String newValue;
+            String newValue = newName;
             if (combinePackage) {
-                newValue = AndroidManifest.extractActivityName(newName, getAppPackage());
-            } else {
-                newValue = newName;
+                String pkg = getAppPackage();
+                if (oldName.startsWith(pkg) && newName.startsWith(pkg)) {
+                    // Heuristic: if the old value is a fully qualified name, then
+                    // assume that's how the user wants it in the manifest and
+                    // do *not* shorten the new value. Keep it fully qualified too.
+                } else {
+                    newValue = AndroidManifest.extractActivityName(newName, pkg);
+                }
             }
             if (newValue != null) {
                 TextEdit edit = createTextEdit(attr, newValue);

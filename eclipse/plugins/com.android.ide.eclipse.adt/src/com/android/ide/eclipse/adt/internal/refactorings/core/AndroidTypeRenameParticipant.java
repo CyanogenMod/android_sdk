@@ -64,12 +64,12 @@ import java.util.Set;
 /**
  * A participant to participate in refactorings that rename a type in an Android project.
  * The class updates android manifest and the layout file
- * The user can suppress refactoring by disabling the "Update references" checkbox
+ * The user can suppress refactoring by disabling the "Update references" checkbox.
  * <p>
  * Rename participants are registered via the extension point <code>
  * org.eclipse.ltk.core.refactoring.renameParticipants</code>.
- * Extensions to this extension point must therefore extend <code>org.eclipse.ltk.core.refactoring.participants.RenameParticipant</code>.
- * </p>
+ * Extensions to this extension point must therefore extend
+ * <code>org.eclipse.ltk.core.refactoring.participants.RenameParticipant</code>.
  */
 @SuppressWarnings("restriction")
 public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
@@ -89,9 +89,9 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
         CompositeChange result = new CompositeChange(getName());
         if (mAndroidManifest.exists()) {
             if (mAndroidElements.size() > 0) {
-                getDocument();
+                getManifestDocument();
                 Change change = new AndroidTypeRenameChange(mAndroidManifest, mManager, mDocument,
-                        mAndroidElements, mNewName, mOldName);
+                        mAndroidElements, mOldName, mNewName);
                 if (change != null) {
                     result.add(change);
                 }
@@ -133,9 +133,10 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
 
             if (manifestResource == null || !manifestResource.exists()
                     || !(manifestResource instanceof IFile)) {
-                RefactoringUtil.logInfo("Invalid or missing the "
-                        + SdkConstants.FN_ANDROID_MANIFEST_XML + " in the " + project.getName()
-                        + " project.");
+                RefactoringUtil.logInfo(
+                        String.format("Invalid or missing file %1$s in project %2$s",
+                                SdkConstants.FN_ANDROID_MANIFEST_XML,
+                                project.getName()));
                 return false;
             }
             mAndroidManifest = (IFile) manifestResource;
@@ -240,8 +241,7 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
                 if (model != null) {
                     IDOMModel xmlModel = (IDOMModel) model;
                     IDOMDocument xmlDoc = xmlModel.getDocument();
-                    NodeList nodes = xmlDoc
-                            .getElementsByTagName(SdkConstants.VIEW);
+                    NodeList nodes = xmlDoc.getElementsByTagName(SdkConstants.VIEW);
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Node node = nodes.item(i);
                         NamedNodeMap attributes = node.getAttributes();
@@ -253,7 +253,7 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
                                 String value = attribute.getValue();
                                 if (value != null && value.equals(className)) {
                                     AndroidLayoutChangeDescription layoutChange =
-                                        new AndroidLayoutChangeDescription(className, mLayoutNewName,
+                                       new AndroidLayoutChangeDescription(className, mLayoutNewName,
                                             AndroidLayoutChangeDescription.VIEW_TYPE);
                                     changes.add(layoutChange);
                                 }
@@ -278,7 +278,8 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
         } finally {
             if (lManager != null) {
                 try {
-                    lManager.disconnect(file.getFullPath(), LocationKind.NORMALIZE,
+                    lManager.disconnect(file.getFullPath(),
+                            LocationKind.NORMALIZE,
                             new NullProgressMonitor());
                 } catch (CoreException ignore) {
                 }
@@ -299,12 +300,13 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
 
         IDocument document;
         try {
-            document = getDocument();
+            document = getManifestDocument();
         } catch (CoreException e) {
             RefactoringUtil.log(e);
             if (mManager != null) {
                 try {
-                    mManager.disconnect(mAndroidManifest.getFullPath(), LocationKind.NORMALIZE,
+                    mManager.disconnect(mAndroidManifest.getFullPath(),
+                            LocationKind.NORMALIZE,
                             new NullProgressMonitor());
                 } catch (CoreException e1) {
                     RefactoringUtil.log(e1);
