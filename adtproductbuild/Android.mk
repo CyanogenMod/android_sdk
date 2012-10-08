@@ -8,9 +8,9 @@
 # ADT_IDE_DEST_DIR:  existing directory where to copy the IDE zip files.
 # ADT_IDE_QUALIFIER: either a date or build number to incorporate in the zip names.
 
-# Expose the ADT Eclipse IDE build only for the SDK builds on Linux
+# Expose the ADT Eclipse IDE build only for the SDK when building adt_eclipse_ide
 ifneq (,$(is_sdk_build)$(filter sdk sdk_x86 sdk_mips,$(TARGET_PRODUCT)))
-ifeq  (linux,$(HOST_OS))
+ifneq (,$(filter adt_eclipse_ide,$(MAKECMDGOALS)))
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
