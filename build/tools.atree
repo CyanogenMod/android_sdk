@@ -50,6 +50,7 @@ bin/emulator64-mips                  strip tools/emulator64-mips
 sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
 usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
 usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin
+sdk/emulator/skins/dynamic           tools/lib/emulator/skins/dynamic
 
 # OpenGLES emulation libraries
 lib/libOpenglRender${DLL_EXTENSION}         strip tools/lib/libOpenglRender${DLL_EXTENSION}
