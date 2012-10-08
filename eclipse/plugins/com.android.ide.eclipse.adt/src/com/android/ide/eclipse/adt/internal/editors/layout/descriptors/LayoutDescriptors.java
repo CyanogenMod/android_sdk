@@ -316,6 +316,18 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         // Create the include custom attributes
         ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
 
+        // Find View and inherit all its layout attributes
+        AttributeDescriptor[] viewLayoutAttribs;
+        AttributeDescriptor[] viewAttributes = null;
+        ViewElementDescriptor viewDesc = findDescriptorByClass(SdkConstants.CLASS_VIEW);
+        if (viewDesc != null) {
+            viewAttributes = viewDesc.getAttributes();
+            attributes = new ArrayList<AttributeDescriptor>(viewAttributes.length + 1);
+            viewLayoutAttribs = viewDesc.getLayoutAttributes();
+        } else {
+            viewLayoutAttribs = new AttributeDescriptor[0];
+        }
+
         // Note that the "layout" attribute does NOT have the Android namespace
         DescriptorsUtils.appendAttribute(attributes,
                 null, //elementXmlName
@@ -326,18 +338,11 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 true,  //required
                 null); //overrides
 
-        DescriptorsUtils.appendAttribute(attributes,
-                null, //elementXmlName
-                ANDROID_URI, //nsUri
-                new AttributeInfo(
-                        "id",           //$NON-NLS-1$
-                        Format.REFERENCE_SET ),
-                true,  //required
-                null); //overrides
-
-        // Find View and inherit all its layout attributes
-        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
-                SdkConstants.CLASS_VIEW);
+        if (viewAttributes != null) {
+            for (AttributeDescriptor descriptor : viewAttributes) {
+                attributes.add(descriptor);
+            }
+        }
 
         // Create the include descriptor
         ViewElementDescriptor desc = new ViewElementDescriptor(xmlName,
