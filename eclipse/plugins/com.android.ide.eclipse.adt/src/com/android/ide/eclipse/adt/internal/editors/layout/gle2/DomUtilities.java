@@ -25,6 +25,7 @@ import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentT
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.utils.Pair;
 
@@ -182,6 +183,31 @@ public class DomUtilities {
 
         return null;
     }
+
+    /**
+     * Returns the DOM document for the given editor
+     *
+     * @param editor the XML editor
+     * @return the document, or null if not found or not parsed properly (no
+     *         errors are generated/thrown)
+     */
+    @Nullable
+    public static Document getDocument(@NonNull AndroidXmlEditor editor) {
+        IStructuredModel model = editor.getModelForRead();
+        try {
+            if (model instanceof IDOMModel) {
+                IDOMModel domModel = (IDOMModel) model;
+                return domModel.getDocument();
+            }
+        } finally {
+            if (model != null) {
+                model.releaseFromRead();
+            }
+        }
+
+        return null;
+    }
+
 
     /**
      * Returns the XML DOM node corresponding to the given offset of the given

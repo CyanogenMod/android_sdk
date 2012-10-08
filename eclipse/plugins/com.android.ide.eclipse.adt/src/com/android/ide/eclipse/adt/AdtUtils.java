@@ -18,11 +18,13 @@ package com.android.ide.eclipse.adt;
 
 import static com.android.SdkConstants.TOOLS_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
+import static org.eclipse.ui.IWorkbenchPage.MATCH_INPUT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
@@ -34,6 +36,10 @@ import com.android.utils.XmlUtils;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -47,6 +53,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
@@ -68,10 +75,16 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -80,6 +93,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -346,6 +360,47 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Looks through the open editors and returns the editors that have the
+     * given file as input.
+     *
+     * @param file the file to search for
+     * @param restore whether editors should be restored (if they have an open
+     *            tab, but the editor hasn't been restored since the most recent
+     *            IDE start yet
+     * @return a collection of editors
+     */
+    @NonNull
+    public static Collection<IEditorPart> findEditorsFor(@NonNull IFile file, boolean restore) {
+        FileEditorInput input = new FileEditorInput(file);
+        List<IEditorPart> result = null;
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow[] windows = workbench.getWorkbenchWindows();
+        for (IWorkbenchWindow window : windows) {
+            IWorkbenchPage[] pages = window.getPages();
+            for (IWorkbenchPage page : pages) {
+                IEditorReference[] editors = page.findEditors(input, null,  MATCH_INPUT);
+                if (editors != null) {
+                    for (IEditorReference reference : editors) {
+                        IEditorPart editor = reference.getEditor(restore);
+                        if (editor != null) {
+                            if (result == null) {
+                                result = new ArrayList<IEditorPart>();
+                            }
+                            result.add(editor);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (result == null) {
+            return Collections.emptyList();
+        }
+
+        return result;
     }
 
     /**
@@ -652,6 +707,23 @@ public class AdtUtils {
     }
 
     /**
+     * Returns the XML editor for the given editor part
+     *
+     * @param part the editor part to look up the editor for
+     * @return the editor or null if this part is not an XML editor
+     */
+    @Nullable
+    public static AndroidXmlEditor getXmlEditor(@NonNull IEditorPart part) {
+        if (part instanceof AndroidXmlEditor) {
+            return (AndroidXmlEditor) part;
+        } else if (part instanceof GraphicalEditorPart) {
+            ((GraphicalEditorPart) part).getEditorDelegate().getEditor();
+        }
+
+        return null;
+    }
+
+    /**
      * Sets the given tools: attribute in the given XML editor document, adding
      * the tools name space declaration if necessary, formatting the affected
      * document region, and optionally comma-appending to an existing value and
@@ -803,6 +875,97 @@ public class AdtUtils {
     }
 
     /**
+     * Sets the given tools: attribute in the given XML editor document, adding
+     * the tools name space declaration if necessary, and optionally
+     * comma-appending to an existing value.
+     *
+     * @param file the file associated with the element
+     * @param element the associated element
+     * @param description the description of the attribute (shown in the undo
+     *            event)
+     * @param name the name of the attribute
+     * @param value the attribute value
+     * @param appendValue if true, add this value as a comma separated value to
+     *            the existing attribute value, if any
+     */
+    public static void setToolsAttribute(
+            @NonNull final IFile file,
+            @NonNull final Element element,
+            @NonNull final String description,
+            @NonNull final String name,
+            @Nullable final String value,
+            final boolean appendValue) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        if (modelManager == null) {
+            return;
+        }
+
+        try {
+            IStructuredModel model = null;
+            if (model == null) {
+                model = modelManager.getModelForEdit(file);
+            }
+            if (model != null) {
+                try {
+                    model.aboutToChangeModel();
+                    if (model instanceof IDOMModel) {
+                        IDOMModel domModel = (IDOMModel) model;
+                        Document doc = domModel.getDocument();
+                        if (doc != null && element.getOwnerDocument() == doc) {
+                            String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI,
+                                    null);
+                            if (prefix == null) {
+                                // Add in new prefix...
+                                prefix = XmlUtils.lookupNamespacePrefix(element,
+                                        TOOLS_URI, TOOLS_PREFIX);
+                            }
+
+                            String v = value;
+                            if (appendValue && v != null) {
+                                String prev = element.getAttributeNS(TOOLS_URI, name);
+                                if (prev.length() > 0) {
+                                    v = prev + ',' + value;
+                                }
+                            }
+
+                            // Use the non-namespace form of set attribute since we can't
+                            // reference the namespace until the model has been reloaded
+                            if (v != null) {
+                                element.setAttribute(prefix + ':' + name, v);
+                            } else {
+                                element.removeAttribute(prefix + ':' + name);
+                            }
+                        }
+                    }
+                } finally {
+                    model.changedModel();
+                    String updated = model.getStructuredDocument().get();
+                    model.releaseFromEdit();
+                    model.save(file);
+
+                    // Must also force a save on disk since the above model.save(file) often
+                    // (always?) has no effect.
+                    ITextFileBufferManager manager = FileBuffers.getTextFileBufferManager();
+                    NullProgressMonitor monitor = new NullProgressMonitor();
+                    IPath path = file.getFullPath();
+                    manager.connect(path, LocationKind.IFILE, monitor);
+                    try {
+                        ITextFileBuffer buffer = manager.getTextFileBuffer(path,
+                                LocationKind.IFILE);
+                        IDocument currentDocument = buffer.getDocument();
+                        currentDocument.set(updated);
+                        buffer.commit(monitor, true);
+                    } finally {
+                        manager.disconnect(path, LocationKind.IFILE,  monitor);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            AdtPlugin.log(e, null);
+        }
+    }
+
+    /**
      * Returns the Android version and code name of the given API level
      *
      * @param api the api level
@@ -828,7 +991,7 @@ public class AdtUtils {
             case 15: return "API 15: Android 4.0.3 (IceCreamSandwich)";
             case 16: return "API 16: Android 4.1 (Jelly Bean)";
             // If you add more versions here, also update #getBuildCodes and
-            // LintConstants#HIGHEST_KNOWN_API
+            // SdkConstants#HIGHEST_KNOWN_API
 
             default: {
                 // Consult SDK manager to see if we know any more (later) names,
