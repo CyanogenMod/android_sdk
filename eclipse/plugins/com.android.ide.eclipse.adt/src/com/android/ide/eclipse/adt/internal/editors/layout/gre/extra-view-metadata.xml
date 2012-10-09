@@ -293,11 +293,13 @@
             class="android.widget.ImageView"
             topAttrs="src,scaleType"
             resize="scaled"
+            render="skip"
             relatedTo="ImageButton,VideoView" />
         <view
             class="android.widget.ImageButton"
             topAttrs="src,background,style"
             resize="scaled"
+            render="skip"
             relatedTo="Button,ImageView" />
         <view
             class="android.widget.Gallery"

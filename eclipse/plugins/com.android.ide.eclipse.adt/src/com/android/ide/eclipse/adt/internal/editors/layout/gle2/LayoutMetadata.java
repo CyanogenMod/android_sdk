@@ -16,15 +16,13 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.SdkConstants.ANDROID_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NUM_COLUMNS;
 import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.SdkConstants.GRID_VIEW;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
 
-
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.AdapterBinding;
@@ -49,6 +47,7 @@ import org.xmlpull.v1.XmlPullParser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Design-time metadata lookup for layouts, such as fragment and AdapterView bindings.
@@ -375,10 +374,36 @@ public class LayoutMetadata {
      * has not yet chosen a target layout to use for the given AdapterView.
      *
      * @param viewObject the view object to create an adapter binding for
+     * @param map a map containing tools attribute metadata
+     * @return a binding, or null
+     */
+    @Nullable
+    public static AdapterBinding getNodeBinding(
+            @Nullable Object viewObject,
+            @NonNull Map<String, String> map) {
+        String header = map.get(KEY_LV_HEADER);
+        String footer = map.get(KEY_LV_FOOTER);
+        String layout = map.get(KEY_LV_ITEM);
+        if (layout != null || header != null || footer != null) {
+            int count = 12;
+            return getNodeBinding(viewObject, header, footer, layout, count);
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates an {@link AdapterBinding} for the given view object, or null if the user
+     * has not yet chosen a target layout to use for the given AdapterView.
+     *
+     * @param viewObject the view object to create an adapter binding for
      * @param uiNode the ui node corresponding to the view object
      * @return a binding, or null
      */
-    public static AdapterBinding getNodeBinding(Object viewObject, UiViewElementNode uiNode) {
+    @Nullable
+    public static AdapterBinding getNodeBinding(
+            @Nullable Object viewObject,
+            @NonNull UiViewElementNode uiNode) {
         Node xmlNode = uiNode.getXmlNode();
 
         String header = getProperty(xmlNode, KEY_LV_HEADER);
@@ -400,6 +425,16 @@ public class LayoutMetadata {
                 }
                 count *= multiplier;
             }
+
+            return getNodeBinding(viewObject, header, footer, layout, count);
+        }
+
+        return null;
+    }
+
+    private static AdapterBinding getNodeBinding(Object viewObject,
+            String header, String footer, String layout, int count) {
+        if (layout != null || header != null || footer != null) {
             AdapterBinding binding = new AdapterBinding(count);
 
             if (header != null) {

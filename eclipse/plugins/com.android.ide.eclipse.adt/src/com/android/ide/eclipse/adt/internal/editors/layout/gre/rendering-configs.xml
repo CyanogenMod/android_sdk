@@ -188,18 +188,6 @@
         android:layout_height="wrap_content">
     </TextView>
 
-    <ImageButton
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:id="@+id/android_widget_ImageButton"
-        android:src="@android:drawable/ic_menu_gallery">
-    </ImageButton>
-    <ImageView
-        android:id="@+id/android_widget_ImageView"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:src="@android:drawable/ic_menu_gallery">
-    </ImageView>
     <MultiAutoCompleteTextView
         android:layout_height="wrap_content"
         android:layout_width="200dip"
