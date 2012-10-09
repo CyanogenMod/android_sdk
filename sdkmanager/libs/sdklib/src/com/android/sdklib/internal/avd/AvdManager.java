@@ -114,6 +114,12 @@ public class AvdManager {
      * If missing, use the {@link #AVD_INI_SKIN_PATH} key instead.
      */
     public final static String AVD_INI_SKIN_NAME = "skin.name"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing whether a dynamic skin should be displayed.
+     */
+    public final static String AVD_INI_SKIN_DYNAMIC = "skin.dynamic"; //$NON-NLS-1$
+
     /**
      * AVD/config.ini key name representing the path to the sdcard file.
      * If missing, the default name "sdcard.img" will be used for the sdcard, if there's such
