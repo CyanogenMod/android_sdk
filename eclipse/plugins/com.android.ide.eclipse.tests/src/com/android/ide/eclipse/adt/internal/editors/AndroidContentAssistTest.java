@@ -487,6 +487,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("completion11.xml", "?and^roid:attr/Textapp");
     }
 
+    public void testCompletion75() throws Exception {
+        // Test <include> attributes
+        checkLayoutCompletion("completion12.xml", "<include ^/>");
+    }
+
     // ---- Test *applying* code completion ----
 
     // The following tests check -applying- a specific code completion
