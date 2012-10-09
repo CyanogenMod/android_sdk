@@ -488,7 +488,7 @@ public class ConfigurationChooser extends Composite
      */
     public void setFile(IFile file) {
         mEditedFile = file;
-        initializeConfiguration();
+        ensureInitialized();
     }
 
     /**
@@ -656,6 +656,7 @@ public class ConfigurationChooser extends Composite
         try {
             updateDevices();
             updateTargets();
+            ensureInitialized();
         } finally {
             mDisableUpdates--;
         }
@@ -695,6 +696,7 @@ public class ConfigurationChooser extends Composite
                 if (mSdkChanged) {
                     updateDevices();
                     updateTargets();
+                    ensureInitialized();
                     mSdkChanged = false;
                 }
 
@@ -709,6 +711,7 @@ public class ConfigurationChooser extends Composite
                 if (mProjectTarget != null) {
                     targetStatus = Sdk.getCurrent().checkAndLoadTargetData(mProjectTarget, null);
                     updateTargets();
+                    ensureInitialized();
                 }
 
                 if (targetStatus == LoadStatus.LOADED) {
@@ -730,7 +733,7 @@ public class ConfigurationChooser extends Composite
                     targetData = Sdk.getCurrent().getTargetData(mProjectTarget);
 
                     // get the file stored state
-                    initializeConfiguration();
+                    ensureInitialized();
                     boolean loadedConfigData = mConfiguration.getDevice() != null &&
                             mConfiguration.getDeviceState() != null;
 
@@ -851,8 +854,9 @@ public class ConfigurationChooser extends Composite
         return false;
     }
 
-    private void initializeConfiguration() {
-        if (mConfiguration.getDevice() == null) {
+    /** Ensures that the configuration has been initialized */
+    public void ensureInitialized() {
+        if (mConfiguration.getDevice() == null && mEditedFile != null) {
             String data = AdtPlugin.getFileProperty(mEditedFile, NAME_CONFIG_STATE);
             if (mInitialState != null) {
                 data = mInitialState;
@@ -860,6 +864,7 @@ public class ConfigurationChooser extends Composite
             }
             if (data != null) {
                 mConfiguration.initialize(data);
+                mConfiguration.syncFolderConfig();
             }
         }
     }

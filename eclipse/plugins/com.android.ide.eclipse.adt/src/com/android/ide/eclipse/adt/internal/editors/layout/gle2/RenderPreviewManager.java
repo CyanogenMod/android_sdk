@@ -88,6 +88,11 @@ public class RenderPreviewManager {
     private @Nullable ScrollBarListener mListener;
     private int mLayoutHeight;
     private int mMaxVisibleY;
+    /** Last seen state revision in this {@link RenderPreviewManager}. If less
+     * than {@link #sRevision}, the previews need to be updated on next exposure */
+    private static int mRevision;
+    /** Current global revision count */
+    private static int sRevision;
 
     /**
      * Creates a {@link RenderPreviewManager} associated with the given canvas
@@ -98,6 +103,15 @@ public class RenderPreviewManager {
         mCanvas = canvas;
         mHScale = canvas.getHorizontalTransform();
         mVScale = canvas.getVerticalTransform();
+    }
+
+    /**
+     * Revise the global state revision counter. This will cause all layout
+     * preview managers to refresh themselves to the latest revision when they
+     * are next exposed.
+     */
+    public static void bumpRevision() {
+        sRevision++;
     }
 
     /**
@@ -399,7 +413,7 @@ public class RenderPreviewManager {
 
                 int x = destX + destWidth / 2 - preview.getWidth() / 2;
                 int y = destY + destHeight - preview.getHeight();
-                preview.paintTitle(gc, x, y);
+                preview.paintTitle(gc, x, y, false /*showFile*/);
             }
         } else if (mMode == RenderPreviewMode.CUSTOM) {
             int rootX = getX();
@@ -595,13 +609,15 @@ public class RenderPreviewManager {
      */
     public boolean recomputePreviews(boolean force) {
         RenderPreviewMode newMode = AdtPrefs.getPrefs().getRenderPreviewMode();
-        if (newMode == mMode) {
-            if (!force || mMode == RenderPreviewMode.CUSTOM) {
-                return false;
-            }
+        if (newMode == mMode && !force
+                && (mRevision == sRevision
+                    || mMode == RenderPreviewMode.NONE
+                    || mMode == RenderPreviewMode.CUSTOM)) {
+            return false;
         }
 
         mMode = newMode;
+        mRevision = sRevision;
 
         sScale = 1.0;
         disposePreviews();
@@ -667,7 +683,7 @@ public class RenderPreviewManager {
             configuration.setOverrideLocale(true);
             configuration.setLocale(locale, false);
 
-            String displayName = ConfigurationChooser.getLocaleLabel(chooser, locale, true);
+            String displayName = ConfigurationChooser.getLocaleLabel(chooser, locale, false);
             assert displayName != null; // it's never non null when locale is non null
             configuration.setDisplayName(displayName);
 
@@ -677,7 +693,7 @@ public class RenderPreviewManager {
         // Make a placeholder preview for the current screen, in case we switch from it
         Configuration configuration = parent;
         Locale locale = configuration.getLocale();
-        String label = ConfigurationChooser.getLocaleLabel(chooser, locale, true);
+        String label = ConfigurationChooser.getLocaleLabel(chooser, locale, false);
         if (label == null) {
             label = "default";
         }

@@ -69,6 +69,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -92,9 +93,27 @@ import java.util.Map;
  * Represents a preview rendering of a given configuration
  */
 public class RenderPreview implements IJobChangeListener {
-    private static final int HEADER_HEIGHT = 20;
+    /** Whether previews should use large shadows */
     static final boolean LARGE_SHADOWS = false;
+
+    /**
+     * Still doesn't work; get exceptions from layoutlib:
+     * java.lang.IllegalStateException: After scene creation, #init() must be called
+     *   at com.android.layoutlib.bridge.impl.RenderAction.acquire(RenderAction.java:151)
+     * <p>
+     * TODO: Investigate.
+     */
+    private static final boolean RENDER_ASYNC = false;
+
+    /**
+     * Height of the toolbar shown over a preview during hover. Needs to be
+     * large enough to accommodate icons below.
+     */
+    private static final int HEADER_HEIGHT = 20;
+
+    /** Whether to dump out rendering failures of the previews to the log */
     private static final boolean DUMP_RENDER_DIAGNOSTICS = false;
+
     private static final Image EDIT_ICON;
     private static final Image ZOOM_IN_ICON;
     private static final Image ZOOM_OUT_ICON;
@@ -118,11 +137,12 @@ public class RenderPreview implements IJobChangeListener {
 
     /** The configuration being previewed */
     private final @NonNull Configuration mConfiguration;
+
     /** The associated manager */
     private final @NonNull RenderPreviewManager mManager;
     private final @NonNull LayoutCanvas mCanvas;
     private @Nullable ResourceResolver mResourceResolver;
-    private @Nullable RenderJob mJob;
+    private @Nullable Job mJob;
     private @Nullable Map<ResourceType, Map<String, ResourceValue>> mConfiguredFrameworkRes;
     private @Nullable Map<ResourceType, Map<String, ResourceValue>> mConfiguredProjectRes;
     private @Nullable Image mThumbnail;
@@ -132,15 +152,20 @@ public class RenderPreview implements IJobChangeListener {
     private int mX;
     private int mY;
     private double mScale = 1.0;
+
     /** If non null, points to a separate file containing the source */
     private @Nullable IFile mInput;
+
     /** If included within another layout, the name of that outer layout */
     private @Nullable Reference mIncludedWithin;
+
     /** Whether the mouse is actively hovering over this preview */
     private boolean mActive;
+
     /** Whether this preview cannot be rendered because of a model error - such as
      * an invalid configuration, a missing resource, an error in the XML markup, etc */
     private boolean mError;
+
     /**
      * Whether this preview presents a file that has been "forked" (separate,
      * not linked) from the primary layout.
@@ -149,8 +174,14 @@ public class RenderPreview implements IJobChangeListener {
      * instead.
      */
     private boolean mForked;
+
     /** Whether in the current layout, this preview is visible */
     private boolean mVisible;
+
+    /** Whether the configuration has changed and needs to be refreshed the next time
+     * this preview made visible. This corresponds to the change flags in
+     * {@link ConfigurationClient}. */
+    private int mDirty;
 
     /**
      * Creates a new {@linkplain RenderPreview}
@@ -172,8 +203,6 @@ public class RenderPreview implements IJobChangeListener {
         mConfiguration = configuration;
         mWidth = width;
         mHeight = height;
-
-        updateForkStatus();
     }
 
     /**
@@ -255,7 +284,17 @@ public class RenderPreview implements IJobChangeListener {
      * @param visible whether this preview is visible
      */
     public void setVisible(boolean visible) {
-        mVisible = visible;
+        if (visible != mVisible) {
+            mVisible = visible;
+            if (mVisible) {
+                if (mDirty != 0) {
+                    // Just made the render preview visible:
+                    configurationChanged(mDirty);
+                } else {
+                    updateForkStatus();
+                }
+            }
+        }
     }
 
     /**
@@ -427,11 +466,15 @@ public class RenderPreview implements IJobChangeListener {
      * @param delay the delay to wait before starting the render job
      */
     public void render(long delay) {
-        RenderJob job = mJob;
+        Job job = mJob;
         if (job != null) {
             job.cancel();
         }
-        job = new RenderJob();
+        if (RENDER_ASYNC) {
+            job = new AsyncRenderJob();
+        } else {
+            job = new RenderJob();
+        }
         job.schedule(delay);
         job.addJobChangeListener(this);
         mJob = job;
@@ -495,12 +538,13 @@ public class RenderPreview implements IJobChangeListener {
 
         if (DUMP_RENDER_DIAGNOSTICS) {
             if (log.hasProblems() || !render.isSuccess()) {
+                AdtPlugin.log(IStatus.ERROR, "Found problems rendering preview "
+                        + getDisplayName() + ": "
+                        + render.getErrorMessage() + " : "
+                        + log.getProblems(false));
                 Throwable exception = render.getException();
-                System.out.println("Found problems rendering preview " + getDisplayName());
-                System.out.println(render.getErrorMessage());
-                System.out.println(log.getProblems(false));
                 if (exception != null) {
-                    exception.printStackTrace();
+                    AdtPlugin.log(exception, "Failure rendering preview " + getDisplayName());
                 }
             }
         }
@@ -662,7 +706,7 @@ public class RenderPreview implements IJobChangeListener {
      * @return true if this preview handled (and therefore consumed) the click
      */
     public boolean click(int x, int y) {
-        if (y < RenderPreview.HEADER_HEIGHT) {
+        if (y < HEADER_HEIGHT) {
             int left = 0;
             left += CLOSE_ICON_WIDTH;
             if (x <= left) {
@@ -768,8 +812,7 @@ public class RenderPreview implements IJobChangeListener {
             gc.setAlpha(128+32);
             Color bg = mCanvas.getDisplay().getSystemColor(SWT.COLOR_WHITE);
             gc.setBackground(bg);
-            gc.fillRectangle(left, y, x + getWidth() - left,
-                    RenderPreview.HEADER_HEIGHT);
+            gc.fillRectangle(left, y, x + getWidth() - left, HEADER_HEIGHT);
             gc.setAlpha(prevAlpha);
 
             // Paint icons
@@ -786,7 +829,7 @@ public class RenderPreview implements IJobChangeListener {
             left += EDIT_ICON_WIDTH;
         }
 
-        paintTitle(gc, x, y);
+        paintTitle(gc, x, y, true /*showFile*/);
     }
 
     /**
@@ -796,7 +839,7 @@ public class RenderPreview implements IJobChangeListener {
      * @param x the left edge of the preview rectangle
      * @param y the top edge of the preview rectangle
      */
-    void paintTitle(GC gc, int x, int y) {
+    void paintTitle(GC gc, int x, int y, boolean showFile) {
         String displayName = getDisplayName();
         if (displayName != null && displayName.length() > 0) {
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
@@ -826,7 +869,7 @@ public class RenderPreview implements IJobChangeListener {
                 gc.drawText(displayName, labelLeft, labelTop, true);
             }
 
-            if (mForked && mInput != null) {
+            if (mForked && mInput != null && showFile) {
                 // Draw file flag, and parent folder name
                 labelTop += extent.y;
                 String fileName = mInput.getParent().getName() + File.separator + mInput.getName();
@@ -856,6 +899,11 @@ public class RenderPreview implements IJobChangeListener {
      *            {@code CHANGE_} constants in {@link ConfigurationClient}
      */
     public void configurationChanged(int flags) {
+        if (!mVisible) {
+            mDirty |= flags;
+            return;
+        }
+
         if ((flags & (CHANGED_FOLDER | CHANGED_THEME | CHANGED_DEVICE
                 | CHANGED_RENDER_TARGET | CHANGED_LOCALE)) != 0) {
             mResourceResolver = null;
@@ -888,6 +936,8 @@ public class RenderPreview implements IJobChangeListener {
             mHeight = mWidth;
             mWidth = temp;
         }
+
+        mDirty = 0;
     }
 
     /**
@@ -936,28 +986,6 @@ public class RenderPreview implements IJobChangeListener {
             setUser(false);
         }
 
-        /* TODO: Make this job work in the background. Need to make the render service
-         * not read UI thread properties out of the configuration composite.
-         * SEPTEMBER 2012: The config composite work should be done now, check.
-        @Override
-        protected IStatus run(IProgressMonitor monitor) {
-            if (mCanvas.isDisposed()) {
-                return org.eclipse.core.runtime.Status.CANCEL_STATUS;
-            }
-
-            renderSync();
-
-            // Update display
-            mCanvas.getDisplay().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    mCanvas.redraw();
-                }
-            });
-            return org.eclipse.core.runtime.Status.OK_STATUS;
-        }
-        */
-
         @Override
         public IStatus runInUIThread(IProgressMonitor monitor) {
             mJob = null;
@@ -976,6 +1004,35 @@ public class RenderPreview implements IJobChangeListener {
                 return null;
             }
             return mCanvas.getDisplay();
+        }
+    }
+
+    private final class AsyncRenderJob extends Job {
+        public AsyncRenderJob() {
+            super("RenderPreview");
+            setSystem(true);
+            setUser(false);
+        }
+
+        @Override
+        protected IStatus run(IProgressMonitor monitor) {
+            mJob = null;
+
+            if (mCanvas.isDisposed()) {
+                return org.eclipse.core.runtime.Status.CANCEL_STATUS;
+            }
+
+            renderSync();
+
+            // Update display
+            mCanvas.getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    mCanvas.redraw();
+                }
+            });
+
+            return org.eclipse.core.runtime.Status.OK_STATUS;
         }
     }
 

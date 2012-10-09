@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -156,10 +155,13 @@ public class Configuration {
     public static Configuration create(@NonNull ConfigurationChooser chooser,
             @NonNull IFile file) {
         Configuration configuration = copy(chooser.getConfiguration());
-        String data = AdtPlugin.getFileProperty(file, NAME_CONFIG_STATE);
-        if (data != null) {
-            configuration.initialize(data);
-        } else {
+        // Ideally, we'd pick the configuration the user has most recently configured
+        // for the outer layout. But this doesn't always work as expected, so for now
+        // always compute the best fit.
+        //String data = AdtPlugin.getFileProperty(file, NAME_CONFIG_STATE);
+        //if (data != null) {
+        //    configuration.initialize(data);
+        //} else {
             ProjectResources resources = chooser.getResources();
             ConfigurationMatcher matcher = new ConfigurationMatcher(chooser, configuration, file,
                     resources, false);
@@ -167,7 +169,7 @@ public class Configuration {
                 configuration.mEditedConfig = new FolderConfiguration();
             }
             matcher.adaptConfigSelection(true /*needBestMatch*/);
-        }
+        //}
 
         return configuration;
     }
