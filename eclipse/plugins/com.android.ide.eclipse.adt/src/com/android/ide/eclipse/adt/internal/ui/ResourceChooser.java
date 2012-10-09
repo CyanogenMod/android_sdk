@@ -29,6 +29,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.OpenCreateAssetSetWizardAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
+import com.android.ide.eclipse.adt.internal.editors.layout.properties.PropertyFactory;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
@@ -560,6 +561,11 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
             data.horizontalAlignment = GridData.FILL;
             data.verticalAlignment = GridData.BEGINNING;
             mResolvedLabel.setLayoutData(data);
+        }
+
+        Composite workaround = PropertyFactory.addWorkaround(top);
+        if (workaround != null) {
+            workaround.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1, 1));
         }
     }
 

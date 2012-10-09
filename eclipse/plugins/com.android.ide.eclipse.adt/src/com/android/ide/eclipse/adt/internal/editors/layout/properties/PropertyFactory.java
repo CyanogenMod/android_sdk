@@ -37,12 +37,26 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.wb.internal.core.editor.structure.property.PropertyListIntersector;
 import org.eclipse.wb.internal.core.model.property.ComplexProperty;
 import org.eclipse.wb.internal.core.model.property.Property;
 import org.eclipse.wb.internal.core.model.property.category.PropertyCategory;
 import org.eclipse.wb.internal.core.model.property.editor.PropertyEditor;
+import org.eclipse.wb.internal.core.model.property.editor.presentation.ButtonPropertyEditorPresentation;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -684,5 +698,49 @@ public class PropertyFactory {
 
     public void setSortingMode(SortingMode sortingMode) {
         mSortMode = sortingMode;
+    }
+
+    // https://bugs.eclipse.org/bugs/show_bug.cgi?id=388574
+    public static Composite addWorkaround(Composite parent) {
+        if (ButtonPropertyEditorPresentation.isInWorkaround) {
+            Composite top = new Composite(parent, SWT.NONE);
+            top.setLayout(new GridLayout(1, false));
+            Label label = new Label(top, SWT.WRAP);
+            label.setText(
+                    "This dialog is shown instead of an inline text editor as a\n" +
+                    "workaround for an Eclipse bug specific to OSX Mountain Lion.\n" +
+                    "It should be fixed in Eclipse 4.3.");
+            label.setForeground(top.getDisplay().getSystemColor(SWT.COLOR_RED));
+            GridData data = new GridData();
+            data.grabExcessVerticalSpace = false;
+            data.grabExcessHorizontalSpace = false;
+            data.horizontalAlignment = GridData.FILL;
+            data.verticalAlignment = GridData.BEGINNING;
+            label.setLayoutData(data);
+
+            Link link = new Link(top, SWT.NO_FOCUS);
+            link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1, 1));
+            link.setText("<a>https://bugs.eclipse.org/bugs/show_bug.cgi?id=388574</a>");
+            link.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent event) {
+                    try {
+                        IWorkbench workbench = PlatformUI.getWorkbench();
+                        IWebBrowser browser = workbench.getBrowserSupport().getExternalBrowser();
+                        browser.openURL(new URL(event.text));
+                    } catch (Exception e) {
+                        String message = String.format(
+                                "Could not open browser. Vist\n%1$s\ninstead.",
+                                event.text);
+                        MessageDialog.openError(((Link)event.getSource()).getShell(),
+                                "Browser Error", message);
+                    }
+                }
+            });
+
+            return top;
+        }
+
+        return null;
     }
 }
