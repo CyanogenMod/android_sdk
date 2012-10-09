@@ -43,9 +43,12 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.corext.refactoring.rename.RenameCompilationUnitProcessor;
+import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.participants.RefactoringProcessor;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
@@ -84,8 +87,26 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
         if (pm.isCanceled()) {
             return null;
         }
+
+        // Only propose this refactoring if the "Update References" checkbox is set.
         if (!getArguments().getUpdateReferences())
             return null;
+
+        RefactoringProcessor p = getProcessor();
+        if (p instanceof RenameCompilationUnitProcessor) {
+            RenameTypeProcessor rtp = ((RenameCompilationUnitProcessor) p).getRenameTypeProcessor();
+            if (rtp != null) {
+                String pattern = rtp.getFilePatterns();
+                boolean updQualf = rtp.getUpdateQualifiedNames();
+                if (updQualf && pattern != null && pattern.contains("xml")) { //$NON-NLS-1$
+                    // Do not propose this refactoring if the
+                    // "Update fully qualified names in non-Java files" option is
+                    // checked and the file patterns mention XML. [c.f. SDK bug 21589]
+                    return null;
+                }
+            }
+        }
+
         CompositeChange result = new CompositeChange(getName());
         if (mAndroidManifest.exists()) {
             if (mAndroidElements.size() > 0) {
