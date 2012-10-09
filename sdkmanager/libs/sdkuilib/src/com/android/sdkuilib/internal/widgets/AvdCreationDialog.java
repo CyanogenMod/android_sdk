@@ -87,6 +87,7 @@ public class AvdCreationDialog extends GridDialog {
     private Combo mTarget;
     private Combo mAbi;
 
+    private Button mKeyboard;
     private Combo mFrontCamera;
     private Combo mBackCamera;
 
@@ -243,6 +244,13 @@ public class AvdCreationDialog extends GridDialog {
         mAbi.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mAbi.setToolTipText(tooltip);
         mAbi.addSelectionListener(validateListener);
+
+        label = new Label(parent, SWT.NONE);
+        label.setText("Keyboard:");
+        mKeyboard = new Button(parent, SWT.CHECK);
+        mKeyboard.setSelection(true); // default to having a keyboard irrespective of device
+        mKeyboard.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mKeyboard.setText("Hardware keyboard present");
 
         label = new Label(parent, SWT.NONE);
         label.setText("Front Camera:");
@@ -896,6 +904,10 @@ public class AvdCreationDialog extends GridDialog {
         }
         hwProps.put(AvdManager.AVD_INI_DATA_PARTITION_SIZE, mDataPartition.getText()+suffix);
 
+        hwProps.put(HardwareProperties.HW_KEYBOARD,
+                mKeyboard.getSelection() ?
+                        HardwareProperties.BOOLEAN_YES : HardwareProperties.BOOLEAN_NO);
+
         if (mFrontCamera.isEnabled()) {
             hwProps.put(AvdManager.AVD_INI_CAMERA_FRONT,
                     mFrontCamera.getText().toLowerCase());
@@ -1026,6 +1038,9 @@ public class AvdCreationDialog extends GridDialog {
                         mDataPartitionSize.select(-1);
                 }
             }
+
+            mKeyboard.setSelection(
+                    props.get(HardwareProperties.HW_KEYBOARD) == HardwareProperties.BOOLEAN_YES);
 
             String cameraFront = props.get(AvdManager.AVD_INI_CAMERA_FRONT);
             if (cameraFront != null) {
