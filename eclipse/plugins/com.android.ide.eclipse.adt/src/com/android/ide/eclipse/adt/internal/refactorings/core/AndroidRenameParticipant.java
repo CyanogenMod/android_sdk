@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.core;
+package com.android.ide.eclipse.adt.internal.refactorings.core;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;

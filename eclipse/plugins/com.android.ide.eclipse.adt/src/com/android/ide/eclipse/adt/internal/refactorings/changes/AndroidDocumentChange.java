@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.changes;
+package com.android.ide.eclipse.adt.internal.refactorings.changes;
 
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErrorListener;
-import com.android.ide.eclipse.adt.internal.refactoring.core.RefactoringUtil;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RefactoringUtil;
 import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.ITextFileBufferManager;

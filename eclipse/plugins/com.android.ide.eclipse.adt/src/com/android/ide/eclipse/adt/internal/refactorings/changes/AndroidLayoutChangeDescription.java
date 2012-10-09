@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.refactoring.changes;
+package com.android.ide.eclipse.adt.internal.refactorings.changes;
 
 /**
  * This class describes the text changes of android layout files

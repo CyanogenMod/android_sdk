@@ -191,7 +191,7 @@ class ReplaceStringsVisitor extends ASTVisitor {
      *
      * This covers the case of Activity.setTitle(int resId) vs setTitle(String str).
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private boolean examineMethodInvocation(StringLiteral node) {
 
         ASTNode parent = null;
