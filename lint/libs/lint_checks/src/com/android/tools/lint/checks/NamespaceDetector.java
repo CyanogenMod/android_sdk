@@ -68,7 +68,7 @@ public class NamespaceDetector extends LayoutDetector {
             "Unused namespace declarations take up space and require processing that is not " +
             "necessary",
 
-            Category.CORRECTNESS,
+            Category.PERFORMANCE,
             1,
             Severity.WARNING,
             NamespaceDetector.class,

@@ -87,4 +87,12 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
             lintFiles("wrongid/ignorelayout1.xml=>res/layout/layout1.xml"));
     }
 
+    public void testNewIdPrefix() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintFiles("res/layout/default_item_badges.xml",
+                          "res/layout/detailed_item.xml"));
+    }
+
 }

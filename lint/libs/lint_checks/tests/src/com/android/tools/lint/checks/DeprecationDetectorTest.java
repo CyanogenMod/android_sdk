@@ -33,8 +33,13 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
             "res/layout/deprecation.xml:18: Warning: android:editable is deprecated: Use an <EditText> to make it editable [Deprecated]\n" +
             "        android:editable=\"true\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 2 warnings\n" +
-            "",
+            "res/layout/deprecation.xml:26: Warning: android:editable is deprecated: <EditText> is already editable [Deprecated]\n" +
+            "    <EditText android:editable=\"true\" />\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:27: Warning: android:editable is deprecated: Use inputType instead [Deprecated]\n" +
+            "    <EditText android:editable=\"false\" />\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n",
 
             lintProject(
                     "apicheck/minsdk1.xml=>AndroidManifest.xml",
@@ -67,8 +72,13 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
             "res/layout/deprecation.xml:23: Warning: android:phoneNumber is deprecated: Use inputType instead [Deprecated]\n" +
             "        android:phoneNumber=\"true\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 8 warnings\n" +
-            "",
+            "res/layout/deprecation.xml:26: Warning: android:editable is deprecated: <EditText> is already editable [Deprecated]\n" +
+            "    <EditText android:editable=\"true\" />\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/deprecation.xml:27: Warning: android:editable is deprecated: Use inputType instead [Deprecated]\n" +
+            "    <EditText android:editable=\"false\" />\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 10 warnings\n",
 
             lintProject(
                     "apicheck/minsdk4.xml=>AndroidManifest.xml",

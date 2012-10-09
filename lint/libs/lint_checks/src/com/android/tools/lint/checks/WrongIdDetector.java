@@ -231,7 +231,8 @@ public class WrongIdDetector extends LayoutDetector {
                                 id, suggestionMessage);
                     }
                     report(context, UNKNOWN_ID, handle, message);
-                } else if (checkSameLayout && (!projectScope || isBound)) {
+                } else if (checkSameLayout && (!projectScope || isBound)
+                        && id.startsWith(NEW_ID_PREFIX)) {
                     // The id was defined, but in a different layout. Usually not intentional
                     // (might be referring to a random other view that happens to have the same
                     // name.)

@@ -23,6 +23,7 @@ import static com.android.SdkConstants.ABS_SPINNER;
 import static com.android.SdkConstants.ADAPTER_VIEW;
 import static com.android.SdkConstants.AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.BUTTON;
+import static com.android.SdkConstants.CHECKABLE;
 import static com.android.SdkConstants.CHECKED_TEXT_VIEW;
 import static com.android.SdkConstants.CHECK_BOX;
 import static com.android.SdkConstants.COMPOUND_BUTTON;
@@ -125,6 +126,9 @@ class DefaultSdkInfo extends SdkInfo {
             if (parent.equals(child)) {
                 return true;
             }
+            if (implementsInterface(child, parentType)) {
+                return true;
+            }
             child = PARENTS.get(child);
             if (child == null) {
                 // Unknown view - err on the side of caution
@@ -133,6 +137,10 @@ class DefaultSdkInfo extends SdkInfo {
         }
 
         return false;
+    }
+
+    private static boolean implementsInterface(String className, String interfaceName) {
+        return interfaceName.equals(INTERFACES.get(className));
     }
 
     // Strip off type parameters, e.g. AdapterView<?> => AdapterView
@@ -229,5 +237,14 @@ class DefaultSdkInfo extends SdkInfo {
             }
         }
         */
+    }
+
+    // Currently using a map; this should really be a list, but using a map until we actually
+    // start adding more than one item
+    @NonNull
+    private static final Map<String, String> INTERFACES = new HashMap<String, String>(2);
+    static {
+        INTERFACES.put(CHECKED_TEXT_VIEW, CHECKABLE);
+        INTERFACES.put(COMPOUND_BUTTON, CHECKABLE);
     }
 }
