@@ -934,6 +934,10 @@ public final class SdkConstants {
     public static final String REFERENCE_STYLE = "style/";                     //$NON-NLS-1$
     public static final String PREFIX_ANDROID = "android:";                    //$NON-NLS-1$
 
+    // Resource Types
+    public static final String DRAWABLE_TYPE = "drawable";              //$NON-NLS-1$
+    public static final String MENU_TYPE = "menu";                      //$NON-NLS-1$
+
     // Packages
     public static final String ANDROID_PKG_PREFIX = "android.";         //$NON-NLS-1$
     public static final String WIDGET_PKG_PREFIX = "android.widget.";   //$NON-NLS-1$
