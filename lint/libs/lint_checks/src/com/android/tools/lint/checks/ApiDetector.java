@@ -93,7 +93,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             6,
             Severity.ERROR,
             ApiDetector.class,
-            EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE))
+            EnumSet.of(Scope.CLASS_FILE, Scope.RESOURCE_FILE, Scope.MANIFEST))
             .addAnalysisScope(Scope.RESOURCE_FILE_SCOPE)
             .addAnalysisScope(Scope.CLASS_FILE_SCOPE);
 
@@ -163,6 +163,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             String owner = "android/R$"    //$NON-NLS-1$
                     + value.substring(prefix.length(), index);
             String name = value.substring(index + 1);
+            if (name.indexOf('.') != -1) {
+                name = name.replace('.', '_');
+            }
             int api = mApiDatabase.getFieldVersion(owner, name);
             int minSdk = getMinSdk(context);
             if (api > minSdk && api > context.getFolderVersion()) {
@@ -202,6 +205,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             String owner = "android/R$"    //$NON-NLS-1$
                                     + text.substring(ANDROID_PREFIX.length(), index);
                             String name = text.substring(index + 1);
+                            if (name.indexOf('.') != -1) {
+                                name = name.replace('.', '_');
+                            }
                             int api = mApiDatabase.getFieldVersion(owner, name);
                             int minSdk = getMinSdk(context);
                             if (api > minSdk && api > context.getFolderVersion()) {
