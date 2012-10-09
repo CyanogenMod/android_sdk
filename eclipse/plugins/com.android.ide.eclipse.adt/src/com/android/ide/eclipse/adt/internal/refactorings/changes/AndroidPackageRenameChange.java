@@ -53,7 +53,7 @@ public class AndroidPackageRenameChange extends AndroidDocumentChange {
      * @param isPackage is the application package
      */
     public AndroidPackageRenameChange(IFile androidManifest, ITextFileBufferManager manager,
-            IDocument document, Map<String, String> elements, String newName, String oldName,
+            IDocument document, Map<String, String> elements, String oldName, String newName,
             boolean isPackage) {
         super(document);
         this.mDocument = document;

@@ -113,9 +113,9 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
         CompositeChange result = new CompositeChange(getName());
         if (mAndroidManifest.exists()) {
             if (mAndroidElements.size() > 0 || mIsPackage) {
-                getDocument();
+                getManifestDocument();
                 Change change = new AndroidPackageRenameChange(mAndroidManifest, mManager,
-                        mDocument, mAndroidElements, mNewName, mOldName, mIsPackage);
+                        mDocument, mAndroidElements, mOldName, mNewName, mIsPackage);
                 if (change != null) {
                     result.add(change);
                 }
@@ -438,7 +438,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
 
         IDocument document;
         try {
-            document = getDocument();
+            document = getManifestDocument();
         } catch (CoreException e) {
             RefactoringUtil.log(e);
             if (mManager != null) {

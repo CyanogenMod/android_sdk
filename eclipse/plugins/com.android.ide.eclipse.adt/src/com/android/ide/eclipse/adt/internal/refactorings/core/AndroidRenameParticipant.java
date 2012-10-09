@@ -59,15 +59,17 @@ public abstract class AndroidRenameParticipant extends RenameParticipant {
     }
 
     /**
-     * @return the document
+     * @return the document for the {@link #mAndroidManifest}
      * @throws CoreException
      */
-    public IDocument getDocument() throws CoreException {
+    public IDocument getManifestDocument() throws CoreException {
         if (mDocument == null) {
             mManager = FileBuffers.getTextFileBufferManager();
-            mManager.connect(mAndroidManifest.getFullPath(), LocationKind.NORMALIZE,
+            mManager.connect(mAndroidManifest.getFullPath(),
+                    LocationKind.NORMALIZE,
                     new NullProgressMonitor());
-            ITextFileBuffer buffer = mManager.getTextFileBuffer(mAndroidManifest.getFullPath(),
+            ITextFileBuffer buffer = mManager.getTextFileBuffer(
+                    mAndroidManifest.getFullPath(),
                     LocationKind.NORMALIZE);
             mDocument = buffer.getDocument();
         }
