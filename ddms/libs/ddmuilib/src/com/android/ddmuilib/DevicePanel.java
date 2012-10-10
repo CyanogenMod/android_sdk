@@ -245,7 +245,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
                     case CLIENT_COL_NAME:
                         String name = cd.getClientDescription();
                         if (name != null) {
-                            if (cd.isValidUserId()) {
+                            if (cd.isValidUserId() && cd.getUserId() != 0) {
                                 return String.format(Locale.US, "%s (%d)", name, cd.getUserId());
                             } else {
                                 return name;
