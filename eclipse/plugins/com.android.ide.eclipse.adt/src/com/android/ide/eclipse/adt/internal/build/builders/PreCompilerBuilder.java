@@ -323,17 +323,22 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                     // Notify the ResourceManager:
                     ResourceManager resManager = ResourceManager.getInstance();
-                    ProjectResources projectResources = resManager.getProjectResources(project);
 
                     if (ResourceManager.isAutoBuilding()) {
+                        ProjectResources projectResources = resManager.getProjectResources(project);
+
                         IdeScanningContext context = new IdeScanningContext(projectResources,
                                 project, true);
 
-                        resManager.processDelta(delta, context);
+                        boolean wasCleared = projectResources.ensureInitialized();
+
+                        if (!wasCleared) {
+                            resManager.processDelta(delta, context);
+                        }
 
                         // Check whether this project or its dependencies (libraries) have
                         // resources that need compilation
-                        if (context.needsFullAapt()) {
+                        if (wasCleared || context.needsFullAapt()) {
                             mMustCompileResources = true;
 
                             // Must also call markAaptRequested on the project to not just
@@ -735,6 +740,10 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // Also clean up lint
         EclipseLintClient.clearMarkers(project);
+
+        // clean the project repo
+        ProjectResources res = ResourceManager.getInstance().getProjectResources(project);
+        res.clear();
     }
 
     @Override
