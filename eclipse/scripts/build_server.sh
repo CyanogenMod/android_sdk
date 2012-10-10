@@ -107,15 +107,15 @@ function build_plugin() {
 }
 
 function build_adt_ide() {
-  ADT_IDE_DEST_DIR="$DEST_DIR" \
-  ADT_IDE_QUALIFIER="$QUALIFIER" \
-  make PRODUCT-sdk-adt_eclipse_ide
+  if [[ -z $INTERNAL_BUILD && "Linux" == $(uname) ]]; then
+    ADT_IDE_DEST_DIR="$DEST_DIR" \
+    ADT_IDE_QUALIFIER="$QUALIFIER" \
+    make PRODUCT-sdk-adt_eclipse_ide
+  fi
 }
 
 get_params "$@"
 check_params
 ( build_plugin )
-if [[ -z $INTERNAL_BUILD ]]; then
-  ( build_adt_ide )
-fi
+( build_adt_ide )
 
