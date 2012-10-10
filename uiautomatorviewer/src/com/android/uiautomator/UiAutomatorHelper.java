@@ -80,7 +80,7 @@ public class UiAutomatorHelper {
         try {
             device.executeShellCommand(command,
                     new CollectingOutputReceiver(commandCompleteLatch));
-            commandCompleteLatch.await(20, TimeUnit.SECONDS);
+            commandCompleteLatch.await(40, TimeUnit.SECONDS);
 
             monitor.subTask("Pull UI XML snapshot from device...");
             device.getSyncService().pullFile(UIDUMP_DEVICE_PATH,

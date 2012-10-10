@@ -550,8 +550,12 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                 }
             });
         } catch (Exception e) {
+            Throwable t = e;
+            if (e instanceof InvocationTargetException) {
+                t = ((InvocationTargetException) e).getTargetException();
+            }
             Status s = new Status(IStatus.ERROR, DdmsPlugin.PLUGIN_ID,
-                                            "Error obtaining UI hierarchy", e);
+                                            "Error obtaining UI hierarchy", t);
             ErrorDialog.openError(shell, "UI Automator",
                     "Unexpected error while obtaining UI hierarchy", s);
         }
