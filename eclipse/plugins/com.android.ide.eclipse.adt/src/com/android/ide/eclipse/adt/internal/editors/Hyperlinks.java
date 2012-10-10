@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
@@ -36,6 +37,7 @@ import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
@@ -56,6 +58,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -343,7 +346,9 @@ public class Hyperlinks {
         String tag = context.getElement().getTagName();
         String attributeName = attribute.getLocalName();
         return ATTR_CLASS.equals(attributeName) && (VIEW.equals(tag) || VIEW_FRAGMENT.equals(tag))
-                || ATTR_NAME.equals(attributeName) && VIEW_FRAGMENT.equals(tag);
+                || ATTR_NAME.equals(attributeName) && VIEW_FRAGMENT.equals(tag)
+                || (ATTR_CONTEXT.equals(attributeName)
+                        && TOOLS_URI.equals(attribute.getNamespaceURI()));
     }
 
     /** Returns true if this represents an onClick attribute specifying a method handler */
@@ -370,7 +375,18 @@ public class Hyperlinks {
     /** Returns the FQCN for a class declaration at the given context */
     private static String getClassFqcn(XmlContext context) {
         if (isClassAttribute(context)) {
-            return context.getAttribute().getValue();
+            String value = context.getAttribute().getValue();
+            if (!value.isEmpty() && value.charAt(0) == '.') {
+                IProject project = getProject();
+                if (project != null) {
+                    ManifestInfo info = ManifestInfo.get(project);
+                    String pkg = info.getPackage();
+                    if (pkg != null) {
+                        value = pkg + value;
+                    }
+                }
+            }
+            return value;
         } else if (isClassElement(context)) {
             return context.getElement().getTagName();
         }
