@@ -16,9 +16,9 @@
 
 package com.android.ide.common.api;
 
-import com.google.common.annotations.Beta;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.annotations.Beta;
 
 
 /**
@@ -81,11 +81,39 @@ public class Rect {
 
     /** Returns true if the rectangle contains the x,y coordinates, borders included. */
     public boolean contains(int x, int y) {
-        return isValid() &&
-            x >= this.x &&
-            y >= this.y &&
-            x < (this.x + this.w) &&
-            y < (this.y + this.h);
+        return isValid()
+                && x >= this.x
+                && y >= this.y
+                && x < (this.x + this.w)
+                && y < (this.y + this.h);
+    }
+
+    /**
+     * Returns true if this rectangle intersects the given rectangle.
+     * Two rectangles intersect if they overlap.
+     * @param other the other rectangle to test
+     * @return true if the two rectangles overlap
+     */
+    public boolean intersects(@Nullable Rect other) {
+        if (other == null) {
+            return false;
+        }
+        if (x2() <= other.x
+                || other.x2() <= x
+                || y2() <= other.y
+                || other.y2() <= y) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Returns true if the rectangle fully contains the given rectangle */
+    public boolean contains(@Nullable Rect rect) {
+        return rect != null && x <= rect.x
+                && y <= rect.y
+                && x2() >= rect.x2()
+                && y2() >= rect.y2();
     }
 
     /** Returns true if the rectangle contains the x,y coordinates, borders included. */
