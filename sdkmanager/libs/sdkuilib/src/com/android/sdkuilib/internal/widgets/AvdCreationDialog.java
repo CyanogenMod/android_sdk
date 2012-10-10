@@ -709,29 +709,46 @@ public class AvdCreationDialog extends GridDialog {
         String error = null;
         String warning = null;
         boolean valid = true;
+
         if (mAvdName.getText().isEmpty()) {
-            valid = false;
+            error = "AVD Name cannot be empty";
+            setPageValid(false, error, warning);
+            return;
+        }
+
+        String avdName = mAvdName.getText();
+        if (!AvdManager.RE_AVD_NAME.matcher(avdName).matches()) {
+            error = String.format(
+                    "AVD name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
+                    avdName, AvdManager.CHARS_AVD_NAME);
+            setPageValid(false, error, warning);
+            return;
         }
 
         if (mDeviceManufacturer.getSelectionIndex() < 0 || mDeviceName.getSelectionIndex() < 0) {
-            valid = false;
+            setPageValid(false, error, warning);
+            return;
         }
 
         if (mTarget.getSelectionIndex() < 0 || mAbi.getSelectionIndex() < 0) {
-            valid = false;
+            setPageValid(false, error, warning);
+            return;
         }
 
         if (mRam.getText().isEmpty()) {
-            valid = false;
+            setPageValid(false, error, warning);
+            return;
         }
 
         if (mVmHeap.getText().isEmpty()) {
-            valid = false;
+            setPageValid(false, error, warning);
+            return;
         }
 
         if (mDataPartition.getText().isEmpty() || mDataPartitionSize.getSelectionIndex() < 0) {
-            valid = false;
-            error = "Data partition must be a valid file size.";
+            error = "Invalid Data partition size.";
+            setPageValid(false, error, warning);
+            return;
         }
 
         // validate sdcard size or file
@@ -762,6 +779,10 @@ public class AvdCreationDialog extends GridDialog {
                 error = "SD Card path isn't valid.";
             }
         }
+        if (!valid) {
+            setPageValid(valid, error, warning);
+            return;
+        }
 
         if (mForceCreation.isEnabled() && !mForceCreation.getSelection()) {
             valid = false;
@@ -782,6 +803,11 @@ public class AvdCreationDialog extends GridDialog {
             error = "GPU Emulation and Snapshot cannot be used simultaneously";
         }
 
+        setPageValid(valid, error, warning);
+        return;
+    }
+
+    private void setPageValid(boolean valid, String error, String warning) {
         mOkButton.setEnabled(valid);
         if (error != null) {
             mStatusIcon.setImage(mImageFactory.getImageByName("reject_icon16.png")); //$NON-NLS-1$
