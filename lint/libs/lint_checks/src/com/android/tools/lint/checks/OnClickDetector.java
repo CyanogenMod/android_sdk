@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ATTR_ON_CLICK;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintDriver;
@@ -132,7 +133,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
         } else if (!value.equals(value.trim())) {
             context.report(ISSUE, attribute, context.getLocation(attribute),
                     "There should be no whitespace around attribute values", null);
-        } else {
+        } else if (!value.startsWith(PREFIX_RESOURCE_REF)) { // Not resolved
             if (mNames == null) {
                 mNames = new HashMap<String, Location.Handle>();
             }
