@@ -18,11 +18,15 @@ package com.android.ide.common.resources.platform;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.DOT_XML;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.mock.Mocks;
+import com.android.io.IAbstractFolder;
+import com.android.io.IAbstractResource;
 import com.android.resources.ResourceType;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
@@ -219,11 +223,14 @@ public class AttributeInfoTest extends TestCase {
     }
 
     public void testResourcesExist() throws Exception {
+        IAbstractFolder folder = Mocks.createAbstractFolder(
+                SdkConstants.FD_RESOURCES, new IAbstractResource[0]);
+
         AttributeInfo info = new AttributeInfo("test", Format.REFERENCE_SET);
-        TestResourceRepository projectResources = new TestResourceRepository(false);
+        TestResourceRepository projectResources = new TestResourceRepository(folder,false);
         projectResources.addResource(ResourceType.STRING, "mystring");
         projectResources.addResource(ResourceType.DIMEN, "mydimen");
-        TestResourceRepository frameworkResources = new TestResourceRepository(true);
+        TestResourceRepository frameworkResources = new TestResourceRepository(folder, true);
         frameworkResources.addResource(ResourceType.LAYOUT, "mylayout");
 
         assertTrue(info.isValid("@string/mystring", null, null));
@@ -247,8 +254,8 @@ public class AttributeInfoTest extends TestCase {
     private class TestResourceRepository extends ResourceRepository {
         private Multimap<ResourceType, String> mResources = ArrayListMultimap.create();
 
-        protected TestResourceRepository(boolean isFrameworkRepository) {
-            super(isFrameworkRepository);
+        protected TestResourceRepository(IAbstractFolder resFolder, boolean isFrameworkRepository) {
+            super(resFolder, isFrameworkRepository);
         }
 
         void addResource(ResourceType type, String name) {

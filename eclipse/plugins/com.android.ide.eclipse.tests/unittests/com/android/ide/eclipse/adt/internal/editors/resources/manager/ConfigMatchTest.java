@@ -16,8 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources.manager;
 
+import com.android.SdkConstants;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.SingleResourceFile;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -25,6 +27,8 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.ide.eclipse.mock.Mocks;
+import com.android.io.IAbstractFolder;
+import com.android.io.IAbstractResource;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
@@ -46,7 +50,7 @@ public class ConfigMatchTest extends TestCase {
     private static final String MISC2_FILENAME = "bar.xml"; //$NON-NLS-1$
 
     private FolderConfiguration mDefaultConfig;
-    private ProjectResources mResources;
+    private ResourceRepository mResources;
     private FolderConfiguration config4;
     private FolderConfiguration config3;
     private FolderConfiguration config2;
@@ -60,8 +64,16 @@ public class ConfigMatchTest extends TestCase {
         mDefaultConfig = new FolderConfiguration();
         mDefaultConfig.createDefault();
 
+        IAbstractFolder folder = Mocks.createAbstractFolder(
+                SdkConstants.FD_RESOURCES, new IAbstractResource[0]);
+
         // create the project resources.
-        mResources = new ProjectResources(null /*project*/);
+        mResources = new ResourceRepository(folder, false) {
+            @Override
+            protected ResourceItem createResourceItem(String name) {
+                return new ResourceItem(name);
+            }
+        };
 
         // create 2 arrays of IResource. one with the filename being looked up, and one without.
         // Since the required API uses IResource, we can use MockFolder for them.

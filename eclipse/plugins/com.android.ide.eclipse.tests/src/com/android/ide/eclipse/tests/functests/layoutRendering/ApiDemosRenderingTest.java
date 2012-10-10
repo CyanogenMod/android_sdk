@@ -26,6 +26,7 @@ import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
+import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -43,7 +44,6 @@ import com.android.ide.common.resources.configuration.SmallestScreenWidthQualifi
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.tests.SdkTestCase;
@@ -215,8 +215,13 @@ public class ApiDemosRenderingTest extends SdkTestCase {
         ResourceRepository framework = ResourceManager.getInstance().loadFrameworkResources(target);
 
         // now load the project resources
-        ProjectResources project = new ProjectResources(null /*project*/);
-        project.loadResources(resFolder);
+        ResourceRepository project = new ResourceRepository(resFolder, false) {
+            @Override
+            protected ResourceItem createResourceItem(String name) {
+                return new ResourceItem(name);
+            }
+
+        };
 
         // Create a folder configuration that will be used for the rendering:
         FolderConfiguration config = getConfiguration();

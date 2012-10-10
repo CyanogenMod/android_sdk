@@ -59,8 +59,8 @@ public class FrameworkResources extends ResourceRepository {
     protected final Map<ResourceType, List<ResourceItem>> mPublicResourceMap =
         new EnumMap<ResourceType, List<ResourceItem>>(ResourceType.class);
 
-    public FrameworkResources() {
-        super(true /*isFrameworkRepository*/);
+    public FrameworkResources(@NonNull IAbstractFolder resFolder) {
+        super(resFolder, true /*isFrameworkRepository*/);
     }
 
     /**
@@ -102,8 +102,8 @@ public class FrameworkResources extends ResourceRepository {
      * @param resFolder The root folder of the resources
      * @param logger a logger to report issues to
      */
-    public void loadPublicResources(@NonNull IAbstractFolder resFolder, @Nullable ILogger logger) {
-        IAbstractFolder valueFolder = resFolder.getFolder(SdkConstants.FD_RES_VALUES);
+    public void loadPublicResources(@Nullable ILogger logger) {
+        IAbstractFolder valueFolder = getResFolder().getFolder(SdkConstants.FD_RES_VALUES);
         if (valueFolder.exists() == false) {
             return;
         }

@@ -31,7 +31,6 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,30 +58,93 @@ import java.util.TreeSet;
  */
 public abstract class ResourceRepository {
 
-    protected final Map<ResourceFolderType, List<ResourceFolder>> mFolderMap =
+    private final IAbstractFolder mResourceFolder;
+
+    protected Map<ResourceFolderType, List<ResourceFolder>> mFolderMap =
         new EnumMap<ResourceFolderType, List<ResourceFolder>>(ResourceFolderType.class);
 
-    protected final Map<ResourceType, Map<String, ResourceItem>> mResourceMap =
+    protected Map<ResourceType, Map<String, ResourceItem>> mResourceMap =
             new EnumMap<ResourceType, Map<String, ResourceItem>>(
-            ResourceType.class);
+                    ResourceType.class);
 
-    private final Map<Map<String, ResourceItem>, Collection<ResourceItem>> mReadOnlyListMap =
+    private Map<Map<String, ResourceItem>, Collection<ResourceItem>> mReadOnlyListMap =
             new IdentityHashMap<Map<String, ResourceItem>, Collection<ResourceItem>>();
 
     private final boolean mFrameworkRepository;
+    private boolean mCleared = true;
+    private boolean mInitializing = false;
 
     protected final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
 
     /**
      * Makes a resource repository
+     * @param resFolder the resource folder of the repository.
      * @param isFrameworkRepository whether the repository is for framework resources.
      */
-    protected ResourceRepository(boolean isFrameworkRepository) {
+    protected ResourceRepository(@NonNull IAbstractFolder resFolder,
+            boolean isFrameworkRepository) {
+        mResourceFolder = resFolder;
         mFrameworkRepository = isFrameworkRepository;
+    }
+
+    public IAbstractFolder getResFolder() {
+        return mResourceFolder;
     }
 
     public boolean isFrameworkRepository() {
         return mFrameworkRepository;
+    }
+
+    public synchronized void clear() {
+        mCleared = true;
+        mFolderMap = new EnumMap<ResourceFolderType, List<ResourceFolder>>(
+                ResourceFolderType.class);
+        mResourceMap = new EnumMap<ResourceType, Map<String, ResourceItem>>(
+                ResourceType.class);
+
+        mReadOnlyListMap =
+            new IdentityHashMap<Map<String, ResourceItem>, Collection<ResourceItem>>();
+    }
+
+    /**
+     * Ensures that the repository has been initialized again after a call to
+     * {@link ResourceRepository#clear()}
+     *
+     * @return true if the repository was just re-initialized.
+     */
+    public synchronized boolean ensureInitialized() {
+        if (mCleared && !mInitializing) {
+            ScanningContext context = new ScanningContext(this);
+            mInitializing = true;
+
+            IAbstractResource[] resources = mResourceFolder.listMembers();
+
+            for (IAbstractResource res : resources) {
+                if (res instanceof IAbstractFolder) {
+                    IAbstractFolder folder = (IAbstractFolder)res;
+                    ResourceFolder resFolder = processFolder(folder);
+
+                    if (resFolder != null) {
+                        // now we process the content of the folder
+                        IAbstractResource[] files = folder.listMembers();
+
+                        for (IAbstractResource fileRes : files) {
+                            if (fileRes instanceof IAbstractFile) {
+                                IAbstractFile file = (IAbstractFile)fileRes;
+
+                                resFolder.processFile(file, ResourceDeltaKind.ADDED, context);
+                            }
+                        }
+                    }
+                }
+            }
+
+            mInitializing = false;
+            mCleared = false;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -140,6 +202,8 @@ public abstract class ResourceRepository {
             @NonNull ResourceFolderType type,
             @NonNull IAbstractFolder removedFolder,
             @Nullable ScanningContext context) {
+        ensureInitialized();
+
         // get the list of folders for the resource type.
         List<ResourceFolder> list = mFolderMap.get(type);
 
@@ -173,6 +237,8 @@ public abstract class ResourceRepository {
     public boolean hasResourceItem(@NonNull String url) {
         assert url.startsWith("@") || url.startsWith("?") : url;
 
+        ensureInitialized();
+
         int typeEnd = url.indexOf('/', 1);
         if (typeEnd != -1) {
             int nameBegin = typeEnd + 1;
@@ -204,6 +270,8 @@ public abstract class ResourceRepository {
      * @return true if the resource is known
      */
     public boolean hasResourceItem(@NonNull ResourceType type, @NonNull String name) {
+        ensureInitialized();
+
         Map<String, ResourceItem> map = mResourceMap.get(type);
 
         if (map != null) {
@@ -227,6 +295,8 @@ public abstract class ResourceRepository {
      */
     @NonNull
     protected ResourceItem getResourceItem(@NonNull ResourceType type, @NonNull String name) {
+        ensureInitialized();
+
         // looking for an existing ResourceItem with this type and name
         ResourceItem item = findDeclaredResourceItem(type, name);
 
@@ -308,6 +378,8 @@ public abstract class ResourceRepository {
      */
     @Nullable
     public ResourceFolder processFolder(@NonNull IAbstractFolder folder) {
+        ensureInitialized();
+
         // split the name of the folder in segments.
         String[] folderSegments = folder.getName().split(SdkConstants.RES_QUALIFIER_SEP);
 
@@ -332,11 +404,15 @@ public abstract class ResourceRepository {
      */
     @Nullable
     public List<ResourceFolder> getFolders(@NonNull ResourceFolderType type) {
+        ensureInitialized();
+
         return mFolderMap.get(type);
     }
 
     @NonNull
     public List<ResourceType> getAvailableResourceTypes() {
+        ensureInitialized();
+
         List<ResourceType> list = new ArrayList<ResourceType>();
 
         // For each key, we check if there's a single ResourceType match.
@@ -381,6 +457,8 @@ public abstract class ResourceRepository {
      */
     @NonNull
     public Collection<ResourceItem> getResourceItemsOfType(@NonNull ResourceType type) {
+        ensureInitialized();
+
         Map<String, ResourceItem> map = mResourceMap.get(type);
 
         if (map == null) {
@@ -402,6 +480,8 @@ public abstract class ResourceRepository {
      * @return true if the repository contains resources of the given type, false otherwise.
      */
     public boolean hasResourcesOfType(@NonNull ResourceType type) {
+        ensureInitialized();
+
         Map<String, ResourceItem> items = mResourceMap.get(type);
         return (items != null && items.size() > 0);
     }
@@ -413,15 +493,9 @@ public abstract class ResourceRepository {
      */
     @Nullable
     public ResourceFolder getResourceFolder(@NonNull IAbstractFolder folder) {
-        Collection<List<ResourceFolder>> values = mFolderMap.values();
+        ensureInitialized();
 
-        if (values.isEmpty()) { // This shouldn't be necessary, but has been observed
-            try {
-                loadResources(folder.getParentFolder());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        Collection<List<ResourceFolder>> values = mFolderMap.values();
 
         for (List<ResourceFolder> list : values) {
             for (ResourceFolder resFolder : list) {
@@ -445,6 +519,8 @@ public abstract class ResourceRepository {
     @Nullable
     public ResourceFile getMatchingFile(@NonNull String name, @NonNull ResourceFolderType type,
             @NonNull FolderConfiguration config) {
+        ensureInitialized();
+
         // get the folders for the given type
         List<ResourceFolder> folders = mFolderMap.get(type);
 
@@ -486,6 +562,7 @@ public abstract class ResourceRepository {
     @Nullable
     public List<ResourceFile> getSourceFiles(@NonNull ResourceType type, @NonNull String name,
             @Nullable FolderConfiguration referenceConfig) {
+        ensureInitialized();
 
         Collection<ResourceItem> items = getResourceItemsOfType(type);
 
@@ -517,6 +594,8 @@ public abstract class ResourceRepository {
     @NonNull
     public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
+        ensureInitialized();
+
         return doGetConfiguredResources(referenceConfig);
     }
 
@@ -530,6 +609,7 @@ public abstract class ResourceRepository {
     @NonNull
     protected final Map<ResourceType, Map<String, ResourceValue>> doGetConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
+        ensureInitialized();
 
         Map<ResourceType, Map<String, ResourceValue>> map =
             new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
@@ -547,6 +627,8 @@ public abstract class ResourceRepository {
      */
     @NonNull
     public SortedSet<String> getLanguages() {
+        ensureInitialized();
+
         SortedSet<String> set = new TreeSet<String>();
 
         Collection<List<ResourceFolder>> folderList = mFolderMap.values();
@@ -569,6 +651,8 @@ public abstract class ResourceRepository {
      */
     @NonNull
     public SortedSet<String> getRegions(@NonNull String currentLanguage) {
+        ensureInitialized();
+
         SortedSet<String> set = new TreeSet<String>();
 
         Collection<List<ResourceFolder>> folderList = mFolderMap.values();
@@ -591,41 +675,17 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Loads the resources from a resource folder.
-     * <p/>
-     *
-     * @param rootFolder The folder to read the resources from. This is the top level
-     * resource folder (res/)
-     * @throws IOException
+     * Loads the resources.
      */
-    public void loadResources(@NonNull IAbstractFolder rootFolder)
-            throws IOException {
-        ScanningContext context = new ScanningContext(this);
-
-        IAbstractResource[] files = rootFolder.listMembers();
-        for (IAbstractResource file : files) {
-            if (file instanceof IAbstractFolder) {
-                IAbstractFolder folder = (IAbstractFolder) file;
-                ResourceFolder resFolder = processFolder(folder);
-
-                if (resFolder != null) {
-                    // now we process the content of the folder
-                    IAbstractResource[] children = folder.listMembers();
-
-                    for (IAbstractResource childRes : children) {
-                        if (childRes instanceof IAbstractFile) {
-                            resFolder.processFile((IAbstractFile) childRes,
-                                    ResourceDeltaKind.ADDED, context);
-                        }
-                    }
-                }
-            }
-        }
+    public void loadResources() {
+        clear();
+        ensureInitialized();
     }
-
 
     protected void removeFile(@NonNull Collection<ResourceType> types,
             @NonNull ResourceFile file) {
+        ensureInitialized();
+
         for (ResourceType type : types) {
             removeFile(type, file);
         }
