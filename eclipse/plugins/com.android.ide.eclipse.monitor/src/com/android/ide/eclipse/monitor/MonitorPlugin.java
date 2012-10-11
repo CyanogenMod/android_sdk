@@ -22,11 +22,13 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import java.io.File;
+
 public class MonitorPlugin extends AbstractUIPlugin {
     public static final String PLUGIN_ID = "com.android.ide.eclipse.monitor"; //$NON-NLS-1$
     private static MonitorPlugin sPlugin;
     private static final DdmsPreferenceStore sDdmsPreferenceStore = new DdmsPreferenceStore();
-    private String mSdkPath;
+    private File mSdkFolder;
 
     @Override
     public void start(BundleContext context) throws Exception {
@@ -53,11 +55,11 @@ public class MonitorPlugin extends AbstractUIPlugin {
         return sDdmsPreferenceStore;
     }
 
-    public void setSdkPath(String sdkPath) {
-        mSdkPath = sdkPath;
+    public void setSdkFolder(File sdkFolder) {
+        mSdkFolder = sdkFolder;
     }
 
-    public String getSdkPath() {
-        return mSdkPath;
+    public File getSdkFolder() {
+        return mSdkFolder;
     }
 }
