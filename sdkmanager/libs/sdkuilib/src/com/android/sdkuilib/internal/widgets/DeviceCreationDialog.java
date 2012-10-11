@@ -157,6 +157,11 @@ public class DeviceCreationDialog extends GridDialog {
             }
         }
 
+        Object ld = mOkButton.getLayoutData();
+        if (ld instanceof GridData) {
+            ((GridData) ld).widthHint = 100;
+        }
+
         validatePage();
 
         return control;
@@ -431,35 +436,37 @@ public class DeviceCreationDialog extends GridDialog {
         public void modifyText(ModifyEvent e) {
 
             if (!mDiagonalLength.getText().isEmpty()) {
-                double diagonal = Double.parseDouble(mDiagonalLength.getText());
-                double diagonalDp = 160.0 * diagonal;
+                try {
+                    double diagonal = Double.parseDouble(mDiagonalLength.getText());
+                    double diagonalDp = 160.0 * diagonal;
 
-                // Set the Screen Size
-                if (diagonalDp >= 1200) {
-                    mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("xlarge")));
-                } else if (diagonalDp >= 800) {
-                    mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("large")));
-                } else if (diagonalDp >= 568) {
-                    mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("normal")));
-                } else {
-                    mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("small")));
-                }
-                if (!mXDimension.getText().isEmpty() && !mYDimension.getText().isEmpty()) {
-
-                    // Set the density based on which bucket it's closest to
-                    double x = Double.parseDouble(mXDimension.getText());
-                    double y = Double.parseDouble(mYDimension.getText());
-                    double dpi = Math.sqrt(x * x + y * y) / diagonal;
-                    double difference = Double.MAX_VALUE;
-                    Density bucket = Density.MEDIUM;
-                    for (Density d : Density.values()) {
-                        if (Math.abs(d.getDpiValue() - dpi) < difference) {
-                            difference = Math.abs(d.getDpiValue() - dpi);
-                            bucket = d;
-                        }
+                    // Set the Screen Size
+                    if (diagonalDp >= 1200) {
+                        mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("xlarge")));
+                    } else if (diagonalDp >= 800) {
+                        mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("large")));
+                    } else if (diagonalDp >= 568) {
+                        mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("normal")));
+                    } else {
+                        mSize.select(ScreenSize.getIndex(ScreenSize.getEnum("small")));
                     }
-                    mDensity.select(Density.getIndex(bucket));
-                }
+                    if (!mXDimension.getText().isEmpty() && !mYDimension.getText().isEmpty()) {
+
+                        // Set the density based on which bucket it's closest to
+                        double x = Double.parseDouble(mXDimension.getText());
+                        double y = Double.parseDouble(mYDimension.getText());
+                        double dpi = Math.sqrt(x * x + y * y) / diagonal;
+                        double difference = Double.MAX_VALUE;
+                        Density bucket = Density.MEDIUM;
+                        for (Density d : Density.values()) {
+                            if (Math.abs(d.getDpiValue() - dpi) < difference) {
+                                difference = Math.abs(d.getDpiValue() - dpi);
+                                bucket = d;
+                            }
+                        }
+                        mDensity.select(Density.getIndex(bucket));
+                    }
+                } catch (NumberFormatException ignore) {}
             }
         }
     }
@@ -575,57 +582,64 @@ public class DeviceCreationDialog extends GridDialog {
             }
         }
 
-        if (name.isEmpty()) {
+        if (valid && name.isEmpty()) {
+            warning = "Please enter a name for the device.";
             valid = false;
         }
-        if (!validateFloat("Diagonal Length", mDiagonalLength.getText())) {
+        if (valid && !validateFloat("Diagonal Length", mDiagonalLength.getText())) {
+            warning = "Please enter a screen size.";
             valid = false;
         }
-        if (!validateInt("Resolution", mXDimension.getText())) {
+        if (valid && !validateInt("Resolution", mXDimension.getText())) {
+            warning = "Please enter the screen resolution.";
             valid = false;
         }
-        if (!validateInt("Resolution", mYDimension.getText())) {
+        if (valid && !validateInt("Resolution", mYDimension.getText())) {
+            warning = "Please enter the screen resolution.";
             valid = false;
         }
-        if (mSize.getSelectionIndex() < 0) {
+        if (valid && mSize.getSelectionIndex() < 0) {
             error = "A size bucket must be selected.";
             valid = false;
         }
-        if (mDensity.getSelectionIndex() < 0) {
+        if (valid && mDensity.getSelectionIndex() < 0) {
             error = "A screen density bucket must be selected";
             valid = false;
         }
-        if (mRatio.getSelectionIndex() < 0) {
+        if (valid && mRatio.getSelectionIndex() < 0) {
             error = "A screen ratio must be selected.";
             valid = false;
         }
-        if (!mNoNav.getSelection() && !mTrackball.getSelection() && !mDpad.getSelection()) {
+        if (valid && !mNoNav.getSelection() && !mTrackball.getSelection() && !mDpad.getSelection()) {
             error = "A mode of hardware navigation, or no navigation, has to be selected.";
             valid = false;
         }
-        if (!validateInt("RAM", mRam.getText())) {
+        if (valid && !validateInt("RAM", mRam.getText())) {
+            warning = "Please enter a RAM amount.";
             valid = false;
         }
-        if (mRamCombo.getSelectionIndex() < 0) {
+        if (valid && mRamCombo.getSelectionIndex() < 0) {
             error = "RAM must have a selected unit.";
             valid = false;
         }
-        if (mButtons.getSelectionIndex() < 0) {
+        if (valid && mButtons.getSelectionIndex() < 0) {
             error = "A button type must be selected.";
             valid = false;
         }
-        if (mKeyboard.getSelection()) {
-            if (!mPortraitKeys.getSelection()
-                    && !mPortrait.getSelection()
-                    && !mLandscapeKeys.getSelection()
-                    && !mLandscape.getSelection()) {
-                error = "At least one device state must be enabled.";
-                valid = false;
-            }
-        } else {
-            if (!mPortrait.getSelection() && !mLandscape.getSelection()) {
-                error = "At least one device state must be enabled";
-                valid = false;
+        if (valid) {
+            if (mKeyboard.getSelection()) {
+                if (!mPortraitKeys.getSelection()
+                        && !mPortrait.getSelection()
+                        && !mLandscapeKeys.getSelection()
+                        && !mLandscape.getSelection()) {
+                    error = "At least one device state must be enabled.";
+                    valid = false;
+                }
+            } else {
+                if (!mPortrait.getSelection() && !mLandscape.getSelection()) {
+                    error = "At least one device state must be enabled";
+                    valid = false;
+                }
             }
         }
         if (mForceCreation.isEnabled() && !mForceCreation.getSelection()) {
