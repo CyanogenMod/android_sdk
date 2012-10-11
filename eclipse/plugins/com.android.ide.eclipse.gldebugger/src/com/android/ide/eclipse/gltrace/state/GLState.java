@@ -362,6 +362,7 @@ public class GLState {
 
     public static IGLProperty createDefaultES1State() {
         GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE_ES1,
+                sGLState.createVertexArrayData(),
                 sGLState.createFramebufferState(),
                 sGLState.createTransformationState(),
                 sGLState.createRasterizationState(),
