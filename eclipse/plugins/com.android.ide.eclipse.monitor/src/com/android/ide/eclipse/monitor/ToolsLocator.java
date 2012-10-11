@@ -22,7 +22,7 @@ public class ToolsLocator implements IToolsLocator {
     private SdkToolsLocator mLocator;
 
     public ToolsLocator() {
-        mLocator = new SdkToolsLocator(MonitorPlugin.getDefault().getSdkPath());
+        mLocator = new SdkToolsLocator(MonitorPlugin.getDefault().getSdkFolder());
     }
 
     @Override

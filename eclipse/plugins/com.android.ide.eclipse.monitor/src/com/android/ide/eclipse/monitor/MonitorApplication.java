@@ -57,7 +57,7 @@ public class MonitorApplication implements IApplication {
             // exit with return code -1
             return Integer.valueOf(-1);
         }
-        MonitorPlugin.getDefault().setSdkPath(sdkPath);
+        MonitorPlugin.getDefault().setSdkFolder(new File(sdkPath));
 
         // install platform tools if necessary
         ILogger sdkLog = NullLogger.getLogger();
@@ -152,7 +152,7 @@ public class MonitorApplication implements IApplication {
             return false;
         }
 
-        SdkToolsLocator locator = new SdkToolsLocator(sdkLocation);
+        SdkToolsLocator locator = new SdkToolsLocator(new File(sdkLocation));
         return locator.isValidInstallation() == SdkInstallStatus.VALID;
     }
 

@@ -46,30 +46,30 @@ public class SdkToolsLocator {
     public static final String FN_HPROF_CONV = "hprof-conv" + PLATFORM_EXECUTABLE_EXTENSION; //$NON-NLS-1$
     public static final String FN_TRACEVIEW = "traceview" + PLATFORM_SCRIPT_EXTENSION; //$NON-NLS-1$
 
-    private final String mSdkPath;
+    private final File mSdkFolder;
 
-    public SdkToolsLocator(String sdkPath) {
-        mSdkPath = sdkPath;
+    public SdkToolsLocator(File sdkFolder) {
+        mSdkFolder = sdkFolder;
     }
 
     public String getAdbLocation() {
-        return getSdkPlatformToolsFolder() + SdkConstants.FN_ADB;
+        return new File(getSdkPlatformToolsFolder(), SdkConstants.FN_ADB).getAbsolutePath();
     }
 
     public String getTraceViewLocation() {
-        return getSdkToolsFolder() + FN_TRACEVIEW;
+        return new File(getSdkToolsFolder(), FN_TRACEVIEW).getAbsolutePath();
     }
 
     public String getHprofConvLocation() {
-        return getSdkToolsFolder() + FN_HPROF_CONV;
+        return new File(getSdkToolsFolder(), FN_HPROF_CONV).getAbsolutePath();
     }
 
     private String getSdkToolsFolder() {
-        return mSdkPath + "/tools/"; //$NON-NLS-1$
+        return new File(mSdkFolder, SdkConstants.FD_TOOLS).getAbsolutePath();
     }
 
     private String getSdkPlatformToolsFolder() {
-        return mSdkPath + "/platform-tools/"; //$NON-NLS-1$
+        return new File(mSdkFolder, SdkConstants.FD_PLATFORM_TOOLS).getAbsolutePath();
     }
 
     public SdkInstallStatus isValidInstallation() {
