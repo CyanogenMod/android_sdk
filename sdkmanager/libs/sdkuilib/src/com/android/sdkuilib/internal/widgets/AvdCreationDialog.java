@@ -71,6 +71,7 @@ public class AvdCreationDialog extends GridDialog {
     private ImageFactory mImageFactory;
     private ILogger mSdkLog;
     private AvdInfo mAvdInfo;
+    private boolean mHaveSystemImage;
 
     // A map from manufacturers to their list of devices.
     private Map<String, List<Device>> mDeviceMap;
@@ -668,7 +669,11 @@ public class AvdCreationDialog extends GridDialog {
                 }
             }
 
-            if (systemImages.length == 1) {
+            mHaveSystemImage = systemImages.length > 0;
+            if (!mHaveSystemImage) {
+                mAbi.add("No system images installed for this target.");
+                mAbi.select(0);
+            } else if (systemImages.length == 1) {
                 mAbi.select(0);
             }
         }
@@ -730,7 +735,8 @@ public class AvdCreationDialog extends GridDialog {
             return;
         }
 
-        if (mTarget.getSelectionIndex() < 0 || mAbi.getSelectionIndex() < 0) {
+        if (mTarget.getSelectionIndex() < 0 ||
+                !mHaveSystemImage || mAbi.getSelectionIndex() < 0) {
             setPageValid(false, error, warning);
             return;
         }
