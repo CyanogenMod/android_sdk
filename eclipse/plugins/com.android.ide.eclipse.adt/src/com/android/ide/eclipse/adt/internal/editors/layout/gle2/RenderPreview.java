@@ -59,6 +59,7 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
+import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
@@ -85,8 +86,10 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 import org.w3c.dom.Document;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Comparator;
 import java.util.Map;
 
 /**
@@ -152,6 +155,7 @@ public class RenderPreview implements IJobChangeListener {
     private int mX;
     private int mY;
     private double mScale = 1.0;
+    private double mAspectRatio;
 
     /** If non null, points to a separate file containing the source */
     private @Nullable IFile mInput;
@@ -203,6 +207,7 @@ public class RenderPreview implements IJobChangeListener {
         mConfiguration = configuration;
         mWidth = width;
         mHeight = height;
+        mAspectRatio = mWidth / (double) mHeight;
     }
 
     /**
@@ -220,12 +225,17 @@ public class RenderPreview implements IJobChangeListener {
      * @param scale the factor to scale the thumbnail picture by
      */
     public void setScale(double scale) {
-        Image thumbnail = mThumbnail;
-        mThumbnail = null;
-        if (thumbnail != null) {
-            thumbnail.dispose();
-        }
+        disposeThumbnail();
         mScale = scale;
+    }
+
+    /**
+     * Returns the aspect ratio of this render preview
+     *
+     * @return the aspect ratio
+     */
+    public double getAspectRatio() {
+        return mAspectRatio;
     }
 
     /**
@@ -277,6 +287,15 @@ public class RenderPreview implements IJobChangeListener {
     }
 
     /**
+     * Returns the area of this render preview, PRIOR to scaling
+     *
+     * @return the area (width times height without scaling)
+     */
+    int getArea() {
+        return mWidth * mHeight;
+    }
+
+    /**
      * Sets whether the preview is visible. Previews that are off
      * screen are typically marked invisible during layout, which means we don't
      * have to expend effort computing preview thumbnails etc
@@ -289,10 +308,13 @@ public class RenderPreview implements IJobChangeListener {
             if (mVisible) {
                 if (mDirty != 0) {
                     // Just made the render preview visible:
-                    configurationChanged(mDirty);
+                    configurationChanged(mDirty); // schedules render
                 } else {
                     updateForkStatus();
+                    mManager.scheduleRender(this);
                 }
+            } else {
+                dispose();
             }
         }
     }
@@ -404,14 +426,19 @@ public class RenderPreview implements IJobChangeListener {
      * of image resources etc
      */
     public void dispose() {
-        if (mThumbnail != null) {
-            mThumbnail.dispose();
-            mThumbnail = null;
-        }
+        disposeThumbnail();
 
         if (mJob != null) {
             mJob.cancel();
             mJob = null;
+        }
+    }
+
+    /** Disposes the thumbnail rendering. */
+    void disposeThumbnail() {
+        if (mThumbnail != null) {
+            mThumbnail.dispose();
+            mThumbnail = null;
         }
     }
 
@@ -482,10 +509,7 @@ public class RenderPreview implements IJobChangeListener {
 
     /** Render immediately */
     private void renderSync() {
-        if (mThumbnail != null) {
-            mThumbnail.dispose();
-            mThumbnail = null;
-        }
+        disposeThumbnail();
 
         GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
         ResourceResolver resolver = getResourceResolver();
@@ -522,6 +546,7 @@ public class RenderPreview implements IJobChangeListener {
             Document document = DomUtilities.getDocument(mInput);
             if (document == null) {
                 mError = true;
+                createErrorThumbnail();
                 return;
             }
             model.loadFromXmlNode(document);
@@ -558,8 +583,12 @@ public class RenderPreview implements IJobChangeListener {
         if (render.isSuccess()) {
             BufferedImage image = session.getImage();
             if (image != null) {
-                setFullImage(image);
+                createThumbnail(image);
             }
+        }
+
+        if (mError) {
+            createErrorThumbnail();
         }
     }
 
@@ -626,13 +655,12 @@ public class RenderPreview implements IJobChangeListener {
      *
      * @param image the full size image
      */
-    void setFullImage(BufferedImage image) {
+    void createThumbnail(BufferedImage image) {
         if (image == null) {
             mThumbnail = null;
             return;
         }
 
-        //double scale = getScale(image);
         double scale = getWidth() / (double) image.getWidth();
         if (scale < 1.0) {
             if (LARGE_SHADOWS) {
@@ -664,6 +692,33 @@ public class RenderPreview implements IJobChangeListener {
                 true /* transferAlpha */, -1);
     }
 
+    void createErrorThumbnail() {
+        int shadowSize = LARGE_SHADOWS ? SHADOW_SIZE : SMALL_SHADOW_SIZE;
+        int width = getWidth();
+        int height = getHeight();
+        BufferedImage image = new BufferedImage(width + shadowSize, height + shadowSize,
+                BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g = image.createGraphics();
+        g.setColor(java.awt.Color.WHITE);
+        g.fillRect(0, 0, width, height);
+
+        g.dispose();
+
+        if (LARGE_SHADOWS) {
+            ImageUtils.drawRectangleShadow(image, 0, 0,
+                    image.getWidth() - SHADOW_SIZE,
+                    image.getHeight() - SHADOW_SIZE);
+        } else {
+            ImageUtils.drawSmallRectangleShadow(image, 0, 0,
+                    image.getWidth() - SMALL_SHADOW_SIZE,
+                    image.getHeight() - SMALL_SHADOW_SIZE);
+        }
+
+        mThumbnail = SwtUtils.convertToSwt(mCanvas.getDisplay(), image,
+                true /* transferAlpha */, -1);
+    }
+
     private static double getScale(int width, int height) {
         int maxWidth = RenderPreviewManager.getMaxWidth();
         int maxHeight = RenderPreviewManager.getMaxHeight();
@@ -685,7 +740,7 @@ public class RenderPreview implements IJobChangeListener {
      * @return the width in pixels
      */
     public int getWidth() {
-        return (int) (mScale * mWidth);
+        return (int) (mWidth * mScale * RenderPreviewManager.getScale());
     }
 
     /**
@@ -694,7 +749,7 @@ public class RenderPreview implements IJobChangeListener {
      * @return the height in pixels
      */
     public int getHeight() {
-        return (int) (mScale * mHeight);
+        return (int) (mHeight * mScale * RenderPreviewManager.getScale());
     }
 
     /**
@@ -774,35 +829,57 @@ public class RenderPreview implements IJobChangeListener {
      * @param y the y coordinate to paint the preview at
      */
     void paint(GC gc, int x, int y) {
-        if (mThumbnail != null) {
+        int width = getWidth();
+        int height = getHeight();
+        if (mThumbnail != null && !mError) {
             gc.drawImage(mThumbnail, x, y);
 
             if (mActive) {
                 int oldWidth = gc.getLineWidth();
                 gc.setLineWidth(3);
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION));
-                gc.drawRectangle(x - 1, y - 1, getWidth() + 2, getHeight() + 2);
+                gc.drawRectangle(x - 1, y - 1, width + 2, height + 2);
                 gc.setLineWidth(oldWidth);
             }
         } else if (mError) {
-            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_BORDER));
-            gc.drawRectangle(x, y, getWidth(), getHeight());
+            if (mThumbnail != null) {
+                gc.drawImage(mThumbnail, x, y);
+            } else {
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_BORDER));
+                gc.drawRectangle(x, y, width, height);
+            }
+
+            gc.setClipping(x, y, width, height + 100);
             Image icon = IconFactory.getInstance().getIcon("renderError"); //$NON-NLS-1$
             ImageData data = icon.getImageData();
             int prevAlpha = gc.getAlpha();
-            gc.setAlpha(128-32);
-            gc.drawImage(icon, x + (getWidth() - data.width) / 2,
-                    y + (getHeight() - data.height) / 2);
+            int alpha = 128-32;
+            if (mThumbnail != null) {
+                alpha -= 64;
+            }
+            gc.setAlpha(alpha);
+            gc.drawImage(icon, x + (width - data.width) / 2, y + (height - data.height) / 2);
+
+            Density density = mConfiguration.getDensity();
+            if (density == Density.TV || density == Density.LOW) {
+                gc.setAlpha(255);
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+                gc.drawText("Broken rendering\nlibrary;\nunsupported DPI\n\nTry updating\nSDK platforms",
+                        x + 8, y + HEADER_HEIGHT, true);
+            }
+
             gc.setAlpha(prevAlpha);
+            gc.setClipping((Region) null);
         } else {
             gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_BORDER));
-            gc.drawRectangle(x, y, getWidth(), getHeight());
+            gc.drawRectangle(x, y, width, height);
+
             Image icon = IconFactory.getInstance().getIcon("refreshPreview"); //$NON-NLS-1$
             ImageData data = icon.getImageData();
             int prevAlpha = gc.getAlpha();
             gc.setAlpha(128-32);
-            gc.drawImage(icon, x + (getWidth() - data.width) / 2,
-                    y + (getHeight() - data.height) / 2);
+            gc.drawImage(icon, x + (width - data.width) / 2,
+                    y + (height - data.height) / 2);
             gc.setAlpha(prevAlpha);
         }
 
@@ -812,7 +889,7 @@ public class RenderPreview implements IJobChangeListener {
             gc.setAlpha(128+32);
             Color bg = mCanvas.getDisplay().getSystemColor(SWT.COLOR_WHITE);
             gc.setBackground(bg);
-            gc.fillRectangle(left, y, x + getWidth() - left, HEADER_HEIGHT);
+            gc.fillRectangle(left, y, x + width - left, HEADER_HEIGHT);
             gc.setAlpha(prevAlpha);
 
             // Paint icons
@@ -935,9 +1012,12 @@ public class RenderPreview implements IJobChangeListener {
             int temp = mHeight;
             mHeight = mWidth;
             mWidth = temp;
+            mAspectRatio = mWidth / (double) mHeight;
         }
 
         mDirty = 0;
+
+        mManager.scheduleRender(this);
     }
 
     /**
@@ -1069,4 +1149,23 @@ public class RenderPreview implements IJobChangeListener {
     public ConfigurationDescription getDescription() {
         return mDescription;
     }
+
+    /** Sorts render previews into increasing aspect ratio order */
+    static Comparator<RenderPreview> INCREASING_ASPECT_RATIO = new Comparator<RenderPreview>() {
+        @Override
+        public int compare(RenderPreview preview1, RenderPreview preview2) {
+            return (int) Math.signum(preview1.mAspectRatio - preview2.mAspectRatio);
+        }
+    };
+    /** Sorts render previews into visual order: row by row, column by column */
+    static Comparator<RenderPreview> VISUAL_ORDER = new Comparator<RenderPreview>() {
+        @Override
+        public int compare(RenderPreview preview1, RenderPreview preview2) {
+            int delta = preview1.mY - preview2.mY;
+            if (delta == 0) {
+                delta = preview1.mX - preview2.mX;
+            }
+            return delta;
+        }
+    };
 }

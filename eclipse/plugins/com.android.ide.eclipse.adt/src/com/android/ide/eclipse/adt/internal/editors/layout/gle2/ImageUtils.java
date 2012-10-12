@@ -671,8 +671,14 @@ public class ImageUtils {
                 null);
     }
 
+    /**
+     * Reads the given image from the plugin folder
+     *
+     * @param name the name of the image (including file extension)
+     * @return the corresponding image, or null if something goes wrong
+     */
     @Nullable
-    private static BufferedImage readImage(@NonNull String name) {
+    public static BufferedImage readImage(@NonNull String name) {
         InputStream stream = ImageUtils.class.getResourceAsStream("/icons/" + name); //$NON-NLS-1$
         if (stream != null) {
             try {

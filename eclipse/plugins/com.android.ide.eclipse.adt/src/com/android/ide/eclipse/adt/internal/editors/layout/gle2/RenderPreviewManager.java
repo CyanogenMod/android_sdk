@@ -22,6 +22,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPre
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -29,6 +30,7 @@ import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ComplementingConfiguration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
@@ -52,6 +54,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.ScrollBar;
 
@@ -60,8 +63,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 
 /**
  * Manager for the configuration previews, which handles layout computations,
@@ -69,11 +74,13 @@ import java.util.Set;
  */
 public class RenderPreviewManager {
     private static double sScale = 1.0;
-    private static final int RENDER_DELAY = 100;
+    private static final int RENDER_DELAY = 150;
     private static final int PREVIEW_VGAP = 18;
     private static final int PREVIEW_HGAP = 12;
     private static final int MAX_WIDTH = 200;
     private static final int MAX_HEIGHT = MAX_WIDTH;
+    private static final int ZOOM_ICON_WIDTH = 16;
+    private static final int ZOOM_ICON_HEIGHT = 16;
     private @Nullable List<RenderPreview> mPreviews;
     private @Nullable RenderPreviewList mManualList;
     private final @NonNull LayoutCanvas mCanvas;
@@ -87,12 +94,15 @@ public class RenderPreviewManager {
     private @Nullable RenderPreview mActivePreview;
     private @Nullable ScrollBarListener mListener;
     private int mLayoutHeight;
-    private int mMaxVisibleY;
     /** Last seen state revision in this {@link RenderPreviewManager}. If less
      * than {@link #sRevision}, the previews need to be updated on next exposure */
     private static int mRevision;
     /** Current global revision count */
     private static int sRevision;
+    private boolean mNeedLayout;
+    private boolean mNeedRender;
+    private boolean mNeedZoom;
+    private SwapAnimation mAnimation;
 
     /**
      * Creates a {@link RenderPreviewManager} associated with the given canvas
@@ -154,19 +164,26 @@ public class RenderPreviewManager {
         updatedZoom();
     }
 
+    /** Zooms to 100 (resets zoom) */
+    public void zoomReset() {
+        sScale = 1.0;
+        updatedZoom();
+        mNeedZoom = mNeedLayout = true;
+        mCanvas.redraw();
+    }
+
     private void updatedZoom() {
         if (hasPreviews()) {
             for (RenderPreview preview : mPreviews) {
-                preview.setScale(sScale);
+                preview.disposeThumbnail();
             }
             RenderPreview preview = mCanvas.getPreview();
             if (preview != null) {
-                preview.setScale(sScale);
+                preview.disposeThumbnail();
             }
         }
 
-        renderPreviews();
-        layout(true);
+        mNeedLayout = mNeedRender = true;
         mCanvas.redraw();
     }
 
@@ -176,6 +193,10 @@ public class RenderPreviewManager {
 
     static int getMaxHeight() {
         return (int) sScale * MAX_HEIGHT;
+    }
+
+    static double getScale() {
+        return sScale;
     }
 
     /** Delete all the previews */
@@ -242,42 +263,27 @@ public class RenderPreviewManager {
 
     /**
      * Layout Algorithm. This sets the {@link RenderPreview#getX()} and
-     * {@link RenderPreview#getY()} coordinates of all the previews. It also marks
-     * previews as visible or invisible via {@link RenderPreview#setVisible(boolean)}
-     * according to their position and the current visible view port in the layout canvas.
-     * Finally, it also sets the {@code mMaxVisibleY} and {@code mLayoutHeight} fields,
-     * such that the scrollbars can compute the right scrolled area, and that scrolling
-     * can cause render refreshes on views that are made visible.
-     *
+     * {@link RenderPreview#getY()} coordinates of all the previews. It also
+     * marks previews as visible or invisible via
+     * {@link RenderPreview#setVisible(boolean)} according to their position and
+     * the current visible view port in the layout canvas. Finally, it also sets
+     * the {@code mLayoutHeight} field, such that the scrollbars can compute the
+     * right scrolled area, and that scrolling can cause render refreshes on
+     * views that are made visible.
      * <p>
-     * Two shapes to fill. The screen is typically wide. When showing a phone,
-     * I should use all the vertical space; I then show thumbnails on the right.
-     * When showing the tablet, I need to do something in between. I reserve at least
-     * 200 pixels either on the right or on the bottom and use the remainder.
-     * TODO: Look up better algorithms. Optimal space division algorithm. Can prune etc.
+     * This is not a traditional bin packing problem, because the objects to be
+     * packaged do not have a fixed size; we can scale them up and down in order
+     * to provide an "optimal" size.
      * <p>
-     * This is not a traditional bin packing problem, because the objects to be packaged
-     * do not have a fixed size; we can scale them up and down in order to provide an
-     * "optimal" size.
-     * <p>
-     * See http://en.wikipedia.org/wiki/Packing_problem
-     * See http://en.wikipedia.org/wiki/Bin_packing_problem
-     * <p>
-     * Returns true if the layout changed (so a redraw is desired)
+     * See http://en.wikipedia.org/wiki/Packing_problem See
+     * http://en.wikipedia.org/wiki/Bin_packing_problem
      */
-    boolean layout(boolean refresh) {
+    void layout(boolean refresh) {
+        mNeedLayout = false;
+
         if (mPreviews == null || mPreviews.isEmpty()) {
-            return false;
+            return;
         }
-
-        if (mListener == null) {
-            mListener = new ScrollBarListener();
-            mCanvas.getVerticalBar().addSelectionListener(mListener);
-        }
-
-        // TODO: Separate layout heuristics for portrait and landscape orientations (though
-        // it also depends on the dimensions of the canvas window, which determines the
-        // shape of the leftover space)
 
         int scaledImageWidth = mHScale.getScaledImgSize();
         int scaledImageHeight = mVScale.getScaledImgSize();
@@ -289,13 +295,48 @@ public class RenderPreviewManager {
                 && clientArea.width == mPrevCanvasWidth
                 && clientArea.height == mPrevCanvasHeight)) {
             // No change
-            return false;
+            return;
         }
 
         mPrevImageWidth = scaledImageWidth;
         mPrevImageHeight = scaledImageHeight;
         mPrevCanvasWidth = clientArea.width;
         mPrevCanvasHeight = clientArea.height;
+
+        if (mListener == null) {
+            mListener = new ScrollBarListener();
+            mCanvas.getVerticalBar().addSelectionListener(mListener);
+        }
+
+        beginRenderScheduling();
+
+        mLayoutHeight = 0;
+
+        if (previewsHaveIdenticalSize() || fixedOrder()) {
+            // If all the preview boxes are of identical sizes, or if the order is predetermined,
+            // just lay them out in rows.
+            rowLayout();
+        } else if (previewsFit()) {
+            layoutFullFit();
+        } else {
+            rowLayout();
+        }
+
+        mCanvas.updateScrollBars();
+    }
+
+    /**
+     * Performs a simple layout where the views are laid out in a row, wrapping
+     * around the top left canvas image.
+     */
+    private void rowLayout() {
+        // TODO: Separate layout heuristics for portrait and landscape orientations (though
+        // it also depends on the dimensions of the canvas window, which determines the
+        // shape of the leftover space)
+
+        int scaledImageWidth = mHScale.getScaledImgSize();
+        int scaledImageHeight = mVScale.getScaledImgSize();
+        Rectangle clientArea = mCanvas.getClientArea();
 
         int availableWidth = clientArea.x + clientArea.width - getX();
         int availableHeight = clientArea.y + clientArea.height - getY();
@@ -319,7 +360,11 @@ public class RenderPreviewManager {
             }
         }
 
-        for (RenderPreview preview : mPreviews) {
+        ArrayList<RenderPreview> aspectOrder = new ArrayList<RenderPreview>(mPreviews);
+        Collections.sort(aspectOrder, RenderPreview.INCREASING_ASPECT_RATIO);
+
+
+        for (RenderPreview preview : aspectOrder) {
             if (x > 0 && x + preview.getWidth() > availableWidth) {
                 x = rightHandSide;
                 int prevY = y;
@@ -362,10 +407,9 @@ public class RenderPreviewManager {
 
             preview.setPosition(x, y);
 
-            if (y > maxVisibleY) {
+            if (y > maxVisibleY && maxVisibleY > 0) {
                 preview.setVisible(false);
             } else if (!preview.isVisible()) {
-                preview.render(RENDER_DELAY);
                 preview.setVisible(true);
             }
 
@@ -375,12 +419,119 @@ public class RenderPreviewManager {
         }
 
         mLayoutHeight = nextY;
-        mMaxVisibleY = maxVisibleY;
-        mCanvas.updateScrollBars();
+    }
+
+    private boolean fixedOrder() {
+        // Currently, none of the lists have fixed order. Possibly we could
+        // consider mMode == RenderPreviewMode.CUSTOM to be fixed.
+        return false;
+    }
+
+    /** Returns true if all the previews have the same identical size */
+    private boolean previewsHaveIdenticalSize() {
+        if (!hasPreviews()) {
+            return true;
+        }
+
+        Iterator<RenderPreview> iterator = mPreviews.iterator();
+        RenderPreview first = iterator.next();
+        int width = first.getWidth();
+        int height = first.getHeight();
+
+        while (iterator.hasNext()) {
+            RenderPreview preview = iterator.next();
+            if (width != preview.getWidth() || height != preview.getHeight()) {
+                return false;
+            }
+        }
 
         return true;
     }
 
+    /** Returns true if all the previews can fully fit in the available space */
+    private boolean previewsFit() {
+        int scaledImageWidth = mHScale.getScaledImgSize();
+        int scaledImageHeight = mVScale.getScaledImgSize();
+        Rectangle clientArea = mCanvas.getClientArea();
+        int availableWidth = clientArea.x + clientArea.width - getX();
+        int availableHeight = clientArea.y + clientArea.height - getY();
+        int bottomBorder = scaledImageHeight;
+        int rightHandSide = scaledImageWidth + PREVIEW_HGAP;
+
+        // First see if we can fit everything; if so, we can try to make the layouts
+        // larger such that they fill up all the available space
+        long availableArea = rightHandSide * bottomBorder +
+                availableWidth * (Math.max(0, availableHeight - bottomBorder));
+
+        long requiredArea = 0;
+        for (RenderPreview preview : mPreviews) {
+            // Note: This does not include individual preview scale; the layout
+            // algorithm itself may be tweaking the scales to fit elements within
+            // the layout
+            requiredArea += preview.getArea();
+        }
+
+        return requiredArea * sScale < availableArea;
+    }
+
+    private void layoutFullFit() {
+        int scaledImageWidth = mHScale.getScaledImgSize();
+        int scaledImageHeight = mVScale.getScaledImgSize();
+        Rectangle clientArea = mCanvas.getClientArea();
+        int availableWidth = clientArea.x + clientArea.width - getX();
+        int availableHeight = clientArea.y + clientArea.height - getY();
+        int maxVisibleY = clientArea.y + clientArea.height;
+        int bottomBorder = scaledImageHeight;
+        int rightHandSide = scaledImageWidth + PREVIEW_HGAP;
+
+        int minWidth = Integer.MAX_VALUE;
+        int minHeight = Integer.MAX_VALUE;
+        for (RenderPreview preview : mPreviews) {
+            minWidth = Math.min(minWidth, preview.getWidth());
+            minHeight = Math.min(minHeight, preview.getHeight());
+        }
+
+        BinPacker packer = new BinPacker(minWidth, minHeight);
+
+        // TODO: Instead of this, just start with client area and occupy scaled image size!
+
+        // Add in gap on right and bottom since we'll add that requirement on the width and
+        // height rectangles too (for spacing)
+        packer.addSpace(new Rect(rightHandSide, 0,
+                availableWidth - rightHandSide + PREVIEW_HGAP,
+                availableHeight + PREVIEW_VGAP));
+        if (maxVisibleY > bottomBorder) {
+            packer.addSpace(new Rect(0, bottomBorder + PREVIEW_VGAP,
+                    availableWidth + PREVIEW_HGAP, maxVisibleY - bottomBorder + PREVIEW_VGAP));
+        }
+
+        // TODO: Sort previews first before attempting to position them?
+
+        ArrayList<RenderPreview> aspectOrder = new ArrayList<RenderPreview>(mPreviews);
+        Collections.sort(aspectOrder, RenderPreview.INCREASING_ASPECT_RATIO);
+
+        for (RenderPreview preview : aspectOrder) {
+            int previewWidth = preview.getWidth();
+            int previewHeight = preview.getHeight();
+            previewHeight += PREVIEW_VGAP;
+            if (preview.isForked()) {
+                previewHeight += PREVIEW_VGAP;
+            }
+            previewWidth += PREVIEW_HGAP;
+            // title height? how do I account for that?
+            Rect position = packer.occupy(previewWidth, previewHeight);
+            if (position != null) {
+                preview.setPosition(position.x, position.y);
+                preview.setVisible(true);
+            } else {
+                // Can't fit: give up and do plain row layout
+                rowLayout();
+                return;
+            }
+        }
+
+        mLayoutHeight = availableHeight;
+    }
     /**
      * Paints the configuration previews
      *
@@ -389,7 +540,15 @@ public class RenderPreviewManager {
     void paint(GC gc) {
         if (hasPreviews()) {
             // Ensure up to date at all times; consider moving if it's too expensive
-            layout(false);
+            layout(mNeedLayout);
+            if (mNeedRender) {
+                renderPreviews();
+            }
+            if (mNeedZoom) {
+                boolean allowZoomIn = true /*mMode == RenderPreviewMode.NONE*/;
+                mCanvas.setFitScale(false /*onlyZoomOut*/, allowZoomIn);
+                mNeedZoom = false;
+            }
             int rootX = getX();
             int rootY = getY();
 
@@ -415,6 +574,23 @@ public class RenderPreviewManager {
                 int y = destY + destHeight - preview.getHeight();
                 preview.paintTitle(gc, x, y, false /*showFile*/);
             }
+
+            // Zoom overlay
+            int x = getZoomX();
+            if (x > 0) {
+                int y = getZoomY();
+                IconFactory iconFactory = IconFactory.getInstance();
+                Image zoomOut = iconFactory.getIcon("zoomminus"); //$NON-NLS-1$);
+                Image zoomIn = iconFactory.getIcon("zoomplus"); //$NON-NLS-1$);
+                Image zoom100 = iconFactory.getIcon("zoom100"); //$NON-NLS-1$);
+
+                gc.drawImage(zoomIn, x, y);
+                y += ZOOM_ICON_HEIGHT;
+                gc.drawImage(zoomOut, x, y);
+                y += ZOOM_ICON_HEIGHT;
+                gc.drawImage(zoom100, x, y);
+                y += ZOOM_ICON_HEIGHT;
+            }
         } else if (mMode == RenderPreviewMode.CUSTOM) {
             int rootX = getX();
             rootX += mHScale.getScaledImgSize();
@@ -425,6 +601,10 @@ public class RenderPreviewManager {
             gc.setForeground(mCanvas.getDisplay().getSystemColor(SWT.COLOR_BLACK));
             gc.drawText("Add previews with \"Add as Thumbnail\"\nin the configuration menu",
                     rootX, rootY, true);
+        }
+
+        if (mAnimation != null) {
+            mAnimation.tick(gc);
         }
     }
 
@@ -460,7 +640,8 @@ public class RenderPreviewManager {
             addPreview(preview);
 
             layout(true);
-            preview.render(RENDER_DELAY);
+            beginRenderScheduling();
+            scheduleRender(preview);
             mCanvas.setFitScale(true /* onlyZoomOut */, false /*allowZoomIn*/);
 
             if (mManualList == null) {
@@ -647,11 +828,13 @@ public class RenderPreviewManager {
                 assert false : mMode;
         }
 
-        layout(true);
-        renderPreviews();
-        boolean allowZoomIn = mMode == RenderPreviewMode.NONE;
-        mCanvas.setFitScale(true /*onlyZoomOut*/, allowZoomIn);
-        mCanvas.updateScrollBars();
+        // We schedule layout for the next redraw rather than process it here immediately;
+        // not only does this let us avoid doing work for windows where the tab is in the
+        // background, but when a file is opened we may not know the size of the canvas
+        // yet, and the layout methods need it in order to do a good job. By the time
+        // the canvas is painted, we have accurate bounds.
+        mNeedLayout = mNeedRender = true;
+        mCanvas.redraw();
 
         return true;
     }
@@ -883,20 +1066,16 @@ public class RenderPreviewManager {
     public void configurationChanged(int flags) {
         // Similar to renderPreviews, but only acts on incomplete previews
         if (hasPreviews()) {
-            long delay = 0;
             // Do zoomed images first
+            beginRenderScheduling();
             for (RenderPreview preview : mPreviews) {
                 if (preview.getScale() > 1.2) {
                     preview.configurationChanged(flags);
-                    delay += RENDER_DELAY;
-                    preview.render(delay);
                 }
             }
             for (RenderPreview preview : mPreviews) {
                 if (preview.getScale() <= 1.2) {
                     preview.configurationChanged(flags);
-                    delay += RENDER_DELAY;
-                    preview.render(delay);
                 }
             }
             RenderPreview preview = mCanvas.getPreview();
@@ -904,7 +1083,7 @@ public class RenderPreviewManager {
                 preview.configurationChanged(flags);
                 preview.dispose();
             }
-            layout(true);
+            mNeedLayout = true;
             mCanvas.redraw();
         }
     }
@@ -912,22 +1091,49 @@ public class RenderPreviewManager {
     /** Updates the configuration preview thumbnails */
     public void renderPreviews() {
         if (hasPreviews()) {
-            long delay = 0;
+            beginRenderScheduling();
+
+            // Process in visual order
+            ArrayList<RenderPreview> visualOrder = new ArrayList<RenderPreview>(mPreviews);
+            Collections.sort(visualOrder, RenderPreview.VISUAL_ORDER);
+
             // Do zoomed images first
-            for (RenderPreview preview : mPreviews) {
+            for (RenderPreview preview : visualOrder) {
                 if (preview.getScale() > 1.2 && preview.isVisible()) {
-                    delay += RENDER_DELAY;
-                    preview.render(delay);
+                    scheduleRender(preview);
                 }
             }
             // Non-zoomed images
-            for (RenderPreview preview : mPreviews) {
+            for (RenderPreview preview : visualOrder) {
                 if (preview.getScale() <= 1.2 && preview.isVisible()) {
-                    delay += RENDER_DELAY;
-                    preview.render(delay);
+                    scheduleRender(preview);
                 }
             }
         }
+
+        mNeedRender = false;
+    }
+
+    private int mPendingRenderCount;
+
+    /**
+     * Reset rendering scheduling. The next render request will be scheduled
+     * after a single delay unit.
+     */
+    public void beginRenderScheduling() {
+        mPendingRenderCount = 0;
+    }
+
+    /**
+     * Schedule rendering the given preview. Each successive call will add an additional
+     * delay unit to the schedule from the previous {@link #scheduleRender(RenderPreview)}
+     * call, until {@link #beginRenderScheduling()} is called again.
+     *
+     * @param preview the preview to render
+     */
+    public void scheduleRender(@NonNull RenderPreview preview) {
+        mPendingRenderCount++;
+        preview.render(mPendingRenderCount * RENDER_DELAY);
     }
 
     /**
@@ -961,12 +1167,24 @@ public class RenderPreviewManager {
 
         // Switch main editor to the clicked configuration preview
         mCanvas.setPreview(preview);
-        chooser.setConfiguration(preview.getConfiguration());
+
+        Configuration newConfiguration = preview.getConfiguration();
+        if (newConfiguration instanceof NestedConfiguration) {
+            // Should never use a complementing configuration for the main
+            // rendering's configuration; instead, create a new configuration
+            // with a snapshot of the configuration's current values
+            newConfiguration = Configuration.copy(preview.getConfiguration());
+        }
+        chooser.setConfiguration(newConfiguration);
+
         editor.recomputeLayout();
+
+        // Scroll to the top again, if necessary
         mCanvas.getVerticalBar().setSelection(mCanvas.getVerticalBar().getMinimum());
-        mCanvas.setFitScale(true /*onlyZoomOut*/, false /*allowZoomIn*/);
-        layout(true);
+
+        mNeedLayout = mNeedZoom = true;
         mCanvas.redraw();
+        mAnimation = new SwapAnimation(preview);
     }
 
     /**
@@ -1001,6 +1219,22 @@ public class RenderPreviewManager {
 
     private int getY() {
         return mVScale.translate(0);
+    }
+
+    private int getZoomX() {
+        Rectangle clientArea = mCanvas.getClientArea();
+        int x = clientArea.x + clientArea.width - ZOOM_ICON_WIDTH;
+        if (x < mHScale.getScaledImgSize() + PREVIEW_HGAP) {
+            // No visible previews because the main image is zoomed too far
+            return -1;
+        }
+
+        return x - 6;
+    }
+
+    private int getZoomY() {
+        Rectangle clientArea = mCanvas.getClientArea();
+        return clientArea.y + 3;
     }
 
     /**
@@ -1062,6 +1296,24 @@ public class RenderPreviewManager {
      * @return true if the click occurred over a preview and was handled, false otherwise
      */
     public boolean click(ControlPoint mousePos) {
+        // Clicked zoom?
+        int x = getZoomX();
+        if (x > 0) {
+            if (mousePos.x >= x && mousePos.x <= x + ZOOM_ICON_WIDTH) {
+                int y = getZoomY();
+                if (mousePos.y >= y && mousePos.y <= y + 3 * ZOOM_ICON_HEIGHT) {
+                    if (mousePos.y < y + ZOOM_ICON_HEIGHT) {
+                        zoomIn();
+                    } else if (mousePos.y < y + 2 * ZOOM_ICON_HEIGHT) {
+                        zoomOut();
+                    } else {
+                        zoomReset();
+                    }
+                }
+            }
+            return true;
+        }
+
         RenderPreview preview = getPreview(mousePos);
         if (preview != null) {
             boolean handled = preview.click(mousePos.x - getX() - preview.getX(),
@@ -1160,11 +1412,9 @@ public class RenderPreviewManager {
             int selection = bar.getSelection();
             int thumb = bar.getThumb();
             int maxY = selection + thumb;
-            if (maxY > mMaxVisibleY) {
-            }
+            beginRenderScheduling();
             for (RenderPreview preview : mPreviews) {
                 if (!preview.isVisible() && preview.getY() <= maxY) {
-                    preview.render(RENDER_DELAY);
                     preview.setVisible(true);
                 }
             }
@@ -1172,6 +1422,53 @@ public class RenderPreviewManager {
 
         @Override
         public void widgetDefaultSelected(SelectionEvent e) {
+        }
+    }
+
+    /** Animation overlay shown briefly after swapping two previews */
+    private class SwapAnimation implements Runnable {
+        private long begin;
+        private long end;
+        private static final long DURATION = 400; // ms
+        private Rect initialPos;
+
+        SwapAnimation(RenderPreview preview) {
+            begin = System.currentTimeMillis();
+            end = begin + DURATION;
+
+            initialPos = new Rect(preview.getX(), preview.getY(),
+                    preview.getWidth(), preview.getHeight());
+        }
+
+        void tick(GC gc) {
+            long now = System.currentTimeMillis();
+            if (now > end || mCanvas.isDisposed()) {
+                mAnimation = null;
+                return;
+            }
+
+            // For now, just animation rect1 towards rect2
+            // The shape of the canvas might have shifted if zoom or device size
+            // or orientation changed, so compute a new target size
+            CanvasTransform hi = mCanvas.getHorizontalTransform();
+            CanvasTransform vi = mCanvas.getVerticalTransform();
+            Rect rect = new Rect(hi.translate(0), vi.translate(0),
+                    hi.getScaledImgSize(), vi.getScaledImgSize());
+            double portion = (now - begin) / (double) DURATION;
+            rect.x = (int) (portion * (rect.x - initialPos.x) + initialPos.x);
+            rect.y = (int) (portion * (rect.y - initialPos.y) + initialPos.y);
+            rect.w = (int) (portion * (rect.w - initialPos.w) + initialPos.w);
+            rect.h = (int) (portion * (rect.h - initialPos.h) + initialPos.h);
+
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
+            gc.drawRectangle(rect.x, rect.y, rect.w, rect.h);
+
+            mCanvas.getDisplay().timerExec(5, this);
+        }
+
+        @Override
+        public void run() {
+            mCanvas.redraw();
         }
     }
 }
