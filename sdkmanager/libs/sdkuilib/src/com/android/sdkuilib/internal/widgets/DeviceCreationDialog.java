@@ -118,12 +118,15 @@ public class DeviceCreationDialog extends GridDialog {
 
     private Button mOkButton;
 
-    // The hardware instance attached to each of the states of the created
-    // device
+    /** The hardware instance attached to each of the states of the created device. */
     private Hardware mHardware;
-    // This contains the Software for the device. Since it has no effect on the
-    // emulator whatsoever, we just use a single instance with reasonable
-    // defaults.
+    /** The instance of the Device created by the dialog, if the user pressed {@code mOkButton}. */
+    private Device mCreatedDevice;
+
+    /**
+     * This contains the Software for the device. Since it has no effect on the
+     * emulator whatsoever, we just use a single instance with reasonable
+     * defaults. */
     private static final Software mSoftware;
 
     static {
@@ -141,6 +144,15 @@ public class DeviceCreationDialog extends GridDialog {
         mDevice = device;
         mManager = manager;
         mUserDevices = mManager.getUserDevices();
+    }
+
+    /**
+     * Returns the instance of the Device created by the dialog,
+     * if the user pressed the OK|create|edit|clone button.
+     * Typically only non-null if the dialog returns OK.
+     */
+    public Device getCreatedDevice() {
+        return mCreatedDevice;
     }
 
     @Override
@@ -1053,6 +1065,7 @@ public class DeviceCreationDialog extends GridDialog {
                 mManager.addUserDevice(d);
             }
             mManager.saveUserDevices();
+            mCreatedDevice = d;
             super.okPressed();
         }
     }

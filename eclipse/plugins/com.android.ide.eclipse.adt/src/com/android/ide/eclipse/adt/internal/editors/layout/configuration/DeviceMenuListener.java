@@ -205,9 +205,9 @@ class DeviceMenuListener extends SelectionAdapter {
         //   same space
         // * Add in screen resolution and density
         String name = d.getName();
-        if (name.equals("3.7 FWVGA slider")) {
+        if (name.equals("3.7 FWVGA slider")) {                        //$NON-NLS-1$
             // Fix metadata: this one entry doesn't have "in" like the rest of them
-            name = "3.7in FWVGA slider";
+            name = "3.7in FWVGA slider";                              //$NON-NLS-1$
         }
 
         Matcher matcher = PATTERN.matcher(name);

@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository.ui;
 
 
 import com.android.SdkConstants;
-import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdkuilib.internal.repository.AboutDialog;
@@ -27,30 +26,27 @@ import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.widgets.DeviceCreationDialog;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.utils.ILogger;
 
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 
 /**
  * This is an intermediate version of the {@link AvdManagerPage}
@@ -169,10 +165,6 @@ public class AvdManagerWindowImpl1 {
         });
 
         GridLayout glShell = new GridLayout(2, false);
-        glShell.verticalSpacing = 0;
-        glShell.horizontalSpacing = 0;
-        glShell.marginWidth = 0;
-        glShell.marginHeight = 0;
         mShell.setLayout(glShell);
 
         mShell.setMinimumSize(new Point(500, 300));
@@ -184,8 +176,36 @@ public class AvdManagerWindowImpl1 {
 
     private void createContents() {
 
-        mAvdPage = new AvdManagerPage(mShell, SWT.NONE, mUpdaterData, mDeviceManager);
-        mAvdPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+        TabFolder tabFolder = new TabFolder(mShell, SWT.NONE);
+        GridDataBuilder.create(tabFolder).fill().grab().hSpan(2);
+
+        // avd tab
+        TabItem avdTabItem = new TabItem(tabFolder, SWT.NONE);
+        avdTabItem.setText("Android Virtual Devices");
+        createAvdTab(tabFolder, avdTabItem);
+
+        // device tab
+        TabItem devTabItem = new TabItem(tabFolder, SWT.NONE);
+        devTabItem.setText("Device Definitions");
+        createDeviceTab(tabFolder, devTabItem);
+    }
+
+    private void createAvdTab(TabFolder tabFolder, TabItem avdTabItem) {
+        Composite root = new Composite(tabFolder, SWT.NONE);
+        avdTabItem.setControl(root);
+        GridLayoutBuilder.create(root).columns(1);
+
+        mAvdPage = new AvdManagerPage(root, SWT.NONE, mUpdaterData, mDeviceManager);
+        GridDataBuilder.create(mAvdPage).fill().grab();
+    }
+
+    private void createDeviceTab(TabFolder tabFolder, TabItem devTabItem) {
+        Composite root = new Composite(tabFolder, SWT.NONE);
+        devTabItem.setControl(root);
+        GridLayoutBuilder.create(root).columns(1);
+
+        DeviceManagerPage container = new DeviceManagerPage(root, SWT.NONE, mUpdaterData, mDeviceManager);
+        GridDataBuilder.create(container).fill().grab();
     }
 
     @SuppressWarnings("unused")
@@ -242,10 +262,6 @@ public class AvdManagerWindowImpl1 {
                 e.printStackTrace();
             }
         }
-
-        MenuItem menuBarDevices = new MenuItem(menuBar, SWT.CASCADE);
-        menuBarDevices.setText("Devices");
-        setupDevices(menuBarDevices);
     }
 
 
@@ -347,62 +363,6 @@ public class AvdManagerWindowImpl1 {
      */
     private void setupSources() {
         mUpdaterData.setupDefaultSources();
-    }
-
-    /**
-     * Sets up the devices in the device menu.
-     */
-    @SuppressWarnings("unused")
-    private void setupDevices(final MenuItem menuBarDevices) {
-        Menu menuDevices = new Menu(menuBarDevices);
-        menuBarDevices.setMenu(menuDevices);
-
-        MenuItem createDevice = new MenuItem(menuDevices, SWT.NONE);
-        createDevice.setText("Create New Device");
-        createDevice.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                DeviceCreationDialog dlg = new DeviceCreationDialog(
-                        mShell, mDeviceManager, mUpdaterData.getImageFactory(), null);
-                if (dlg.open() == Window.OK) {
-                    setupDevices(menuBarDevices);
-                }
-            }
-        });
-        new MenuItem(menuDevices, SWT.SEPARATOR);
-
-        Map<String, List<Device>> devices = new HashMap<String, List<Device>>();
-        for (Device d : mDeviceManager.getDevices(mUpdaterData.getOsSdkRoot())) {
-            List<Device> l;
-            if (devices.containsKey(d.getManufacturer())) {
-                l = devices.get(d.getManufacturer());
-            } else {
-                l = new ArrayList<Device>();
-                devices.put(d.getManufacturer(), l);
-            }
-            l.add(d);
-        }
-
-        for (String manufacturer : devices.keySet()) {
-            MenuItem manufacturerItem = new MenuItem(menuDevices, SWT.CASCADE);
-            manufacturerItem.setText(manufacturer);
-            Menu manufacturerMenu = new Menu(menuDevices);
-            manufacturerItem.setMenu(manufacturerMenu);
-            for (final Device d : devices.get(manufacturer)) {
-                MenuItem deviceItem = new MenuItem(manufacturerMenu, SWT.NONE);
-                deviceItem.setText(d.getName());
-                deviceItem.addSelectionListener(new SelectionAdapter() {
-                    @Override
-                    public void widgetSelected(SelectionEvent e) {
-                        DeviceCreationDialog dlg = new DeviceCreationDialog(
-                                mShell, mDeviceManager, mUpdaterData.getImageFactory(), d);
-                        if(dlg.open() == Window.OK) {
-                            setupDevices(menuBarDevices);
-                        }
-                    }
-                });
-            }
-        }
     }
 
     /**

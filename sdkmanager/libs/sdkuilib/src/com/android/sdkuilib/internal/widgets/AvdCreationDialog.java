@@ -133,6 +133,7 @@ public class AvdCreationDialog extends GridDialog {
             }
         }
     };
+    private Device mInitWithDevice;
 
     public AvdCreationDialog(Shell shell,
             AvdManager avdManager,
@@ -174,6 +175,8 @@ public class AvdCreationDialog extends GridDialog {
 
         if (mAvdInfo != null) {
             fillExistingAvdInfo(mAvdInfo);
+        } else if (mInitWithDevice != null) {
+            fillInitialDeviceInfo(mInitWithDevice);
         }
 
         validatePage();
@@ -433,7 +436,15 @@ public class AvdCreationDialog extends GridDialog {
         mStatusLabel = new Label(mStatusComposite, SWT.NONE);
         mStatusLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mStatusLabel.setText(""); //$NON-NLS-1$
+    }
 
+    /**
+     * Can be called after the constructor to set the default device for this AVD.
+     * Useful especially for new AVDs.
+     * @param device
+     */
+    public void setlectInitialDevice(Device device) {
+        mInitWithDevice = device;
     }
 
     /**
@@ -1135,6 +1146,38 @@ public class AvdCreationDialog extends GridDialog {
         }
     }
 
+    private void fillInitialDeviceInfo(Device device) {
+        String name = device.getManufacturer();
+        if (!name.equals("Generic") && !name.equals("User")) { // TODO define & use constants
+            name = " by " + name;
+        } else {
+            name = "";
+        }
+        name = "AVD for " + device.getName() + name;
+        // sanitize the name
+        name = name.replaceAll("[^0-9a-zA-Z_-]+", " ").trim().replaceAll("[ _]+", "_");
+        mAvdName.setText(name);
+
+        String manufacturer = device.getManufacturer();
+        for (int i = 0; i < mDeviceManufacturer.getItemCount(); i++) {
+            if (mDeviceManufacturer.getItem(i).equals(manufacturer)) {
+                mDeviceManufacturer.select(i);
+                break;
+            }
+        }
+        reloadDeviceNameCombo();
+
+        String deviceName = device.getName();
+        for (int i = 0; i < mDeviceName.getItemCount(); i++) {
+            if (mDeviceName.getItem(i).equals(deviceName)) {
+                mDeviceName.select(i);
+                break;
+            }
+        }
+        toggleCameras();
+
+    }
+
     /**
      * Returns the list of system images of a target.
      * <p/>
@@ -1161,5 +1204,4 @@ public class AvdCreationDialog extends GridDialog {
 
         return new ISystemImage[0];
     }
-
 }
