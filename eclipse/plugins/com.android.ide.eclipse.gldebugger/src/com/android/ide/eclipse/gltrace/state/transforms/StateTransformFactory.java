@@ -1052,7 +1052,7 @@ public class StateTransformFactory {
                         getTextureUnitTargetName(target),
                         level,
                         GLStateType.TEXTURE_IMAGE),
-                f, format, xOffset, yOffset, width, height));
+                f, format, type, xOffset, yOffset, width, height));
 
         return transforms;
     }

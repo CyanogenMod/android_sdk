@@ -263,10 +263,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     private void refreshUI() {
-        int nFrames = 0;
+        if (mTrace == null || mTrace.getGLCalls().size() == 0) {
+            setFrameCount(0);
+            return;
+        }
 
-        nFrames = mTrace == null ? 1 : mTrace.getFrames().size();
-        setFrameCount(nFrames);
+        setFrameCount(mTrace.getFrames().size());
         selectFrame(1);
     }
 
@@ -324,6 +326,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     private void setFrameCount(int nFrames) {
+        boolean en = nFrames > 0;
+        mFrameSelectionScale.setEnabled(en);
+        mFrameSelectionSpinner.setEnabled(en);
+
         mFrameSelectionScale.setMaximum(nFrames);
         mFrameSelectionSpinner.setMaximum(nFrames);
     }

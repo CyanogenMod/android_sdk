@@ -29,7 +29,7 @@ public class TraceFileReader {
      * Currently, we assume that the maximum is for a 1080p display. Since the buffers compress
      * well, we should probably never get close to this.
      */
-    private static final int MAX_PROTOBUF_SIZE = 1920 * 1080 * 4;
+    private static final int MAX_PROTOBUF_SIZE = 1920 * 1080 * 100;
 
     /**
      * Obtain the next protobuf message in this file.
