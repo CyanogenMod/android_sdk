@@ -54,7 +54,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -110,7 +109,6 @@ public class AddonSitesDialog extends UpdaterBaseDialog {
         shell.setSize(600, 400);
 
         TabFolder tabFolder = new TabFolder(shell, SWT.NONE);
-        tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
         GridDataBuilder.create(tabFolder).fill().grab().hSpan(2);
 
         TabItem sitesTabItem = new TabItem(tabFolder, SWT.NONE);

@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public final class GridLayoutBuilder {
 
-    private static GridLayout mGL;
+    private GridLayout mGL;
 
     private GridLayoutBuilder() {
         mGL = new GridLayout();
@@ -41,7 +41,7 @@ public final class GridLayoutBuilder {
      */
     static public GridLayoutBuilder create(Composite parent) {
         GridLayoutBuilder glh = new GridLayoutBuilder();
-        parent.setLayout(GridLayoutBuilder.mGL);
+        parent.setLayout(glh.mGL);
         return glh;
     }
 

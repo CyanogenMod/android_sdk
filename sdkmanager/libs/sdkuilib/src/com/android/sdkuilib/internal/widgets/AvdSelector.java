@@ -438,6 +438,7 @@ public final class AvdSelector {
     public void setSettingsController(SettingsController controller) {
         mController = controller;
     }
+
     /**
      * Sets the table grid layout data.
      *
