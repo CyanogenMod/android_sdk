@@ -18,12 +18,22 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
 import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_CORE_APP;
 import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.SdkConstants.XMLNS_PREFIX;
+import static com.android.resources.ResourceFolderType.ANIM;
+import static com.android.resources.ResourceFolderType.ANIMATOR;
+import static com.android.resources.ResourceFolderType.COLOR;
+import static com.android.resources.ResourceFolderType.DRAWABLE;
+import static com.android.resources.ResourceFolderType.INTERPOLATOR;
+import static com.android.resources.ResourceFolderType.LAYOUT;
+import static com.android.resources.ResourceFolderType.MENU;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -36,6 +46,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,23 +62,41 @@ public class DetectMissingPrefix extends LayoutDetector {
             "Detect XML attributes not using the Android namespace",
             "Most Android views have attributes in the Android namespace. When referencing " +
             "these attributes you *must* include the namespace prefix, or your attribute will " +
-            "be interpreted by aapt as just a custom attribute.",
+            "be interpreted by `aapt` as just a custom attribute.\n" +
+            "\n" +
+            "Similarly, in manifest files, nearly all attributes should be in the `android:` " +
+            "namespace.",
 
             Category.CORRECTNESS,
-            8,
-            Severity.WARNING,
+            6,
+            Severity.ERROR,
             DetectMissingPrefix.class,
-            Scope.RESOURCE_FILE_SCOPE);
+            EnumSet.of(Scope.MANIFEST, Scope.RESOURCE_FILE))
+            .addAnalysisScope(Scope.MANIFEST_SCOPE)
+            .addAnalysisScope(Scope.RESOURCE_FILE_SCOPE);
 
     private static final Set<String> NO_PREFIX_ATTRS = new HashSet<String>();
     static {
         NO_PREFIX_ATTRS.add(ATTR_CLASS);
         NO_PREFIX_ATTRS.add(ATTR_STYLE);
         NO_PREFIX_ATTRS.add(ATTR_LAYOUT);
+        NO_PREFIX_ATTRS.add(ATTR_PACKAGE);
+        NO_PREFIX_ATTRS.add(ATTR_CORE_APP);
     }
 
     /** Constructs a new {@link DetectMissingPrefix} */
     public DetectMissingPrefix() {
+    }
+
+    @Override
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        return folderType == LAYOUT
+                || folderType == MENU
+                || folderType == DRAWABLE
+                || folderType == ANIM
+                || folderType == ANIMATOR
+                || folderType == COLOR
+                || folderType == INTERPOLATOR;
     }
 
     @Override
@@ -93,7 +122,7 @@ public class DetectMissingPrefix extends LayoutDetector {
             }
 
             Element element = attribute.getOwnerElement();
-            if (isCustomView(element)) {
+            if (isCustomView(element) && context.getResourceFolderType() != null) {
                 return;
             }
 

@@ -681,6 +681,7 @@ public final class SdkConstants {
     public static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$
     public static final String ATTR_PACKAGE = "package";               //$NON-NLS-1$
+    public static final String ATTR_CORE_APP = "coreApp";              //$NON-NLS-1$
     public static final String ATTR_THEME = "theme";                   //$NON-NLS-1$
     public static final String ATTR_PATH = "path";                     //$NON-NLS-1$
     public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
