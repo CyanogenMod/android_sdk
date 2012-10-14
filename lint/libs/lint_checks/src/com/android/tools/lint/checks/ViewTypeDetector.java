@@ -37,10 +37,12 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.base.Joiner;
 
 import org.w3c.dom.Attr;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -68,7 +70,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
             ViewTypeDetector.class,
             EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES));
 
-    private Map<String, String> mIdToViewTag = new HashMap<String, String>(50);
+    private Map<String, Object> mIdToViewTag = new HashMap<String, Object>(50);
 
     @Override
     public @NonNull Speed getSpeed() {
@@ -94,13 +96,6 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
         return Collections.singletonList(ATTR_ID);
     }
 
-    /** Special marker value which means that an id is used for multiple different view types;
-     * in this case we should figure out which ids are reachable from different activities
-     * and do a more fine grained analysis to report casting problems, but for now we just
-     * mark these id's to be ignored instead
-     */
-    private static final String IGNORE = "#ignore#";
-
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String view = attribute.getOwnerElement().getTagName();
@@ -117,11 +112,25 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
                 view = attribute.getOwnerElement().getAttribute(ATTR_CLASS);
             }
 
-            String existing = mIdToViewTag.get(id);
-            if (existing != null && !existing.equals(view)) {
-                view = IGNORE;
+            Object existing = mIdToViewTag.get(id);
+            if (existing == null) {
+                mIdToViewTag.put(id, view);
+            } else if (existing instanceof String) {
+                String existingString = (String) existing;
+                if (!existingString.equals(view)) {
+                    // Convert to list
+                    List<String> list = new ArrayList<String>(2);
+                    list.add((String) existing);
+                    list.add(view);
+                    mIdToViewTag.put(id, list);
+                }
+            } else if (existing instanceof List<?>) {
+                @SuppressWarnings("unchecked")
+                List<String> list = (List<String>) existing;
+                if (!list.contains(view)) {
+                    list.add(view);
+                }
             }
-            mIdToViewTag.put(id, view);
         }
     }
 
@@ -148,9 +157,14 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
                     String resource = first.toString();
                     if (resource.startsWith("R.id.")) { //$NON-NLS-1$
                         String id = ((Select) first).astIdentifier().astValue();
-                        String layoutType = mIdToViewTag.get(id);
-                        if (layoutType != null) {
-                            checkCompatible(context, castType, layoutType, cast);
+                        Object types = mIdToViewTag.get(id);
+                        if (types instanceof String) {
+                            String layoutType = (String) types;
+                            checkCompatible(context, castType, layoutType, null, cast);
+                        } else if (types instanceof List<?>) {
+                            @SuppressWarnings("unchecked")
+                            List<String> layoutTypes = (List<String>) types;
+                            checkCompatible(context, castType, null, layoutTypes, cast);
                         }
                     }
                 }
@@ -160,15 +174,35 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
 
     /** Check if the view and cast type are compatible */
     private void checkCompatible(JavaContext context, String castType, String layoutType,
-            Cast node) {
-        if (layoutType != null && !layoutType.equals(IGNORE) && !layoutType.equals(castType)) {
-            if (!context.getSdkInfo().isSubViewOf(castType, layoutType)) {
-                String message = String.format(
-                        "Unexpected cast to %1$s: layout tag was %2$s",
-                        castType, layoutType);
-                context.report(ISSUE, node, context.parser.getLocation(context, node), message,
-                        null);
+            List<String> layoutTypes, Cast node) {
+        assert layoutType == null || layoutTypes == null; // Should only specify one or the other
+        boolean compatible = true;
+        if (layoutType != null) {
+            if (!layoutType.equals(castType)
+                    && !context.getSdkInfo().isSubViewOf(castType, layoutType)) {
+                compatible = false;
             }
+        } else {
+            compatible = false;
+            assert layoutTypes != null;
+            for (String type : layoutTypes) {
+                if (type.equals(castType)
+                        || context.getSdkInfo().isSubViewOf(castType, type)) {
+                    compatible = true;
+                    break;
+                }
+            }
+        }
+
+        if (!compatible) {
+            if (layoutType == null) {
+                layoutType = Joiner.on("|").join(layoutTypes);
+            }
+            String message = String.format(
+                    "Unexpected cast to %1$s: layout tag was %2$s",
+                    castType, layoutType);
+            context.report(ISSUE, node, context.parser.getLocation(context, node), message,
+                    null);
         }
     }
 }
