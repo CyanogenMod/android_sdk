@@ -107,9 +107,12 @@ function build_plugin() {
 }
 
 function build_adt_ide() {
+  # Build the ADT IDE if this runs on Linux.
+  # Qualifier for the zip files is just the build number if available.
   if [[ -z $INTERNAL_BUILD && "Linux" == $(uname) ]]; then
     ADT_IDE_DEST_DIR="$DEST_DIR" \
     ADT_IDE_QUALIFIER="$QUALIFIER" \
+    ADT_IDE_ZIP_QUALIFIER="${BUILD_NUMBER:-$QUALIFIER}" \
     make PRODUCT-sdk-adt_eclipse_ide
   fi
 }
