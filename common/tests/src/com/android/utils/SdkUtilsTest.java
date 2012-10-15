@@ -18,6 +18,7 @@ package com.android.utils;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class SdkUtilsTest extends TestCase {
     public void testEndsWithIgnoreCase() {
         assertTrue(SdkUtils.endsWithIgnoreCase("foo", "foo"));
@@ -81,4 +82,52 @@ public class SdkUtilsTest extends TestCase {
         assertEquals("foobar", SdkUtils.stripWhitespace("foo bar"));
         assertEquals("foobar", SdkUtils.stripWhitespace("  foo bar  \n\t"));
     }
+
+    public void testWrap() {
+        String s =
+            "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
+            "\n" +
+            "* When creating configuration variations (for example for landscape or portrait)" +
+            "you have to repeat the actual text (and keep it up to date when making changes)\n" +
+            "\n" +
+            "* The application cannot be translated to other languages by just adding new " +
+            "translations for existing string resources.";
+        String wrapped = SdkUtils.wrap(s, 70, "");
+        assertEquals(
+            "Hardcoding text attributes directly in layout files is bad for several\n" +
+            "reasons:\n" +
+            "\n" +
+            "* When creating configuration variations (for example for landscape or\n" +
+            "portrait)you have to repeat the actual text (and keep it up to date\n" +
+            "when making changes)\n" +
+            "\n" +
+            "* The application cannot be translated to other languages by just\n" +
+            "adding new translations for existing string resources.\n",
+            wrapped);
+    }
+
+    public void testWrapPrefix() {
+        String s =
+            "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
+            "\n" +
+            "* When creating configuration variations (for example for landscape or portrait)" +
+            "you have to repeat the actual text (and keep it up to date when making changes)\n" +
+            "\n" +
+            "* The application cannot be translated to other languages by just adding new " +
+            "translations for existing string resources.";
+        String wrapped = SdkUtils.wrap(s, 70, "    ");
+        assertEquals(
+            "Hardcoding text attributes directly in layout files is bad for several\n" +
+            "    reasons:\n" +
+            "    \n" +
+            "    * When creating configuration variations (for example for\n" +
+            "    landscape or portrait)you have to repeat the actual text (and keep\n" +
+            "    it up to date when making changes)\n" +
+            "    \n" +
+            "    * The application cannot be translated to other languages by just\n" +
+            "    adding new translations for existing string resources.\n",
+            wrapped);
+    }
+
+
 }

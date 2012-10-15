@@ -657,8 +657,6 @@ public class GraphicalEditorPart extends EditorPart
             return true;
         }
 
-        getCanvasControl().getPreviewManager().configurationChanged(flags);
-
         // Before doing the normal process, test for the following case.
         // - the editor is being opened (or reset for a new input)
         // - the file being opened is not the best match for any possible configuration
@@ -752,6 +750,8 @@ public class GraphicalEditorPart extends EditorPart
         }
 
         reloadPalette();
+
+        getCanvasControl().getPreviewManager().configurationChanged(flags);
 
         return true;
     }

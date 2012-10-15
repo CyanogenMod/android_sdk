@@ -17,7 +17,9 @@
 package com.android.utils;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
+/** Miscellaneous utilities used by the Android SDK tools */
 public class SdkUtils {
     /**
      * Returns true if the given string ends with the given suffix, using a
@@ -111,7 +113,12 @@ public class SdkUtils {
         return sb.toString();
     }
 
-    /** Returns true if the given string has an upper case character. */
+    /**
+     * Returns true if the given string has an upper case character.
+     *
+     * @param s the string to check
+     * @return true if it contains uppercase characters
+     */
     public static boolean hasUpperCaseCharacter(String s) {
         for (int i = 0; i < s.length(); i++) {
             if (Character.isUpperCase(s.charAt(i))) {
@@ -144,4 +151,66 @@ public class SdkUtils {
 
         return sLineSeparator;
     }
+
+    /**
+     * Wraps the given text at the given line width, with an optional hanging
+     * indent.
+     *
+     * @param text the text to be wrapped
+     * @param lineWidth the number of characters to wrap the text to
+     * @param hangingIndent the hanging indent (to be used for the second and
+     *            subsequent lines in each paragraph, or null if not known
+     * @return the string, wrapped
+     */
+    @NonNull
+    public static String wrap(
+            @NonNull String text,
+            int lineWidth,
+            @Nullable String hangingIndent) {
+        if (hangingIndent == null) {
+            hangingIndent = "";
+        }
+        int explanationLength = text.length();
+        StringBuilder sb = new StringBuilder(explanationLength * 2);
+        int index = 0;
+
+        while (index < explanationLength) {
+            int lineEnd = text.indexOf('\n', index);
+            int next;
+
+            if (lineEnd != -1 && (lineEnd - index) < lineWidth) {
+                next = lineEnd + 1;
+            } else {
+                // Line is longer than available width; grab as much as we can
+                lineEnd = Math.min(index + lineWidth, explanationLength);
+                if (lineEnd - index < lineWidth) {
+                    next = explanationLength;
+                } else {
+                    // then back up to the last space
+                    int lastSpace = text.lastIndexOf(' ', lineEnd);
+                    if (lastSpace > index) {
+                        lineEnd = lastSpace;
+                        next = lastSpace + 1;
+                    } else {
+                        // No space anywhere on the line: it contains something wider than
+                        // can fit (like a long URL) so just hard break it
+                        next = lineEnd + 1;
+                    }
+                }
+            }
+
+            if (sb.length() > 0) {
+                sb.append(hangingIndent);
+            } else {
+                lineWidth -= hangingIndent.length();
+            }
+
+            sb.append(text.substring(index, lineEnd));
+            sb.append('\n');
+            index = next;
+        }
+
+        return sb.toString();
+    }
+
 }
