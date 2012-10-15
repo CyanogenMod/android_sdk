@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.swt.SWT;
@@ -30,6 +31,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolItem;
 
 import java.util.List;
+import java.util.RandomAccess;
 
 /**
  * The {@linkplain TargetMenuListener} class is responsible for
@@ -57,8 +59,22 @@ class TargetMenuListener extends SelectionAdapter {
         Configuration configuration = chooser.getConfiguration();
         IAndroidTarget current = configuration.getTarget();
         List<IAndroidTarget> targets = chooser.getTargetList();
+        boolean haveRecent = false;
 
-        for (final IAndroidTarget target : targets) {
+        // Process in reverse order: most important targets first
+        assert targets instanceof RandomAccess;
+        for (int i = targets.size() - 1; i >= 0; i--) {
+            IAndroidTarget target = targets.get(i);
+
+            AndroidVersion version = target.getVersion();
+            if (version.getApiLevel() >= 7) {
+                haveRecent = true;
+            } else if (haveRecent) {
+                // Don't show ancient rendering targets; they're pretty broken
+                // (unless of course all you have are ancient targets)
+                break;
+            }
+
             String title = ConfigurationChooser.getRenderingTargetLabel(target, false);
             MenuItem item = new MenuItem(menu, SWT.CHECK);
             item.setText(title);
