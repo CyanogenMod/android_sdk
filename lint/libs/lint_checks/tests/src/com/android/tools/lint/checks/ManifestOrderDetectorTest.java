@@ -20,6 +20,8 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -230,6 +232,45 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "allowbackup_ignore.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
+    }
+
+    public void testDuplicatePermissions() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.UNIQUE_PERMISSION);
+        assertEquals(
+                "AndroidManifest.xml:12: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n" +
+                "    <permission android:name=\"bar.permission.SEND_SMS\"\n" +
+                "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    AndroidManifest.xml:9: Previous permission here\n" +
+                "1 errors, 0 warnings\n",
+
+                lintProject(
+                        "duplicate_permissions1.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
+    public void testDuplicatePermissionsMultiProject() throws Exception {
+        mEnabled = Collections.singleton(ManifestOrderDetector.UNIQUE_PERMISSION);
+
+        File master = getProjectDir("MasterProject",
+                // Master project
+                "duplicate_permissions2.xml=>AndroidManifest.xml",
+                "multiproject/main-merge.properties=>project.properties",
+                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+        );
+        File library = getProjectDir("LibraryProject",
+                // Library project
+                "duplicate_permissions3.xml=>AndroidManifest.xml",
+                "multiproject/library.properties=>project.properties",
+                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
+                "multiproject/strings.xml=>res/values/strings.xml"
+        );
+        assertEquals(
+                "LibraryProject/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n" +
+                "    <permission android:name=\"bar.permission.SEND_SMS\"\n" +
+                "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings\n",
+
+           checkLint(Arrays.asList(master, library)));
     }
 
 }
