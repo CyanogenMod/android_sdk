@@ -24,6 +24,7 @@ import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_PERMISSION;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
@@ -42,6 +43,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.Maps;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -52,6 +54,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -202,6 +205,27 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             Scope.MANIFEST_SCOPE).setMoreInfo(
                     "http://developer.android.com/reference/android/R.attr.html#allowBackup");
 
+    /** Conflicting permission names */
+    public static final Issue UNIQUE_PERMISSION = Issue.create(
+            "UniquePermission", //$NON-NLS-1$
+            "Checks that permission names are unique",
+
+            "The unqualified names or your permissions must be unique. The reason for this " +
+            "is that at build time, the `aapt` tool will generate a class named `Manifest` " +
+            "which contains a field for each of your permissions. These fields are named " +
+            "using your permission unqualified names (i.e. the name portion after the last " +
+            "dot).\n" +
+            "\n" +
+            "If more than one permission maps to the same field name, that field will " +
+            "arbitrarily name just one of them.",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            ManifestOrderDetector.class,
+            Scope.MANIFEST_SCOPE);
+
+
     /** Constructs a new {@link ManifestOrderDetector} check */
     public ManifestOrderDetector() {
     }
@@ -213,6 +237,9 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     /** Activities we've encountered */
     private Set<String> mActivities = new HashSet<String>();
+
+    /** Permission basenames */
+    private Map<String, String> mPermissionNames;
 
     /** Package declared in the manifest */
     private String mPackage;
@@ -250,7 +277,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
         return Arrays.asList(
                 TAG_APPLICATION,
                 TAG_USES_PERMISSION,
-                "permission",              //$NON-NLS-1$
+                TAG_PERMISSION,
                 "permission-tree",         //$NON-NLS-1$
                 "permission-group",        //$NON-NLS-1$
                 TAG_USES_SDK,
@@ -376,6 +403,46 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                 } catch (NumberFormatException nufe) {
                     // Ignore: AAPT will enforce this.
                 }
+            }
+        }
+
+        if (tag.equals(TAG_PERMISSION)) {
+            Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+            if (nameNode != null) {
+                String name = nameNode.getValue();
+                String base = name.substring(name.lastIndexOf('.') + 1);
+                if (mPermissionNames == null) {
+                    mPermissionNames = Maps.newHashMap();
+                } else if (mPermissionNames.containsKey(base)) {
+                    String prevName = mPermissionNames.get(base);
+                    Location location = context.getLocation(nameNode);
+                    NodeList siblings = element.getParentNode().getChildNodes();
+                    for (int i = 0, n = siblings.getLength(); i < n; i++) {
+                        Node node = siblings.item(i);
+                        if (node == element) {
+                            break;
+                        } else if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            Element sibling = (Element) node;
+                            String suffix = '.' + base;
+                            if (sibling.getTagName().equals(TAG_PERMISSION)) {
+                                String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                                if (b.endsWith(suffix)) {
+                                    Location prevLocation = context.getLocation(node);
+                                    prevLocation.setMessage("Previous permission here");
+                                    location.setSecondary(prevLocation);
+                                    break;
+                                }
+
+                            }
+                        }
+                    }
+
+                    String message = String.format("Permission name %1$s is not unique " +
+                            "(appears in both %2$s and %3$s)", base, prevName, name);
+                    context.report(UNIQUE_PERMISSION, element, location, message, null);
+                }
+
+                mPermissionNames.put(base, name);
             }
         }
 

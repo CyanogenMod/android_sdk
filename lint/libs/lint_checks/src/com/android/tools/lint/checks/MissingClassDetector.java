@@ -101,7 +101,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
         "Ensures that inner classes are referenced using '$' instead of '.' in class names",
 
         "When you reference an inner class in a manifest file, you must use '$' instead of '.' " +
-        "as the separator character, e.g. Outer$Inner instead of Outer.Inner.\n" +
+        "as the separator character, i.e. Outer$Inner instead of Outer.Inner.\n" +
         "\n" +
         "(If you get this warning for a class which is not actually an inner class, it's " +
         "because you are using uppercase characters in your package name, which is not " +
