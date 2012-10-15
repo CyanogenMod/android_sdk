@@ -811,6 +811,8 @@ public final class SdkConstants {
 
     // Menus
     public static final String ATTR_SHOW_AS_ACTION = "showAsAction";   //$NON-NLS-1$
+    public static final String ATTR_TITLE = "title";                   //$NON-NLS-1$
+    public static final String ATTR_VISIBLE = "visible";               //$NON-NLS-1$
     public static final String VALUE_IF_ROOM = "ifRoom";               //$NON-NLS-1$
     public static final String VALUE_ALWAYS = "always";                //$NON-NLS-1$
 
