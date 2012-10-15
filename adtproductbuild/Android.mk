@@ -6,7 +6,7 @@
 #
 # Expected env vars:
 # ADT_IDE_DEST_DIR:  existing directory where to copy the IDE zip files.
-# ADT_IDE_QUALIFIER: either a date or build number to incorporate in the zip names.
+# ADT_IDE_ZIP_QUALIFIER: either a date or build number to incorporate in the zip names.
 
 # Expose the ADT Eclipse IDE build only for the SDK when building adt_eclipse_ide
 ifneq (,$(is_sdk_build)$(filter sdk sdk_x86 sdk_mips,$(TARGET_PRODUCT)))
@@ -67,7 +67,7 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 
 # Defines the zip filename generated for an OS specific android IDE.
 define adt-ide-zip
-$(ADT_IDE_RELEASE_DIR)/android-ide-$(ADT_IDE_QUALIFIER)-$(1).$(2).zip
+$(ADT_IDE_RELEASE_DIR)/android-ide-$(ADT_IDE_ZIP_QUALIFIER)-$(1).$(2).zip
 endef
 
 # Defines the rule needed to make one of the OS specific android IDE.
