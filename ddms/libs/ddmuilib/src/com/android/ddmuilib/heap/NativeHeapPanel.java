@@ -475,8 +475,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     @Override
     protected Control createControl(Composite parent) {
-        parent.setLayout(new GridLayout(1, false));
-
         Composite c = new Composite(parent, SWT.NONE);
         c.setLayout(new GridLayout(1, false));
         c.setLayoutData(new GridData(GridData.FILL_BOTH));
