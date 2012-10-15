@@ -1309,9 +1309,9 @@ public class RenderPreviewManager {
                     } else {
                         zoomReset();
                     }
+                    return true;
                 }
             }
-            return true;
         }
 
         RenderPreview preview = getPreview(mousePos);
