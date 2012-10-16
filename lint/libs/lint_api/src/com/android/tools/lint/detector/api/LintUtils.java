@@ -668,6 +668,9 @@ public class LintUtils {
                     return false;
                 }
             }
+        } else if (Project.isAospFrameworksProject(dir)) {
+            // Hardcoded AOSP support for the frameworks project
+            return true;
         }
 
         return hasManifest;

@@ -25,9 +25,11 @@ import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
+import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.VALUE_TRUE;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
@@ -247,6 +249,9 @@ public class Project {
     @NonNull
     public List<File> getJavaSourceFolders() {
         if (mJavaSourceFolders == null) {
+            if (isAospFrameworksProject(mDir)) {
+                return Collections.singletonList(new File(mDir, "java")); //$NON-NLS-1$
+            }
             if (isAospBuildEnvironment()) {
                 String top = getAospTop();
                 if (mDir.getAbsolutePath().startsWith(top)) {
@@ -268,6 +273,21 @@ public class Project {
     @NonNull
     public List<File> getJavaClassFolders() {
         if (mJavaClassFolders == null) {
+            if (isAospFrameworksProject(mDir)) {
+                File top = mDir.getParentFile().getParentFile().getParentFile();
+                if (top != null) {
+                    File out = new File(top, "out");
+                    if (out.exists()) {
+                        String relative =
+                            "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
+                        File jar = new File(out, relative.replace('/', File.separatorChar));
+                        if (jar.exists()) {
+                            mJavaClassFolders = Collections.singletonList(jar);
+                            return mJavaClassFolders;
+                        }
+                    }
+                }
+            }
             if (isAospBuildEnvironment()) {
                 String top = getAospTop();
                 if (mDir.getAbsolutePath().startsWith(top)) {
@@ -301,6 +321,28 @@ public class Project {
         }
 
         return mJavaLibraries;
+    }
+
+    /**
+     * Returns the resource folder.
+     *
+     * @return a file pointing to the resource folder, or null if the project
+     *         does not contain any resources
+     */
+    @Nullable
+    public File getResourceFolder() {
+        File folder = mClient.getResourceFolder(this);
+
+        if (folder != null && isAospFrameworksProject(mDir)) {
+            // No manifest file for this project: just init the manifest values here
+            mMinSdk = mTargetSdk = SdkConstants.HIGHEST_KNOWN_API;
+            folder = new File(folder, RES_FOLDER);
+            if (!folder.exists()) {
+                folder = null;
+            }
+        }
+
+        return folder;
     }
 
     /**
@@ -641,6 +683,31 @@ public class Project {
         }
 
         return sAospBuild.booleanValue();
+    }
+
+    /**
+     * Is this the frameworks AOSP project? Needs some hardcoded support since
+     * it doesn't have a manifest file, etc.
+     *
+     * @param dir the project directory to check
+     * @return true if this looks like the frameworks/base/core project
+     */
+    static boolean isAospFrameworksProject(@NonNull File dir) {
+        if (!dir.getPath().endsWith("core")) { //$NON-NLS-1$
+            return false;
+        }
+
+        File parent = dir.getParentFile();
+        if (parent == null || !parent.getName().equals("base")) { //$NON-NLS-1$
+            return false;
+        }
+
+        parent = parent.getParentFile();
+        if (parent == null || !parent.getName().equals("frameworks")) { //$NON-NLS-1$
+            return false;
+        }
+
+        return true;
     }
 
     /** Get the root AOSP dir, if any */

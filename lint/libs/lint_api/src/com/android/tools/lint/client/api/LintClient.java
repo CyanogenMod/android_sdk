@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_FOLDER;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.GEN_FOLDER;
 import static com.android.SdkConstants.LIBS_FOLDER;
+import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.SRC_FOLDER;
 
 import com.android.SdkConstants;
@@ -230,6 +231,23 @@ public abstract class LintClient {
     @NonNull
     public List<File> getJavaLibraries(@NonNull Project project) {
         return getClassPath(project).getLibraries();
+    }
+
+    /**
+     * Returns the resource folder.
+     *
+     * @param project the project to look up the resource folder for
+     * @return a file pointing to the resource folder, or null if the project
+     *         does not contain any resources
+     */
+    @Nullable
+    public File getResourceFolder(@NonNull Project project) {
+        File res = new File(project.getDir(), RES_FOLDER);
+        if (res.exists()) {
+            return res;
+        }
+
+        return null;
     }
 
     /**

@@ -32,7 +32,6 @@ import static com.android.SdkConstants.DRAWABLE_MDPI;
 import static com.android.SdkConstants.DRAWABLE_PREFIX;
 import static com.android.SdkConstants.DRAWABLE_XHDPI;
 import static com.android.SdkConstants.MENU_TYPE;
-import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.R_DRAWABLE_PREFIX;
 import static com.android.SdkConstants.TAG_ACTIVITY;
@@ -53,6 +52,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -335,17 +335,17 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
     @Override
     public void afterCheckLibraryProject(@NonNull Context context) {
-        checkResourceFolder(context, context.getProject().getDir());
+        checkResourceFolder(context, context.getProject());
     }
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        checkResourceFolder(context, context.getProject().getDir());
+        checkResourceFolder(context, context.getProject());
     }
 
-    private void checkResourceFolder(Context context, File dir) {
-        File res = new File(dir, RES_FOLDER);
-        if (res.isDirectory()) {
+    private void checkResourceFolder(Context context, @NonNull Project project) {
+        File res = project.getResourceFolder();
+        if (res != null) {
             File[] folders = res.listFiles();
             if (folders != null) {
                 boolean checkFolders = context.isEnabled(ICON_DENSITIES)
