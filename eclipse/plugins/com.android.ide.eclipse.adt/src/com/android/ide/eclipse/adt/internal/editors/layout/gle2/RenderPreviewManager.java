@@ -23,6 +23,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPre
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -73,6 +74,9 @@ import java.util.Set;
  * managing the image buffer cache, etc
  */
 public class RenderPreviewManager {
+    /** TODO: Tie this to a {@link Capability} instead */
+    public static boolean HIDE_TVDPI = true;
+
     private static double sScale = 1.0;
     private static final int RENDER_DELAY = 150;
     private static final int PREVIEW_VGAP = 18;
@@ -936,6 +940,10 @@ public class RenderPreviewManager {
                 if (density != null) {
                     Density d = density.getValue();
                     if (Density.LOW.equals(d)) {
+                        interesting = false;
+                    }
+
+                    if (HIDE_TVDPI && d == Density.TV) {
                         interesting = false;
                     }
                 }
