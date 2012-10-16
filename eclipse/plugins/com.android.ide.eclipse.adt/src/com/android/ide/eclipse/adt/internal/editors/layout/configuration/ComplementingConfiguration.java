@@ -102,6 +102,9 @@ public class ComplementingConfiguration extends NestedConfiguration {
             @NonNull Configuration parent) {
         ComplementingConfiguration configuration =
                 new ComplementingConfiguration(other.mConfigChooser, parent);
+        configuration.setDisplayName(other.getDisplayName());
+        configuration.setActivity(other.getActivity());
+        configuration.mUpdateDisplayName = other.mUpdateDisplayName;
         configuration.mOverrideLocale = other.mOverrideLocale;
         configuration.mOverrideTarget = other.mOverrideTarget;
         configuration.mOverrideDevice = other.mOverrideDevice;

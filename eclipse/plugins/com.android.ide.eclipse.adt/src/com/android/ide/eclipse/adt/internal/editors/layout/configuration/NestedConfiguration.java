@@ -83,6 +83,9 @@ public class NestedConfiguration extends Configuration {
             @NonNull Configuration parent) {
         NestedConfiguration configuration =
                 new NestedConfiguration(other.mConfigChooser, parent);
+        configuration.setDisplayName(values.getDisplayName());
+        configuration.setActivity(values.getActivity());
+
         configuration.mOverrideLocale = other.mOverrideLocale;
         if (configuration.mOverrideLocale) {
             configuration.setLocale(values.getLocale(), true);

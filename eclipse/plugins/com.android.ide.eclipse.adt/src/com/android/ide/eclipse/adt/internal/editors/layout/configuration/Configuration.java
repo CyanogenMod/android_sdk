@@ -197,6 +197,7 @@ public class Configuration {
         copy.mLocale = original.getLocale();
         copy.mUiMode = original.getUiMode();
         copy.mNightMode = original.getNightMode();
+        copy.mDisplayName = original.getDisplayName();
 
         return copy;
     }
