@@ -123,13 +123,19 @@ public final class ExportHelper {
                 }
             });
 
+            ProjectState projectState = Sdk.getProjectState(project);
+
+            // get the jumbo mode option
+            String forceJumboStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_FORCEJUMBO);
+            Boolean b = Boolean.valueOf(forceJumboStr);
+
             BuildHelper helper = new BuildHelper(project,
                     fakeStream, fakeStream,
+                    b.booleanValue(),
                     debugMode, false /*verbose*/,
                     null /*resourceMarker*/);
 
             // get the list of library projects
-            ProjectState projectState = Sdk.getProjectState(project);
             List<IProject> libProjects = projectState.getFullLibraryProjects();
 
             // Step 1. Package the resources.

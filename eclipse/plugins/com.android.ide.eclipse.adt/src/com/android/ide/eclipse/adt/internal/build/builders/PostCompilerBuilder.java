@@ -378,6 +378,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 }
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
+                        false /*jumbo mode doesn't matter here*/,
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);
@@ -481,8 +482,12 @@ public class PostCompilerBuilder extends BaseBuilder {
             // we need to test all three, as we may need to make the final package
             // but not the intermediary ones.
             if (mPackageResources || mConvertToDex || mBuildFinalPackage) {
+                String forceJumboStr = projectState.getProperty(
+                        AdtConstants.DEX_OPTIONS_FORCEJUMBO);
+                Boolean b = Boolean.valueOf(forceJumboStr);
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
+                        b.booleanValue(),
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);

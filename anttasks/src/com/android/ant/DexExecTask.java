@@ -43,6 +43,7 @@ public class DexExecTask extends SingleDependencyTask {
     private String mDexedLibs;
     private boolean mVerbose = false;
     private boolean mNoLocals = false;
+    private boolean mForceJumbo = false;
     private List<Path> mPathInputs;
     private List<FileSet> mFileSetInputs;
 
@@ -81,6 +82,10 @@ public class DexExecTask extends SingleDependencyTask {
      */
     public void setNoLocals(boolean nolocals) {
         mNoLocals = nolocals;
+    }
+
+    public void setForceJumbo(boolean forceJumbo) {
+        mForceJumbo = forceJumbo;
     }
 
     /**
@@ -240,6 +245,10 @@ public class DexExecTask extends SingleDependencyTask {
 
         if (mVerbose) {
             task.createArg().setValue("--verbose");
+        }
+
+        if (mForceJumbo) {
+            task.createArg().setValue("--force-jumbo");
         }
 
         task.createArg().setValue("--output");
