@@ -26,7 +26,6 @@ import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.RESOURCE_CLR_STYLEABLE;
 import static com.android.SdkConstants.RESOURCE_CLZ_ARRAY;
 import static com.android.SdkConstants.RESOURCE_CLZ_ID;
-import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.R_ATTR_PREFIX;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.R_ID_PREFIX;
@@ -261,8 +260,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     if (type != null && LintUtils.isFileBasedResourceType(type)) {
                         String name = resource.substring(secondDot + 1);
 
-                        File res = new File(context.getProject().getDir(), RES_FOLDER);
-                        File[] folders = res.listFiles();
+                        File[] folders = null;
+                        File res = context.getProject().getResourceFolder();
+                        if (res != null) {
+                            folders = res.listFiles();
+                        }
                         if (folders != null) {
                             // Process folders in alphabetical order such that we process
                             // based folders first: we want the locations in base folder
