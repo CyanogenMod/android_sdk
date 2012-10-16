@@ -80,6 +80,7 @@ import java.util.WeakHashMap;
  */
 public class PropertyFactory {
     /** Disable cache during development only */
+    @SuppressWarnings("unused")
     private static final boolean CACHE_ENABLED = true || !LintUtils.assertionsEnabled();
     static {
         if (!CACHE_ENABLED) {
