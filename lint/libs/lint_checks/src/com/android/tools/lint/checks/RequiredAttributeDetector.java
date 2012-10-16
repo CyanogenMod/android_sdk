@@ -319,7 +319,15 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
 
                 String parentTag = element.getParentNode() != null
                         ?  element.getParentNode().getNodeName() : "";
-                if (TABLE_LAYOUT.equals(parentTag) || TABLE_ROW.equals(parentTag)) {
+                if (TABLE_LAYOUT.equals(parentTag)
+                        || TABLE_ROW.equals(parentTag)
+                        || GRID_LAYOUT.equals(parentTag)
+                        || FQCN_GRID_LAYOUT_V7.equals(parentTag)) {
+                    return;
+                }
+
+                String tag = element.getTagName();
+                if (tag.equals(VIEW_INCLUDE)) {
                     return;
                 }
 
@@ -368,11 +376,6 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     }
                 }
 
-                String tag = element.getTagName();
-                if (tag.equals(VIEW_INCLUDE) || tag.equals(GRID_LAYOUT)
-                        || tag.equals(FQCN_GRID_LAYOUT_V7)) {
-                    return;
-                }
                 String message;
                 if (!(hasWidth || hasHeight)) {
                     if (certain) {
