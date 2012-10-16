@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_CONTEXT;
-import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
@@ -1091,6 +1090,11 @@ public class ConfigurationChooser extends Composite
     }
 
     private void selectConfiguration(FolderConfiguration fileConfig) {
+        /* For now, don't show any text in the configuration combo, use just an
+           icon. This has the advantage that the configuration contents don't
+           shift around, so you can for example click back and forth between
+           portrait and landscape without the icon moving under the mouse.
+           If this works well, remove this whole method post ADT 21.
         assert isUiThread();
         try {
             String current = mEditedFile.getParent().getName();
@@ -1107,6 +1111,7 @@ public class ConfigurationChooser extends Composite
         } finally {
             mDisableUpdates--;
         }
+         */
     }
 
     /**

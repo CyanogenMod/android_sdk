@@ -23,6 +23,7 @@ import com.android.resources.UiMode;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
+import com.google.common.base.Objects;
 
 /**
  * An {@linkplain NestedConfiguration} is a {@link Configuration} which inherits
@@ -37,7 +38,7 @@ import com.android.sdklib.devices.State;
  * be "en", but otherwise inherit everything else.
  */
 public class NestedConfiguration extends Configuration {
-    protected final Configuration mParent;
+    protected Configuration mParent;
     protected boolean mOverrideLocale;
     protected boolean mOverrideTarget;
     protected boolean mOverrideDevice;
@@ -63,6 +64,61 @@ public class NestedConfiguration extends Configuration {
             mEditedConfig = new FolderConfiguration();
             mEditedConfig.set(mParent.mEditedConfig);
         }
+    }
+
+    /**
+     * Creates a new {@linkplain NestedConfiguration} that has the same overriding
+     * attributes as the given other {@linkplain NestedConfiguration}, and gets
+     * its values from the given {@linkplain Configuration}.
+     *
+     * @param other the configuration to copy overrides from
+     * @param values the configuration to copy values from
+     * @param parent the parent to tie the configuration to for inheriting values
+     * @return a new configuration
+     */
+    @NonNull
+    public static NestedConfiguration create(
+            @NonNull NestedConfiguration other,
+            @NonNull Configuration values,
+            @NonNull Configuration parent) {
+        NestedConfiguration configuration =
+                new NestedConfiguration(other.mConfigChooser, parent);
+        configuration.mOverrideLocale = other.mOverrideLocale;
+        if (configuration.mOverrideLocale) {
+            configuration.setLocale(values.getLocale(), true);
+        }
+        configuration.mOverrideTarget = other.mOverrideTarget;
+        if (configuration.mOverrideTarget) {
+            configuration.setTarget(values.getTarget(), true);
+        }
+        configuration.mOverrideDevice = other.mOverrideDevice;
+        configuration.mOverrideDeviceState = other.mOverrideDeviceState;
+        if (configuration.mOverrideDevice) {
+            configuration.setDevice(values.getDevice(), true);
+        }
+        if (configuration.mOverrideDeviceState) {
+            configuration.setDeviceState(values.getDeviceState(), true);
+        }
+
+        configuration.mOverrideNightMode = other.mOverrideNightMode;
+        if (configuration.mOverrideNightMode) {
+            configuration.setNightMode(values.getNightMode(), true);
+        }
+        configuration.mOverrideUiMode = other.mOverrideUiMode;
+        if (configuration.mOverrideUiMode) {
+            configuration.setUiMode(values.getUiMode(), true);
+        }
+
+        return configuration;
+    }
+
+    /**
+     * Sets the parent configuration that this configuration is inheriting from.
+     *
+     * @param parent the parent configuration
+     */
+    public void setParent(@NonNull Configuration parent) {
+        mParent = parent;
     }
 
     /**
@@ -301,5 +357,29 @@ public class NestedConfiguration extends Configuration {
     @NonNull
     public Configuration getParent() {
         return mParent;
+    }
+
+    @Override
+    @Nullable
+    public String getActivity() {
+        return mParent.getActivity();
+    }
+
+    @Override
+    public void setActivity(String activity) {
+        super.setActivity(activity);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this.getClass())
+                .add("parent", mParent.getDisplayName())          //$NON-NLS-1$
+                .add("display", getDisplayName())                 //$NON-NLS-1$
+                .add("overrideLocale", mOverrideLocale)           //$NON-NLS-1$
+                .add("overrideTarget", mOverrideTarget)           //$NON-NLS-1$
+                .add("overrideDevice", mOverrideDevice)           //$NON-NLS-1$
+                .add("overrideDeviceState", mOverrideDeviceState) //$NON-NLS-1$
+                .add("persistent", toPersistentString())          //$NON-NLS-1$
+                .toString();
     }
 }

@@ -50,6 +50,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
 import com.android.utils.Pair;
+import com.google.common.base.Objects;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -1063,6 +1064,9 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return toPersistentString();
+        return Objects.toStringHelper(this.getClass())
+                .add("display", getDisplayName())                 //$NON-NLS-1$
+                .add("persistent", toPersistentString())          //$NON-NLS-1$
+                .toString();
     }
 }

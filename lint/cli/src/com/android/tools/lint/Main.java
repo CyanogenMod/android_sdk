@@ -16,9 +16,9 @@
 
 package com.android.tools.lint;
 
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
 import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
-import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
@@ -40,6 +40,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
@@ -873,47 +874,7 @@ public class Main extends LintClient {
     }
 
     static String wrap(String explanation, int lineWidth, String hangingIndent) {
-        int explanationLength = explanation.length();
-        StringBuilder sb = new StringBuilder(explanationLength * 2);
-        int index = 0;
-
-        while (index < explanationLength) {
-            int lineEnd = explanation.indexOf('\n', index);
-            int next;
-
-            if (lineEnd != -1 && (lineEnd - index) < lineWidth) {
-                next = lineEnd + 1;
-            } else {
-                // Line is longer than available width; grab as much as we can
-                lineEnd = Math.min(index + lineWidth, explanationLength);
-                if (lineEnd - index < lineWidth) {
-                    next = explanationLength;
-                } else {
-                    // then back up to the last space
-                    int lastSpace = explanation.lastIndexOf(' ', lineEnd);
-                    if (lastSpace > index) {
-                        lineEnd = lastSpace;
-                        next = lastSpace + 1;
-                    } else {
-                        // No space anywhere on the line: it contains something wider than
-                        // can fit (like a long URL) so just hard break it
-                        next = lineEnd + 1;
-                    }
-                }
-            }
-
-            if (sb.length() > 0) {
-                sb.append(hangingIndent);
-            } else {
-                lineWidth -= hangingIndent.length();
-            }
-
-            sb.append(explanation.substring(index, lineEnd));
-            sb.append('\n');
-            index = next;
-        }
-
-        return sb.toString();
+        return SdkUtils.wrap(explanation, lineWidth, hangingIndent);
     }
 
     private static void printUsage(PrintStream out) {

@@ -64,6 +64,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.IAndroidTarget;
+import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -139,7 +140,7 @@ public class RenderPreview implements IJobChangeListener {
     }
 
     /** The configuration being previewed */
-    private final @NonNull Configuration mConfiguration;
+    private @NonNull Configuration mConfiguration;
 
     /** The associated manager */
     private final @NonNull RenderPreviewManager mManager;
@@ -154,6 +155,7 @@ public class RenderPreview implements IJobChangeListener {
     private int mHeight;
     private int mX;
     private int mY;
+    private int mTitleHeight;
     private double mScale = 1.0;
     private double mAspectRatio;
 
@@ -166,9 +168,13 @@ public class RenderPreview implements IJobChangeListener {
     /** Whether the mouse is actively hovering over this preview */
     private boolean mActive;
 
-    /** Whether this preview cannot be rendered because of a model error - such as
-     * an invalid configuration, a missing resource, an error in the XML markup, etc */
-    private boolean mError;
+    /**
+     * Whether this preview cannot be rendered because of a model error - such
+     * as an invalid configuration, a missing resource, an error in the XML
+     * markup, etc. If non null, contains the error message (or a blank string
+     * if not known), and null if the render was successful.
+     */
+    private String mError;
 
     /**
      * Whether this preview presents a file that has been "forked" (separate,
@@ -208,6 +214,15 @@ public class RenderPreview implements IJobChangeListener {
         mWidth = width;
         mHeight = height;
         mAspectRatio = mWidth / (double) mHeight;
+    }
+
+    /**
+     * Sets the configuration to use for this preview
+     *
+     * @param configuration the new configuration
+     */
+    public void setConfiguration(@NonNull Configuration configuration) {
+        mConfiguration = configuration;
     }
 
     /**
@@ -545,7 +560,7 @@ public class RenderPreview implements IJobChangeListener {
 
             Document document = DomUtilities.getDocument(mInput);
             if (document == null) {
-                mError = true;
+                mError = "No document";
                 createErrorThumbnail();
                 return;
             }
@@ -574,7 +589,14 @@ public class RenderPreview implements IJobChangeListener {
             }
         }
 
-        mError = !render.isSuccess();
+        if (render.isSuccess()) {
+            mError = null;
+        } else {
+            mError = render.getErrorMessage();
+            if (mError == null) {
+                mError = "";
+            }
+        }
 
         if (render.getStatus() == Status.ERROR_TIMEOUT) {
             // TODO: Special handling? schedule update again later
@@ -587,7 +609,7 @@ public class RenderPreview implements IJobChangeListener {
             }
         }
 
-        if (mError) {
+        if (mError != null) {
             createErrorThumbnail();
         }
     }
@@ -663,18 +685,26 @@ public class RenderPreview implements IJobChangeListener {
 
         double scale = getWidth() / (double) image.getWidth();
         if (scale < 1.0) {
+            ImageOverlay imageOverlay = mCanvas.getImageOverlay();
+            boolean drawShadows = imageOverlay == null || imageOverlay.getShowDropShadow();
             if (LARGE_SHADOWS) {
+                int shadowSize = drawShadows ? SHADOW_SIZE : 0;
                 image = ImageUtils.scale(image, scale, scale,
-                        SHADOW_SIZE, SHADOW_SIZE);
-                ImageUtils.drawRectangleShadow(image, 0, 0,
-                        image.getWidth() - SHADOW_SIZE,
-                        image.getHeight() - SHADOW_SIZE);
+                        shadowSize, shadowSize);
+                if (drawShadows) {
+                    ImageUtils.drawRectangleShadow(image, 0, 0,
+                            image.getWidth() - shadowSize,
+                            image.getHeight() - shadowSize);
+                }
             } else {
+                int shadowSize = drawShadows ? SMALL_SHADOW_SIZE : 0;
                 image = ImageUtils.scale(image, scale, scale,
-                        SMALL_SHADOW_SIZE, SMALL_SHADOW_SIZE);
-                ImageUtils.drawSmallRectangleShadow(image, 0, 0,
-                        image.getWidth() - SMALL_SHADOW_SIZE,
-                        image.getHeight() - SMALL_SHADOW_SIZE);
+                        shadowSize, shadowSize);
+                if (drawShadows) {
+                    ImageUtils.drawSmallRectangleShadow(image, 0, 0,
+                            image.getWidth() - shadowSize,
+                            image.getHeight() - shadowSize);
+                }
             }
         }
 
@@ -700,19 +730,23 @@ public class RenderPreview implements IJobChangeListener {
                 BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g = image.createGraphics();
-        g.setColor(java.awt.Color.WHITE);
+        g.setColor(new java.awt.Color(0xfffbfcc6));
         g.fillRect(0, 0, width, height);
 
         g.dispose();
 
-        if (LARGE_SHADOWS) {
-            ImageUtils.drawRectangleShadow(image, 0, 0,
-                    image.getWidth() - SHADOW_SIZE,
-                    image.getHeight() - SHADOW_SIZE);
-        } else {
-            ImageUtils.drawSmallRectangleShadow(image, 0, 0,
-                    image.getWidth() - SMALL_SHADOW_SIZE,
-                    image.getHeight() - SMALL_SHADOW_SIZE);
+        ImageOverlay imageOverlay = mCanvas.getImageOverlay();
+        boolean drawShadows = imageOverlay == null || imageOverlay.getShowDropShadow();
+        if (drawShadows) {
+            if (LARGE_SHADOWS) {
+                ImageUtils.drawRectangleShadow(image, 0, 0,
+                        image.getWidth() - SHADOW_SIZE,
+                        image.getHeight() - SHADOW_SIZE);
+            } else {
+                ImageUtils.drawSmallRectangleShadow(image, 0, 0,
+                        image.getWidth() - SMALL_SHADOW_SIZE,
+                        image.getHeight() - SMALL_SHADOW_SIZE);
+            }
         }
 
         mThumbnail = SwtUtils.convertToSwt(mCanvas.getDisplay(), image,
@@ -761,7 +795,7 @@ public class RenderPreview implements IJobChangeListener {
      * @return true if this preview handled (and therefore consumed) the click
      */
     public boolean click(int x, int y) {
-        if (y < HEADER_HEIGHT) {
+        if (y >= mTitleHeight && y < mTitleHeight + HEADER_HEIGHT) {
             int left = 0;
             left += CLOSE_ICON_WIDTH;
             if (x <= left) {
@@ -829,9 +863,13 @@ public class RenderPreview implements IJobChangeListener {
      * @param y the y coordinate to paint the preview at
      */
     void paint(GC gc, int x, int y) {
+        mTitleHeight = paintTitle(gc, x, y, true /*showFile*/);
+        y += mTitleHeight;
+        y += 2;
+
         int width = getWidth();
         int height = getHeight();
-        if (mThumbnail != null && !mError) {
+        if (mThumbnail != null && mError == null) {
             gc.drawImage(mThumbnail, x, y);
 
             if (mActive) {
@@ -841,7 +879,7 @@ public class RenderPreview implements IJobChangeListener {
                 gc.drawRectangle(x - 1, y - 1, width + 2, height + 2);
                 gc.setLineWidth(oldWidth);
             }
-        } else if (mError) {
+        } else if (mError != null) {
             if (mThumbnail != null) {
                 gc.drawImage(mThumbnail, x, y);
             } else {
@@ -849,25 +887,29 @@ public class RenderPreview implements IJobChangeListener {
                 gc.drawRectangle(x, y, width, height);
             }
 
-            gc.setClipping(x, y, width, height + 100);
+            gc.setClipping(x, y, width, height);
             Image icon = IconFactory.getInstance().getIcon("renderError"); //$NON-NLS-1$
             ImageData data = icon.getImageData();
             int prevAlpha = gc.getAlpha();
-            int alpha = 128-32;
+            int alpha = 96;
             if (mThumbnail != null) {
-                alpha -= 64;
+                alpha -= 32;
             }
             gc.setAlpha(alpha);
             gc.drawImage(icon, x + (width - data.width) / 2, y + (height - data.height) / 2);
 
+            String msg = mError;
             Density density = mConfiguration.getDensity();
             if (density == Density.TV || density == Density.LOW) {
-                gc.setAlpha(255);
-                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
-                gc.drawText("Broken rendering\nlibrary;\nunsupported DPI\n\nTry updating\nSDK platforms",
-                        x + 8, y + HEADER_HEIGHT, true);
+                msg = "Broken rendering library; unsupported DPI. Try using the SDK manager " +
+                        "to get updated layout libraries.";
             }
-
+            int charWidth = gc.getFontMetrics().getAverageCharWidth();
+            int charsPerLine = (width - 10) / charWidth;
+            msg = SdkUtils.wrap(msg, charsPerLine, null);
+            gc.setAlpha(255);
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.drawText(msg, x + 5, y + HEADER_HEIGHT, true);
             gc.setAlpha(prevAlpha);
             gc.setClipping((Region) null);
         } else {
@@ -877,7 +919,7 @@ public class RenderPreview implements IJobChangeListener {
             Image icon = IconFactory.getInstance().getIcon("refreshPreview"); //$NON-NLS-1$
             ImageData data = icon.getImageData();
             int prevAlpha = gc.getAlpha();
-            gc.setAlpha(128-32);
+            gc.setAlpha(96);
             gc.drawImage(icon, x + (width - data.width) / 2,
                     y + (height - data.height) / 2);
             gc.setAlpha(prevAlpha);
@@ -886,11 +928,13 @@ public class RenderPreview implements IJobChangeListener {
         if (mActive) {
             int left = x ;
             int prevAlpha = gc.getAlpha();
-            gc.setAlpha(128+32);
+            gc.setAlpha(208);
             Color bg = mCanvas.getDisplay().getSystemColor(SWT.COLOR_WHITE);
             gc.setBackground(bg);
             gc.fillRectangle(left, y, x + width - left, HEADER_HEIGHT);
             gc.setAlpha(prevAlpha);
+
+            y += 2;
 
             // Paint icons
             gc.drawImage(CLOSE_ICON, left, y);
@@ -905,40 +949,40 @@ public class RenderPreview implements IJobChangeListener {
             gc.drawImage(EDIT_ICON, left, y);
             left += EDIT_ICON_WIDTH;
         }
-
-        paintTitle(gc, x, y, true /*showFile*/);
     }
 
     /**
-     * Paints the preview title at the given position
+     * Paints the preview title at the given position (and returns the required
+     * height)
      *
      * @param gc the graphics context to paint into
      * @param x the left edge of the preview rectangle
      * @param y the top edge of the preview rectangle
      */
-    void paintTitle(GC gc, int x, int y, boolean showFile) {
+    int paintTitle(GC gc, int x, int y, boolean showFile) {
+        int titleHeight = 0;
+
         String displayName = getDisplayName();
         if (displayName != null && displayName.length() > 0) {
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
 
             int width = getWidth();
-            int height = getHeight();
             Point extent = gc.textExtent(displayName);
             int labelLeft = Math.max(x, x + (width - extent.x) / 2);
-            int labelTop = y + height + 1;
-            Image flagImage = null;
+            int labelTop = y + 1;
+            Image icon = null;
             Locale locale = mConfiguration.getLocale();
             if (locale != null && (locale.hasLanguage() || locale.hasRegion())
                     && (!(mConfiguration instanceof NestedConfiguration)
                             || ((NestedConfiguration) mConfiguration).isOverridingLocale())) {
-                flagImage = locale.getFlagImage();
+                icon = locale.getFlagImage();
             }
 
-            gc.setClipping(x, y, width, height + 100);
-            if (flagImage != null) {
-                int flagWidth = flagImage.getImageData().width;
-                int flagHeight = flagImage.getImageData().height;
-                gc.drawImage(flagImage, labelLeft - flagWidth / 2 - 1, labelTop);
+            gc.setClipping(x, labelTop, width, 100);
+            if (icon != null) {
+                int flagWidth = icon.getImageData().width;
+                int flagHeight = icon.getImageData().height;
+                gc.drawImage(icon, labelLeft - flagWidth / 2 - 1, labelTop);
                 labelLeft += flagWidth / 2 + 1;
                 gc.drawText(displayName, labelLeft,
                         labelTop - (extent.y - flagHeight) / 2, true);
@@ -946,27 +990,38 @@ public class RenderPreview implements IJobChangeListener {
                 gc.drawText(displayName, labelLeft, labelTop, true);
             }
 
+            // Use font height rather than extent height since we want two adjacent
+            // previews (which may have different display names and therefore end
+            // up with slightly different extent heights) to have identical title
+            // heights such that they are aligned identically
+            titleHeight = gc.getFontMetrics().getHeight();
+
             if (mForked && mInput != null && showFile) {
                 // Draw file flag, and parent folder name
                 labelTop += extent.y;
                 String fileName = mInput.getParent().getName() + File.separator + mInput.getName();
                 extent = gc.textExtent(fileName);
-                flagImage = IconFactory.getInstance().getIcon("android_file"); //$NON-NLS-1$
-                int flagWidth = flagImage.getImageData().width;
-                int flagHeight = flagImage.getImageData().height;
+                icon = IconFactory.getInstance().getIcon("android_file"); //$NON-NLS-1$
+                int flagWidth = icon.getImageData().width;
+                int flagHeight = icon.getImageData().height;
 
                 labelLeft = Math.max(x, x + (width - extent.x - flagWidth - 1) / 2);
 
-                gc.drawImage(flagImage, labelLeft, labelTop);
+                gc.drawImage(icon, labelLeft, labelTop);
 
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
                 labelLeft += flagWidth + 1;
                 labelTop -= (extent.y - flagHeight) / 2;
                 gc.drawText(fileName, labelLeft, labelTop, true);
+
+                titleHeight += Math.max(titleHeight, icon.getImageData().height);
+
             }
 
             gc.setClipping((Region) null);
         }
+
+        return titleHeight;
     }
 
     /**
@@ -992,7 +1047,7 @@ public class RenderPreview implements IJobChangeListener {
         FolderConfiguration folderConfig = mConfiguration.getFullConfig();
         ScreenOrientationQualifier qualifier = folderConfig.getScreenOrientationQualifier();
         ScreenOrientation orientation = qualifier == null
-                ? ScreenOrientation.PORTRAIT :  qualifier.getValue();
+                ? ScreenOrientation.PORTRAIT : qualifier.getValue();
         if (orientation == ScreenOrientation.LANDSCAPE
                 || orientation == ScreenOrientation.SQUARE) {
             orientation = ScreenOrientation.PORTRAIT;
@@ -1148,6 +1203,11 @@ public class RenderPreview implements IJobChangeListener {
     @Nullable
     public ConfigurationDescription getDescription() {
         return mDescription;
+    }
+
+    @Override
+    public String toString() {
+        return getDisplayName() + ':' + mConfiguration;
     }
 
     /** Sorts render previews into increasing aspect ratio order */

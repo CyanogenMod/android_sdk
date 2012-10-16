@@ -571,7 +571,7 @@ public class RenderPreviewManager {
                 int destHeight = vi.getScaledImgSize();
 
                 int x = destX + destWidth / 2 - preview.getWidth() / 2;
-                int y = destY + destHeight - preview.getHeight();
+                int y = destY + destHeight;
                 preview.paintTitle(gc, x, y, false /*showFile*/);
             }
 
@@ -1145,38 +1145,69 @@ public class RenderPreviewManager {
         GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
         ConfigurationChooser chooser = editor.getConfigurationChooser();
 
-        RenderPreview newPreview = mCanvas.getPreview();
-        if (newPreview == null) {
-            newPreview = RenderPreview.create(this, chooser.getConfiguration());
-        }
+        Configuration originalConfiguration = chooser.getConfiguration();
 
-        // Replace clicked preview with preview of the formerly edited main configuration
-        if (newPreview != null) {
-            // This doesn't work yet because the image overlay has had its image
-            // replaced by the configuration previews! I should make a list of them
-            //newPreview.setFullImage(mImageOverlay.getAwtImage());
-
-            for (int i = 0, n = mPreviews.size(); i < n; i++) {
-                if (preview == mPreviews.get(i)) {
-                    mPreviews.set(i, newPreview);
-                    break;
-                }
-            }
-            //newPreview.setPosition(preview.getX(), preview.getY());
-        }
-
-        // Switch main editor to the clicked configuration preview
-        mCanvas.setPreview(preview);
-
-        Configuration newConfiguration = preview.getConfiguration();
+        // The new configuration is the configuration which will become the configuration
+        // in the layout editor's chooser
+        Configuration previewConfiguration = preview.getConfiguration();
+        Configuration newConfiguration = previewConfiguration;
         if (newConfiguration instanceof NestedConfiguration) {
             // Should never use a complementing configuration for the main
             // rendering's configuration; instead, create a new configuration
             // with a snapshot of the configuration's current values
-            newConfiguration = Configuration.copy(preview.getConfiguration());
-        }
-        chooser.setConfiguration(newConfiguration);
+            newConfiguration = Configuration.copy(previewConfiguration);
 
+            // Remap all the previews to be parented to this new copy instead
+            // of the old one (which is no longer controlled by the chooser)
+            for (RenderPreview p : mPreviews) {
+                Configuration configuration = p.getConfiguration();
+                if (configuration instanceof NestedConfiguration) {
+                    NestedConfiguration nested = (NestedConfiguration) configuration;
+                    nested.setParent(newConfiguration);
+                }
+            }
+        }
+
+        // Make a preview for the configuration which *was* showing in the
+        // chooser up until this point:
+        RenderPreview newPreview = mCanvas.getPreview();
+        if (newPreview == null) {
+            newPreview = RenderPreview.create(this, originalConfiguration);
+        }
+
+        // Update its configuration such that it is complementing or inheriting
+        // from the new chosen configuration
+        if (previewConfiguration instanceof ComplementingConfiguration) {
+            originalConfiguration = ComplementingConfiguration.create(
+                    (ComplementingConfiguration) previewConfiguration,
+                    newConfiguration);
+            newPreview.setConfiguration(originalConfiguration);
+        } else if (previewConfiguration instanceof NestedConfiguration) {
+            originalConfiguration = NestedConfiguration.create(
+                    (NestedConfiguration) previewConfiguration,
+                    originalConfiguration,
+                    newConfiguration);
+            newPreview.setConfiguration(originalConfiguration);
+        }
+
+        // Replace clicked preview with preview of the formerly edited main configuration
+        // This doesn't work yet because the image overlay has had its image
+        // replaced by the configuration previews! I should make a list of them
+        //newPreview.setFullImage(mImageOverlay.getAwtImage());
+        for (int i = 0, n = mPreviews.size(); i < n; i++) {
+            if (preview == mPreviews.get(i)) {
+                mPreviews.set(i, newPreview);
+                break;
+            }
+        }
+
+        // Stash the corresponding preview (not active) on the canvas so we can
+        // retrieve it if clicking to some other preview later
+        mCanvas.setPreview(preview);
+
+        // Switch to the configuration from the clicked preview (though it's
+        // most likely a copy, see above)
+        chooser.setConfiguration(newConfiguration);
         editor.recomputeLayout();
 
         // Scroll to the top again, if necessary
@@ -1184,7 +1215,7 @@ public class RenderPreviewManager {
 
         mNeedLayout = mNeedZoom = true;
         mCanvas.redraw();
-        mAnimation = new SwapAnimation(preview);
+        mAnimation = new SwapAnimation(preview, newPreview);
     }
 
     /**
@@ -1430,14 +1461,24 @@ public class RenderPreviewManager {
         private long begin;
         private long end;
         private static final long DURATION = 400; // ms
-        private Rect initialPos;
+        private Rect initialRect1;
+        private Rect targetRect1;
+        private Rect initialRect2;
+        private Rect targetRect2;
+        private RenderPreview preview;
 
-        SwapAnimation(RenderPreview preview) {
+        SwapAnimation(RenderPreview preview1, RenderPreview preview2) {
             begin = System.currentTimeMillis();
             end = begin + DURATION;
 
-            initialPos = new Rect(preview.getX(), preview.getY(),
-                    preview.getWidth(), preview.getHeight());
+            initialRect1 = new Rect(preview1.getX(), preview1.getY(),
+                    preview1.getWidth(), preview1.getHeight());
+
+            CanvasTransform hi = mCanvas.getHorizontalTransform();
+            CanvasTransform vi = mCanvas.getVerticalTransform();
+            initialRect2 = new Rect(hi.translate(0), vi.translate(0),
+                    hi.getScaledImgSize(), vi.getScaledImgSize());
+            preview = preview2;
         }
 
         void tick(GC gc) {
@@ -1447,21 +1488,33 @@ public class RenderPreviewManager {
                 return;
             }
 
-            // For now, just animation rect1 towards rect2
-            // The shape of the canvas might have shifted if zoom or device size
-            // or orientation changed, so compute a new target size
             CanvasTransform hi = mCanvas.getHorizontalTransform();
             CanvasTransform vi = mCanvas.getVerticalTransform();
-            Rect rect = new Rect(hi.translate(0), vi.translate(0),
+            if (targetRect1 == null) {
+                targetRect1 = new Rect(hi.translate(0), vi.translate(0),
                     hi.getScaledImgSize(), vi.getScaledImgSize());
+            }
             double portion = (now - begin) / (double) DURATION;
-            rect.x = (int) (portion * (rect.x - initialPos.x) + initialPos.x);
-            rect.y = (int) (portion * (rect.y - initialPos.y) + initialPos.y);
-            rect.w = (int) (portion * (rect.w - initialPos.w) + initialPos.w);
-            rect.h = (int) (portion * (rect.h - initialPos.h) + initialPos.h);
+            Rect rect1 = new Rect(
+                    (int) (portion * (targetRect1.x - initialRect1.x) + initialRect1.x),
+                    (int) (portion * (targetRect1.y - initialRect1.y) + initialRect1.y),
+                    (int) (portion * (targetRect1.w - initialRect1.w) + initialRect1.w),
+                    (int) (portion * (targetRect1.h - initialRect1.h) + initialRect1.h));
+
+            if (targetRect2 == null) {
+                targetRect2 = new Rect(preview.getX(), preview.getY(),
+                        preview.getWidth(), preview.getHeight());
+            }
+            portion = (now - begin) / (double) DURATION;
+            Rect rect2 = new Rect(
+                (int) (portion * (targetRect2.x - initialRect2.x) + initialRect2.x),
+                (int) (portion * (targetRect2.y - initialRect2.y) + initialRect2.y),
+                (int) (portion * (targetRect2.w - initialRect2.w) + initialRect2.w),
+                (int) (portion * (targetRect2.h - initialRect2.h) + initialRect2.h));
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
-            gc.drawRectangle(rect.x, rect.y, rect.w, rect.h);
+            gc.drawRectangle(rect1.x, rect1.y, rect1.w, rect1.h);
+            gc.drawRectangle(rect2.x, rect2.y, rect2.w, rect2.h);
 
             mCanvas.getDisplay().timerExec(5, this);
         }

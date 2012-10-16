@@ -87,6 +87,30 @@ public class ComplementingConfiguration extends NestedConfiguration {
     }
 
     /**
+     * Creates a new {@linkplain ComplementingConfiguration} that has the same overriding
+     * attributes as the given other {@linkplain ComplementingConfiguration}.
+     *
+     * @param other the configuration to copy overrides from
+     * @param parent the parent to tie the configuration to for inheriting values
+     * @return a new configuration
+     */
+    @NonNull
+    public static ComplementingConfiguration create(
+            @NonNull ComplementingConfiguration other,
+            @NonNull Configuration parent) {
+        ComplementingConfiguration configuration =
+                new ComplementingConfiguration(other.mConfigChooser, parent);
+        configuration.mOverrideLocale = other.mOverrideLocale;
+        configuration.mOverrideTarget = other.mOverrideTarget;
+        configuration.mOverrideDevice = other.mOverrideDevice;
+        configuration.mOverrideDeviceState = other.mOverrideDeviceState;
+        configuration.mOverrideNightMode = other.mOverrideNightMode;
+        configuration.mOverrideUiMode = other.mOverrideUiMode;
+
+        return configuration;
+    }
+
+    /**
      * Sets the variation version for this
      * {@linkplain ComplementingConfiguration}. There might be multiple
      * {@linkplain ComplementingConfiguration} instances inheriting from a
