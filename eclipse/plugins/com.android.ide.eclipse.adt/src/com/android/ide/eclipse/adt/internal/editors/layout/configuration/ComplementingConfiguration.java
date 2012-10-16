@@ -17,7 +17,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.resources.Density;
 import com.android.resources.NightMode;
 import com.android.resources.UiMode;
 import com.android.sdklib.IAndroidTarget;
@@ -282,6 +284,11 @@ public class ComplementingConfiguration extends NestedConfiguration {
             for (Device d : devices) {
                 double size = getScreenSize(d);
                 if (size >= from && size < to) {
+                    if (RenderPreviewManager.HIDE_TVDPI &&
+                            getDensity(d) == Density.TV) {
+                        continue;
+                    }
+
                     device = d;
                     break;
                 }
@@ -294,6 +301,26 @@ public class ComplementingConfiguration extends NestedConfiguration {
 
         return device;
     }
+
+    /**
+     * Returns the density of the given device
+     *
+     * @param device the device to check
+     * @return the density or null
+     */
+    @Nullable
+    public static Density getDensity(@NonNull Device device) {
+        Hardware hardware = device.getDefaultHardware();
+        if (hardware != null) {
+            Screen screen = hardware.getScreen();
+            if (screen != null) {
+                return screen.getPixelDensity();
+            }
+        }
+
+        return null;
+    }
+
     private static double getScreenSize(@NonNull Device device) {
         Hardware hardware = device.getDefaultHardware();
         if (hardware != null) {

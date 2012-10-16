@@ -2048,6 +2048,21 @@ public class GraphicalEditorPart extends EditorPart
                         "or fix the theme style references.\n\n");
             }
 
+            List<Throwable> trace = logger.getFirstTrace();
+            if (trace != null
+                    && trace.toString().contains(
+                            "java.lang.IndexOutOfBoundsException: Index: 2, Size: 2") //$NON-NLS-1$
+                    && mConfigChooser.getConfiguration().getDensity() == Density.TV) {
+                addBoldText(mErrorLabel,
+                        "It looks like you are using a render target where the layout library " +
+                        "does not support the tvdpi density.\n\n");
+                addText(mErrorLabel, "Please try either updating to " +
+                        "the latest available version (using the SDK manager), or if no updated " +
+                        "version is available for this specific version of Android, try using " +
+                        "a more recent render target version.\n\n");
+
+            }
+
             if (hasAaptErrors && logger.seenTagPrefix(LayoutLog.TAG_RESOURCES_PREFIX)) {
                 // Text will automatically be wrapped by the error widget so no reason
                 // to insert linebreaks in this error message:
