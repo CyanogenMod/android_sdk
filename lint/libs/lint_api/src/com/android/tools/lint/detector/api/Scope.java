@@ -70,6 +70,13 @@ public enum Scope {
      */
     CLASS_FILE,
 
+    /**
+     * The analysis considers <b>all</b> the Java class files together.
+     * <p>
+     * This flag is mutually exclusive with {@link #CLASS_FILE}.
+     */
+    ALL_CLASS_FILES,
+
     /** The analysis considers the manifest file */
     MANIFEST,
 
