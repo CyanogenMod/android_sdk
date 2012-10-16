@@ -863,12 +863,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     private void checkFormatCall(JavaContext context, MethodInvocation node) {
-        lombok.ast.Node current = node.getParent();
-        while (current != null
-                && !(current instanceof MethodDeclaration)
-                && !(current instanceof ConstructorDeclaration)) {
-            current = current.getParent();
-        }
+        lombok.ast.Node current = getParentMethod(node);
         if (current != null) {
             checkStringFormatCall(context, current, node);
         }
@@ -892,7 +887,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             return;
         }
 
-        StringTracker tracker = new StringTracker(method, call);
+        StringTracker tracker = new StringTracker(method, call, 0);
         method.accept(tracker);
         String name = tracker.getFormatStringName();
         if (name == null) {
@@ -1010,10 +1005,33 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
     }
 
+    /** Returns the parent method of the given AST node */
+    @Nullable
+    static lombok.ast.Node getParentMethod(@NonNull lombok.ast.Node node) {
+        lombok.ast.Node current = node.getParent();
+        while (current != null
+                && !(current instanceof MethodDeclaration)
+                && !(current instanceof ConstructorDeclaration)) {
+            current = current.getParent();
+        }
+
+        return current;
+    }
+
     /** Returns the resource name corresponding to the first argument in the given call */
     static String getResourceForFirstArg(lombok.ast.Node method, lombok.ast.Node call) {
         assert call instanceof MethodInvocation || call instanceof ConstructorInvocation;
-        StringTracker tracker = new StringTracker(method, call);
+        StringTracker tracker = new StringTracker(method, call, 0);
+        method.accept(tracker);
+        String name = tracker.getFormatStringName();
+
+        return name;
+    }
+
+    /** Returns the resource name corresponding to the given argument in the given call */
+    static String getResourceArg(lombok.ast.Node method, lombok.ast.Node call, int argIndex) {
+        assert call instanceof MethodInvocation || call instanceof ConstructorInvocation;
+        StringTracker tracker = new StringTracker(method, call, argIndex);
         method.accept(tracker);
         String name = tracker.getFormatStringName();
 
@@ -1044,6 +1062,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     private static class StringTracker extends ForwardingAstVisitor {
         /** Method we're searching within */
         private final lombok.ast.Node mTop;
+        /** The argument index in the method we're targeting */
+        private final int mArgIndex;
         /** Map from variable name to corresponding string resource name */
         private final Map<String, String> mMap = new HashMap<String, String>();
         /** Map from variable name to corresponding type */
@@ -1057,8 +1077,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
          */
         private String mName;
 
-        public StringTracker(lombok.ast.Node top, lombok.ast.Node targetNode) {
+        public StringTracker(lombok.ast.Node top, lombok.ast.Node targetNode, int argIndex) {
             mTop = top;
+            mArgIndex = argIndex;
             mTargetNode = targetNode;
         }
 
@@ -1145,19 +1166,38 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             return false;
         }
 
+        @Nullable
+        private Expression getTargetArgument() {
+            Iterator<Expression> iterator;
+            if (mTargetNode instanceof MethodInvocation) {
+                iterator = ((MethodInvocation) mTargetNode).astArguments().iterator();
+            } else if (mTargetNode instanceof ConstructorInvocation) {
+                iterator = ((ConstructorInvocation) mTargetNode).astArguments().iterator();
+            } else {
+                return null;
+            }
+            int i = 0;
+            while (i < mArgIndex && iterator.hasNext()) {
+                iterator.next();
+                i++;
+            }
+            if (iterator.hasNext()) {
+                return iterator.next();
+            }
+
+            return null;
+        }
+
         @Override
         public boolean visitMethodInvocation(MethodInvocation node) {
             if (node == mTargetNode) {
-                StrictListAccessor<Expression, MethodInvocation> args = node.astArguments();
-                if (args.size() > 0) {
-                    Expression first = args.first();
-                    if (first instanceof VariableReference) {
-                          VariableReference reference = (VariableReference) first;
-                          String variable = reference.astIdentifier().astValue();
-                          mName = mMap.get(variable);
-                          mDone = true;
-                          return true;
-                    }
+                Expression arg = getTargetArgument();
+                if (arg instanceof VariableReference) {
+                      VariableReference reference = (VariableReference) arg;
+                      String variable = reference.astIdentifier().astValue();
+                      mName = mMap.get(variable);
+                      mDone = true;
+                      return true;
                 }
             }
 
@@ -1169,16 +1209,13 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         @Override
         public boolean visitConstructorInvocation(ConstructorInvocation node) {
             if (node == mTargetNode) {
-                StrictListAccessor<Expression, ConstructorInvocation> args = node.astArguments();
-                if (args.size() > 0) {
-                    Expression first = args.first();
-                    if (first instanceof VariableReference) {
-                          VariableReference reference = (VariableReference) first;
-                          String variable = reference.astIdentifier().astValue();
-                          mName = mMap.get(variable);
-                          mDone = true;
-                          return true;
-                    }
+                Expression arg = getTargetArgument();
+                if (arg instanceof VariableReference) {
+                      VariableReference reference = (VariableReference) arg;
+                      String variable = reference.astIdentifier().astValue();
+                      mName = mMap.get(variable);
+                      mDone = true;
+                      return true;
                 }
             }
 

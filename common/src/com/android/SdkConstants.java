@@ -699,7 +699,7 @@ public final class SdkConstants {
     public static final String ATTR_COLOR = "color";                   //$NON-NLS-1$
 
     // Attributes: Layout
-    public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_";         //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_";//$NON-NLS-1$
     public static final String ATTR_CLASS = "class";                   //$NON-NLS-1$
     public static final String ATTR_STYLE = "style";                   //$NON-NLS-1$
     public static final String ATTR_CONTEXT = "context";               //$NON-NLS-1$

@@ -1616,7 +1616,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                         return super.visitConstructorInvocation(node);
                     }
 
-                    Node method = getParentMethod(node);
+                    Node method = StringFormatDetector.getParentMethod(node);
                     if (method != null) {
                         // Must track local types
                         String name = StringFormatDetector.getResourceForFirstArg(method, node);
@@ -1639,7 +1639,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     }
                 }
                 if (isBuilder) {
-                    Node method = getParentMethod(node);
+                    Node method = StringFormatDetector.getParentMethod(node);
                     if (method != null) {
                         SetIconFinder finder = new SetIconFinder();
                         method.accept(finder);
@@ -1649,16 +1649,6 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
             return super.visitConstructorInvocation(node);
         }
-    }
-
-    @Nullable
-    private Node getParentMethod(@NonNull Node node) {
-        Node method = node;
-        while (method != null && !(method.getParent() instanceof MethodDeclaration)) {
-            method = method.getParent();
-        }
-
-        return method;
     }
 
     private boolean handleSelect(Select select) {
