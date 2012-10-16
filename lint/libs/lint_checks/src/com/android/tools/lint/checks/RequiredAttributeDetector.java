@@ -509,11 +509,5 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                 }
             }
         }
-        if (args.size() == 2) {
-        } else if (args.size() == 3) {
-        } else {
-// Debugging only
-context.report(ISSUE, context.getLocation(call), "Unexpected inflate signature here", null);
-        }
     }
 }
