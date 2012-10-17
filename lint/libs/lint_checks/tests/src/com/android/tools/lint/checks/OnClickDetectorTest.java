@@ -54,8 +54,7 @@ public class OnClickDetectorTest extends AbstractCheckTest {
             "res/layout/onclick.xml:58: Error: Corresponding method handler 'public void simple_typo(android.view.View)' not found (did you mean void test.pkg.OnClickActivity#simple_tyop(android.view.View) ?) [OnClick]\n" +
             "        android:onClick=\"simple_typo\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "9 errors, 0 warnings\n" +
-            "",
+            "9 errors, 0 warnings\n",
 
             lintProject(
                 "bytecode/.classpath=>.classpath",
@@ -73,5 +72,4 @@ public class OnClickDetectorTest extends AbstractCheckTest {
 
                 lintProject("res/layout/accessibility.xml"));
     }
-
 }

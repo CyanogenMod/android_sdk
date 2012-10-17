@@ -523,6 +523,13 @@ public class LintDriver {
                     assert detector instanceof Detector.ClassScanner : detector;
                 }
             }
+
+            List<Detector> classCodeDetectors = mScopeDetectors.get(Scope.ALL_CLASS_FILES);
+            if (classCodeDetectors != null) {
+                for (Detector detector : classCodeDetectors) {
+                    assert detector instanceof Detector.ClassScanner : detector;
+                }
+            }
         }
     }
 
@@ -850,7 +857,9 @@ public class LintDriver {
             return;
         }
 
-        if (mScope.contains(Scope.CLASS_FILE) || mScope.contains(Scope.JAVA_LIBRARIES)) {
+        if (mScope.contains(Scope.CLASS_FILE)
+                || mScope.contains(Scope.ALL_CLASS_FILES)
+                || mScope.contains(Scope.JAVA_LIBRARIES)) {
             checkClasses(project, main);
         }
 
@@ -1054,6 +1063,7 @@ public class LintDriver {
         }
 
         runClassDetectors(Scope.CLASS_FILE, classEntries, project, main);
+        runClassDetectors(Scope.ALL_CLASS_FILES, classEntries, project, main);
     }
 
     private void checkIndividualClassFiles(
