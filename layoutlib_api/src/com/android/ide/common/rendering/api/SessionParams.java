@@ -16,8 +16,6 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.resources.Density;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +50,6 @@ public class SessionParams extends RenderParams {
 
     private final ILayoutPullParser mLayoutDescription;
     private final RenderingMode mRenderingMode;
-    private final boolean mSoftwareButtons;
     private boolean mLayoutOnly = false;
     private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
     private boolean mExtendedViewInfoMode = false;
@@ -80,26 +77,22 @@ public class SessionParams extends RenderParams {
             ILayoutPullParser layoutDescription,
             RenderingMode renderingMode,
             Object projectKey,
-            int screenWidth, int screenHeight,
-            Density density, float xdpi, float ydpi,
+            HardwareConfig hardwareConfig,
             RenderResources renderResources,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
-            boolean softwareButtons,
             LayoutLog log) {
-        super(projectKey, screenWidth, screenHeight, density, xdpi, ydpi,
+        super(projectKey, hardwareConfig,
                 renderResources, projectCallback, minSdkVersion, targetSdkVersion, log);
 
         mLayoutDescription = layoutDescription;
         mRenderingMode = renderingMode;
-        mSoftwareButtons = softwareButtons;
     }
 
     public SessionParams(SessionParams params) {
         super(params);
         mLayoutDescription = params.mLayoutDescription;
         mRenderingMode = params.mRenderingMode;
-        mSoftwareButtons = params.mSoftwareButtons;
         if (params.mAdapterBindingMap != null) {
             mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>(
                     params.mAdapterBindingMap);
@@ -113,10 +106,6 @@ public class SessionParams extends RenderParams {
 
     public RenderingMode getRenderingMode() {
         return mRenderingMode;
-    }
-
-    public boolean hasSoftwareButtons() {
-        return mSoftwareButtons;
     }
 
     public void setLayoutOnly() {

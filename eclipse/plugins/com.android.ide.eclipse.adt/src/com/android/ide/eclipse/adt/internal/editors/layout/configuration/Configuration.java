@@ -22,7 +22,6 @@ import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -31,8 +30,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
-import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
-import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
@@ -44,7 +41,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
-import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
@@ -951,96 +947,6 @@ public class Configuration {
 
         // no config? return medium as the default density.
         return Density.MEDIUM;
-    }
-
-    /**
-     * Returns the current device xdpi.
-     *
-     * @return the x dpi as a float
-     */
-    public float getXDpi() {
-        Device device = getDevice();
-        if (device != null) {
-            State currState = getDeviceState();
-            if (currState == null) {
-                currState = device.getDefaultState();
-            }
-            float dpi = (float) currState.getHardware().getScreen().getXdpi();
-            if (!Float.isNaN(dpi)) {
-                return dpi;
-            }
-        }
-
-        // get the pixel density as the density.
-        return getDensity().getDpiValue();
-    }
-
-    /**
-     * Returns the current device ydpi.
-     *
-     * @return the y dpi as a float
-     */
-    public float getYDpi() {
-        Device device = getDevice();
-        if (device != null) {
-            State currState = getDeviceState();
-            if (currState == null) {
-                currState = device.getDefaultState();
-            }
-            float dpi = (float) currState.getHardware().getScreen().getYdpi();
-            if (!Float.isNaN(dpi)) {
-                return dpi;
-            }
-        }
-
-        // get the pixel density as the density.
-        return getDensity().getDpiValue();
-    }
-
-    /**
-     * Returns the bounds of the screen
-     *
-     * @return the screen bounds
-     */
-    public Rect getScreenBounds() {
-        return getScreenBounds(mFullConfig);
-    }
-
-    /**
-     * Gets the orientation from the given configuration
-     *
-     * @param config the configuration to look up
-     * @return the bounds
-     */
-    @NonNull
-    public static Rect getScreenBounds(FolderConfiguration config) {
-        // get the orientation from the given device config
-        ScreenOrientationQualifier qual = config.getScreenOrientationQualifier();
-        ScreenOrientation orientation = ScreenOrientation.PORTRAIT;
-        if (qual != null) {
-            orientation = qual.getValue();
-        }
-
-        // get the device screen dimension
-        ScreenDimensionQualifier qual2 = config.getScreenDimensionQualifier();
-        int s1, s2;
-        if (qual2 != null) {
-            s1 = qual2.getValue1();
-            s2 = qual2.getValue2();
-        } else {
-            s1 = 480;
-            s2 = 320;
-        }
-
-        switch (orientation) {
-            default:
-            case PORTRAIT:
-                return new Rect(0, 0, s2, s1);
-            case LANDSCAPE:
-                return new Rect(0, 0, s1, s2);
-            case SQUARE:
-                return new Rect(0, 0, s1, s1);
-        }
     }
 
     /**

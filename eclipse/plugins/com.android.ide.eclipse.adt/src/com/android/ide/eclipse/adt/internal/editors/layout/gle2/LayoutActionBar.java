@@ -33,6 +33,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.Screen;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 import com.google.common.base.Strings;
 
@@ -708,7 +710,9 @@ public class LayoutActionBar extends Composite {
         // compute average dpi of X and Y
         ConfigurationChooser chooser = mEditor.getConfigurationChooser();
         Configuration config = chooser.getConfiguration();
-        float dpi = (config.getXDpi() + config.getYDpi()) / 2.f;
+        Device device = config.getDevice();
+        Screen screen = device.getDefaultHardware().getScreen();
+        double dpi = (screen.getXdpi() + screen.getYdpi()) / 2.;
 
         // get the monitor dpi
         float monitor = AdtPrefs.getPrefs().getMonitorDensity();

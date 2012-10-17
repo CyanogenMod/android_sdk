@@ -28,7 +28,6 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtil
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.Result;
@@ -39,7 +38,6 @@ import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -529,9 +527,7 @@ public class RenderPreview implements IJobChangeListener {
         GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
         ResourceResolver resolver = getResourceResolver();
         FolderConfiguration config = mConfiguration.getFullConfig();
-        RenderService renderService = RenderService.create(editor, config, resolver);
-        ScreenSizeQualifier screenSize = config.getScreenSizeQualifier();
-        renderService.setScreen(screenSize, mConfiguration.getXDpi(), mConfiguration.getYDpi());
+        RenderService renderService = RenderService.create(editor, mConfiguration, resolver);
 
         if (mIncludedWithin != null) {
             renderService.setIncludedWithin(mIncludedWithin);
@@ -569,8 +565,6 @@ public class RenderPreview implements IJobChangeListener {
         } else {
             renderService.setModel(editor.getModel());
         }
-        Rect rect = Configuration.getScreenBounds(config);
-        renderService.setSize(rect.w, rect.h);
         RenderLogger log = new RenderLogger(getDisplayName());
         renderService.setLog(log);
         RenderSession session = renderService.createRenderSession();

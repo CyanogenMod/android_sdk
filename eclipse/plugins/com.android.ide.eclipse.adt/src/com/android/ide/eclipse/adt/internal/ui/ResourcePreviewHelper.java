@@ -166,7 +166,7 @@ public class ResourcePreviewHelper {
 
                         if (image == null) {
                             RenderService renderService = RenderService.create(mEditor);
-                            renderService.setSize(WIDTH, HEIGHT);
+                            renderService.setOverrideRenderSize(WIDTH, HEIGHT);
                             image = renderService.renderDrawable(drawable);
                         }
                     }

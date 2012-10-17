@@ -29,11 +29,7 @@ public abstract class RenderParams {
     public final static long DEFAULT_TIMEOUT = 250; //ms
 
     private final Object mProjectKey;
-    private final int mScreenWidth;
-    private final int mScreenHeight;
-    private final Density mDensity;
-    private final float mXdpi;
-    private final float mYdpi;
+    private final HardwareConfig mHardwareConfig;
     private final RenderResources mRenderResources;
     private final IProjectCallback mProjectCallback;
     private final int mMinSdkVersion;
@@ -46,7 +42,6 @@ public abstract class RenderParams {
 
     private IImageFactory mImageFactory = null;
 
-    private ScreenSize mConfigScreenSize = null;
     private String mAppIcon = null;
     private String mAppLabel = null;
     private String mLocale = null;
@@ -55,11 +50,7 @@ public abstract class RenderParams {
     /**
      *
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
-     * @param screenWidth the screen width
-     * @param screenHeight the screen height
-     * @param density the density factor for the screen.
-     * @param xdpi the screen actual dpi in X
-     * @param ydpi the screen actual dpi in Y
+     * @param hardwareConfig the {@link HardwareConfig}.
     * @param renderResources a {@link RenderResources} object providing access to the resources.
      * @param projectCallback The {@link IProjectCallback} object to get information from
      * the project.
@@ -69,18 +60,13 @@ public abstract class RenderParams {
      */
     public RenderParams(
             Object projectKey,
-            int screenWidth, int screenHeight,
-            Density density, float xdpi, float ydpi,
+            HardwareConfig hardwareConfig,
             RenderResources renderResources,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log) {
         mProjectKey = projectKey;
-        mScreenWidth = screenWidth;
-        mScreenHeight = screenHeight;
-        mDensity = density;
-        mXdpi = xdpi;
-        mYdpi = ydpi;
+        mHardwareConfig = hardwareConfig;
         mRenderResources = renderResources;
         mProjectCallback = projectCallback;
         mMinSdkVersion = minSdkVersion;
@@ -95,11 +81,7 @@ public abstract class RenderParams {
      */
     public RenderParams(RenderParams params) {
         mProjectKey = params.mProjectKey;
-        mScreenWidth = params.mScreenWidth;
-        mScreenHeight = params.mScreenHeight;
-        mDensity = params.mDensity;
-        mXdpi = params.mXdpi;
-        mYdpi = params.mYdpi;
+        mHardwareConfig = params.mHardwareConfig;
         mRenderResources = params.mRenderResources;
         mProjectCallback = params.mProjectCallback;
         mMinSdkVersion = params.mMinSdkVersion;
@@ -109,7 +91,6 @@ public abstract class RenderParams {
         mCustomBackgroundColor = params.mCustomBackgroundColor;
         mTimeout = params.mTimeout;
         mImageFactory = params.mImageFactory;
-        mConfigScreenSize = params.mConfigScreenSize;
         mAppIcon = params.mAppIcon;
         mAppLabel = params.mAppLabel;
         mLocale = params.mLocale;
@@ -127,10 +108,6 @@ public abstract class RenderParams {
 
     public void setImageFactory(IImageFactory imageFactory) {
         mImageFactory = imageFactory;
-    }
-
-    public void setConfigScreenSize(ScreenSize size) {
-        mConfigScreenSize  = size;
     }
 
     public void setAppIcon(String appIcon) {
@@ -153,6 +130,10 @@ public abstract class RenderParams {
         return mProjectKey;
     }
 
+    public HardwareConfig getHardwareConfig() {
+        return mHardwareConfig;
+    }
+
     public int getMinSdkVersion() {
         return mMinSdkVersion;
     }
@@ -161,24 +142,44 @@ public abstract class RenderParams {
         return mTargetSdkVersion;
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public int getScreenWidth() {
-        return mScreenWidth;
+        return mHardwareConfig.getScreenWidth();
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public int getScreenHeight() {
-        return mScreenHeight;
+        return mHardwareConfig.getScreenHeight();
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public Density getDensity() {
-        return mDensity;
+        return mHardwareConfig.getDensity();
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public float getXdpi() {
-        return mXdpi;
+        return mHardwareConfig.getXdpi();
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public float getYdpi() {
-        return mYdpi;
+        return mHardwareConfig.getYdpi();
     }
 
     public RenderResources getResources() {
@@ -209,8 +210,12 @@ public abstract class RenderParams {
         return mImageFactory;
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
     public ScreenSize getConfigScreenSize() {
-        return mConfigScreenSize;
+        return mHardwareConfig.getScreenSize();
     }
 
     public String getAppIcon() {

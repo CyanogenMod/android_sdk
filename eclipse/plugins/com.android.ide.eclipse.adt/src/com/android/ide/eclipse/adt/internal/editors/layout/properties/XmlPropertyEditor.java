@@ -200,7 +200,7 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                             XmlProperty xmlProperty = (XmlProperty) property;
                             GraphicalEditorPart graphicalEditor = xmlProperty.getGraphicalEditor();
                             RenderService service = RenderService.create(graphicalEditor);
-                            service.setSize(SAMPLE_SIZE, SAMPLE_SIZE);
+                            service.setOverrideRenderSize(SAMPLE_SIZE, SAMPLE_SIZE);
                             BufferedImage drawable = service.renderDrawable(resValue);
                             if (drawable != null) {
                                 swtImage = SwtUtils.convertToSwt(gc.getDevice(), drawable,

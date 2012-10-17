@@ -16,7 +16,6 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.resources.Density;
 
 /**
  * Rendering parameters for {@link Bridge#renderDrawable(DrawableParams)}
@@ -32,11 +31,7 @@ public class DrawableParams extends RenderParams {
     *
     * @param drawable the {@link ResourceValue} identifying the drawable.
     * @param projectKey An Object identifying the project. This is used for the cache mechanism.
-    * @param screenWidth the screen width
-    * @param screenHeight the screen height
-    * @param density the density factor for the screen.
-    * @param xdpi the screen actual dpi in X
-    * @param ydpi the screen actual dpi in Y
+    * @param hardwareConfig the {@link HardwareConfig}.
     * @param renderResources a {@link RenderResources} object providing access to the resources.
     * @param projectCallback The {@link IProjectCallback} object to get information from
     * the project.
@@ -47,13 +42,12 @@ public class DrawableParams extends RenderParams {
     public DrawableParams(
             ResourceValue drawable,
             Object projectKey,
-            int screenWidth, int screenHeight,
-            Density density, float xdpi, float ydpi,
+            HardwareConfig hardwareConfig,
             RenderResources renderResources,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
             LayoutLog log) {
-        super(projectKey, screenWidth, screenHeight, density, xdpi, ydpi,
+        super(projectKey, hardwareConfig,
                 renderResources, projectCallback, minSdkVersion, targetSdkVersion, log);
         mDrawable = drawable;
     }

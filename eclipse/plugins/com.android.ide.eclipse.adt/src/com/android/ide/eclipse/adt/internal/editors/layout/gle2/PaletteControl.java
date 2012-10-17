@@ -1000,14 +1000,11 @@ public class PaletteControl extends Composite {
                 // This is important since when we fill the size of certain views (like
                 // a SeekBar), we want it to at most be the width of the screen, and for small
                 // screens the RENDER_WIDTH was wider.
-                Rect screenBounds = editor.getScreenBounds();
-                int renderWidth = Math.min(screenBounds.w, MAX_RENDER_WIDTH);
-                int renderHeight = Math.min(screenBounds.h, MAX_RENDER_HEIGHT);
                 LayoutLog silentLogger = new LayoutLog();
 
                 session = RenderService.create(editor)
                     .setModel(model)
-                    .setSize(renderWidth, renderHeight)
+                    .setMaxRenderSize(MAX_RENDER_WIDTH, MAX_RENDER_HEIGHT)
                     .setLog(silentLogger)
                     .setOverrideBgColor(overrideBgColor)
                     .setDecorations(false)

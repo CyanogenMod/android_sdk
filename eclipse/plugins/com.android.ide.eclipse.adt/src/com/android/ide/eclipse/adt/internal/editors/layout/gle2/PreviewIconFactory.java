@@ -265,7 +265,7 @@ public class PreviewIconFactory {
 
                 session = RenderService.create(editor)
                     .setModel(model)
-                    .setSize(width, height)
+                    .setOverrideRenderSize(width, height)
                     .setRenderingMode(RenderingMode.FULL_EXPAND)
                     .setLog(new RenderLogger("palette"))
                     .setOverrideBgColor(overrideBgColor)
@@ -440,7 +440,7 @@ public class PreviewIconFactory {
         ResourceResolver resources = editor.getResourceResolver();
         ResourceValue resourceValue = resources.findItemInTheme(themeItemName);
         BufferedImage image = RenderService.create(editor)
-            .setSize(100, 100)
+            .setOverrideRenderSize(100, 100)
             .renderDrawable(resourceValue);
         if (image != null) {
             // Use the middle pixel as the color since that works better for gradients;
