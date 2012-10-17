@@ -19,6 +19,7 @@ package com.android.ide.eclipse.tests.functests.layoutRendering;
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
+import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.RenderSession;
@@ -250,20 +251,25 @@ public class ApiDemosRenderingTest extends SdkTestCase {
                     configuredProject, configuredFramework,
                     "Theme", false /*isProjectTheme*/);
 
-            RenderSession session = layoutLib.createSession(new SessionParams(
-                    parser,
-                    RenderingMode.NORMAL,
-                    null /*projectKey*/,
+            HardwareConfig hardwareConfig = new HardwareConfig(
                     320,
                     480,
                     Density.MEDIUM,
                     160, //xdpi
                     160, // ydpi
+                    ScreenSize.NORMAL,
+                    ScreenOrientation.PORTRAIT,
+                    false /*software buttons */);
+
+            RenderSession session = layoutLib.createSession(new SessionParams(
+                    parser,
+                    RenderingMode.NORMAL,
+                    null /*projectKey*/,
+                    hardwareConfig,
                     resolver,
                     projectCallBack,
                     1, // minSdkVersion
                     1, // targetSdkVersion
-                    false, // softwareButtons
                     null //logger
                     ));
 

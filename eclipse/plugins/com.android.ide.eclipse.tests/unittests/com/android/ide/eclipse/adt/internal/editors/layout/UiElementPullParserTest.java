@@ -170,7 +170,6 @@ public class UiElementPullParserTest extends TestCase {
                     false, // explodedView
                     null, // explodeNodes
                     Density.MEDIUM, // density (default from ConfigurationComposite)
-                    Density.MEDIUM.getDpiValue(), // xdpi (default from ConfigurationComposite)
                     null // iProject
                     );
 

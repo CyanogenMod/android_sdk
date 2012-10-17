@@ -32,6 +32,7 @@ import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
+
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
@@ -40,7 +41,6 @@ import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_OPEN;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
@@ -1316,15 +1316,6 @@ public class GraphicalEditorPart extends EditorPart
     }
 
     /**
-     * Returns the current bounds of the Android device screen, in canvas control pixels.
-     *
-     * @return the bounds of the screen, never null
-     */
-    public Rect getScreenBounds() {
-        return mConfigChooser.getConfiguration().getScreenBounds();
-    }
-
-    /**
      * Returns the scale to multiply pixels in the layout coordinate space with to obtain
      * the corresponding dip (device independent pixel)
      *
@@ -1518,7 +1509,6 @@ public class GraphicalEditorPart extends EditorPart
             LayoutLibrary layoutLib) {
         LayoutCanvas canvas = getCanvasControl();
         Set<UiElementNode> explodeNodes = canvas.getNodesToExplode();
-        Rect rect = getScreenBounds();
         RenderLogger logger = new RenderLogger(mEditedFile.getName());
         RenderingMode renderingMode = RenderingMode.NORMAL;
         // FIXME set the rendering mode using ViewRule or something.
@@ -1530,7 +1520,6 @@ public class GraphicalEditorPart extends EditorPart
 
         RenderSession session = RenderService.create(this)
             .setModel(model)
-            .setSize(rect.w, rect.h)
             .setLog(logger)
             .setRenderingMode(renderingMode)
             .setIncludedWithin(mIncludedWithin)

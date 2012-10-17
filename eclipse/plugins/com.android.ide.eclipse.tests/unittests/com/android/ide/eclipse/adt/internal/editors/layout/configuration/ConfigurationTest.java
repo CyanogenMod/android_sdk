@@ -18,12 +18,12 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.ide.common.resources.configuration.LanguageQualifier.FAKE_LANG_VALUE;
 import static com.android.ide.common.resources.configuration.RegionQualifier.FAKE_REGION_VALUE;
 
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.resources.Density;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.Screen;
 import com.android.utils.StdLogger;
 
 import java.lang.reflect.Constructor;
@@ -97,9 +97,9 @@ public class ConfigurationTest extends TestCase {
                 configuration.toPersistentString());
 
         assertEquals(Density.MEDIUM, configuration.getDensity());
-        assertEquals(145.0f, configuration.getXDpi(), 0.001);
-        assertEquals(145.0f, configuration.getYDpi(), 0.001);
-        assertEquals(new Rect(0, 0, 320, 480), configuration.getScreenBounds());
+        Screen screen = configuration.getDevice().getDefaultHardware().getScreen();
+        assertEquals(145.0f, screen.getXdpi(), 0.001);
+        assertEquals(145.0f, screen.getYdpi(), 0.001);
     }
 
     public void testCopy() throws Exception {
