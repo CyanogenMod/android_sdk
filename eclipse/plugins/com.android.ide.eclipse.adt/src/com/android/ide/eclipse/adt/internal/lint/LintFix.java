@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
+import com.android.tools.lint.checks.DosLineEndingDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.ManifestOrderDetector;
@@ -170,6 +171,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(),
                 UseCompoundDrawableDetectorFix.class);
         sFixes.put(TypoDetector.ISSUE.getId(), TypoFix.class);
+        sFixes.put(DosLineEndingDetector.ISSUE.getId(), DosLineEndingsFix.class);
         // ApiDetector.UNSUPPORTED is provided as a marker resolution rather than
         // a quick assistant (the marker resolution adds a suitable @TargetApi annotation)
     }

@@ -55,7 +55,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 120;
+        final int initialCapacity = 121;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -102,6 +102,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TranslationDetector.MISSING);
         issues.add(HardcodedValuesDetector.ISSUE);
         issues.add(Utf8Detector.ISSUE);
+        issues.add(DosLineEndingDetector.ISSUE);
         issues.add(ProguardDetector.WRONGKEEP);
         issues.add(ProguardDetector.SPLITCONFIG);
         issues.add(PxUsageDetector.PX_ISSUE);
@@ -306,7 +307,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         // to give a hint to the user that some fixes don't require manual work
 
         if (sAdtFixes == null) {
-            sAdtFixes = new HashSet<Issue>(20);
+            sAdtFixes = new HashSet<Issue>(25);
             sAdtFixes.add(InefficientWeightDetector.INEFFICIENT_WEIGHT);
             sAdtFixes.add(AccessibilityDetector.ISSUE);
             sAdtFixes.add(InefficientWeightDetector.BASELINE_WEIGHTS);
@@ -327,6 +328,10 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             sAdtFixes.add(UseCompoundDrawableDetector.ISSUE);
             sAdtFixes.add(ApiDetector.UNSUPPORTED);
             sAdtFixes.add(TypoDetector.ISSUE);
+            sAdtFixes.add(ManifestOrderDetector.ALLOW_BACKUP);
+            sAdtFixes.add(MissingIdDetector.ISSUE);
+            sAdtFixes.add(TranslationDetector.MISSING);
+            sAdtFixes.add(DosLineEndingDetector.ISSUE);
         }
 
         return sAdtFixes.contains(issue);

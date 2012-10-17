@@ -235,6 +235,7 @@ public class Location {
         Position start = null;
         int line = 0;
         int lineOffset = 0;
+        char prev = 0;
         for (int offset = 0; offset <= size; offset++) {
             if (offset == startOffset) {
                 start = new DefaultPosition(line, offset - lineOffset, offset);
@@ -246,8 +247,14 @@ public class Location {
             char c = contents.charAt(offset);
             if (c == '\n') {
                 lineOffset = offset + 1;
+                if (prev != '\r') {
+                    line++;
+                }
+            } else if (c == '\r') {
                 line++;
+                lineOffset = offset + 1;
             }
+            prev = c;
         }
         return Location.create(file);
     }

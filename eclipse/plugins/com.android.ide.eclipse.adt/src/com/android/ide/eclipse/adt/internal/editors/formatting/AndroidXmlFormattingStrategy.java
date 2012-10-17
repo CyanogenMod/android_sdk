@@ -27,6 +27,7 @@ import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG
 import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG_OPEN;
 
 import com.android.SdkConstants;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -360,7 +361,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
      * adjusted (for example to make the edit smaller if the beginning and/or end is
      * identical, and so on)
      */
-    private static ReplaceEdit createReplaceEdit(IStructuredDocument document, int replaceStart,
+    @VisibleForTesting
+    static ReplaceEdit createReplaceEdit(IDocument document, int replaceStart,
             int replaceEnd, String formatted, XmlFormatPreferences prefs) {
         // If replacing a node somewhere in the middle, start the replacement at the
         // beginning of the current line
@@ -399,7 +401,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             if (c == '\n') {
                 beginsWithNewline = true;
                 break;
-            } else if (!Character.isWhitespace(c)) {
+            } else if (!Character.isWhitespace(c)) { // \r is whitespace so is handled correctly
                 break;
             }
         }
@@ -411,6 +413,9 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
                         replaceStart = prevNewlineIndex;
                     }
                     prevNewlineIndex = index;
+                    if (index > 0 && document.getChar(index - 1) == '\r') {
+                        prevNewlineIndex--;
+                    }
                 } else if (!Character.isWhitespace(c)) {
                     break;
                 }
@@ -423,16 +428,16 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         }
 
         // Search forwards too
-        prevNewlineIndex = -1;
+        int nextNewlineIndex = -1;
         try {
             int max = document.getLength();
             for (index = replaceEnd; index < max; index++) {
                 char c = document.getChar(index);
                 if (c == '\n') {
-                    if (prevNewlineIndex != -1) {
-                        replaceEnd = prevNewlineIndex + 1;
+                    if (nextNewlineIndex != -1) {
+                        replaceEnd = nextNewlineIndex + 1;
                     }
-                    prevNewlineIndex = index;
+                    nextNewlineIndex = index;
                 } else if (!Character.isWhitespace(c)) {
                     break;
                 }
@@ -440,7 +445,6 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         } catch (BadLocationException e) {
             AdtPlugin.log(e, null);
         }
-
         boolean endsWithNewline = false;
         for (int i = formatted.length() - 1; i >= 0; i--) {
             char c = formatted.charAt(i);
@@ -452,8 +456,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             }
         }
 
-        if (prefs.removeEmptyLines && prevNewlineIndex != -1 && endsWithNewline) {
-            replaceEnd = prevNewlineIndex + 1;
+        if (prefs.removeEmptyLines && nextNewlineIndex != -1 && endsWithNewline) {
+            replaceEnd = nextNewlineIndex + 1;
         }
 
         // Figure out how much of the before and after strings are identical and narrow

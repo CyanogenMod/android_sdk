@@ -531,6 +531,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      */
     private static Pair<Integer, Integer> adjustOffsets(IDocument doc, int startOffset,
             int endOffset) {
+        int originalStart = startOffset;
+        int originalEnd = endOffset;
+
         if (doc != null) {
             while (endOffset > startOffset && endOffset < doc.getLength()) {
                 try {
@@ -552,6 +555,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                     char c = doc.getChar(lineEnd);
                     if (c == '\n' || c == '\r') {
                         endOffset = lineEnd;
+                        if (endOffset > 0 && doc.getChar(endOffset - 1) == '\r') {
+                            endOffset--;
+                        }
                         break;
                     }
                 } catch (BadLocationException e) {
@@ -560,6 +566,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 }
                 lineEnd++;
             }
+        }
+
+        if (startOffset >= endOffset) {
+            // Selecting nothing (for example, for the mangled CRLF delimiter issue selecting
+            // just the newline)
+            // In that case, use the real range
+            return Pair.of(originalStart, originalEnd);
         }
 
         return Pair.of(startOffset, endOffset);
