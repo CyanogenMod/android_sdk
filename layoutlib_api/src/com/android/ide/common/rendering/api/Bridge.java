@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public abstract class Bridge {
 
-    public final static int API_CURRENT = 8;
+    public final static int API_CURRENT = 9;
 
     /**
      * Returns the API level of the layout library.

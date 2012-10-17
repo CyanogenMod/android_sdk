@@ -263,6 +263,7 @@ public class ApiDemosRenderingTest extends SdkTestCase {
                     projectCallBack,
                     1, // minSdkVersion
                     1, // targetSdkVersion
+                    false, // softwareButtons
                     null //logger
                     ));
 
