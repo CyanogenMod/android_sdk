@@ -23,6 +23,7 @@ import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
@@ -36,6 +37,7 @@ import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -1061,6 +1063,22 @@ public class Configuration {
         }
 
         return null;
+    }
+
+    /**
+     * Returns true if this configuration supports the given rendering
+     * capability
+     *
+     * @param capability the capability to check
+     * @return true if the capability is supported
+     */
+    public boolean supports(Capability capability) {
+        IAndroidTarget target = getTarget();
+        if (target != null) {
+            return RenderService.supports(target, capability);
+        }
+
+        return false;
     }
 
     @Override

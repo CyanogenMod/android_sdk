@@ -17,10 +17,12 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.DrawableParams;
 import com.android.ide.common.rendering.api.IImageFactory;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
@@ -49,8 +51,13 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
+import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.ButtonType;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.Hardware;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
@@ -122,8 +129,7 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
-        mSoftwareButtons =
-            config.getDevice().getDefaultHardware().getButtonType() == ButtonType.SOFT;
+        mSoftwareButtons = getButtonType(config) == ButtonType.SOFT;
     }
 
     private RenderService(GraphicalEditorPart editor, FolderConfiguration configuration,
@@ -141,8 +147,7 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
-        mSoftwareButtons =
-            config.getDevice().getDefaultHardware().getButtonType() == ButtonType.SOFT;
+        mSoftwareButtons = getButtonType(config) == ButtonType.SOFT;
 
         // TODO: Look up device etc and offer additional configuration options here?
         Density density = Density.MEDIUM;
@@ -156,6 +161,44 @@ public class RenderService {
         }
         mDensity = density;
         mScreenSize = configuration.getScreenSizeQualifier();
+    }
+
+    @NonNull
+    private static ButtonType getButtonType(@NonNull Configuration configuration) {
+        Device device = configuration.getDevice();
+        if (device != null) {
+            Hardware hardware = device.getDefaultHardware();
+            if (hardware != null) {
+                return hardware.getButtonType();
+            }
+        }
+
+        return ButtonType.SOFT;
+    }
+
+    /**
+     * Returns true if this configuration supports the given rendering
+     * capability
+     *
+     * @param target the target to look up the layout library for
+     * @param capability the capability to check
+     * @return true if the capability is supported
+     */
+    public static boolean supports(
+            @NonNull IAndroidTarget target,
+            @NonNull Capability capability) {
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            AndroidTargetData targetData = sdk.getTargetData(target);
+            if (targetData != null) {
+                LayoutLibrary layoutLib = targetData.getLayoutLibrary();
+                if (layoutLib != null) {
+                    return layoutLib.supports(capability);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
