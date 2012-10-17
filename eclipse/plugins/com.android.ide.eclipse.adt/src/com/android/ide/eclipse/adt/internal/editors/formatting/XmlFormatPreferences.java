@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder;
@@ -67,6 +68,7 @@ public class XmlFormatPreferences {
      *
      * @return an {@link XmlFormatPreferences} object
      */
+    @NonNull
     public static XmlFormatPreferences create() {
         XmlFormatPreferences p = new XmlFormatPreferences();
         AdtPrefs prefs = AdtPrefs.getPrefs();
@@ -78,6 +80,16 @@ public class XmlFormatPreferences {
         p.spaceBeforeClose = prefs.isSpaceBeforeClose();
 
         return p;
+    }
+
+    /**
+     * Returns a new preferences object initialized with the defaults
+     *
+     * @return an {@link XmlFormatPreferences} object
+     */
+    @NonNull
+    static XmlFormatPreferences defaults() {
+        return new XmlFormatPreferences();
     }
 
     // The XML module settings do not have a public API. We should replace this with JDT
