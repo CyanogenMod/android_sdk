@@ -52,6 +52,7 @@ public class SessionParams extends RenderParams {
 
     private final ILayoutPullParser mLayoutDescription;
     private final RenderingMode mRenderingMode;
+    private final boolean mSoftwareButtons;
     private boolean mLayoutOnly = false;
     private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
     private boolean mExtendedViewInfoMode = false;
@@ -72,6 +73,7 @@ public class SessionParams extends RenderParams {
      * the project.
      * @param minSdkVersion the minSdkVersion of the project
      * @param targetSdkVersion the targetSdkVersion of the project
+     * @param softwareButtons whether the device use software buttons
      * @param log the object responsible for displaying warning/errors to the user.
      */
     public SessionParams(
@@ -83,18 +85,21 @@ public class SessionParams extends RenderParams {
             RenderResources renderResources,
             IProjectCallback projectCallback,
             int minSdkVersion, int targetSdkVersion,
+            boolean softwareButtons,
             LayoutLog log) {
         super(projectKey, screenWidth, screenHeight, density, xdpi, ydpi,
                 renderResources, projectCallback, minSdkVersion, targetSdkVersion, log);
 
         mLayoutDescription = layoutDescription;
         mRenderingMode = renderingMode;
+        mSoftwareButtons = softwareButtons;
     }
 
     public SessionParams(SessionParams params) {
         super(params);
         mLayoutDescription = params.mLayoutDescription;
         mRenderingMode = params.mRenderingMode;
+        mSoftwareButtons = params.mSoftwareButtons;
         if (params.mAdapterBindingMap != null) {
             mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>(
                     params.mAdapterBindingMap);
@@ -108,6 +113,10 @@ public class SessionParams extends RenderParams {
 
     public RenderingMode getRenderingMode() {
         return mRenderingMode;
+    }
+
+    public boolean hasSoftwareButtons() {
+        return mSoftwareButtons;
     }
 
     public void setLayoutOnly() {

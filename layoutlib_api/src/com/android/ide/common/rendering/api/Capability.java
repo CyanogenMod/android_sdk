@@ -61,5 +61,9 @@ public enum Capability {
      */
     FULL_ANIMATED_VIEW_MANIPULATION,
     ADAPTER_BINDING,
-    EXTENDED_VIEWINFO;
+    EXTENDED_VIEWINFO,
+    /**
+     * Ability to properly resize nine-patch assets.
+     */
+    FIXED_SCALABLE_NINE_PATCH;
 }

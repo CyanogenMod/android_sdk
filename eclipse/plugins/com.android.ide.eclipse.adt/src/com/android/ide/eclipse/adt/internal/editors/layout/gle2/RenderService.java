@@ -50,6 +50,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.Density;
+import com.android.sdklib.devices.ButtonType;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
@@ -81,6 +82,7 @@ public class RenderService {
     private final ResourceResolver mResourceResolver;
     private final int mMinSdkVersion;
     private final int mTargetSdkVersion;
+    private final boolean mSoftwareButtons;
     private final LayoutLibrary mLayoutLib;
     private final IImageFactory mImageFactory;
     private final Density mDensity;
@@ -120,6 +122,8 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
+        mSoftwareButtons =
+            config.getDevice().getDefaultHardware().getButtonType() == ButtonType.SOFT;
     }
 
     private RenderService(GraphicalEditorPart editor, FolderConfiguration configuration,
@@ -137,6 +141,8 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
+        mSoftwareButtons =
+            config.getDevice().getDefaultHardware().getButtonType() == ButtonType.SOFT;
 
         // TODO: Look up device etc and offer additional configuration options here?
         Density density = Density.MEDIUM;
@@ -398,6 +404,7 @@ public class RenderService {
                 mProjectCallback,
                 mMinSdkVersion,
                 mTargetSdkVersion,
+                mSoftwareButtons,
                 mLogger);
 
         // Request margin and baseline information.
@@ -533,6 +540,7 @@ public class RenderService {
                 mProjectCallback,
                 mMinSdkVersion,
                 mTargetSdkVersion,
+                mSoftwareButtons,
                 mLogger);
         params.setLayoutOnly();
         params.setForceNoDecor();
