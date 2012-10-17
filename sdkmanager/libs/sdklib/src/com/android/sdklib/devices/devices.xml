@@ -1273,7 +1273,7 @@
             <d:keyboard>nokeys</d:keyboard>
             <d:nav>nonav</d:nav>
             <d:ram unit="MiB">512</d:ram>
-            <d:buttons>hard</d:buttons>
+            <d:buttons>soft</d:buttons>
             <d:internal-storage unit="GiB">8</d:internal-storage>
             <d:removable-storage unit="MiB"></d:removable-storage>
             <d:cpu>OMAP 9001</d:cpu>
@@ -1368,7 +1368,7 @@
             <d:keyboard>nokeys</d:keyboard>
             <d:nav>nonav</d:nav>
             <d:ram unit="MiB">512</d:ram>
-            <d:buttons>hard</d:buttons>
+            <d:buttons>soft</d:buttons>
             <d:internal-storage unit="GiB">8</d:internal-storage>
             <d:removable-storage unit="MiB"></d:removable-storage>
             <d:cpu>OMAP 9001</d:cpu>
