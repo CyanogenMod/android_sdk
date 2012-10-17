@@ -17,7 +17,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
+import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
@@ -284,12 +284,15 @@ public class ComplementingConfiguration extends NestedConfiguration {
                 to = biggest + 0.1;
             }
 
+            boolean canScaleNinePatch = supports(Capability.FIXED_SCALABLE_NINE_PATCH);
             for (Device d : devices) {
                 double size = getScreenSize(d);
                 if (size >= from && size < to) {
-                    if (RenderPreviewManager.HIDE_TVDPI &&
-                            getDensity(d) == Density.TV) {
-                        continue;
+                    if (!canScaleNinePatch) {
+                        Density density = getDensity(d);
+                        if (density == Density.TV || density == Density.LOW) {
+                            continue;
+                        }
                     }
 
                     device = d;

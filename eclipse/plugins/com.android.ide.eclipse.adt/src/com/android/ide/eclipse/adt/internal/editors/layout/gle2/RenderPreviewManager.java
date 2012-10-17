@@ -74,9 +74,6 @@ import java.util.Set;
  * managing the image buffer cache, etc
  */
 public class RenderPreviewManager {
-    /** TODO: Tie this to a {@link Capability} instead */
-    public static boolean HIDE_TVDPI = true;
-
     private static double sScale = 1.0;
     private static final int RENDER_DELAY = 150;
     private static final int PREVIEW_VGAP = 18;
@@ -898,6 +895,7 @@ public class RenderPreviewManager {
         ConfigurationChooser chooser = getChooser();
         List<Device> devices = chooser.getDeviceList();
         Configuration configuration = chooser.getConfiguration();
+        boolean canScaleNinePatch = configuration.supports(Capability.FIXED_SCALABLE_NINE_PATCH);
 
         // Rearrange the devices a bit such that the most interesting devices bubble
         // to the front
@@ -939,11 +937,11 @@ public class RenderPreviewManager {
                 DensityQualifier density = c.getDensityQualifier();
                 if (density != null) {
                     Density d = density.getValue();
-                    if (Density.LOW.equals(d)) {
+                    if (d == Density.LOW) {
                         interesting = false;
                     }
 
-                    if (HIDE_TVDPI && d == Density.TV) {
+                    if (!canScaleNinePatch && d == Density.TV) {
                         interesting = false;
                     }
                 }
