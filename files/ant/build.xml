@@ -58,6 +58,13 @@
     -->
     <property name="aapt.ignore.assets" value="" />
 
+    <!-- dex force jumbo options, to be used when dex merging fails with
+         UNEXPECTED TOP-LEVEL EXCEPTION: com.android.dx.util.DexException: Cannot handle conversion to jumbo index!
+           at com.android.dx.merge.InstructionTransformer.jumboCheck(InstructionTransformer.java:103)
+           ...
+    -->
+    <property name="dex.force.jumbo" value="false" />
+
     <!-- compilation options -->
     <property name="java.encoding" value="UTF-8" />
     <property name="java.target" value="1.5" />
@@ -277,6 +284,7 @@
                     output="${intermediate.dex.file}"
                     dexedlibs="${out.dexed.absolute.dir}"
                     nolocals="@{nolocals}"
+                    forceJumbo="${dex.force.jumbo}"
                     verbose="${verbose}">
                 <path path="${out.dex.input.absolute.dir}"/>
                 <path refid="out.dex.jar.input.ref" />

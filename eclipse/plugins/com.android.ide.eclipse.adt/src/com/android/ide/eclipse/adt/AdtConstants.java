@@ -218,4 +218,6 @@ public class AdtConstants {
 
     /** Documentation marker for elements, attributes etc that should be hidden */
     public static final String DOC_HIDE = "@hide"; //$NON-NLS-1$
+
+    public static final String DEX_OPTIONS_FORCEJUMBO = "dex.force.jumbo"; //$NON-NLS-1$
 }

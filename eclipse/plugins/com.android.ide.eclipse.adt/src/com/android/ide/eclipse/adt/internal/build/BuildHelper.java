@@ -108,6 +108,7 @@ public class BuildHelper {
     private final IProject mProject;
     private final AndroidPrintStream mOutStream;
     private final AndroidPrintStream mErrStream;
+    private final boolean mForceJumbo;
     private final boolean mVerbose;
     private final boolean mDebugMode;
 
@@ -139,12 +140,14 @@ public class BuildHelper {
     public BuildHelper(@NonNull IProject project,
             @NonNull AndroidPrintStream outStream,
             @NonNull AndroidPrintStream errStream,
-            boolean debugMode, boolean verbose, ResourceMarker resMarker) throws CoreException {
+            boolean forceJumbo, boolean debugMode,
+            boolean verbose, ResourceMarker resMarker) throws CoreException {
         mProject = project;
         mOutStream = outStream;
         mErrStream = errStream;
         mDebugMode = debugMode;
         mVerbose = verbose;
+        mForceJumbo = forceJumbo;
 
         gatherPaths(resMarker);
     }
@@ -739,7 +742,7 @@ public class BuildHelper {
                             }
 
                             int res = wrapper.run(dexedLibPath, Collections.singleton(input),
-                                    mVerbose, mOutStream, mErrStream);
+                                    mForceJumbo, mVerbose, mOutStream, mErrStream);
 
                             if (res != 0) {
                                 // output error message and mark the project.
@@ -767,6 +770,7 @@ public class BuildHelper {
 
             int res = wrapper.run(osOutFilePath,
                     finalInputPaths,
+                    mForceJumbo,
                     mVerbose,
                     mOutStream, mErrStream);
 
