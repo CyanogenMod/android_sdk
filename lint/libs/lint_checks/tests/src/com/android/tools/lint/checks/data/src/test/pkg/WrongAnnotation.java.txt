@@ -1,6 +1,7 @@
-package com.example.test2;
+package test.pkg;
 
 import android.annotation.SuppressLint;
+import android.view.View;
 
 public class WrongAnnotation {
     @Override
@@ -15,5 +16,16 @@ public class WrongAnnotation {
         @SuppressLint("SdCardPath") // Valid: AST-based check
         boolean d;
     }
-}
 
+    @SuppressLint("NewApi")
+    private int field1;
+
+    @SuppressLint("NewApi")
+    private int field2 = 5;
+
+    static {
+        // Local variable outside method: invalid
+        @SuppressLint("NewApi")
+        int localvar = 5;
+    }
+}

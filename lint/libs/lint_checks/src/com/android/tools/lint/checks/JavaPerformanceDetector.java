@@ -180,7 +180,6 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
             mCheckAllocations = context.isEnabled(PAINT_ALLOC);
             mCheckMaps = context.isEnabled(USE_SPARSEARRAY);
             mCheckValueOf = context.isEnabled(USE_VALUEOF);
-            assert mCheckAllocations || mCheckMaps || mCheckValueOf; // enforced by infrastructure
         }
 
         @Override

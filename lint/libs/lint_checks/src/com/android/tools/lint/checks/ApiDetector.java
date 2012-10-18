@@ -683,7 +683,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             }
         }
 
-        Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd, hints);
-        context.report(UNSUPPORTED, method, location, message, null);
+        Location location = context.getLocationForLine(lineNumber, patternStart, patternEnd,
+                hints);
+        context.report(UNSUPPORTED, method, node, location, message, null);
     }
 }

@@ -639,4 +639,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testSuppressFieldAnnotations() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=38626
+        assertEquals(
+            "src/test/pkg/ApiCallTest9.java:9: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]\n" +
+            "    private GridLayout field1 = new GridLayout(null);\n" +
+            "            ~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest9.java:12: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]\n" +
+            "    private static GridLayout field2 = new GridLayout(null);\n" +
+            "                   ~~~~~~~~~~\n" +
+            "2 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/ApiCallTest9.java.txt=>src/test/pkg/ApiCallTest9.java",
+                    "apicheck/ApiCallTest9.class.data=>bin/classes/test/pkg/ApiCallTest9.class"
+                ));
+    }
 }

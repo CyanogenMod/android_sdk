@@ -96,7 +96,7 @@ public class LocaleDetector extends Detector implements ClassScanner {
             6,
             Severity.WARNING,
             LocaleDetector.class,
-            EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.CLASS_FILE)).setMoreInfo(
+            Scope.CLASS_FILE_SCOPE).setMoreInfo(
              "http://developer.android.com/reference/java/text/SimpleDateFormat.html"); //$NON-NLS-1$
 
     private static final String DATE_FORMAT_OWNER = "java/text/SimpleDateFormat"; //$NON-NLS-1$
@@ -147,8 +147,9 @@ public class LocaleDetector extends Detector implements ClassScanner {
                     "To get local formatting use getDateInstance(), getDateTimeInstance(), " +
                     "or getTimeInstance(), or use new SimpleDateFormat(String template, " +
                     "Locale locale) with for example Locale.US for ASCII dates.", name);
-                context.report(DATE_FORMAT, method, location, message, null);
+                context.report(DATE_FORMAT, method, call, location, message, null);
             }
+            return;
         } else if (!owner.equals(STRING_OWNER)) {
             return;
         }
@@ -186,7 +187,7 @@ public class LocaleDetector extends Detector implements ClassScanner {
                         String message =
                             "Implicitly using the default locale is a common source of bugs: " +
                             "Use String.format(Locale, ...) instead";
-                        context.report(STRING_LOCALE, method, location, message, null);
+                        context.report(STRING_LOCALE, method, call, location, message, null);
                     }
                 }
             } catch (AnalyzerException e) {
@@ -198,7 +199,7 @@ public class LocaleDetector extends Detector implements ClassScanner {
                 String message = String.format(
                     "Implicitly using the default locale is a common source of bugs: " +
                     "Use %1$s(Locale) instead", name);
-                context.report(STRING_LOCALE, method, location, message, null);
+                context.report(STRING_LOCALE, method, call, location, message, null);
             }
         }
     }

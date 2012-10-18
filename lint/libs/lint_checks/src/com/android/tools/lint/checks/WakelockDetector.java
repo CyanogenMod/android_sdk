@@ -117,7 +117,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
 
                 if (context.getDriver().getPhase() == 2) {
                     assert !mHasRelease;
-                    context.report(ISSUE, method, context.getLocation(call),
+                    context.report(ISSUE, method, call, context.getLocation(call),
                         "Found a wakelock acquire() but no release() calls anywhere",
                         null);
                 } else {
@@ -136,7 +136,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
                 if ("onDestroy".equals(method.name) //$NON-NLS-1$
                         && context.getDriver().isSubclassOf(
                                 classNode, ANDROID_APP_ACTIVITY)) {
-                    context.report(ISSUE, method, context.getLocation(call),
+                    context.report(ISSUE, method, call, context.getLocation(call),
                         "Wakelocks should be released in onPause, not onDestroy",
                         null);
                 }
@@ -191,7 +191,8 @@ public class WakelockDetector extends Detector implements ClassScanner {
                     message = "The release() call is not always reached";
                 }
 
-                context.report(ISSUE, method, context.getLocation(release), message, null);
+                context.report(ISSUE, method, acquire,
+                        context.getLocation(release), message, null);
             }
         } catch (AnalyzerException e) {
             context.log(e, null);
