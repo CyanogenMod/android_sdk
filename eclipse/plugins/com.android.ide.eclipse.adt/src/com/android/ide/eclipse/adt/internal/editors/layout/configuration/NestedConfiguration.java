@@ -30,7 +30,7 @@ import com.google.common.base.Objects;
  * all of its values from a different configuration, except for one or more
  * attributes where it overrides a custom value.
  * <p>
- * Unlike a {@link ComplementingConfiguration}, a {@linkplain NestedConfiguration}
+ * Unlike a {@link VaryingConfiguration}, a {@linkplain NestedConfiguration}
  * will always return the same overridden value, regardless of the inherited
  * value.
  * <p>
@@ -38,13 +38,11 @@ import com.google.common.base.Objects;
  * be "en", but otherwise inherit everything else.
  */
 public class NestedConfiguration extends Configuration {
+    /** The configuration we are inheriting non-overridden values from */
     protected Configuration mParent;
-    protected boolean mOverrideLocale;
-    protected boolean mOverrideTarget;
-    protected boolean mOverrideDevice;
-    protected boolean mOverrideDeviceState;
-    protected boolean mOverrideNightMode;
-    protected boolean mOverrideUiMode;
+
+    /** Bitmask of attributes to be overridden in this configuration */
+    private int mOverride;
 
     /**
      * Constructs a new {@linkplain NestedConfiguration}.
@@ -67,6 +65,16 @@ public class NestedConfiguration extends Configuration {
     }
 
     /**
+     * Returns the override flags for this configuration. Corresponds to
+     * the {@code CFG_} flags in {@link ConfigurationClient}.
+     *
+     * @return the bitmask
+     */
+    public int getOverrideFlags() {
+        return mOverride;
+    }
+
+    /**
      * Creates a new {@linkplain NestedConfiguration} that has the same overriding
      * attributes as the given other {@linkplain NestedConfiguration}, and gets
      * its values from the given {@linkplain Configuration}.
@@ -83,36 +91,47 @@ public class NestedConfiguration extends Configuration {
             @NonNull Configuration parent) {
         NestedConfiguration configuration =
                 new NestedConfiguration(other.mConfigChooser, parent);
+        initFrom(configuration, other, values, true /*sync*/);
+        return configuration;
+    }
+
+    /**
+     * Initializes a new {@linkplain NestedConfiguration} with the overriding
+     * attributes as the given other {@linkplain NestedConfiguration}, and gets
+     * its values from the given {@linkplain Configuration}.
+     *
+     * @param configuration the configuration to initialize
+     * @param other the configuration to copy overrides from
+     * @param values the configuration to copy values from
+     * @param sync if true, sync the folder configuration from
+     */
+    protected static void initFrom(NestedConfiguration configuration,
+            NestedConfiguration other, Configuration values, boolean sync) {
+        configuration.mOverride = other.mOverride;
         configuration.setDisplayName(values.getDisplayName());
         configuration.setActivity(values.getActivity());
 
-        configuration.mOverrideLocale = other.mOverrideLocale;
-        if (configuration.mOverrideLocale) {
+        if (configuration.isOverridingLocale()) {
             configuration.setLocale(values.getLocale(), true);
         }
-        configuration.mOverrideTarget = other.mOverrideTarget;
-        if (configuration.mOverrideTarget) {
+        if (configuration.isOverridingTarget()) {
             configuration.setTarget(values.getTarget(), true);
         }
-        configuration.mOverrideDevice = other.mOverrideDevice;
-        configuration.mOverrideDeviceState = other.mOverrideDeviceState;
-        if (configuration.mOverrideDevice) {
+        if (configuration.isOverridingDevice()) {
             configuration.setDevice(values.getDevice(), true);
         }
-        if (configuration.mOverrideDeviceState) {
+        if (configuration.isOverridingDeviceState()) {
             configuration.setDeviceState(values.getDeviceState(), true);
         }
-
-        configuration.mOverrideNightMode = other.mOverrideNightMode;
-        if (configuration.mOverrideNightMode) {
+        if (configuration.isOverridingNightMode()) {
             configuration.setNightMode(values.getNightMode(), true);
         }
-        configuration.mOverrideUiMode = other.mOverrideUiMode;
-        if (configuration.mOverrideUiMode) {
+        if (configuration.isOverridingUiMode()) {
             configuration.setUiMode(values.getUiMode(), true);
         }
-
-        return configuration;
+        if (sync) {
+            configuration.syncFolderConfig();
+        }
     }
 
     /**
@@ -159,7 +178,7 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideLocale(boolean override) {
-        mOverrideLocale = override;
+        mOverride |= CFG_LOCALE;
     }
 
     /**
@@ -167,14 +186,14 @@ public class NestedConfiguration extends Configuration {
      *
      * @return true if the locale is overridden
      */
-    public boolean isOverridingLocale() {
-        return mOverrideLocale;
+    public final boolean isOverridingLocale() {
+        return (mOverride & CFG_LOCALE) != 0;
     }
 
     @Override
     @NonNull
     public Locale getLocale() {
-        if (mOverrideLocale) {
+        if (isOverridingLocale()) {
             return super.getLocale();
         } else {
             return mParent.getLocale();
@@ -183,7 +202,7 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setLocale(@NonNull Locale locale, boolean skipSync) {
-        if (mOverrideLocale) {
+        if (isOverridingLocale()) {
             super.setLocale(locale, skipSync);
         } else {
             mParent.setLocale(locale, skipSync);
@@ -196,13 +215,22 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideTarget(boolean override) {
-        mOverrideTarget = override;
+        mOverride |= CFG_TARGET;
+    }
+
+    /**
+     * Returns true if the target is overridden
+     *
+     * @return true if the target is overridden
+     */
+    public final boolean isOverridingTarget() {
+        return (mOverride & CFG_TARGET) != 0;
     }
 
     @Override
     @Nullable
     public IAndroidTarget getTarget() {
-        if (mOverrideTarget) {
+        if (isOverridingTarget()) {
             return super.getTarget();
         } else {
             return mParent.getTarget();
@@ -211,7 +239,7 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setTarget(IAndroidTarget target, boolean skipSync) {
-        if (mOverrideTarget) {
+        if (isOverridingTarget()) {
             super.setTarget(target, skipSync);
         } else {
             mParent.setTarget(target, skipSync);
@@ -224,13 +252,22 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideDevice(boolean override) {
-        mOverrideDevice = override;
+        mOverride |= CFG_DEVICE;
+    }
+
+    /**
+     * Returns true if the device is overridden
+     *
+     * @return true if the device is overridden
+     */
+    public final boolean isOverridingDevice() {
+        return (mOverride & CFG_DEVICE) != 0;
     }
 
     @Override
     @Nullable
     public Device getDevice() {
-        if (mOverrideDevice) {
+        if (isOverridingDevice()) {
             return super.getDevice();
         } else {
             return mParent.getDevice();
@@ -239,7 +276,7 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setDevice(Device device, boolean skipSync) {
-        if (mOverrideDevice) {
+        if (isOverridingDevice()) {
             super.setDevice(device, skipSync);
         } else {
             mParent.setDevice(device, skipSync);
@@ -252,17 +289,26 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideDeviceState(boolean override) {
-        mOverrideDeviceState = override;
+        mOverride |= CFG_DEVICE_STATE;
+    }
+
+    /**
+     * Returns true if the device state is overridden
+     *
+     * @return true if the device state is overridden
+     */
+    public final boolean isOverridingDeviceState() {
+        return (mOverride & CFG_DEVICE_STATE) != 0;
     }
 
     @Override
     @Nullable
     public State getDeviceState() {
-        if (mOverrideDeviceState) {
+        if (isOverridingDeviceState()) {
             return super.getDeviceState();
         } else {
             State state = mParent.getDeviceState();
-            if (mOverrideDevice) {
+            if (isOverridingDevice()) {
                 // If the device differs, I need to look up a suitable equivalent state
                 // on our device
                 if (state != null) {
@@ -279,10 +325,10 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setDeviceState(State state, boolean skipSync) {
-        if (mOverrideDeviceState) {
+        if (isOverridingDeviceState()) {
             super.setDeviceState(state, skipSync);
         } else {
-            if (mOverrideDevice) {
+            if (isOverridingDevice()) {
                 Device device = super.getDevice();
                 if (device != null) {
                     State equivalentState = device.getState(state.getName());
@@ -301,13 +347,22 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideNightMode(boolean override) {
-        mOverrideNightMode = override;
+        mOverride |= CFG_NIGHT_MODE;
+    }
+
+    /**
+     * Returns true if the night mode is overridden
+     *
+     * @return true if the night mode is overridden
+     */
+    public final boolean isOverridingNightMode() {
+        return (mOverride & CFG_NIGHT_MODE) != 0;
     }
 
     @Override
     @NonNull
     public NightMode getNightMode() {
-        if (mOverrideNightMode) {
+        if (isOverridingNightMode()) {
             return super.getNightMode();
         } else {
             return mParent.getNightMode();
@@ -316,7 +371,7 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setNightMode(@NonNull NightMode night, boolean skipSync) {
-        if (mOverrideNightMode) {
+        if (isOverridingNightMode()) {
             super.setNightMode(night, skipSync);
         } else {
             mParent.setNightMode(night, skipSync);
@@ -329,13 +384,22 @@ public class NestedConfiguration extends Configuration {
      * @param override if true, override the inherited value
      */
     public void setOverrideUiMode(boolean override) {
-        mOverrideUiMode = override;
+        mOverride |= CFG_UI_MODE;
+    }
+
+    /**
+     * Returns true if the UI mode is overridden
+     *
+     * @return true if the UI mode is overridden
+     */
+    public final boolean isOverridingUiMode() {
+        return (mOverride & CFG_UI_MODE) != 0;
     }
 
     @Override
     @NonNull
     public UiMode getUiMode() {
-        if (mOverrideUiMode) {
+        if (isOverridingUiMode()) {
             return super.getUiMode();
         } else {
             return mParent.getUiMode();
@@ -344,7 +408,7 @@ public class NestedConfiguration extends Configuration {
 
     @Override
     public void setUiMode(@NonNull UiMode uiMode, boolean skipSync) {
-        if (mOverrideUiMode) {
+        if (isOverridingUiMode()) {
             super.setUiMode(uiMode, skipSync);
         } else {
             mParent.setUiMode(uiMode, skipSync);
@@ -373,15 +437,69 @@ public class NestedConfiguration extends Configuration {
         super.setActivity(activity);
     }
 
+    /**
+     * Returns a computed display name (ignoring the value stored by
+     * {@link #setDisplayName(String)}) by looking at the override flags
+     * and picking a suitable name.
+     *
+     * @return a suitable display name
+     */
+    @Nullable
+    public String computeDisplayName() {
+        return computeDisplayName(mOverride, this);
+    }
+
+    /**
+     * Computes a display name for the given configuration, using the given
+     * override flags (which correspond to the {@code CFG_} constants in
+     * {@link ConfigurationClient}
+     *
+     * @param flags the override bitmask
+     * @param configuration the configuration to fetch values from
+     * @return a suitable display name
+     */
+    @Nullable
+    public static String computeDisplayName(int flags, @NonNull Configuration configuration) {
+        if ((flags & CFG_LOCALE) != 0) {
+            return ConfigurationChooser.getLocaleLabel(configuration.mConfigChooser,
+                    configuration.getLocale(), false);
+        }
+
+        if ((flags & CFG_TARGET) != 0) {
+            return ConfigurationChooser.getRenderingTargetLabel(configuration.getTarget(), false);
+        }
+
+        if ((flags & CFG_DEVICE) != 0) {
+            return ConfigurationChooser.getDeviceLabel(configuration.getDevice(), true);
+        }
+
+        if ((flags & CFG_DEVICE_STATE) != 0) {
+            State deviceState = configuration.getDeviceState();
+            if (deviceState != null) {
+                return deviceState.getName();
+            }
+        }
+
+        if ((flags & CFG_NIGHT_MODE) != 0) {
+            return configuration.getNightMode().getLongDisplayValue();
+        }
+
+        if ((flags & CFG_UI_MODE) != 0) {
+            configuration.getUiMode().getLongDisplayValue();
+        }
+
+        return null;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this.getClass())
                 .add("parent", mParent.getDisplayName())          //$NON-NLS-1$
                 .add("display", getDisplayName())                 //$NON-NLS-1$
-                .add("overrideLocale", mOverrideLocale)           //$NON-NLS-1$
-                .add("overrideTarget", mOverrideTarget)           //$NON-NLS-1$
-                .add("overrideDevice", mOverrideDevice)           //$NON-NLS-1$
-                .add("overrideDeviceState", mOverrideDeviceState) //$NON-NLS-1$
+                .add("overrideLocale", isOverridingLocale())           //$NON-NLS-1$
+                .add("overrideTarget", isOverridingTarget())           //$NON-NLS-1$
+                .add("overrideDevice", isOverridingDevice())           //$NON-NLS-1$
+                .add("overrideDeviceState", isOverridingDeviceState()) //$NON-NLS-1$
                 .add("persistent", toPersistentString())          //$NON-NLS-1$
                 .toString();
     }

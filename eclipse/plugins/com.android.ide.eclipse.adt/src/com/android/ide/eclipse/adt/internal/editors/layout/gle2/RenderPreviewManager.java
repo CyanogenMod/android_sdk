@@ -16,9 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.MASK_ALL;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SMALL_SHADOW_SIZE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreview.LARGE_SHADOWS;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.CUSTOM;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.NONE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.SCREENS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,12 +38,14 @@ import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ComplementingConfiguration;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Locale;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.NestedConfiguration;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.VaryingConfiguration;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.resources.Density;
@@ -58,6 +66,9 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.ide.IDE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,7 +78,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * Manager for the configuration previews, which handles layout computations,
@@ -91,7 +101,7 @@ public class RenderPreviewManager {
     private int mPrevCanvasHeight;
     private int mPrevImageWidth;
     private int mPrevImageHeight;
-    private @NonNull RenderPreviewMode mMode = RenderPreviewMode.NONE;
+    private @NonNull RenderPreviewMode mMode = NONE;
     private @Nullable RenderPreview mActivePreview;
     private @Nullable ScrollBarListener mListener;
     private int mLayoutHeight;
@@ -189,21 +199,32 @@ public class RenderPreviewManager {
     }
 
     static int getMaxWidth() {
-        return (int) sScale * MAX_WIDTH;
+        return (int) (sScale * MAX_WIDTH);
     }
 
     static int getMaxHeight() {
-        return (int) sScale * MAX_HEIGHT;
+        return (int) (sScale * MAX_HEIGHT);
     }
 
     static double getScale() {
         return sScale;
     }
 
+    /**
+     * Returns whether there are any manual preview items (provided the current
+     * mode is manual previews
+     *
+     * @return true if there are items in the manual preview list
+     */
+    public boolean hasManualPreviews() {
+        assert mMode == CUSTOM;
+        return mManualList != null && !mManualList.isEmpty();
+    }
+
     /** Delete all the previews */
     public void deleteManualPreviews() {
         disposePreviews();
-        selectMode(RenderPreviewMode.NONE);
+        selectMode(NONE);
         mCanvas.setFitScale(true /* onlyZoomOut */, true /*allowZoomIn*/);
 
         if (mManualList != null) {
@@ -361,9 +382,13 @@ public class RenderPreviewManager {
             }
         }
 
-        ArrayList<RenderPreview> aspectOrder = new ArrayList<RenderPreview>(mPreviews);
-        Collections.sort(aspectOrder, RenderPreview.INCREASING_ASPECT_RATIO);
-
+        List<RenderPreview> aspectOrder;
+        if (!fixedOrder()) {
+            aspectOrder = new ArrayList<RenderPreview>(mPreviews);
+            Collections.sort(aspectOrder, RenderPreview.INCREASING_ASPECT_RATIO);
+        } else {
+            aspectOrder = mPreviews;
+        }
 
         for (RenderPreview preview : aspectOrder) {
             if (x > 0 && x + preview.getWidth() > availableWidth) {
@@ -423,9 +448,7 @@ public class RenderPreviewManager {
     }
 
     private boolean fixedOrder() {
-        // Currently, none of the lists have fixed order. Possibly we could
-        // consider mMode == RenderPreviewMode.CUSTOM to be fixed.
-        return false;
+        return mMode == SCREENS;
     }
 
     /** Returns true if all the previews have the same identical size */
@@ -546,7 +569,7 @@ public class RenderPreviewManager {
                 renderPreviews();
             }
             if (mNeedZoom) {
-                boolean allowZoomIn = true /*mMode == RenderPreviewMode.NONE*/;
+                boolean allowZoomIn = true /*mMode == NONE*/;
                 mCanvas.setFitScale(false /*onlyZoomOut*/, allowZoomIn);
                 mNeedZoom = false;
             }
@@ -563,27 +586,59 @@ public class RenderPreviewManager {
 
             RenderPreview preview = mCanvas.getPreview();
             if (preview != null) {
-                CanvasTransform hi = mHScale;
-                CanvasTransform vi = mVScale;
+                String displayName = null;
+                Configuration configuration = preview.getConfiguration();
+                if (configuration instanceof VaryingConfiguration) {
+                    // Use override flags from stashed preview, but configuration
+                    // data from live (not varying) configured configuration
+                    VaryingConfiguration cfg = (VaryingConfiguration) configuration;
+                    int flags = cfg.getAlternateFlags() | cfg.getOverrideFlags();
+                    displayName = NestedConfiguration.computeDisplayName(flags,
+                            getChooser().getConfiguration());
+                } else if (configuration instanceof NestedConfiguration) {
+                    int flags = ((NestedConfiguration) configuration).getOverrideFlags();
+                    displayName = NestedConfiguration.computeDisplayName(flags,
+                            getChooser().getConfiguration());
+                } else {
+                    displayName = configuration.getDisplayName();
+                }
+                if (displayName != null) {
+                    CanvasTransform hi = mHScale;
+                    CanvasTransform vi = mVScale;
 
-                int destX = hi.translate(0);
-                int destY = vi.translate(0);
-                int destWidth = hi.getScaledImgSize();
-                int destHeight = vi.getScaledImgSize();
+                    int destX = hi.translate(0);
+                    int destY = vi.translate(0);
+                    int destWidth = hi.getScaledImgSize();
+                    int destHeight = vi.getScaledImgSize();
 
-                int x = destX + destWidth / 2 - preview.getWidth() / 2;
-                int y = destY + destHeight;
-                preview.paintTitle(gc, x, y, false /*showFile*/);
+                    int x = destX + destWidth / 2 - preview.getWidth() / 2;
+                    int y = destY + destHeight;
+
+                    preview.paintTitle(gc, x, y, false /*showFile*/, displayName);
+                }
             }
 
             // Zoom overlay
             int x = getZoomX();
             if (x > 0) {
                 int y = getZoomY();
+                int oldAlpha = gc.getAlpha();
+
+                // Paint background oval rectangle behind the zoom and close icons
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
+                gc.setAlpha(128);
+                int padding = 3;
+                int arc = 5;
+                gc.fillRoundRectangle(x - padding, y - padding,
+                        ZOOM_ICON_WIDTH + 2 * padding,
+                        4 * ZOOM_ICON_HEIGHT + 2 * padding, arc, arc);
+
+                gc.setAlpha(255);
                 IconFactory iconFactory = IconFactory.getInstance();
                 Image zoomOut = iconFactory.getIcon("zoomminus"); //$NON-NLS-1$);
-                Image zoomIn = iconFactory.getIcon("zoomplus"); //$NON-NLS-1$);
-                Image zoom100 = iconFactory.getIcon("zoom100"); //$NON-NLS-1$);
+                Image zoomIn = iconFactory.getIcon("zoomplus");   //$NON-NLS-1$);
+                Image zoom100 = iconFactory.getIcon("zoom100");   //$NON-NLS-1$);
+                Image close = iconFactory.getIcon("close");       //$NON-NLS-1$);
 
                 gc.drawImage(zoomIn, x, y);
                 y += ZOOM_ICON_HEIGHT;
@@ -591,8 +646,11 @@ public class RenderPreviewManager {
                 y += ZOOM_ICON_HEIGHT;
                 gc.drawImage(zoom100, x, y);
                 y += ZOOM_ICON_HEIGHT;
+                gc.drawImage(close, x, y);
+                y += ZOOM_ICON_HEIGHT;
+                gc.setAlpha(oldAlpha);
             }
-        } else if (mMode == RenderPreviewMode.CUSTOM) {
+        } else if (mMode == CUSTOM) {
             int rootX = getX();
             rootX += mHScale.getScaledImgSize();
             rootX += 2 * PREVIEW_HGAP;
@@ -630,7 +688,7 @@ public class RenderPreviewManager {
                 name,
                 null);
         if (d.open() == Window.OK) {
-            selectMode(RenderPreviewMode.CUSTOM);
+            selectMode(CUSTOM);
 
             String newName = d.getValue();
             // Create a new configuration from the current settings in the composite
@@ -706,6 +764,9 @@ public class RenderPreviewManager {
             createRenderTargetVariation(chooser, parent);
         }
 
+        // Also add in include-context previews, if any
+        addIncludedInPreviews();
+
         // Make a placeholder preview for the current screen, in case we switch from it
         RenderPreview preview = RenderPreview.create(this, parent);
         mCanvas.setPreview(preview);
@@ -717,9 +778,9 @@ public class RenderPreviewManager {
         /* This is disabled for now: need to load multiple versions of layoutlib.
         When I did this, there seemed to be some drug interactions between
         them, and I would end up with NPEs in layoutlib code which normally works.
-        ComplementingConfiguration configuration =
-                ComplementingConfiguration.create(chooser, parent);
-        configuration.setOverrideTarget(true);
+        VaryingConfiguration configuration =
+                VaryingConfiguration.create(chooser, parent);
+        configuration.setAlternatingTarget(true);
         configuration.syncFolderConfig();
         addPreview(RenderPreview.create(this, configuration));
         */
@@ -729,10 +790,10 @@ public class RenderPreviewManager {
         State currentState = parent.getDeviceState();
         State nextState = parent.getNextDeviceState(currentState);
         if (nextState != currentState) {
-            ComplementingConfiguration configuration =
-                    ComplementingConfiguration.create(chooser, parent);
-            configuration.setOverrideDeviceState(true);
-            configuration.setDeviceState(nextState, false);
+            VaryingConfiguration configuration =
+                    VaryingConfiguration.create(chooser, parent);
+            configuration.setAlternateDeviceState(true);
+            configuration.syncFolderConfig();
             addPreview(RenderPreview.create(this, configuration));
         }
     }
@@ -742,11 +803,10 @@ public class RenderPreviewManager {
         for (Locale locale : chooser.getLocaleList()) {
             LanguageQualifier language = locale.language;
             if (!language.equals(currentLanguage)) {
-                ComplementingConfiguration configuration =
-                        ComplementingConfiguration.create(chooser, parent);
-                configuration.setOverrideLocale(true);
-                Locale otherLanguage = Locale.create(language);
-                configuration.setLocale(otherLanguage, false);
+                VaryingConfiguration configuration =
+                        VaryingConfiguration.create(chooser, parent);
+                configuration.setAlternateLocale(true);
+                configuration.syncFolderConfig();
                 addPreview(RenderPreview.create(this, configuration));
                 break;
             }
@@ -755,17 +815,17 @@ public class RenderPreviewManager {
 
     private void createScreenVariations(Configuration parent) {
         ConfigurationChooser chooser = getChooser();
-        ComplementingConfiguration configuration;
+        VaryingConfiguration configuration;
 
-        configuration = ComplementingConfiguration.create(chooser, parent);
+        configuration = VaryingConfiguration.create(chooser, parent);
         configuration.setVariation(0);
-        configuration.setOverrideDevice(true);
+        configuration.setAlternateDevice(true);
         configuration.syncFolderConfig();
         addPreview(RenderPreview.create(this, configuration));
 
-        configuration = ComplementingConfiguration.create(chooser, parent);
+        configuration = VaryingConfiguration.create(chooser, parent);
         configuration.setVariation(1);
-        configuration.setOverrideDevice(true);
+        configuration.setAlternateDevice(true);
         configuration.syncFolderConfig();
         addPreview(RenderPreview.create(this, configuration));
     }
@@ -793,11 +853,12 @@ public class RenderPreviewManager {
         RenderPreviewMode newMode = AdtPrefs.getPrefs().getRenderPreviewMode();
         if (newMode == mMode && !force
                 && (mRevision == sRevision
-                    || mMode == RenderPreviewMode.NONE
-                    || mMode == RenderPreviewMode.CUSTOM)) {
+                    || mMode == NONE
+                    || mMode == CUSTOM)) {
             return false;
         }
 
+        RenderPreviewMode oldMode = mMode;
         mMode = newMode;
         mRevision = sRevision;
 
@@ -824,6 +885,9 @@ public class RenderPreviewManager {
                 addManualPreviews();
                 break;
             case NONE:
+                // Can't just set mNeedZoom because with no previews, the paint
+                // method does nothing
+                mCanvas.setFitScale(false /*onlyZoomOut*/, true /*allowZoomIn*/);
                 break;
             default:
                 assert false : mMode;
@@ -836,6 +900,13 @@ public class RenderPreviewManager {
         // the canvas is painted, we have accurate bounds.
         mNeedLayout = mNeedRender = true;
         mCanvas.redraw();
+
+        if (oldMode != mMode && (oldMode == NONE || mMode == NONE)) {
+            // If entering or exiting preview mode: updating padding which is compressed
+            // only in preview mode.
+            mCanvas.getHorizontalTransform().refresh();
+            mCanvas.getVerticalTransform().refresh();
+        }
 
         return true;
     }
@@ -983,7 +1054,8 @@ public class RenderPreviewManager {
 
         for (final Reference reference : includedBy) {
             String title = reference.getDisplayName();
-            Configuration config = Configuration.create(chooser, reference.getFile());
+            Configuration config = Configuration.create(chooser.getConfiguration(),
+                    reference.getFile());
             RenderPreview preview = RenderPreview.create(this, config);
             preview.setDisplayName(title);
             preview.setIncludedWithin(reference);
@@ -1011,12 +1083,16 @@ public class RenderPreviewManager {
             }
         });
 
+        Configuration currentConfig = chooser.getConfiguration();
+
         for (IFile variation : variations) {
             String title = variation.getParent().getName();
-            Configuration config = Configuration.create(chooser, variation);
+            Configuration config = Configuration.create(chooser.getConfiguration(), variation);
+            config.setTheme(currentConfig.getTheme());
+            config.setActivity(currentConfig.getActivity());
             RenderPreview preview = RenderPreview.create(this, config);
             preview.setDisplayName(title);
-            preview.setInput(variation);
+            preview.setAlternateInput(variation);
 
             addPreview(preview);
         }
@@ -1062,6 +1138,20 @@ public class RenderPreviewManager {
             }
         }
     }
+
+    void rename(ConfigurationDescription description, String newName) {
+        IProject project = getChooser().getProject();
+        if (project == null) {
+            return;
+        }
+
+        if (mManualList == null) {
+            mManualList = RenderPreviewList.get(project);
+        }
+        description.displayName = newName;
+        saveList();
+    }
+
 
     /**
      * Notifies that the main configuration has changed.
@@ -1148,6 +1238,47 @@ public class RenderPreviewManager {
      * @param preview the preview to switch to
      */
     public void switchTo(@NonNull RenderPreview preview) {
+        IFile input = preview.getAlternateInput();
+        if (input != null) {
+            IWorkbenchPartSite site = mCanvas.getEditorDelegate().getEditor().getSite();
+            try {
+                // This switches to the given file, but the file might not have
+                // an identical configuration to what was shown in the preview.
+                // For example, while viewing a 10" layout-xlarge file, it might
+                // show a preview for a 5" version tied to the default layout. If
+                // you click on it, it will open the default layout file, but it might
+                // be using a different screen size; any of those that match the
+                // default layout, say a 3.8".
+                //
+                // Thus, we need to also perform a screen size sync first
+                Configuration configuration = preview.getConfiguration();
+                boolean setSize = false;
+                if (configuration instanceof NestedConfiguration) {
+                    NestedConfiguration nestedConfig = (NestedConfiguration) configuration;
+                    setSize = nestedConfig.isOverridingDevice();
+                    if (configuration instanceof VaryingConfiguration) {
+                        VaryingConfiguration c = (VaryingConfiguration) configuration;
+                        setSize |= c.isAlternatingDevice();
+                    }
+
+                    if (setSize) {
+                        ConfigurationChooser chooser = getChooser();
+                        IFile editedFile = chooser.getEditedFile();
+                        if (editedFile != null) {
+                            chooser.syncToVariations(CFG_DEVICE|CFG_DEVICE_STATE,
+                                    editedFile, configuration, false, false);
+                        }
+                    }
+                }
+
+                IDE.openEditor(site.getWorkbenchWindow().getActivePage(), input,
+                        CommonXmlEditor.ID);
+            } catch (PartInitException e) {
+                AdtPlugin.log(e, null);
+            }
+            return;
+        }
+
         GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
         ConfigurationChooser chooser = editor.getConfigurationChooser();
 
@@ -1183,16 +1314,20 @@ public class RenderPreviewManager {
 
         // Update its configuration such that it is complementing or inheriting
         // from the new chosen configuration
-        if (previewConfiguration instanceof ComplementingConfiguration) {
-            originalConfiguration = ComplementingConfiguration.create(
-                    (ComplementingConfiguration) previewConfiguration,
+        if (previewConfiguration instanceof VaryingConfiguration) {
+            VaryingConfiguration varying = VaryingConfiguration.create(
+                    (VaryingConfiguration) previewConfiguration,
                     newConfiguration);
+            varying.updateDisplayName();
+            originalConfiguration = varying;
             newPreview.setConfiguration(originalConfiguration);
         } else if (previewConfiguration instanceof NestedConfiguration) {
-            originalConfiguration = NestedConfiguration.create(
+            NestedConfiguration nested = NestedConfiguration.create(
                     (NestedConfiguration) previewConfiguration,
                     originalConfiguration,
                     newConfiguration);
+            nested.setDisplayName(nested.computeDisplayName());
+            originalConfiguration = nested;
             newPreview.setConfiguration(originalConfiguration);
         }
 
@@ -1210,11 +1345,12 @@ public class RenderPreviewManager {
         // Stash the corresponding preview (not active) on the canvas so we can
         // retrieve it if clicking to some other preview later
         mCanvas.setPreview(preview);
+        preview.setVisible(false);
 
         // Switch to the configuration from the clicked preview (though it's
         // most likely a copy, see above)
         chooser.setConfiguration(newConfiguration);
-        editor.recomputeLayout();
+        editor.changed(MASK_ALL);
 
         // Scroll to the top again, if necessary
         mCanvas.getVerticalBar().setSelection(mCanvas.getVerticalBar().getMinimum());
@@ -1271,7 +1407,7 @@ public class RenderPreviewManager {
 
     private int getZoomY() {
         Rectangle clientArea = mCanvas.getClientArea();
-        return clientArea.y + 3;
+        return clientArea.y + 5;
     }
 
     /**
@@ -1338,13 +1474,15 @@ public class RenderPreviewManager {
         if (x > 0) {
             if (mousePos.x >= x && mousePos.x <= x + ZOOM_ICON_WIDTH) {
                 int y = getZoomY();
-                if (mousePos.y >= y && mousePos.y <= y + 3 * ZOOM_ICON_HEIGHT) {
+                if (mousePos.y >= y && mousePos.y <= y + 4 * ZOOM_ICON_HEIGHT) {
                     if (mousePos.y < y + ZOOM_ICON_HEIGHT) {
                         zoomIn();
                     } else if (mousePos.y < y + 2 * ZOOM_ICON_HEIGHT) {
                         zoomOut();
-                    } else {
+                    } else if (mousePos.y < y + 3 * ZOOM_ICON_HEIGHT) {
                         zoomReset();
+                    } else {
+                        selectMode(NONE);
                     }
                     return true;
                 }
@@ -1528,6 +1666,30 @@ public class RenderPreviewManager {
         @Override
         public void run() {
             mCanvas.redraw();
+        }
+    }
+
+    /**
+     * Notifies the {@linkplain RenderPreviewManager} that the configuration used
+     * in the main chooser has been changed. This may require updating parent references
+     * in the preview configurations inheriting from it.
+     *
+     * @param oldConfiguration the previous configuration
+     * @param newConfiguration the new configuration in the chooser
+     */
+    public void updateChooserConfig(
+            @NonNull Configuration oldConfiguration,
+            @NonNull Configuration newConfiguration) {
+        if (hasPreviews()) {
+            for (RenderPreview preview : mPreviews) {
+                Configuration configuration = preview.getConfiguration();
+                if (configuration instanceof NestedConfiguration) {
+                    NestedConfiguration nestedConfig = (NestedConfiguration) configuration;
+                    if (nestedConfig.getParent() == oldConfiguration) {
+                        nestedConfig.setParent(newConfiguration);
+                    }
+                }
+            }
         }
     }
 }

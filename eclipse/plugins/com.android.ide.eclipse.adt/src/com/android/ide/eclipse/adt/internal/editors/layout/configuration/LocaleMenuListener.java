@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.AddTranslationDialog;
 
 import org.eclipse.core.resources.IProject;
@@ -95,6 +96,14 @@ class LocaleMenuListener extends SelectionAdapter {
             LocaleMenuListener listener = new LocaleMenuListener(chooser, ACTION_SET_LOCALE,
                     locale);
             item.addSelectionListener(listener);
+        }
+
+        if (locales.size() > 1) {
+            @SuppressWarnings("unused")
+            MenuItem separator = new MenuItem(menu, SWT.SEPARATOR);
+
+            ConfigurationMenuListener.addTogglePreviewModeAction(menu,
+                    "Preview All Locales", chooser, RenderPreviewMode.LOCALES);
         }
 
         @SuppressWarnings("unused")

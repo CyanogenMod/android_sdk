@@ -53,15 +53,18 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.devices.Device;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -130,7 +133,9 @@ public class RenderService {
         mImageFactory = canvas.getImageOverlay();
         FolderConfiguration folderConfig = configuration.getFullConfig();
 
-        mHardwareConfigHelper = new HardwareConfigHelper(configuration.getDevice());
+        Device device = configuration.getDevice();
+        assert device != null;
+        mHardwareConfigHelper = new HardwareConfigHelper(device);
         mHardwareConfigHelper.setOrientation(
                 folderConfig.getScreenOrientationQualifier().getValue());
 
@@ -373,17 +378,20 @@ public class RenderService {
                 File layoutFile = new File(contextLayout.getValue());
                 if (layoutFile.isFile()) {
                     try {
+                        byte[] bytes = Files.toByteArray(layoutFile);
+
                         // Get the name of the layout actually being edited, without the extension
                         // as it's what IXmlPullParser.getParser(String) will receive.
                         String queryLayoutName = mEditor.getLayoutResourceName();
                         mProjectCallback.setLayoutParser(queryLayoutName, modelParser);
                         topParser = new ContextPullParser(mProjectCallback, layoutFile);
                         topParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                        topParser.setInput(new FileInputStream(layoutFile), "UTF-8"); //$NON-NLS-1$
+                        InputStream inputStream = new ByteArrayInputStream(bytes);
+                        topParser.setInput(inputStream, "UTF-8"); //$NON-NLS-1$
+                    } catch (IOException e) {
+                        AdtPlugin.log(e, null);
                     } catch (XmlPullParserException e) {
-                        AdtPlugin.log(e, ""); //$NON-NLS-1$
-                    } catch (FileNotFoundException e) {
-                        // this will not happen since we check above.
+                        AdtPlugin.log(e, null);
                     }
                 }
             }

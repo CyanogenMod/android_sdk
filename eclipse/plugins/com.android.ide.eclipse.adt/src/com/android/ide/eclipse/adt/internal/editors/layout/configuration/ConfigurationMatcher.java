@@ -66,6 +66,8 @@ import java.util.List;
  * http://developer.android.com/guide/topics/resources/providing-resources.html
  */
 public class ConfigurationMatcher {
+    private static final boolean PREFER_RECENT_RENDER_TARGETS = true;
+
     private final ConfigurationChooser mConfigChooser;
     private final Configuration mConfiguration;
     private final IFile mEditedFile;
@@ -524,7 +526,16 @@ public class ConfigurationMatcher {
 
     /** Return the default render target to use, or null if no strong preference */
     @Nullable
-    static IAndroidTarget findDefaultRenderTarget(@NonNull IProject project) {
+    static IAndroidTarget findDefaultRenderTarget(ConfigurationChooser chooser) {
+        if (PREFER_RECENT_RENDER_TARGETS) {
+            // Use the most recent target
+            List<IAndroidTarget> targetList = chooser.getTargetList();
+            if (!targetList.isEmpty()) {
+                return targetList.get(targetList.size() - 1);
+            }
+        }
+
+        IProject project = chooser.getProject();
         // Default to layoutlib version 5
         Sdk current = Sdk.getCurrent();
         if (current != null) {

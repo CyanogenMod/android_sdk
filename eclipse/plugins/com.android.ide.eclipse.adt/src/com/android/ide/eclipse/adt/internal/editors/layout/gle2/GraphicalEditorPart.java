@@ -30,9 +30,11 @@ import static com.android.SdkConstants.STRING_PREFIX;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_FOLDER;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_TARGET;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
-
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_COLLAPSED;
@@ -70,6 +72,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationMatcher;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -642,7 +645,7 @@ public class GraphicalEditorPart extends EditorPart
     // ---- Implements ConfigurationClient ----
     @Override
     public void aboutToChange(int flags) {
-        if ((flags & CHANGED_RENDER_TARGET) != 0) {
+        if ((flags & CFG_TARGET) != 0) {
             IAndroidTarget oldTarget = mConfigChooser.getConfiguration().getTarget();
             preRenderingTargetChangeCleanUp(oldTarget);
         }
@@ -670,8 +673,12 @@ public class GraphicalEditorPart extends EditorPart
         if (mEditorDelegate.getEditor().isCreatingPages()) {
             recomputeLayout();
         } else {
+            boolean affectsFileSelection = (flags & Configuration.MASK_FILE_ATTRS) != 0;
+            IFile best = null;
             // get the resources of the file's project.
-            IFile best = ConfigurationMatcher.getBestFileMatch(mConfigChooser);
+            if (affectsFileSelection) {
+                best = ConfigurationMatcher.getBestFileMatch(mConfigChooser);
+            }
             if (best != null) {
                 if (!best.equals(mEditedFile)) {
                     try {
@@ -681,12 +688,12 @@ public class GraphicalEditorPart extends EditorPart
 
                         boolean reuseEditor = AdtPrefs.getPrefs().isSharedLayoutEditor();
                         if (!reuseEditor) {
-                            String data = AdtPlugin.getFileProperty(best, NAME_CONFIG_STATE);
+                            String data = ConfigurationDescription.getDescription(best);
                             if (data == null) {
                                 // Not previously opened: duplicate the current state as
                                 // much as possible
                                 data = mConfigChooser.getConfiguration().toPersistentString();
-                                AdtPlugin.setFileProperty(best, NAME_CONFIG_STATE, data);
+                                ConfigurationDescription.setDescription(best, data);
                             }
                         }
 
@@ -709,7 +716,7 @@ public class GraphicalEditorPart extends EditorPart
                 // Even though the layout doesn't change, the config changed, and referenced
                 // resources need to be updated.
                 recomputeLayout();
-            } else {
+            } else if (affectsFileSelection) {
                 // display the error.
                 Configuration configuration = mConfigChooser.getConfiguration();
                 FolderConfiguration currentConfig = configuration.getFullConfig();
@@ -727,10 +734,15 @@ public class GraphicalEditorPart extends EditorPart
                         currentConfig.toDisplayString(),
                         currentConfig.getFolderName(ResourceFolderType.LAYOUT),
                         mEditedFile.getName());
+            } else {
+                // Something else changed, such as the theme - just recompute existing
+                // layout
+                mConfigChooser.saveConstraints();
+                recomputeLayout();
             }
         }
 
-        if ((flags & CHANGED_RENDER_TARGET) != 0) {
+        if ((flags & CFG_TARGET) != 0) {
             Configuration configuration = mConfigChooser.getConfiguration();
             IAndroidTarget target = configuration.getTarget();
             Sdk current = Sdk.getCurrent();
@@ -740,7 +752,7 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        if ((flags & (CHANGED_DEVICE | CHANGED_DEVICE_CONFIG)) != 0) {
+        if ((flags & (CFG_DEVICE | CFG_DEVICE_STATE)) != 0) {
             // When the device changes, zoom the view to fit, but only up to 100% (e.g. zoom
             // out to fit the content, or zoom back in if we were zoomed out more from the
             // previous view, but only up to 100% such that we never blow up pixels
@@ -873,6 +885,12 @@ public class GraphicalEditorPart extends EditorPart
         return mIncludedWithin;
     }
 
+    @Override
+    @Nullable
+    public LayoutCanvas getCanvas() {
+        return getCanvasControl();
+    }
+
     /**
      * Listens to target changed in the current project, to trigger a new layout rendering.
      */
@@ -907,7 +925,7 @@ public class GraphicalEditorPart extends EditorPart
                 IAndroidTarget target = currentSdk.getTarget(mEditedFile.getProject());
                 if (target != null) {
                     mConfigChooser.onSdkLoaded(target);
-                    changed(CHANGED_FOLDER | CHANGED_RENDER_TARGET);
+                    changed(CFG_FOLDER | CFG_TARGET);
                 }
             }
         }
@@ -1168,7 +1186,7 @@ public class GraphicalEditorPart extends EditorPart
         AndroidTargetData targetData = mConfigChooser.onXmlModelLoaded();
         updateCapabilities(targetData);
 
-        changed(CHANGED_FOLDER | CHANGED_RENDER_TARGET);
+        changed(CFG_FOLDER | CFG_TARGET);
     }
 
     /** Updates the capabilities for the given target data (which may be null) */
@@ -1577,6 +1595,8 @@ public class GraphicalEditorPart extends EditorPart
                 job.setSystem(true);
                 job.schedule(3000); // 3 seconds
             }
+
+            mConfigChooser.ensureInitialized();
         }
 
         model.refreshUi();

@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.Screen;
@@ -182,6 +183,13 @@ class DeviceMenuListener extends SelectionAdapter {
                 }
             }
         }
+
+        @SuppressWarnings("unused")
+        MenuItem separator = new MenuItem(menu, SWT.SEPARATOR);
+
+        ConfigurationMenuListener.addTogglePreviewModeAction(menu,
+                "Preview All Screens", chooser, RenderPreviewMode.SCREENS);
+
 
         Rectangle bounds = combo.getBounds();
         Point location = new Point(bounds.x, bounds.y + bounds.height);

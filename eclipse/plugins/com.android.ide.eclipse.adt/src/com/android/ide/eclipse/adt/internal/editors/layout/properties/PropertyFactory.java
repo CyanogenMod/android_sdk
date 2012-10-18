@@ -268,6 +268,9 @@ public class PropertyFactory {
         Map<String, ComplexProperty> categoryToProperty = new HashMap<String, ComplexProperty>();
         Multimap<String, Property> categoryToProperties = ArrayListMultimap.create();
 
+        if (properties.isEmpty()) {
+            return properties;
+        }
 
         ViewElementDescriptor parent = (ViewElementDescriptor) properties.get(0).getDescriptor()
                 .getParent();
