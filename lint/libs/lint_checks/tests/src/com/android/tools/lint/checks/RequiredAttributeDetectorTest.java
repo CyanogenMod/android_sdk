@@ -82,4 +82,13 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testRequestFocus() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=38700
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/layout/edit_type.xml"
+            ));
+    }
 }
