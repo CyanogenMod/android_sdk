@@ -5,7 +5,7 @@
 
     <d:device>
         <d:name>Nexus One</d:name>
-        <d:manufacturer>Nexus</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -80,7 +80,7 @@
     </d:device>
     <d:device>
         <d:name>Nexus S</d:name>
-        <d:manufacturer>Nexus</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -193,7 +193,7 @@
 
     <d:device>
         <d:name>Galaxy Nexus</d:name>
-        <d:manufacturer>Nexus</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -324,7 +324,7 @@
     </d:device>
     <d:device>
         <d:name>Nexus 7</d:name>
-        <d:manufacturer>Nexus</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>large</d:screen-size>
