@@ -101,8 +101,8 @@ public class TypoDetectorTest extends AbstractCheckTest {
             "res/values-nb/typos.xml:12: Warning: \"Altid\" is a common misspelling; did you mean \"Alltid\" ? [Typos]\n" +
             "    <string name=\"s5\">Altid</string>\n" +
             "                      ^\n" +
-            "res/values-nb/typos.xml:18: Warning: \"karriære\" is a common misspelling; did you mean \"karrière\" ? [Typos]\n" +
-            "    <string name=\"s7\">Koding er en spennende karriære</string>\n" +
+            "res/values-nb/typos.xml:18: Warning: \"karri√¶re\" is a common misspelling; did you mean \"karri√®re\" ? [Typos]\n" +
+            "    <string name=\"s7\">Koding er en spennende karri√¶re</string>\n" +
             "                                             ^\n" +
             "0 errors, 6 warnings\n" +
             "",
@@ -118,8 +118,8 @@ public class TypoDetectorTest extends AbstractCheckTest {
             "res/values-de/typos.xml:9: Warning: \"Authorisierungscode\" is a common misspelling; did you mean \"Autorisierungscode\" ? [Typos]\n" +
             "    <string name=\"s2\">(Authorisierungscode!)</string>\n" +
             "                       ^\n" +
-            "res/values-de/typos.xml:10: Warning: \"zurück gefoobaren\" is a common misspelling; did you mean \"zurückgefoobaren\" ? [Typos]\n" +
-            "    <string name=\"s3\">   zurück gefoobaren!</string>\n" +
+            "res/values-de/typos.xml:10: Warning: \"zur√ºck gefoobaren\" is a common misspelling; did you mean \"zur√ºckgefoobaren\" ? [Typos]\n" +
+            "    <string name=\"s3\">   zur√ºck gefoobaren!</string>\n" +
             "                         ^\n" +
             "0 errors, 3 warnings\n" +
             "",
