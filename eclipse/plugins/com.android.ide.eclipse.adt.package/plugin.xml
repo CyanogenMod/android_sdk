@@ -6,31 +6,35 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.eclipse.ui.ide.workbench"
-            name="Eclipse IDE for Android">
+            description="Android Developer Tools"
+            name="ADT">
          <property
             name="preferenceCustomization"
             value="plugin_customization.ini" />
          <property
             name="appName"
-            value="Eclipse IDE for Android" />
+            value="ADT" />
          <property
-            name="introTitle"
-            value="Eclipse IDE for Android" />
+            name="aboutImage"
+            value="adt-about.png">
+         </property>
          <property
-            name="introBrandingImage"
-            value="product:eclipse.png" />
-         <property
-            name="introBrandingImageText"
-            value="AOSP" />
+            name="aboutText"
+            value="Android Developer Tools&#x0A;&#x0A;Build: {0}&#x0A;&#x0A;This product includes Eclipse Platform, JDT, CDT, EMF, GEF and WTP,&#x0A;all of which are Copyright (c) Eclipse contributors and others.&#x0A;Visit http://eclipse.org/&#x0A;&#x0A;Android Developer Tools are Copyright (c) The Android Open Source Project.&#x0A;Visit http://developer.android.com">
+         </property>
          <property
             name="startupProgressRect"
-            value="10,250,200,5" />
+            value="216,229,170,4" />
          <property
             name="startupMessageRect"
-            value="10,260,300,30" />
+            value="216,240,265,30" />
          <property
             name="startupForegroundColor"
-            value="AAAAAA" />
+            value="999999" />
+         <property
+               name="windowImages"
+               value="icons/adt16.png,icons/adt32.png,icons/adt48.png">
+         </property>
       </product>
    </extension>
    <extension
