@@ -13,6 +13,7 @@ def getVersion() {
 }
 
 version = getVersion()
+group = 'com.android.tools'
 archivesBaseName = 'common'
 
 sourceSets {

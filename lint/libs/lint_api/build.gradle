@@ -1,5 +1,12 @@
 dependencies {
-    testCompile 'junit:junit:3.8.1'
+    compile project(':common')
+    compile project(':sdklib')
+    compile project(':layoutlib_api')
+
+    compile 'com.google.guava:guava:13.0.1'
+    compile 'org.projectlombok:lombok.ast:0.2'
+    compile 'org.ow2.asm:asm:4.0'
+    compile 'org.ow2.asm:asm-tree:4.0'
 }
 
 def getVersion() {
@@ -11,8 +18,8 @@ def getVersion() {
 }
 
 version = getVersion()
-group = 'com.android.tools'
-archivesBaseName = 'dvlib'
+group = 'com.android.tools.lint'
+archivesBaseName = 'lint-api'
 
 sourceSets {
     main {
@@ -23,14 +30,6 @@ sourceSets {
             srcDir 'src'
         }
     }
-    test {
-        java {
-            srcDir 'tests/src'
-        }
-        resources {
-            srcDir 'tests/src'
-        }
-   }
 }
 
 uploadArchives {
@@ -49,8 +48,8 @@ uploadArchives {
             }
 
             pom.project {
-                name 'Android Tools dvlib'
-                description 'A Library to manage the Android device database XML files.'
+                name 'Android Tools Lint API'
+                description 'API to build lint checks'
                 url 'http://tools.android.com'
                 inceptionYear '2007'
 

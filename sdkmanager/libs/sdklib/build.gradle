@@ -20,6 +20,7 @@ def getVersion() {
 }
 
 version = getVersion()
+group = 'com.android.tools.sdk'
 archivesBaseName = 'sdklib'
 
 sourceSets {

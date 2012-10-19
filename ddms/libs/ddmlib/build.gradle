@@ -12,6 +12,7 @@ def getVersion() {
 }
 
 version = getVersion()
+group = 'com.android.tools.ddms'
 archivesBaseName = 'ddmlib'
 
 sourceSets {

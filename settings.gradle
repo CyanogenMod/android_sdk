@@ -4,7 +4,13 @@ include 'dvlib'
 include 'sdklib'
 include 'ddmlib'
 include 'manifmerger'
+include 'lint_api'
+include 'lint_checks'
+include 'lint'
 
 project(':dvlib').projectDir = new File('device_validator/dvlib')
 project(':sdklib').projectDir = new File('sdkmanager/libs/sdklib')
 project(':ddmlib').projectDir = new File('ddms/libs/ddmlib')
+project(':lint_api').projectDir = new File('lint/libs/lint_api')
+project(':lint_checks').projectDir = new File('lint/libs/lint_checks')
+project(':lint').projectDir = new File('lint/cli')

@@ -14,7 +14,8 @@ def getVersion() {
 }
 
 version = getVersion()
-archivesBaseName = 'layoutlib_api'
+group = 'com.android.tools.layoutlib'
+archivesBaseName = 'layoutlib-api'
 
 sourceSets {
     main {

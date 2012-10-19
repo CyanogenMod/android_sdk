@@ -1,4 +1,8 @@
 dependencies {
+    compile project(':lint_api')
+    compile project(':lint_checks')
+
+    testCompile 'org.easymock:easymock:3.1'
     testCompile 'junit:junit:3.8.1'
 }
 
@@ -11,8 +15,8 @@ def getVersion() {
 }
 
 version = getVersion()
-group = 'com.android.tools'
-archivesBaseName = 'dvlib'
+group = 'com.android.tools.lint'
+archivesBaseName = 'lint'
 
 sourceSets {
     main {
@@ -30,7 +34,11 @@ sourceSets {
         resources {
             srcDir 'tests/src'
         }
-   }
+    }
+}
+
+jar {
+    manifest { attributes 'Main-Class': 'com.android.tools.lint.Main' }
 }
 
 uploadArchives {
@@ -49,8 +57,8 @@ uploadArchives {
             }
 
             pom.project {
-                name 'Android Tools dvlib'
-                description 'A Library to manage the Android device database XML files.'
+                name 'Android Lint Tool'
+                description 'Lint tools. Both a Command line tool and a library to add lint features to other tools'
                 url 'http://tools.android.com'
                 inceptionYear '2007'
 

@@ -16,6 +16,7 @@ def getVersion() {
 }
 
 version = getVersion()
+group = 'com.android.tools.build'
 archivesBaseName = 'manifest-merger'
 
 sourceSets {
