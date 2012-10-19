@@ -31,6 +31,7 @@ ADT_IDE_JAVA_LIBS := $(shell $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh
 ADT_IDE_JAVA_DEPS := $(foreach m,$(ADT_IDE_JAVA_LIBS),$(HOST_OUT_JAVA_LIBRARIES)/$(m).jar)
 
 ADT_IDE_JAVA_TARGET := $(ADT_IDE_RELEASE_DIR)/adt_eclipse_ide_java_build
+ADT_VERSION := $(shell grep Bundle-Version $(TOPDIR)sdk/eclipse/plugins/com.android.ide.eclipse.adt/META-INF/MANIFEST.MF | sed 's/.*: \([0-9]\+.[0-9]\+.[0-9]\+\).*/\1/')
 
 # Common not-quite-phony rule to perform the eclipse build only once
 # This invokes the java builder on eclipse. It generates multiple
@@ -86,6 +87,10 @@ $(5): $(ADT_IDE_JAVA_TARGET)
 	unzip -q $(3) -d $(4) && \
 	sed -i -e 's/org.eclipse.platform/com.android.ide.eclipse.adt.package.product/g' \
 	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),eclipse.app/Contents/MacOS/)eclipse.ini && \
+	echo "-Declipse.buildId=v$(ADT_VERSION)-$(ADT_IDE_ZIP_QUALIFIER)" >> \
+	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),eclipse.app/Contents/MacOS/)eclipse.ini && \
+	sed -i -e "s/buildId/v$(ADT_VERSION)-$(ADT_IDE_ZIP_QUALIFIER)/g" \
+	  $(4)/eclipse/plugins/com.android.ide.eclipse.adt.package_*/about.mappings && \
 	sed -i -e 's/org.eclipse.platform.ide/com.android.ide.eclipse.adt.package.product/g' \
 	       -e 's/org.eclipse.platform/com.android.ide.eclipse.adt.package/g' \
 	  $(4)/eclipse/configuration/config.ini
