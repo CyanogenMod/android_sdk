@@ -245,6 +245,7 @@ public abstract class AbstractCheckTest extends TestCase {
         }
 
         Files.copy(new InputSupplier<InputStream>() {
+            @Override
             public InputStream getInput() throws IOException {
                 return contents;
             }
@@ -436,38 +437,20 @@ public abstract class AbstractCheckTest extends TestCase {
         @Override
         public File findResource(String relativePath) {
             if (relativePath.equals("platform-tools/api/api-versions.xml")) {
-                CodeSource source = getClass().getProtectionDomain().getCodeSource();
-                if (source != null) {
-                    URL location = source.getLocation();
-                    try {
-                        File dir = new File(location.toURI());
-                        assertTrue(dir.getPath(), dir.exists());
-                        File sdkDir = dir.getParentFile().getParentFile().getParentFile()
-                                .getParentFile().getParentFile().getParentFile();
-                        File file = new File(sdkDir, "development" + File.separator + "sdk"
-                                + File.separator + "api-versions.xml");
-                        return file;
-                    } catch (URISyntaxException e) {
-                        fail(e.getLocalizedMessage());
-                    }
+                File rootDir = getRootDir();
+                if (rootDir != null) {
+                    File file = new File(rootDir, "development" + File.separator + "sdk"
+                            + File.separator + "api-versions.xml");
+                    return file;
                 }
             } else if (relativePath.startsWith("tools/support/")) {
                 String base = relativePath.substring("tools/support/".length());
-                CodeSource source = getClass().getProtectionDomain().getCodeSource();
-                if (source != null) {
-                    URL location = source.getLocation();
-                    try {
-                        File dir = new File(location.toURI());
-                        assertTrue(dir.getPath(), dir.exists());
-                        File sdkDir = dir.getParentFile().getParentFile().getParentFile()
-                                .getParentFile().getParentFile().getParentFile();
-                        File file = new File(sdkDir, "sdk" + File.separator + "files"
-                                + File.separator + "typos"
-                                + File.separator + base);
-                        return file;
-                    } catch (URISyntaxException e) {
-                        fail(e.getLocalizedMessage());
-                    }
+                File rootDir = getRootDir();
+                if (rootDir != null) {
+                    File file = new File(rootDir, "sdk" + File.separator + "files"
+                            + File.separator + "typos"
+                            + File.separator + base);
+                    return file;
                 }
             } else {
                 fail("Unit tests don't support arbitrary resource lookup yet.");
@@ -475,6 +458,37 @@ public abstract class AbstractCheckTest extends TestCase {
 
             return super.findResource(relativePath);
         }
+    }
+
+    /**
+     * Returns the Android source tree root dir.
+     * @return the root dir or null if it couldn't be computed.
+     */
+    private File getRootDir() {
+        CodeSource source = getClass().getProtectionDomain().getCodeSource();
+        if (source != null) {
+            URL location = source.getLocation();
+            try {
+                File dir = new File(location.toURI());
+                assertTrue(dir.getPath(), dir.exists());
+                File rootDir = dir.getParentFile().getParentFile().getParentFile()
+                        .getParentFile().getParentFile().getParentFile();
+
+                // check if "settings.gradle" is there. This will let us know if we need
+                // to go up one extra level, which is the case when running the tests
+                // from gradle.
+                File settingsGradle = new File(rootDir, "settings.gradle"); //$NON-NLS-1$
+                if (settingsGradle.isFile()) {
+                    rootDir = rootDir.getParentFile();
+                }
+
+                return rootDir;
+            } catch (URISyntaxException e) {
+                fail(e.getLocalizedMessage());
+            }
+        }
+
+        return null;
     }
 
     public class TestConfiguration extends Configuration {

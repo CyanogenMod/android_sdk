@@ -9,10 +9,13 @@ subprojects {
         mavenCentral()
     }
 
-    group = 'com.android.tools'
-
     project.ext {
         baseVersion = '21.0'
+    }
+
+    // set all java compilation to use UTF-8 encoding.
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
     }
 
     // custom tasks for creating source/javadoc jars

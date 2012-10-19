@@ -60,17 +60,12 @@ public class SessionParams extends RenderParams {
      * layout file.
      * @param renderingMode The rendering mode.
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
-     * @param screenWidth the screen width
-     * @param screenHeight the screen height
-     * @param density the density factor for the screen.
-     * @param xdpi the screen actual dpi in X
-     * @param ydpi the screen actual dpi in Y
-    * @param renderResources a {@link RenderResources} object providing access to the resources.
+     * @param hardwareConfig the {@link HardwareConfig}.
+     * @param renderResources a {@link RenderResources} object providing access to the resources.
      * @param projectCallback The {@link IProjectCallback} object to get information from
      * the project.
      * @param minSdkVersion the minSdkVersion of the project
      * @param targetSdkVersion the targetSdkVersion of the project
-     * @param softwareButtons whether the device use software buttons
      * @param log the object responsible for displaying warning/errors to the user.
      */
     public SessionParams(
