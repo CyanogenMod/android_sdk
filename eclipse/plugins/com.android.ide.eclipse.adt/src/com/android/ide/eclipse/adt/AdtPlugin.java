@@ -1197,14 +1197,13 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             }
 
             private void openSdkManager() {
-                // Windows only: open the standalone external SDK Manager since we know
+                // Open the standalone external SDK Manager since we know
                 // that ADT on Windows is bound to be locking some SDK folders.
-                // Also when this is invoked becasue SdkManagerAction.run() fails, this
+                //
+                // Also when this is invoked because SdkManagerAction.run() fails, this
                 // test will fail and we'll fallback on using the internal one.
-                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                    if (SdkManagerAction.openExternalSdkManager()) {
-                        return;
-                    }
+                if (SdkManagerAction.openExternalSdkManager()) {
+                    return;
                 }
 
                 // Otherwise open the regular SDK Manager bundled within ADT

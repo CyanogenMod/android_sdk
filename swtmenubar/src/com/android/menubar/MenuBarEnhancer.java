@@ -26,6 +26,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
+import com.android.menubar.IMenuBarEnhancer.MenuBarMode;
+
 
 /**
  * On Mac, {@link MenuBarEnhancer#setupMenu} plugs a listener on the About and the
@@ -55,7 +57,7 @@ public final class MenuBarEnhancer {
      *          called "Tools". Must not be null.
      * @param callbacks Callbacks called when "About" and "Preferences" menu items are invoked.
      *          Must not be null.
-     * @return A actual {@link IMenuBarEnhancer} implementation. Never null.
+     * @return An actual {@link IMenuBarEnhancer} implementation. Can be null on failure.
      *          This is currently not of any use for the caller but is left in case
      *          we want to expand the functionality later.
      */
@@ -64,61 +66,80 @@ public final class MenuBarEnhancer {
             final Menu swtMenu,
             IMenuBarCallback callbacks) {
 
-        IMenuBarEnhancer enhancer = getEnhancer(callbacks);
+        IMenuBarEnhancer enhancer = getEnhancer(callbacks, swtMenu.getDisplay());
 
         // Default implementation for generic platforms
         if (enhancer == null) {
-            enhancer = new IMenuBarEnhancer() {
-
-                public MenuBarMode getMenuBarMode() {
-                    return MenuBarMode.GENERIC;
-                }
-
-                public void setupMenu(
-                        String appName,
-                        Display display,
-                        final IMenuBarCallback callbacks) {
-                    if (swtMenu.getItemCount() > 0) {
-                        new MenuItem(swtMenu, SWT.SEPARATOR);
-                    }
-
-                    // Note: we use "Preferences" on Mac and "Options" on Windows/Linux.
-                    final MenuItem pref = new MenuItem(swtMenu, SWT.NONE);
-                    pref.setText("&Options...");
-
-                    final MenuItem about = new MenuItem(swtMenu, SWT.NONE);
-                    about.setText("&About...");
-
-                    pref.addSelectionListener(new SelectionAdapter() {
-                        @Override
-                        public void widgetSelected(SelectionEvent e) {
-                            try {
-                                pref.setEnabled(false);
-                                callbacks.onPreferencesMenuSelected();
-                                super.widgetSelected(e);
-                            } finally {
-                                pref.setEnabled(true);
-                            }
-                        }
-                    });
-
-                    about.addSelectionListener(new SelectionAdapter() {
-                        @Override
-                        public void widgetSelected(SelectionEvent e) {
-                            try {
-                                about.setEnabled(false);
-                                callbacks.onAboutMenuSelected();
-                                super.widgetSelected(e);
-                            } finally {
-                                about.setEnabled(true);
-                            }
-                        }
-                    });
-                }
-            };
+            enhancer = getGenericEnhancer(swtMenu);
         }
 
-        enhancer.setupMenu(appName, swtMenu.getDisplay(), callbacks);
+        try {
+            enhancer.setupMenu(appName, swtMenu.getDisplay(), callbacks);
+        } catch (Exception e) {
+            // If the enhancer failed, try to fall back on the generic one
+            if (enhancer.getMenuBarMode() != MenuBarMode.GENERIC) {
+                enhancer = getGenericEnhancer(swtMenu);
+                try {
+                    enhancer.setupMenu(appName, swtMenu.getDisplay(), callbacks);
+                } catch (Exception e2) {
+                    callbacks.printError("SWTMenuBar failed: %s", e2.toString());
+                    return null;
+                }
+            }
+        }
+        return enhancer;
+    }
+
+    private static IMenuBarEnhancer getGenericEnhancer(final Menu swtMenu) {
+        IMenuBarEnhancer enhancer;
+        enhancer = new IMenuBarEnhancer() {
+
+            public MenuBarMode getMenuBarMode() {
+                return MenuBarMode.GENERIC;
+            }
+
+            public void setupMenu(
+                    String appName,
+                    Display display,
+                    final IMenuBarCallback callbacks) {
+                if (swtMenu.getItemCount() > 0) {
+                    new MenuItem(swtMenu, SWT.SEPARATOR);
+                }
+
+                // Note: we use "Preferences" on Mac and "Options" on Windows/Linux.
+                final MenuItem pref = new MenuItem(swtMenu, SWT.NONE);
+                pref.setText("&Options...");
+
+                final MenuItem about = new MenuItem(swtMenu, SWT.NONE);
+                about.setText("&About...");
+
+                pref.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        try {
+                            pref.setEnabled(false);
+                            callbacks.onPreferencesMenuSelected();
+                            super.widgetSelected(e);
+                        } finally {
+                            pref.setEnabled(true);
+                        }
+                    }
+                });
+
+                about.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        try {
+                            about.setEnabled(false);
+                            callbacks.onAboutMenuSelected();
+                            super.widgetSelected(e);
+                        } finally {
+                            about.setEnabled(true);
+                        }
+                    }
+                });
+            }
+        };
         return enhancer;
     }
 
@@ -149,7 +170,7 @@ public final class MenuBarEnhancer {
             }
         };
 
-        IMenuBarEnhancer enhancer = getEnhancer(callbacks);
+        IMenuBarEnhancer enhancer = getEnhancer(callbacks, display);
 
         // Default implementation for generic platforms
         if (enhancer == null) {
@@ -187,12 +208,16 @@ public final class MenuBarEnhancer {
         return enhancer;
     }
 
-    private static IMenuBarEnhancer getEnhancer(IMenuBarCallback callbacks) {
+    private static IMenuBarEnhancer getEnhancer(IMenuBarCallback callbacks, Display display) {
         IMenuBarEnhancer enhancer = null;
         String p = SWT.getPlatform();
         String className = null;
         if ("cocoa".equals(p)) {                                                  //$NON-NLS-1$
             className = "com.android.menubar.internal.MenuBarEnhancerCocoa";      //$NON-NLS-1$
+
+            if (SWT.getVersion() >= 3700 && MenuBarEnhancer37.isSupported(display)) {
+                className = MenuBarEnhancer37.class.getName();
+            }
         }
 
         if (System.getenv("DEBUG_SWTMENUBAR") != null) {
