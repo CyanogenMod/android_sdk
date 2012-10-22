@@ -109,6 +109,10 @@ public class AdtStartup implements IStartup, IWindowListener {
                 if (AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
                                 new SdkValidator())) {
                     AdtPrefs.getPrefs().setSdkLocation(new File(osSdkPath));
+                    // parse the SDK resources.
+                    // Wait 2 seconds before starting the job. This leaves some time to the
+                    // other bundles to initialize.
+                    AdtPlugin.getDefault().parseSdkContent(2000 /*milliseconds*/);
                 }
             }
         }
