@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findLineStart;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findTextStart;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.SELECTOR_TAG;
@@ -32,8 +33,14 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.resources.ResourceType;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -84,6 +91,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     private final Queue<IDocument> mDocuments = new LinkedList<IDocument>();
     private final LinkedList<TypedPosition> mPartitions = new LinkedList<TypedPosition>();
     private ContextBasedFormattingStrategy mDelegate = null;
+    /** False if document is known not to be in an Android project, null until initialized */
+    private Boolean mIsAndroid;
 
     /**
      * Creates a new {@link AndroidXmlFormattingStrategy}
@@ -92,7 +101,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     }
 
     private ContextBasedFormattingStrategy getDelegate() {
-        if (!AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
+        if (!AdtPrefs.getPrefs().getUseCustomXmlFormatter()
+                || mIsAndroid != null && !mIsAndroid.booleanValue()) {
             if (mDelegate == null) {
                 mDelegate = new XMLFormattingStrategy();
             }
@@ -159,7 +169,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
      * @param length the length of the text range to be formatted
      * @return a {@link TextEdit} which edits the model into a formatted document
      */
-    public static TextEdit format(IStructuredModel model, int start, int length) {
+    private static TextEdit format(IStructuredModel model, int start, int length) {
         int end = start + length;
 
         TextEdit edit = new MultiTextEdit();
@@ -545,6 +555,50 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         return style;
     }
 
+    private Boolean isAndroid(IDocument document) {
+        if (mIsAndroid == null) {
+            // Look up the corresponding IResource for this document. This isn't
+            // readily available, so take advantage of the structured model's base location
+            // string and convert it to an IResource to look up its project.
+            if (document instanceof IStructuredDocument) {
+                IStructuredDocument structuredDocument = (IStructuredDocument) document;
+                IModelManager modelManager = StructuredModelManager.getModelManager();
+
+                IStructuredModel model = modelManager.getModelForRead(structuredDocument);
+                if (model != null) {
+                    String location = model.getBaseLocation();
+                    model.releaseFromRead();
+                    if (location != null) {
+                        if (!location.endsWith(ANDROID_MANIFEST_XML)
+                                && !location.contains("/res/")) { //$NON-NLS-1$
+                            // See if it looks like a foreign document
+                            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+                            IWorkspaceRoot root = workspace.getRoot();
+                            IResource member = root.findMember(location);
+                            if (member.exists()) {
+                                IProject project = member.getProject();
+                                if (project.isAccessible() &&
+                                        !BaseProjectHelper.isAndroidProject(project)) {
+                                    mIsAndroid = false;
+                                    return false;
+                                }
+                            }
+                        }
+                        // Ignore Maven POM files even in Android projects
+                        if (location.endsWith("/pom.xml")) { //$NON-NLS-1$
+                            mIsAndroid = false;
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            mIsAndroid = true;
+        }
+
+        return mIsAndroid.booleanValue();
+    }
+
     @Override
     public void formatterStarts(final IFormattingContext context) {
         // Use Eclipse XML formatter instead?
@@ -567,6 +621,15 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         IDocument document = (IDocument) context.getProperty(CONTEXT_MEDIUM);
         mPartitions.offer(partition);
         mDocuments.offer(document);
+
+        if (!isAndroid(document)) {
+            // It's some foreign type of project: use default
+            // formatter
+            delegate = getDelegate();
+            if (delegate != null) {
+                delegate.formatterStarts(context);
+            }
+        }
     }
 
     @Override
