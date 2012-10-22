@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="com.android.ide.eclipse.adt.package"
-      label="Android IDE Package"
-      version="20.0.0.qualifier"
+      label="ADT Package"
+      version="21.0.0.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt.package">
 
@@ -26,6 +26,30 @@
          id="org.eclipse.platform"
          version="0.0.0"
          search-location="both"/>
+
+   <includes
+         id="com.android.ide.eclipse.ddms"
+         version="0.0.0"/>
+
+   <includes
+         id="com.android.ide.eclipse.adt"
+         version="0.0.0"/>
+
+   <includes
+         id="com.android.ide.eclipse.gldebugger"
+         version="0.0.0"/>
+
+   <includes
+         id="com.android.ide.eclipse.hierarchyviewer"
+         version="0.0.0"/>
+
+   <includes
+         id="com.android.ide.eclipse.ndk"
+         version="0.0.0"/>
+
+   <includes
+         id="com.android.ide.eclipse.traceview"
+         version="0.0.0"/>
 
    <requires>
       <import feature="org.eclipse.platform"/>
@@ -67,10 +91,10 @@
       <import feature="org.eclipse.platform"/>
       <import feature="org.eclipse.rcp" version="3.7.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.wst.common_core.feature" version="3.2.3.v201011031800-7B7DFEsF7RZHOaLfS0KpNJ"/>
-      <import feature="org.eclipse.wst.common_ui.feature" version="3.2.3.v201011031800-7C78FPlEdhO_oXWe4k_elbMgT1Lq"/>
-      <import feature="org.eclipse.wst.xml_core.feature" version="3.2.3.v201102160550-7C7OFXcF7RZHQKIkMxMsW_"/>
-      <import feature="org.eclipse.wst.xml_ui.feature" version="3.2.3.v201102160550-7H7AFUWDxumQJOi9ghcTb5YgkwEZ"/>
+      <import feature="org.eclipse.wst.common_core.feature"/>
+      <import feature="org.eclipse.wst.common_ui.feature"/>
+      <import feature="org.eclipse.wst.xml_core.feature"/>
+      <import feature="org.eclipse.wst.xml_ui.feature"/>
       <import plugin="org.eclipse.core.variables"/>
       <import plugin="org.eclipse.cdt.core"/>
       <import plugin="org.eclipse.cdt.ui"/>
@@ -88,63 +112,6 @@
          id="com.android.ide.eclipse.adt.package"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
-
-   <plugin
-         id="com.android.ide.eclipse.adt"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.base"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.ddms"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.gldebugger"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.hierarchyviewer"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.traceview"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="overlay.com.android.ide.eclipse.adt.overlay"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.android.ide.eclipse.ndk"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="Eclipse IDE for Android" uid="com.android.ide.eclipse.adt.package.product" id="com.android.ide.eclipse.adt.package.product" application="org.eclipse.ui.ide.workbench" version="20.0.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="Android Developer Tools" uid="com.android.ide.eclipse.adt.package.product" id="com.android.ide.eclipse.adt.package.product" application="org.eclipse.ui.ide.workbench" version="20.0.0.qualifier" useFeatures="true" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
@@ -35,7 +35,7 @@
    </plugins>
 
    <features>
-      <feature id="com.android.ide.eclipse.adt.package" version="20.0.0.qualifier"/>
+      <feature id="com.android.ide.eclipse.adt.package"/>
    </features>
 
    <configurations>
