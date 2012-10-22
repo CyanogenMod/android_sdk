@@ -33,6 +33,7 @@ import java.util.TreeMap;
 public class ChimpChat {
     private final IChimpBackend mBackend;
     private static String sAdbLocation;
+    private static boolean sNoInitAdb;
 
     private ChimpChat(IChimpBackend backend) {
         this.mBackend = backend;
@@ -45,6 +46,8 @@ public class ChimpChat {
      */
     public static ChimpChat getInstance(Map<String, String> options) {
         sAdbLocation = options.get("adbLocation");
+        sNoInitAdb = Boolean.valueOf(options.get("noInitAdb"));
+
         IChimpBackend backend = createBackendByName(options.get("backend"));
         if (backend == null) {
             return null;
@@ -72,11 +75,7 @@ public class ChimpChat {
 
     private static IChimpBackend createBackendByName(String backendName) {
         if ("adb".equals(backendName)) {
-            if (sAdbLocation == null) {
-                return new AdbBackend();
-            } else {
-                return new AdbBackend(sAdbLocation);
-            }
+            return new AdbBackend(sAdbLocation, sNoInitAdb);
         } else {
             return null;
         }
