@@ -519,53 +519,57 @@ public class AvdCreationDialog extends GridDialog {
             }
 
             if (currentDevice != null) {
-                Hardware hw = currentDevice.getDefaultHardware();
-                Long ram = hw.getRam().getSizeAsUnit(Storage.Unit.MiB);
-                mRam.setText(Long.toString(ram));
-
-                // Set the default VM heap size. This is based on the Android CDD minimums for each
-                // screen size and density.
-                Screen s = hw.getScreen();
-                ScreenSize size = s.getSize();
-                Density density = s.getPixelDensity();
-                int vmHeapSize = 32;
-                if (size.equals(ScreenSize.XLARGE)) {
-                    switch (density) {
-                        case LOW:
-                        case MEDIUM:
-                            vmHeapSize = 32;
-                            break;
-                        case TV:
-                        case HIGH:
-                            vmHeapSize = 64;
-                            break;
-                        case XHIGH:
-                        case XXHIGH:
-                            vmHeapSize = 128;
-                    }
-                } else {
-                    switch (density) {
-                        case LOW:
-                        case MEDIUM:
-                            vmHeapSize = 16;
-                            break;
-                        case TV:
-                        case HIGH:
-                            vmHeapSize = 32;
-                            break;
-                        case XHIGH:
-                        case XXHIGH:
-                            vmHeapSize = 64;
-
-                    }
-                }
-                mVmHeap.setText(Integer.toString(vmHeapSize));
+                fillDeviceProperties(currentDevice);
             }
 
             toggleCameras();
             validatePage();
         }
 
+    }
+
+    private void fillDeviceProperties(Device device) {
+        Hardware hw = device.getDefaultHardware();
+        Long ram = hw.getRam().getSizeAsUnit(Storage.Unit.MiB);
+        mRam.setText(Long.toString(ram));
+
+        // Set the default VM heap size. This is based on the Android CDD minimums for each
+        // screen size and density.
+        Screen s = hw.getScreen();
+        ScreenSize size = s.getSize();
+        Density density = s.getPixelDensity();
+        int vmHeapSize = 32;
+        if (size.equals(ScreenSize.XLARGE)) {
+            switch (density) {
+                case LOW:
+                case MEDIUM:
+                    vmHeapSize = 32;
+                    break;
+                case TV:
+                case HIGH:
+                    vmHeapSize = 64;
+                    break;
+                case XHIGH:
+                case XXHIGH:
+                    vmHeapSize = 128;
+            }
+        } else {
+            switch (density) {
+                case LOW:
+                case MEDIUM:
+                    vmHeapSize = 16;
+                    break;
+                case TV:
+                case HIGH:
+                    vmHeapSize = 32;
+                    break;
+                case XHIGH:
+                case XXHIGH:
+                    vmHeapSize = 64;
+
+            }
+        }
+        mVmHeap.setText(Integer.toString(vmHeapSize));
     }
 
     private void toggleCameras() {
@@ -1148,7 +1152,9 @@ public class AvdCreationDialog extends GridDialog {
 
     private void fillInitialDeviceInfo(Device device) {
         String name = device.getManufacturer();
-        if (!name.equals("Generic") && !name.equals("User")) { // TODO define & use constants
+        if (!name.equals("Generic") &&      // TODO define & use constants
+                !name.equals("User") &&
+                device.getName().indexOf(name) == -1) {
             name = " by " + name;
         } else {
             name = "";
@@ -1158,6 +1164,7 @@ public class AvdCreationDialog extends GridDialog {
         name = name.replaceAll("[^0-9a-zA-Z_-]+", " ").trim().replaceAll("[ _]+", "_");
         mAvdName.setText(name);
 
+        // Select the manufacturer of the device
         String manufacturer = device.getManufacturer();
         for (int i = 0; i < mDeviceManufacturer.getItemCount(); i++) {
             if (mDeviceManufacturer.getItem(i).equals(manufacturer)) {
@@ -1167,6 +1174,7 @@ public class AvdCreationDialog extends GridDialog {
         }
         reloadDeviceNameCombo();
 
+        // Select the device
         String deviceName = device.getName();
         for (int i = 0; i < mDeviceName.getItemCount(); i++) {
             if (mDeviceName.getItem(i).equals(deviceName)) {
@@ -1176,6 +1184,15 @@ public class AvdCreationDialog extends GridDialog {
         }
         toggleCameras();
 
+        // If there's only one target, select it by default.
+        // TODO: if there are more than 1 target, select the higher platform target as
+        // a likely default.
+        if (mTarget.getItemCount() == 1) {
+            mTarget.select(0);
+            reloadAbiTypeCombo();
+        }
+
+        fillDeviceProperties(device);
     }
 
     /**
