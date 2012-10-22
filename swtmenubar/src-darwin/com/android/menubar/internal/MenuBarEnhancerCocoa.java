@@ -234,7 +234,7 @@ public class MenuBarEnhancerCocoa implements IMenuBarEnhancer {
         // invoked.
         //
         // We don't need to set the target here as the current target is the
-        // SWTApplicationDelegate and we have registerd the new selectors on
+        // SWTApplicationDelegate and we have registered the new selectors on
         // it. So just set the new action to invoke the selector.
         invoke(nsMenuitemCls, prefMenuItem, "setAction",
                 new Object[] {
