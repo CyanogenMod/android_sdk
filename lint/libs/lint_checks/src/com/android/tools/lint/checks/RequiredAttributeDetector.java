@@ -30,6 +30,7 @@ import static com.android.SdkConstants.FN_RESOURCE_BASE;
 import static com.android.SdkConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.REQUEST_FOCUS;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TABLE_LAYOUT;
 import static com.android.SdkConstants.TABLE_ROW;
@@ -311,11 +312,12 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     return;
                 }
 
-                if (VIEW_MERGE.equals(element.getNodeName())) {
+                String tag = element.getTagName();
+                if (VIEW_MERGE.equals(tag)
+                        || VIEW_INCLUDE.equals(tag)
+                        || REQUEST_FOCUS.equals(tag)) {
                     return;
                 }
-
-                boolean certain = true;
 
                 String parentTag = element.getParentNode() != null
                         ?  element.getParentNode().getNodeName() : "";
@@ -326,11 +328,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     return;
                 }
 
-                String tag = element.getTagName();
-                if (tag.equals(VIEW_INCLUDE)) {
-                    return;
-                }
-
+                boolean certain = true;
                 boolean isRoot = isRootElement(element);
                 if (isRoot || isRootElement(element.getParentNode())
                         && VIEW_MERGE.equals(parentTag)) {
