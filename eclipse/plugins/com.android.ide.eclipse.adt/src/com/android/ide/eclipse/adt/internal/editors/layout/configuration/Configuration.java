@@ -37,6 +37,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -832,27 +833,32 @@ public class Configuration {
                     }
                     locale = Locale.create(language, region);
 
-                    target = stringToTarget(chooser, values[1]);
-
-                    // See if we should "correct" the rendering target to a better version.
-                    // If you're using a pre-release version of the render target, and a
-                    // final release is available and installed, we should switch to that
-                    // one instead.
-                    if (target != null) {
-                        AndroidVersion version = target.getVersion();
-                        List<IAndroidTarget> targetList = chooser.getTargetList();
-                        if (version.getCodename() != null && targetList != null) {
-                            int targetApiLevel = version.getApiLevel() + 1;
-                            for (IAndroidTarget t : targetList) {
-                                if (t.getVersion().getApiLevel() == targetApiLevel
-                                        && t.isPlatform()) {
-                                    target = t;
-                                    break;
+                    if (AdtPrefs.getPrefs().isAutoPickRenderTarget()) {
+                        target = ConfigurationMatcher.findDefaultRenderTarget(chooser);
+                    } else {
+                        String targetString = values[1];
+                        target = stringToTarget(chooser, targetString);
+                        // See if we should "correct" the rendering target to a
+                        // better version. If you're using a pre-release version
+                        // of the render target, and a final release is
+                        // available and installed, we should switch to that
+                        // one instead.
+                        if (target != null) {
+                            AndroidVersion version = target.getVersion();
+                            List<IAndroidTarget> targetList = chooser.getTargetList();
+                            if (version.getCodename() != null && targetList != null) {
+                                int targetApiLevel = version.getApiLevel() + 1;
+                                for (IAndroidTarget t : targetList) {
+                                    if (t.getVersion().getApiLevel() == targetApiLevel
+                                            && t.isPlatform()) {
+                                        target = t;
+                                        break;
+                                    }
                                 }
                             }
+                        } else {
+                            target = ConfigurationMatcher.findDefaultRenderTarget(chooser);
                         }
-                    } else {
-                        target = ConfigurationMatcher.findDefaultRenderTarget(chooser);
                     }
                 }
 
@@ -878,7 +884,7 @@ public class Configuration {
         }
         try {
             // Generate a persistent string from locale+target
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(32);
             Locale locale = getLocale();
             if (locale != null) {
                 // locale[0]/[1] can be null sometimes when starting Eclipse

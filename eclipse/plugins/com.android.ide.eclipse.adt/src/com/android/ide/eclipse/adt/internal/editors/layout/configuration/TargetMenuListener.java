@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 
@@ -40,17 +41,36 @@ import java.util.RandomAccess;
 class TargetMenuListener extends SelectionAdapter {
     private final ConfigurationChooser mConfigChooser;
     private final IAndroidTarget mTarget;
+    private final boolean mPickBest;
 
     TargetMenuListener(
             @NonNull ConfigurationChooser configChooser,
-            @Nullable IAndroidTarget target) {
+            @Nullable IAndroidTarget target,
+            boolean pickBest) {
         mConfigChooser = configChooser;
         mTarget = target;
+        mPickBest = pickBest;
     }
 
     @Override
     public void widgetSelected(SelectionEvent e) {
-        mConfigChooser.selectTarget(mTarget);
+        IAndroidTarget target = mTarget;
+        AdtPrefs prefs = AdtPrefs.getPrefs();
+        if (mPickBest) {
+            boolean autoPick = prefs.isAutoPickRenderTarget();
+            autoPick = !autoPick;
+            prefs.setAutoPickRenderTarget(autoPick);
+            if (autoPick) {
+                target = ConfigurationMatcher.findDefaultRenderTarget(mConfigChooser);
+            } else {
+                // Turn it off, but keep current target until another one is chosen
+                return;
+            }
+        } else {
+            // Manually picked some other target: turn off auto-pick
+            prefs.setAutoPickRenderTarget(false);
+        }
+        mConfigChooser.selectTarget(target);
         mConfigChooser.onRenderingTargetChange();
     }
 
@@ -60,6 +80,16 @@ class TargetMenuListener extends SelectionAdapter {
         IAndroidTarget current = configuration.getTarget();
         List<IAndroidTarget> targets = chooser.getTargetList();
         boolean haveRecent = false;
+
+        MenuItem menuItem = new MenuItem(menu, SWT.CHECK);
+        menuItem.setText("Automatically Pick Best");
+        menuItem.addSelectionListener(new TargetMenuListener(chooser, null, true));
+        if (AdtPrefs.getPrefs().isAutoPickRenderTarget()) {
+            menuItem.setSelection(true);
+        }
+
+        @SuppressWarnings("unused")
+        MenuItem separator = new MenuItem(menu, SWT.SEPARATOR);
 
         // Process in reverse order: most important targets first
         assert targets instanceof RandomAccess;
@@ -84,7 +114,7 @@ class TargetMenuListener extends SelectionAdapter {
                 item.setSelection(true);
             }
 
-            item.addSelectionListener(new TargetMenuListener(chooser, target));
+            item.addSelectionListener(new TargetMenuListener(chooser, target, false));
         }
 
         Rectangle bounds = combo.getBounds();

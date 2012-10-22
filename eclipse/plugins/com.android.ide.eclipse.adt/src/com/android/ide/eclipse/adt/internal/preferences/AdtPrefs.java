@@ -73,6 +73,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
     public final static String PREFS_SHARED_LAYOUT_EDITOR = AdtPlugin.PLUGIN_ID + ".sharedLayoutEditor"; //$NON-NLS-1$
     public final static String PREFS_PREVIEWS = AdtPlugin.PLUGIN_ID + ".previews"; //$NON-NLS-1$
+    public final static String PREFS_AUTO_PICK_TARGET = AdtPlugin.PLUGIN_ID + ".autoPickTarget"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -103,6 +104,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mLintOnExport;
     private AttributeSortOrder mAttributeSort;
     private boolean mSharedLayoutEditor;
+    private boolean mAutoPickTarget;
     private RenderPreviewMode mPreviewMode = RenderPreviewMode.NONE;
     private int mPreferXmlEditor;
 
@@ -257,6 +259,10 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
         if (property == null || PREFS_SHARED_LAYOUT_EDITOR.equals(property)) {
             mSharedLayoutEditor = mStore.getBoolean(PREFS_SHARED_LAYOUT_EDITOR);
+        }
+
+        if (property == null || PREFS_AUTO_PICK_TARGET.equals(property)) {
+            mAutoPickTarget = mStore.getBoolean(PREFS_AUTO_PICK_TARGET);
         }
 
         if (property == null || PREFS_PREVIEWS.equals(property)) {
@@ -501,6 +507,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_SPACE_BEFORE_CLOSE, true);
         store.setDefault(PREFS_LINT_ON_SAVE, true);
         store.setDefault(PREFS_LINT_ON_EXPORT, true);
+        store.setDefault(PREFS_AUTO_PICK_TARGET, true);
 
         // Defaults already handled; no need to write into map:
         //store.setDefault(PREFS_ATTRIBUTE_SORT, AttributeSortOrder.LOGICAL.key);
@@ -577,6 +584,30 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             store.setValue(PREFS_PREVIEWS, previewMode.name().toLowerCase(Locale.US));
         } else {
             store.setToDefault(PREFS_PREVIEWS);
+        }
+    }
+
+    /**
+     * Sets whether auto-pick render target mode is enabled.
+     *
+     * @return whether the layout editor should automatically pick the best render target
+     */
+    public boolean isAutoPickRenderTarget() {
+        return mAutoPickTarget;
+    }
+
+    /**
+     * Sets whether auto-pick render target mode is enabled.
+     *
+     * @param autoPick if true, auto pick the best render target in the layout editor
+     */
+    public void setAutoPickRenderTarget(boolean autoPick) {
+        mAutoPickTarget = autoPick;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        if (autoPick) {
+            store.setToDefault(PREFS_AUTO_PICK_TARGET);
+        } else {
+            store.setValue(PREFS_AUTO_PICK_TARGET, autoPick);
         }
     }
 }
