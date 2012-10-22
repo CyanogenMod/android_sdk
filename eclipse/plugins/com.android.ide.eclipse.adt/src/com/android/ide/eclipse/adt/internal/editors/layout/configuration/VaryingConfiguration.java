@@ -31,14 +31,14 @@ import com.android.sdklib.devices.State;
 import java.util.List;
 
 /**
- * An {@linkplain ComplementingConfiguration} is a {@link Configuration} which
+ * An {@linkplain VaryingConfiguration} is a {@link Configuration} which
  * inherits all of its values from a different configuration, except for one or
  * more attributes where it overrides a custom value, and the overridden value
  * will always <b>differ</b> from the inherited value!
  * <p>
- * For example, a {@linkplain ComplementingConfiguration} may state that it
+ * For example, a {@linkplain VaryingConfiguration} may state that it
  * overrides the locale, and if the inherited locale is "en", then the returned
- * locale from the {@linkplain ComplementingConfiguration} may be for example "nb",
+ * locale from the {@linkplain VaryingConfiguration} may be for example "nb",
  * but never "en".
  * <p>
  * The configuration will attempt to make its changed inherited value to be as
@@ -46,28 +46,24 @@ import java.util.List;
  * overrides the device will probably return a phone-sized screen if the
  * inherited device is a tablet, or vice versa.
  */
-public class ComplementingConfiguration extends NestedConfiguration {
-    /**
-     * If non zero, keep the display name up to date with the label for the
-     * given overridden attribute, according to the flag constants in
-     * {@link ConfigurationClient}
-     */
-    private int mUpdateDisplayName;
-
+public class VaryingConfiguration extends NestedConfiguration {
     /** Variation version; see {@link #setVariation(int)} */
     private int mVariation;
 
     /** Variation version count; see {@link #setVariationCount(int)} */
     private int mVariationCount;
 
+    /** Bitmask of attributes to be varied/alternated from the parent */
+    private int mAlternate;
+
     /**
-     * Constructs a new {@linkplain ComplementingConfiguration}.
+     * Constructs a new {@linkplain VaryingConfiguration}.
      * Construct via
      *
      * @param chooser the associated chooser
      * @param configuration the configuration to inherit from
      */
-    private ComplementingConfiguration(
+    private VaryingConfiguration(
             @NonNull ConfigurationChooser chooser,
             @NonNull Configuration configuration) {
         super(chooser, configuration);
@@ -83,42 +79,54 @@ public class ComplementingConfiguration extends NestedConfiguration {
      * @return a new configuration
      */
     @NonNull
-    public static ComplementingConfiguration create(@NonNull ConfigurationChooser chooser,
+    public static VaryingConfiguration create(@NonNull ConfigurationChooser chooser,
             @NonNull Configuration parent) {
-        return new ComplementingConfiguration(chooser, parent);
+        return new VaryingConfiguration(chooser, parent);
     }
 
     /**
-     * Creates a new {@linkplain ComplementingConfiguration} that has the same overriding
-     * attributes as the given other {@linkplain ComplementingConfiguration}.
+     * Creates a new {@linkplain VaryingConfiguration} that has the same overriding
+     * attributes as the given other {@linkplain VaryingConfiguration}.
      *
      * @param other the configuration to copy overrides from
      * @param parent the parent to tie the configuration to for inheriting values
      * @return a new configuration
      */
     @NonNull
-    public static ComplementingConfiguration create(
-            @NonNull ComplementingConfiguration other,
+    public static VaryingConfiguration create(
+            @NonNull VaryingConfiguration other,
             @NonNull Configuration parent) {
-        ComplementingConfiguration configuration =
-                new ComplementingConfiguration(other.mConfigChooser, parent);
-        configuration.setDisplayName(other.getDisplayName());
-        configuration.setActivity(other.getActivity());
-        configuration.mUpdateDisplayName = other.mUpdateDisplayName;
-        configuration.mOverrideLocale = other.mOverrideLocale;
-        configuration.mOverrideTarget = other.mOverrideTarget;
-        configuration.mOverrideDevice = other.mOverrideDevice;
-        configuration.mOverrideDeviceState = other.mOverrideDeviceState;
-        configuration.mOverrideNightMode = other.mOverrideNightMode;
-        configuration.mOverrideUiMode = other.mOverrideUiMode;
+        VaryingConfiguration configuration =
+                new VaryingConfiguration(other.mConfigChooser, parent);
+        initFrom(configuration, other, other, false);
+        configuration.mAlternate = other.mAlternate;
+        configuration.mVariation = other.mVariation;
+        configuration.mVariationCount = other.mVariationCount;
+        configuration.syncFolderConfig();
 
         return configuration;
     }
 
     /**
+     * Returns the alternate flags for this configuration. Corresponds to
+     * the {@code CFG_} flags in {@link ConfigurationClient}.
+     *
+     * @return the bitmask
+     */
+    public int getAlternateFlags() {
+        return mAlternate;
+    }
+
+    @Override
+    public void syncFolderConfig() {
+        super.syncFolderConfig();
+        updateDisplayName();
+    }
+
+    /**
      * Sets the variation version for this
-     * {@linkplain ComplementingConfiguration}. There might be multiple
-     * {@linkplain ComplementingConfiguration} instances inheriting from a
+     * {@linkplain VaryingConfiguration}. There might be multiple
+     * {@linkplain VaryingConfiguration} instances inheriting from a
      * {@link Configuration}. The variation version allows them to choose
      * different complementing values, so they don't all flip to the same other
      * (out of multiple choices) value. The {@link #setVariationCount(int)}
@@ -133,7 +141,7 @@ public class ComplementingConfiguration extends NestedConfiguration {
     }
 
     /**
-     * Sets the number of {@link ComplementingConfiguration} variations mapped
+     * Sets the number of {@link VaryingConfiguration} variations mapped
      * to the same parent configuration as this one. See
      * {@link #setVariation(int)} for details.
      *
@@ -143,47 +151,21 @@ public class ComplementingConfiguration extends NestedConfiguration {
         mVariationCount = count;
     }
 
-    @Override
-    public void setOverrideDevice(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_DEVICE;
-        super.setOverrideDevice(override);
-    }
-
-    @Override
-    public void setOverrideDeviceState(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_DEVICE_CONFIG;
-        super.setOverrideDeviceState(override);
-    }
-
-    @Override
-    public void setOverrideLocale(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_LOCALE;
-        super.setOverrideLocale(override);
-    }
-
-    @Override
-    public void setOverrideTarget(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_RENDER_TARGET;
-        super.setOverrideTarget(override);
-    }
-
-    @Override
-    public void setOverrideNightMode(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_NIGHT_MODE;
-        super.setOverrideNightMode(override);
-    }
-
-    @Override
-    public void setOverrideUiMode(boolean override) {
-        mUpdateDisplayName |= ConfigurationClient.CHANGED_UI_MODE;
-        super.setOverrideUiMode(override);
+    /**
+     * Updates the display name in this configuration based on the values and override settings
+     */
+    public void updateDisplayName() {
+        setDisplayName(computeDisplayName());
     }
 
     @Override
     @NonNull
     public Locale getLocale() {
+        if (isOverridingLocale()) {
+            return super.getLocale();
+        }
         Locale locale = mParent.getLocale();
-        if (mOverrideLocale && locale != null) {
+        if (isAlternatingLocale() && locale != null) {
             List<Locale> locales = mConfigChooser.getLocaleList();
             for (Locale l : locales) {
                 // TODO: Try to be smarter about which one we pick; for example, try
@@ -195,10 +177,6 @@ public class ComplementingConfiguration extends NestedConfiguration {
                     break;
                 }
             }
-
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_LOCALE) != 0) {
-                setDisplayName(ConfigurationChooser.getLocaleLabel(mConfigChooser, locale, false));
-            }
         }
 
         return locale;
@@ -207,8 +185,11 @@ public class ComplementingConfiguration extends NestedConfiguration {
     @Override
     @Nullable
     public IAndroidTarget getTarget() {
+        if (isOverridingTarget()) {
+            return super.getTarget();
+        }
         IAndroidTarget target = mParent.getTarget();
-        if (mOverrideTarget && target != null) {
+        if (isAlternatingTarget() && target != null) {
             List<IAndroidTarget> targets = mConfigChooser.getTargetList();
             if (!targets.isEmpty()) {
                 // Pick a different target: if you're showing the most recent render target,
@@ -228,23 +209,31 @@ public class ComplementingConfiguration extends NestedConfiguration {
                     target = mostRecent;
                 }
             }
-
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_RENDER_TARGET) != 0) {
-                setDisplayName(ConfigurationChooser.getRenderingTargetLabel(target, false));
-            }
         }
 
         return target;
     }
 
+    // Cached values, key=parent's device, cached value=device
+    private Device mPrevParentDevice;
+    private Device mPrevDevice;
+
     @Override
     @Nullable
     public Device getDevice() {
+        if (isOverridingDevice()) {
+            return super.getDevice();
+        }
         Device device = mParent.getDevice();
-        if (mOverrideDevice && device != null) {
+        if (isAlternatingDevice() && device != null) {
+            if (device == mPrevParentDevice) {
+                return mPrevDevice;
+            }
+
+            mPrevParentDevice = device;
+
             // Pick a different device
             List<Device> devices = mConfigChooser.getDeviceList();
-
 
             // Divide up the available devices into {@link #mVariationCount} + 1 buckets
             // (the + 1 is for the bucket now taken up by the inherited value).
@@ -300,9 +289,7 @@ public class ComplementingConfiguration extends NestedConfiguration {
                 }
             }
 
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_DEVICE) != 0) {
-                setDisplayName(ConfigurationChooser.getDeviceLabel(device, true));
-            }
+            mPrevDevice = device;
         }
 
         return device;
@@ -315,7 +302,7 @@ public class ComplementingConfiguration extends NestedConfiguration {
      * @return the density or null
      */
     @Nullable
-    public static Density getDensity(@NonNull Device device) {
+    private static Density getDensity(@NonNull Device device) {
         Hardware hardware = device.getDefaultHardware();
         if (hardware != null) {
             Screen screen = hardware.getScreen();
@@ -327,6 +314,12 @@ public class ComplementingConfiguration extends NestedConfiguration {
         return null;
     }
 
+    /**
+     * Returns the diagonal length of the given device
+     *
+     * @param device the device to check
+     * @return the diagonal length or -1
+     */
     private static double getScreenSize(@NonNull Device device) {
         Hardware hardware = device.getDefaultHardware();
         if (hardware != null) {
@@ -342,19 +335,16 @@ public class ComplementingConfiguration extends NestedConfiguration {
     @Override
     @Nullable
     public State getDeviceState() {
+        if (isOverridingDeviceState()) {
+            return super.getDeviceState();
+        }
         State state = mParent.getDeviceState();
-        if (mOverrideDeviceState && state != null) {
+        if (isAlternatingDeviceState() && state != null) {
             State alternate = getNextDeviceState(state);
-
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_DEVICE_CONFIG) != 0) {
-                if (alternate != null) {
-                    setDisplayName(alternate.getName());
-                }
-            }
 
             return alternate;
         } else {
-            if (mOverrideDevice && state != null) {
+            if ((isAlternatingDevice() || isOverridingDevice()) && state != null) {
                 // If the device differs, I need to look up a suitable equivalent state
                 // on our device
                 Device device = getDevice();
@@ -370,12 +360,12 @@ public class ComplementingConfiguration extends NestedConfiguration {
     @Override
     @NonNull
     public NightMode getNightMode() {
+        if (isOverridingNightMode()) {
+            return super.getNightMode();
+        }
         NightMode nightMode = mParent.getNightMode();
-        if (mOverrideNightMode && nightMode != null) {
+        if (isAlternatingNightMode() && nightMode != null) {
             nightMode = nightMode == NightMode.NIGHT ? NightMode.NOTNIGHT : NightMode.NIGHT;
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_NIGHT_MODE) != 0) {
-                setDisplayName(nightMode.getLongDisplayValue());
-            }
             return nightMode;
         } else {
             return nightMode;
@@ -385,19 +375,134 @@ public class ComplementingConfiguration extends NestedConfiguration {
     @Override
     @NonNull
     public UiMode getUiMode() {
+        if (isOverridingUiMode()) {
+            return super.getUiMode();
+        }
         UiMode uiMode = mParent.getUiMode();
-        if (mOverrideUiMode && uiMode != null) {
+        if (isAlternatingUiMode() && uiMode != null) {
             // TODO: Use manifest's supports screen to decide which are most relevant
             // (as well as which available configuration qualifiers are present in the
             // layout)
             UiMode[] values = UiMode.values();
             uiMode = values[(uiMode.ordinal() + 1) % values.length];
-            if ((mUpdateDisplayName & ConfigurationClient.CHANGED_UI_MODE) != 0) {
-                setDisplayName(uiMode.getLongDisplayValue());
-            }
             return uiMode;
         } else {
             return uiMode;
         }
     }
+
+    @Override
+    @Nullable
+    public String computeDisplayName() {
+        return computeDisplayName(getOverrideFlags() | mAlternate, this);
+    }
+
+    /**
+     * Sets whether the locale should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateLocale(boolean alternate) {
+        mAlternate |= CFG_LOCALE;
+    }
+
+    /**
+     * Returns true if the locale is alternated
+     *
+     * @return true if the locale is alternated
+     */
+    public final boolean isAlternatingLocale() {
+        return (mAlternate & CFG_LOCALE) != 0;
+    }
+
+    /**
+     * Sets whether the rendering target should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateTarget(boolean alternate) {
+        mAlternate |= CFG_TARGET;
+    }
+
+    /**
+     * Returns true if the target is alternated
+     *
+     * @return true if the target is alternated
+     */
+    public final boolean isAlternatingTarget() {
+        return (mAlternate & CFG_TARGET) != 0;
+    }
+
+    /**
+     * Sets whether the device should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateDevice(boolean alternate) {
+        mAlternate |= CFG_DEVICE;
+    }
+
+    /**
+     * Returns true if the device is alternated
+     *
+     * @return true if the device is alternated
+     */
+    public final boolean isAlternatingDevice() {
+        return (mAlternate & CFG_DEVICE) != 0;
+    }
+
+    /**
+     * Sets whether the device state should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateDeviceState(boolean alternate) {
+        mAlternate |= CFG_DEVICE_STATE;
+    }
+
+    /**
+     * Returns true if the device state is alternated
+     *
+     * @return true if the device state is alternated
+     */
+    public final boolean isAlternatingDeviceState() {
+        return (mAlternate & CFG_DEVICE_STATE) != 0;
+    }
+
+    /**
+     * Sets whether the night mode should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateNightMode(boolean alternate) {
+        mAlternate |= CFG_NIGHT_MODE;
+    }
+
+    /**
+     * Returns true if the night mode is alternated
+     *
+     * @return true if the night mode is alternated
+     */
+    public final boolean isAlternatingNightMode() {
+        return (mAlternate & CFG_NIGHT_MODE) != 0;
+    }
+
+    /**
+     * Sets whether the UI mode should be alternated by this configuration
+     *
+     * @param alternate if true, alternate the inherited value
+     */
+    public void setAlternateUiMode(boolean alternate) {
+        mAlternate |= CFG_UI_MODE;
+    }
+
+    /**
+     * Returns true if the UI mode is alternated
+     *
+     * @return true if the UI mode is alternated
+     */
+    public final boolean isAlternatingUiMode() {
+        return (mAlternate & CFG_UI_MODE) != 0;
+    }
+
 }

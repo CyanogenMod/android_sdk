@@ -93,7 +93,7 @@ class RenderPreviewList {
     }
 
     void save() throws IOException {
-        delete();
+        deleteFile();
         if (!mList.isEmpty()) {
             File file = getManualFile();
             save(file);
@@ -147,23 +147,37 @@ class RenderPreviewList {
         ConfigurationChooser chooser = canvas.getEditorDelegate().getGraphicalEditor()
                 .getConfigurationChooser();
 
+        Configuration chooserConfig = chooser.getConfiguration();
         for (ConfigurationDescription description : mList) {
             Configuration configuration = Configuration.create(chooser);
-            configuration.getFullConfig().set(description.folder);
-            if (description.target != null) {
-                // TODO: Make sure this layout isn't in some v-folder which is incompatible
-                // with this target!
-                configuration.setTarget(description.target, true);
-            }
+            configuration.setDisplayName(description.displayName);
+            configuration.setActivity(description.activity);
+            configuration.setLocale(
+                    description.locale != null ? description.locale : chooserConfig.getLocale(),
+                            true);
+            // TODO: Make sure this layout isn't in some v-folder which is incompatible
+            // with this target!
+            configuration.setTarget(
+                    description.target != null ? description.target : chooserConfig.getTarget(),
+                            true);
+            configuration.setTheme(
+                description.theme != null ? description.theme : chooserConfig.getTheme());
+            configuration.setDevice(
+                description.device != null ? description.device : chooserConfig.getDevice(),
+                        true);
+            configuration.setDeviceState(
+                description.state != null ? description.state : chooserConfig.getDeviceState(),
+                        true);
+            configuration.setNightMode(
+                description.nightMode != null ? description.nightMode
+                        : chooserConfig.getNightMode(), true);
+            configuration.setUiMode(
+                description.uiMode != null ? description.uiMode : chooserConfig.getUiMode(), true);
 
-            if (description.theme != null) {
-                configuration.setTheme(description.theme);
-            }
+            //configuration.syncFolderConfig();
+            configuration.getFullConfig().set(description.folder);
 
             RenderPreview preview = RenderPreview.create(manager, configuration);
-            if (description.displayName != null) {
-                preview.setDisplayName(description.displayName);
-            }
 
             preview.setDescription(description);
             previews.add(preview);
@@ -195,6 +209,10 @@ class RenderPreviewList {
 
     void delete() {
         mList.clear();
+        deleteFile();
+    }
+
+    private void deleteFile() {
         File file = getManualFile();
         if (file.exists()) {
             file.delete();

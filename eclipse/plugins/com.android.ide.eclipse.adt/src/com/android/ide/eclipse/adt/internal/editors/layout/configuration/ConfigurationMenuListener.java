@@ -16,6 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.CUSTOM;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.DEFAULT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.INCLUDES;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.LOCALES;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.NONE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.SCREENS;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.VARIATIONS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ResourceFolder;
@@ -57,26 +65,23 @@ class ConfigurationMenuListener extends SelectionAdapter {
     private static final int ACTION_SELECT_CONFIG = 1;
     private static final int ACTION_CREATE_CONFIG_FILE = 2;
     private static final int ACTION_ADD = 3;
-    private static final int ACTION_GENERATE_DEFAULT = 4;
-    private static final int ACTION_DELETE_ALL = 5;
-    private static final int ACTION_PREVIEW_LOCALES = 6;
-    private static final int ACTION_PREVIEW_SCREENS = 7;
-    private static final int ACTION_PREVIEW_INCLUDED_IN = 8;
-    private static final int ACTION_PREVIEW_VARIATIONS = 9;
-    private static final int ACTION_PREVIEW_CUSTOM = 10;
-    private static final int ACTION_PREVIEW_NONE = 11;
+    private static final int ACTION_DELETE_ALL = 4;
+    private static final int ACTION_PREVIEW_MODE = 5;
 
     private final ConfigurationChooser mConfigChooser;
     private final int mAction;
     private final IFile mResource;
+    private final RenderPreviewMode mMode;
 
     ConfigurationMenuListener(
             @NonNull ConfigurationChooser configChooser,
             int action,
-            @Nullable IFile resource) {
+            @Nullable IFile resource,
+            @Nullable RenderPreviewMode mode) {
         mConfigChooser = configChooser;
         mAction = action;
         mResource = resource;
+        mMode = mode;
     }
 
     @Override
@@ -120,36 +125,12 @@ class ConfigurationMenuListener extends SelectionAdapter {
                 previewManager.addAsThumbnail();
                 break;
             }
-            case ACTION_GENERATE_DEFAULT: {
-                previewManager.selectMode(RenderPreviewMode.DEFAULT);
+            case ACTION_PREVIEW_MODE: {
+                previewManager.selectMode(mMode);
                 break;
             }
             case ACTION_DELETE_ALL: {
                 previewManager.deleteManualPreviews();
-                break;
-            }
-            case ACTION_PREVIEW_LOCALES: {
-                previewManager.selectMode(RenderPreviewMode.LOCALES);
-                break;
-            }
-            case ACTION_PREVIEW_SCREENS: {
-                previewManager.selectMode(RenderPreviewMode.SCREENS);
-                break;
-            }
-            case ACTION_PREVIEW_INCLUDED_IN: {
-                previewManager.selectMode(RenderPreviewMode.INCLUDES);
-                break;
-            }
-            case ACTION_PREVIEW_VARIATIONS: {
-                previewManager.selectMode(RenderPreviewMode.VARIATIONS);
-                break;
-            }
-            case ACTION_PREVIEW_CUSTOM: {
-                previewManager.selectMode(RenderPreviewMode.CUSTOM);
-                break;
-            }
-            case ACTION_PREVIEW_NONE: {
-                previewManager.selectMode(RenderPreviewMode.NONE);
                 break;
             }
             default: assert false : mAction;
@@ -164,26 +145,36 @@ class ConfigurationMenuListener extends SelectionAdapter {
 
         // Configuration Previews
         create(menu, "Add As Thumbnail...",
-                new ConfigurationMenuListener(chooser, ACTION_ADD, null), SWT.PUSH, false);
+                new ConfigurationMenuListener(chooser, ACTION_ADD, null, null),
+                SWT.PUSH, false);
         if (mode == RenderPreviewMode.CUSTOM) {
-            create(menu, "Delete All Thumbnails",
-                new ConfigurationMenuListener(chooser, ACTION_DELETE_ALL, null), SWT.PUSH, false);
+            MenuItem item = create(menu, "Delete All Thumbnails",
+                new ConfigurationMenuListener(chooser, ACTION_DELETE_ALL, null, null),
+                SWT.PUSH, false);
+            IEditorPart activeEditor = AdtUtils.getActiveEditor();
+            LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(activeEditor);
+            if (delegate != null) {
+                LayoutCanvas canvas = delegate.getGraphicalEditor().getCanvasControl();
+                RenderPreviewManager previewManager = canvas.getPreviewManager();
+                if (!previewManager.hasManualPreviews()) {
+                    item.setEnabled(false);
+                }
+            }
         }
 
         @SuppressWarnings("unused")
         MenuItem configSeparator = new MenuItem(menu, SWT.SEPARATOR);
 
-        //create(menu, "Generate Default Thumbnails",
-        create(menu, "Preview Sample",
-                new ConfigurationMenuListener(chooser, ACTION_GENERATE_DEFAULT, null), SWT.RADIO,
-                mode == RenderPreviewMode.DEFAULT);
+        create(menu, "Preview Representative Sample",
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        DEFAULT), SWT.RADIO, mode == DEFAULT);
         create(menu, "Preview All Screen Sizes",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_SCREENS, null), SWT.RADIO,
-                mode == RenderPreviewMode.SCREENS);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        SCREENS), SWT.RADIO, mode == SCREENS);
 
         MenuItem localeItem = create(menu, "Preview All Locales",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_LOCALES, null), SWT.RADIO,
-                mode == RenderPreviewMode.LOCALES);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        LOCALES), SWT.RADIO, mode == LOCALES);
         if (chooser.getLocaleList().size() <= 1) {
             localeItem.setEnabled(false);
         }
@@ -199,8 +190,8 @@ class ConfigurationMenuListener extends SelectionAdapter {
         //    canPreviewIncluded = false;
         //}
         MenuItem includedItem = create(menu, "Preview Included",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_INCLUDED_IN, null),
-                SWT.RADIO, mode == RenderPreviewMode.INCLUDES);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        INCLUDES), SWT.RADIO, mode == INCLUDES);
         if (!canPreviewIncluded) {
             includedItem.setEnabled(false);
         }
@@ -208,18 +199,18 @@ class ConfigurationMenuListener extends SelectionAdapter {
         IFile file = chooser.getEditedFile();
         List<IFile> variations = AdtUtils.getResourceVariations(file, true);
         MenuItem variationsItem = create(menu, "Preview Layout Versions",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_VARIATIONS, null),
-                SWT.RADIO, mode == RenderPreviewMode.VARIATIONS);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        VARIATIONS), SWT.RADIO, mode == VARIATIONS);
         if (variations.size() <= 1) {
             variationsItem.setEnabled(false);
         }
 
         create(menu, "Manual Previews",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_CUSTOM, null),
-                SWT.RADIO, mode == RenderPreviewMode.CUSTOM);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        CUSTOM), SWT.RADIO, mode == CUSTOM);
         create(menu, "None",
-                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_NONE, null),
-                SWT.RADIO, mode == RenderPreviewMode.NONE);
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null,
+                        NONE), SWT.RADIO, mode == NONE);
 
         if (variations.size() > 1) {
             @SuppressWarnings("unused")
@@ -233,7 +224,8 @@ class ConfigurationMenuListener extends SelectionAdapter {
                 String title = configuration.toDisplayString();
 
                 MenuItem item = create(menu, title,
-                        new ConfigurationMenuListener(chooser, ACTION_SELECT_CONFIG, resource),
+                        new ConfigurationMenuListener(chooser, ACTION_SELECT_CONFIG,
+                                resource, null),
                         SWT.CHECK, false);
 
                 if (file != null) {
@@ -256,7 +248,8 @@ class ConfigurationMenuListener extends SelectionAdapter {
 
             // Add action for creating a new configuration
             MenuItem item = create(menu, "Create New...",
-                    new ConfigurationMenuListener(chooser, ACTION_CREATE_CONFIG_FILE, null),
+                    new ConfigurationMenuListener(chooser, ACTION_CREATE_CONFIG_FILE,
+                            null, null),
                     SWT.PUSH, false);
             item.setImage(IconFactory.getInstance().getIcon(ICON_NEW_CONFIG));
         }
@@ -278,5 +271,20 @@ class ConfigurationMenuListener extends SelectionAdapter {
             item.setSelection(true);
         }
         return item;
+    }
+
+    @NonNull
+    static MenuItem addTogglePreviewModeAction(
+            @NonNull Menu menu,
+            @NonNull String title,
+            @NonNull ConfigurationChooser chooser,
+            @NonNull RenderPreviewMode mode) {
+        boolean selected = AdtPrefs.getPrefs().getRenderPreviewMode() == mode;
+        if (selected) {
+            mode = RenderPreviewMode.NONE;
+        }
+        return create(menu, title,
+                new ConfigurationMenuListener(chooser, ACTION_PREVIEW_MODE, null, mode),
+                SWT.CHECK, selected);
     }
 }

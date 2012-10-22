@@ -154,7 +154,7 @@ class ActivityMenuListener extends SelectionAdapter {
             }
 
             item.addSelectionListener(new ActivityMenuListener(chooser,
-                    ACTION_OPEN_ACTIVITY, fqcn));
+                    ACTION_SELECT_ACTIVITY, fqcn));
         }
 
         return current;

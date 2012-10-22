@@ -30,6 +30,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -42,7 +43,9 @@ import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
 import com.google.common.base.Splitter;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.QualifiedName;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -62,6 +65,13 @@ public class ConfigurationDescription {
     private static final String ATTR_UIMODE = "ui";           //$NON-NLS-1$
     private static final String ATTR_NIGHTMODE = "night";     //$NON-NLS-1$
     private final static String SEP_LOCALE = "-";             //$NON-NLS-1$
+
+    /**
+     * Settings name for file-specific configuration preferences, such as which theme or
+     * device to render the current layout with
+     */
+    public final static QualifiedName NAME_CONFIG_STATE =
+        new QualifiedName(AdtPlugin.PLUGIN_ID, "state");//$NON-NLS-1$
 
     /** The project corresponding to this configuration's description */
     public final IProject project;
@@ -100,6 +110,27 @@ public class ConfigurationDescription {
 
     private ConfigurationDescription(@Nullable IProject project) {
         this.project = project;
+    }
+
+    /**
+     * Returns the persistent configuration description from the given file
+     *
+     * @param file the file to look up a description from
+     * @return the description or null if never written
+     */
+    @Nullable
+    public static String getDescription(@NonNull IFile file) {
+        return AdtPlugin.getFileProperty(file, NAME_CONFIG_STATE);
+    }
+
+    /**
+     * Sets the persistent configuration description data for the given file
+     *
+     * @param file the file to associate the description with
+     * @param description the description
+     */
+    public static void setDescription(@NonNull IFile file, @NonNull String description) {
+        AdtPlugin.setFileProperty(file, NAME_CONFIG_STATE, description);
     }
 
     /**

@@ -18,13 +18,11 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_DEVICE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_FOLDER;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_LOCALE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_RENDER_TARGET;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_THEME;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.MASK_RENDERING;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SHADOW_SIZE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils.SMALL_SHADOW_SIZE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.DEFAULT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode.INCLUDES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -36,7 +34,6 @@ import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -48,6 +45,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configu
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Locale;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.NestedConfiguration;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.VaryingConfiguration;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
@@ -62,6 +60,9 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.Screen;
+import com.android.sdklib.devices.State;
 import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
@@ -88,6 +89,7 @@ import org.w3c.dom.Document;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -116,6 +118,9 @@ public class RenderPreview implements IJobChangeListener {
     /** Whether to dump out rendering failures of the previews to the log */
     private static final boolean DUMP_RENDER_DIAGNOSTICS = false;
 
+    /** Extra error checking in debug mode */
+    private static final boolean DEBUG = false;
+
     private static final Image EDIT_ICON;
     private static final Image ZOOM_IN_ICON;
     private static final Image ZOOM_OUT_ICON;
@@ -140,13 +145,16 @@ public class RenderPreview implements IJobChangeListener {
     /** The configuration being previewed */
     private @NonNull Configuration mConfiguration;
 
+    /** Configuration to use if we have an alternate input to be rendered */
+    private @NonNull Configuration mAlternateConfiguration;
+
     /** The associated manager */
     private final @NonNull RenderPreviewManager mManager;
     private final @NonNull LayoutCanvas mCanvas;
-    private @Nullable ResourceResolver mResourceResolver;
+
+    private @NonNull SoftReference<ResourceResolver> mResourceResolver =
+            new SoftReference<ResourceResolver>(null);
     private @Nullable Job mJob;
-    private @Nullable Map<ResourceType, Map<String, ResourceValue>> mConfiguredFrameworkRes;
-    private @Nullable Map<ResourceType, Map<String, ResourceValue>> mConfiguredProjectRes;
     private @Nullable Image mThumbnail;
     private @Nullable String mDisplayName;
     private int mWidth;
@@ -158,7 +166,7 @@ public class RenderPreview implements IJobChangeListener {
     private double mAspectRatio;
 
     /** If non null, points to a separate file containing the source */
-    private @Nullable IFile mInput;
+    private @Nullable IFile mAlternateInput;
 
     /** If included within another layout, the name of that outer layout */
     private @Nullable Reference mIncludedWithin;
@@ -173,15 +181,6 @@ public class RenderPreview implements IJobChangeListener {
      * if not known), and null if the render was successful.
      */
     private String mError;
-
-    /**
-     * Whether this preview presents a file that has been "forked" (separate,
-     * not linked) from the primary layout.
-     * <p>
-     * TODO: Decide if this is redundant and I can just use {@link #mInput} != null
-     * instead.
-     */
-    private boolean mForked;
 
     /** Whether in the current layout, this preview is visible */
     private boolean mVisible;
@@ -203,15 +202,21 @@ public class RenderPreview implements IJobChangeListener {
     private RenderPreview(
             @NonNull RenderPreviewManager manager,
             @NonNull LayoutCanvas canvas,
-            @NonNull Configuration configuration,
-            int width,
-            int height) {
+            @NonNull Configuration configuration) {
         mManager = manager;
         mCanvas = canvas;
         mConfiguration = configuration;
-        mWidth = width;
-        mHeight = height;
-        mAspectRatio = mWidth / (double) mHeight;
+        updateSize();
+
+        // Should only attempt to create configurations for fully configured devices
+        assert mConfiguration.getDevice() != null
+                && mConfiguration.getDeviceState() != null
+                && mConfiguration.getLocale() != null
+                && mConfiguration.getTarget() != null
+                && mConfiguration.getTheme() != null
+                && mConfiguration.getFullConfig() != null
+                && mConfiguration.getFullConfig().getScreenSizeQualifier() != null :
+                    mConfiguration;
     }
 
     /**
@@ -281,22 +286,29 @@ public class RenderPreview implements IJobChangeListener {
     }
 
     /**
-     * Sets whether this preview represents a forked layout (e.g. a layout which lives
-     * in a separate file and is not connected to the main layout)
-     *
-     * @param forked true if this preview represents a separate file
-     */
-    public void setForked(boolean forked) {
-        mForked = forked;
-    }
-
-    /**
      * Returns whether this preview represents a forked layout
      *
      * @return true if this preview represents a separate file
      */
     public boolean isForked() {
-        return mForked;
+        return mAlternateInput != null || mIncludedWithin != null;
+    }
+
+    /**
+     * Returns the file to be used for this preview, or null if this is not a
+     * forked layout meaning that the file is the one used in the chooser
+     *
+     * @return the file or null for non-forked layouts
+     */
+    @Nullable
+    public IFile getAlternateInput() {
+        if (mAlternateInput != null) {
+            return mAlternateInput;
+        } else if (mIncludedWithin != null) {
+            return mIncludedWithin.getFile();
+        }
+
+        return null;
     }
 
     /**
@@ -359,12 +371,15 @@ public class RenderPreview implements IJobChangeListener {
 
     /** Determine whether this configuration has a better match in a different layout file */
     private void updateForkStatus() {
-        mForked = false;
-        mInput = null;
         ConfigurationChooser chooser = mManager.getChooser();
+        FolderConfiguration config = mConfiguration.getFullConfig();
+        if (mAlternateInput != null && chooser.isBestMatchFor(mAlternateInput, config)) {
+            return;
+        }
+
+        mAlternateInput = null;
         IFile editedFile = chooser.getEditedFile();
         if (editedFile != null) {
-            FolderConfiguration config = mConfiguration.getFullConfig();
             if (!chooser.isBestMatchFor(editedFile, config)) {
                 ProjectResources resources = chooser.getResources();
                 if (resources != null) {
@@ -373,13 +388,16 @@ public class RenderPreview implements IJobChangeListener {
                     if (best != null) {
                         IAbstractFile file = best.getFile();
                         if (file instanceof IFileWrapper) {
-                            mInput = ((IFileWrapper) file).getIFile();
+                            mAlternateInput = ((IFileWrapper) file).getIFile();
                         } else if (file instanceof File) {
-                            mInput = AdtUtils.fileToIFile(((File) file));
+                            mAlternateInput = AdtUtils.fileToIFile(((File) file));
                         }
                     }
                 }
-                mForked = true;
+                if (mAlternateInput != null) {
+                    mAlternateConfiguration = Configuration.create(mConfiguration,
+                            mAlternateInput);
+                }
             }
         }
     }
@@ -396,42 +414,7 @@ public class RenderPreview implements IJobChangeListener {
             @NonNull RenderPreviewManager manager,
             @NonNull Configuration configuration) {
         LayoutCanvas canvas = manager.getCanvas();
-
-        Image image = canvas.getImageOverlay().getImage();
-
-        // Image size
-        int screenWidth = 0;
-        int screenHeight = 0;
-        FolderConfiguration myconfig = configuration.getFullConfig();
-        ScreenDimensionQualifier dimension = myconfig.getScreenDimensionQualifier();
-        if (dimension != null) {
-            screenWidth = dimension.getValue1();
-            screenHeight = dimension.getValue2();
-            ScreenOrientationQualifier orientation = myconfig.getScreenOrientationQualifier();
-            if (orientation != null) {
-                ScreenOrientation value = orientation.getValue();
-                if (value == ScreenOrientation.PORTRAIT) {
-                    int temp = screenWidth;
-                    screenWidth = screenHeight;
-                    screenHeight = temp;
-                }
-            }
-        } else {
-            if (image != null) {
-                screenWidth = image.getImageData().width;
-                screenHeight = image.getImageData().height;
-            }
-        }
-        int width = RenderPreviewManager.getMaxWidth();
-        int height = RenderPreviewManager.getMaxHeight();
-        if (screenWidth > 0) {
-            double scale = getScale(screenWidth, screenHeight);
-            width = (int) (screenWidth * scale);
-            height = (int) (screenHeight * scale);
-        }
-
-        return new RenderPreview(manager, canvas,
-                configuration, width, height);
+        return new RenderPreview(manager, canvas, configuration);
     }
 
     /**
@@ -524,16 +507,17 @@ public class RenderPreview implements IJobChangeListener {
     private void renderSync() {
         disposeThumbnail();
 
+        Configuration configuration =
+                mAlternateInput != null ? mAlternateConfiguration : mConfiguration;
         GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
-        ResourceResolver resolver = getResourceResolver();
-        FolderConfiguration config = mConfiguration.getFullConfig();
-        RenderService renderService = RenderService.create(editor, mConfiguration, resolver);
+        ResourceResolver resolver = getResourceResolver(configuration);
+        RenderService renderService = RenderService.create(editor, configuration, resolver);
 
         if (mIncludedWithin != null) {
             renderService.setIncludedWithin(mIncludedWithin);
         }
 
-        if (mInput != null) {
+        if (mAlternateInput != null) {
             IAndroidTarget target = editor.getRenderingTarget();
             AndroidTargetData data = null;
             if (target != null) {
@@ -554,7 +538,7 @@ public class RenderPreview implements IJobChangeListener {
             model.setEditor(mCanvas.getEditorDelegate().getEditor());
             model.setUnknownDescriptorProvider(editor.getModel().getUnknownDescriptorProvider());
 
-            Document document = DomUtilities.getDocument(mInput);
+            Document document = DomUtilities.getDocument(mAlternateInput);
             if (document == null) {
                 mError = "No document";
                 createErrorThumbnail();
@@ -608,21 +592,22 @@ public class RenderPreview implements IJobChangeListener {
         }
     }
 
-    private ResourceResolver getResourceResolver() {
-        if (mResourceResolver != null) {
-            return mResourceResolver;
+    private ResourceResolver getResourceResolver(Configuration configuration) {
+        ResourceResolver resourceResolver = mResourceResolver.get();
+        if (resourceResolver != null) {
+            return resourceResolver;
         }
 
         GraphicalEditorPart graphicalEditor = mCanvas.getEditorDelegate().getGraphicalEditor();
-        String theme = mConfiguration.getTheme();
+        String theme = configuration.getTheme();
         if (theme == null) {
             return null;
         }
 
-        mConfiguredFrameworkRes = mConfiguredProjectRes = null;
-        mResourceResolver = null;
+        Map<ResourceType, Map<String, ResourceValue>> configuredFrameworkRes = null;
+        Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes = null;
 
-        FolderConfiguration config = mConfiguration.getFullConfig();
+        FolderConfiguration config = configuration.getFullConfig();
         IAndroidTarget target = graphicalEditor.getRenderingTarget();
         ResourceRepository frameworkRes = null;
         if (target != null) {
@@ -635,20 +620,20 @@ public class RenderPreview implements IJobChangeListener {
             if (data != null) {
                 // TODO: SHARE if possible
                 frameworkRes = data.getFrameworkResources();
-                mConfiguredFrameworkRes = frameworkRes.getConfiguredResources(config);
+                configuredFrameworkRes = frameworkRes.getConfiguredResources(config);
             } else {
                 return null;
             }
         } else {
             return null;
         }
-        assert mConfiguredFrameworkRes != null;
+        assert configuredFrameworkRes != null;
 
 
         // get the resources of the file's project.
         ProjectResources projectRes = ResourceManager.getInstance().getProjectResources(
                 graphicalEditor.getProject());
-        mConfiguredProjectRes = projectRes.getConfiguredResources(config);
+        configuredProjectRes = projectRes.getConfiguredResources(config);
 
         if (!theme.startsWith(PREFIX_RESOURCE_REF)) {
             if (frameworkRes.hasResourceItem(ANDROID_STYLE_RESOURCE_PREFIX + theme)) {
@@ -658,12 +643,12 @@ public class RenderPreview implements IJobChangeListener {
             }
         }
 
-        mResourceResolver = ResourceResolver.create(
-                mConfiguredProjectRes, mConfiguredFrameworkRes,
+        resourceResolver = ResourceResolver.create(
+                configuredProjectRes, configuredFrameworkRes,
                 ResourceHelper.styleToTheme(theme),
                 ResourceHelper.isProjectStyle(theme));
-
-        return mResourceResolver;
+        mResourceResolver = new SoftReference<ResourceResolver>(resourceResolver);
+        return resourceResolver;
     }
 
     /**
@@ -677,12 +662,17 @@ public class RenderPreview implements IJobChangeListener {
             return;
         }
 
+        ImageOverlay imageOverlay = mCanvas.getImageOverlay();
+        boolean drawShadows = imageOverlay == null || imageOverlay.getShowDropShadow();
         double scale = getWidth() / (double) image.getWidth();
+        int shadowSize;
+        if (LARGE_SHADOWS) {
+            shadowSize = drawShadows ? SHADOW_SIZE : 0;
+        } else {
+            shadowSize = drawShadows ? SMALL_SHADOW_SIZE : 0;
+        }
         if (scale < 1.0) {
-            ImageOverlay imageOverlay = mCanvas.getImageOverlay();
-            boolean drawShadows = imageOverlay == null || imageOverlay.getShowDropShadow();
             if (LARGE_SHADOWS) {
-                int shadowSize = drawShadows ? SHADOW_SIZE : 0;
                 image = ImageUtils.scale(image, scale, scale,
                         shadowSize, shadowSize);
                 if (drawShadows) {
@@ -691,7 +681,6 @@ public class RenderPreview implements IJobChangeListener {
                             image.getHeight() - shadowSize);
                 }
             } else {
-                int shadowSize = drawShadows ? SMALL_SHADOW_SIZE : 0;
                 image = ImageUtils.scale(image, scale, scale,
                         shadowSize, shadowSize);
                 if (drawShadows) {
@@ -701,16 +690,6 @@ public class RenderPreview implements IJobChangeListener {
                 }
             }
         }
-
-        // Adjust size; for different aspect ratios the height might get adjusted etc
-        /*
-        if (LARGE_SHADOWS) {
-            mWidth = image.getWidth() - SMALL_SHADOW_SIZE;
-            mHeight = image.getHeight() - SMALL_SHADOW_SIZE;
-        } else {
-            mWidth = image.getWidth() - SHADOW_SIZE;
-            mHeight = image.getHeight() - SHADOW_SIZE;
-        }*/
 
         mThumbnail = SwtUtils.convertToSwt(mCanvas.getDisplay(), image,
                 true /* transferAlpha */, -1);
@@ -835,6 +814,9 @@ public class RenderPreview implements IJobChangeListener {
                 if (d.open() == Window.OK) {
                     String newName = d.getValue();
                     mConfiguration.setDisplayName(newName);
+                    if (mDescription != null) {
+                        mManager.rename(mDescription, newName);
+                    }
                     mCanvas.redraw();
                 }
 
@@ -953,17 +935,46 @@ public class RenderPreview implements IJobChangeListener {
      * @param x the left edge of the preview rectangle
      * @param y the top edge of the preview rectangle
      */
-    int paintTitle(GC gc, int x, int y, boolean showFile) {
+    private int paintTitle(GC gc, int x, int y, boolean showFile) {
+        String displayName = getDisplayName();
+        return paintTitle(gc, x, y, showFile, displayName);
+    }
+
+    /**
+     * Paints the preview title at the given position (and returns the required
+     * height)
+     *
+     * @param gc the graphics context to paint into
+     * @param x the left edge of the preview rectangle
+     * @param y the top edge of the preview rectangle
+     * @param displayName the title string to be used
+     */
+    int paintTitle(GC gc, int x, int y, boolean showFile, String displayName) {
         int titleHeight = 0;
 
-        String displayName = getDisplayName();
+        if (showFile && mIncludedWithin != null) {
+            if (mManager.getMode() != INCLUDES) {
+                displayName = "<include>";
+            } else {
+                // Skip: just paint footer instead
+                displayName = null;
+            }
+        }
+
+        int width = getWidth();
+        int labelTop = y + 1;
+        gc.setClipping(x, labelTop, width, 100);
+
+        // Use font height rather than extent height since we want two adjacent
+        // previews (which may have different display names and therefore end
+        // up with slightly different extent heights) to have identical title
+        // heights such that they are aligned identically
+        int fontHeight = gc.getFontMetrics().getHeight();
+
         if (displayName != null && displayName.length() > 0) {
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
-
-            int width = getWidth();
             Point extent = gc.textExtent(displayName);
             int labelLeft = Math.max(x, x + (width - extent.x) / 2);
-            int labelTop = y + 1;
             Image icon = null;
             Locale locale = mConfiguration.getLocale();
             if (locale != null && (locale.hasLanguage() || locale.hasRegion())
@@ -972,10 +983,10 @@ public class RenderPreview implements IJobChangeListener {
                 icon = locale.getFlagImage();
             }
 
-            gc.setClipping(x, labelTop, width, 100);
             if (icon != null) {
                 int flagWidth = icon.getImageData().width;
                 int flagHeight = icon.getImageData().height;
+                labelLeft = Math.max(x + flagWidth / 2, labelLeft);
                 gc.drawImage(icon, labelLeft - flagWidth / 2 - 1, labelTop);
                 labelLeft += flagWidth / 2 + 1;
                 gc.drawText(displayName, labelLeft,
@@ -984,36 +995,34 @@ public class RenderPreview implements IJobChangeListener {
                 gc.drawText(displayName, labelLeft, labelTop, true);
             }
 
-            // Use font height rather than extent height since we want two adjacent
-            // previews (which may have different display names and therefore end
-            // up with slightly different extent heights) to have identical title
-            // heights such that they are aligned identically
-            titleHeight = gc.getFontMetrics().getHeight();
-
-            if (mForked && mInput != null && showFile) {
-                // Draw file flag, and parent folder name
-                labelTop += extent.y;
-                String fileName = mInput.getParent().getName() + File.separator + mInput.getName();
-                extent = gc.textExtent(fileName);
-                icon = IconFactory.getInstance().getIcon("android_file"); //$NON-NLS-1$
-                int flagWidth = icon.getImageData().width;
-                int flagHeight = icon.getImageData().height;
-
-                labelLeft = Math.max(x, x + (width - extent.x - flagWidth - 1) / 2);
-
-                gc.drawImage(icon, labelLeft, labelTop);
-
-                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
-                labelLeft += flagWidth + 1;
-                labelTop -= (extent.y - flagHeight) / 2;
-                gc.drawText(fileName, labelLeft, labelTop, true);
-
-                titleHeight += Math.max(titleHeight, icon.getImageData().height);
-
-            }
-
-            gc.setClipping((Region) null);
+            labelTop += extent.y;
+            titleHeight += fontHeight;
         }
+
+        if (showFile && (mAlternateInput != null || mIncludedWithin != null)) {
+            // Draw file flag, and parent folder name
+            IFile file = mAlternateInput != null
+                    ? mAlternateInput : mIncludedWithin.getFile();
+            String fileName = file.getParent().getName() + File.separator
+                    + file.getName();
+            Point extent = gc.textExtent(fileName);
+            Image icon = IconFactory.getInstance().getIcon("android_file"); //$NON-NLS-1$
+            int flagWidth = icon.getImageData().width;
+            int flagHeight = icon.getImageData().height;
+
+            int labelLeft = Math.max(x, x + (width - extent.x - flagWidth - 1) / 2);
+
+            gc.drawImage(icon, labelLeft, labelTop);
+
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GRAY));
+            labelLeft += flagWidth + 1;
+            labelTop -= (extent.y - flagHeight) / 2;
+            gc.drawText(fileName, labelLeft, labelTop, true);
+
+            titleHeight += Math.max(titleHeight, icon.getImageData().height);
+        }
+
+        gc.setClipping((Region) null);
 
         return titleHeight;
     }
@@ -1030,43 +1039,136 @@ public class RenderPreview implements IJobChangeListener {
             return;
         }
 
-        if ((flags & (CHANGED_FOLDER | CHANGED_THEME | CHANGED_DEVICE
-                | CHANGED_RENDER_TARGET | CHANGED_LOCALE)) != 0) {
-            mResourceResolver = null;
+        if ((flags & MASK_RENDERING) != 0) {
+            mResourceResolver.clear();
             // Handle inheritance
             mConfiguration.syncFolderConfig();
             updateForkStatus();
+            updateSize();
+        }
+
+        // Sanity check to make sure things are working correctly
+        if (DEBUG) {
+            RenderPreviewMode mode = mManager.getMode();
+            if (mode == DEFAULT) {
+                assert mConfiguration instanceof VaryingConfiguration;
+                VaryingConfiguration config = (VaryingConfiguration) mConfiguration;
+                int alternateFlags = config.getAlternateFlags();
+                switch (alternateFlags) {
+                    case Configuration.CFG_DEVICE_STATE: {
+                        State configState = config.getDeviceState();
+                        State chooserState = mManager.getChooser().getConfiguration()
+                                .getDeviceState();
+                        assert configState != null && chooserState != null;
+                        assert !configState.getName().equals(chooserState.getName())
+                                : configState.toString() + ':' + chooserState;
+
+                        Device configDevice = config.getDevice();
+                        Device chooserDevice = mManager.getChooser().getConfiguration()
+                                .getDevice();
+                        assert configDevice != null && chooserDevice != null;
+                        assert configDevice == chooserDevice
+                                : configDevice.toString() + ':' + chooserDevice;
+
+                        break;
+                    }
+                    case Configuration.CFG_DEVICE: {
+                        Device configDevice = config.getDevice();
+                        Device chooserDevice = mManager.getChooser().getConfiguration()
+                                .getDevice();
+                        assert configDevice != null && chooserDevice != null;
+                        assert configDevice != chooserDevice
+                                : configDevice.toString() + ':' + chooserDevice;
+
+                        State configState = config.getDeviceState();
+                        State chooserState = mManager.getChooser().getConfiguration()
+                                .getDeviceState();
+                        assert configState != null && chooserState != null;
+                        assert configState.getName().equals(chooserState.getName())
+                                : configState.toString() + ':' + chooserState;
+
+                        break;
+                    }
+                    case Configuration.CFG_LOCALE: {
+                        Locale configLocale = config.getLocale();
+                        Locale chooserLocale = mManager.getChooser().getConfiguration()
+                                .getLocale();
+                        assert configLocale != null && chooserLocale != null;
+                        assert configLocale != chooserLocale
+                                : configLocale.toString() + ':' + chooserLocale;
+                        break;
+                    }
+                    default: {
+                        // Some other type of override I didn't anticipate
+                        assert false : alternateFlags;
+                    }
+                }
+            }
+        }
+
+        mDirty = 0;
+        mManager.scheduleRender(this);
+    }
+
+    private void updateSize() {
+        Device device = mConfiguration.getDevice();
+        if (device == null) {
+            return;
+        }
+        Screen screen = device.getDefaultHardware().getScreen();
+        if (screen == null) {
+            return;
         }
 
         FolderConfiguration folderConfig = mConfiguration.getFullConfig();
         ScreenOrientationQualifier qualifier = folderConfig.getScreenOrientationQualifier();
         ScreenOrientation orientation = qualifier == null
                 ? ScreenOrientation.PORTRAIT : qualifier.getValue();
-        if (orientation == ScreenOrientation.LANDSCAPE
-                || orientation == ScreenOrientation.SQUARE) {
-            orientation = ScreenOrientation.PORTRAIT;
+
+        // compute width and height to take orientation into account.
+        int x = screen.getXDimension();
+        int y = screen.getYDimension();
+        int screenWidth, screenHeight;
+
+        if (x > y) {
+            if (orientation == ScreenOrientation.LANDSCAPE) {
+                screenWidth = x;
+                screenHeight = y;
+            } else {
+                screenWidth = y;
+                screenHeight = x;
+            }
         } else {
-            orientation = ScreenOrientation.LANDSCAPE;
+            if (orientation == ScreenOrientation.LANDSCAPE) {
+                screenWidth = y;
+                screenHeight = x;
+            } else {
+                screenWidth = x;
+                screenHeight = y;
+            }
         }
 
-        if ((mWidth < mHeight && orientation == ScreenOrientation.PORTRAIT)
-                || (mWidth > mHeight && orientation == ScreenOrientation.LANDSCAPE)) {
+        int width = RenderPreviewManager.getMaxWidth();
+        int height = RenderPreviewManager.getMaxHeight();
+        if (screenWidth > 0) {
+            double scale = getScale(screenWidth, screenHeight);
+            width = (int) (screenWidth * scale);
+            height = (int) (screenHeight * scale);
+        }
+
+        if (width != mWidth || height != mHeight) {
+            mWidth = width;
+            mHeight = height;
+
             Image thumbnail = mThumbnail;
             mThumbnail = null;
             if (thumbnail != null) {
                 thumbnail.dispose();
             }
-
-            // Flip icon size
-            int temp = mHeight;
-            mHeight = mWidth;
-            mWidth = temp;
-            mAspectRatio = mWidth / (double) mHeight;
+            if (mHeight != 0) {
+                mAspectRatio = mWidth / (double) mHeight;
+            }
         }
-
-        mDirty = 0;
-
-        mManager.scheduleRender(this);
     }
 
     /**
@@ -1173,8 +1275,8 @@ public class RenderPreview implements IJobChangeListener {
      *
      * @param file the file to set as input
      */
-    public void setInput(@Nullable IFile file) {
-        mInput = file;
+    public void setAlternateInput(@Nullable IFile file) {
+        mAlternateInput = file;
     }
 
     /** Corresponding description for this preview if it is a manually added preview */
