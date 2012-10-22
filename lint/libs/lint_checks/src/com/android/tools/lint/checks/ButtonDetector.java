@@ -302,7 +302,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                             reportOkPosition(context, element);
                         }
                     } else {
-                        assert BACK_LABEL.equalsIgnoreCase(label);
+                        assert BACK_LABEL.equalsIgnoreCase(label) : label + ':' + context.file;
                         Location location = context.getLocation(element);
                         if (context.isEnabled(BACKBUTTON)) {
                             context.report(BACKBUTTON, element, location,

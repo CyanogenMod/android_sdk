@@ -164,7 +164,7 @@ public class ViewTagDetector extends Detector implements ClassScanner {
                     String message = String.format("Avoid setting %1$s as values for setTag: " +
                         "Can lead to memory leaks in versions older than Android 4.0",
                         objectType);
-                    context.report(ISSUE, method, location, message, null);
+                    context.report(ISSUE, method, call, location, message, null);
                 }
             } catch (AnalyzerException e) {
                 context.log(e, null);

@@ -40,12 +40,16 @@ import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationValue;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.AstVisitor;
+import lombok.ast.Block;
+import lombok.ast.ConstructorDeclaration;
 import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.MethodDeclaration;
 import lombok.ast.Modifiers;
 import lombok.ast.Node;
 import lombok.ast.StrictListAccessor;
 import lombok.ast.StringLiteral;
+import lombok.ast.TypeBody;
 import lombok.ast.VariableDefinition;
 
 /**
@@ -153,11 +157,27 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
             IssueRegistry registry = mContext.getDriver().getRegistry();
             Issue issue = registry.getIssue(id);
             if (issue != null && !issue.getScope().contains(Scope.JAVA_FILE)) {
+                // Ensure that this isn't a field
+                Node parent = node.getParent();
+                while (parent != null) {
+                    if (parent instanceof MethodDeclaration
+                            || parent instanceof ConstructorDeclaration
+                            || parent instanceof Block) {
+                        break;
+                    } else if (parent instanceof TypeBody) { // It's a field
+                        return true;
+                    }
+                    parent = parent.getParent();
+                    if (parent == null) {
+                        return true;
+                    }
+                }
+
                 // This issue doesn't have AST access: annotations are not
                 // available for local variables or parameters
                 mContext.report(ISSUE,mContext.getLocation(node), String.format(
                     "The @SuppresLint annotation cannot be used on a local" +
-                    " variable  with the lint check '%1$s': move out to the " +
+                    " variable with the lint check '%1$s': move out to the " +
                     "surrounding method", id),
                     null);
                 return false;

@@ -280,7 +280,7 @@ public class ClassContext extends Context {
      * Detectors should only call this method if an error applies to the whole class
      * scope and there is no specific method or field that applies to the error.
      * If so, use
-     * {@link #report(Issue, MethodNode, Location, String, Object)} or
+     * {@link #report(Issue, MethodNode, AbstractInsnNode, Location, String, Object)} or
      * {@link #report(Issue, FieldNode, Location, String, Object)}, such that
      * suppress annotations are checked.
      *
@@ -313,7 +313,8 @@ public class ClassContext extends Context {
                             // Found the outer method for this anonymous class; continue
                             // reporting on it (which will also work its way up the parent
                             // class hierarchy)
-                            if (method != null && mDriver.isSuppressed(issue, method)) {
+                            if (method != null && mDriver.isSuppressed(issue, mClassNode, method,
+                                    null)) {
                                 return;
                             }
                             break;
@@ -337,9 +338,18 @@ public class ClassContext extends Context {
      * Reports an issue applicable to a given method node.
      *
      * @param issue the issue to report
-     * @param method the method scope the error applies to. The lint infrastructure
-     *    will check whether there are suppress annotations on this method (or its enclosing
-     *    class) and if so suppress the warning without involving the client.
+     * @param method the method scope the error applies to. The lint
+     *            infrastructure will check whether there are suppress
+     *            annotations on this method (or its enclosing class) and if so
+     *            suppress the warning without involving the client.
+     * @param instruction the instruction within the method the error applies
+     *            to. You cannot place annotations on individual method
+     *            instructions (for example, annotations on local variables are
+     *            allowed, but are not kept in the .class file). However, this
+     *            instruction is needed to handle suppressing errors on field
+     *            initializations; in that case, the errors may be reported in
+     *            the {@code <clinit>} method, but the annotation is found not
+     *            on that method but for the {@link FieldNode}'s.
      * @param location the location of the issue, or null if not known
      * @param message the message for this warning
      * @param data any associated data, or null
@@ -347,10 +357,11 @@ public class ClassContext extends Context {
     public void report(
             @NonNull Issue issue,
             @Nullable MethodNode method,
+            @Nullable AbstractInsnNode instruction,
             @Nullable Location location,
             @NonNull String message,
             @Nullable Object data) {
-        if (method != null && mDriver.isSuppressed(issue, method)) {
+        if (method != null && mDriver.isSuppressed(issue, mClassNode, method, instruction)) {
             return;
         }
         report(issue, location, message, data); // also checks the class node

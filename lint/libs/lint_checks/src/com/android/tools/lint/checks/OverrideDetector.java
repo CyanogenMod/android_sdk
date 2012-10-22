@@ -251,7 +251,8 @@ public class OverrideDetector extends Detector implements ClassScanner {
 
                 String signature = method.name + method.desc;
                 if (methods.containsKey(signature)){
-                    if (method != null && context.getDriver().isSuppressed(ISSUE, method)) {
+                    if (method != null && context.getDriver().isSuppressed(ISSUE, classNode,
+                            method, null)) {
                         Map<String, String> errors = mErrors.get(classNode.name);
                         if (errors != null) {
                             errors.remove(signature);

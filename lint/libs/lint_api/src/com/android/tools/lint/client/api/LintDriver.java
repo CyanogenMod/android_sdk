@@ -60,8 +60,10 @@ import com.google.common.io.Closeables;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
@@ -1800,25 +1802,60 @@ public class LintDriver {
     // pointers, so we have to have multiple methods which pass in each type
     // of node (class, method, field) to be checked.
 
-    // TODO: The Quickfix should look for lint warnings placed *inside* warnings
-    // and warn that they won't apply to checks that are bytecode oriented!
-
     /**
      * Returns whether the given issue is suppressed in the given method.
      *
      * @param issue the issue to be checked, or null to just check for "all"
+     * @param classNode the class containing the issue
      * @param method the method containing the issue
+     * @param instruction the instruction within the method, if any
      * @return true if there is a suppress annotation covering the specific
      *         issue on this method
      */
-    public boolean isSuppressed(@Nullable Issue issue, @NonNull MethodNode method) {
+    public boolean isSuppressed(
+            @Nullable Issue issue,
+            @NonNull ClassNode classNode,
+            @NonNull MethodNode method,
+            @Nullable AbstractInsnNode instruction) {
         if (method.invisibleAnnotations != null) {
             @SuppressWarnings("unchecked")
             List<AnnotationNode> annotations = method.invisibleAnnotations;
             return isSuppressed(issue, annotations);
         }
 
+        // Initializations of fields end up placed in generated methods (<init>
+        // for members and <clinit> for static fields).
+        if (instruction != null && method.name.charAt(0) == '<') {
+            AbstractInsnNode next = LintUtils.getNextInstruction(instruction);
+            if (next != null && next.getType() == AbstractInsnNode.FIELD_INSN) {
+                FieldInsnNode fieldRef = (FieldInsnNode) next;
+                FieldNode field = findField(classNode, fieldRef.owner, fieldRef.name);
+                if (field != null && isSuppressed(issue, field)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
+    }
+
+    @Nullable
+    private FieldNode findField(ClassNode classNode, String owner, String name) {
+        while (classNode != null) {
+            if (owner.equals(classNode.name)) {
+                @SuppressWarnings("rawtypes") // ASM API
+                List fieldList = classNode.fields;
+                for (Object f : fieldList) {
+                    FieldNode field = (FieldNode) f;
+                    if (field.name.equals(name)) {
+                        return field;
+                    }
+                }
+                return null;
+            }
+            classNode = getOuterClassNode(classNode);
+        }
+        return null;
     }
 
     /**
