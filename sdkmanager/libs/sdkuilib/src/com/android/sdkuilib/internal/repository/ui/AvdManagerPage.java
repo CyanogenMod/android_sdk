@@ -19,6 +19,8 @@ package com.android.sdkuilib.internal.repository.ui;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
@@ -110,6 +112,18 @@ public class AvdManagerPage extends Composite
     @Override
     protected void checkSubclass() {
         // Disable the check that prevents subclassing of SWT components
+    }
+
+    public void selectAvd(AvdInfo avdInfo, boolean reloadAvdList) {
+        if (reloadAvdList) {
+            mAvdSelector.refresh(true /*reload*/);
+
+            // Reloading the AVDs created new objects, so the reference to avdInfo
+            // will never be selected. Instead reselect it based on its unique name.
+            AvdManager am = mUpdaterData.getAvdManager();
+            avdInfo = am.getAvd(avdInfo.getName(), false /*validAvdOnly*/);
+        }
+        mAvdSelector.setSelection(avdInfo);
     }
 
     // -- Start of internal part ----------

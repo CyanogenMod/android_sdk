@@ -116,6 +116,9 @@ public class AvdCreationDialog extends GridDialog {
     private Label mStatusIcon;
     private Label mStatusLabel;
 
+    private Device mInitWithDevice;
+    private AvdInfo mCreatedAvd;
+
     /**
      * {@link VerifyListener} for {@link Text} widgets that should only contains
      * numbers.
@@ -133,7 +136,6 @@ public class AvdCreationDialog extends GridDialog {
             }
         }
     };
-    private Device mInitWithDevice;
 
     public AvdCreationDialog(Shell shell,
             AvdManager avdManager,
@@ -163,6 +165,11 @@ public class AvdCreationDialog extends GridDialog {
                 list.add(d);
             }
         }
+    }
+
+    /** Returns the AVD Created, if successful. */
+    public AvdInfo getCreatedAvd() {
+        return mCreatedAvd;
     }
 
     @Override
@@ -994,6 +1001,7 @@ public class AvdCreationDialog extends GridDialog {
                 mAvdInfo != null, // edit existing
                 log);
 
+        mCreatedAvd = avdInfo;
         boolean success = avdInfo != null;
 
         if (log instanceof MessageBoxLog) {

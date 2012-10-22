@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.SdkConstants;
 import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdkuilib.internal.repository.AboutDialog;
 import com.android.sdkuilib.internal.repository.MenuBarWrapper;
@@ -26,6 +27,7 @@ import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.SettingsDialog;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.ui.DeviceManagerPage.IAvdCreatedListener;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
@@ -72,6 +74,7 @@ public class AvdManagerWindowImpl1 {
     protected Shell mShell;
     private AvdManagerPage mAvdPage;
     private SettingsController mSettingsController;
+    private TabFolder mTabFolder;
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -176,18 +179,18 @@ public class AvdManagerWindowImpl1 {
 
     private void createContents() {
 
-        TabFolder tabFolder = new TabFolder(mShell, SWT.NONE);
-        GridDataBuilder.create(tabFolder).fill().grab().hSpan(2);
+        mTabFolder = new TabFolder(mShell, SWT.NONE);
+        GridDataBuilder.create(mTabFolder).fill().grab().hSpan(2);
 
         // avd tab
-        TabItem avdTabItem = new TabItem(tabFolder, SWT.NONE);
+        TabItem avdTabItem = new TabItem(mTabFolder, SWT.NONE);
         avdTabItem.setText("Android Virtual Devices");
-        createAvdTab(tabFolder, avdTabItem);
+        createAvdTab(mTabFolder, avdTabItem);
 
         // device tab
-        TabItem devTabItem = new TabItem(tabFolder, SWT.NONE);
+        TabItem devTabItem = new TabItem(mTabFolder, SWT.NONE);
         devTabItem.setText("Device Definitions");
-        createDeviceTab(tabFolder, devTabItem);
+        createDeviceTab(mTabFolder, devTabItem);
     }
 
     private void createAvdTab(TabFolder tabFolder, TabItem avdTabItem) {
@@ -204,8 +207,19 @@ public class AvdManagerWindowImpl1 {
         devTabItem.setControl(root);
         GridLayoutBuilder.create(root).columns(1);
 
-        DeviceManagerPage container = new DeviceManagerPage(root, SWT.NONE, mUpdaterData, mDeviceManager);
-        GridDataBuilder.create(container).fill().grab();
+        DeviceManagerPage devicePage =
+            new DeviceManagerPage(root, SWT.NONE, mUpdaterData, mDeviceManager);
+        GridDataBuilder.create(devicePage).fill().grab();
+
+        devicePage.setAvdCreatedListener(new IAvdCreatedListener() {
+            @Override
+            public void onAvdCreated(AvdInfo avdInfo) {
+                if (avdInfo != null) {
+                    mTabFolder.setSelection(0);      // display mAvdPage
+                    mAvdPage.selectAvd(avdInfo, true /*reloadAvdList*/);
+                }
+            }
+        });
     }
 
     @SuppressWarnings("unused")
