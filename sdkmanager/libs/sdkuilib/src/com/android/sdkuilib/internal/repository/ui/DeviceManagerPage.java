@@ -90,6 +90,10 @@ import java.util.regex.Pattern;
 public class DeviceManagerPage extends Composite
     implements ISdkChangeListener, DevicesChangeListener, DisposeListener {
 
+    public interface IAvdCreatedListener {
+        public void onAvdCreated(AvdInfo createdAvdInfo);
+    }
+
     private final UpdaterData mUpdaterData;
     private final DeviceManager mDeviceManager;
     private Table mTable;
@@ -104,6 +108,8 @@ public class DeviceManagerPage extends Composite
     private Image mOtherImage;
     private int mImageWidth;
     private boolean mDisableRefresh;
+    private IAvdCreatedListener mAvdCreatedListener;
+
     /**
      * Create the composite.
      * @param parent The parent of the composite.
@@ -123,6 +129,10 @@ public class DeviceManagerPage extends Composite
 
         createContents(this);
         postCreate();  //$hide$
+    }
+
+    public void setAvdCreatedListener(IAvdCreatedListener avdCreatedListener) {
+        mAvdCreatedListener = avdCreatedListener;
     }
 
     private void createContents(Composite parent) {
@@ -201,7 +211,7 @@ public class DeviceManagerPage extends Composite
         mNewAvdButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
-                onNewAvd();
+                onCreateAvd();
             }
         });
 
@@ -702,13 +712,13 @@ public class DeviceManagerPage extends Composite
         }
     }
 
-    private void onNewAvd() {
+    private void onCreateAvd() {
         CellInfo ci = getTableSelection();
         if (ci == null || ci.mDevice == null) {
             return;
         }
 
-        AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(),
+        final AvdCreationDialog dlg = new AvdCreationDialog(mTable.getShell(),
                 mUpdaterData.getAvdManager(),
                 mImageFactory,
                 mUpdaterData.getSdkLog(),
@@ -717,6 +727,10 @@ public class DeviceManagerPage extends Composite
 
         if (dlg.open() == Window.OK) {
             onRefresh();
+
+            if (mAvdCreatedListener != null) {
+                mAvdCreatedListener.onAvdCreated(dlg.getCreatedAvd());
+            }
         }
     }
 
