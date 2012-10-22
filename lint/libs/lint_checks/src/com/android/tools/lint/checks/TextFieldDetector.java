@@ -23,6 +23,7 @@ import static com.android.SdkConstants.ATTR_INPUT_METHOD;
 import static com.android.SdkConstants.ATTR_INPUT_TYPE;
 import static com.android.SdkConstants.ATTR_PASSWORD;
 import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
+import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.EDIT_TEXT;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -89,6 +90,16 @@ public class TextFieldDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
+        String style = element.getAttribute(ATTR_STYLE);
+        if (style != null && !style.isEmpty()) {
+            // The input type might be specified via a style. This will require
+            // us to track these (similar to what is done for the
+            // RequiredAttributeDetector to track layout_width and layout_height
+            // in style declarations). For now, simply ignore these elements
+            // to avoid producing false positives.
+            return;
+        }
+
         Attr inputTypeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_INPUT_TYPE);
         if (inputTypeNode == null &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
