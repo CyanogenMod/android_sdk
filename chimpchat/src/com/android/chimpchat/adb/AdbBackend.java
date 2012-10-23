@@ -38,21 +38,36 @@ public class AdbBackend implements IChimpBackend {
     private static final int CONNECTION_ITERATION_TIMEOUT_MS = 200;
     private final List<IChimpDevice> devices = Lists.newArrayList();
     private final AndroidDebugBridge bridge;
+    private final boolean initAdb;
 
+    /**
+     * Constructs an AdbBackend with default options.
+     */
     public AdbBackend() {
-        // [try to] ensure ADB is running
-        String adbLocation = findAdb();
+        this(null, false);
+    }
 
-        AndroidDebugBridge.init(false /* debugger support */);
+    /**
+     * Constructs an AdbBackend.
+     *
+     * @param adbLocation The location of the adb binary. If null, AdbBackend will
+     *     attempt to find the binary by itself.
+     * @param noInitAdb If true, AdbBackend will not initialize AndroidDebugBridge.
+     */
+    public AdbBackend(String adbLocation, boolean noInitAdb) {
+        this.initAdb = !noInitAdb;
+
+        // [try to] ensure ADB is running
+        if (adbLocation == null) {
+            adbLocation = findAdb();
+        }
+
+        if (initAdb) {
+            AndroidDebugBridge.init(false /* debugger support */);
+        }
 
         bridge = AndroidDebugBridge.createBridge(
                 adbLocation, true /* forceNewBridge */);
-    }
-
-    public AdbBackend(String location) {
-        AndroidDebugBridge.init(false /* debugger support */);
-        bridge = AndroidDebugBridge.createBridge(location,
-                                                 true /* force new bridge */);
     }
 
     private String findAdb() {
@@ -126,6 +141,8 @@ public class AdbBackend implements IChimpBackend {
         for (IChimpDevice device : devices) {
             device.dispose();
         }
-        AndroidDebugBridge.terminate();
+        if (initAdb) {
+            AndroidDebugBridge.terminate();
+        }
     }
 }
