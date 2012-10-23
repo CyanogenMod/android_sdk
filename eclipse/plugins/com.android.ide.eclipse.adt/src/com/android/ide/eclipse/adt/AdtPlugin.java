@@ -265,16 +265,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         // Listen on resource file edits for updates to file inclusion
         IncludeFinder.start();
-
-        // Parse the SDK content.
-        // This is deferred in separate jobs to avoid blocking the bundle start.
-        final boolean isSdkLocationValid = checkSdkLocationAndId();
-        if (isSdkLocationValid) {
-            // parse the SDK resources.
-            // Wait 2 seconds before starting the job. This leaves some time to the
-            // other bundles to initialize.
-            parseSdkContent(2000 /*milliseconds*/);
-        }
     }
 
     /*
@@ -303,6 +293,16 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     /** Called when the workbench has been started */
     public void workbenchStarted() {
+        // Parse the SDK content.
+        // This is deferred in separate jobs to avoid blocking the bundle start.
+        final boolean isSdkLocationValid = checkSdkLocationAndId();
+        if (isSdkLocationValid) {
+            // parse the SDK resources.
+            // Wait 2 seconds before starting the job. This leaves some time to the
+            // other bundles to initialize.
+            parseSdkContent(2000 /*milliseconds*/);
+        }
+
         Display display = getDisplay();
         mRed = new Color(display, 0xFF, 0x00, 0x00);
 
