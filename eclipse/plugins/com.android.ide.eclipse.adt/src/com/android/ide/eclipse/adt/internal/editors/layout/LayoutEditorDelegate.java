@@ -261,6 +261,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             if (input instanceof FileEditorInput) {
                 FileEditorInput fileInput = (FileEditorInput)input;
                 editedFile = fileInput.getFile();
+                if (!editedFile.isAccessible()) {
+                    return;
+                }
             } else {
                 AdtPlugin.log(IStatus.ERROR,
                         "Input is not of type FileEditorInput: %1$s",  //$NON-NLS-1$
