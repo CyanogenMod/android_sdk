@@ -85,10 +85,19 @@ $(5): $(ADT_IDE_JAVA_TARGET)
 	rm  -f $(V) $(5) && \
 	mkdir -p $(4) && \
 	unzip -q $(3) -d $(4) && \
+	if [[ "$(1)" == "macosx.cocoa" ]]; then \
+	  mv $(4)/eclipse/eclipse.app/Contents/MacOS/eclipse.ini $(4)/eclipse/Eclipse.app/Contents/MacOS && \
+	  rm -rf $(4)/eclipse/eclipse.app && \
+	  rm -r  $(4)/eclipse/eclipse && \
+	  chmod +x $(4)/eclipse/Eclipse.app/Contents/MacOS/eclipse && \
+	  cp $(4)/eclipse/plugins/com.android.ide.eclipse.adt.package*/icons/adt.icns \
+	     $(4)/eclipse/Eclipse.app/Contents/Resources && \
+	  sed -i -e 's/Eclipse.icns/adt.icns/g' $(4)/eclipse/Eclipse.app/Contents/MacOS/eclipse.ini; \
+	fi && \
 	sed -i -e 's/org.eclipse.platform/com.android.ide.eclipse.adt.package.product/g' \
-	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),eclipse.app/Contents/MacOS/)eclipse.ini && \
+	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),Eclipse.app/Contents/MacOS/)eclipse.ini && \
 	echo "-Declipse.buildId=v$(ADT_VERSION)-$(ADT_IDE_ZIP_QUALIFIER)" >> \
-	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),eclipse.app/Contents/MacOS/)eclipse.ini && \
+	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),Eclipse.app/Contents/MacOS/)eclipse.ini && \
 	sed -i -e "s/buildId/v$(ADT_VERSION)-$(ADT_IDE_ZIP_QUALIFIER)/g" \
 	  $(4)/eclipse/plugins/com.android.ide.eclipse.adt.package_*/about.mappings && \
 	sed -i -e 's/org.eclipse.platform.ide/com.android.ide.eclipse.adt.package.product/g' \
