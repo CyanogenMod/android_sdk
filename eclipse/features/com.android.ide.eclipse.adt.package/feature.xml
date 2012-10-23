@@ -22,35 +22,6 @@
       <update label="Android Update Site" url="https://dl-ssl.google.com/android/eclipse/"/>
    </url>
 
-   <includes
-         id="org.eclipse.platform"
-         version="0.0.0"
-         search-location="both"/>
-
-   <includes
-         id="com.android.ide.eclipse.ddms"
-         version="0.0.0"/>
-
-   <includes
-         id="com.android.ide.eclipse.adt"
-         version="0.0.0"/>
-
-   <includes
-         id="com.android.ide.eclipse.gldebugger"
-         version="0.0.0"/>
-
-   <includes
-         id="com.android.ide.eclipse.hierarchyviewer"
-         version="0.0.0"/>
-
-   <includes
-         id="com.android.ide.eclipse.ndk"
-         version="0.0.0"/>
-
-   <includes
-         id="com.android.ide.eclipse.traceview"
-         version="0.0.0"/>
-
    <requires>
       <import feature="org.eclipse.platform"/>
       <import plugin="org.eclipse.equinox.app"/>
@@ -82,15 +53,9 @@
       <import plugin="org.eclipse.ltk.core.refactoring"/>
       <import plugin="org.eclipse.ltk.ui.refactoring"/>
       <import plugin="org.eclipse.core.expressions"/>
-      <import feature="org.eclipse.platform"/>
-      <import feature="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.platform"/>
-      <import feature="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.equinox.p2.user.ui"/>
       <import feature="org.eclipse.help"/>
-      <import feature="org.eclipse.platform"/>
       <import feature="org.eclipse.rcp" version="3.7.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.wst.common_core.feature"/>
       <import feature="org.eclipse.wst.common_ui.feature"/>
       <import feature="org.eclipse.wst.xml_core.feature"/>
@@ -106,12 +71,12 @@
       <import plugin="org.eclipse.cdt.dsf.gdb"/>
       <import plugin="org.eclipse.cdt.dsf.gdb.ui"/>
       <import plugin="org.eclipse.cdt.launch"/>
+      <import feature="com.android.ide.eclipse.ddms"            version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.adt"             version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.gldebugger"      version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.hierarchyviewer" version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ndk"             version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.traceview"       version="21.0.0" match="greaterOrEqual" />
    </requires>
-
-   <plugin
-         id="com.android.ide.eclipse.adt.package"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
 
 </feature>
