@@ -23,8 +23,8 @@ include $(BUILD_SYSTEM)/base_rules.mk
 
 ADT_IDE_MODULE_DEPS := $(TOPDIR)sdk/adtproductbuild/$(LOCAL_MODULE)
 
-ADT_IDE_BUILD_LOG    := $(TOPDIR)out/host/eclipse/adtproduct/build/adtproduct.log
-ADT_IDE_ARTIFACT_DIR := $(TOPDIR)out/host/eclipse/adtproduct/build/I.RcpBuild
+ADT_IDE_BUILD_LOG    := $(TOPDIR)out/host/eclipse/adtproduct/adtproduct.log
+ADT_IDE_ARTIFACT_DIR := $(TOPDIR)out/host/eclipse/adtproduct/pbuild/I.RcpBuild
 ADT_IDE_RELEASE_DIR  := $(TOPDIR)out/host/eclipse/adtproduct/release
 
 ADT_IDE_JAVA_LIBS := $(shell $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -d)
@@ -45,7 +45,8 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 		echo "*** [adt_eclipse_ide] ERROR: Missing prebuilts/eclipse-build-deps directory. Make sure to run 'repo init -g all;repo sync' first."; \
 		exit 1; \
 	fi
-	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/build/plugins
+	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/fbuild/plugins
+	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/pbuild/plugins
 	$(hide)mkdir -p $(dir $@)
 	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/adtproductbuild && \
@@ -53,8 +54,8 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 		( java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
 			org.eclipse.equinox.launcher.Main \
 			-application org.eclipse.ant.core.antRunner \
-			-configuration ../../out/host/eclipse/adtproduct/build/configuration \
-			-data ../../out/host/eclipse/adtproduct/workspace \
+			-configuration ../../out/host/eclipse/adtproduct/ant-configuration \
+			-data ../../out/host/eclipse/adtproduct/ant-workspace \
 			2>&1 && \
 		  mv -f ../../$(ADT_IDE_BUILD_LOG) ../../$(ADT_IDE_BUILD_LOG).1 ) \
 		| tee ../../$(ADT_IDE_BUILD_LOG) \

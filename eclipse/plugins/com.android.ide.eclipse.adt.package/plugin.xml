@@ -41,7 +41,7 @@
          point="org.eclipse.ui.intro">
       <intro
             class="org.eclipse.ui.intro.config.CustomizableIntroPart"
-            icon="$nl$/icons/image_obj.gif"
+            icon="icons/adt16.png"
             id="org.eclipse.intro.minimal"
             label="Android IDE"/>
    </extension>
