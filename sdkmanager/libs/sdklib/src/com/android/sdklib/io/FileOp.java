@@ -18,6 +18,7 @@ package com.android.sdklib.io;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.google.common.io.Closeables;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -346,6 +347,7 @@ public class FileOp implements IFileOp {
         return new FileOutputStream(file);
     }
 
+    @SuppressWarnings("resource") // Eclipse doesn't understand Closeables.closeQuietly
     @Override
     public @NonNull Properties loadProperties(@NonNull File file) {
         Properties props = new Properties();
@@ -355,15 +357,12 @@ public class FileOp implements IFileOp {
             props.load(fis);
         } catch (IOException ignore) {
         } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (Exception ignore) {}
-            }
+            Closeables.closeQuietly(fis);
         }
         return props;
     }
 
+    @SuppressWarnings("resource") // Eclipse doesn't understand Closeables.closeQuietly
     @Override
     public boolean saveProperties(@NonNull File file, @NonNull Properties props,
             @NonNull String comments) {
@@ -375,12 +374,7 @@ public class FileOp implements IFileOp {
             return true;
         } catch (IOException ignore) {
         } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                }
-            }
+            Closeables.closeQuietly(fos);
         }
 
         return false;

@@ -81,11 +81,13 @@ public class DdmsPreferenceStore {
                     + File.separator + ".ddmsrc";                               //$NON-NLS-1$
                 File oldPrefFile = new File(oldPrefPath);
                 if (oldPrefFile.isFile()) {
+                    FileOutputStream fileOutputStream = null;
                     try {
                         PreferenceStore oldStore = new PreferenceStore(oldPrefPath);
                         oldStore.load();
 
-                        oldStore.save(new FileOutputStream(rcFileName), "");    //$NON-NLS-1$
+                        fileOutputStream = new FileOutputStream(rcFileName);
+                        oldStore.save(fileOutputStream, "");    //$NON-NLS-1$
                         oldPrefFile.delete();
 
                         PreferenceStore newStore = new PreferenceStore(rcFileName);
@@ -94,6 +96,14 @@ public class DdmsPreferenceStore {
                     } catch (IOException e) {
                         // create a new empty store.
                         sPrefStore = new PreferenceStore(rcFileName);
+                    } finally {
+                        if (fileOutputStream != null) {
+                            try {
+                                fileOutputStream.close();
+                            } catch (IOException e) {
+                                // pass
+                            }
+                        }
                     }
                 } else {
                     sPrefStore = new PreferenceStore(rcFileName);

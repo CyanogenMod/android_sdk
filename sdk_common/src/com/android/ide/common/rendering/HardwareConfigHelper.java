@@ -16,6 +16,7 @@
 
 package com.android.ide.common.rendering;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.devices.ButtonType;
@@ -34,8 +35,8 @@ import com.android.sdklib.devices.Screen;
  */
 public class HardwareConfigHelper {
 
-    private final Device mDevice;
-    private ScreenOrientation mScreenOrientation = ScreenOrientation.PORTRAIT;
+    private final @NonNull Device mDevice;
+    private @NonNull ScreenOrientation mScreenOrientation = ScreenOrientation.PORTRAIT;
 
     // optional
     private int mMaxRenderWidth = -1;
@@ -47,7 +48,7 @@ public class HardwareConfigHelper {
      * Creates a new helper for a given device.
      * @param device the device to provide the base data.
      */
-    public HardwareConfigHelper(Device device) {
+    public HardwareConfigHelper(@NonNull Device device) {
         mDevice = device;
     }
 
@@ -56,7 +57,8 @@ public class HardwareConfigHelper {
      * @param screenOrientation the orientation.
      * @return this (such that chains of setters can be stringed together)
      */
-    public HardwareConfigHelper setOrientation(ScreenOrientation screenOrientation) {
+    @NonNull
+    public HardwareConfigHelper setOrientation(@NonNull ScreenOrientation screenOrientation) {
         mScreenOrientation = screenOrientation;
         return this;
     }
@@ -71,6 +73,7 @@ public class HardwareConfigHelper {
      * @param overrideRenderHeight the height in pixels of the layout to be rendered
      * @return this (such that chains of setters can be stringed together)
      */
+    @NonNull
     public HardwareConfigHelper setOverrideRenderSize(int overrideRenderWidth,
             int overrideRenderHeight) {
         mOverrideRenderWidth = overrideRenderWidth;
@@ -88,6 +91,7 @@ public class HardwareConfigHelper {
      * @param maxRenderHeight the max height in pixels of the layout to be rendered
      * @return this (such that chains of setters can be stringed together)
      */
+    @NonNull
     public HardwareConfigHelper setMaxRenderSize(int maxRenderWidth, int maxRenderHeight) {
         mMaxRenderWidth = maxRenderWidth;
         mMaxRenderHeight = maxRenderHeight;
@@ -98,6 +102,7 @@ public class HardwareConfigHelper {
      * Creates and returns the HardwareConfig object.
      * @return the config
      */
+    @NonNull
     public HardwareConfig getConfig() {
         Screen screen = mDevice.getDefaultHardware().getScreen();
 

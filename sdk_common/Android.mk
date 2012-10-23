@@ -22,6 +22,7 @@ LOCAL_JAVA_LIBRARIES := \
 	layoutlib_api \
 	common \
 	kxml2-2.3.0 \
+	guava-tools \
 	sdklib
 
 LOCAL_MODULE := sdk_common
