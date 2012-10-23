@@ -505,11 +505,17 @@ public class RenderPreview implements IJobChangeListener {
 
     /** Render immediately */
     private void renderSync() {
+        GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
+        if (editor.getReadyLayoutLib(false /*displayError*/) == null) {
+            // Don't attempt to render when there is no ready layout library: most likely
+            // the targets are loading/reloading.
+            return;
+        }
+
         disposeThumbnail();
 
         Configuration configuration =
                 mAlternateInput != null ? mAlternateConfiguration : mConfiguration;
-        GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
         ResourceResolver resolver = getResourceResolver(configuration);
         RenderService renderService = RenderService.create(editor, configuration, resolver);
 
