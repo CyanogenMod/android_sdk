@@ -537,6 +537,8 @@ public class ConfigurationChooser extends Composite
                     selectConfiguration(mConfiguration.getEditedConfig());
                     updateActivity();
                 }
+            } else if (sdkStatus == LoadStatus.FAILED) {
+                setVisible(true);
             }
         } finally {
             mDisableUpdates--;
@@ -808,6 +810,8 @@ public class ConfigurationChooser extends Composite
 
                     // compute the final current config
                     mConfiguration.syncFolderConfig();
+                } else if (targetStatus == LoadStatus.FAILED) {
+                    setVisible(true);
                 }
             } finally {
                 mDisableUpdates--;
