@@ -515,7 +515,8 @@ public class RenderPreview implements IJobChangeListener {
         disposeThumbnail();
 
         Configuration configuration =
-                mAlternateInput != null ? mAlternateConfiguration : mConfiguration;
+                mAlternateInput != null && mAlternateConfiguration != null
+                ? mAlternateConfiguration : mConfiguration;
         ResourceResolver resolver = getResourceResolver(configuration);
         RenderService renderService = RenderService.create(editor, configuration, resolver);
 
