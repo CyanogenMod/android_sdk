@@ -1256,7 +1256,7 @@
 
         <if condition="${emma.enabled}">
             <then>
-                <echo>WARNING: Code Coverage is currently only supported on the emulator and rooted devices.</echo>
+                <echo>Running tests...</echo>
                 <run-tests-helper emma.enabled="true">
                     <extra-instrument-args>
                         <arg value="-e" />
@@ -1264,6 +1264,17 @@
                            <arg value="${emma.dump.file}" />
                     </extra-instrument-args>
                 </run-tests-helper>
+
+                <echo level="info">Settting permission to download the coverage file...</echo>
+                <exec executable="${adb}" failonerror="true">
+                    <arg line="${adb.device.arg}" />
+                    <arg value="shell" />
+                    <arg value="run-as" />
+                    <arg value="${tested.project.app.package}" />
+                    <arg value="chmod" />
+                    <arg value="644" />
+                    <arg value="${emma.dump.file}" />
+                </exec>
                 <echo level="info">Downloading coverage file into project directory...</echo>
                 <exec executable="${adb}" failonerror="true">
                     <arg line="${adb.device.arg}" />
@@ -1279,7 +1290,6 @@
                         <identitymapper/>
                     </firstmatchmapper>
                 </pathconvert>
-
 
                 <emma>
                     <report sourcepath="${tested.project.source.absolute.dir}:${tested.project.lib.source.path.value}"
