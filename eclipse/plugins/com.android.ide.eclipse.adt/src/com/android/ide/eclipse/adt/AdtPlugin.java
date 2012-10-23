@@ -46,7 +46,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
-import com.android.ide.eclipse.base.InstallDetails;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
@@ -267,16 +266,14 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // Listen on resource file edits for updates to file inclusion
         IncludeFinder.start();
 
-        if (!InstallDetails.isAndroidIdePackage()) {
-            // Parse the SDK content.
-            // This is deferred in separate jobs to avoid blocking the bundle start.
-            final boolean isSdkLocationValid = checkSdkLocationAndId();
-            if (isSdkLocationValid) {
-                // parse the SDK resources.
-                // Wait 2 seconds before starting the job. This leaves some time to the
-                // other bundles to initialize.
-                parseSdkContent(2000 /*milliseconds*/);
-            }
+        // Parse the SDK content.
+        // This is deferred in separate jobs to avoid blocking the bundle start.
+        final boolean isSdkLocationValid = checkSdkLocationAndId();
+        if (isSdkLocationValid) {
+            // parse the SDK resources.
+            // Wait 2 seconds before starting the job. This leaves some time to the
+            // other bundles to initialize.
+            parseSdkContent(2000 /*milliseconds*/);
         }
     }
 
@@ -1369,10 +1366,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     /**
      * Parses the SDK resources.
-     *
-     * @param delay the delay to wait before starting the parsing job
      */
-    public void parseSdkContent(long delay) {
+    private void parseSdkContent(long delay) {
         // Perform the update in a thread (here an Eclipse runtime job)
         // since this should never block the caller (especially the start method)
         Job job = new Job(Messages.AdtPlugin_Android_SDK_Content_Loader) {
