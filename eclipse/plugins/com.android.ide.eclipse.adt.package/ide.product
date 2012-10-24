@@ -20,7 +20,8 @@
       location="com.android.ide.eclipse.adt.package" />
    <launcher>
       <solaris/>
-      <win useIco="false">
+      <win useIco="true">
+         <ico path="/plugin-adt-package/icons/adt.ico"/>
          <bmp/>
       </win>
    </launcher>
