@@ -1282,7 +1282,6 @@
                     <arg value="${emma.dump.file}" />
                     <arg path="${out.absolute.dir}/coverage.ec" />
                 </exec>
-                <echo level="info">Extracting coverage report...</echo>
 
                 <pathconvert property="tested.project.lib.source.path.value" refid="tested.project.lib.source.path">
                     <firstmatchmapper>
@@ -1291,6 +1290,7 @@
                     </firstmatchmapper>
                 </pathconvert>
 
+                <echo level="info">Extracting coverage report...</echo>
                 <emma>
                     <report sourcepath="${tested.project.source.absolute.dir}:${tested.project.lib.source.path.value}"
                             verbosity="${verbosity}">
@@ -1304,6 +1304,14 @@
                 <echo level="info">Cleaning up temporary files...</echo>
                 <delete file="${out.absolute.dir}/coverage.ec" />
                 <delete file="${out.absolute.dir}/coverage.em" />
+                <exec executable="${adb}" failonerror="true">
+                    <arg line="${adb.device.arg}" />
+                    <arg value="shell" />
+                    <arg value="run-as" />
+                    <arg value="${tested.project.app.package}" />
+                    <arg value="rm" />
+                    <arg value="${emma.dump.file}" />
+                </exec>
                 <echo level="info">Saving the report file in ${out.absolute.dir}/coverage.html</echo>
             </then>
             <else>
