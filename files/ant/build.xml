@@ -1300,11 +1300,13 @@
                         <infileset file="${tested.project.out.absolute.dir}/coverage.em" />
                         <!-- TODO: reports in other, indicated by user formats -->
                         <html outfile="${out.absolute.dir}/coverage.html" />
+                        <txt outfile="${out.absolute.dir}/coverage.txt" />
+                        <xml outfile="${out.absolute.dir}/coverage.xml" />
                    </report>
                 </emma>
                 <echo level="info">Cleaning up temporary files...</echo>
                 <delete file="${out.absolute.dir}/coverage.ec" />
-                <delete file="${out.absolute.dir}/coverage.em" />
+                <delete file="${tested.project.out.absolute.dir}/coverage.em" />
                 <exec executable="${adb}" failonerror="true">
                     <arg line="${adb.device.arg}" />
                     <arg value="shell" />
@@ -1313,7 +1315,7 @@
                     <arg value="rm" />
                     <arg value="${emma.dump.file}" />
                 </exec>
-                <echo level="info">Saving the report file in ${out.absolute.dir}/coverage.html</echo>
+                <echo level="info">Saving the coverage reports in ${out.absolute.dir}</echo>
             </then>
             <else>
                 <run-tests-helper />
