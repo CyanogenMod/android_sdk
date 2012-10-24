@@ -384,7 +384,10 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
                 for (IResource member : members) {
                     if (member.getType() == IResource.FILE &&
                             SdkConstants.EXT_JAR.equalsIgnoreCase(member.getFileExtension())) {
-                        jarFiles.add(member.getLocation().toFile());
+                        IPath location = member.getLocation();
+                        if (location != null) {
+                            jarFiles.add(location.toFile());
+                        }
                     }
                 }
             } catch (CoreException e) {
