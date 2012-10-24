@@ -71,8 +71,11 @@ public class AdtStartup implements IStartup, IWindowListener {
 
     @Override
     public void earlyStartup() {
-        if (InstallDetails.isAndroidIdePackage()) {
-            useBundledSdk();
+        if (!isSdkSpecified()) {
+            File bundledSdk = getBundledSdk();
+            if (bundledSdk != null) {
+                AdtPrefs.getPrefs().setSdkLocation(bundledSdk);
+            }
         }
 
         if (isFirstTime()) {
@@ -88,30 +91,34 @@ public class AdtStartup implements IStartup, IWindowListener {
         AdtPlugin.getDefault().workbenchStarted();
     }
 
-    private void useBundledSdk() {
+    private boolean isSdkSpecified() {
         String osSdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
+        return (osSdkFolder != null && !osSdkFolder.isEmpty());
+    }
 
-        // sdk path is already set
-        if (osSdkFolder != null && osSdkFolder.length() > 0) {
-            return;
-        }
-
-        // The Android IDE bundle is structured as follows:
-        // root
-        //    |--eclipse
-        //    |--sdk
-        // So use the SDK folder that is
+    /**
+     * Returns the path to the bundled SDK if this is part of the ADT package.
+     * The ADT package has the following structure:
+     *   root
+     *      |--eclipse
+     *      |--sdk
+     * @return path to bundled SDK, null if no valid bundled SDK detected.
+     */
+    private File getBundledSdk() {
         Location install = Platform.getInstallLocation();
         if (install != null && install.getURL() != null) {
-            String toolsFolder = new File(install.getURL().getFile()).getParent();
+            File toolsFolder = new File(install.getURL().getFile()).getParentFile();
             if (toolsFolder != null) {
-                String osSdkPath = toolsFolder + File.separator + "sdk";
-                if (AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
-                                new SdkValidator())) {
-                    AdtPrefs.getPrefs().setSdkLocation(new File(osSdkPath));
+                File sdkFolder = new File(toolsFolder, "sdk");
+                if (sdkFolder.exists() && AdtPlugin.getDefault().checkSdkLocationAndId(
+                        sdkFolder.getAbsolutePath(),
+                        new SdkValidator())) {
+                    return sdkFolder;
                 }
             }
         }
+
+        return null;
     }
 
     private boolean isFirstTime() {
