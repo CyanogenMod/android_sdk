@@ -1292,6 +1292,7 @@
 
                 <echo level="info">Extracting coverage report...</echo>
                 <emma>
+                    <property name="report.html.out.encoding" value="UTF-8" />
                     <report sourcepath="${tested.project.source.absolute.dir}:${tested.project.lib.source.path.value}"
                             verbosity="${verbosity}">
                         <!-- TODO: report.dir or something like should be introduced if necessary -->
