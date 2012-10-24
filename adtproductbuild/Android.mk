@@ -108,7 +108,8 @@ $(5): $(ADT_IDE_JAVA_TARGET)
 	  chmod +x $(4)/eclipse/Eclipse.app/Contents/MacOS/eclipse && \
 	  cp $(4)/eclipse/plugins/com.android.ide.eclipse.adt.package*/icons/adt.icns \
 	     $(4)/eclipse/Eclipse.app/Contents/Resources && \
-	  sed -i -e 's/Eclipse.icns/adt.icns/g' $(4)/eclipse/Eclipse.app/Contents/MacOS/eclipse.ini; \
+	  sed -i -e 's/Eclipse.icns/adt.icns/g' $(4)/eclipse/Eclipse.app/Contents/MacOS/eclipse.ini && \
+	  sed -i -e 's/Eclipse.icns/adt.icns/g' $(4)/eclipse/Eclipse.app/Contents/Info.plist ; \
 	fi && \
 	sed -i -e 's/org.eclipse.platform/com.android.ide.eclipse.adt.package.product/g' \
 	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),Eclipse.app/Contents/MacOS/)eclipse.ini && \
