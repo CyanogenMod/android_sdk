@@ -240,13 +240,15 @@ public class DeviceManagerPage extends Composite
         new Label(legend, SWT.NONE).setText("A user-created device definition.");
         new Label(legend, SWT.NONE).setImage(mGenericImage);
         new Label(legend, SWT.NONE).setText("A generic device definition.");
-        new Label(legend, SWT.NONE).setImage(mOtherImage);
+        Label icon = new Label(legend, SWT.NONE);
+        icon.setImage(mOtherImage);
         Label l = new Label(legend, SWT.NONE);
         l.setText("A manufacturer-specific device definition.");
         GridData gd;
         l.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 3;
-
+        icon.setVisible(false);
+        l.setVisible(false);
 
         // create the table columns
         final TableColumn column0 = new TableColumn(mTable, SWT.NONE);
