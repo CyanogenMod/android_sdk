@@ -525,14 +525,17 @@ public class DeviceManagerPage extends Composite
             sb.append(name);
             int pos1 = sb.length();
 
-            String manu = device.getManufacturer();
+            String manufacturer = device.getManufacturer();
+            String manu = manufacturer;
             if (isUser) {
                 item.setImage(mUserImage);
             } else if (GENERIC.equals(manu)) {
                 item.setImage(mGenericImage);
             } else {
                 item.setImage(mOtherImage);
-                sb.append("  by ").append(device.getManufacturer());
+                if (!manufacturer.contains(NEXUS)) {
+                    sb.append("  by ").append(manufacturer);
+                }
             }
 
             Hardware hw = device.getDefaultHardware();
@@ -723,7 +726,7 @@ public class DeviceManagerPage extends Composite
                 mImageFactory,
                 mUpdaterData.getSdkLog(),
                 null);
-        dlg.setlectInitialDevice(ci.mDevice);
+        dlg.selectInitialDevice(ci.mDevice);
 
         if (dlg.open() == Window.OK) {
             onRefresh();
