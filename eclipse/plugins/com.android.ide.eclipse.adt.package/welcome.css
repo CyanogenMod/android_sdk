@@ -1,0 +1,176 @@
+/* stylesheet for ADT welcome page */
+
+html,body {
+  background-color:#F9F9F9;
+  font:14px/19px sans-serif;
+  color: #222
+  margin:0;
+  padding:0;}
+
+body {
+  padding:15px;
+}
+
+a:link, a:visited {
+  color: #258aaf;
+  text-decoration: none;
+}
+a:focus, a:hover, a:active {
+  color: #33B5E5;
+  text-decoration: none;
+}
+strong, b {
+  font-weight:bold;
+  color: #222;
+}
+img {
+  border: none; }
+
+
+h1, h2 {
+    line-height: 32px;
+}
+h1 {
+    color:#33B5E5;
+    font-size: 28px;
+    margin: 10px 0 0;
+    padding:0;
+}
+h2 {
+    color:#33B5E5;
+    font-size: 20px;
+    margin: 20px 0 20px;
+    padding:0;
+}
+h3 {
+    color:#33B5E5;
+    font-size: 18px;
+}
+
+
+div.feature-box,
+a:link div.feature-box,
+a:visited div.feature-box {
+  margin: 20px 0 0;
+  padding: 15px 0;
+  width:100%;
+  border:1px solid transparent;
+  background-color: rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: 3px 3px 12px #aaa;
+  -webkit-box-shadow: 3px 3px 12px #aaa;
+  box-shadow: 3px 3px 12px #aaa;
+}
+
+a:hover div.feature-box {
+  border:1px solid #33B5E5;
+}
+a:active div.feature-box {
+  -moz-box-shadow: 1px 1px 12px #aaa;
+  -webkit-box-shadow: 1px 1px 12px #aaa;
+  box-shadow: 1px 1px 12px #aaa;
+}
+div.feature-box > * {
+  margin:15px;
+}
+div.feature-box h2,
+div.feature-box h3 {
+  color:#33B5E5;
+  margin-top:0;
+}
+div.feature-box p {
+  color:#222;
+}
+
+
+
+
+
+
+
+/********** LAYOUT **************/
+
+.wrap {
+	margin: 0 auto;
+	width: 100%;
+	min-width:600px;
+	max-width:900px;
+	clear: both;
+}
+.cols {
+    height: 1%;
+    margin: 0 -1.533742331288343558282%;
+    width: 103.06748466257669%}
+*+html .cols {
+    margin-bottom: 20px;
+}
+.cols:after {
+    clear: both;
+    content: ' ';
+    display: block;
+    height: 0;
+    visibility: hidden;
+}
+.col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12,
+.col-13, .col-14, .col-15, .col-16 {
+    float: left;
+    margin: 0 1.2% 20px 1.7%;
+}
+* html .col-1, * html .col-2, * html .col-3, * html .col-4, * html .col-5, * html .col-6, * html
+.col-7, * html .col-8, * html .col-9, * html .col-10, * html .col-11, * html .col-12, * html
+.col-13, * html .col-14, * html .col-15, * html .col-16  {
+    margin: 0;
+    margin: 0 1.2% 20px 1.7%;
+}
+[dir='rtl'] .col-1, [dir='rtl'] .col-2, [dir='rtl'] .col-3, [dir='rtl'] .col-4, [dir='rtl'] .col-5,
+[dir='rtl'] .col-6, [dir='rtl'] .col-7, [dir='rtl'] .col-8, [dir='rtl'] .col-9, [dir='rtl'] .col-10,
+[dir='rtl'] .col-11, [dir='rtl'] .col-12 {
+    float: right;
+}
+.col-1 {
+    width: 4.16666666666667%;
+}
+.col-2 {
+    width: 10.4166666666667%;
+}
+.col-3 {
+    width: 16.6666666666667%;
+}
+.col-4 {
+    width: 22.9166666666667%;
+}
+.col-5 {
+    width: 29.1666666666667%;
+}
+.col-6 {
+    width: 35.4166666666667%;
+}
+.col-7 {
+    width: 41.6666666666667%;
+}
+.col-8 {
+    width: 47.9166666666667%;
+}
+.col-9 {
+    width: 55.3333333333333%;
+}
+.col-10 {
+    width: 60.4166666666667%;
+}
+.col-11 {
+    width: 66.6666666666667%;
+}
+.col-12 {
+    width: 72.9166666666667%;
+}
+.col-13 {
+    width: 79.1666666666667%;
+}
+.col-14 {
+    width: 85.4166666666667%;
+}
+.col-15 {
+    width: 91.6666666666667%;
+}
+.col-16 {
+    width: 97.9166666666667%;
+}
