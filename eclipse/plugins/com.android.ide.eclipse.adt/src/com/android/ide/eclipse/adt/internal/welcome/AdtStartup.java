@@ -78,11 +78,14 @@ public class AdtStartup implements IStartup, IWindowListener {
             }
         }
 
-        if (isFirstTime()) {
-            showWelcomeWizard();
-            // Usage statistics are sent after the wizard has run asynchronously (provided the
-            // user opted in)
-        } else if (mStore.isPingOptIn()) {
+        boolean showSdkInstallationPage = !isSdkSpecified() && isFirstTime();
+        boolean showOptInDialogPage = !mStore.hasPingId();
+
+        if (showSdkInstallationPage || showOptInDialogPage) {
+            showWelcomeWizard(showSdkInstallationPage, showOptInDialogPage);
+        }
+
+        if (mStore.isPingOptIn()) {
             sendUsageStats();
         }
 
@@ -122,13 +125,6 @@ public class AdtStartup implements IStartup, IWindowListener {
     }
 
     private boolean isFirstTime() {
-        // If we already have a known SDK location in our workspace then we know this
-        // is not the first time this user is running ADT.
-        String osSdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
-        if (osSdkFolder != null && osSdkFolder.length() > 0) {
-            return false;
-        }
-
         for (int i = 0; i < 2; i++) {
             String osSdkPath = null;
 
@@ -258,14 +254,16 @@ public class AdtStartup implements IStartup, IWindowListener {
         });
     }
 
-    private void showWelcomeWizard() {
+    private void showWelcomeWizard(final boolean showSdkInstallPage,
+            final boolean showUsageOptInPage) {
         final IWorkbench workbench = PlatformUI.getWorkbench();
         workbench.getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
                 IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
                 if (window != null) {
-                    WelcomeWizard wizard = new WelcomeWizard(mStore);
+                    WelcomeWizard wizard = new WelcomeWizard(mStore, showSdkInstallPage,
+                            showUsageOptInPage);
                     WizardDialog dialog = new WizardDialog(window.getShell(), wizard);
                     dialog.open();
                 }
