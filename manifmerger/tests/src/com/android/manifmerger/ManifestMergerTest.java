@@ -177,4 +177,12 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
     public void test69_remove_uses() throws Exception {
         processTestFiles();
     }
+
+    public void test70_expand_fqcns() throws Exception {
+        processTestFiles();
+    }
+
+    public void test71_prefixes_enable_extractprefix() throws Exception {
+        processTestFiles();
+    }
 }

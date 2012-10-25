@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_FTL;
 import static com.android.SdkConstants.DOT_JAVA;
@@ -798,12 +799,28 @@ class TemplateHandler {
     private boolean mergeManifest(Document currentManifest, Document fragment) {
         // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
         // and maintain error markers.
+
+        // Transfer package element from manifest to merged in root; required by
+        // manifest merger
+        Element fragmentRoot = fragment.getDocumentElement();
+        Element manifestRoot = currentManifest.getDocumentElement();
+        if (fragmentRoot == null || manifestRoot == null) {
+            return false;
+        }
+        String pkg = fragmentRoot.getAttribute(ATTR_PACKAGE);
+        if (pkg == null || pkg.isEmpty()) {
+            pkg = manifestRoot.getAttribute(ATTR_PACKAGE);
+            if (pkg != null && !pkg.isEmpty()) {
+                fragmentRoot.setAttribute(ATTR_PACKAGE, pkg);
+            }
+        }
+
         ManifestMerger merger = new ManifestMerger(
                 MergerLog.wrapSdkLog(AdtPlugin.getDefault()),
-                new AdtManifestMergeCallback());
+                new AdtManifestMergeCallback()).setExtractPackagePrefix(true);
         return currentManifest != null &&
-               fragment != null &&
-               merger.process(currentManifest, fragment);
+                fragment != null &&
+                merger.process(currentManifest, fragment);
     }
 
     /**

@@ -128,6 +128,8 @@ public class ManifestMerger {
     private final ICallback mCallback;
     private XPath mXPath;
     private Document mMainDoc;
+    /** Option to extract our package prefixes in the merged manifest */
+    private boolean mExtractPackagePrefix;
 
     /** Namespace for Android attributes in an AndroidManifest.xml */
     private static final String NS_URI    = SdkConstants.NS_RESOURCES;
@@ -169,6 +171,17 @@ public class ManifestMerger {
     public ManifestMerger(@NonNull IMergerLog log, @Nullable ICallback callback) {
         mLog = log;
         mCallback = callback;
+    }
+
+    /**
+     * Sets whether the manifest merger should extract package prefixes
+     *
+     * @param extract if true, extract package prefixes
+     * @return this, for constructor chaining
+     */
+    public ManifestMerger setExtractPackagePrefix(boolean extract) {
+        mExtractPackagePrefix = extract;
+        return this;
     }
 
     /**
@@ -250,6 +263,11 @@ public class ManifestMerger {
         }
 
         cleanupToolsAttributes(mainDoc);
+
+        if (mExtractPackagePrefix) {
+            extractFqcns(mainDoc);
+        }
+
         mXPath = null;
         mMainDoc = null;
         return success;
@@ -447,6 +465,55 @@ public class ManifestMerger {
                             } else {
                                 value = pkg + '.' + value;
                             }
+                            attr.setNodeValue(value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Extracts the fully qualified class names from the manifest and uses the
+     * prefix notation relative to the manifest package. This basically reverses
+     * the effects of {@link #expandFqcns(Document)}, though of course it may
+     * also remove prefixes which were inlined in the original documents.
+     *
+     * @param doc the document in which to extract the FQCNs.
+     */
+    private void extractFqcns(Document doc) {
+        // Find the package attribute of the manifest.
+        String pkg = null;
+        Element manifest = findFirstElement(doc, "/manifest");
+        if (manifest != null) {
+            pkg = manifest.getAttribute("package");
+        }
+
+        if (pkg == null || pkg.length() == 0) {
+            return;
+        }
+
+        int pkgLength = pkg.length();
+        for (String elementAttr : sClassAttributes) {
+            String[] names = elementAttr.split("/");
+            if (names.length != 2) {
+                continue;
+            }
+            String elemName = names[0];
+            String attrName = names[1];
+            NodeList elements = doc.getElementsByTagName(elemName);
+            for (int i = 0; i < elements.getLength(); i++) {
+                Node elem = elements.item(i);
+                if (elem instanceof Element) {
+                    Attr attr = ((Element) elem).getAttributeNodeNS(NS_URI, attrName);
+                    if (attr != null) {
+                        String value = attr.getNodeValue();
+
+                        // We know it's a shortened FQCN if it starts with a dot
+                        // or does not contain any dot.
+                        if (value != null && value.length() > pkgLength &&
+                                value.startsWith(pkg) && value.charAt(pkgLength) == '.') {
+                            value = value.substring(pkgLength);
                             attr.setNodeValue(value);
                         }
                     }
