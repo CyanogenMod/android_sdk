@@ -71,6 +71,7 @@ bin/android             tools/android
 bin/monkeyrunner        tools/monkeyrunner
 bin/lint                tools/lint
 bin/uiautomatorviewer   tools/uiautomatorviewer
+bin/jobb                tools/jobb
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
@@ -122,6 +123,7 @@ framework/manifmerger.jar        tools/lib/manifmerger.jar
 framework/dvlib.jar              tools/lib/dvlib.jar
 framework/layoutlib_api.jar      tools/lib/layoutlib_api.jar
 framework/uiautomatorviewer.jar  tools/lib/uiautomatorviewer.jar
+framework/jobb.jar               tools/lib/jobb.jar
 
 
 # 3rd Party java libraries
