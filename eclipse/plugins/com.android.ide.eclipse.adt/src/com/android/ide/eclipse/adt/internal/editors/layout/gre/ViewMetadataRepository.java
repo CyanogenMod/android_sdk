@@ -199,6 +199,7 @@ public class ViewMetadataRepository {
     }
 
     /** Returns an ordered list of categories and views, parsed from a metadata file */
+    @SuppressWarnings("resource") // streams passed to parser InputSource closed by parser
     private List<CategoryData> getCategories() {
         if (mCategories == null) {
             mCategories = new ArrayList<CategoryData>();

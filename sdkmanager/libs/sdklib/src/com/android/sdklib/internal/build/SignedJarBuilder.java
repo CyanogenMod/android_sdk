@@ -260,7 +260,9 @@ public class SignedJarBuilder {
             Signature signature = Signature.getInstance("SHA1with" + mKey.getAlgorithm());
             signature.initSign(mKey);
             mOutputJar.putNextEntry(new JarEntry("META-INF/CERT.SF"));
-            writeSignatureFile(new SignatureOutputStream(mOutputJar, signature));
+            SignatureOutputStream out = new SignatureOutputStream(mOutputJar, signature);
+            writeSignatureFile(out);
+            out.close();
 
             // CERT.*
             mOutputJar.putNextEntry(new JarEntry("META-INF/CERT." + mKey.getAlgorithm()));

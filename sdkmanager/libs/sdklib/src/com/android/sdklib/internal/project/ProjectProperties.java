@@ -24,6 +24,7 @@ import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.android.utils.ILogger;
+import com.google.common.io.Closeables;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -469,13 +470,7 @@ public class ProjectProperties implements IPropertySource {
                         e.getMessage());
             }
         } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // pass
-                }
-            }
+            Closeables.closeQuietly(reader);
         }
 
         return null;

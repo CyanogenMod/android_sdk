@@ -538,6 +538,7 @@ public final class ApkBuilder implements IArchiveBuilder {
             // ask the builder to add the content of the file.
             FileInputStream fis = new FileInputStream(zipFile);
             mBuilder.writeZip(fis, mNullFilter);
+            fis.close();
         } catch (DuplicateFileException e) {
             mBuilder.cleanUp();
             throw e;
@@ -573,6 +574,7 @@ public final class ApkBuilder implements IArchiveBuilder {
             // the java resources.
             FileInputStream fis = new FileInputStream(jarFile);
             mBuilder.writeZip(fis, mFilter);
+            fis.close();
 
             // check if native libraries were found in the external library. This should
             // constitutes an error or warning depending on if they are in lib/

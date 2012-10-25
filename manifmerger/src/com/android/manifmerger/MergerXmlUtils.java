@@ -32,9 +32,11 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -80,7 +82,8 @@ class MergerXmlUtils {
     static Document parseDocument(@NonNull final File xmlFile, @NonNull final IMergerLog log) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            InputSource is = new InputSource(new FileReader(xmlFile));
+            Reader reader = new BufferedReader(new FileReader(xmlFile));
+            InputSource is = new InputSource(reader);
             factory.setNamespaceAware(true);
             factory.setValidating(false);
             DocumentBuilder builder = factory.newDocumentBuilder();

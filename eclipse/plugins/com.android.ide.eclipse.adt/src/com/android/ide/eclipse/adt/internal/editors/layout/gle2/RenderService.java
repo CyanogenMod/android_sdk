@@ -113,7 +113,9 @@ public class RenderService {
         Configuration config = chooser.getConfiguration();
         FolderConfiguration folderConfig = config.getFullConfig();
 
-        mHardwareConfigHelper = new HardwareConfigHelper(config.getDevice());
+        Device device = config.getDevice();
+        assert device != null; // Should only attempt render with configuration that has device
+        mHardwareConfigHelper = new HardwareConfigHelper(device);
         mHardwareConfigHelper.setOrientation(
                 folderConfig.getScreenOrientationQualifier().getValue());
 

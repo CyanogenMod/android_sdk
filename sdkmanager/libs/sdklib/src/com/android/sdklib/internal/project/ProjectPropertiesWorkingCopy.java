@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
+import com.google.common.io.Closeables;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
@@ -140,7 +142,7 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
             // since we're reading the existing file and replacing values with new ones, or skipping
             // removed values, we need to record what properties have been visited, so that
             // we can figure later what new properties need to be added at the end of the file.
-            HashSet<String> visitedProps = new HashSet<String>();
+            Set<String> visitedProps = new HashSet<String>();
 
             String line = null;
             while ((line = reader.readLine()) != null) {
@@ -193,6 +195,8 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
                 }
             }
 
+            Closeables.closeQuietly(reader);
+
         } else {
             // new file, just write it all
 
@@ -216,6 +220,7 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
         OutputStream filestream = toSave.getOutputStream();
         filestream.write(baos.toByteArray());
         filestream.flush();
+        filestream.close();
     }
 
     private void writeValue(OutputStreamWriter writer, String key, String value,

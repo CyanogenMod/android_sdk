@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.SdkConstants;
+import com.google.common.io.Closeables;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -205,6 +206,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
      * @throws InvalidAttributeValueException
      * @throws ClassFormatError
      */
+    @SuppressWarnings("resource") // Eclipse doesn't understand Closeables.closeQuietly
     @Override
     public HashMap<String, ArrayList<IClassDescriptor>> findClassesDerivingFrom(
             String packageFilter,
@@ -223,43 +225,47 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         // create streams to read the intermediary archive
         FileInputStream fis = new FileInputStream(mOsFrameworkLocation);
         ZipInputStream zis = new ZipInputStream(fis);
-        ZipEntry entry;
-        while ((entry = zis.getNextEntry()) != null) {
-            // get the name of the entry and convert to a class binary name
-            String entryPath = entry.getName();
-            if (!entryPath.endsWith(SdkConstants.DOT_CLASS)) {
-                // only accept class files
-                continue;
-            }
-            if (packageFilter.length() > 0 && !entryPath.startsWith(packageFilter)) {
-                // only accept stuff from the requested root package.
-                continue;
-            }
-            String className = entryPathToClassName(entryPath);
+        try {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                // get the name of the entry and convert to a class binary name
+                String entryPath = entry.getName();
+                if (!entryPath.endsWith(SdkConstants.DOT_CLASS)) {
+                    // only accept class files
+                    continue;
+                }
+                if (packageFilter.length() > 0 && !entryPath.startsWith(packageFilter)) {
+                    // only accept stuff from the requested root package.
+                    continue;
+                }
+                String className = entryPathToClassName(entryPath);
 
-            Class<?> loaded_class = mClassCache.get(className);
-            if (loaded_class == null) {
-                byte[] data = mEntryCache.get(className);
-                if (data == null) {
-                    // Get the class and cache it
-                    long entrySize = entry.getSize();
-                    if (entrySize > Integer.MAX_VALUE) {
-                        throw new InvalidAttributeValueException();
+                Class<?> loaded_class = mClassCache.get(className);
+                if (loaded_class == null) {
+                    byte[] data = mEntryCache.get(className);
+                    if (data == null) {
+                        // Get the class and cache it
+                        long entrySize = entry.getSize();
+                        if (entrySize > Integer.MAX_VALUE) {
+                            throw new InvalidAttributeValueException();
+                        }
+                        data = readZipData(zis, (int)entrySize);
                     }
-                    data = readZipData(zis, (int)entrySize);
+                    loaded_class = defineAndCacheClass(className, data);
                 }
-                loaded_class = defineAndCacheClass(className, data);
-            }
 
-            for (Class<?> superClass = loaded_class.getSuperclass();
-                    superClass != null;
-                    superClass = superClass.getSuperclass()) {
-                String superName = superClass.getCanonicalName();
-                if (mClassesFound.containsKey(superName)) {
-                    mClassesFound.get(superName).add(new ClassWrapper(loaded_class));
-                    break;
+                for (Class<?> superClass = loaded_class.getSuperclass();
+                        superClass != null;
+                        superClass = superClass.getSuperclass()) {
+                    String superName = superClass.getCanonicalName();
+                    if (mClassesFound.containsKey(superName)) {
+                        mClassesFound.get(superName).add(new ClassWrapper(loaded_class));
+                        break;
+                    }
                 }
             }
+        } finally {
+            Closeables.closeQuietly(zis);
         }
 
         return mClassesFound;
