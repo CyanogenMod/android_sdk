@@ -410,6 +410,11 @@ abstract class ManifestMergerTestCase extends TestCase {
                 return ICallback.UNKNOWN_CODENAME;
             }
         });
+
+        // Test name contains "enable_extractprefix" to enable manifest extract prefix
+        if (getName().contains("enable_extractprefix")) {
+            merger.setExtractPackagePrefix(true);
+        }
         boolean processOK = merger.process(testFiles.getActualResult(),
                                   testFiles.getMain(),
                                   testFiles.getLibs(),
