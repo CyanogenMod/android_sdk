@@ -38,7 +38,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/dummy_button1" />=
+                android:text="@string/dummy_button1" />
 
         </LinearLayout>
     </FrameLayout>
