@@ -39,6 +39,10 @@ sdk/draw9patch/etc/draw9patch.bat                 tools/draw9patch.bat
 rm tools/lint
 sdk/lint/cli/etc/lint.bat                         tools/lint.bat
 
+rm tools/jobb
+sdk/jobb/etc/jobb.bat                             tools/jobb.bat
+
+
 rm tools/emulator
 rm tools/emulator-arm
 rm tools/emulator-x86
