@@ -217,6 +217,9 @@ public class AdtProjectTest extends SdkTestCase {
 
         IAndroidTarget[] targets = getSdk().getTargets();
         for (IAndroidTarget t : targets) {
+            if (!t.isPlatform()) {
+                continue;
+            }
             if (t.getVersion().getApiLevel() >= TARGET_API_LEVEL) {
                 target = t;
                 break;
