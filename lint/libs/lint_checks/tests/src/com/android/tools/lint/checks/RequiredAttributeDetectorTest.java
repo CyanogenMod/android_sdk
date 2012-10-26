@@ -91,4 +91,15 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                     "res/layout/edit_type.xml"
             ));
     }
+
+    public void testFrameworkStyles() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=38958
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/layout/listseparator.xml"
+            ));
+    }
+
 }
