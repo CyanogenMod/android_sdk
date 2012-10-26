@@ -332,6 +332,13 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 if (resTypes.contains(ResourceType.ATTR)
                         || resTypes.contains(ResourceType.STYLE)) {
                     results.add(PREFIX_THEME_REF + ResourceType.ATTR.getName() + '/');
+                    if (prefix != null && prefix.startsWith(ANDROID_THEME_PREFIX)) {
+                        // including attr isn't required
+                        for (ResourceItem item : repository.getResourceItemsOfType(
+                                ResourceType.ATTR)) {
+                            results.add(ANDROID_THEME_PREFIX + item.getName());
+                        }
+                    }
                 }
                 return results.toArray(new String[results.size()]);
             }

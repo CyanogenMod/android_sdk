@@ -492,6 +492,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("completion12.xml", "<include ^/>");
     }
 
+    public void testComplation76() throws Exception {
+        // Test theme completion with implicit attr
+        checkLayoutCompletion("navigation1.xml", "?android:a^ttr/alertDialogStyle");
+    }
+
     // ---- Test *applying* code completion ----
 
     // The following tests check -applying- a specific code completion
