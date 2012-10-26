@@ -513,6 +513,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * @param string the string to be searched for
      * @return true if the file is found and contains the given string anywhere within it
      */
+    @SuppressWarnings("resource") // Closed by streamContains
     public static boolean fileContains(IFile file, String string) {
         InputStream contents = null;
         try {
