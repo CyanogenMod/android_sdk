@@ -17,7 +17,9 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
@@ -161,10 +163,39 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
     }
 
     private boolean isSizeStyle(String style, Set<String> sizeStyles) {
+        if (isFrameworkSizeStyle(style)) {
+            return true;
+        }
         if (sizeStyles == null) {
             return false;
         }
         return isSizeStyle(stripStylePrefix(style), sizeStyles, 0);
+    }
+
+    private boolean isFrameworkSizeStyle(String style) {
+        // A few attributes
+        if (!(style.startsWith(ANDROID_THEME_PREFIX) || style.startsWith(ANDROID_PREFIX))) {
+            return false;
+        }
+
+        // The styles Widget.TextView.ListSeparator (and several theme variations, such as
+        // Widget.Holo.TextView.ListSeparator, Widget.Holo.Light.TextView.ListSeparator, etc)
+        // define layout_width and layout_height.
+        // These are exposed through the listSeparatorTextViewStyle style.
+        if (style.equals("?android:attr/listSeparatorTextViewStyle")) { //$NON-NLS-1$
+            return true;
+        }
+
+        // It's also set on Widget.QuickContactBadge and Widget.QuickContactBadgeSmall
+        // These are exposed via a handful of attributes with a common prefix
+        if (style.startsWith("?android:attr/quickContactBadgeStyle")) { //$NON-NLS-1$
+            return true;
+        }
+
+        // Finally, the styles are set on MediaButton and Widget.Holo.Tab (and
+        // Widget.Holo.Light.Tab) but these are not exposed via attributes.
+
+        return false;
     }
 
     private boolean isSizeStyle(
