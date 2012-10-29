@@ -116,6 +116,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * with a few methods they can use to access functionality from this {@link RulesEngine}.
  */
 class ClientRulesEngine implements IClientRulesEngine {
+    /** The return code from the dialog for the user choosing "Clear" */
+    public static final int CLEAR_RETURN_CODE = -5;
+    /** The dialog button ID for the user choosing "Clear" */
+    private static final int CLEAR_BUTTON_ID = CLEAR_RETURN_CODE;
+
     private final RulesEngine mRulesEngine;
     private final String mFqcn;
 
@@ -174,8 +179,28 @@ class ClientRulesEngine implements IClientRulesEngine {
                     mFqcn,  // title
                     message,
                     value == null ? "" : value, //$NON-NLS-1$
-                    validator);
-        if (d.open() == Window.OK) {
+                    validator) {
+            @Override
+            protected void createButtonsForButtonBar(Composite parent) {
+                createButton(parent, CLEAR_BUTTON_ID, "Clear", false /*defaultButton*/);
+                super.createButtonsForButtonBar(parent);
+            }
+
+            @Override
+            protected void buttonPressed(int buttonId) {
+                super.buttonPressed(buttonId);
+
+                if (buttonId == CLEAR_BUTTON_ID) {
+                    assert CLEAR_RETURN_CODE != Window.OK && CLEAR_RETURN_CODE != Window.CANCEL;
+                    setReturnCode(CLEAR_RETURN_CODE);
+                    close();
+                }
+            }
+        };
+        int result = d.open();
+        if (result == ResourceChooser.CLEAR_RETURN_CODE) {
+            return "";
+        } else if (result == Window.OK) {
             return d.getValue();
         }
         return null;

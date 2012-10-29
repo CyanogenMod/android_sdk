@@ -188,6 +188,9 @@ public class LinearLayoutRule extends BaseLayoutRule {
                                 weight = mRulesEngine.displayInput("Enter Weight Value:", weight,
                                         null);
                                 if (weight != null) {
+                                    if (weight.isEmpty()) {
+                                        weight = null; // remove attribute
+                                    }
                                     for (INode child : children) {
                                         child.setAttribute(ANDROID_URI,
                                                 ATTR_LAYOUT_WEIGHT, weight);

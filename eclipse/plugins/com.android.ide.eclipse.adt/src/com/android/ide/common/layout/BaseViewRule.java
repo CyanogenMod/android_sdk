@@ -207,6 +207,11 @@ public class BaseViewRule extends AbstractViewRule {
                             node.editXml("Change ID", new PropertySettingNodeHandler(ANDROID_URI,
                                     ATTR_ID, newId));
                             editedProperty(ATTR_ID);
+                        } else if (newId != null) {
+                            // Clear
+                            node.editXml("Change ID", new PropertySettingNodeHandler(ANDROID_URI,
+                                    ATTR_ID, null));
+                            editedProperty(ATTR_ID);
                         } else if (newId == null) {
                             // Cancelled
                             break;
