@@ -24,6 +24,8 @@ import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.VALUE_VERTICAL;
+import static com.android.SdkConstants.VIEW;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -87,6 +89,25 @@ public class InefficientWeightDetector extends LayoutDetector {
             Category.PERFORMANCE,
             3,
             Severity.WARNING,
+            InefficientWeightDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
+    /** Using 0dp on the wrong dimension */
+    public static final Issue WRONG_0DP = Issue.create(
+            "Suspicious0dp", //$NON-NLS-1$
+            "Looks for 0dp as the width in a vertical LinearLayout or as the height in a " +
+            "horizontal",
+
+            "Using 0dp as the width in a horizontal LinearLayout with weights is a useful " +
+            "trick to ensure that only the weights (and not the intrinsic sizes) are used " +
+            "when sizing the children.\n" +
+            "\n" +
+            "However, if you use 0dp for the opposite dimension, the view will be invisible. " +
+            "This can happen if you change the orientation of a layout without also flipping " +
+            "the 0dp dimension in all the children.",
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
             InefficientWeightDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
@@ -182,6 +203,79 @@ public class InefficientWeightDetector extends LayoutDetector {
                         weightChild,
                         context.getLocation(sizeNode != null ? sizeNode : weightChild), msg, null);
 
+            }
+        }
+
+        if (context.isEnabled(WRONG_0DP)) {
+            checkWrong0Dp(context, element, children);
+        }
+    }
+
+    private void checkWrong0Dp(XmlContext context, Element element, List<Element> children) {
+        boolean isVertical = false;
+        String orientation = element.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION);
+        if (VALUE_VERTICAL.equals(orientation)) {
+            isVertical = true;
+        }
+
+        for (Element child : children) {
+            String tagName = child.getTagName();
+            if (tagName.equals(VIEW)) {
+                // Might just used for spacing
+                return;
+            }
+            if (tagName.indexOf('.') != -1 || tagName.equals(VIEW_TAG)) {
+                // Custom views might perform their own dynamic sizing or ignore the layout
+                // attributes all together
+                return;
+            }
+
+            boolean hasWeight = child.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT);
+
+            Attr widthNode = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
+            Attr heightNode = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
+
+            boolean noWidth = false;
+            boolean noHeight = false;
+            if (widthNode != null && widthNode.getValue().startsWith("0")) { //$NON-NLS-1$
+                noWidth = true;
+            }
+            if (heightNode != null && heightNode.getValue().startsWith("0")) { //$NON-NLS-1$
+                noHeight = true;
+            } else if (!noWidth) {
+                return;
+            }
+
+            // If you're specifying 0dp for both the width and height you are probably
+            // trying to hide it deliberately
+            if (noWidth && noHeight) {
+                return;
+            }
+            assert noWidth || noHeight;
+
+            if (noWidth) {
+                assert widthNode != null;
+                if (!hasWeight) {
+                    context.report(WRONG_0DP, widthNode, context.getLocation(widthNode),
+                        "Suspicious size: this will make the view invisible, should be " +
+                        "used with layout_weight", null);
+                } else if (isVertical) {
+                    context.report(WRONG_0DP, widthNode, context.getLocation(widthNode),
+                        "Suspicious size: this will make the view invisible, probably " +
+                        "intended for layout_height", null);
+                }
+            } else {
+                assert noHeight;
+                assert heightNode != null;
+                if (!hasWeight) {
+                    context.report(WRONG_0DP, widthNode, context.getLocation(heightNode),
+                        "Suspicious size: this will make the view invisible, should be " +
+                        "used with layout_weight", null);
+                } else if (!isVertical) {
+                    context.report(WRONG_0DP, widthNode, context.getLocation(heightNode),
+                        "Suspicious size: this will make the view invisible, probably " +
+                        "intended for layout_width", null);
+                }
             }
         }
     }

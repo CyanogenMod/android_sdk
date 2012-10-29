@@ -91,4 +91,28 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
 
                 lintFiles("res/layout/nested_weights2.xml"));
     }
+
+    public void testWrong0Dp() throws Exception {
+        assertEquals(
+            "res/layout/wrong0dp.xml:19: Error: Suspicious size: this will make the view invisible, should be used with layout_weight [Suspicious0dp]\n" +
+            "            android:layout_width=\"0dp\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong0dp.xml:25: Error: Suspicious size: this will make the view invisible, should be used with layout_weight [Suspicious0dp]\n" +
+            "            android:layout_height=\"0dp\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong0dp.xml:34: Error: Suspicious size: this will make the view invisible, probably intended for layout_height [Suspicious0dp]\n" +
+            "            android:layout_width=\"0dp\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong0dp.xml:67: Error: Suspicious size: this will make the view invisible, probably intended for layout_width [Suspicious0dp]\n" +
+            "            android:layout_height=\"0dp\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong0dp.xml:90: Error: Suspicious size: this will make the view invisible, probably intended for layout_width [Suspicious0dp]\n" +
+            "            android:layout_height=\"0dp\"\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "5 errors, 0 warnings\n",
+
+            lintFiles("res/layout/wrong0dp.xml"));
+    }
+
+
 }
