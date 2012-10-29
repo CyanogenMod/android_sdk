@@ -25,6 +25,8 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -51,8 +53,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -526,22 +530,36 @@ public class AndroidClasspathContainerInitializer extends BaseClasspathContainer
         return androidSourceProperty;
     }
 
+    /**
+     * Cache results for testURL: Some are expensive to compute, and this is
+     * called repeatedly (perhaps for each open project)
+     */
+    private static final Map<String, Boolean> sRecentUrlValidCache =
+            Maps.newHashMapWithExpectedSize(4);
+
+    @SuppressWarnings("resource") // Eclipse does not handle Closeables#closeQuietly
     private static boolean testURL(String androidApiURL) {
+        Boolean cached = sRecentUrlValidCache.get(androidApiURL);
+        if (cached != null) {
+            return cached.booleanValue();
+        }
         boolean valid = false;
         InputStream is = null;
         try {
             URL testURL = new URL(androidApiURL);
-            is = testURL.openStream();
+            URLConnection connection = testURL.openConnection();
+            // Only try for 5 seconds (though some implementations ignore this flag)
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+            is = connection.getInputStream();
             valid = true;
         } catch (Exception ignore) {
         } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ignore) {
-                }
-            }
+            Closeables.closeQuietly(is);
         }
+
+        sRecentUrlValidCache.put(androidApiURL, valid);
+
         return valid;
     }
 
