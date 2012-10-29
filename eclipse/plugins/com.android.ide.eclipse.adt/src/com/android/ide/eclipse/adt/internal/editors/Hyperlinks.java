@@ -34,6 +34,7 @@ import static com.android.SdkConstants.FN_RESOURCE_CLASS;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.SdkConstants.TAG_STYLE;
@@ -1117,8 +1118,17 @@ public class Hyperlinks {
     /** Parse a resource reference or a theme reference and return the individual parts */
     private static Pair<ResourceType,String> parseResource(String url) {
         if (url.startsWith(PREFIX_THEME_REF)) {
-            url = PREFIX_RESOURCE_REF + url.substring(PREFIX_THEME_REF.length());
-            return ResourceHelper.parseResource(url);
+            String remainder = url.substring(PREFIX_THEME_REF.length());
+            int colon = url.indexOf(':');
+            if (colon != -1) {
+                // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
+                if (remainder.indexOf('/', colon) == -1) {
+                    remainder = remainder.substring(0, colon) + RESOURCE_CLZ_ATTR + '/'
+                            + remainder.substring(colon);
+                }
+                url = PREFIX_RESOURCE_REF + remainder;
+                return ResourceHelper.parseResource(url);
+            }
         }
 
         return ResourceHelper.parseResource(url);

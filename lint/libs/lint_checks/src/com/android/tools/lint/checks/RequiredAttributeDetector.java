@@ -17,9 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
-import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
@@ -173,16 +171,12 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
     }
 
     private boolean isFrameworkSizeStyle(String style) {
-        // A few attributes
-        if (!(style.startsWith(ANDROID_THEME_PREFIX) || style.startsWith(ANDROID_PREFIX))) {
-            return false;
-        }
-
         // The styles Widget.TextView.ListSeparator (and several theme variations, such as
         // Widget.Holo.TextView.ListSeparator, Widget.Holo.Light.TextView.ListSeparator, etc)
         // define layout_width and layout_height.
         // These are exposed through the listSeparatorTextViewStyle style.
-        if (style.equals("?android:attr/listSeparatorTextViewStyle")) { //$NON-NLS-1$
+        if (style.equals("?android:attr/listSeparatorTextViewStyle")      //$NON-NLS-1$
+                || style.equals("?android/listSeparatorTextViewStyle")) { //$NON-NLS-1$
             return true;
         }
 
