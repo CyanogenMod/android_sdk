@@ -19,6 +19,7 @@ import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -238,6 +239,16 @@ public class NewProjectWizard extends TemplateWizard {
     @NonNull
     protected List<String> getFilesToOpen() {
         return mValues.template.getFilesToOpen();
+    }
+
+    @VisibleForTesting
+    NewProjectWizardState getValues() {
+        return mValues;
+    }
+
+    @VisibleForTesting
+    void setValues(NewProjectWizardState values) {
+        mValues = values;
     }
 
     @Override

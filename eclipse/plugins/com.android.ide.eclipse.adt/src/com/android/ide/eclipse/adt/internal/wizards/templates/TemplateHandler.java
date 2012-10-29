@@ -31,6 +31,7 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateMan
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
@@ -392,6 +393,14 @@ class TemplateHandler {
         }
     }
 
+    /**
+     * Most recent thrown exception during template instantiation. This should
+     * basically always be null. Used by unit tests to see if any template
+     * instantiation recorded a failure.
+     */
+    @VisibleForTesting
+    public static Exception sMostRecentException;
+
     /** Read the given FreeMarker file and process the variable definitions */
     private void processVariables(final Configuration freemarker,
             String file, final Map<String, Object> paramMap) {
@@ -472,6 +481,7 @@ class TemplateHandler {
                 }
             });
         } catch (Exception e) {
+            sMostRecentException = e;
             AdtPlugin.log(e, null);
         }
     }
@@ -582,12 +592,14 @@ class TemplateHandler {
                             System.err.println("WARNING: Unknown template directive " + name);
                         }
                     } catch (Exception e) {
+                        sMostRecentException = e;
                         AdtPlugin.log(e, null);
                     }
                 }
             });
 
         } catch (Exception e) {
+            sMostRecentException = e;
             AdtPlugin.log(e, null);
         }
     }
