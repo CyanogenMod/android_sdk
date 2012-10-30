@@ -124,7 +124,7 @@ framework/dvlib.jar              tools/lib/dvlib.jar
 framework/layoutlib_api.jar      tools/lib/layoutlib_api.jar
 framework/uiautomatorviewer.jar  tools/lib/uiautomatorviewer.jar
 framework/jobb.jar               tools/lib/jobb.jar
-
+framework/fat32lib.jar           tools/lib/fat32lib.jar
 
 # 3rd Party java libraries
 framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
