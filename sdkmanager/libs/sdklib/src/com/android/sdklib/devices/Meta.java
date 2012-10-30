@@ -143,19 +143,16 @@ public class Meta {
     public int hashCode() {
         int hash = 17;
         if(mIconSixteen != null){
-            for (Character c : mIconSixteen.getAbsolutePath().toCharArray()) {
-                hash = 31 * hash + c;
-            }
+            String path = mIconSixteen.getAbsolutePath();
+            hash = 31 * hash + path.hashCode();
         }
         if(mIconSixtyFour != null){
-            for (Character c : mIconSixtyFour.getAbsolutePath().toCharArray()) {
-                hash = 31 * hash + c;
-            }
+            String path = mIconSixtyFour.getAbsolutePath();
+            hash = 31 * hash + path.hashCode();
         }
         if(mFrame != null){
-            for (Character c : mFrame.getAbsolutePath().toCharArray()) {
-                hash = 31 * hash + c;
-            }
+            String path = mFrame.getAbsolutePath();
+            hash = 31 * hash + path.hashCode();
         }
         if(mFrameOffsetLandscape != null){
             hash = 31 * hash + mFrameOffsetLandscape.x;
