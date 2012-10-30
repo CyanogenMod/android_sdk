@@ -275,11 +275,11 @@ public final class Device {
     /** A hash that's stable across JVM instances */
     public int hashCode() {
         int hash = 17;
-        for (Character c : mName.toCharArray()) {
-            hash = 31 * hash + c;
+        if (mName != null) {
+            hash = 31 * hash + mName.hashCode();
         }
-        for (Character c : mManufacturer.toCharArray()) {
-            hash = 31 * hash + c;
+        if (mManufacturer != null) {
+            hash = 31 * hash + mManufacturer.hashCode();
         }
         hash = 31 * hash + mSoftware.hashCode();
         hash = 31 * hash + mState.hashCode();

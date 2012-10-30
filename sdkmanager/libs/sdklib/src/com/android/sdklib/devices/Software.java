@@ -17,16 +17,16 @@
 package com.android.sdklib.devices;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Software {
     private int mMinSdkLevel = 0;
     private int mMaxSdkLevel = Integer.MAX_VALUE;
     private boolean mLiveWallpaperSupport;
-    private Set<BluetoothProfile> mBluetoothProfiles = new HashSet<BluetoothProfile>();
+    private Set<BluetoothProfile> mBluetoothProfiles = new LinkedHashSet<BluetoothProfile>();
     private String mGlVersion;
-    private Set<String> mGlExtensions = new HashSet<String>();
+    private Set<String> mGlExtensions = new LinkedHashSet<String>();
     private boolean mStatusBar;
 
     public int getMinSdkLevel() {
@@ -134,12 +134,12 @@ public class Software {
         for (BluetoothProfile bp : mBluetoothProfiles) {
             hash = 31 * hash + bp.ordinal();
         }
-        for (Character c : mGlVersion.toCharArray()) {
-            hash = 31 * hash + c;
+        if (mGlVersion != null) {
+            hash = 31 * hash + mGlVersion.hashCode();
         }
         for (String glExtension : mGlExtensions) {
-            for (Character c : glExtension.toCharArray()) {
-                hash = 31 * hash + c;
+            if (glExtension != null) {
+                hash = 31 * hash + glExtension.hashCode();
             }
         }
         hash = 31 * hash + (mStatusBar ? 1 : 0);

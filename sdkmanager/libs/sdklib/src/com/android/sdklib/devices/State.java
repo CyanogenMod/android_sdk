@@ -125,11 +125,11 @@ public class State {
     public int hashCode() {
         int hash = 17;
         hash = 31 * hash + (mDefaultState ? 1 : 0);
-        for (Character c : mName.toCharArray()) {
-            hash = 31 * hash + c;
+        if (mName != null) {
+            hash = 31 * hash + mName.hashCode();
         }
-        for (Character c : mDescription.toCharArray()) {
-            hash = 31 * hash + c;
+        if (mDescription != null) {
+            hash = 31 * hash + mDescription.hashCode();
         }
         hash = 31 * hash + mOrientation.ordinal();
         hash = 31 * hash + mKeyState.ordinal();
