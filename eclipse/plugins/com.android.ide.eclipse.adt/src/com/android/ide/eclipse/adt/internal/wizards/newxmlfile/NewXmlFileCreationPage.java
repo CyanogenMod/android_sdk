@@ -733,6 +733,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
                 String[] folderSegments = targetWsFolderPath.split(RES_QUALIFIER_SEP);
                 if (folderSegments.length > 0) {
+                    mValues.configuration = FolderConfiguration.getConfig(folderSegments);
                     String folderName = folderSegments[0];
                     selectTypeFromFolder(folderName);
                 }
