@@ -33,13 +33,16 @@ import java.util.List;
 
 import lombok.ast.AstVisitor;
 import lombok.ast.ConstructorDeclaration;
+import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
+import lombok.ast.NormalTypeBody;
 import lombok.ast.Return;
+import lombok.ast.VariableDeclaration;
 import lombok.ast.VariableDefinition;
-import lombok.ast.VariableDefinitionEntry;
+import lombok.ast.VariableReference;
 
 /**
  * Detector looking for SharedPreferences.edit() calls without a corresponding
@@ -77,7 +80,8 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         return Collections.singletonList("edit"); //$NON-NLS-1$
     }
 
-    private Node findSurroundingMethod(Node scope) {
+    @Nullable
+    private static Node findSurroundingMethod(Node scope) {
         while (scope != null) {
             Class<? extends Node> type = scope.getClass();
             // The Lombok AST uses a flat hierarchy of node type implementation classes
@@ -92,11 +96,29 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         return null;
     }
 
+    @Nullable
+    private static NormalTypeBody findSurroundingTypeBody(Node scope) {
+        while (scope != null) {
+            Class<? extends Node> type = scope.getClass();
+            // The Lombok AST uses a flat hierarchy of node type implementation classes
+            // so no need to do instanceof stuff here.
+            if (type == NormalTypeBody.class) {
+                return (NormalTypeBody) scope;
+            }
+
+            scope = scope.getParent();
+        }
+
+        return null;
+    }
+
+
     @Override
     public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
             @NonNull MethodInvocation node) {
         assert node.astName().astValue().equals("edit");
-        if (node.astOperand() == null) {
+        Expression operand = node.astOperand();
+        if (operand == null) {
             return;
         }
 
@@ -104,32 +126,81 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         // to a local variable; this means we won't recognize some other usages
         // of the API (e.g. assigning it to a previously declared variable) but
         // is needed until we have type attribution in the AST itself.
-        if (!(node.getParent() instanceof VariableDefinitionEntry &&
-                node.getParent().getParent() instanceof VariableDefinition)) {
-            return;
-        }
-        VariableDefinition definition = (VariableDefinition) node.getParent().getParent();
-        String type = definition.astTypeReference().toString();
-        if (!type.endsWith("SharedPreferences.Editor")) {                   //$NON-NLS-1$
-            if (!type.equals("Editor") ||                                   //$NON-NLS-1$
-                    !LintUtils.isImported(context.compilationUnit,
-                            "android.content.SharedPreferences.Editor")) {  //$NON-NLS-1$
+        Node parent = node.getParent();
+        VariableDefinition definition = getLhs(parent);
+        boolean allowCommitBeforeTarget;
+        if (definition == null) {
+            if (operand instanceof VariableReference) {
+                NormalTypeBody body = findSurroundingTypeBody(parent);
+                if (body == null) {
+                    return;
+                }
+                String variableName = ((VariableReference) operand).astIdentifier().astValue();
+                String type = getFieldType(body, variableName);
+                if (type == null || !type.equals("SharedPreferences")) { //$NON-NLS-1$
+                    return;
+                }
+                allowCommitBeforeTarget = true;
+            } else {
                 return;
             }
+        } else {
+            String type = definition.astTypeReference().toString();
+            if (!type.endsWith("SharedPreferences.Editor")) {                   //$NON-NLS-1$
+                if (!type.equals("Editor") ||                                   //$NON-NLS-1$
+                        !LintUtils.isImported(context.compilationUnit,
+                                "android.content.SharedPreferences.Editor")) {  //$NON-NLS-1$
+                    return;
+                }
+            }
+            allowCommitBeforeTarget = false;
         }
 
-        Node method = findSurroundingMethod(node.getParent());
+        Node method = findSurroundingMethod(parent);
         if (method == null) {
             return;
         }
 
-        CommitFinder finder = new CommitFinder(node);
+        CommitFinder finder = new CommitFinder(node, allowCommitBeforeTarget);
         method.accept(finder);
         if (!finder.isCommitCalled()) {
             context.report(ISSUE, method, context.getLocation(node),
                     "SharedPreferences.edit() without a corresponding commit() or apply() call",
                     null);
         }
+    }
+
+    @Nullable
+    private static String getFieldType(@NonNull NormalTypeBody cls, @NonNull String name) {
+        List<Node> children = cls.getChildren();
+        for (Node child : children) {
+            if (child.getClass() == VariableDeclaration.class) {
+                VariableDeclaration declaration = (VariableDeclaration) child;
+                VariableDefinition definition = declaration.astDefinition();
+                return definition.astTypeReference().toString();
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static VariableDefinition getLhs(@NonNull Node node) {
+        while (node != null) {
+            Class<? extends Node> type = node.getClass();
+            // The Lombok AST uses a flat hierarchy of node type implementation classes
+            // so no need to do instanceof stuff here.
+            if (type == MethodDeclaration.class || type == ConstructorDeclaration.class) {
+                return null;
+            }
+            if (type == VariableDefinition.class) {
+                return (VariableDefinition) node;
+            }
+
+            node = node.getParent();
+        }
+
+        return null;
     }
 
     private class CommitFinder extends ForwardingAstVisitor {
@@ -139,16 +210,18 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         private MethodInvocation mTarget;
         /** Whether we've seen the target edit node yet */
         private boolean mSeenTarget;
+        private boolean mAllowCommitBeforeTarget;
 
-        private CommitFinder(MethodInvocation target) {
+        private CommitFinder(MethodInvocation target, boolean allowCommitBeforeTarget) {
             mTarget = target;
+            mAllowCommitBeforeTarget = allowCommitBeforeTarget;
         }
 
         @Override
         public boolean visitMethodInvocation(MethodInvocation node) {
             if (node == mTarget) {
                 mSeenTarget = true;
-            } else if (mSeenTarget || node.astOperand() == mTarget) {
+            } else if (mAllowCommitBeforeTarget || mSeenTarget || node.astOperand() == mTarget) {
                 String name = node.astName().astValue();
                 if ("commit".equals(name) || "apply".equals(name)) { //$NON-NLS-1$ //$NON-NLS-2$
                     // TODO: Do more flow analysis to see whether we're really calling commit/apply
@@ -157,7 +230,7 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
                 }
             }
 
-            return true;
+            return super.visitMethodInvocation(node);
         }
 
         @Override
