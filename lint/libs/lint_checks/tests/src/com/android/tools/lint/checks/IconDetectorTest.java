@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -61,8 +62,8 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     @Override
-    protected TestConfiguration getConfiguration(Project project) {
-        return new TestConfiguration() {
+    protected TestConfiguration getConfiguration(LintClient client, Project project) {
+        return new TestConfiguration(client, project, null) {
             @Override
             public boolean isEnabled(Issue issue) {
                 return super.isEnabled(issue) && mEnabled.contains(issue);
@@ -409,4 +410,21 @@ public class IconDetectorTest extends AbstractCheckTest {
                     "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher12.png"
             ));
     }
+
+    public void testIgnoreMissingFolders() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_DENSITIES);
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    // Use minSDK4 to ensure that we get warnings about missing drawables
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "ignoremissing.xml=>lint.xml",
+                    "res/drawable/ic_launcher.png=>res/drawable-hdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher2.png"
+            ));
+    }
+
+
 }

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
@@ -36,8 +37,8 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
     private Set<Issue> mEnabled = new HashSet<Issue>();
 
     @Override
-    protected TestConfiguration getConfiguration(Project project) {
-        return new TestConfiguration() {
+    protected TestConfiguration getConfiguration(LintClient client, Project project) {
+        return new TestConfiguration(client, project, null) {
             @Override
             public boolean isEnabled(Issue issue) {
                 return super.isEnabled(issue) && mEnabled.contains(issue);
