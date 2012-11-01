@@ -867,7 +867,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     context.report(ICON_NODPI, location,
                         String.format(
                             "The following images appear in both -nodpi and in a density folder: %1$s",
-                            LintUtils.formatList(list, 10)),
+                            LintUtils.formatList(list,
+                                    context.getDriver().isAbbreviating() ? 10 : -1)),
                         null);
                 }
             }
@@ -907,7 +908,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                         }
                         if (defined.size() > 0) {
                             foundIn = String.format(" (found in %1$s)",
-                                    LintUtils.formatList(defined, 5));
+                                    LintUtils.formatList(defined,
+                                            context.getDriver().isAbbreviating() ? 5 : -1));
                         }
                     }
 
@@ -915,7 +917,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                             String.format(
                                     "Missing the following drawables in %1$s: %2$s%3$s",
                                     file.getName(),
-                                    LintUtils.formatList(delta, 5),
+                                    LintUtils.formatList(delta,
+                                            context.getDriver().isAbbreviating() ? 5 : -1),
                                     foundIn),
                             null);
                 }
