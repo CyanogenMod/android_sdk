@@ -16,15 +16,19 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.LombokParser;
 import com.android.tools.lint.Main;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -142,8 +146,8 @@ public abstract class AbstractCheckTest extends TestCase {
         return new TestLintClient();
     }
 
-    protected TestConfiguration getConfiguration(Project project) {
-        return new TestConfiguration();
+    protected TestConfiguration getConfiguration(LintClient client, Project project) {
+        return new TestConfiguration(client, project, null);
     }
 
     protected void configureDriver(LintDriver driver) {
@@ -435,7 +439,7 @@ public abstract class AbstractCheckTest extends TestCase {
 
         @Override
         public Configuration getConfiguration(Project project) {
-            return AbstractCheckTest.this.getConfiguration(project);
+            return AbstractCheckTest.this.getConfiguration(this, project);
         }
 
         @Override
@@ -495,7 +499,33 @@ public abstract class AbstractCheckTest extends TestCase {
         return null;
     }
 
-    public class TestConfiguration extends Configuration {
+    public class TestConfiguration extends DefaultConfiguration {
+        protected TestConfiguration(
+                @NonNull LintClient client,
+                @NonNull Project project,
+                @Nullable Configuration parent) {
+            super(client, project, parent);
+        }
+
+        public TestConfiguration(
+                @NonNull LintClient client,
+                @Nullable Project project,
+                @Nullable Configuration parent,
+                @NonNull File configFile) {
+            super(client, project, parent, configFile);
+        }
+
+        @Override
+        @NonNull
+        protected Severity getDefaultSeverity(@NonNull Issue issue) {
+            // In unit tests, include issues that are ignored by default
+            Severity severity = super.getDefaultSeverity(issue);
+            if (severity == Severity.IGNORE) {
+                return Severity.WARNING;
+            }
+            return severity;
+        }
+
         @Override
         public boolean isEnabled(Issue issue) {
             return AbstractCheckTest.this.isEnabled(issue);
