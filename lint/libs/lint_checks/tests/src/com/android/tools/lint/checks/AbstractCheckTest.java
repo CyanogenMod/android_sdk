@@ -146,6 +146,9 @@ public abstract class AbstractCheckTest extends TestCase {
         return new TestConfiguration();
     }
 
+    protected void configureDriver(LintDriver driver) {
+    }
+
     /**
      * Run lint on the given files when constructed as a separate project
      * @return The output of the lint check. On Windows, this transforms all directory
@@ -341,6 +344,7 @@ public abstract class AbstractCheckTest extends TestCase {
 
         public String analyze(List<File> files) throws Exception {
             mDriver = new LintDriver(new CustomIssueRegistry(), this);
+            configureDriver(mDriver);
             mDriver.analyze(files, getLintScope(files));
 
             Collections.sort(mWarnings);

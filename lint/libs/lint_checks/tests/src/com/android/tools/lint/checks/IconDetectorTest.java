@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
@@ -32,6 +33,8 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     private Set<Issue> mEnabled = new HashSet<Issue>();
+    private boolean mAbbreviate;
+
     private static Set<Issue> ALL = new HashSet<Issue>();
     static {
         ALL.add(IconDetector.DUPLICATES_CONFIGURATIONS);
@@ -44,6 +47,17 @@ public class IconDetectorTest extends AbstractCheckTest {
         ALL.add(IconDetector.ICON_MISSING_FOLDER);
         ALL.add(IconDetector.ICON_NODPI);
         ALL.add(IconDetector.ICON_COLORS);
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        mAbbreviate = true;
+    }
+
+    @Override
+    protected void configureDriver(LintDriver driver) {
+        driver.setAbbreviating(mAbbreviate);
     }
 
     @Override
@@ -327,6 +341,72 @@ public class IconDetectorTest extends AbstractCheckTest {
                 "res/drawable-mdpi/ic_menu_add_clip_normal.png=>res/drawable-mdpi/icon2.png",
                 "res/drawable-mdpi/stat_notify_alarm.png=>res/drawable-mdpi/icon4.png",
                 "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher2.png"
+            ));
+    }
+
+    public void testAbbreviate() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_DENSITIES);
+        assertEquals(
+            "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: " +
+            "ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, " +
+            "ic_launcher3.png... (6 more) [IconDensities]\n" +
+            "res/drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: " +
+            "ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, " +
+            "ic_launcher3.png... (6 more) [IconDensities]\n" +
+            "0 errors, 2 warnings\n",
+
+            lintProject(
+                    // Use minSDK4 to ensure that we get warnings about missing drawables
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "res/drawable/ic_launcher.png=>res/drawable-hdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-xhdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher2.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher3.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher4.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher5.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher6.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher7.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher8.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher9.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher10.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher11.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher12.png"
+            ));
+    }
+
+
+    public void testShowAll() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_DENSITIES);
+        mAbbreviate = false;
+        assertEquals(
+            "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: " +
+            "ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, " +
+            "ic_launcher3.png, ic_launcher4.png, ic_launcher5.png, ic_launcher6.png, " +
+            "ic_launcher7.png, ic_launcher8.png, ic_launcher9.png [IconDensities]\n" +
+            "res/drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: " +
+            "ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png," +
+            " ic_launcher3.png, ic_launcher4.png, ic_launcher5.png, ic_launcher6.png, " +
+            "ic_launcher7.png, ic_launcher8.png, ic_launcher9.png [IconDensities]\n" +
+            "0 errors, 2 warnings\n",
+
+            lintProject(
+                    // Use minSDK4 to ensure that we get warnings about missing drawables
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "res/drawable/ic_launcher.png=>res/drawable-hdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-xhdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher1.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher2.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher3.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher4.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher5.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher6.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher7.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher8.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher9.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher10.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher11.png",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher12.png"
             ));
     }
 }
