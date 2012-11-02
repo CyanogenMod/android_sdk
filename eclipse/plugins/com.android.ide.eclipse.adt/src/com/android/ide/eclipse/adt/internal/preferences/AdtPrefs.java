@@ -73,6 +73,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
     public final static String PREFS_SHARED_LAYOUT_EDITOR = AdtPlugin.PLUGIN_ID + ".sharedLayoutEditor"; //$NON-NLS-1$
     public final static String PREFS_PREVIEWS = AdtPlugin.PLUGIN_ID + ".previews"; //$NON-NLS-1$
+    public final static String PREFS_SKIP_LINT_LIBS = AdtPlugin.PLUGIN_ID + ".skipLintLibs"; //$NON-NLS-1$
     public final static String PREFS_AUTO_PICK_TARGET = AdtPlugin.PLUGIN_ID + ".autoPickTarget"; //$NON-NLS-1$
 
     /** singleton instance */
@@ -107,6 +108,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mAutoPickTarget;
     private RenderPreviewMode mPreviewMode = RenderPreviewMode.NONE;
     private int mPreferXmlEditor;
+    private boolean mSkipLibrariesFromLint;
 
     public static enum BuildVerbosity {
         /** Build verbosity "Always". Those messages are always displayed, even in silent mode */
@@ -275,6 +277,10 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
                     // Ignore: Leave it as RenderPreviewMode.NONE
                 }
             }
+        }
+
+        if (property == null || PREFS_SKIP_LINT_LIBS.equals(property)) {
+            mSkipLibrariesFromLint = mStore.getBoolean(PREFS_SKIP_LINT_LIBS);
         }
     }
 
@@ -515,6 +521,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         //store.setDefault(PREVS_REMOVE_EMPTY_LINES, false);
         //store.setDefault(PREFS_FORMAT_ON_SAVE, false);
         //store.setDefault(PREFS_SHARED_LAYOUT_EDITOR, false);
+        //store.setDefault(PREFS_SKIP_LINT_LIBS, false);
 
         try {
             store.setDefault(PREFS_DEFAULT_DEBUG_KEYSTORE,
@@ -609,5 +616,31 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         } else {
             store.setValue(PREFS_AUTO_PICK_TARGET, autoPick);
         }
+    }
+
+    /**
+     * Sets whether libraries should be excluded when running lint on a project
+     *
+     * @param exclude if true, exclude library projects
+     */
+    public void setSkipLibrariesFromLint(boolean exclude) {
+        if (exclude != mSkipLibrariesFromLint) {
+            mSkipLibrariesFromLint = exclude;
+            IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+            if (exclude) {
+                store.setValue(PREFS_SKIP_LINT_LIBS, true);
+            } else {
+                store.setToDefault(PREFS_SKIP_LINT_LIBS);
+            }
+        }
+    }
+
+    /**
+     * Returns whether libraries should be excluded when running lint on a project
+     *
+     * @return if true, exclude library projects
+     */
+    public boolean getSkipLibrariesFromLint() {
+        return mSkipLibrariesFromLint;
     }
 }

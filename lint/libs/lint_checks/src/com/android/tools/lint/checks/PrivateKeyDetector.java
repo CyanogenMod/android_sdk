@@ -16,9 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -30,6 +27,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +97,11 @@ public class PrivateKeyDetector extends Detector {
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
+        if (!context.getProject().getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
+
         Project project = context.getProject();
         File projectFolder = project.getDir();
 
@@ -105,7 +109,7 @@ public class PrivateKeyDetector extends Detector {
         checkFolder(context, new File(projectFolder, "assets"));
 
         for (File srcFolder : project.getJavaSourceFolders()) {
-          checkFolder(context, srcFolder);
+            checkFolder(context, srcFolder);
         }
     }
 

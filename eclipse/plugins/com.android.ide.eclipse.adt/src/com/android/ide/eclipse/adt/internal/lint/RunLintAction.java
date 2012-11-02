@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_XML;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.tools.lint.detector.api.LintUtils;
 
 import org.eclipse.core.resources.IFile;
@@ -110,7 +111,8 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
 
         IconFactory iconFactory = IconFactory.getInstance();
         ImageDescriptor allIcon = iconFactory.getImageDescriptor("lintrun"); //$NON-NLS-1$
-        LintMenuAction allAction = new LintMenuAction("Check All Projects", allIcon, false, null);
+        LintMenuAction allAction = new LintMenuAction("Check All Projects", allIcon,
+                ACTION_RUN, null);
 
         addAction(allAction);
         addSeparator();
@@ -121,7 +123,7 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
             IProject p = project.getProject();
             ImageDescriptor icon = ImageDescriptor.createFromImage(provider.getImage(p));
             String label = String.format("Check %1$s", p.getName());
-            LintMenuAction projectAction = new LintMenuAction(label, icon, false, p);
+            LintMenuAction projectAction = new LintMenuAction(label, icon, ACTION_RUN, p);
             addAction(projectAction);
         }
 
@@ -131,7 +133,8 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
             // Currently only supported for XML files
             if (file != null && LintUtils.endsWith(file.getName(), DOT_XML)) {
                 ImageDescriptor icon = ImageDescriptor.createFromImage(provider.getImage(file));
-                IAction fileAction = new LintMenuAction("Check Current File", icon, false, file);
+                IAction fileAction = new LintMenuAction("Check Current File", icon, ACTION_RUN,
+                        file);
 
                 addSeparator();
                 addAction(fileAction);
@@ -140,9 +143,16 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
 
         ISharedImages images = PlatformUI.getWorkbench().getSharedImages();
         ImageDescriptor clear = images.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVEALL);
-        LintMenuAction clearAction = new LintMenuAction("Clear Lint Warnings", clear, true, null);
+        LintMenuAction clearAction = new LintMenuAction("Clear Lint Warnings", clear, ACTION_CLEAR,
+                null);
         addSeparator();
         addAction(clearAction);
+
+        LintMenuAction excludeAction = new LintMenuAction("Skip Library Project Dependencies",
+                allIcon, ACTION_TOGGLE_EXCLUDE, null);
+        addSeparator();
+        addAction(excludeAction);
+        excludeAction.setChecked(AdtPrefs.getPrefs().getSkipLibrariesFromLint());
 
         return mMenu;
     }
@@ -161,32 +171,44 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
         return null;
     }
 
+    private static final int ACTION_RUN = 1;
+    private static final int ACTION_CLEAR = 2;
+    private static final int ACTION_TOGGLE_EXCLUDE = 3;
+
     /**
      * Actions in the pulldown context menu: run lint or clear lint markers on
      * the given resource
      */
     private static class LintMenuAction extends Action {
-        private final boolean mClear;
         private final IResource mResource;
+        private final int mAction;
 
         /**
          * Creates a new context menu action
          *
          * @param text the label
          * @param descriptor the icon
-         * @param clear if true, clear lint markers otherwise check the resource
+         * @param action the action to run: run lint, clear, or toggle exclude libraries
          * @param resource the resource to check or clear markers for, where
          *            null means all projects
          */
-        private LintMenuAction(String text, ImageDescriptor descriptor, boolean clear,
+        private LintMenuAction(String text, ImageDescriptor descriptor, int action,
                 IResource resource) {
-            super(text, descriptor);
-            mClear = clear;
+            super(text, action == ACTION_TOGGLE_EXCLUDE ? AS_CHECK_BOX : AS_PUSH_BUTTON);
+            if (descriptor != null) {
+                setImageDescriptor(descriptor);
+            }
+            mAction = action;
             mResource = resource;
         }
 
         @Override
         public void run() {
+            if (mAction == ACTION_TOGGLE_EXCLUDE) {
+                AdtPrefs prefs = AdtPrefs.getPrefs();
+                prefs.setSkipLibrariesFromLint(!prefs.getSkipLibrariesFromLint());
+                return;
+            }
             List<IResource> resources = new ArrayList<IResource>();
             if (mResource == null) {
                 // All projects
@@ -198,9 +220,10 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
                 resources.add(mResource);
             }
             EclipseLintRunner.cancelCurrentJobs(false);
-            if (mClear) {
+            if (mAction == ACTION_CLEAR) {
                 EclipseLintClient.clearMarkers(resources);
             } else {
+                assert mAction == ACTION_RUN;
                 EclipseLintRunner.startLint(resources, null, null, false /*fatalOnly*/,
                         true /*show*/);
             }

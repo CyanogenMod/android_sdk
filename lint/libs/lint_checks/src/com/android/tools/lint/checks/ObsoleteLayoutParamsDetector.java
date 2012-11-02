@@ -55,12 +55,12 @@ import static com.android.SdkConstants.ATTR_LAYOUT_X;
 import static com.android.SdkConstants.ATTR_LAYOUT_Y;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.GRID_LAYOUT;
-import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
-import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.SdkConstants.RELATIVE_LAYOUT;
 import static com.android.SdkConstants.TABLE_ROW;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
@@ -306,6 +306,11 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             if (parent.getNodeType() == Node.ELEMENT_NODE) {
                 String tag = parent.getNodeName();
                 if (tag.indexOf('.') == -1 && !tag.equals(VIEW_MERGE)) {
+                    if (!context.getProject().getReportIssues()) {
+                        // If this is a library project not being analyzed, ignore it
+                        return;
+                    }
+
                     if (mIncludes == null) {
                         mIncludes = new HashMap<String, List<Pair<File, String>>>();
                     }

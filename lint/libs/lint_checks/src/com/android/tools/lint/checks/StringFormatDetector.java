@@ -291,6 +291,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
 
         if (found && name != null) {
+            if (!context.getProject().getReportIssues()) {
+                // If this is a library project not being analyzed, ignore it
+                return;
+            }
+
             // Record it for analysis when seen in Java code
             if (mFormatStrings == null) {
                 mFormatStrings = new HashMap<String, List<Pair<Handle,String>>>();

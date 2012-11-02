@@ -170,6 +170,11 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
             return;
         }
 
+        if (!context.getProject().getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
+
         if (mReferencedClasses == null) {
             mReferencedClasses = Maps.newHashMapWithExpectedSize(16);
         }

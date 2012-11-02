@@ -335,6 +335,11 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
     @Override
     public void afterCheckLibraryProject(@NonNull Context context) {
+        if (!context.getProject().getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
+
         checkResourceFolder(context, context.getProject());
     }
 

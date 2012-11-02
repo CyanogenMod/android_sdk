@@ -156,6 +156,11 @@ public class WrongIdDetector extends LayoutDetector {
     @Override
     public void afterCheckFile(@NonNull Context context) {
         if (mRelativeLayouts != null) {
+            if (!context.getProject().getReportIssues()) {
+                // If this is a library project not being analyzed, ignore it
+                return;
+            }
+
             for (Element layout : mRelativeLayouts) {
                 NodeList children = layout.getChildNodes();
                 for (int j = 0, childCount = children.getLength(); j < childCount; j++) {

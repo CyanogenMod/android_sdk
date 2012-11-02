@@ -111,6 +111,11 @@ public class WakelockDetector extends Detector implements ClassScanner {
     public void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
             @NonNull MethodNode method, @NonNull MethodInsnNode call) {
         if (call.owner.equals(WAKELOCK_OWNER)) {
+            if (!context.getProject().getReportIssues()) {
+                // If this is a library project not being analyzed, ignore it
+                return;
+            }
+
             String name = call.name;
             if (name.equals(ACQUIRE_METHOD)) {
                 mHasAcquire = true;
