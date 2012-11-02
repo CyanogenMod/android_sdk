@@ -20,9 +20,9 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.DOT_XML;
-import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -211,6 +211,11 @@ public class DuplicateIdDetector extends LayoutDetector {
             layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
 
             if (context.getPhase() == 1) {
+                if (!context.getProject().getReportIssues()) {
+                    // If this is a library project not being analyzed, ignore it
+                    return;
+                }
+
                 List<String> to = mIncludes.get(context.file);
                 if (to == null) {
                     to = new ArrayList<String>();

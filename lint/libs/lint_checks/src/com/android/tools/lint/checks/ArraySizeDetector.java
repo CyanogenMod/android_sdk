@@ -80,8 +80,6 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             ArraySizeDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
-    //private Map<File, List<Pair<String, Integer>>> mFileToArrayCount;
-    //private Map<File, List<Pair<String, Integer>>> mFileToArrayCount;
     private Multimap<File, Pair<String, Integer>> mFileToArrayCount;
 
     /** Locations for each array name. Populated during phase 2, if necessary */
@@ -238,8 +236,10 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         } else {
             String name = attribute.getValue();
             if (phase == 1) {
-                int childCount = LintUtils.getChildCount(element);
-                mFileToArrayCount.put(context.file, Pair.of(name, childCount));
+                if (context.getProject().getReportIssues()) {
+                    int childCount = LintUtils.getChildCount(element);
+                    mFileToArrayCount.put(context.file, Pair.of(name, childCount));
+                }
             } else {
                 assert phase == 2;
                 if (mLocations.containsKey(name)) {

@@ -23,9 +23,9 @@ import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.FRAME_LAYOUT;
-import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.R_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -166,6 +166,11 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Dete
                 String layout = LintUtils.getLayoutName(context.file);
                 Handle handle = context.parser.createLocationHandle(context, element);
                 handle.setClientData(element);
+
+                if (!context.getProject().getReportIssues()) {
+                    // If this is a library project not being analyzed, ignore it
+                    return;
+                }
 
                 if (mPending == null) {
                     mPending = new ArrayList<Pair<String,Handle>>();

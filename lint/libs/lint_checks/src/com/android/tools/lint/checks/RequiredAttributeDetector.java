@@ -353,6 +353,11 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     return;
                 }
 
+                if (!context.getProject().getReportIssues()) {
+                    // If this is a library project not being analyzed, ignore it
+                    return;
+                }
+
                 boolean certain = true;
                 boolean isRoot = isRootElement(element);
                 if (isRoot || isRootElement(element.getParentNode())

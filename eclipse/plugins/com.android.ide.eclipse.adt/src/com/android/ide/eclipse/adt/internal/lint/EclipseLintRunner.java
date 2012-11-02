@@ -127,7 +127,9 @@ public class EclipseLintRunner {
             @Nullable IResource source,
             boolean show) {
         if (resources != null && !resources.isEmpty()) {
-            resources = addLibraries(resources);
+            if (!AdtPrefs.getPrefs().getSkipLibrariesFromLint()) {
+                resources = addLibraries(resources);
+            }
 
             cancelCurrentJobs(false);
 

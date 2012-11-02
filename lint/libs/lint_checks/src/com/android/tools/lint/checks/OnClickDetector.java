@@ -134,6 +134,11 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
             context.report(ISSUE, attribute, context.getLocation(attribute),
                     "There should be no whitespace around attribute values", null);
         } else if (!value.startsWith(PREFIX_RESOURCE_REF)) { // Not resolved
+            if (!context.getProject().getReportIssues()) {
+                // If this is a library project not being analyzed, ignore it
+                return;
+            }
+
             if (mNames == null) {
                 mNames = new HashMap<String, Location.Handle>();
             }

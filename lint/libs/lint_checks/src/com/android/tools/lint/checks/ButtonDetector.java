@@ -366,6 +366,11 @@ public class ButtonDetector extends ResourceXmlDetector {
             return;
         }
 
+        if (!context.getProject().getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
+
         if (mApplicableResources == null) {
             mApplicableResources = new HashSet<String>();
         }

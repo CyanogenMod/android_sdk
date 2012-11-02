@@ -289,6 +289,11 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                 return;
             }
 
+            if (!context.getProject().getReportIssues()) {
+                // If this is a library project not being analyzed, ignore it
+                return;
+            }
+
             Location location = context.getLocation(attribute);
             location.setClientData(attribute);
             if (mRootAttributes == null) {
@@ -472,6 +477,9 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
 
     @Override
     public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
+        if (!context.getProject().getReportIssues()) {
+            return null;
+        }
         return new OverdrawVisitor();
     }
 
