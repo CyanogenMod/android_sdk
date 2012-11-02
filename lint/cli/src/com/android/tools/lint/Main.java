@@ -23,6 +23,7 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
@@ -41,6 +42,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
@@ -1317,6 +1319,62 @@ public class Main extends LintClient {
         }
     }
 
+    /**
+     * Given a file, it produces a cleaned up path from the file.
+     * This will clean up the path such that
+     * <ul>
+     *   <li>  {@code foo/./bar} becomes {@code foo/bar}
+     *   <li>  {@code foo/bar/../baz} becomes {@code foo/baz}
+     * </ul>
+     *
+     * Unlike {@link File#getCanonicalPath()} however, it will <b>not</b> attempt
+     * to make the file canonical, such as expanding symlinks and network mounts.
+     *
+     * @param file the file to compute a clean path for
+     * @return the cleaned up path
+     */
+    @VisibleForTesting
+    @NonNull
+    static String getCleanPath(@NonNull File file) {
+        String path = file.getPath();
+        StringBuilder sb = new StringBuilder(path.length());
+
+        if (path.startsWith(File.separator)) {
+            sb.append(File.separator);
+        }
+        elementLoop:
+        for (String element : Splitter.on(File.separatorChar).omitEmptyStrings().split(path)) {
+            if (element.equals(".")) {          //$NON-NLS-1$
+                continue;
+            } else if (element.equals("..")) {  //$NON-NLS-1$
+                if (sb.length() > 0) {
+                    for (int i = sb.length() - 1; i >= 0; i--) {
+                        char c = sb.charAt(i);
+                        if (c == File.separatorChar) {
+                            sb.setLength(i == 0 ? 1 : i);
+                            continue elementLoop;
+                        }
+                    }
+                    sb.setLength(0);
+                    continue;
+                }
+            }
+
+            if (sb.length() > 1) {
+                sb.append(File.separatorChar);
+            } else if (sb.length() > 0 && sb.charAt(0) != File.separatorChar) {
+                sb.append(File.separatorChar);
+            }
+            sb.append(element);
+        }
+        if (path.endsWith(File.separator) && sb.length() > 0
+                && sb.charAt(sb.length() - 1) != File.separatorChar) {
+            sb.append(File.separator);
+        }
+
+        return sb.toString();
+    }
+
     String getDisplayPath(Project project, File file) {
         String path = file.getPath();
         if (!mFullPath && path.startsWith(project.getReferenceDir().getPath())) {
@@ -1328,6 +1386,8 @@ public class Main extends LintClient {
             if (path.length() == 0) {
                 path = file.getName();
             }
+        } else if (mFullPath) {
+            path = getCleanPath(file.getAbsoluteFile());
         }
 
         return path;
