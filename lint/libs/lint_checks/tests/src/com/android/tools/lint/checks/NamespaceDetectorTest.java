@@ -100,6 +100,22 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
             lintProject("res/layout/wrong_namespace3.xml"));
     }
 
+    public void testTypo4() throws Exception {
+        assertEquals(
+            "res/layout/wrong_namespace5.xml:2: Warning: Suspicious namespace: should start with http:// [NamespaceTypo]\n" +
+            "    xmlns:noturi=\"tp://schems.android.com/apk/res/com.my.package\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong_namespace5.xml:3: Warning: Possible typo in URL: was \"http://schems.android.com/apk/res/com.my.package\", should probably be \"http://schemas.android.com/apk/res/com.my.package\" [NamespaceTypo]\n" +
+            "    xmlns:typo1=\"http://schems.android.com/apk/res/com.my.package\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/wrong_namespace5.xml:4: Warning: Possible typo in URL: was \"http://schems.android.comm/apk/res/com.my.package\", should probably be \"http://schemas.android.com/apk/res/com.my.package\" [NamespaceTypo]\n" +
+            "    xmlns:typo2=\"http://schems.android.comm/apk/res/com.my.package\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 3 warnings\n",
+
+            lintProject("res/layout/wrong_namespace5.xml"));
+    }
+
     public void testTypoOk() throws Exception {
         assertEquals(
                 "No warnings.",

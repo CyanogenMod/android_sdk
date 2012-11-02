@@ -127,10 +127,30 @@ public class NamespaceDetector extends LayoutDetector {
                         }
                         mUnusedNamespaces.put(item.getNodeName().substring(XMLNS_PREFIX.length()),
                                 attribute);
+                    } else if (!value.startsWith("http://")) { //$NON-NLS-1$
+                        context.report(TYPO, attribute, context.getLocation(attribute),
+                                "Suspicious namespace: should start with http://", null);
+
+                        continue;
                     }
 
                     String name = attribute.getName();
                     if (!name.equals(XMLNS_ANDROID) && !name.equals(XMLNS_A)) {
+                        // See if it looks like a typo
+                        int resIndex = value.indexOf("/res/"); //$NON-NLS-1$
+                        if (resIndex != -1 && value.length() + 5 > URI_PREFIX.length()) {
+                            String urlPrefix = value.substring(0, resIndex + 5);
+                            if (!urlPrefix.equals(URI_PREFIX) &&
+                                    LintUtils.editDistance(URI_PREFIX, urlPrefix) <= 3) {
+                                String correctUri = URI_PREFIX + value.substring(resIndex + 5);
+                                context.report(TYPO, attribute, context.getLocation(attribute),
+                                        String.format(
+                                            "Possible typo in URL: was \"%1$s\", should " +
+                                            "probably be \"%2$s\"",
+                                            value, correctUri),
+                                            null);
+                            }
+                        }
                         continue;
                     }
 
