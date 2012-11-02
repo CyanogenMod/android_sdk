@@ -254,4 +254,17 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                 "registration/Bar.java.txt=>src/test/pkg/Foo/Bar.java"
             ));
     }
+
+    public void testNoClassesWithLibraries() throws Exception {
+        mScopes = null;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "bytecode/AndroidManifestWrongRegs.xml=>AndroidManifest.xml",
+                "bytecode/.classpath=>.classpath",
+                "bytecode/GetterTest.jar.data=>libs/foo.jar"
+            ));
+    }
+
 }

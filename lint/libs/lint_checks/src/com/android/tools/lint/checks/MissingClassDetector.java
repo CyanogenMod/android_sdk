@@ -250,7 +250,9 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        mHaveClasses = true;
+        if (!context.isFromClassLibrary()) {
+            mHaveClasses = true;
+        }
         String curr = classNode.name;
         if (mReferencedClasses != null && mReferencedClasses.containsKey(curr)) {
             mReferencedClasses.remove(curr);
