@@ -22,6 +22,7 @@ import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.SdkConstants.GRID_VIEW;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VALUE_AUTO_FIT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -341,10 +342,16 @@ public class LayoutMetadata {
                 Element element = (Element) xmlNode;
                 String columns = element.getAttributeNS(ANDROID_URI, ATTR_NUM_COLUMNS);
                 int multiplier = 2;
-                if (columns != null && columns.length() > 0) {
-                    int c = Integer.parseInt(columns);
-                    if (c >= 1 && c <= 10) {
-                        multiplier = c;
+                if (columns != null && columns.length() > 0 &&
+                        !columns.equals(VALUE_AUTO_FIT)) {
+                    try {
+                        int c = Integer.parseInt(columns);
+                        if (c >= 1 && c <= 10) {
+                            multiplier = c;
+                        }
+                    } catch (NumberFormatException nufe) {
+                        // some unexpected numColumns value: just stick with 2 columns for
+                        // preview purposes
                     }
                 }
                 count *= multiplier;
