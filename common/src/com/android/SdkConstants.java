@@ -801,6 +801,7 @@ public final class SdkConstants {
     public static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
     public static final String VALUE_TRUE = "true";                     //$NON-NLS-1$
     public static final String VALUE_EDITABLE = "editable";             //$NON-NLS-1$
+    public static final String VALUE_AUTO_FIT = "auto_fit";             //$NON-NLS-1$
 
 
     // Values: Resources
