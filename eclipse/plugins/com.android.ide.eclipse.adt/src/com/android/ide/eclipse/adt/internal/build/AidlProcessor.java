@@ -45,7 +45,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,6 +67,7 @@ public class AidlProcessor extends SourceProcessor {
      */
     private static Pattern sAidlPattern1 = Pattern.compile("^(.+?):(\\d+):?\\s(.+)$"); //$NON-NLS-1$
 
+    private final static Set<String> EXTENSIONS = Collections.singleton(SdkConstants.EXT_AIDL);
 
     private enum AidlType {
         UNKNOWN, INTERFACE, PARCELABLE;
@@ -83,8 +86,8 @@ public class AidlProcessor extends SourceProcessor {
     }
 
     @Override
-    protected String getExtension() {
-        return SdkConstants.EXT_AIDL;
+    protected Set<String> getExtensions() {
+        return EXTENSIONS;
     }
 
     @Override

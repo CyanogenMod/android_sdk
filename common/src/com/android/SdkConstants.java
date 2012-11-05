@@ -868,6 +868,8 @@ public final class SdkConstants {
     public static final String EXT_AIDL = "aidl"; //$NON-NLS-1$
     /** Extension of Renderscript files, i.e. "rs" */
     public static final String EXT_RS = "rs"; //$NON-NLS-1$
+    /** Extension of FilterScript files, i.e. "fs" */
+    public static final String EXT_FS = "fs"; //$NON-NLS-1$
     /** Extension of dependency files, i.e. "d" */
     public static final String EXT_DEP = "d"; //$NON-NLS-1$
     /** Extension of native libraries, i.e. "so" */
@@ -887,6 +889,8 @@ public final class SdkConstants {
     public static final String DOT_AIDL = DOT + EXT_AIDL;
     /** Dot-Extension of renderscript files, i.e. ".rs" */
     public static final String DOT_RS = DOT + EXT_RS;
+    /** Dot-Extension of FilterScript files, i.e. ".fs" */
+    public static final String DOT_FS = DOT + EXT_FS;
     /** Dot-Extension of dependency files, i.e. ".d" */
     public static final String DOT_DEP = DOT + EXT_DEP;
     /** Dot-Extension of dex files, i.e. ".dex" */
