@@ -840,8 +840,9 @@ public class AdtUtils {
             case 14: return "ICE_CREAM_SANDWICH"; //$NON-NLS-1$
             case 15: return "ICE_CREAM_SANDWICH_MR1"; //$NON-NLS-1$
             case 16: return "JELLY_BEAN"; //$NON-NLS-1$
+            case 17: return "JELLY_BEAN_MR1"; //$NON-NLS-1$
             // If you add more versions here, also update #getAndroidName and
-            // LintConstants#HIGHEST_KNOWN_API
+            // SdkConstants#HIGHEST_KNOWN_API
         }
 
         return null;
@@ -990,6 +991,7 @@ public class AdtUtils {
             case 14: return "API 14: Android 4.0 (IceCreamSandwich)";
             case 15: return "API 15: Android 4.0.3 (IceCreamSandwich)";
             case 16: return "API 16: Android 4.1 (Jelly Bean)";
+            case 17: return "API 17: Android 4.2 (Jelly Bean)";
             // If you add more versions here, also update #getBuildCodes and
             // SdkConstants#HIGHEST_KNOWN_API
 

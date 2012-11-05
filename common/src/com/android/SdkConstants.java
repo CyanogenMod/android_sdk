@@ -1147,5 +1147,5 @@ public final class SdkConstants {
      * release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 16;
+    public static final int HIGHEST_KNOWN_API = 17;
 }
