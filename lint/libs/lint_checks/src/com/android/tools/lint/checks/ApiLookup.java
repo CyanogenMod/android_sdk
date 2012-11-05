@@ -24,7 +24,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.primitives.UnsignedBytes;
 
@@ -74,12 +76,12 @@ public class ApiLookup {
     /** Relative path to the api-versions.xml database file within the Lint installation */
     private static final String XML_FILE_PATH = "platform-tools/api/api-versions.xml"; //$NON-NLS-1$
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 4;
+    private static final int BINARY_FORMAT_VERSION = 5;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
     /** Default size to reserve for each API entry when creating byte buffer to build up data */
-    private static final int BYTES_PER_ENTRY = 40;
+    private static final int BYTES_PER_ENTRY = 36;
 
     private final LintClient mClient;
     private final File mXmlFile;
@@ -89,6 +91,7 @@ public class ApiLookup {
     private int[] mIndices;
     private int mClassCount;
     private int mMethodCount;
+    private String[] mJavaPackages;
 
     private static WeakReference<ApiLookup> sInstance =
             new WeakReference<ApiLookup>(null);
@@ -237,16 +240,20 @@ public class ApiLookup {
      *     version, it can ignore it (and regenerate the cache from XML).
      * 3. The number of classes [1 int]
      * 4. The number of members (across all classes) [1 int].
-     * 5. Class offset table (one integer per class, pointing to the byte offset in the
+     * 5. The number of java/javax packages [1 int]
+     * 6. The java/javax package name table. Each item consists of a byte count for
+     *    the package string (as 1 byte) followed by the UTF-8 encoded bytes for each package.
+     *    These are in sorted order.
+     * 7. Class offset table (one integer per class, pointing to the byte offset in the
      *      file (relative to the beginning of the file) where each class begins.
      *      The classes are always sorted alphabetically by fully qualified name.
-     * 6. Member offset table (one integer per member, pointing to the byte offset in the
+     * 8. Member offset table (one integer per member, pointing to the byte offset in the
      *      file (relative to the beginning of the file) where each member entry begins.
      *      The members are always sorted alphabetically.
-     * 7. Class entry table. Each class entry consists of the fully qualified class name,
+     * 9. Class entry table. Each class entry consists of the fully qualified class name,
      *       in JVM format (using / instead of . in package names and $ for inner classes),
      *       followed by the byte 0 as a terminator, followed by the API version as a byte.
-     * 8. Member entry table. Each member entry consists of the class number (as a short),
+     * 10. Member entry table. Each member entry consists of the class number (as a short),
      *      followed by the JVM method/field signature, encoded as UTF-8, followed by a 0 byte
      *      signature terminator, followed by the API level as a byte.
      * <p>
@@ -289,6 +296,16 @@ public class ApiLookup {
 
             mClassCount = buffer.getInt();
             mMethodCount = buffer.getInt();
+
+            int javaPackageCount = buffer.getInt();
+            // Read in the Java packages
+            mJavaPackages = new String[javaPackageCount];
+            for (int i = 0; i < javaPackageCount; i++) {
+                int count = UnsignedBytes.toInt(buffer.get());
+                byte[] bytes = new byte[count];
+                buffer.get(bytes, 0, count);
+                mJavaPackages[i] = new String(bytes, Charsets.UTF_8);
+            }
 
             // Read in the class table indices;
             int count = mClassCount + mMethodCount;
@@ -345,9 +362,16 @@ public class ApiLookup {
         Map<ApiClass, List<String>> memberMap =
                 Maps.newHashMapWithExpectedSize(classMap.size());
         int memberCount = 0;
+        Set<String> javaPackageSet = Sets.newHashSetWithExpectedSize(70);
         for (Map.Entry<String, ApiClass> entry : classMap.entrySet()) {
             String className = entry.getKey();
             ApiClass apiClass = entry.getValue();
+
+            if (className.startsWith("java/")               //$NON-NLS-1$
+                    || className.startsWith("javax/")) {    //$NON-NLS-1$
+                String pkg = apiClass.getPackage();
+                javaPackageSet.add(pkg);
+            }
 
             Set<String> allMethods = apiClass.getAllMethods(info);
             Set<String> allFields = apiClass.getAllFields(info);
@@ -399,6 +423,10 @@ public class ApiLookup {
         }
         Collections.sort(classes);
 
+        List<String> javaPackages = Lists.newArrayList(javaPackageSet);
+        Collections.sort(javaPackages);
+        int javaPackageCount = javaPackages.size();
+
         int entryCount = classMap.size() + memberCount;
         int capacity = entryCount * BYTES_PER_ENTRY;
         ByteBuffer buffer = ByteBuffer.allocate(capacity);
@@ -413,14 +441,26 @@ public class ApiLookup {
         //      version, it can ignore it (and regenerate the cache from XML).
         buffer.put((byte) BINARY_FORMAT_VERSION);
 
-
-
         //  3. The number of classes [1 int]
         buffer.putInt(classes.size());
+
         //  4. The number of members (across all classes) [1 int].
         buffer.putInt(memberCount);
 
-        //  5. Class offset table (one integer per class, pointing to the byte offset in the
+        //  5. The number of Java packages [1 int].
+        buffer.putInt(javaPackageCount);
+
+        //  6. The Java package table. There are javaPackage.size() entries, where each entry
+        //     consists of a string length, as a byte, followed by the bytes in the package.
+        //     There is no terminating 0.
+        for (String pkg : javaPackages) {
+            byte[] bytes = pkg.getBytes(Charsets.UTF_8);
+            assert bytes.length < 255 : pkg;
+            buffer.put((byte) bytes.length);
+            buffer.put(bytes);
+        }
+
+        //  7. Class offset table (one integer per class, pointing to the byte offset in the
         //       file (relative to the beginning of the file) where each class begins.
         //       The classes are always sorted alphabetically by fully qualified name.
         int classOffsetTable = buffer.position();
@@ -431,7 +471,7 @@ public class ApiLookup {
             buffer.putInt(0);
         }
 
-        //  6. Member offset table (one integer per member, pointing to the byte offset in the
+        //  8. Member offset table (one integer per member, pointing to the byte offset in the
         //       file (relative to the beginning of the file) where each member entry begins.
         //       The members are always sorted alphabetically.
         int methodOffsetTable = buffer.position();
@@ -442,7 +482,7 @@ public class ApiLookup {
         int nextEntry = buffer.position();
         int nextOffset = classOffsetTable;
 
-        // 7. Class entry table. Each class entry consists of the fully qualified class name,
+        // 9. Class entry table. Each class entry consists of the fully qualified class name,
         //      in JVM format (using / instead of . in package names and $ for inner classes),
         //      followed by the byte 0 as a terminator, followed by the API version as a byte.
         for (String clz : classes) {
@@ -462,7 +502,7 @@ public class ApiLookup {
             nextEntry = buffer.position();
         }
 
-        //  8. Member entry table. Each member entry consists of the class number (as a short),
+        //  10. Member entry table. Each member entry consists of the class number (as a short),
         //       followed by the JVM method/field signature, encoded as UTF-8, followed by a 0 byte
         //       signature terminator, followed by the API level as a byte.
         assert nextOffset == methodOffsetTable;
@@ -715,6 +755,70 @@ public class ApiLookup {
         return -1;
     }
 
+    /**
+     * Returns true if the given owner (in VM format) is a valid Java package supported
+     * in any version of Android.
+     *
+     * @param owner the package, in VM format
+     * @return true if the package is included in one or more versions of Android
+     */
+    public boolean isValidJavaPackage(@NonNull String owner) {
+        int packageLength = owner.lastIndexOf('/');
+        if (packageLength == -1) {
+            return false;
+        }
+
+        // The index array contains class indexes from 0 to classCount and
+        //   member indices from classCount to mIndices.length.
+        int low = 0;
+        int high = mJavaPackages.length - 1;
+        while (low <= high) {
+            int middle = (low + high) >>> 1;
+            int offset = middle;
+
+            if (DEBUG_SEARCH) {
+                System.out.println("Comparing string " + owner + " with entry at " + offset
+                        + ": " + mJavaPackages[offset]);
+            }
+
+            // Compare the api info at the given index.
+            int compare = comparePackage(mJavaPackages[offset], owner, packageLength);
+            if (compare == 0) {
+                return true;
+            }
+
+            if (compare < 0) {
+                low = middle + 1;
+            } else if (compare > 0) {
+                high = middle - 1;
+            } else {
+                assert false; // compare == 0 already handled above
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private int comparePackage(String s1, String s2, int max) {
+        for (int i = 0; i < max; i++) {
+            if (i == s1.length()) {
+                return -1;
+            }
+            char c1 = s1.charAt(i);
+            char c2 = s2.charAt(i);
+            if (c1 != c2) {
+                return c1 - c2;
+            }
+        }
+
+        if (s1.length() > max) {
+            return 1;
+        }
+
+        return 0;
+    }
+
     /** Returns the class number of the given class, or -1 if it is unknown */
     private int findClass(@NonNull String owner) {
         assert owner.indexOf('.') == -1 : "Should use / instead of . in owner: " + owner;
@@ -723,17 +827,17 @@ public class ApiLookup {
         //   member indices from classCount to mIndices.length.
         int low = 0;
         int high = mClassCount - 1;
+        // Compare the api info at the given index.
+        int classNameLength = owner.length();
         while (low <= high) {
             int middle = (low + high) >>> 1;
             int offset = mIndices[middle];
 
             if (DEBUG_SEARCH) {
-                System.out.println("Comparing string " + owner +" with entry at " + offset
+                System.out.println("Comparing string " + owner + " with entry at " + offset
                         + ": " + dumpEntry(offset));
             }
 
-            // Compare the api info at the given index.
-            int classNameLength = owner.length();
             int compare = compare(mData, offset, (byte) 0, owner, classNameLength);
             if (compare == 0) {
                 return middle;

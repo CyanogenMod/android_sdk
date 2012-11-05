@@ -55,7 +55,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 131;
+        final int initialCapacity = 132;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -64,6 +64,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(SdCardDetector.ISSUE);
         issues.add(ApiDetector.UNSUPPORTED);
+        issues.add(InvalidPackageDetector.ISSUE);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(DuplicateResourceDetector.ISSUE);

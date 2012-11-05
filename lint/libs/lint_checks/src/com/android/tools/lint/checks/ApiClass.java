@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 
+import com.android.annotations.Nullable;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 
@@ -227,6 +228,16 @@ public class ApiClass {
 
         list.add(Pair.of(name, Integer.valueOf(value)));
 
+    }
+
+    @Nullable
+    public String getPackage() {
+        int index = mName.lastIndexOf('/');
+        if (index != -1) {
+            return mName.substring(0, index);
+        }
+
+        return null;
     }
 
     @Override

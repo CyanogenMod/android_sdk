@@ -87,6 +87,16 @@ public class ApiLookupTest extends AbstractCheckTest {
                 "(Landroid/preference/PreferenceFragment;Landroid/preference/Preference;)"));
     }
 
+    public void testIsValidPackage() {
+        assertTrue(mDb.isValidJavaPackage("java/lang/Integer"));
+        assertTrue(mDb.isValidJavaPackage("javax/crypto/Cipher"));
+        assertTrue(mDb.isValidJavaPackage("java/awt/font/NumericShaper"));
+
+        assertFalse(mDb.isValidJavaPackage("javax/swing/JButton"));
+        assertFalse(mDb.isValidJavaPackage("java/rmi/Naming"));
+        assertFalse(mDb.isValidJavaPackage("java/lang/instrument/Instrumentation"));
+    }
+
     @Override
     protected Detector getDetector() {
         fail("This is not used in the ApiDatabase test");
@@ -129,6 +139,9 @@ public class ApiLookupTest extends AbstractCheckTest {
         raf.close();
         lookup = ApiLookup.get(new LookupTestClient());
         String message = mLogBuffer.toString();
+        // NOTE: This test is incompatible with the DEBUG_FORCE_REGENERATE_BINARY and WRITE_STATS
+        // flags in the ApiLookup class, so if the test fails during development and those are
+        // set, clear them.
         assertTrue(message.contains("Please delete the file and restart the IDE/lint:"));
         assertTrue(message.contains(mCacheDir.getPath()));
         ApiLookup.dispose();

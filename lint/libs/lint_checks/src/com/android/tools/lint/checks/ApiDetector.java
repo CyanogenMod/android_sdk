@@ -312,7 +312,6 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                     className.substring(className.lastIndexOf('/') + 1), null,
                                     SearchHints.create(NEAREST).matchJavaSymbol());
                         }
-
                     }
                 }
             }
