@@ -740,13 +740,15 @@
             class="com.android.ide.eclipse.adt.internal.editors.common.CommonSourceViewerConfig"
             target="com.android.ide.eclipse.editors.CommonXmlEditor">
         </sourceViewerConfiguration>
-
         <quickOutlineConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.AndroidQuickOutlineConfiguration"
             target="org.eclipse.core.runtime.xml" />
         <contentOutlineConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.AndroidOutlineConfiguration"
             target="org.eclipse.core.runtime.xml" />
+        <doubleClickStrategy
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidDoubleClickStrategy"
+            target="org.eclipse.wst.xml.XML_DEFAULT" />
         <provisionalConfiguration
             type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
             class="com.android.ide.eclipse.adt.internal.editors.formatting.XmlQuickAssistManager"
