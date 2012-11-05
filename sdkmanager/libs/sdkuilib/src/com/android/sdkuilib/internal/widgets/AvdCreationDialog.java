@@ -1299,8 +1299,14 @@ public class AvdCreationDialog extends GridDialog {
         if (name.endsWith(" 7")) {       //$NON-NLS-1$
             return 4;
         }
+        if (name.endsWith(" 10")) {       //$NON-NLS-1$
+            return 5;
+        }
+        if (name.endsWith(" 4")) {       //$NON-NLS-1$
+            return 6;
+        }
 
-        return 5;
+        return 7;
     }
 
     private static boolean isGeneric(Device device) {
