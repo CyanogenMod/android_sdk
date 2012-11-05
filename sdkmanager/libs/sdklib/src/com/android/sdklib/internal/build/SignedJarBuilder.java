@@ -262,11 +262,15 @@ public class SignedJarBuilder {
             mOutputJar.putNextEntry(new JarEntry("META-INF/CERT.SF"));
             SignatureOutputStream out = new SignatureOutputStream(mOutputJar, signature);
             writeSignatureFile(out);
-            out.close();
 
             // CERT.*
             mOutputJar.putNextEntry(new JarEntry("META-INF/CERT." + mKey.getAlgorithm()));
             writeSignatureBlock(signature, mCertificate, mKey);
+
+            // close out at the end because it can also close mOutputJar.
+            // (there's some timing issue here I think, because it's worked before with out
+            // being closed after writing CERT.SF).
+            out.close();
         }
 
         mOutputJar.close();
