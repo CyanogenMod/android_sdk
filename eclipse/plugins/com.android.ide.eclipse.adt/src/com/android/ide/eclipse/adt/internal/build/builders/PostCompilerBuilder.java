@@ -355,13 +355,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             // remove older packaging markers.
             removeMarkersFromContainer(javaProject.getProject(), AdtConstants.MARKER_PACKAGING);
 
-            if (androidOutputFolder == null) {
-                // mark project and exit
-                markProject(AdtConstants.MARKER_PACKAGING, Messages.Failed_To_Get_Output,
-                        IMarker.SEVERITY_ERROR);
-                return allRefProjects;
-            }
-
             // finished with the common init and tests. Special case of the library.
             if (isLibrary) {
                 // check the jar output file is present, if not create it.
@@ -641,6 +634,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                             Messages.ApkBuilder_Update_or_Execute_manually_s,
                             e.getCommandLine());
 
+                    AdtPlugin.log(e, msg);
+
                     return allRefProjects;
                 } catch (ApkCreationException e) {
                     String eMessage = e.getMessage();
@@ -649,6 +644,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                     String msg = String.format(Messages.Final_Archive_Error_s, eMessage);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+
+                    AdtPlugin.log(e, msg);
                 } catch (AndroidLocationException e) {
                     String eMessage = e.getMessage();
 
@@ -656,6 +653,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     String msg = String.format(Messages.Final_Archive_Error_s, eMessage);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+                    AdtPlugin.log(e, msg);
                 } catch (NativeLibInJarException e) {
                     String msg = e.getMessage();
 
@@ -669,6 +667,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     AdtPlugin.printErrorToConsole(project, msg);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+                    AdtPlugin.log(e, msg);
                 } catch (DuplicateFileException e) {
                     String msg1 = String.format(
                             "Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
