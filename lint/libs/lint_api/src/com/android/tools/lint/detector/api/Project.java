@@ -617,11 +617,20 @@ public class Project {
     @NonNull
     public String getName() {
         if (mName == null) {
-            // TODO: Consider reading the name from .project (if it's an Eclipse project)
-            mName = mDir.getName();
+            mName = mClient.getProjectName(this);
         }
 
         return mName;
+    }
+
+    /**
+     * Sets the name of the project
+     *
+     * @param name the name of the project, never null
+     */
+    public void setName(@NonNull String name) {
+        assert !name.isEmpty();
+        mName = name;
     }
 
     /**

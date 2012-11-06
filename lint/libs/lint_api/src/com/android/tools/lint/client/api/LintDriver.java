@@ -1763,6 +1763,12 @@ public class LintDriver {
                 @NonNull String superClassName) {
             return mDelegate.isSubclassOf(project, name, superClassName);
         }
+
+        @Override
+        @NonNull
+        public String getProjectName(@NonNull Project project) {
+            return mDelegate.getProjectName(project);
+        }
     }
 
     /**

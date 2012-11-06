@@ -287,6 +287,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
+    @Override
+    @NonNull
+    public String getProjectName(@NonNull Project project) {
+        // Initialize the lint project's name to the name of the Eclipse project,
+        // which might differ from the directory name
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject != null) {
+            return eclipseProject.getName();
+        }
+
+        return super.getProjectName(project);
+    }
+
     @NonNull
     @Override
     public Configuration getConfiguration(@NonNull Project project) {
