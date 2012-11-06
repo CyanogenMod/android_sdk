@@ -568,10 +568,31 @@ public abstract class LintClient {
             return project;
         }
 
-
-        project = Project.create(this, dir, referenceDir);
+        project = createProject(dir, referenceDir);
         mDirToProject.put(canonicalDir, project);
         return project;
+    }
+
+    /**
+     * Create a project for the given directory
+     * @param dir the root directory of the project
+     * @param referenceDir See {@link Project#getReferenceDir()}.
+     * @return a new project
+     */
+    @NonNull
+    protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+        return Project.create(this, dir, referenceDir);
+    }
+
+    /**
+     * Returns the name of the given project
+     *
+     * @param project the project to look up
+     * @return the name of the project
+     */
+    @NonNull
+    public String getProjectName(@NonNull Project project) {
+        return project.getDir().getName();
     }
 
     private IAndroidTarget[] mTargets;
