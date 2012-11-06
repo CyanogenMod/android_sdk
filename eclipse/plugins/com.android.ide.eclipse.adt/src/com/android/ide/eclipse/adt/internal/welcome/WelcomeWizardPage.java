@@ -99,7 +99,7 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
         mInstallCommonCheckbox = new Button(container, SWT.CHECK);
         mInstallCommonCheckbox.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3,
                 1));
-        mInstallCommonCheckbox.setText("Install Android 2.2, a version which is supported by ~93% phones and tablets");
+        mInstallCommonCheckbox.setText("Install Android 2.2, a version which is supported by ~96% phones and tablets");
         mInstallCommonCheckbox.addSelectionListener(this);
 
         new Label(container, SWT.NONE);
