@@ -75,4 +75,35 @@ public class SharedPrefsDetectorTest  extends AbstractCheckTest {
             lintProject("src/test/pkg/SharedPrefsTest4.java.txt=>" +
                     "src/test/pkg/SharedPrefsTest4.java"));
     }
+
+    public void test5() throws Exception {
+        // Check fields too: http://code.google.com/p/android/issues/detail?id=39134
+        assertEquals(
+            "src/test/pkg/SharedPrefsTest5.java:16: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        mPreferences.edit().putString(PREF_FOO, \"bar\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:17: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        mPreferences.edit().remove(PREF_BAZ).remove(PREF_FOO);\n" +
+            "        ~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:26: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        preferences.edit().putString(PREF_FOO, \"bar\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:27: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);\n" +
+            "        ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:32: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        preferences.edit().putString(PREF_FOO, \"bar\");\n" +
+            "        ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:33: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        preferences.edit().remove(PREF_BAZ).remove(PREF_FOO);\n" +
+            "        ~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SharedPrefsTest5.java:38: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n" +
+            "        Editor editor = preferences.edit().putString(PREF_FOO, \"bar\");\n" +
+            "                        ~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 7 warnings\n",
+
+            lintProject("src/test/pkg/SharedPrefsTest5.java.txt=>" +
+                    "src/test/pkg/SharedPrefsTest5.java"));
+    }
+
 }
