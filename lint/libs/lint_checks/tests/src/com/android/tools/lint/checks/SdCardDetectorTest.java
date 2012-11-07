@@ -48,14 +48,24 @@ public class SdCardDetectorTest extends AbstractCheckTest {
             "src/test/pkg/SdCardTest.java:24: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
             "  String FilePath = \"/sdcard/\" + new File(\"test\");\n" +
             "                    ~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:29: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  intent.setDataAndType(Uri.parse(\"file://sdcard/foo.json\"), \"application/bar-json\");\n" +
+            "                                  ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "src/test/pkg/SdCardTest.java:30: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
             "  intent.putExtra(\"path-filter\", \"/sdcard(/.+)*\");\n" +
             "                                 ~~~~~~~~~~~~~~~\n" +
             "src/test/pkg/SdCardTest.java:31: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
             "  intent.putExtra(\"start-dir\", \"/sdcard\");\n" +
             "                               ~~~~~~~~~\n" +
-            "0 errors, 9 warnings\n" +
-            "",
+            "src/test/pkg/SdCardTest.java:32: Warning: Do not hardcode \"/data/\"; use Context.getFilesDir().getPath() instead [SdCardPath]\n" +
+            "  String mypath = \"/data/data/foo\";\n" +
+            "                  ~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:33: Warning: Do not hardcode \"/data/\"; use Context.getFilesDir().getPath() instead [SdCardPath]\n" +
+            "  String base = \"/data/data/foo.bar/test-profiling\";\n" +
+            "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/SdCardTest.java:34: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+            "  String s = \"file://sdcard/foo\";\n" +
+            "             ~~~~~~~~~~~~~~~~~~~\n",
 
             lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
     }

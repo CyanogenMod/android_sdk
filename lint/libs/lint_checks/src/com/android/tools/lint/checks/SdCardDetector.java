@@ -46,7 +46,11 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
             "Looks for hardcoded references to /sdcard",
 
             "Your code should not reference the `/sdcard` path directly; instead use " +
-            "`Environment.getExternalStorageDirectory().getPath()`",
+            "`Environment.getExternalStorageDirectory().getPath()`.\n" +
+            "\n" +
+            "Similarly, do not reference the `/data/data/` path directly; it can vary " +
+            "in multi-user scenarios. Instead, use " +
+            "`Context.getFilesDir().getPath()`.",
 
             Category.CORRECTNESS,
             6,
@@ -91,16 +95,29 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
         @Override
         public boolean visitStringLiteral(StringLiteral node) {
             String s = node.astValue();
-            // Other potential String prefixes to check for:
-            //    /mnt/sdcard/
-            //    /system/media/sdcard
-            //    file://sdcard
-            //    file:///sdcard
-            if (s.startsWith("/sdcard")) { //$NON-NLS-1$
+            if (s.isEmpty()) {
+                return false;
+            }
+            char c = s.charAt(0);
+            if (c != '/' && c != 'f') {
+                return false;
+            }
+
+            if (s.startsWith("/sdcard")                        //$NON-NLS-1$
+                    || s.startsWith("/mnt/sdcard/")            //$NON-NLS-1$
+                    || s.startsWith("/system/media/sdcard")    //$NON-NLS-1$
+                    || s.startsWith("file://sdcard/")          //$NON-NLS-1$
+                    || s.startsWith("file:///sdcard/")) {      //$NON-NLS-1$
                 String message = "Do not hardcode \"/sdcard/\"; " +
                     "use Environment.getExternalStorageDirectory().getPath() instead";
                 Location location = mContext.getLocation(node);
                 mContext.report(ISSUE, node, location, message, s);
+            } else if (s.startsWith("/data/data/")    //$NON-NLS-1$
+                    || s.startsWith("/data/user/")) { //$NON-NLS-1$
+                String message = "Do not hardcode \"/data/\"; " +
+                        "use Context.getFilesDir().getPath() instead";
+                    Location location = mContext.getLocation(node);
+                    mContext.report(ISSUE, node, location, message, s);
             }
 
             return false;
