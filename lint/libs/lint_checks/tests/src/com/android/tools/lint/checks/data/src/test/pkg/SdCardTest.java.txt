@@ -29,5 +29,8 @@ public class SdCardTest {
 		intent.setDataAndType(Uri.parse("file://sdcard/foo.json"), "application/bar-json");
 		intent.putExtra("path-filter", "/sdcard(/.+)*");
 		intent.putExtra("start-dir", "/sdcard");
+		String mypath = "/data/data/foo";
+		String base = "/data/data/foo.bar/test-profiling";
+		String s = "file://sdcard/foo";
 	}
 }
