@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_HINT;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LABEL_FOR;
 import static com.android.SdkConstants.AUTO_COMPLETE_TEXT_VIEW;
@@ -103,6 +104,9 @@ public class LabelForDetector extends LayoutDetector {
             }
 
             for (Element element : mTextFields) {
+                if (element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
+                    continue;
+                }
                 String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
                 boolean missing = true;
                 if (mLabels.contains(id)) {
