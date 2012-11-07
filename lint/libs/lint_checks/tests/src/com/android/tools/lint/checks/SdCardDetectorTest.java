@@ -65,7 +65,8 @@ public class SdCardDetectorTest extends AbstractCheckTest {
             "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "src/test/pkg/SdCardTest.java:34: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
             "  String s = \"file://sdcard/foo\";\n" +
-            "             ~~~~~~~~~~~~~~~~~~~\n",
+            "             ~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 13 warnings\n",
 
             lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
     }

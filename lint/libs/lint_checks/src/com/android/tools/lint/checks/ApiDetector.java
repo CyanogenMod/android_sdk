@@ -355,6 +355,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         owner = classNode.superName;
                     }
 
+                    boolean checkingSuperClass = false;
                     while (owner != null) {
                         int api = mApiDatabase.getCallVersion(owner, name, desc);
                         if (api > minSdk) {
@@ -367,6 +368,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                 // calls.
                                 break;
                             }
+
+                            if (!checkingSuperClass
+                                    && node.getOpcode() == Opcodes.INVOKEVIRTUAL
+                                    && methodDefinedLocally(classNode, name, desc)) {
+                                break;
+                            }
+
                             String fqcn;
                             if (CONSTRUCTOR_NAME.equals(name)) {
                                 fqcn = "new " + ClassContext.getFqcn(owner); //$NON-NLS-1$
@@ -409,6 +417,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         } else {
                             owner = null;
                         }
+
+                        checkingSuperClass = true;
                     }
                 } else if (type == AbstractInsnNode.FIELD_INSN) {
                     FieldInsnNode node = (FieldInsnNode) instruction;
@@ -448,6 +458,19 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                 }
             }
         }
+    }
+
+    @SuppressWarnings("rawtypes") // ASM API
+    private boolean methodDefinedLocally(ClassNode classNode, String name, String desc) {
+        List methodList = classNode.methods;
+        for (Object m : methodList) {
+            MethodNode method = (MethodNode) m;
+            if (name.equals(method.name) && desc.equals(method.desc)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @SuppressWarnings("rawtypes") // ASM API

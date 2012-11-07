@@ -705,4 +705,26 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/TestLint.class.data=>bin/classes/TestLint.class"
                 ));
     }
+
+    public void testAllowLocalMethodsImplementingInaccessible() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=39030
+        assertEquals(
+            "src/test/pkg/ApiCallTest10.java:25: Error: Call requires API level 14 (current min is 4): android.view.View#onPopulateAccessibilityEvent [NewApi]\n" +
+            "        super.onPopulateAccessibilityEvent(event); // Valid lint warning\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest10.java:31: Error: Call requires API level 14 (current min is 4): android.view.View#dispatchGenericFocusedEvent [NewApi]\n" +
+            "        return super.dispatchGenericFocusedEvent(event); // Should flag this\n" +
+            "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest10.java:40: Error: Call requires API level 14 (current min is 4): android.view.View#dispatchHoverEvent [NewApi]\n" +
+            "        dispatchHoverEvent(null);\n" +
+            "        ~~~~~~~~~~~~~~~~~~\n" +
+            "3 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/ApiCallTest10.java.txt=>src/test/pkg/ApiCallTest10.java",
+                    "apicheck/ApiCallTest10.class.data=>bin/classes/test/pkg/ApiCallTest10.class"
+                ));
+    }
 }
