@@ -33,9 +33,28 @@ public class HardcodedValuesDetectorTest  extends AbstractCheckTest {
             "res/layout/accessibility.xml:6: Warning: [I18N] Hardcoded string \"Button\", should use @string resource [HardcodedText]\n" +
             "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 2 warnings\n" +
-            "",
+            "0 errors, 2 warnings\n",
+
             lintFiles("res/layout/accessibility.xml"));
+    }
+
+    public void testMenus() throws Exception {
+        assertEquals(
+            "res/menu/menu.xml:7: Warning: [I18N] Hardcoded string \"My title 1\", should use @string resource [HardcodedText]\n" +
+            "        android:title=\"My title 1\">\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/menu/menu.xml:13: Warning: [I18N] Hardcoded string \"My title 2\", should use @string resource [HardcodedText]\n" +
+            "        android:title=\"My title 2\">\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings\n",
+
+            lintFiles("res/menu/menu.xml"));
+    }
+
+    public void testMenusOk() throws Exception {
+        assertEquals(
+            "No warnings.",
+            lintFiles("res/menu/titles.xml"));
     }
 
     public void testSuppress() throws Exception {
