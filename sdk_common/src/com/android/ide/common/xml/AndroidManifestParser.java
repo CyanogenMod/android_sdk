@@ -228,7 +228,8 @@ public class AndroidManifestParser {
                             }
                             break;
                         case LEVEL_INSIDE_APPLICATION:
-                            if (AndroidManifest.NODE_ACTIVITY.equals(localName)) {
+                            if (AndroidManifest.NODE_ACTIVITY.equals(localName)
+                                    || AndroidManifest.NODE_ACTIVITY_ALIAS.equals(localName)) {
                                 processActivityNode(attributes);
                                 mValidLevel++;
                             } else if (AndroidManifest.NODE_SERVICE.equals(localName)) {

@@ -22,9 +22,9 @@ import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
 
-import java.io.InputStream;
-
 import junit.framework.TestCase;
+
+import java.io.InputStream;
 
 /**
  * Tests for {@link AndroidManifestParser}
@@ -39,6 +39,8 @@ public class AndroidManifestParserTest extends TestCase {
         "AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
     private static final String TESTAPP_XML = TESTDATA_PATH +
         "AndroidManifest-testapp.xml";  //$NON-NLS-1$
+    private static final String ACTIVITY_ALIAS_XML = TESTDATA_PATH +
+            "AndroidManifest-activityalias.xml";  //$NON-NLS-1$
     private static final String PACKAGE_NAME =  "com.android.testapp"; //$NON-NLS-1$
     private static final Integer VERSION_CODE = 42;
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$
@@ -159,5 +161,15 @@ public class AndroidManifestParserTest extends TestCase {
 
     public void testGetPackageName() {
         assertEquals(PACKAGE_NAME, mManifestTestApp.getPackage());
+    }
+
+    public void testActivityAlias() throws Exception {
+        InputStream manifestStream = this.getClass().getResourceAsStream(ACTIVITY_ALIAS_XML);
+
+        ManifestData manifest = AndroidManifestParser.parse(manifestStream);
+        assertNotNull(manifest);
+
+        assertEquals(manifest.getLauncherActivity().getName(),
+                "com.android.testapp.AliasActivity"); //$NON-NLS-1$
     }
 }
