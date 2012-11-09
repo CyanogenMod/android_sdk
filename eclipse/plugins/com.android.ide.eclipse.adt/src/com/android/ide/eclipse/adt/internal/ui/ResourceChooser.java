@@ -641,7 +641,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
     @Nullable
     private String createNewFile(ResourceType type) {
         // Show a name/value dialog entering the key name and the value
-        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+        Shell shell = AdtPlugin.getShell();
         if (shell == null) {
             return null;
         }
@@ -649,7 +649,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
         ResourceNameValidator validator = ResourceNameValidator.create(true /*allowXmlExtension*/,
                 mProject, mResourceType);
         InputDialog d = new InputDialog(
-                AdtPlugin.getDisplay().getActiveShell(),
+                AdtPlugin.getShell(),
                 "Enter name",  // title
                 "Enter name",
                 "", //$NON-NLS-1$
@@ -674,7 +674,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
     @Nullable
     private String createNewValue(ResourceType type) {
         // Show a name/value dialog entering the key name and the value
-        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+        Shell shell = AdtPlugin.getShell();
         if (shell == null) {
             return null;
         }

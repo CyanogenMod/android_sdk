@@ -150,7 +150,7 @@ class ClientRulesEngine implements IClientRulesEngine {
     @Override
     public void displayAlert(@NonNull String message) {
         MessageDialog.openInformation(
-                AdtPlugin.getDisplay().getActiveShell(),
+                AdtPlugin.getShell(),
                 mFqcn,  // title
                 message);
     }
@@ -175,7 +175,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         }
 
         InputDialog d = new InputDialog(
-                    AdtPlugin.getDisplay().getActiveShell(),
+                    AdtPlugin.getShell(),
                     mFqcn,  // title
                     message,
                     value == null ? "" : value, //$NON-NLS-1$
@@ -324,7 +324,7 @@ class ClientRulesEngine implements IClientRulesEngine {
             // get the resource repository for this project and the system resources.
             ResourceRepository projectRepository =
                 ResourceManager.getInstance().getProjectResources(project);
-            Shell shell = AdtPlugin.getDisplay().getActiveShell();
+            Shell shell = AdtPlugin.getShell();
             if (shell == null) {
                 return null;
             }
@@ -363,7 +363,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         GraphicalEditorPart editor = mRulesEngine.getEditor();
         IProject project = editor.getProject();
         if (project != null) {
-            Shell shell = AdtPlugin.getDisplay().getActiveShell();
+            Shell shell = AdtPlugin.getShell();
             if (shell == null) {
                 return null;
             }
@@ -462,7 +462,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                 scope = SearchEngine.createJavaSearchScope(subTypes, IJavaSearchScope.SOURCES);
             }
 
-            Shell parent = AdtPlugin.getDisplay().getActiveShell();
+            Shell parent = AdtPlugin.getShell();
             final AtomicReference<String> returnValue =
                 new AtomicReference<String>();
             final AtomicReference<SelectionDialog> dialogHolder =

@@ -606,7 +606,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     // open the chooser dialog. It'll fill 'response' with the device to use
                     // or the AVD to launch.
                     DeviceChooserDialog dialog = new DeviceChooserDialog(
-                            AdtPlugin.getDisplay().getActiveShell(),
+                            AdtPlugin.getShell(),
                             response, launchInfo.getPackageName(),
                             desiredProjectTarget, minApiVersion);
                     if (dialog.open() == Dialog.OK) {
@@ -1377,7 +1377,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         } catch (CoreException e) {
-            MessageDialog.openError(AdtPlugin.getDisplay().getActiveShell(),
+            MessageDialog.openError(AdtPlugin.getShell(),
                     "Launch Error", e.getStatus().getMessage());
         }
 

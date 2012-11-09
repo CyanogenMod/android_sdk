@@ -184,7 +184,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
         // and get the installation path of the library.
 
         AdtUpdateDialog window = new AdtUpdateDialog(
-                AdtPlugin.getDisplay().getActiveShell(),
+                AdtPlugin.getShell(),
                 new AdtConsoleSdkLog(),
                 sdkLocation);
 

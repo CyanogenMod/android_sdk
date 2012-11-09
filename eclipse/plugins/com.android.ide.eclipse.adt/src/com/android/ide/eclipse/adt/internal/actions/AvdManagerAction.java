@@ -55,7 +55,7 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
 
             // Runs the updater window, directing all logs to the ADT console.
             AvdManagerWindow window = new AvdManagerWindow(
-                    AdtPlugin.getDisplay().getActiveShell(),
+                    AdtPlugin.getShell(),
                     new AdtConsoleSdkLog(),
                     sdk.getSdkLocation(),
                     AvdInvocationContext.IDE);

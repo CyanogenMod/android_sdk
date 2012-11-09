@@ -2366,7 +2366,7 @@ public class GraphicalEditorPart extends EditorPart
                     @SuppressWarnings("restriction")
                     String id = BuildPathsPropertyPage.PROP_ID;
                     PreferencesUtil.createPropertyDialogOn(
-                            AdtPlugin.getDisplay().getActiveShell(),
+                            AdtPlugin.getShell(),
                             getProject(), id, null, null).open();
                     break;
                 case LINK_OPEN_CLASS:
