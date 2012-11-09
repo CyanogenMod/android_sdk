@@ -48,8 +48,7 @@ public class RefactoringAssistantTest extends AdtProjectTest {
     }
 
     public void testAssistant4() throws Exception {
-        // Negative test: ensure that we don't offer extract string on a value that is
-        // already a resource (should list all but extract string)
+        // Check for resource rename refactoring (and don't offer extract string)
         checkFixes("sample1a.xml", "android:id=\"@+id/Linea^rLayout2\"");
     }
 

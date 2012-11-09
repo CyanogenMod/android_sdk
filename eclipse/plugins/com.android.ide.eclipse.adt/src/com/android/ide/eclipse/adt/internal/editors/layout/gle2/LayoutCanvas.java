@@ -150,7 +150,7 @@ public class LayoutCanvas extends Canvas {
     private DropTarget mDropTarget;
 
     /** Factory that can create {@link INode} proxies. */
-    private final NodeFactory mNodeFactory = new NodeFactory(this);
+    private final @NonNull NodeFactory mNodeFactory = new NodeFactory(this);
 
     /** Vertical scaling & scrollbar information. */
     private final CanvasTransform mVScale;
@@ -599,8 +599,11 @@ public class LayoutCanvas extends Canvas {
     /**
      * Returns the factory to use to convert from {@link CanvasViewInfo} or from
      * {@link UiViewElementNode} to {@link INode} proxies.
+     *
+     * @return the node factory
      */
-    NodeFactory getNodeFactory() {
+    @NonNull
+    public NodeFactory getNodeFactory() {
         return mNodeFactory;
     }
 

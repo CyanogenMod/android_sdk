@@ -21,21 +21,31 @@ import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.ide.common.layout.BaseViewRule.stripIdPrefix;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
+import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceWizard;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResult;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
@@ -47,6 +57,9 @@ import com.google.common.collect.Maps;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -301,16 +314,101 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
 
     @Override
     protected boolean setEditorText(Property property, String text) throws Exception {
+        Object oldValue = property.getValue();
+        String old = oldValue != null ? oldValue.toString() : null;
+
+        // If users enters a new id without specifying the @id/@+id prefix, insert it
+        boolean isId = isIdProperty(property);
+        if (isId && !text.startsWith(PREFIX_RESOURCE_REF)) {
+            text = NEW_ID_PREFIX + text;
+        }
+
+        // Handle id refactoring: if you change an id, may want to update references too.
+        // Ask user.
+        if (isId && property instanceof XmlProperty
+                && old != null && !old.isEmpty()
+                && text != null && !text.isEmpty()
+                && !text.equals(old)) {
+            XmlProperty xmlProperty = (XmlProperty) property;
+            IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+            String refactorPref = store.getString(AdtPrefs.PREFS_REFACTOR_IDS);
+            boolean performRefactor = false;
+            Shell shell = AdtPlugin.getShell();
+            if (refactorPref == null
+                    || refactorPref.isEmpty()
+                    || refactorPref.equals(MessageDialogWithToggle.PROMPT)) {
+                MessageDialogWithToggle dialog =
+                        MessageDialogWithToggle.openYesNoCancelQuestion(
+                    shell,
+                    "Update References?",
+                    "Update all references as well? " +
+                    "This will update all XML references and Java R field references.",
+                    "Do not show again",
+                    false,
+                    store,
+                    AdtPrefs.PREFS_REFACTOR_IDS);
+                switch (dialog.getReturnCode()) {
+                    case IDialogConstants.CANCEL_ID:
+                        return false;
+                    case IDialogConstants.YES_ID:
+                        performRefactor = true;
+                        break;
+                    case IDialogConstants.NO_ID:
+                        performRefactor = false;
+                        break;
+                }
+            } else {
+                performRefactor = refactorPref.equals(MessageDialogWithToggle.ALWAYS);
+            }
+            if (performRefactor) {
+                CommonXmlEditor xmlEditor = xmlProperty.getXmlEditor();
+                if (xmlEditor != null) {
+                    IProject project = xmlEditor.getProject();
+                    if (project != null && shell != null) {
+                        RenameResourceWizard.renameResource(shell, project,
+                                ResourceType.ID, stripIdPrefix(old), stripIdPrefix(text), false);
+                    }
+                }
+            }
+        }
+
         property.setValue(text);
+
         return true;
+    }
+
+    private static boolean isIdProperty(Property property) {
+        XmlProperty xmlProperty = (XmlProperty) property;
+        return xmlProperty.getDescriptor().getXmlLocalName().equals(ATTR_ID);
     }
 
     private void openDialog(PropertyTable propertyTable, Property property) throws Exception {
         XmlProperty xmlProperty = (XmlProperty) property;
         IAttributeInfo attributeInfo = xmlProperty.getDescriptor().getAttributeInfo();
 
-        boolean isId = xmlProperty.getDescriptor().getXmlLocalName().equals(ATTR_ID);
-        if (isId) {
+        if (isIdProperty(property)) {
+            Object value = xmlProperty.getValue();
+            if (value != null && !value.toString().isEmpty()) {
+                GraphicalEditorPart editor = xmlProperty.getGraphicalEditor();
+                if (editor != null) {
+                    LayoutCanvas canvas = editor.getCanvasControl();
+                    SelectionManager manager = canvas.getSelectionManager();
+
+                    NodeProxy primary = canvas.getNodeFactory().create(xmlProperty.getNode());
+                    if (primary != null) {
+                        RenameResult result = manager.performRename(primary, null);
+                        if (result.isCanceled()) {
+                            return;
+                        } else if (!result.isUnavailable()) {
+                            String name = result.getName();
+                            String id = NEW_ID_PREFIX + BaseViewRule.stripIdPrefix(name);
+                            xmlProperty.setValue(id);
+                            return;
+                        }
+                    }
+                }
+            }
+
             // When editing the id attribute, don't offer a resource chooser: usually
             // you want to enter a *new* id here
             attributeInfo = null;
@@ -370,7 +468,7 @@ class XmlPropertyEditor extends AbstractTextPropertyEditor {
                         // get the resource repository for this project and the system resources.
                         ResourceRepository projectRepository =
                             ResourceManager.getInstance().getProjectResources(project);
-                        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+                        Shell shell = AdtPlugin.getShell();
                         ReferenceChooserDialog dlg = new ReferenceChooserDialog(
                                 project,
                                 projectRepository,

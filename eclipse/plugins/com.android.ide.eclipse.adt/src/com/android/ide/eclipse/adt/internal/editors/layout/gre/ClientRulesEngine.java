@@ -50,6 +50,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResult;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -153,6 +154,15 @@ class ClientRulesEngine implements IClientRulesEngine {
                 AdtPlugin.getShell(),
                 mFqcn,  // title
                 message);
+    }
+
+    @Override
+    public boolean rename(INode node) {
+        GraphicalEditorPart editor = mRulesEngine.getEditor();
+        SelectionManager manager = editor.getCanvasControl().getSelectionManager();
+        RenameResult result = manager.performRename(node, null);
+
+        return !result.isCanceled() && !result.isUnavailable();
     }
 
     @Override
