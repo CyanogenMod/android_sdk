@@ -59,6 +59,8 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -285,6 +287,20 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             IconDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
+    /** Icons appearing as both drawable xml files and bitmaps */
+    public static final Issue ICON_XML_AND_PNG = Issue.create(
+            "IconXmlAndPng", //$NON-NLS-1$
+            "Finds icons that appear both as a drawable .xml file and as bitmaps",
+            "If a drawable resource appears as an .xml file in the drawable/ folder, " +
+            "it's usually not intentional for it to also appear as a bitmap using the " +
+            "same name; generally you expect the drawable XML file to define states " +
+            "and each state has a corresponding drawable bitmap.",
+            Category.ICONS,
+            7,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
+
     /** Wrong filename according to the format */
     public static final Issue ICON_EXTENSION = Issue.create(
             "IconExtension", //$NON-NLS-1$
@@ -355,7 +371,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             if (folders != null) {
                 boolean checkFolders = context.isEnabled(ICON_DENSITIES)
                         || context.isEnabled(ICON_MISSING_FOLDER)
-                        || context.isEnabled(ICON_NODPI);
+                        || context.isEnabled(ICON_NODPI)
+                        || context.isEnabled(ICON_XML_AND_PNG);
                 boolean checkDipSizes = context.isEnabled(ICON_DIP_SIZE);
                 boolean checkDuplicates = context.isEnabled(DUPLICATES_NAMES)
                          || context.isEnabled(DUPLICATES_CONFIGURATIONS);
@@ -367,6 +384,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     fileSizes = new HashMap<File, Long>();
                 }
                 Map<File, Set<String>> folderToNames = new HashMap<File, Set<String>>();
+                Map<File, Set<String>> nonDpiFolderNames = new HashMap<File, Set<String>>();
                 for (File folder : folders) {
                     String folderName = folder.getName();
                     if (folderName.startsWith(DRAWABLE_FOLDER)) {
@@ -383,6 +401,15 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                                     }
                                 }
                                 folderToNames.put(folder, names);
+                            } else if (checkFolders) {
+                                Set<String> names = new HashSet<String>(files.length);
+                                for (File f : files) {
+                                    String name = f.getName();
+                                    if (isDrawableFile(name)) {
+                                        names.add(name);
+                                    }
+                                }
+                                nonDpiFolderNames.put(folder, names);
                             }
                         }
                     }
@@ -397,7 +424,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                 }
 
                 if (checkFolders && folderToNames.size() > 0) {
-                    checkDensities(context, res, folderToNames);
+                    checkDensities(context, res, folderToNames, nonDpiFolderNames);
                 }
             }
         }
@@ -799,7 +826,9 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         }
     }
 
-    private void checkDensities(Context context, File res, Map<File, Set<String>> folderToNames) {
+    private void checkDensities(Context context, File res,
+            Map<File, Set<String>> folderToNames,
+            Map<File, Set<String>> nonDpiFolderNames) {
         // TODO: Is there a way to look at the manifest and figure out whether
         // all densities are expected to be needed?
         // Note: ldpi is probably not needed; it has very little usage
@@ -875,6 +904,81 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                             LintUtils.formatList(list,
                                     context.getDriver().isAbbreviating() ? 10 : -1)),
                         null);
+                }
+            }
+        }
+
+        if (context.isEnabled(ICON_XML_AND_PNG)) {
+            Map<File, Set<String>> folderMap = Maps.newHashMap(folderToNames);
+            folderMap.putAll(nonDpiFolderNames);
+            Set<String> xmlNames = Sets.newHashSetWithExpectedSize(100);
+            Set<String> bitmapNames = Sets.newHashSetWithExpectedSize(100);
+
+            for (Map.Entry<File, Set<String>> entry : folderMap.entrySet()) {
+                Set<String> names = entry.getValue();
+                for (String name : names) {
+                    if (endsWith(name, DOT_XML)) {
+                        xmlNames.add(name);
+                    } else if (isDrawableFile(name)) {
+                        bitmapNames.add(name);
+                    }
+                }
+            }
+            if (!xmlNames.isEmpty() && !bitmapNames.isEmpty()) {
+                // Make sure that none of the nodpi names appear in a non-nodpi folder
+                Set<String> overlap = nameIntersection(xmlNames, bitmapNames);
+                if (!overlap.isEmpty()) {
+                    Multimap<String, File> map = ArrayListMultimap.create();
+                    Set<String> bases = Sets.newHashSetWithExpectedSize(overlap.size());
+                    for (String name : overlap) {
+                        bases.add(LintUtils.getBaseName(name));
+                    }
+
+                    for (String base : bases) {
+                        for (Map.Entry<File, Set<String>> entry : folderMap.entrySet()) {
+                            File folder = entry.getKey();
+                            for (String n : entry.getValue()) {
+                                if (base.equals(LintUtils.getBaseName(n))) {
+                                    map.put(base, new File(folder, n));
+                                }
+                            }
+                        }
+                    }
+                    List<String> sorted = new ArrayList<String>(map.keySet());
+                    Collections.sort(sorted);
+                    for (String name : sorted) {
+                        List<File> lists = Lists.newArrayList(map.get(name));
+                        Collections.sort(lists);
+
+                        // Chain locations together
+                        Location location = null;
+                        for (File file : lists) {
+                            Location linkedLocation = location;
+                            location = Location.create(file);
+                            location.setSecondary(linkedLocation);
+                        }
+
+                        List<String> fileNames = Lists.newArrayList();
+                        boolean seenXml = false;
+                        boolean seenNonXml = false;
+                        for (File f : lists) {
+                            boolean isXml = endsWith(f.getPath(), DOT_XML);
+                            if (isXml && !seenXml) {
+                                fileNames.add(context.getProject().getDisplayPath(f));
+                                seenXml = true;
+                            } else if (!isXml && !seenNonXml) {
+                                fileNames.add(context.getProject().getDisplayPath(f));
+                                seenNonXml = true;
+                            }
+                        }
+
+                        context.report(ICON_XML_AND_PNG, location,
+                            String.format(
+                                "The following images appear both as density independent .xml files and as bitmap files: %1$s",
+                                LintUtils.formatList(fileNames,
+                                        context.getDriver().isAbbreviating() ? 10 : -1)),
+                            null);
+                    }
                 }
             }
         }
