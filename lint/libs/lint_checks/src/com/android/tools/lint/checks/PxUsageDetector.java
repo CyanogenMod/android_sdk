@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TEXT_SIZE;
 import static com.android.SdkConstants.TAG_ITEM;
@@ -25,6 +26,7 @@ import static com.android.SdkConstants.UNIT_DP;
 import static com.android.SdkConstants.UNIT_IN;
 import static com.android.SdkConstants.UNIT_MM;
 import static com.android.SdkConstants.UNIT_PX;
+import static com.android.SdkConstants.UNIT_SP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -111,6 +113,20 @@ public class PxUsageDetector extends LayoutDetector {
             Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/training/multiscreen/screendensities.html"); //$NON-NLS-1$
 
+    /** Using text sizes that are too small */
+    public static final Issue SMALL_SP_ISSUE = Issue.create(
+            "SmallSp", //$NON-NLS-1$
+            "Looks for text sizes that are too small",
+
+            "Avoid using sizes smaller than 12sp.",
+
+            Category.USABILITY,
+            4,
+            Severity.WARNING,
+            PxUsageDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
+
     /** Constructs a new {@link PxUsageDetector} */
     public PxUsageDetector() {
     }
@@ -161,19 +177,35 @@ public class PxUsageDetector extends LayoutDetector {
             }
             if (context.isEnabled(IN_MM_ISSUE)) {
                 String unit = value.substring(value.length() - 2);
-                context.report(IN_MM_ISSUE, attribute, context.getLocation(attribute), String.format(
-                    "Avoid using \"%1$s\" as units " +
-                    "(it does not work accurately on all devices); use \"dp\" instead", unit),
+                context.report(IN_MM_ISSUE, attribute, context.getLocation(attribute),
+                        String.format("Avoid using \"%1$s\" as units " +
+                                "(it does not work accurately on all devices); use \"dp\" instead",
+                                unit),
                     null);
+            }
+        } else if (value.endsWith(UNIT_SP)
+                && (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
+                        || ATTR_LAYOUT_HEIGHT.equals(attribute.getLocalName()))
+                && value.matches("\\d+sp")) { //$NON-NLS-1$
+            int size = getSize(value);
+            if (size > 0 && size < 12) {
+                context.report(SMALL_SP_ISSUE, attribute, context.getLocation(attribute),
+                        String.format("Avoid using sizes smaller than 12sp: %1$s", value),
+                        null);
             }
         } else if (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
                 && (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP))
-                && (value.matches("\\d+di?p"))) {
+                && (value.matches("\\d+di?p"))) { //$NON-NLS-1$
             if (context.isEnabled(DP_ISSUE)) {
                 context.report(DP_ISSUE, attribute, context.getLocation(attribute),
                     "Should use \"sp\" instead of \"dp\" for text sizes", null);
             }
         }
+    }
+
+    private static int getSize(String text) {
+        assert text.matches("\\d+sp") : text; //$NON-NLS-1$
+        return Integer.parseInt(text.substring(0, text.length() - 2));
     }
 
     @Override
@@ -237,6 +269,23 @@ public class PxUsageDetector extends LayoutDetector {
                         if (context.isEnabled(DP_ISSUE)) {
                             context.report(DP_ISSUE, item, context.getLocation(textNode),
                                 "Should use \"sp\" instead of \"dp\" for text sizes", null);
+                        }
+                    }
+                } else if (c == 'p' && text.charAt(j - 1) == 's') {
+                    String name = item.getAttribute(ATTR_NAME);
+                    if (ATTR_TEXT_SIZE.equals(name) || ATTR_LAYOUT_HEIGHT.equals(name)) {
+                        text = text.trim();
+                        String unit = text.substring(text.length() - 2);
+                        if (text.matches("\\d+" + unit)) { //$NON-NLS-1$
+                            if (context.isEnabled(SMALL_SP_ISSUE)) {
+                                int size = getSize(text);
+                                if (size > 0 && size < 12) {
+                                    context.report(SMALL_SP_ISSUE, item,
+                                        context.getLocation(textNode), String.format(
+                                                "Avoid using sizes smaller than 12sp: %1$s",
+                                                        text), null);
+                                }
+                            }
                         }
                     }
                 }
