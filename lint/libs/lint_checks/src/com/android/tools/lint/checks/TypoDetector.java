@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.android.SdkConstants.TAG_STRING;
+import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.google.common.base.Objects.equal;
 
 import com.android.annotations.NonNull;
