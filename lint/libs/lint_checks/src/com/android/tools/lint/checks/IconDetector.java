@@ -333,6 +333,26 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             ICON_TYPE_SCOPE).setMoreInfo(
                 "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
 
+    /** Wrong launcher icon shape */
+    public static final Issue ICON_LAUNCHER_SHAPE = Issue.create(
+            "IconLauncherShape", //$NON-NLS-1$
+            "Checks that launcher icons follow the recommended visual style",
+
+            "According to the Android Design Guide " +
+            "(http://developer.android.com/design/style/iconography.html) " +
+            "your launcher icons should \"use a distinct silhouette\", " +
+            "a \"three-dimensional, front view, with a slight perspective as if viewed " +
+            "from above, so that users perceive some depth.\"\n" +
+            "\n" +
+            "The unique silhouette implies that your launcher icon should not be a filled " +
+            "square.",
+            Category.ICONS,
+            6,
+            Severity.WARNING,
+            IconDetector.class,
+            ICON_TYPE_SCOPE).setMoreInfo(
+                "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
+
     /** Constructs a new {@link IconDetector} check */
     public IconDetector() {
     }
@@ -1113,6 +1133,25 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         return file.getName().contains("-nodpi");
     }
 
+    private Map<File, BufferedImage> mImageCache;
+
+    @Nullable
+    private BufferedImage getImage(@Nullable File file) throws IOException {
+        if (mImageCache == null) {
+            mImageCache = Maps.newHashMap();
+        } else {
+            BufferedImage image = mImageCache.get(file);
+            if (image != null) {
+                return image;
+            }
+        }
+
+        BufferedImage image = ImageIO.read(file);
+        mImageCache.put(file, image);
+
+        return image;
+    }
+
     private void checkDrawableDir(Context context, File folder, File[] files,
             Map<File, Dimension> pixelSizes, Map<File, Long> fileSizes) {
         if (folder.getName().equals(DRAWABLE_FOLDER)
@@ -1179,6 +1218,18 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             }
         }
 
+        if (context.isEnabled(ICON_LAUNCHER_SHAPE)) {
+            // Look up launcher icon name
+            for (File file : files) {
+                String name = file.getName();
+                if (isLauncherIcon(name)
+                        && !endsWith(name, DOT_XML)
+                        && !endsWith(name, DOT_9PNG)) {
+                    checkLauncherShape(context, file);
+                }
+            }
+        }
+
         // Check icon sizes
         if (context.isEnabled(ICON_EXPECTED_SIZE)) {
             checkExpectedSizes(context, folder, files);
@@ -1204,6 +1255,36 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     }
                 }
             }
+        }
+
+        mImageCache = null;
+    }
+
+    /**
+     * Check that launcher icons do not fill every pixel in the image
+     */
+    private void checkLauncherShape(Context context, File file) {
+        try {
+            BufferedImage image = getImage(file);
+            if (image != null) {
+                // TODO: see if the shape is rectangular but inset from outer rectangle; if so
+                // that's probably not right either!
+                for (int y = 0, height = image.getHeight(); y < height; y++) {
+                    for (int x = 0, width = image.getWidth(); x < width; x++) {
+                        int rgb = image.getRGB(x, y);
+                        if ((rgb & 0xFF000000) == 0) {
+                            return;
+                        }
+                    }
+                }
+
+                String message = "Launcher icons should not fill every pixel of their square " +
+                                 "region; see the design guide for details";
+                context.report(ICON_LAUNCHER_SHAPE, Location.create(file),
+                        message, null);
+            }
+        } catch (IOException e) {
+            // Pass: ignore files we can't read
         }
     }
 
@@ -1231,7 +1312,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         // also check that they actually include a -v11 or -v14 folder with proper
         // icons, since the below won't flag the older icons.
         try {
-            BufferedImage image = ImageIO.read(file);
+            BufferedImage image = getImage(file);
             if (image != null) {
                 if (isActionBarIcon) {
                     checkPixels:
