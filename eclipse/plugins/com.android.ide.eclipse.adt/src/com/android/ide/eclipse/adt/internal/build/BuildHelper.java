@@ -974,12 +974,12 @@ public class BuildHelper {
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
-                // ignore non exported entries, unless it's the LIBRARIES container,
+                // ignore non exported entries, unless they're in the DEPEDENCIES container,
                 // in which case we always want it (there may be some older projects that
                 // have it as non exported).
                 if (e.isExported() ||
                         (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
-                         e.getPath().toString().equals(AdtConstants.CONTAINER_LIBRARIES))) {
+                         e.getPath().toString().equals(AdtConstants.CONTAINER_DEPENDENCIES))) {
                     handleCPE(e, javaProject, wsRoot, resMarker);
                 }
             }

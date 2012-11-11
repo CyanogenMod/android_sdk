@@ -64,7 +64,8 @@ public class AdtConstants {
         "com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"; //$NON-NLS-1$
 
     /** The container id for the libraries */
-    public final static String CONTAINER_LIBRARIES = "com.android.ide.eclipse.adt.LIBRARIES"; //$NON-NLS-1$
+    public final static String CONTAINER_PRIVATE_LIBRARIES = "com.android.ide.eclipse.adt.LIBRARIES"; //$NON-NLS-1$
+    public final static String CONTAINER_DEPENDENCIES = "com.android.ide.eclipse.adt.DEPENDENCIES";
 
 
     /** Separator for workspace path, i.e. "/". */

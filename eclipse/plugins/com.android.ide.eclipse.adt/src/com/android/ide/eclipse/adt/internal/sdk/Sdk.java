@@ -69,6 +69,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -1014,6 +1015,12 @@ public final class Sdk  {
 
                 // Correct file editor associations.
                 fixEditorAssociations(openedProject);
+
+                try {
+                    ProjectHelper.fixProjectClasspathEntries(JavaCore.create(openedProject));
+                } catch (JavaModelException e) {
+                    AdtPlugin.log(e, "error fixing classpath entries");
+                }
 
                 if (DEBUG) {
                     System.out.println("<<<");

@@ -562,6 +562,10 @@
             class="com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer"
             id="com.android.ide.eclipse.adt.LIBRARIES">
         </classpathContainerInitializer>
+        <classpathContainerInitializer
+            class="com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer"
+            id="com.android.ide.eclipse.adt.DEPENDENCIES">
+        </classpathContainerInitializer>
     </extension>
     <extension point="org.eclipse.jdt.ui.classpathContainerPage">
         <classpathContainerPage
