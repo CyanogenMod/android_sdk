@@ -325,4 +325,91 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                 lintProject("res/layout/buttonbar.xml=>res/layout-de/buttonbar.xml",
                         "res/values/buttonbar-values.xml=>res/values-de/buttonbar-values.xml"));
     }
+
+    public void testButtonStyle() throws Exception {
+        sTestIssue = ButtonDetector.STYLE;
+        assertEquals(
+            "res/layout/buttonbar.xml:12: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:17: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:28: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:33: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:44: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:49: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:60: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:65: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:76: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:81: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:92: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:97: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:108: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:113: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:124: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:129: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:140: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:145: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:156: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "res/layout/buttonbar.xml:161: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n" +
+            "        <Button\n" +
+            "        ^\n" +
+            "0 errors, 20 warnings\n",
+
+            lintProject(
+                    "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml",
+                    "res/layout/buttonbar2.xml",
+                    "res/layout/buttonbar3.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
+    public void testButtonStyleOldMinSdk() throws Exception {
+        sTestIssue = ButtonDetector.STYLE;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar.xml",
+                    "res/layout/buttonbar2.xml",
+                    "res/layout/buttonbar3.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
 }

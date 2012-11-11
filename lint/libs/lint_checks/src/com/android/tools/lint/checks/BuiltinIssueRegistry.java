@@ -55,7 +55,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        final int initialCapacity = 130;
+        final int initialCapacity = 131;
         List<Issue> issues = new ArrayList<Issue>(initialCapacity);
 
         issues.add(AccessibilityDetector.ISSUE);
@@ -159,6 +159,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ButtonDetector.ORDER);
         issues.add(ButtonDetector.CASE);
         issues.add(ButtonDetector.BACKBUTTON);
+        issues.add(ButtonDetector.STYLE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(OverdrawDetector.ISSUE);
         issues.add(StringFormatDetector.INVALID);

@@ -170,12 +170,12 @@
         android:layout_height="wrap_content" >
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="wrap_content" android:background="?android:attr/selectableItemBackground"
             android:layout_height="wrap_content"
             android:text="@string/send" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="wrap_content" android:background="?android:attr/selectableItemBackground"
             android:layout_height="wrap_content"
             android:text="@string/cancel" />
     </LinearLayout>
