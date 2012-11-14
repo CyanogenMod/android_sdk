@@ -148,8 +148,10 @@ ADT_IDE_MODULE_DEPS += $(ADT_IDE_DEST_DIR)/$(notdir $(call adt-ide-zip,$(1),$(2)
 endif
 endef
 
+$(eval $(call mk-adt-ide,linux.gtk,x86))
 $(eval $(call mk-adt-ide,linux.gtk,x86_64))
 $(eval $(call mk-adt-ide,macosx.cocoa,x86_64))
+$(eval $(call mk-adt-ide,win32.win32,x86))
 $(eval $(call mk-adt-ide,win32.win32,x86_64))
 
 # This rule triggers the build of the 3 ide zip files.
