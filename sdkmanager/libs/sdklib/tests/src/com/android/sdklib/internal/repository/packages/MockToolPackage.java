@@ -84,10 +84,40 @@ public class MockToolPackage extends ToolPackage {
                 );
     }
 
+    /**
+     * Creates a {@link MockToolPackage} with the given revision and hardcoded defaults
+     * for everything else.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
+     */
+    public MockToolPackage(
+            SdkSource source,
+            FullRevision revision,
+            FullRevision minPlatformToolsRev) {
+        super(
+                source, // source,
+                createProps(revision, minPlatformToolsRev), // props,
+                revision.getMajor(),
+                null, // license,
+                "desc", // description,
+                "url", // descUrl,
+                Os.getCurrentOs(), // archiveOs,
+                Arch.getCurrentArch(), // archiveArch,
+                "foo" // archiveOsPath
+                );
+    }
+
     private static Properties createProps(FullRevision revision, int minPlatformToolsRev) {
         Properties props = FullRevisionPackageTest.createProps(revision);
         props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
                           Integer.toString((minPlatformToolsRev)));
+        return props;
+    }
+
+    private static Properties createProps(FullRevision revision, FullRevision minPlatformToolsRev) {
+        Properties props = FullRevisionPackageTest.createProps(revision);
+        props.setProperty(PkgProps.MIN_PLATFORM_TOOLS_REV,
+                          minPlatformToolsRev.toShortString());
         return props;
     }
 }
