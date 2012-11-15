@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
@@ -63,6 +64,13 @@ public class MonitorApplication implements IApplication {
         ILogger sdkLog = NullLogger.getLogger();
         SdkManager manager = SdkManager.createManager(sdkPath, sdkLog);
         if (manager.getPlatformToolsVersion() == null) {
+            boolean install = MessageDialog.openQuestion(new Shell(display),
+                    "Monitor",
+                    "The platform tools package that provides adb is missing from your SDK installation. "
+                    + "Monitor requires this package to work properly. Would you like to install that package now?");
+            if (!install) {
+                return Integer.valueOf(-1);
+            }
             AdtUpdateDialog window = new AdtUpdateDialog(new Shell(display), sdkLog, sdkPath);
             window.installPlatformTools();
         }
