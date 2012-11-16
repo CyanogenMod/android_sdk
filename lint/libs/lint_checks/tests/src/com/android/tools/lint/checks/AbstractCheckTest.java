@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.SdkTestCase;
 import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.LombokParser;
 import com.android.tools.lint.Main;
@@ -37,8 +38,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -49,16 +48,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 /** Common utility methods for the various lint check tests */
 @SuppressWarnings("javadoc")
-public abstract class AbstractCheckTest extends TestCase {
+public abstract class AbstractCheckTest extends SdkTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -113,16 +109,6 @@ public abstract class AbstractCheckTest extends TestCase {
         return checkLint(files);
     }
 
-    protected void deleteFile(File dir) {
-        if (dir.isDirectory()) {
-            for (File f : dir.listFiles()) {
-                deleteFile(f);
-            }
-        } else if (dir.isFile()) {
-            assertTrue(dir.getPath(), dir.delete());
-        }
-    }
-
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
         TestLintClient lintClient = createClient();
@@ -163,6 +149,13 @@ public abstract class AbstractCheckTest extends TestCase {
         return checkLint(Collections.singletonList(projectDir));
     }
 
+    @Override
+    protected File getTargetDir() {
+        File targetDir = new File(getTempDir(), getClass().getSimpleName() + "_" + getName());
+        addCleanupDir(targetDir);
+        return targetDir;
+    }
+
     /** Creates a project directory structure from the given files */
     protected File getProjectDir(String name, String ...relativePaths) throws Exception {
         assertFalse("getTargetDir must be overridden to make a unique directory",
@@ -172,7 +165,9 @@ public abstract class AbstractCheckTest extends TestCase {
         if (name != null) {
             projectDir = new File(projectDir, name);
         }
-        assertTrue(projectDir.getPath(), projectDir.mkdirs());
+        if (!projectDir.exists()) {
+            assertTrue(projectDir.getPath(), projectDir.mkdirs());
+        }
 
         List<File> files = new ArrayList<File>();
         for (String relativePath : relativePaths) {
@@ -203,91 +198,15 @@ public abstract class AbstractCheckTest extends TestCase {
 
     private StringBuilder mOutput = null;
 
-    protected static File sTempDir = null;
-
-    protected File getTempDir() {
-        if (sTempDir == null) {
-            File base = new File(System.getProperty("java.io.tmpdir"));     //$NON-NLS-1$
-            String os = System.getProperty("os.name");          //$NON-NLS-1$
-            if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
-                base = new File("/tmp");
-            }
-            Calendar c = Calendar.getInstance();
-            String name = String.format("lintTests/%1$tF_%1$tT", c).replace(':', '-'); //$NON-NLS-1$
-            File tmpDir = new File(base, name);
-            if (!tmpDir.exists() && tmpDir.mkdirs()) {
-                sTempDir = tmpDir;
-            } else {
-                sTempDir = base;
-            }
-        }
-
-        return sTempDir;
-    }
-
-    protected File getTargetDir() {
-        return new File(getTempDir(), getClass().getSimpleName() + "_" + getName());
-    }
-
-    private File makeTestFile(String name, String relative,
-            final InputStream contents) throws IOException {
-        return makeTestFile(getTargetDir(), name, relative, contents);
-    }
-
-    private File makeTestFile(File dir, String name, String relative,
-            final InputStream contents) throws IOException {
-        if (relative != null) {
-            dir = new File(dir, relative);
-            if (!dir.exists()) {
-                boolean mkdir = dir.mkdirs();
-                assertTrue(dir.getPath(), mkdir);
-            }
-        } else if (!dir.exists()) {
-            boolean mkdir = dir.mkdirs();
-            assertTrue(dir.getPath(), mkdir);
-        }
-        File tempFile = new File(dir, name);
-        if (tempFile.exists()) {
-            tempFile.delete();
-        }
-
-        Files.copy(new InputSupplier<InputStream>() {
-            @Override
-            public InputStream getInput() throws IOException {
-                return contents;
-            }
-        }, tempFile);
-
-        return tempFile;
-    }
-
-    private File getTestfile(File targetDir, String relativePath) throws IOException {
-        // Support replacing filenames and paths with a => syntax, e.g.
-        //   dir/file.txt=>dir2/dir3/file2.java
-        // will read dir/file.txt from the test data and write it into the target
-        // directory as dir2/dir3/file2.java
-
-        String targetPath = relativePath;
-        int replaceIndex = relativePath.indexOf("=>"); //$NON-NLS-1$
-        if (replaceIndex != -1) {
-            // foo=>bar
-            targetPath = relativePath.substring(replaceIndex + "=>".length());
-            relativePath = relativePath.substring(0, replaceIndex);
-        }
-
+    @Override
+    protected InputStream getTestResource(String relativePath, boolean expectExists) {
         String path = "data" + File.separator + relativePath; //$NON-NLS-1$
         InputStream stream =
             AbstractCheckTest.class.getResourceAsStream(path);
-        assertNotNull(relativePath + " does not exist", stream);
-        int index = targetPath.lastIndexOf('/');
-        String relative = null;
-        String name = targetPath;
-        if (index != -1) {
-            name = targetPath.substring(index + 1);
-            relative = targetPath.substring(0, index);
+        if (!expectExists && stream == null) {
+            return null;
         }
-
-        return makeTestFile(targetDir, name, relative, stream);
+        return stream;
     }
 
     protected boolean isEnabled(Issue issue) {
@@ -301,23 +220,6 @@ public abstract class AbstractCheckTest extends TestCase {
 
     protected boolean includeParentPath() {
         return false;
-    }
-
-    protected static String cleanup(String result) throws IOException {
-        if (sTempDir != null && result.contains(sTempDir.getPath())) {
-            result = result.replace(sTempDir.getCanonicalFile().getPath(), "/TESTROOT");
-            result = result.replace(sTempDir.getAbsoluteFile().getPath(), "/TESTROOT");
-            result = result.replace(sTempDir.getPath(), "/TESTROOT");
-        }
-
-        // The output typically contains a few directory/filenames.
-        // On Windows we need to change the separators to the unix-style
-        // forward slash to make the test as OS-agnostic as possible.
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-
-        return result;
     }
 
     protected EnumSet<Scope> getLintScope(List<File> file) {
@@ -345,7 +247,6 @@ public abstract class AbstractCheckTest extends TestCase {
             return super.getSuperClass(project, name);
         }
 
-
         public String analyze(List<File> files) throws Exception {
             mDriver = new LintDriver(new CustomIssueRegistry(), this);
             configureDriver(mDriver);
@@ -368,11 +269,7 @@ public abstract class AbstractCheckTest extends TestCase {
                 result = "No warnings.";
             }
 
-            if (sTempDir != null && result.contains(sTempDir.getPath())) {
-                result = result.replace(sTempDir.getCanonicalFile().getPath(), "/TESTROOT");
-                result = result.replace(sTempDir.getAbsoluteFile().getPath(), "/TESTROOT");
-                result = result.replace(sTempDir.getPath(), "/TESTROOT");
-            }
+            result = cleanup(result);
 
             return result;
         }

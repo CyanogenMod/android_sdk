@@ -21,20 +21,19 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
+import com.android.testutils.SdkTestCase;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import junit.framework.TestCase;
-
 /**
  * A test case which uses the SDK loaded by the ADT plugin.
  */
-public abstract class SdkTestCase extends TestCase {
+public abstract class SdkLoadingTestCase extends SdkTestCase {
 
     private Sdk mSdk;
 
-    protected SdkTestCase() {
+    protected SdkLoadingTestCase() {
     }
 
     /**
@@ -107,9 +106,11 @@ public abstract class SdkTestCase extends TestCase {
             if (!validateSdk(target)) {
                 continue;
             }
+            if (false) { // This takes forEVER
             IStatus status = new AndroidTargetParser(target).run(new NullProgressMonitor());
             if (status.getCode() != IStatus.OK) {
                 fail("Failed to parse targets data");
+            }
             }
         }
     }

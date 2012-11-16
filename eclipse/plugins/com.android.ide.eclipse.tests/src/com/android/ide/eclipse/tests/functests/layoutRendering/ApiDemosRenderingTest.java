@@ -47,7 +47,7 @@ import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.tests.SdkTestCase;
+import com.android.ide.eclipse.tests.SdkLoadingTestCase;
 import com.android.io.FolderWrapper;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
@@ -74,7 +74,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-public class ApiDemosRenderingTest extends SdkTestCase {
+public class ApiDemosRenderingTest extends SdkLoadingTestCase {
 
     /**
      * Custom parser that implements {@link ILayoutPullParser} (which itself extends

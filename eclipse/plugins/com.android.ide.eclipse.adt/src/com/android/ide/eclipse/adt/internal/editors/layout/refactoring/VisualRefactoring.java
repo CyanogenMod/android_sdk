@@ -294,6 +294,10 @@ public abstract class VisualRefactoring extends Refactoring {
         return args;
     }
 
+    IFile getFile() {
+        return mFile;
+    }
+
     // ---- Shared functionality ----
 
 

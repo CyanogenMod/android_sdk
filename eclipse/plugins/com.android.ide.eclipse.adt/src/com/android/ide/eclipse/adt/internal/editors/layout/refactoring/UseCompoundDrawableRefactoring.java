@@ -353,8 +353,10 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
             }
         }
 
-        String xml = XmlPrettyPrinter.prettyPrint(tempDocument, XmlFormatPreferences.create(),
+        String xml = XmlPrettyPrinter.prettyPrint(tempDocument.getDocumentElement(),
+                XmlFormatPreferences.create(),
                 XmlFormatStyle.LAYOUT, null);
+
         TextEdit replace = new ReplaceEdit(mSelectionStart, mSelectionEnd - mSelectionStart, xml);
         rootEdit.addChild(replace);
 

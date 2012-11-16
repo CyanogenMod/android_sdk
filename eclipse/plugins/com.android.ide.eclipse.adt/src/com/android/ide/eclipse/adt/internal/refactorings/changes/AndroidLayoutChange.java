@@ -91,6 +91,10 @@ public class AndroidLayoutChange extends DocumentChange {
         }
     }
 
+    public IFile getFile() {
+        return mFile;
+    }
+
     @Override
     public String getName() {
         return mFile.getName();
