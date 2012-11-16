@@ -201,4 +201,46 @@ public class LocaleManagerTest extends TestCase {
             }
         }
     }
+
+    /* Utility useful for identifying strings which must be using \\u in the string names
+     * to ensure that they are handled properly during the build (outside of Eclipse,
+     * where this source file is marked as using UTF-8.
+    public void testPrintable() {
+        Set<String> languageCodes = LocaleManager.getLanguageCodes();
+        for (String code : languageCodes) {
+            String name = LocaleManager.getLanguageName(code);
+            assertNotNull(name);
+            checkEncoding(name);
+        }
+
+        Set<String> regionCodes = LocaleManager.getRegionCodes();
+        for (String code : regionCodes) {
+            String name = LocaleManager.getRegionName(code);
+            assertNotNull(name);
+            checkEncoding(name);
+        }
+    }
+
+    private static void checkEncoding(String s) {
+        for (int i = 0, n = s.length(); i < n; i++) {
+            char c = s.charAt(i);
+            if (c >= 128) {
+                System.out.println("Need unicode encoding for '" + s + "'");
+                StringBuilder sb = new StringBuilder();
+                for (int j = 0, m = s.length(); j < m; j++) {
+                    char d = s.charAt(j);
+                    if (d < 128) {
+                        sb.append(d);
+                    } else {
+                        sb.append('\\');
+                        sb.append('u');
+                        sb.append(String.format("%04x", (int)d));
+                    }
+                }
+                System.out.println(" Replacement=" + sb);
+                return;
+            }
+        }
+    }
+     */
 }
