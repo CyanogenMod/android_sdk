@@ -43,16 +43,9 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.corext.refactoring.changes.RenamePackageChange;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
@@ -111,6 +104,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
             return null;
         }
         CompositeChange result = new CompositeChange(getName());
+        result.markAsSynthetic();
         if (mAndroidManifest.exists()) {
             if (mAndroidElements.size() > 0 || mIsPackage) {
                 getManifestDocument();
@@ -232,37 +226,25 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                     mIsPackage = true;
                 }
                 mAndroidElements = addAndroidElements();
+
                 try {
                     final IType type = javaProject.findType(SdkConstants.CLASS_VIEW);
-                    SearchPattern pattern = SearchPattern.createPattern("*",
-                            IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS,
-                            SearchPattern.R_REGEXP_MATCH);
-                    IJavaSearchScope scope =SearchEngine.createJavaSearchScope(
-                            new IJavaElement[] { mPackageFragment });
                     final HashSet<IType> elements = new HashSet<IType>();
-                    SearchRequestor requestor = new SearchRequestor() {
-
-                        @Override
-                        public void acceptSearchMatch(SearchMatch match) throws CoreException {
-                            Object elem = match.getElement();
-                            if (elem instanceof IType) {
-                                IType eType = (IType) elem;
-                                IType[] superTypes = JavaModelUtil.getAllSuperTypes(eType,
-                                        new NullProgressMonitor());
-                                for (int i = 0; i < superTypes.length; i++) {
-                                    if (superTypes[i].equals(type)) {
-                                        elements.add(eType);
-                                        break;
-                                    }
+                    if (type != null) {
+                        ITypeHierarchy hierarchy = type.newTypeHierarchy(
+                                new NullProgressMonitor());
+                        IType[] allSubtypes = hierarchy.getAllSubtypes(type);
+                        for (IType subType : allSubtypes) {
+                            IResource resource = subType.getResource();
+                            // TODO: Handle library project downstream dependencies!
+                            if (resource != null && project.equals(resource.getProject())) {
+                                if (subType.getPackageFragment().equals(mPackageFragment)) {
+                                    elements.add(subType);
                                 }
                             }
-
                         }
-                    };
-                    SearchEngine searchEngine = new SearchEngine();
-                    searchEngine.search(pattern, new SearchParticipant[] {
-                        SearchEngine.getDefaultSearchParticipant()
-                    }, scope, requestor, null);
+                    }
+
                     List<String> views = new ArrayList<String>();
                     for (IType elem : elements) {
                         views.add(elem.getFullyQualifiedName());
@@ -516,7 +498,11 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                             }
                         } else {
                             if (fullName != null) {
-                                androidElements.put(element, value);
+                                String currentPackage = mPackageFragment.getElementName();
+                                if (fullName.lastIndexOf('.') == currentPackage.length()
+                                        && fullName.startsWith(currentPackage)) {
+                                    androidElements.put(element, value);
+                                }
                             }
                         }
                     }

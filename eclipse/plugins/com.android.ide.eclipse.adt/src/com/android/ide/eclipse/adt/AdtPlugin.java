@@ -1743,7 +1743,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             (List<ITargetChangeListener>)mTargetChangeListeners.clone();
 
         Display display = AdtPlugin.getDisplay();
-        if (display == null) {
+        if (display == null || display.isDisposed()) {
             return;
         }
         display.asyncExec(new Runnable() {
