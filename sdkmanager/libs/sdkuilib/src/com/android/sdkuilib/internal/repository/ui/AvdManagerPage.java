@@ -18,7 +18,7 @@ package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.devices.DeviceManager.DevicesChangedListener;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.repository.UpdaterData;
@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Label;
  * page displays the actually list of AVDs and various action buttons.
  */
 public class AvdManagerPage extends Composite
-    implements ISdkChangeListener, DevicesChangeListener, DisposeListener {
+    implements ISdkChangeListener, DevicesChangedListener, DisposeListener {
 
     private AvdSelector mAvdSelector;
 
@@ -162,7 +162,7 @@ public class AvdManagerPage extends Composite
     // --- Implementation of DevicesChangeListener
 
     @Override
-    public void onDevicesChange() {
+    public void onDevicesChanged() {
         mAvdSelector.refresh(false /*reload*/);
     }
 

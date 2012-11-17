@@ -49,8 +49,10 @@ public class ConfigurationTest extends TestCase {
         configuration.setTheme("@style/Theme");
         assertEquals("@style/Theme", configuration.getTheme());
 
-        DeviceManager deviceManager = new DeviceManager(new StdLogger(StdLogger.Level.VERBOSE));
-        List<Device> devices = deviceManager.getDefaultDevices();
+        DeviceManager deviceManager = DeviceManager.createInstance(
+                                                        null /*osSdkPath*/,
+                                                        new StdLogger(StdLogger.Level.VERBOSE));
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
         assertNotNull(devices);
         assertTrue(devices.size() > 0);
         configuration.setDevice(devices.get(0), false);
@@ -107,8 +109,10 @@ public class ConfigurationTest extends TestCase {
         assertNotNull(configuration);
         configuration.setTheme("@style/Theme");
         assertEquals("@style/Theme", configuration.getTheme());
-        DeviceManager deviceManager = new DeviceManager(new StdLogger(StdLogger.Level.VERBOSE));
-        List<Device> devices = deviceManager.getDefaultDevices();
+        DeviceManager deviceManager = DeviceManager.createInstance(
+                                            null /*osSdkPath*/,
+                                            new StdLogger(StdLogger.Level.VERBOSE));
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
         assertNotNull(devices);
         assertTrue(devices.size() > 0);
         configuration.setDevice(devices.get(0), false);

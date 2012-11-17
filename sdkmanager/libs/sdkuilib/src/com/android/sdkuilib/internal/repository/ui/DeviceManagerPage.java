@@ -18,7 +18,7 @@ package com.android.sdkuilib.internal.repository.ui;
 
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.devices.DeviceManager.DevicesChangedListener;
 import com.android.sdklib.devices.Hardware;
 import com.android.sdklib.devices.Screen;
 import com.android.sdklib.devices.Storage;
@@ -88,7 +88,7 @@ import java.util.regex.Pattern;
  * - a filter box to do a string search on any part of the display.
  */
 public class DeviceManagerPage extends Composite
-    implements ISdkChangeListener, DevicesChangeListener, DisposeListener {
+    implements ISdkChangeListener, DevicesChangedListener, DisposeListener {
 
     public interface IAvdCreatedListener {
         public void onAvdCreated(AvdInfo createdAvdInfo);
@@ -355,11 +355,10 @@ public class DeviceManagerPage extends Composite
         try {
             mDisableRefresh = true;
             disposables.addAll(fillDevices(table, boldFont, true,
-                    mDeviceManager.getUserDevices(),
-                    null));
+                    mDeviceManager.getDevices(DeviceManager.USER_DEVICES)));
             disposables.addAll(fillDevices(table, boldFont, false,
-                    mDeviceManager.getDefaultDevices(),
-                    mDeviceManager.getVendorDevices(mUpdaterData.getOsSdkRoot())));
+                    mDeviceManager.getDevices(DeviceManager.DEFAULT_DEVICES |
+                                              DeviceManager.VENDOR_DEVICES)));
         } finally {
             mDisableRefresh = false;
         }
@@ -456,19 +455,15 @@ public class DeviceManagerPage extends Composite
             Table table,
             Font boldFont,
             boolean isUser,
-            List<Device> devices1,
-            List<Device> devices2) {
+            List<Device> devices) {
         List<Resource> disposables = new ArrayList<Resource>();
         Display display = table.getDisplay();
 
         TextStyle boldStyle = new TextStyle();
         boldStyle.font = boldFont;
 
-
-        List<Device> devices = new ArrayList<Device>(devices1);
-        if (devices2 != null) {
-            devices.addAll(devices2);
-        }
+        // We need the list to be be modifiable so that we can sort it.
+        devices = new ArrayList<Device>(devices);
 
         if (isUser) {
             // Just sort user devices by alphabetical name. They will show up at the top.
@@ -582,15 +577,14 @@ public class DeviceManagerPage extends Composite
     }
 
     // Constants extracted from DeviceMenuListerner -- TODO refactor somewhere else.
-    @SuppressWarnings("unused")
-    private static final String NEXUS = "Nexus";       //$NON-NLS-1$
+    private static final String NEXUS   = "Nexus";     //$NON-NLS-1$
     private static final String GENERIC = "Generic";   //$NON-NLS-1$
     private static Pattern PATTERN = Pattern.compile(
             "(\\d+\\.?\\d*)in (.+?)( \\(.*Nexus.*\\))?"); //$NON-NLS-1$
     /**
      * Returns a pretty name for the device.
      *
-     * Extracted from DeviceMenuListerner.
+     * Extracted from DeviceMenuListener.
      * Modified to remove the leading space insertion as it doesn't render
      * neatly in the avd manager. Instead added the option to add leading
      * zeroes to make the string names sort properly.
@@ -828,7 +822,7 @@ public class DeviceManagerPage extends Composite
     // --- Implementation of DevicesChangeListener
 
     @Override
-    public void onDevicesChange() {
+    public void onDevicesChanged() {
         onRefresh();
     }
 

@@ -143,7 +143,7 @@ public class DeviceCreationDialog extends GridDialog {
         mImageFactory = imageFactory;
         mDevice = device;
         mManager = manager;
-        mUserDevices = mManager.getUserDevices();
+        mUserDevices = mManager.getDevices(DeviceManager.USER_DEVICES);
     }
 
     /**

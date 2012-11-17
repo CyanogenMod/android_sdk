@@ -461,8 +461,8 @@ public class AvdCreationDialog extends GridDialog {
         SdkManager sdkManager = mAvdManager.getSdkManager();
         String location = sdkManager.getLocation();
         if (sdkManager != null && location != null) {
-            DeviceManager deviceManager = new DeviceManager(mSdkLog);
-            List<Device> deviceList = new ArrayList<Device>(deviceManager.getDevices(location));
+            DeviceManager deviceManager = DeviceManager.createInstance(location, mSdkLog);
+            List<Device>  deviceList    = deviceManager.getDevices(DeviceManager.ALL_DEVICES);
 
             // Sort
             List<Device> nexus = new ArrayList<Device>(deviceList.size());
@@ -608,6 +608,9 @@ public class AvdCreationDialog extends GridDialog {
                 case XHIGH:
                 case XXHIGH:
                     vmHeapSize = 128;
+                break;
+                case NODPI:
+                    break;
             }
         } else {
             switch (density) {
@@ -622,7 +625,9 @@ public class AvdCreationDialog extends GridDialog {
                 case XHIGH:
                 case XXHIGH:
                     vmHeapSize = 64;
-
+                break;
+                case NODPI:
+                    break;
             }
         }
         mVmHeap.setText(Integer.toString(vmHeapSize));
@@ -734,6 +739,8 @@ public class AvdCreationDialog extends GridDialog {
         }
     }
 
+    @SuppressWarnings("unused")
+    @Deprecated // FIXME unused, cleanup later
     private IAndroidTarget getSelectedTarget() {
         IAndroidTarget[] targets = (IAndroidTarget[]) mTarget.getData();
         int index = mTarget.getSelectionIndex();

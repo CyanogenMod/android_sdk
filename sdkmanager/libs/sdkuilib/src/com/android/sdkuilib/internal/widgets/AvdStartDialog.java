@@ -100,7 +100,7 @@ final class AvdStartDialog extends GridDialog {
         mAvd = avd;
         mSdkLocation = sdkLocation;
         mSettingsController = settingsController;
-        mDeviceManager = new DeviceManager(sdkLog);
+        mDeviceManager = DeviceManager.createInstance(mSdkLocation, sdkLog);
         if (mAvd == null) {
             throw new IllegalArgumentException("avd cannot be null");
         }
@@ -449,7 +449,7 @@ final class AvdStartDialog extends GridDialog {
             String name = properties.get(AvdManager.AVD_INI_DEVICE_NAME);
             String mfctr = properties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
             if (name != null && mfctr != null) {
-                Device d = mDeviceManager.getDevice(mSdkLocation, name, mfctr);
+                Device d = mDeviceManager.getDevice(name, mfctr);
                 if (d != null) {
                     double screenSize =
                         d.getDefaultHardware().getScreen().getDiagonalLength();

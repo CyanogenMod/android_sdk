@@ -59,7 +59,7 @@ public class AvdManager {
     /**
      * Exception thrown when something is wrong with a target path.
      */
-    private final static class InvalidTargetPathException extends Exception {
+    private static final class InvalidTargetPathException extends Exception {
         private static final long serialVersionUID = 1L;
 
         InvalidTargetPathException(String message) {
@@ -69,26 +69,26 @@ public class AvdManager {
 
     public static final String AVD_FOLDER_EXTENSION = ".avd";  //$NON-NLS-1$
 
-    public final static String AVD_INFO_PATH = "path";         //$NON-NLS-1$
-    public final static String AVD_INFO_TARGET = "target";     //$NON-NLS-1$
+    public static final String AVD_INFO_PATH = "path";         //$NON-NLS-1$
+    public static final String AVD_INFO_TARGET = "target";     //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the abi type of the specific avd
      *
      */
-    public final static String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
+    public static final String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the CPU architecture of the specific avd
      *
      */
-    public final static String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
+    public static final String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the CPU architecture of the specific avd
      *
      */
-    public final static String AVD_INI_CPU_MODEL = "hw.cpu.model"; //$NON-NLS-1$
+    public static final String AVD_INI_CPU_MODEL = "hw.cpu.model"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the manufacturer of the device this avd was based on.
@@ -106,19 +106,19 @@ public class AvdManager {
      *
      * @see #NUMERIC_SKIN_SIZE
      */
-    public final static String AVD_INI_SKIN_PATH = "skin.path"; //$NON-NLS-1$
+    public static final String AVD_INI_SKIN_PATH = "skin.path"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing an UI name for the skin.
      * This config key is ignored by the emulator. It is only used by the SDK manager or
      * tools to give a friendlier name to the skin.
      * If missing, use the {@link #AVD_INI_SKIN_PATH} key instead.
      */
-    public final static String AVD_INI_SKIN_NAME = "skin.name"; //$NON-NLS-1$
+    public static final String AVD_INI_SKIN_NAME = "skin.name"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing whether a dynamic skin should be displayed.
      */
-    public final static String AVD_INI_SKIN_DYNAMIC = "skin.dynamic"; //$NON-NLS-1$
+    public static final String AVD_INI_SKIN_DYNAMIC = "skin.dynamic"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the path to the sdcard file.
@@ -127,7 +127,7 @@ public class AvdManager {
      *
      * @see #SDCARD_IMG
      */
-    public final static String AVD_INI_SDCARD_PATH = "sdcard.path"; //$NON-NLS-1$
+    public static final String AVD_INI_SDCARD_PATH = "sdcard.path"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the size of the SD card.
      * This property is for UI purposes only. It is not used by the emulator.
@@ -135,7 +135,7 @@ public class AvdManager {
      * @see #SDCARD_SIZE_PATTERN
      * @see #parseSdcardSize(String, String[])
      */
-    public final static String AVD_INI_SDCARD_SIZE = "sdcard.size"; //$NON-NLS-1$
+    public static final String AVD_INI_SDCARD_SIZE = "sdcard.size"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the first path where the emulator looks
      * for system images. Typically this is the path to the add-on system image or
@@ -143,80 +143,80 @@ public class AvdManager {
      * <p/>
      * The emulator looks at {@link #AVD_INI_IMAGES_1} before {@link #AVD_INI_IMAGES_2}.
      */
-    public final static String AVD_INI_IMAGES_1 = "image.sysdir.1"; //$NON-NLS-1$
+    public static final String AVD_INI_IMAGES_1 = "image.sysdir.1"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the second path where the emulator looks
      * for system images. Typically this is the path to the platform system image.
      *
      * @see #AVD_INI_IMAGES_1
      */
-    public final static String AVD_INI_IMAGES_2 = "image.sysdir.2"; //$NON-NLS-1$
+    public static final String AVD_INI_IMAGES_2 = "image.sysdir.2"; //$NON-NLS-1$
     /**
      * AVD/config.ini key name representing the presence of the snapshots file.
      * This property is for UI purposes only. It is not used by the emulator.
      *
      * @see #SNAPSHOTS_IMG
      */
-    public final static String AVD_INI_SNAPSHOT_PRESENT = "snapshot.present"; //$NON-NLS-1$
+    public static final String AVD_INI_SNAPSHOT_PRESENT = "snapshot.present"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing whether hardware OpenGLES emulation is enabled
      */
-    public final static String AVD_INI_GPU_EMULATION = "hw.gpu.enabled"; //$NON-NLS-1$
+    public static final String AVD_INI_GPU_EMULATION = "hw.gpu.enabled"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing how to emulate the front facing camera
      */
-    public final static String AVD_INI_CAMERA_FRONT = "hw.camera.front"; //$NON-NLS-1$
+    public static final String AVD_INI_CAMERA_FRONT = "hw.camera.front"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing how to emulate the rear facing camera
      */
-    public final static String AVD_INI_CAMERA_BACK = "hw.camera.back"; //$NON-NLS-1$
+    public static final String AVD_INI_CAMERA_BACK = "hw.camera.back"; //$NON-NLS-1$
 
     /**
      * AVD/config.ini key name representing the amount of RAM the emulated device should have
      */
-    public final static String AVD_INI_RAM_SIZE = "hw.ramSize";
+    public static final String AVD_INI_RAM_SIZE = "hw.ramSize";
 
     /**
      * AVD/config.ini key name representing the amount of memory available to applications by default
      */
-    public final static String AVD_INI_VM_HEAP_SIZE = "vm.heapSize";
+    public static final String AVD_INI_VM_HEAP_SIZE = "vm.heapSize";
 
     /**
      * AVD/config.ini key name representing the size of the data partition
      */
-    public final static String AVD_INI_DATA_PARTITION_SIZE = "disk.dataPartition.size";
+    public static final String AVD_INI_DATA_PARTITION_SIZE = "disk.dataPartition.size";
 
     /**
      * AVD/config.ini key name representing the hash of the device this AVD is based on
      */
-    public final static String AVD_INI_DEVICE_HASH = "hw.device.hash";
+    public static final String AVD_INI_DEVICE_HASH = "hw.device.hash";
 
     /**
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
-    public final static Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
+    public static final Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
 
-    private final static String USERDATA_IMG = "userdata.img"; //$NON-NLS-1$
-    final static String CONFIG_INI = "config.ini"; //$NON-NLS-1$
-    private final static String SDCARD_IMG = "sdcard.img"; //$NON-NLS-1$
-    private final static String SNAPSHOTS_IMG = "snapshots.img"; //$NON-NLS-1$
+    private static final String USERDATA_IMG = "userdata.img"; //$NON-NLS-1$
+    static final String CONFIG_INI = "config.ini"; //$NON-NLS-1$
+    private static final String SDCARD_IMG = "sdcard.img"; //$NON-NLS-1$
+    private static final String SNAPSHOTS_IMG = "snapshots.img"; //$NON-NLS-1$
 
-    final static String INI_EXTENSION = ".ini"; //$NON-NLS-1$
-    private final static Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + //$NON-NLS-1$
+    static final String INI_EXTENSION = ".ini"; //$NON-NLS-1$
+    private static final Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + //$NON-NLS-1$
             INI_EXTENSION + "$",                                               //$NON-NLS-1$
             Pattern.CASE_INSENSITIVE);
 
-    private final static Pattern IMAGE_NAME_PATTERN = Pattern.compile("(.+)\\.img$", //$NON-NLS-1$
+    private static final Pattern IMAGE_NAME_PATTERN = Pattern.compile("(.+)\\.img$", //$NON-NLS-1$
             Pattern.CASE_INSENSITIVE);
 
     /**
      * Pattern for matching SD Card sizes, e.g. "4K" or "16M".
      * Callers should use {@link #parseSdcardSize(String, String[])} instead of using this directly.
      */
-    private final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("(\\d+)([KMG])"); //$NON-NLS-1$
+    private static final Pattern SDCARD_SIZE_PATTERN = Pattern.compile("(\\d+)([KMG])"); //$NON-NLS-1$
 
     /**
      * Minimal size of an SDCard image file in bytes. Currently 9 MiB.
@@ -229,19 +229,19 @@ public class AvdManager {
     public static final long SDCARD_MAX_BYTE_SIZE = 1023L<<30;
 
     /** The sdcard string represents a valid number but the size is outside of the allowed range. */
-    public final static int SDCARD_SIZE_NOT_IN_RANGE = 0;
+    public static final int SDCARD_SIZE_NOT_IN_RANGE = 0;
     /** The sdcard string looks like a size number+suffix but the number failed to decode. */
-    public final static int SDCARD_SIZE_INVALID = -1;
+    public static final int SDCARD_SIZE_INVALID = -1;
     /** The sdcard string doesn't look like a size, it might be a path instead. */
-    public final static int SDCARD_NOT_SIZE_PATTERN = -2;
+    public static final int SDCARD_NOT_SIZE_PATTERN = -2;
 
     /** Regex used to validate characters that compose an AVD name. */
-    public final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+"); //$NON-NLS-1$
+    public static final Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+"); //$NON-NLS-1$
 
     /** List of valid characters for an AVD name. Used for display purposes. */
-    public final static String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -"; //$NON-NLS-1$
+    public static final String CHARS_AVD_NAME = "a-z A-Z 0-9 . _ -"; //$NON-NLS-1$
 
-    public final static String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
+    public static final String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
 
     /**
      * Status returned by {@link AvdManager#isAvdNameConflicting(String)}.
@@ -1410,8 +1410,8 @@ public class AvdManager {
             String hash = properties.get(AVD_INI_DEVICE_HASH);
             if (deviceName != null && deviceMfctr != null && hash != null) {
                 int deviceHash = Integer.parseInt(hash);
-                deviceStatus = (new DeviceManager(log)).getDeviceStatus(
-                        mSdkManager.getLocation(), deviceName, deviceMfctr, deviceHash);
+                DeviceManager devMan = DeviceManager.createInstance(mSdkManager.getLocation(), log);
+                deviceStatus = devMan.getDeviceStatus(deviceName, deviceMfctr, deviceHash);
             }
         }
 
