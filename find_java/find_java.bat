@@ -41,6 +41,10 @@ echo Tools, you need a suitable version of Java JDK installed on your system.
 echo We recommend that you install the JDK version of JavaSE, available here:
 echo   http://www.oracle.com/technetwork/java/javase/downloads
 echo.
+echo If you already have Java installed, you can define the JAVA_HOME environment
+echo variable in Control Panel / System / Avanced System Settings to point to the
+echo JDK folder.
+echo.
 echo You can find the complete Android SDK requirements here:
 echo   http://developer.android.com/sdk/requirements.html
 echo.
