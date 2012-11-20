@@ -713,6 +713,7 @@ public class DeviceManagerPage extends Composite
 
         if (result.get()) {
             mDeviceManager.removeUserDevice(ci.mDevice);
+            mDeviceManager.saveUserDevices();
             onRefresh();
         }
     }
