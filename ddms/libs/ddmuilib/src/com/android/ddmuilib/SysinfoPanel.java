@@ -22,6 +22,8 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -78,14 +80,6 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
     private static final int MODE_SYNC = 4;
 
     // argument to dumpsys; section in the bugreport holding the data
-    private static final String BUGREPORT_SECTION[] = {
-        "cpuinfo",
-        "alarm",
-        "batteryinfo",
-        "MEMORY INFO",
-        "content"
-    };
-
     private static final String DUMP_COMMAND[] = {
         "dumpsys cpuinfo",
         "dumpsys alarm",
@@ -502,7 +496,6 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                 }
 
                 if (!found) {
-                    System.out.println("no match: " + line);
                     continue;
                 }
 
@@ -560,12 +553,12 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
             long other = 0;
 
             // Scan meminfo
-            while (true) {
-                String line = br.readLine();
-                if (line == null) {
-                    // End of file
-                    break;
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("----")) {
+                    continue;
                 }
+
                 Matcher m = valuePattern.matcher(line);
                 if (m.find()) {
                     long kb = Long.parseLong(m.group(1));
@@ -594,33 +587,66 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                     break;
                 }
             }
-            // Scan procrank
-            while (true) {
-                String line = br.readLine();
-                if (line == null) {
-                    break;
-                }
-                if (line.indexOf("PROCRANK") >= 0 || line.indexOf("PID") >= 0) {
-                    // procrank header
-                    continue;
-                }
-                if  (line.indexOf("----") >= 0) {
-                    //end of procrank section
-                    break;
-                }
-                // Extract pss field from procrank output
-                long pss = Long.parseLong(line.substring(23, 31).trim());
-                String cmdline = line.substring(43).trim().replace("/system/bin/", "");
-                // Arbitrary minimum size to display
-                if (pss > 2000) {
-                    results.add(new DataValue(cmdline, pss));
+
+            List<DataValue> procRankResults = readProcRankDataset(br, line);
+            for (DataValue procRank : procRankResults) {
+                if (procRank.value > 2000) { // only show processes using > 2000K in memory
+                    results.add(procRank);
                 } else {
-                    other += pss;
+                    other += procRank.value;
                 }
-                total -= pss;
+
+                total -= procRank.value;
             }
-            results.add(new DataValue("Other", other));
-            results.add(new DataValue("Unknown", total));
+
+            if (other > 0) {
+                results.add(new DataValue("Other", other));
+            }
+
+            // The Pss calculation is not necessarily accurate as accounting memory to
+            // a process is not accurate. So only if there really is unaccounted for memory do we
+            // add it to the pie.
+            if (total > 0) {
+                results.add(new DataValue("Unknown", total));
+            }
+
+            return results;
+        }
+
+        static List<DataValue> readProcRankDataset(BufferedReader br, String header)
+                throws IOException {
+            List<DataValue> results = new ArrayList<DataValue>();
+
+            if (header == null || !header.contains("PID")) {
+                return results;
+            }
+
+            Splitter PROCRANK_SPLITTER = Splitter.on(' ').omitEmptyStrings().trimResults();
+            List<String> fields = Lists.newArrayList(PROCRANK_SPLITTER.split(header));
+            int pssIndex = fields.indexOf("Pss");
+            int cmdIndex = fields.indexOf("cmdline");
+
+            if (pssIndex == -1 || cmdIndex == -1) {
+                return results;
+            }
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Extract pss field from procrank output
+                fields = Lists.newArrayList(PROCRANK_SPLITTER.split(line));
+
+                if (fields.size() < cmdIndex) {
+                    break;
+                }
+
+                String cmdline = fields.get(cmdIndex).replace("/system/bin/", "");
+                String pssInK = fields.get(pssIndex);
+                if (pssInK.endsWith("K")) {
+                    pssInK = pssInK.substring(0, pssInK.length() - 1);
+                }
+                long pss = safeParseLong(pssInK);
+                results.add(new DataValue(cmdline, pss));
+            }
 
             return results;
         }

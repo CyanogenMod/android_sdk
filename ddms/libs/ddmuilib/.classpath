@@ -10,5 +10,6 @@
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/jfreechart/jfreechart-1.0.9-swt.jar"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/jfreechart/jfreechart-1.0.9.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/guava-tools/guava-13.0.1.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/guava-tools/src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -63,4 +63,75 @@ public class BugReportParserTest extends TestCase {
         assertEquals("675/system_server (user)", data.get(0).name);
         assertEquals("Idle", data.get(3).name);
     }
+
+    public void testParseProcRankEclair() throws IOException {
+        String memInfo =
+                "   51   39408K   37908K   18731K   14936K  system_server\n" +
+                "   96   27432K   27432K    9501K    6816K  android.process.acore\n" +
+                "   27     248K     248K      83K      76K  /system/bin/debuggerd\n";
+        BufferedReader br = new BufferedReader(new StringReader(memInfo));
+        List<DataValue> data = BugReportParser.readProcRankDataset(br,
+                "  PID      Vss      Rss      Pss      Uss  cmdline\n");
+
+        assertEquals(3, data.size());
+        assertEquals("debuggerd", data.get(2).name);
+        if (data.get(0).value - 18731 > 0.0002) {
+            fail("Unexpected PSS Value " + data.get(0).value);
+        }
+    }
+
+    public void testParseProcRankJb() throws IOException {
+        String memInfo =
+                "  675  101120K  100928K   63452K   52624K  system_server\n" +
+                "10170   82100K   82012K   58246K   53580K  com.android.chrome:sandboxed_process0\n" +
+                " 8742   27296K   27224K    6849K    5620K  com.google.android.apps.walletnfcrel\n" +
+                "                          ------   ------  ------\n" +
+                "                         480598K  394172K  TOTAL\n" +
+                "\n" +
+                "RAM: 1916984K total, 886404K free, 72036K buffers, 482544K cached, 456K shmem, 34864K slab\n";
+        BufferedReader br = new BufferedReader(new StringReader(memInfo));
+        List<DataValue> data = BugReportParser.readProcRankDataset(br,
+                "  PID      Vss      Rss      Pss      Uss  cmdline\n");
+
+        assertEquals(3, data.size());
+    }
+
+    public void testParseMeminfoEclair() throws IOException {
+        String memInfo =
+                "------ MEMORY INFO ------\n" +
+                "MemTotal:         516528 kB\n" +
+                "MemFree:          401036 kB\n" +
+                "Buffers:               0 kB\n" +
+                "  PID      Vss      Rss      Pss      Uss  cmdline\n" +
+                "   51   39408K   37908K   18731K   14936K  system_server\n" +
+                "   96   27432K   27432K    9501K    6816K  android.process.acore\n" +
+                "  297   23348K   23348K    5245K    2276K  com.android.gallery\n";
+        BufferedReader br = new BufferedReader(new StringReader(memInfo));
+        List<DataValue> data = BugReportParser.readMeminfoDataset(br);
+        assertEquals(5, data.size());
+
+        assertEquals("Free", data.get(0).name);
+    }
+
+    public void testParseMeminfoJb() throws IOException {
+
+        String memInfo = // note: This dataset does not have all entries, so the totals will be off
+                "------ MEMORY INFO ------\n" +
+                "MemTotal:        1916984 kB\n" +
+                "MemFree:          888048 kB\n" +
+                "Buffers:           72036 kB\n" +
+                "  PID      Vss      Rss      Pss      Uss  cmdline\n" +
+                "  675  101120K  100928K   63452K   52624K  system_server\n" +
+                "10170   82100K   82012K   58246K   53580K  com.android.chrome:sandboxed_process0\n" +
+                " 8742   27296K   27224K    6849K    5620K  com.google.android.apps.walletnfcrel\n" +
+                "                          ------   ------  ------\n" +
+                "                         480598K  394172K  TOTAL\n" +
+                "\n" +
+                "RAM: 1916984K total, 886404K free, 72036K buffers, 482544K cached, 456K shmem, 34864K slab\n";
+
+        BufferedReader br = new BufferedReader(new StringReader(memInfo));
+        List<DataValue> data = BugReportParser.readMeminfoDataset(br);
+
+        assertEquals(6, data.size());
+    }
 }

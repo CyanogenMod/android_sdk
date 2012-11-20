@@ -20,8 +20,9 @@ LOCAL_JAVA_LIBRARIES := \
 	org.eclipse.core.commands_3.6.0.I20100512-1500 \
 	jcommon-1.0.12 \
 	jfreechart-1.0.9 \
-	jfreechart-1.0.9-swt
-	
+	jfreechart-1.0.9-swt \
+	guava-tools
+
 LOCAL_MODULE := ddmuilib
 
 include $(BUILD_HOST_JAVA_LIBRARY)
