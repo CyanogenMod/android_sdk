@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.android.SdkConstants.TAG_STRING;
+import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.google.common.base.Objects.equal;
 
 import com.android.annotations.NonNull;
@@ -183,15 +183,27 @@ public class TypoDetector extends ResourceXmlDetector {
         int index = 0;
         boolean checkedTypos = false;
         while (index < max) {
-            while (index < max && !Character.isLetter(text.charAt(index))) {
-                index++;
+            for (; index < max; index++) {
+                char c = text.charAt(index);
+                if (c == '\\') {
+                    index++;
+                    continue;
+                } else if (Character.isLetter(c)) {
+                    break;
+                }
             }
-            if (index == max) {
+            if (index >= max) {
                 return;
             }
             int begin = index;
-            while (index < max && Character.isLetter(text.charAt(index))) {
-                if (text.charAt(index) >= 0x80) {
+            for (; index < max; index++) {
+                char c = text.charAt(index);
+                if (c == '\\') {
+                    index++;
+                    break;
+                } else if (!Character.isLetter(c)) {
+                    break;
+                } else if (text.charAt(index) >= 0x80) {
                     // Switch to UTF-8 handling for this string
                     if (checkedTypos) {
                         // If we've already checked words we may have reported typos
@@ -207,7 +219,6 @@ public class TypoDetector extends ResourceXmlDetector {
                     }
                     return;
                 }
-                index++;
             }
 
             int end = index;
@@ -228,7 +239,13 @@ public class TypoDetector extends ResourceXmlDetector {
             // Find beginning of word
             while (index < byteEnd) {
                 byte b = utf8Text[index];
-                if (isLetter(b)) {
+                if (b == '\\') {
+                    index++;
+                    charStart++;
+                    if (index < byteEnd) {
+                        b = utf8Text[index];
+                    }
+                } else if (isLetter(b)) {
                     break;
                 }
                 index++;
@@ -238,7 +255,7 @@ public class TypoDetector extends ResourceXmlDetector {
                 }
             }
 
-            if (index == byteEnd) {
+            if (index >= byteEnd) {
                 return;
             }
             int charEnd = charStart;
@@ -248,7 +265,17 @@ public class TypoDetector extends ResourceXmlDetector {
             // bytes won't match these ASCII characters (because the high bit must be set there)
             while (index < byteEnd) {
                 byte b = utf8Text[index];
-                if (!isLetter(b)) {
+                if (b == '\\') {
+                    index++;
+                    charEnd++;
+                    if (index < byteEnd) {
+                        b = utf8Text[index++];
+                        if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
+                            charEnd++;
+                        }
+                    }
+                    break;
+                } else if (!isLetter(b)) {
                     break;
                 }
                 index++;
