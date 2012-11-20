@@ -321,15 +321,28 @@ public class DeviceManager {
      * {@link AndroidLocation#getFolder()}.
      */
     public void saveUserDevices() {
+        if (mUserDevices == null) {
+            return;
+        }
+
+        File userDevicesFile = null;
+        try {
+            userDevicesFile = new File(AndroidLocation.getFolder(),
+                    SdkConstants.FN_DEVICES_XML);
+        } catch (AndroidLocationException e) {
+            mLog.warning("Couldn't find user directory: %1$s", e.getMessage());
+            return;
+        }
+
+        if (mUserDevices.size() == 0) {
+            userDevicesFile.delete();
+            return;
+        }
+
         synchronized (sLock) {
-            if (mUserDevices != null && mUserDevices.size() != 0) {
-                File userDevicesFile;
+            if (mUserDevices.size() > 0) {
                 try {
-                    userDevicesFile = new File(AndroidLocation.getFolder(),
-                            SdkConstants.FN_DEVICES_XML);
                     DeviceWriter.writeToXml(new FileOutputStream(userDevicesFile), mUserDevices);
-                } catch (AndroidLocationException e) {
-                    mLog.warning("Couldn't find user directory: %1$s", e.getMessage());
                 } catch (FileNotFoundException e) {
                     mLog.warning("Couldn't open file: %1$s", e.getMessage());
                 } catch (ParserConfigurationException e) {
