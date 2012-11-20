@@ -301,8 +301,8 @@ public class DeviceCreationDialog extends GridDialog {
         generateLabel("Buttons:", tooltip, column2);
         mButtons = new Combo(column2, SWT.DROP_DOWN | SWT.READ_ONLY);
         mButtons.setToolTipText(tooltip);
-        mButtons.add("Software");
-        mButtons.add("Hardware");
+        mButtons.add(ButtonType.SOFT.getDescription());
+        mButtons.add(ButtonType.HARD.getDescription());
         mButtons.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mButtons.select(0);
         mButtons.addModifyListener(validator);
@@ -867,8 +867,9 @@ public class DeviceCreationDialog extends GridDialog {
         }
         mRam.setText(Long.toString(mHardware.getRam().getSizeAsUnit(Storage.Unit.MiB)));
         mRamCombo.select(0);
+
         for (int i = 0; i < mButtons.getItemCount(); i++) {
-            if (mButtons.getItem(i).equals(mHardware.getButtonType().toString())) {
+            if (mButtons.getItem(i).equals(mHardware.getButtonType().getDescription())) {
                 mButtons.select(i);
                 break;
             }
@@ -966,7 +967,7 @@ public class DeviceCreationDialog extends GridDialog {
             long ram = Long.parseLong(mRam.getText());
             Storage.Unit unit = Storage.Unit.getEnum(mRamCombo.getText());
             mHardware.setRam(new Storage(ram, unit));
-            if (mButtons.getText().equals("Hardware")) {
+            if (mButtons.getText().equals(ButtonType.HARD.getDescription())) {
                 mHardware.setButtonType(ButtonType.HARD);
             } else {
                 mHardware.setButtonType(ButtonType.SOFT);
