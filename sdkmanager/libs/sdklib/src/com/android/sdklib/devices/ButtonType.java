@@ -17,18 +17,26 @@
 package com.android.sdklib.devices;
 
 public enum ButtonType {
-    HARD("hard"),
-    SOFT("soft");
+    HARD("hard", "Hardware"),
+    SOFT("soft", "Software");
 
-    private final String mValue;
+    private final String mId;
+    private final String mDescription;
 
-    private ButtonType(String value) {
-        mValue = value;
+    /**
+     * Construct a {@link ButtonType}.
+     *
+     * @param id identifier for this button type. Persisted on disk when a user creates a device.
+     * @param desc User friendly description
+     */
+    private ButtonType(String id, String desc) {
+        mId = id;
+        mDescription = desc;
     }
 
     public static ButtonType getEnum(String value) {
         for (ButtonType n : values()) {
-            if (n.mValue.equals(value)) {
+            if (n.mId.equals(value)) {
                 return n;
             }
         }
@@ -37,6 +45,11 @@ public enum ButtonType {
 
     @Override
     public String toString() {
-        return mValue;
+        return mId;
     }
+
+    public String getDescription() {
+        return mDescription;
+    }
+
 }
