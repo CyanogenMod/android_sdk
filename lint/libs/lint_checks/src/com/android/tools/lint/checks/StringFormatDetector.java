@@ -156,10 +156,16 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     private Map<String, List<Pair<Handle, String>>> mFormatStrings;
 
     /**
-     * List of strings that contain percents that aren't formatting strings; these
+     * Map of strings that contain percents that aren't formatting strings; these
      * should not be passed to String.format.
      */
     private Map<String, Handle> mNotFormatStrings = new HashMap<String, Handle>();
+
+    /**
+     * Set of strings that have an unknown format such as date formatting; we should not
+     * flag these as invalid when used from a String#format call
+     */
+    private Set<String> mIgnoreStrings;
 
     /** Constructs a new {@link StringFormatDetector} check */
     public StringFormatDetector() {
@@ -275,11 +281,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 String conversion = matcher.group(6);
                 int conversionClass = getConversionClass(conversion.charAt(0));
                 if (conversionClass == CONVERSION_CLASS_UNKNOWN || matcher.group(5) != null) {
-                    if (!mNotFormatStrings.containsKey(name)) {
-                        Handle handle = context.parser.createLocationHandle(context, element);
-                        handle.setClientData(element);
-                        mNotFormatStrings.put(name, handle);
+                    if (mIgnoreStrings == null) {
+                        mIgnoreStrings = new HashSet<String>();
                     }
+                    mIgnoreStrings.add(name);
+
                     // Don't process any other strings here; some of them could
                     // accidentally look like a string, e.g. "%H" is a hash code conversion
                     // in String.format (and hour in Time formatting).
@@ -287,6 +293,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 }
 
                 found = true;
+                j++; // Ensure that when we process a "%%" we don't separately check the second %
             }
         }
 
@@ -730,6 +737,10 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         int max = 0;
         while (true) {
             if (matcher.find(index)) {
+                if ("%".equals(matcher.group(6))) { //$NON-NLS-1$
+                    index = matcher.end();
+                    continue;
+                }
                 int matchStart = matcher.start();
                 // Make sure this is not an escaped '%'
                 for (; prevIndex < matchStart; prevIndex++) {
@@ -896,6 +907,10 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         method.accept(tracker);
         String name = tracker.getFormatStringName();
         if (name == null) {
+            return;
+        }
+
+        if (mIgnoreStrings != null && mIgnoreStrings.contains(name)) {
             return;
         }
 
