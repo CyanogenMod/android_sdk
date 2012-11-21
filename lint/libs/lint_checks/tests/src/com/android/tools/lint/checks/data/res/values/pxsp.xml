@@ -26,4 +26,9 @@
         </item>
     </style>
 
+    <style name="Widget.TabStrip" parent="Widget">
+        <item name="android:divider">?android:attr/listDivider</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerPadding">0px</item>
+    </style>
 </resources>

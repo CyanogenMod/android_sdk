@@ -209,7 +209,7 @@ public class PxUsageDetector extends LayoutDetector {
             if (!Character.isWhitespace(c)) {
                 if (c == 'x' && text.charAt(j - 1) == 'p') { // ends with px
                     text = text.trim();
-                    if (text.matches("\\d+px")) { //$NON-NLS-1$
+                    if (text.matches("\\d+px") && text.charAt(0) != '0') { //$NON-NLS-1$
                         if (context.isEnabled(PX_ISSUE)) {
                             context.report(PX_ISSUE, item, context.getLocation(textNode),
                                 "Avoid using \"px\" as units; use \"dp\" instead", null);
@@ -219,7 +219,7 @@ public class PxUsageDetector extends LayoutDetector {
                             c == 'n' && text.charAt(j - 1) == 'i') {
                     text = text.trim();
                     String unit = text.substring(text.length() - 2);
-                    if (text.matches("\\d+" + unit)) { //$NON-NLS-1$
+                    if (text.matches("\\d+" + unit) && text.charAt(0) != '0') { //$NON-NLS-1$
                         if (context.isEnabled(IN_MM_ISSUE)) {
                             context.report(IN_MM_ISSUE, item, context.getLocation(textNode),
                                 String.format("Avoid using \"%1$s\" as units "
