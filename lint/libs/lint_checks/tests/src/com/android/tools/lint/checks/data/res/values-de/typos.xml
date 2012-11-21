@@ -8,5 +8,7 @@
            </string>
     <string name="s2">(Authorisierungscode!)</string>
     <string name="s3">   zurück gefoobaren!</string>
+    <!-- escaped separator -->
+    <string name="issue39599">"ü test\nciht zu"</string>
 
 </resources>

@@ -18,5 +18,8 @@
     <string name="s8">OK Cancel dialog with a long message</string>
     <!-- case changes only: invalid -->
     <string name="dlg_button_ok">Ok</string>
+    <!-- escaped separator -->
+    <string name="issue39599">"Please take a moment\nto rate ^1"</string>
+    <!-- escaped separator 2 -->
+    <string name="issue39599_2">"\nto</string>
 </resources>
-
