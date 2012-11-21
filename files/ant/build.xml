@@ -86,14 +86,14 @@
 
     <!-- Output location of the HTML report for the "lint" target.
          Ideally this would be specified as
-            value="${out.dir}/lint.html"
+            value="${out.dir}/lint-results.html"
          but we can't make a forward reference to the definition for
          ${out.dir}, and it is not a configurable property (yet).
      -->
-    <property name="lint.out.html" value="bin/lint.html" />
+    <property name="lint.out.html" value="bin/lint-results.html" />
 
     <!-- Output location of the XML report for the "lint" target -->
-    <property name="lint.out.xml" value="bin/lint.xml" />
+    <property name="lint.out.xml" value="bin/lint-results.xml" />
 
     <!-- ******************************************************* -->
     <!-- ********************* Custom Tasks ******************** -->
