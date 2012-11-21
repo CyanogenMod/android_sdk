@@ -154,6 +154,15 @@ public class StringFormatDetectorTest  extends AbstractCheckTest {
             lintProject("res/values/formatstrings3.xml"));
     }
 
+    public void testIssue39758() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "res/values/formatstrings4.xml",
+                "src/test/pkg/StringFormatActivity2.java.txt=>src/test/pkg/StringFormatActivity2.java"));
+    }
+
     public void testIsLocaleSpecific() throws Exception {
         assertFalse(isLocaleSpecific(""));
         assertFalse(isLocaleSpecific("Hello World!"));
