@@ -865,6 +865,10 @@ public class Project {
             File apiDir = new File(getAospTop(), "frameworks/base/api" //$NON-NLS-1$
                     .replace('/', File.separatorChar));
             File[] apiFiles = apiDir.listFiles();
+            if (apiFiles == null) {
+                sCurrentVersion = 1;
+                return sCurrentVersion;
+            }
             int max = 1;
             for (File apiFile : apiFiles) {
                 String name = apiFile.getName();
