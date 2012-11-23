@@ -28,6 +28,7 @@ import org.w3c.dom.NodeList;
 import java.awt.Point;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Locale;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -136,7 +137,7 @@ public class DeviceWriter {
 
         addElement(doc, screen, DeviceSchema.NODE_SCREEN_SIZE, s.getSize().getResourceValue());
         addElement(doc, screen, DeviceSchema.NODE_DIAGONAL_LENGTH,
-                String.format("%.2f",s.getDiagonalLength()));
+                String.format(Locale.US, "%.2f",s.getDiagonalLength()));
         addElement(doc, screen, DeviceSchema.NODE_PIXEL_DENSITY,
                 s.getPixelDensity().getResourceValue());
         addElement(doc, screen, DeviceSchema.NODE_SCREEN_RATIO, s.getRatio().getResourceValue());
@@ -148,8 +149,10 @@ public class DeviceWriter {
                 Integer.toString(s.getXDimension()));
         addElement(doc, dimensions, DeviceSchema.NODE_Y_DIMENSION,
                 Integer.toString(s.getYDimension()));
-        addElement(doc, screen, DeviceSchema.NODE_XDPI, String.format("%.2f", s.getXdpi()));
-        addElement(doc, screen, DeviceSchema.NODE_YDPI, String.format("%.2f", s.getYdpi()));
+        addElement(doc, screen, DeviceSchema.NODE_XDPI, String.format(Locale.US,
+                "%.2f", s.getXdpi()));
+        addElement(doc, screen, DeviceSchema.NODE_YDPI, String.format(Locale.US,
+                "%.2f", s.getYdpi()));
 
         Element touch = doc.createElement(PREFIX + DeviceSchema.NODE_TOUCH);
         screen.appendChild(touch);
