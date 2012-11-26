@@ -74,6 +74,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
     private static final String WAKELOCK_OWNER = "android/os/PowerManager$WakeLock"; //$NON-NLS-1$
     private static final String RELEASE_METHOD = "release"; //$NON-NLS-1$
     private static final String ACQUIRE_METHOD = "acquire"; //$NON-NLS-1$
+    private static final String IS_HELD_METHOD = "isHeld"; //$NON-NLS-1$
 
     /** Print diagnostics during analysis (display flow control graph etc).
      * Make sure you add the asm-debug or asm-util jars to the runtime classpath
@@ -239,6 +240,22 @@ public class WakelockDetector extends Detector implements ClassScanner {
                         }
                     }
                 }
+            } else if (from.getOpcode() == Opcodes.IFEQ) {
+                JumpInsnNode jump = (JumpInsnNode) from;
+                if (jump.label == to) {
+                    AbstractInsnNode prev = LintUtils.getPrevInstruction(from);
+                    if (prev != null && prev.getType() == AbstractInsnNode.METHOD_INSN) {
+                        MethodInsnNode method = (MethodInsnNode) prev;
+                        if (method.name.equals(IS_HELD_METHOD) &&
+                                method.owner.equals(WAKELOCK_OWNER)) {
+                            AbstractInsnNode next = LintUtils.getNextInstruction(from);
+                            if (next != null) {
+                                super.add(from, next);
+                                return;
+                            }
+                        }
+                    }
+                }
             }
 
             super.add(from, to);
@@ -289,6 +306,8 @@ public class WakelockDetector extends Detector implements ClassScanner {
             if (method.name.equals(RELEASE_METHOD) && method.owner.equals(WAKELOCK_OWNER)) {
                 return SEEN_TARGET;
             } else if (method.name.equals(ACQUIRE_METHOD) && method.owner.equals(WAKELOCK_OWNER)) {
+                // OK
+            } else if (method.name.equals(IS_HELD_METHOD) && method.owner.equals(WAKELOCK_OWNER)) {
                 // OK
             } else {
                 // Some non acquire/release method call: if this is not associated with a
