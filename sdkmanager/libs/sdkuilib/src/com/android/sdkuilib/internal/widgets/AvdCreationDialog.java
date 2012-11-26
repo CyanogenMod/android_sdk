@@ -468,10 +468,8 @@ public class AvdCreationDialog extends GridDialog {
             List<Device> nexus = new ArrayList<Device>(deviceList.size());
             List<Device> other = new ArrayList<Device>(deviceList.size());
             for (Device device : deviceList) {
-                if (isNexus(device)) {
-                    if (!isGeneric(device)) { // Filter out repeated definitions
-                        nexus.add(device);
-                    }
+                if (isNexus(device) && !isGeneric(device)) {
+                    nexus.add(device);
                 } else {
                     other.add(device);
                 }
@@ -491,7 +489,7 @@ public class AvdCreationDialog extends GridDialog {
             String[] labels = new String[devices.length];
             for (int i = 0, n = devices.length; i < n; i++) {
                 Device device = devices[i];
-                if (isNexus(device)) {
+                if (isNexus(device) && !isGeneric(device)) {
                     labels[i] = getNexusLabel(device);
                 } else {
                     labels[i] = getGenericLabel(device);
