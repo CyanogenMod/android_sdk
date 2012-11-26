@@ -49,6 +49,11 @@ public class MockPackagesPageImpl extends PackagesPageImpl {
         runnable.run();
     }
 
+    @Override
+    protected void syncViewerSelection() {
+        // No-op. There is no real tree viewer to synchronize.
+    }
+
     private MockTreeViewer mTreeViewer;
 
     @Override

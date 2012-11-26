@@ -150,6 +150,12 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
                     mGroupPackages.getDisplay().syncExec(runnable);
                 }
             };
+
+            @Override
+            protected void syncViewerSelection() {
+                PackagesPage.this.syncViewerSelection();
+            }
+
             @Override
             protected void refreshViewerInput() {
                 PackagesPage.this.refreshViewerInput();
@@ -478,7 +484,6 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
                     mTreeViewer.setInput(null);
                     refreshViewerInput();
                     syncViewerSelection();
-                    updateButtonsState();
                     break;
                 case TOGGLE_SHOW_INSTALLED_PKG:
                     button = mCheckFilterInstalled;
@@ -882,10 +887,9 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
      * for initial run.
      */
     private void onSelectNewUpdates(boolean selectNew, boolean selectUpdates, boolean selectTop) {
-        // This does not update the tree itself, syncViewerSelection does it below.
+        // This will update the tree's "selected" state and then invoke syncViewerSelection()
+        // which will in turn update tree.
         mImpl.onSelectNewUpdates(selectNew, selectUpdates, selectTop);
-        syncViewerSelection();
-        updateButtonsState();
     }
 
     /**
@@ -895,7 +899,6 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
         // This does not update the tree itself, syncViewerSelection does it below.
         mImpl.onDeselectAll();
         syncViewerSelection();
-        updateButtonsState();
     }
 
     /**
@@ -935,33 +938,38 @@ public final class PackagesPage extends Composite implements ISdkChangeListener 
         ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
 
         Object input = mTreeViewer.getInput();
-        if (input == null) {
-            return;
-        }
-        for (Object cat : provider.getElements(input)) {
-            Object[] children = provider.getElements(cat);
-            boolean allChecked = children.length > 0;
-            for (Object child : children) {
-                if (child instanceof PkgItem) {
-                    PkgItem item = (PkgItem) child;
-                    boolean checked = item.isChecked();
-                    allChecked &= checked;
+        if (input != null) {
+            for (Object cat : provider.getElements(input)) {
+                Object[] children = provider.getElements(cat);
+                boolean allChecked = children.length > 0;
+                for (Object child : children) {
+                    if (child instanceof PkgItem) {
+                        PkgItem item = (PkgItem) child;
+                        boolean checked = item.isChecked();
+                        allChecked &= checked;
 
-                    if (checked != mTreeViewer.getChecked(item)) {
-                        if (checked) {
-                            if (!mTreeViewer.getExpandedState(cat)) {
-                                mTreeViewer.setExpandedState(cat, true);
+                        if (checked != mTreeViewer.getChecked(item)) {
+                            if (checked) {
+                                if (!mTreeViewer.getExpandedState(cat)) {
+                                    mTreeViewer.setExpandedState(cat, true);
+                                }
                             }
+                            checkAndExpandItem(
+                                    item,
+                                    checked,
+                                    true/*fixChildren*/,
+                                    false/*fixParent*/);
                         }
-                        checkAndExpandItem(item, checked, true/*fixChildren*/, false/*fixParent*/);
                     }
                 }
-            }
 
-            if (allChecked != mTreeViewer.getChecked(cat)) {
-                mTreeViewer.setChecked(cat, allChecked);
+                if (allChecked != mTreeViewer.getChecked(cat)) {
+                    mTreeViewer.setChecked(cat, allChecked);
+                }
             }
         }
+
+        updateButtonsState();
     }
 
     /**

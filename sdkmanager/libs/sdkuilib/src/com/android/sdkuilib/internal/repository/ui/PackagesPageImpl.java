@@ -82,6 +82,11 @@ abstract class PackagesPageImpl {
      */
     abstract protected void syncExec(Runnable runnable);
 
+    /**
+     * Synchronizes the 'checked' state of PkgItems in the tree with their internal isChecked state.
+     */
+    abstract protected void syncViewerSelection();
+
     void performFirstLoad() {
         // First a package loader is created that only checks
         // the local cache xml files. It populates the package
@@ -310,6 +315,7 @@ abstract class PackagesPageImpl {
                 selectUpdates,
                 selectTop,
                 SdkConstants.CURRENT_PLATFORM);
+        syncViewerSelection();
     }
 
     /**
