@@ -832,9 +832,7 @@ public class MoveGesture extends DropGesture {
             return;
         }
 
-        String rootFqcn = elements[0].getFqcn();
-
-        mCanvas.createDocumentRoot(rootFqcn);
+        mCanvas.createDocumentRoot(elements[0]);
     }
 
     /**

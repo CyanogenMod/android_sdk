@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
@@ -1579,16 +1580,16 @@ public class LayoutCanvas extends Canvas {
      * This is invoked by
      * {@link MoveGesture#drop(org.eclipse.swt.dnd.DropTargetEvent)}.
      *
-     * @param rootFqcn A non-null non-empty FQCN that must match an existing
-     *            {@link ViewElementDescriptor} to add as root to the current
-     *            empty XML document.
+     * @param root A non-null descriptor of the root element to create.
      */
-    void createDocumentRoot(String rootFqcn) {
+    void createDocumentRoot(final @NonNull SimpleElement root) {
+        String rootFqcn = root.getFqcn();
 
         // Need a valid empty document to create the new root
         final UiDocumentNode uiDoc = mEditorDelegate.getUiRootNode();
         if (uiDoc == null || uiDoc.getUiChildren().size() > 0) {
-            debugPrintf("Failed to create document root for %1$s: document is not empty", rootFqcn);
+            debugPrintf("Failed to create document root for %1$s: document is not empty",
+                    rootFqcn);
             return;
         }
 
@@ -1619,6 +1620,16 @@ public class LayoutCanvas extends Canvas {
                         SdkConstants.XMLNS_URI,
                         SdkConstants.NS_RESOURCES,
                         true /*override*/);
+
+                IDragAttribute[] attributes = root.getAttributes();
+                if (attributes != null) {
+                    for (IDragAttribute attribute : attributes) {
+                        String uri = attribute.getUri();
+                        String name = attribute.getName();
+                        String value = attribute.getValue();
+                        uiNew.setAttributeValue(name, uri, value, false /*override*/);
+                    }
+                }
 
                 // Adjust the attributes
                 DescriptorsUtils.setDefaultLayoutAttributes(uiNew, false /*updateLayout*/);

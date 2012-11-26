@@ -1058,7 +1058,12 @@ public abstract class AndroidXmlEditor extends FormEditor {
                                         end = begin + 1;
                                     }
 
-                                    reformatRegion(begin, end);
+                                    if (mFormatChildren
+                                         && node == node.getOwnerDocument().getDocumentElement()) {
+                                        reformatDocument();
+                                    } else {
+                                        reformatRegion(begin, end);
+                                    }
                                 }
                             }
                             mFormatNode = null;
