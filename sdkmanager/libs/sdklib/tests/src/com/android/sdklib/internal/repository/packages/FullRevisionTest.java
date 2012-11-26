@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository.packages;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 public class FullRevisionTest extends TestCase {
@@ -31,6 +33,8 @@ public class FullRevisionTest extends TestCase {
         assertEquals(p, FullRevision.parseRevision("5"));
         assertEquals("5.0.0", p.toString());
         assertEquals(p, FullRevision.parseRevision("5.0.0"));
+        assertEquals("[5, 0, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[5, 0, 0, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
 
         p = new FullRevision(5, 0, 0, 6);
         assertEquals(5, p.getMajor());
@@ -42,6 +46,8 @@ public class FullRevisionTest extends TestCase {
         assertEquals(p, FullRevision.parseRevision("5 rc6"));
         assertEquals("5.0.0 rc6", p.toString());
         assertEquals(p, FullRevision.parseRevision("5.0.0 rc6"));
+        assertEquals("[5, 0, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[5, 0, 0, 6]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
 
         p = new FullRevision(6, 7, 0);
         assertEquals(6, p.getMajor());
@@ -53,6 +59,8 @@ public class FullRevisionTest extends TestCase {
         assertEquals(p, FullRevision.parseRevision("6.7"));
         assertEquals("6.7.0", p.toString());
         assertEquals(p, FullRevision.parseRevision("6.7.0"));
+        assertEquals("[6, 7, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[6, 7, 0, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
 
         p = new FullRevision(10, 11, 12, FullRevision.NOT_A_PREVIEW);
         assertEquals(10, p.getMajor());
@@ -63,6 +71,8 @@ public class FullRevisionTest extends TestCase {
         assertEquals("10.11.12", p.toShortString());
         assertEquals("10.11.12", p.toString());
         assertEquals(p, FullRevision.parseRevision("10.11.12"));
+        assertEquals("[10, 11, 12]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[10, 11, 12, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
 
         p = new FullRevision(10, 11, 12, 13);
         assertEquals(10, p.getMajor());
@@ -76,6 +86,8 @@ public class FullRevisionTest extends TestCase {
         assertEquals(p, FullRevision.parseRevision("   10.11.12 rc13"));
         assertEquals(p, FullRevision.parseRevision("10.11.12 rc13   "));
         assertEquals(p, FullRevision.parseRevision("   10.11.12   rc13   "));
+        assertEquals("[10, 11, 12]",     Arrays.toString(p.toIntArray(false /*includePreview*/)));
+        assertEquals("[10, 11, 12, 13]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
     }
 
     public final void testParseError() {

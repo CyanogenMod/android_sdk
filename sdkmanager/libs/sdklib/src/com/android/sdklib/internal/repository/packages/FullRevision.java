@@ -169,6 +169,31 @@ public class FullRevision implements Comparable<FullRevision> {
         return sb.toString();
     }
 
+    /**
+     * Returns the version number as an integer array, in the form
+     * [major, minor, micro] or [major, minor, micro, preview].
+     *
+     * This is useful to initialize an instance of
+     * {@code org.apache.tools.ant.util.DeweyDecimal} using a
+     * {@link FullRevision}.
+     *
+     * @param includePreview If true the output will contain 4 fields
+     *  to include the preview number (even if 0.) If false the output
+     *  will contain only 3 fields (major, minor and micro.)
+     * @return A new int array, never null, with either 3 or 4 fields.
+     */
+    public int[] toIntArray(boolean includePreview) {
+        int size = includePreview ? 4 : 3;
+        int[] result = new int[size];
+        result[0] = mMajor;
+        result[1] = mMinor;
+        result[2] = mMicro;
+        if (result.length > 3) {
+            result[3] = mPreview;
+        }
+        return result;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -22,6 +22,8 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.sdklib.internal.repository.packages.FullRevision;
+import com.android.sdklib.repository.PkgProps;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -91,19 +93,17 @@ final class TaskHelper {
                 }
             }
 
-            String value = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
+            String value = p.getProperty(PkgProps.PKG_REVISION);
             if (value != null) {
-                value = value.trim();
-                int space = value.indexOf(' ');
-                if (space != -1) {
-                    value = value.substring(0, space);
-                }
-                return new DeweyDecimal(value);
+                FullRevision rev = FullRevision.parseRevision(value);
+                return new DeweyDecimal(rev.toIntArray(false /*includePreview*/));
             }
+        } catch (NumberFormatException e) {
+            // couldn't parse the version number.
         } catch (FileNotFoundException e) {
-            // couldn't find the file? return -1 below.
+            // couldn't find the file.
         } catch (IOException e) {
-            // couldn't find the file? return -1 below.
+            // couldn't find the file.
         }
 
         return null;
