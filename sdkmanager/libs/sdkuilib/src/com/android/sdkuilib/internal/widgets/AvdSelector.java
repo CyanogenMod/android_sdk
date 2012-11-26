@@ -115,6 +115,8 @@ public final class AvdSelector {
 
     private final ILogger mSdkLog;
 
+    private boolean mInternalRefresh;
+
 
     /**
      * The display mode of the AVD Selector.
@@ -467,21 +469,29 @@ public final class AvdSelector {
      * <code>false</code>.
      */
     public boolean refresh(boolean reload) {
-        if (reload) {
+        if (!mInternalRefresh) {
             try {
-                mAvdManager.reloadAvds(NullLogger.getLogger());
-            } catch (AndroidLocationException e) {
-                return false;
+                // Note that AvdManagerPage.onDevicesChange() will trigger a
+                // refresh while the AVDs are being reloaded so prevent from
+                // having a recursive call to here.
+                mInternalRefresh = true;
+                if (reload) {
+                    try {
+                        mAvdManager.reloadAvds(NullLogger.getLogger());
+                    } catch (AndroidLocationException e) {
+                        return false;
+                    }
+                }
+
+                AvdInfo selected = getSelected();
+                fillTable(mTable);
+                setSelection(selected);
+                return true;
+            } finally {
+                mInternalRefresh = false;
             }
         }
-
-        AvdInfo selected = getSelected();
-
-        fillTable(mTable);
-
-        setSelection(selected);
-
-        return true;
+        return false;
     }
 
     /**
@@ -1021,7 +1031,8 @@ public final class AvdSelector {
             // Overwrite the properties derived from the device and nothing else
             Map<String, String> properties = new HashMap<String, String>(avdInfo.getProperties());
 
-            List<Device> devices = (new DeviceManager(mSdkLog)).getDevices(mOsSdkPath);
+            DeviceManager devMan  = DeviceManager.createInstance(mOsSdkPath, mSdkLog);
+            List<Device>  devices = devMan.getDevices(DeviceManager.ALL_DEVICES);
             String name = properties.get(AvdManager.AVD_INI_DEVICE_NAME);
             String manufacturer = properties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
 

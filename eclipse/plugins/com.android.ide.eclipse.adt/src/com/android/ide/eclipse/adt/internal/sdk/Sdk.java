@@ -45,7 +45,6 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -702,12 +701,6 @@ public final class Sdk  {
         return mDeviceManager;
     }
 
-    /** Returns the devices provided by the SDK, including user created devices */
-    @NonNull
-    public List<Device> getDevices() {
-        return mDeviceManager.getDevices(getSdkLocation());
-    }
-
     /**
      * Returns a list of {@link ProjectState} representing projects depending, directly or
      * indirectly on a given library project.
@@ -784,10 +777,11 @@ public final class Sdk  {
                 IResourceDelta.CHANGED | IResourceDelta.ADDED | IResourceDelta.REMOVED);
 
         // pre-compute some paths
-        mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
+        mDocBaseUrl = getDocumentationBaseUrl(manager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        mDeviceManager = new DeviceManager(AdtPlugin.getDefault());
+        mDeviceManager = DeviceManager.createInstance(manager.getLocation(),
+                                                      AdtPlugin.getDefault());
 
         // update whatever ProjectState is already present with new IAndroidTarget objects.
         synchronized (LOCK) {

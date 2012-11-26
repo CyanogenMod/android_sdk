@@ -69,7 +69,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.devices.DeviceManager.DevicesChangedListener;
 import com.android.sdklib.devices.State;
 import com.android.utils.Pair;
 import com.google.common.base.Objects;
@@ -109,7 +109,7 @@ import java.util.SortedSet;
  * {@link Configuration} by configuring various constraints.
  */
 public class ConfigurationChooser extends Composite
-        implements DevicesChangeListener, DisposeListener {
+        implements DevicesChangedListener, DisposeListener {
     private static final String ICON_SQUARE = "square";           //$NON-NLS-1$
     private static final String ICON_LANDSCAPE = "landscape";     //$NON-NLS-1$
     private static final String ICON_PORTRAIT = "portrait";       //$NON-NLS-1$
@@ -858,11 +858,11 @@ public class ConfigurationChooser extends Composite
     private void initDevices() {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            mDeviceList = sdk.getDevices();
             DeviceManager manager = sdk.getDeviceManager();
             // This method can be called more than once, so avoid duplicate entries
             manager.unregisterListener(this);
             manager.registerListener(this);
+            mDeviceList = manager.getDevices(DeviceManager.ALL_DEVICES);
         } else {
             mDeviceList = new ArrayList<Device>();
         }
@@ -1353,12 +1353,16 @@ public class ConfigurationChooser extends Composite
         }
     }
 
-    // ---- Implements DevicesChangeListener ----
+    // ---- Implements DevicesChangedListener ----
 
     @Override
-    public void onDevicesChange() {
+    public void onDevicesChanged() {
         final Sdk sdk = Sdk.getCurrent();
-        mDeviceList = sdk.getDevices();
+        if (sdk != null) {
+            mDeviceList = sdk.getDeviceManager().getDevices(DeviceManager.ALL_DEVICES);
+        } else {
+            mDeviceList = new ArrayList<Device>();
+        }
     }
 
     // ---- Reacting to UI changes ----

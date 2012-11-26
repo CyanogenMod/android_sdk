@@ -17,6 +17,7 @@
 package com.android.sdklib.devices;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -56,20 +57,26 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
  */
 public class DeviceManager {
 
-    private final static String sDeviceProfilesProp = "DeviceProfiles";
-    private final static Pattern sPathPropertyPattern = Pattern.compile("^" + PkgProps.EXTRA_PATH
-            + "=" + sDeviceProfilesProp + "$");
+    private static final String  DEVICE_PROFILES_PROP = "DeviceProfiles";
+    private static final Pattern PATH_PROPERTY_PATTERN =
+        Pattern.compile("^" + PkgProps.EXTRA_PATH + "=" + DEVICE_PROFILES_PROP + "$");
     private ILogger mLog;
-    // Vendor devices can't be a static list since they change based on the SDK
-    // Location
     private List<Device> mVendorDevices;
-    // Keeps track of where the currently loaded vendor devices were loaded from
-    private String mVendorDevicesLocation = "";
-    private static List<Device> mUserDevices;
-    private static List<Device> mDefaultDevices;
-    private static final Object sLock = new Object();
-    private static final List<DevicesChangeListener> sListeners =
-                                        new ArrayList<DevicesChangeListener>();
+    private List<Device> mUserDevices;
+    private List<Device> mDefaultDevices;
+    private final Object mLock = new Object();
+    private final List<DevicesChangedListener> sListeners =
+                                        new ArrayList<DevicesChangedListener>();
+    private final String mOsSdkPath;
+
+    /** getDevices() flag to list user devices. */
+    public static final int USER_DEVICES    = 1;
+    /** getDevices() flag to list default devices. */
+    public static final int DEFAULT_DEVICES = 2;
+    /** getDevices() flag to list vendor devices. */
+    public static final int VENDOR_DEVICES  = 4;
+    /** getDevices() flag to list all devices. */
+    public static final int ALL_DEVICES  = USER_DEVICES | DEFAULT_DEVICES | VENDOR_DEVICES;
 
     public static enum DeviceStatus {
         /**
@@ -86,10 +93,26 @@ public class DeviceManager {
         MISSING;
     }
 
-    // TODO: Refactor this to look more like AvdManager so that we don't have
-    // multiple instances in the same application, which forces us to parse
-    // the XML multiple times when we don't have to.
-    public DeviceManager(ILogger log) {
+    /**
+     * Creates a new instance of DeviceManager.
+     *
+     * @param osSdkPath Path to the current SDK. If null or invalid, vendor devices are ignored.
+     * @param log SDK logger instance. Should be non-null.
+     */
+    public static DeviceManager createInstance(@Nullable String osSdkPath, @NonNull ILogger log) {
+        // TODO consider using a cache and reusing the same instance of the device manager
+        // for the same manager/log combo.
+        return new DeviceManager(osSdkPath, log);
+    }
+
+    /**
+     * Creates a new instance of DeviceManager.
+     *
+     * @param osSdkPath Path to the current SDK. If null or invalid, vendor devices are ignored.
+     * @param log SDK logger instance. Should be non-null.
+     */
+    private DeviceManager(@Nullable String osSdkPath, @NonNull ILogger log) {
+        mOsSdkPath = osSdkPath;
         mLog = log;
     }
 
@@ -97,11 +120,11 @@ public class DeviceManager {
      * Interface implemented by objects which want to know when changes occur to the {@link Device}
      * lists.
      */
-    public static interface DevicesChangeListener {
+    public static interface DevicesChangedListener {
         /**
          * Called after one of the {@link Device} lists has been updated.
          */
-        public void onDevicesChange();
+        public void onDevicesChanged();
     }
 
     /**
@@ -109,7 +132,7 @@ public class DeviceManager {
      *
      * @param listener The listener to add. Ignored if already registered.
      */
-    public void registerListener(DevicesChangeListener listener) {
+    public void registerListener(DevicesChangedListener listener) {
         if (listener != null) {
             synchronized (sListeners) {
                 if (!sListeners.contains(listener)) {
@@ -125,15 +148,14 @@ public class DeviceManager {
      *
      * @param listener The listener to remove.
      */
-    public boolean unregisterListener(DevicesChangeListener listener) {
+    public boolean unregisterListener(DevicesChangedListener listener) {
         synchronized (sListeners) {
             return sListeners.remove(listener);
         }
     }
 
-    public DeviceStatus getDeviceStatus(
-            @Nullable String sdkLocation, String name, String manufacturer, int hashCode) {
-        Device d = getDevice(sdkLocation, name, manufacturer);
+    public DeviceStatus getDeviceStatus(String name, String manufacturer, int hashCode) {
+        Device d = getDevice(name, manufacturer);
         if (d == null) {
             return DeviceStatus.MISSING;
         } else {
@@ -141,46 +163,64 @@ public class DeviceManager {
         }
     }
 
-    public Device getDevice(@Nullable String sdkLocation, String name, String manufacturer) {
-        List<Device> devices;
-        if (sdkLocation != null) {
-            devices = getDevices(sdkLocation);
-        } else {
-            devices = new ArrayList<Device>(getDefaultDevices());
-            devices.addAll(getUserDevices());
-        }
-        for (Device d : devices) {
-            if (d.getName().equals(name) && d.getManufacturer().equals(manufacturer)) {
-                return d;
+    public Device getDevice(String name, String manufacturer) {
+        initDevicesLists();
+        for (List<?> devices :
+                new List<?>[] { mUserDevices, mDefaultDevices, mVendorDevices } ) {
+            if (devices != null) {
+                @SuppressWarnings("unchecked") List<Device> devicesList = (List<Device>) devices;
+                for (Device d : devicesList) {
+                    if (d.getName().equals(name) && d.getManufacturer().equals(manufacturer)) {
+                        return d;
+                    }
+                }
             }
         }
         return null;
     }
 
     /**
-     * Returns both vendor provided and user created {@link Device}s.
+     * Returns the known {@link Device} list.
      *
-     * @param sdkLocation Location of the Android SDK
-     * @return A list of both vendor and user provided {@link Device}s
+     * @param deviceFilter A combination of USER_DEVICES, VENDOR_DEVICES and DEFAULT_DEVICES
+     *                     or the constant ALL_DEVICES.
+     * @return A copy of the list of {@link Device}s. Can be empty but not null.
      */
-    public List<Device> getDevices(String sdkLocation) {
-        List<Device> devices = new ArrayList<Device>(getVendorDevices(sdkLocation));
-        devices.addAll(getDefaultDevices());
-        devices.addAll(getUserDevices());
+    public List<Device> getDevices(int deviceFilter) {
+        initDevicesLists();
+        List<Device> devices = new ArrayList<Device>();
+        if (mUserDevices != null && (deviceFilter & USER_DEVICES) != 0) {
+            devices.addAll(mUserDevices);
+        }
+        if (mDefaultDevices != null && (deviceFilter & DEFAULT_DEVICES) != 0) {
+            devices.addAll(mDefaultDevices);
+        }
+        if (mVendorDevices != null && (deviceFilter & VENDOR_DEVICES) != 0) {
+            devices.addAll(mVendorDevices);
+        }
         return Collections.unmodifiableList(devices);
     }
 
+    private void initDevicesLists() {
+        boolean changed = initDefaultDevices();
+        changed |= initVendorDevices();
+        changed |= initUserDevices();
+        if (changed) {
+            notifyListeners();
+        }
+    }
+
     /**
-     * Gets the {@link List} of {@link Device}s packaged with the SDK.
-     *
-     * @return The {@link List} of default {@link Device}s
+     * Initializes the {@link Device}s packaged with the SDK.
+     * @return True if the list has changed.
      */
-    public List<Device> getDefaultDevices() {
-        synchronized (sLock) {
+    private boolean initDefaultDevices() {
+        synchronized (mLock) {
             if (mDefaultDevices == null) {
                 try {
                     mDefaultDevices = DeviceParser.parse(
                             DeviceManager.class.getResourceAsStream(SdkConstants.FN_DEVICES_XML));
+                    return true;
                 } catch (IllegalStateException e) {
                     // The device builders can throw IllegalStateExceptions if
                     // build gets called before everything is properly setup
@@ -190,65 +230,64 @@ public class DeviceManager {
                     mLog.error(null, "Error reading default devices");
                     mDefaultDevices = new ArrayList<Device>();
                 }
-                notifyListeners();
             }
         }
-        return Collections.unmodifiableList(mDefaultDevices);
+        return false;
     }
 
     /**
-     * Returns all vendor-provided {@link Device}s
-     *
-     * @param sdkLocation Location of the Android SDK
-     * @return A list of vendor-provided {@link Device}s
+     * Initializes all vendor-provided {@link Device}s.
+     * @return True if the list has changed.
      */
-    public List<Device> getVendorDevices(String sdkLocation) {
-        synchronized (sLock) {
-            if (mVendorDevices == null || !mVendorDevicesLocation.equals(sdkLocation)) {
-                mVendorDevicesLocation = sdkLocation;
-                List<Device> devices = new ArrayList<Device>();
+    private boolean initVendorDevices() {
+        synchronized (mLock) {
+            if (mVendorDevices == null) {
+                mVendorDevices = new ArrayList<Device>();
 
-                // Load devices from tools folder
-                File toolsDevices = new File(sdkLocation, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER +
-                        File.separator + SdkConstants.FN_DEVICES_XML);
-                if (toolsDevices.isFile()) {
-                    devices.addAll(loadDevices(toolsDevices));
-                }
-
-                // Load devices from vendor extras
-                File extrasFolder = new File(sdkLocation, SdkConstants.FD_EXTRAS);
-                List<File> deviceDirs = getExtraDirs(extrasFolder);
-                for (File deviceDir : deviceDirs) {
-                    File deviceXml = new File(deviceDir, SdkConstants.FN_DEVICES_XML);
-                    if (deviceXml.isFile()) {
-                        devices.addAll(loadDevices(deviceXml));
+                if (mOsSdkPath != null) {
+                    // Load devices from tools folder
+                    File toolsDevices = new File(mOsSdkPath,
+                            SdkConstants.OS_SDK_TOOLS_LIB_FOLDER +
+                            File.separator +
+                            SdkConstants.FN_DEVICES_XML);
+                    if (toolsDevices.isFile()) {
+                        mVendorDevices.addAll(loadDevices(toolsDevices));
                     }
+
+                    // Load devices from vendor extras
+                    File extrasFolder = new File(mOsSdkPath, SdkConstants.FD_EXTRAS);
+                    List<File> deviceDirs = getExtraDirs(extrasFolder);
+                    for (File deviceDir : deviceDirs) {
+                        File deviceXml = new File(deviceDir, SdkConstants.FN_DEVICES_XML);
+                        if (deviceXml.isFile()) {
+                            mVendorDevices.addAll(loadDevices(deviceXml));
+                        }
+                    }
+                    return true;
                 }
-                mVendorDevices = devices;
-                notifyListeners();
             }
         }
-        return Collections.unmodifiableList(mVendorDevices);
+        return false;
     }
 
     /**
-     * Returns all user-created {@link Device}s
-     *
-     * @return All user-created {@link Device}s
+     * Initializes all user-created {@link Device}s
+     * @return True if the list has changed.
      */
-    public List<Device> getUserDevices() {
-        synchronized (sLock) {
+    private boolean initUserDevices() {
+        synchronized (mLock) {
             if (mUserDevices == null) {
                 // User devices should be saved out to
                 // $HOME/.android/devices.xml
                 mUserDevices = new ArrayList<Device>();
                 File userDevicesFile = null;
                 try {
-                    userDevicesFile = new File(AndroidLocation.getFolder(),
+                    userDevicesFile = new File(
+                            AndroidLocation.getFolder(),
                             SdkConstants.FN_DEVICES_XML);
                     if (userDevicesFile.exists()) {
                         mUserDevices.addAll(DeviceParser.parse(userDevicesFile));
-                        notifyListeners();
+                        return true;
                     }
                 } catch (AndroidLocationException e) {
                     mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
@@ -262,7 +301,8 @@ public class DeviceManager {
                             renamedConfig = new File(base + '.' + (i++));
                         }
                         mLog.error(null, "Error parsing %1$s, backing up to %2$s",
-                                userDevicesFile.getAbsolutePath(), renamedConfig.getAbsolutePath());
+                                userDevicesFile.getAbsolutePath(),
+                                renamedConfig.getAbsolutePath());
                         userDevicesFile.renameTo(renamedConfig);
                     }
                 } catch (ParserConfigurationException e) {
@@ -274,42 +314,52 @@ public class DeviceManager {
                 }
             }
         }
-        return Collections.unmodifiableList(mUserDevices);
+        return false;
     }
 
     public void addUserDevice(Device d) {
-        synchronized (sLock) {
+        boolean changed = false;
+        synchronized (mLock) {
             if (mUserDevices == null) {
-                getUserDevices();
+                initUserDevices();
+                assert mUserDevices != null;
             }
-            mUserDevices.add(d);
+            if (mUserDevices != null) {
+                mUserDevices.add(d);
+            }
+            changed = true;
         }
-        notifyListeners();
+        if (changed) {
+            notifyListeners();
+        }
     }
 
     public void removeUserDevice(Device d) {
-        synchronized (sLock) {
+        synchronized (mLock) {
             if (mUserDevices == null) {
-                getUserDevices();
+                initUserDevices();
+                assert mUserDevices != null;
             }
-            Iterator<Device> it = mUserDevices.iterator();
-            while (it.hasNext()) {
-                Device userDevice = it.next();
-                if (userDevice.getName().equals(d.getName())
-                        && userDevice.getManufacturer().equals(d.getManufacturer())) {
-                    it.remove();
-                    notifyListeners();
-                    break;
-                }
+            if (mUserDevices != null) {
+                Iterator<Device> it = mUserDevices.iterator();
+                while (it.hasNext()) {
+                    Device userDevice = it.next();
+                    if (userDevice.getName().equals(d.getName())
+                            && userDevice.getManufacturer().equals(d.getManufacturer())) {
+                        it.remove();
+                        notifyListeners();
+                        return;
+                    }
 
+                }
             }
         }
     }
 
     public void replaceUserDevice(Device d) {
-        synchronized (sLock) {
+        synchronized (mLock) {
             if (mUserDevices == null) {
-                getUserDevices();
+                initUserDevices();
             }
             removeUserDevice(d);
             addUserDevice(d);
@@ -339,7 +389,7 @@ public class DeviceManager {
             return;
         }
 
-        synchronized (sLock) {
+        synchronized (mLock) {
             if (mUserDevices.size() > 0) {
                 try {
                     DeviceWriter.writeToXml(new FileOutputStream(userDevicesFile), mUserDevices);
@@ -446,8 +496,8 @@ public class DeviceManager {
 
     private void notifyListeners() {
         synchronized (sListeners) {
-            for (DevicesChangeListener listener : sListeners) {
-                listener.onDevicesChange();
+            for (DevicesChangedListener listener : sListeners) {
+                listener.onDevicesChanged();
             }
         }
     }
@@ -483,7 +533,7 @@ public class DeviceManager {
             try {
                 String line;
                 while ((line = propertiesReader.readLine()) != null) {
-                    Matcher m = sPathPropertyPattern.matcher(line);
+                    Matcher m = PATH_PROPERTY_PATTERN.matcher(line);
                     if (m.matches()) {
                         return true;
                     }

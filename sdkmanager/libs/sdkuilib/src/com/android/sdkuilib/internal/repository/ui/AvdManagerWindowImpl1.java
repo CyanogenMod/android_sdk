@@ -94,7 +94,7 @@ public class AvdManagerWindowImpl1 {
         mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
         mOwnUpdaterData = true;
-        mDeviceManager = new DeviceManager(sdkLog);
+        mDeviceManager = DeviceManager.createInstance(osSdkRoot, sdkLog);
     }
 
     /**
@@ -116,7 +116,8 @@ public class AvdManagerWindowImpl1 {
         mContext = context;
         mUpdaterData = updaterData;
         mOwnUpdaterData = false;
-        mDeviceManager = new DeviceManager(mUpdaterData.getSdkLog());
+        mDeviceManager = DeviceManager.createInstance(mUpdaterData.getOsSdkRoot(),
+                                                      mUpdaterData.getSdkLog());
     }
 
     /**
