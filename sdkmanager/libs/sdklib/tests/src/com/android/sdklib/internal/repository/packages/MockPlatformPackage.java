@@ -47,11 +47,25 @@ public class MockPlatformPackage extends PlatformPackage {
      * Creates a {@link MockPlatformTarget} with the requested API and revision
      * and then a {@link MockPlatformPackage} wrapping it.
      *
-     * Also sets the min-tools-rev of the platform.
+     * Also sets the min-tools-rev of the platform using a major revision integer.
      *
      * By design, this package contains one and only one archive.
      */
     public MockPlatformPackage(int apiLevel, int revision, int min_tools_rev) {
+        this(null /*source*/,
+             new MockPlatformTarget(apiLevel, revision),
+             createProps(min_tools_rev));
+    }
+
+    /**
+     * Creates a {@link MockPlatformTarget} with the requested API and revision
+     * and then a {@link MockPlatformPackage} wrapping it.
+     *
+     * Also sets the min-tools-rev of the platform using a {@link FullRevision}.
+     *
+     * By design, this package contains one and only one archive.
+     */
+    public MockPlatformPackage(int apiLevel, int revision, FullRevision min_tools_rev) {
         this(null /*source*/,
              new MockPlatformTarget(apiLevel, revision),
              createProps(min_tools_rev));
@@ -70,6 +84,12 @@ public class MockPlatformPackage extends PlatformPackage {
     private static Properties createProps(int min_tools_rev) {
         Properties props = new Properties();
         props.setProperty(PkgProps.MIN_TOOLS_REV, Integer.toString((min_tools_rev)));
+        return props;
+    }
+
+    private static Properties createProps(FullRevision min_tools_rev) {
+        Properties props = new Properties();
+        props.setProperty(PkgProps.MIN_TOOLS_REV, min_tools_rev.toShortString());
         return props;
     }
 

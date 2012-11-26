@@ -738,24 +738,33 @@ class SdkUpdaterLogic {
 
         // Finally nothing matched, so let's look at all available remote packages
         fetchRemotePackages(remotePkgs, remoteSources);
+        FullRevision localRev = rev;
+        Archive localArch = null;
         for (Package p : remotePkgs) {
             if (p instanceof ToolPackage) {
-                if (((ToolPackage) p).getRevision().compareTo(rev) >= 0) {
+                FullRevision r = ((ToolPackage) p).getRevision();
+                if (r.compareTo(localRev) >= 0) {
                     // It's not already in the list of things to install, so add the
                     // first compatible archive we can find.
                     for (Archive a : p.getArchives()) {
                         if (a.isCompatible()) {
-                            return insertArchive(a,
-                                    outArchives,
-                                    selectedArchives,
-                                    remotePkgs,
-                                    remoteSources,
-                                    localArchives,
-                                    true /*automated*/);
+                            localRev = r;
+                            localArch = a;
+                            break;
                         }
                     }
                 }
             }
+        }
+        if (localArch != null) {
+            return insertArchive(localArch,
+                    outArchives,
+                    selectedArchives,
+                    remotePkgs,
+                    remoteSources,
+                    localArchives,
+                    true /*automated*/);
+
         }
 
         // We end up here if nothing matches. We don't have a good platform to match.
@@ -782,6 +791,7 @@ class SdkUpdaterLogic {
         // This is the requirement to match.
         FullRevision rev = pkg.getMinPlatformToolsRevision();
         boolean findMax = false;
+        int compareThreshold = 0;
         ArchiveInfo aiMax = null;
         Archive aMax = null;
 
@@ -793,6 +803,9 @@ class SdkUpdaterLogic {
             // So instead we parse all the existing and remote packages and try to find
             // the max available revision and we'll use it.
             findMax = true;
+            // When findMax is false, we want r.compareTo(rev) >= 0.
+            // When findMax is true, we want r.compareTo(rev) > 0 (so >= 1).
+            compareThreshold = 1;
         }
 
         // First look in locally installed packages.
@@ -802,10 +815,10 @@ class SdkUpdaterLogic {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
                     FullRevision r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r.compareTo(rev) > 0) {
+                    if (findMax && r.compareTo(rev) > compareThreshold) {
                         rev = r;
                         aiMax = ai;
-                    } else if (!findMax && r.compareTo(rev) >= 0) {
+                    } else if (!findMax && r.compareTo(rev) >= compareThreshold) {
                         // We found one already installed.
                         return null;
                     }
@@ -813,6 +826,9 @@ class SdkUpdaterLogic {
             }
         }
 
+        // Because of previews, we can have more than 1 choice, so get the local max.
+        FullRevision localRev = rev;
+        ArchiveInfo localAiMax = null;
         // Look in archives already scheduled for install
         for (ArchiveInfo ai : outArchives) {
             Archive a = ai.getNewArchive();
@@ -820,43 +836,61 @@ class SdkUpdaterLogic {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
                     FullRevision r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r.compareTo(rev) > 0) {
-                        rev = r;
-                        aiMax = ai;
-                    } else if (!findMax && r.compareTo(rev) >= 0) {
-                        // The dependency is already scheduled for install, nothing else to do.
-                        return ai;
+                    if (r.compareTo(localRev) >= compareThreshold) {
+                        localRev = r;
+                        localAiMax = ai;
                     }
                 }
             }
         }
+        if (localAiMax != null) {
+            if (findMax) {
+                rev = localRev;
+                aiMax = localAiMax;
+            } else {
+                // The dependency is already scheduled for install, nothing else to do.
+                return localAiMax;
+            }
+        }
+
 
         // Otherwise look in the selected archives.
+        localRev = rev;
+        Archive localAMax = null;
         if (selectedArchives != null) {
             for (Archive a : selectedArchives) {
                 Package p = a.getParentPackage();
                 if (p instanceof PlatformToolPackage) {
                     FullRevision r = ((PlatformToolPackage) p).getRevision();
-                    if (findMax && r.compareTo(rev) > 0) {
-                        rev = r;
-                        aiMax = null;
-                        aMax = a;
-                    } else if (!findMax && r.compareTo(rev) >= 0) {
-                        // It's not already in the list of things to install, so add it now
-                        return insertArchive(a,
-                                outArchives,
-                                selectedArchives,
-                                remotePkgs,
-                                remoteSources,
-                                localArchives,
-                                true /*automated*/);
+                    if (r.compareTo(localRev) >= compareThreshold) {
+                        localRev = r;
+                        localAiMax = null;
+                        localAMax = a;
                     }
+                }
+            }
+            if (localAMax != null) {
+                if (findMax) {
+                    rev = localRev;
+                    aiMax = null;
+                    aMax = localAMax;
+                } else {
+                    // It's not already in the list of things to install, so add it now
+                    return insertArchive(localAMax,
+                            outArchives,
+                            selectedArchives,
+                            remotePkgs,
+                            remoteSources,
+                            localArchives,
+                            true /*automated*/);
                 }
             }
         }
 
         // Finally nothing matched, so let's look at all available remote packages
         fetchRemotePackages(remotePkgs, remoteSources);
+        localRev = rev;
+        localAMax = null;
         for (Package p : remotePkgs) {
             if (p instanceof PlatformToolPackage) {
                 FullRevision r = ((PlatformToolPackage) p).getRevision();
@@ -864,24 +898,32 @@ class SdkUpdaterLogic {
                     // Make sure there's at least one valid archive here
                     for (Archive a : p.getArchives()) {
                         if (a.isCompatible()) {
-                            if (findMax && r.compareTo(rev) > 0) {
-                                rev = r;
-                                aiMax = null;
-                                aMax = a;
-                            } else if (!findMax && r.compareTo(rev) >= 0) {
-                                // It's not already in the list of things to install, so add the
-                                // first compatible archive we can find.
-                                return insertArchive(a,
-                                        outArchives,
-                                        selectedArchives,
-                                        remotePkgs,
-                                        remoteSources,
-                                        localArchives,
-                                        true /*automated*/);
+                            if (r.compareTo(localRev) >= compareThreshold) {
+                                localRev = r;
+                                localAiMax = null;
+                                localAMax = a;
+                                break;
                             }
                         }
                     }
                 }
+            }
+        }
+        if (localAMax != null) {
+            if (findMax) {
+                rev = localRev;
+                aiMax = null;
+                aMax = localAMax;
+            } else {
+                // It's not already in the list of things to install, so add the
+                // first compatible archive we can find.
+                return insertArchive(localAMax,
+                        outArchives,
+                        selectedArchives,
+                        remotePkgs,
+                        remoteSources,
+                        localArchives,
+                        true /*automated*/);
             }
         }
 

@@ -21,6 +21,7 @@ import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.archives.Archive;
+import com.android.sdklib.internal.repository.packages.FullRevision;
 import com.android.sdklib.internal.repository.packages.MockAddonPackage;
 import com.android.sdklib.internal.repository.packages.MockBrokenPackage;
 import com.android.sdklib.internal.repository.packages.MockPlatformPackage;
@@ -41,7 +42,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-public class UpdaterLogicTest extends TestCase {
+public class SdkUpdaterLogicTest extends TestCase {
 
     private static class NullUpdaterData implements IUpdaterData {
 
@@ -87,10 +88,10 @@ public class UpdaterLogicTest extends TestCase {
 
     }
 
-    private static class MockUpdaterLogic extends SdkUpdaterLogic {
+    private static class MockSdkUpdaterLogic extends SdkUpdaterLogic {
         private final Package[] mRemotePackages;
 
-        public MockUpdaterLogic(IUpdaterData updaterData, Package[] remotePackages) {
+        public MockSdkUpdaterLogic(IUpdaterData updaterData, Package[] remotePackages) {
             super(updaterData);
             mRemotePackages = remotePackages;
         }
@@ -112,7 +113,7 @@ public class UpdaterLogicTest extends TestCase {
      * can find the base platform for a given addon.
      */
     public void testFindAddonDependency() {
-        MockUpdaterLogic mul = new MockUpdaterLogic(new NullUpdaterData(), null);
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(), null);
 
         MockPlatformPackage p1 = new MockPlatformPackage(1, 1);
         MockPlatformPackage p2 = new MockPlatformPackage(2, 1);
@@ -154,7 +155,7 @@ public class UpdaterLogicTest extends TestCase {
      * platform package for a given broken add-on package.
      */
     public void testFindExactApiLevelDependency() {
-        MockUpdaterLogic mul = new MockUpdaterLogic(new NullUpdaterData(), null);
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(), null);
 
         MockPlatformPackage p1 = new MockPlatformPackage(1, 1);
         MockPlatformPackage p2 = new MockPlatformPackage(2, 1);
@@ -202,7 +203,7 @@ public class UpdaterLogicTest extends TestCase {
      * tool package for a given platform package.
      */
     public void testFindPlatformDependency() {
-        MockUpdaterLogic mul = new MockUpdaterLogic(new NullUpdaterData(), null);
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(), null);
 
         MockPlatformToolPackage pt1 = new MockPlatformToolPackage(1);
 
@@ -245,7 +246,7 @@ public class UpdaterLogicTest extends TestCase {
      * platform-tool package for a given tool package.
      */
     public void testFindPlatformToolDependency() {
-        MockUpdaterLogic mul = new MockUpdaterLogic(new NullUpdaterData(), null);
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(), null);
 
         MockPlatformToolPackage t1 = new MockPlatformToolPackage(1);
         MockPlatformToolPackage t2 = new MockPlatformToolPackage(2);
@@ -306,7 +307,7 @@ public class UpdaterLogicTest extends TestCase {
 
         // Note: the mock updater logic gets the remotes packages from the array given
         // here and bypasses the source (to avoid fetching any actual URLs)
-        MockUpdaterLogic mul = new MockUpdaterLogic(new NullUpdaterData(),
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(),
                 new Package[] { t8, pt2, t9, pt3, p9 });
 
         SdkSources sources = new SdkSources();
@@ -337,7 +338,7 @@ public class UpdaterLogicTest extends TestCase {
 
         // Now try again but reverse the order of the remote package list.
 
-        mul = new MockUpdaterLogic(new NullUpdaterData(),
+        mul = new MockSdkUpdaterLogic(new NullUpdaterData(),
                 new Package[] { p9, t9, pt3, t8, pt2 });
 
         selected = mul.computeUpdates(
@@ -361,6 +362,134 @@ public class UpdaterLogicTest extends TestCase {
                 "[Android SDK Platform-tools, revision 3, " +
                  "Android SDK Tools, revision 9, " +
                  "SDK Platform Android android-9, API 9, revision 1]",
+                Arrays.toString(selected.toArray()));
+    }
+
+    public void testComputeRevisionUpdate2() {
+        // Scenario:
+        // - user has tools rev 2 installed and NO platform-tools
+        // - server has platform tools 1 rc 1 (a preview) and 2.
+        // - server has platform 2 that requires min-tools 2 that requires min-plat-tools 1rc1.
+        //
+        // One issue is that when there was only one instance of platform-tools possible,
+        // the computeUpdates() code would pick the first one. But now there can be 2 of
+        // them (preview, non-preview) and thus we need to pick up the higher one even if
+        // it's not the first choice.
+
+        final MockPlatformToolPackage pt1rc = new MockPlatformToolPackage(
+                                                    null,
+                                                    new FullRevision(1, 0, 0, 1));
+        final MockPlatformToolPackage pt2 = new MockPlatformToolPackage(2);
+
+        // Tools rev 2 requires at least plat-tools 1rc1
+        final MockToolPackage t2 = new MockToolPackage(null,
+                                                       new FullRevision(2),           // tools rev
+                                                       new FullRevision(1, 0, 0, 1)); // min-pt-rev
+
+        final MockPlatformPackage p2 = new MockPlatformPackage(2, 1, 2 /*min-tools*/);
+
+        // Note: the mock updater logic gets the remotes packages from the array given
+        // here and bypasses the source (to avoid fetching any actual URLs)
+        // Remote available packages include both plat-tools 1rc1 and 2.
+        //
+        // Order DOES matter: the issue is that computeUpdates was selecting the first platform
+        // tools (so 1rc1) and ignoring the newer revision 2 because originally there could be
+        // only one platform-tool definition. Now with previews we can have 2 and we need to
+        // select the higher one even if it's not the first choice.
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(),
+                new Package[] { t2, pt1rc, pt2, p2 });
+
+        // Local packages only have tools 2.
+        SdkSources sources = new SdkSources();
+        Package[] localPkgs = { t2 };
+        List<Archive> selectedArchives = Arrays.asList( p2.getArchives() );
+
+        List<ArchiveInfo> selected = mul.computeUpdates(
+                selectedArchives,
+                sources,
+                localPkgs,
+                false /*includeObsoletes*/);
+
+        assertEquals(
+                "[SDK Platform Android android-2, API 2, revision 1, " +
+                 "Android SDK Platform-tools, revision 2]",
+                Arrays.toString(selected.toArray()));
+
+        mul.addNewPlatforms(
+                selected,
+                sources,
+                localPkgs,
+                false /*includeObsoletes*/);
+
+        assertEquals(
+                "[SDK Platform Android android-2, API 2, revision 1, " +
+                 "Android SDK Platform-tools, revision 2]",
+                Arrays.toString(selected.toArray()));
+    }
+
+    public void testComputeRevisionUpdate3() {
+        // Scenario:
+        // - user has tools rev 2 installed and NO platform-tools
+        // - server has platform tools 1 rc 1 (a preview) and 2.
+        // - server has platform 2 that requires min-tools 2 that requires min-plat-tools 1rc1.
+        //
+        // One issue is that when there was only one instance of tools possible,
+        // the computeUpdates() code would pick the first one. But now there can be 2 of
+        // them (preview, non-preview) and thus we need to pick up the higher one even if
+        // it's not the first choice.
+
+        final MockPlatformToolPackage pt1rc = new MockPlatformToolPackage(
+                                                    null,
+                                                    new FullRevision(1, 0, 0, 1));
+        final MockPlatformToolPackage pt2 = new MockPlatformToolPackage(2);
+
+        // Tools rev 1rc1 requires plat-tools 1rc1, and tools 2 requires plat-tools 2.
+        final MockToolPackage t1rc = new MockToolPackage(null,
+                                                       new FullRevision(1, 0, 0, 1),  // tools rev
+                                                       new FullRevision(1, 0, 0, 1)); // min-pt-rev
+        final MockToolPackage t2 = new MockToolPackage(null, 2, 2);
+
+        // Platform depends on min-tools 1rc1, so any of tools 1rc1 or 2 would satisfy.
+        final MockPlatformPackage p2 = new MockPlatformPackage(2, 1, new FullRevision(1, 0, 0, 1));
+
+        // Note: the mock updater logic gets the remotes packages from the array given
+        // here and bypasses the source (to avoid fetching any actual URLs)
+        // Remote available packages include both plat-tools 1rc1 and 2.
+        //
+        // Order DOES matter: the issue is that computeUpdates was selecting the first tools (1rc1)
+        // and ignoring the newer revision 2 because originally there could be only one tool
+        // definition. Now with previews we can have 2 and we need to select the higher version
+        // available even if it's not the first choice.
+        MockSdkUpdaterLogic mul = new MockSdkUpdaterLogic(new NullUpdaterData(),
+                new Package[] { t1rc, pt1rc, t2, pt2, p2 });
+
+        // Local packages only have tools 2.
+        SdkSources sources = new SdkSources();
+        Package[] localPkgs = {  };
+        List<Archive> selectedArchives = Arrays.asList( p2.getArchives() );
+
+        List<ArchiveInfo> selected = mul.computeUpdates(
+                selectedArchives,
+                sources,
+                localPkgs,
+                false /*includeObsoletes*/);
+
+        assertEquals(
+                "[Android SDK Platform-tools, revision 2, " +
+                 "Android SDK Tools, revision 2, " +
+                 "SDK Platform Android android-2, API 2, revision 1]",
+                Arrays.toString(selected.toArray()));
+
+        mul.addNewPlatforms(
+                selected,
+                sources,
+                localPkgs,
+                false /*includeObsoletes*/);
+
+        assertEquals(
+                "[Android SDK Platform-tools, revision 2, " +
+                 "Android SDK Tools, revision 2, " +
+                 "SDK Platform Android android-2, API 2, revision 1]",
                 Arrays.toString(selected.toArray()));
     }
 }
