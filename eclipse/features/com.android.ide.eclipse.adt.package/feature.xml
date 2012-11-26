@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt.package"
       label="ADT Package"
-      version="21.0.0.qualifier"
+      version="22.0.0.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt.package">
 
@@ -71,12 +71,12 @@
       <import plugin="org.eclipse.cdt.dsf.gdb"/>
       <import plugin="org.eclipse.cdt.dsf.gdb.ui"/>
       <import plugin="org.eclipse.cdt.launch"/>
-      <import feature="com.android.ide.eclipse.ddms"            version="21.0.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.adt"             version="21.0.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.gldebugger"      version="21.0.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.hierarchyviewer" version="21.0.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.ndk"             version="21.0.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.traceview"       version="21.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ddms"            version="22.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.adt"             version="22.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.gldebugger"      version="22.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.hierarchyviewer" version="22.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ndk"             version="22.0.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.traceview"       version="22.0.0" match="greaterOrEqual" />
    </requires>
 
 </feature>
