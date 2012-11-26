@@ -60,6 +60,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     private final String mTargetHash;
     private final IAndroidTarget mTarget;
     private final String mAbiType;
+    /** An immutable map of properties. This must not be modified. Map can be empty. Never null. */
     private final Map<String, String> mProperties;
     private final AvdStatus mStatus;
 
@@ -75,7 +76,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param targetHash the target hash
      * @param target The target. Can be null, if the target was not resolved.
      * @param abiType Name of the abi.
-     * @param properties The property map. Cannot be null.
+     * @param properties The property map. If null, an empty map will be created.
      */
     public AvdInfo(String name,
             File iniFile,
@@ -99,7 +100,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param targetHash the target hash
      * @param target The target. Can be null, if the target was not resolved.
      * @param abiType Name of the abi.
-     * @param properties The property map. Can be null.
+     * @param properties The property map. If null, an empty map will be created.
      * @param status The {@link AvdStatus} of this AVD. Cannot be null.
      */
     public AvdInfo(String name,
@@ -116,7 +117,8 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         mTargetHash = targetHash;
         mTarget = target;
         mAbiType = abiType;
-        mProperties = properties == null ? null : Collections.unmodifiableMap(properties);
+        mProperties = properties == null ? Collections.<String, String>emptyMap()
+                                         : Collections.unmodifiableMap(properties);
         mStatus = status;
     }
 
@@ -261,7 +263,9 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     }
 
     /**
-     * Returns an unmodifiable map of properties for the AVD. This can be null.
+     * Returns an unmodifiable map of properties for the AVD.
+     * This can be empty but not null.
+     * Callers must NOT try to modify this immutable map.
      */
     public Map<String, String> getProperties() {
         return mProperties;
