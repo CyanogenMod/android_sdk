@@ -252,18 +252,30 @@ public class PackagesDiffLogic {
             }
         }
 
-        if (selectTop && currentPlatform == SdkConstants.PLATFORM_WINDOWS) {
-            // On Windows, we'll also auto-select the USB driver
+        if (selectTop) {
             for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
                 Package p = item.getMainPackage();
                 if (p instanceof ExtraPackage &&
                         item.getState() == PkgState.NEW &&
                         !item.getRevision().isPreview()) {
                     ExtraPackage ep = (ExtraPackage) p;
-                    if (ep.getVendorId().equals("google") &&            //$NON-NLS-1$
-                            ep.getPath().equals("usb_driver")) {        //$NON-NLS-1$
-                        item.setChecked(true);
+
+                    // On Windows, we'll also auto-select the USB driver
+                    if (currentPlatform == SdkConstants.PLATFORM_WINDOWS) {
+                        if (ep.getVendorId().equals("google") &&            //$NON-NLS-1$
+                                ep.getPath().equals("usb_driver")) {        //$NON-NLS-1$
+                            item.setChecked(true);
+                            continue;
+                        }
                     }
+
+                    // On all platforms, we'll auto-select the support library.
+                    if (ep.getVendorId().equals("android") &&               //$NON-NLS-1$
+                            ep.getPath().equals("support")) {               //$NON-NLS-1$
+                        item.setChecked(true);
+                        continue;
+                    }
+
                 }
             }
         }
