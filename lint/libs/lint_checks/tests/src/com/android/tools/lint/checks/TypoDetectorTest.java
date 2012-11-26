@@ -139,4 +139,17 @@ public class TypoDetectorTest extends AbstractCheckTest {
         assertEquals(Arrays.asList("thought", "through", "throughout"),
                 TypoDetector.getSuggestions(s));
     }
+
+    public void testNorwegianDefault() throws Exception {
+        assertEquals(
+            "res/values/typos.xml:5: Warning: \"altid\" is a common misspelling; did you mean \"alltid\" ? [Typos]\n" +
+            "    <string name=\"s4\"><b>altid</b></string>\n" +
+            "                         ^\n" +
+            "res/values/typos.xml:7: Warning: \"Altid\" is a common misspelling; did you mean \"Alltid\" ? [Typos]\n" +
+            "    <string name=\"s5\">Altid</string>\n" +
+            "                      ^\n" +
+            "0 errors, 2 warnings\n",
+
+            lintProject("res/values-nb/typos_locale.xml=>res/values/typos.xml"));
+    }
 }

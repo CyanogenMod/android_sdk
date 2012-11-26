@@ -1222,7 +1222,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             // Look up launcher icon name
             for (File file : files) {
                 String name = file.getName();
-                if (isLauncherIcon(name)
+                if (isLauncherIcon(getBaseName(name))
                         && !endsWith(name, DOT_XML)
                         && !endsWith(name, DOT_9PNG)) {
                     checkLauncherShape(context, file);

@@ -189,4 +189,24 @@ public class TranslationDetectorTest extends AbstractCheckTest {
 
             lintProject("res/values/nontranslatable.xml=>res/values-nb/nontranslatable.xml"));
     }
+
+    public void testSpecifiedLanguageOk() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = false;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                 "res/values-es/strings.xml=>res/values-es/strings.xml",
+                 "res/values-es-rUS/strings.xml"));
+    }
+
+    public void testSpecifiedLanguage() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = false;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                 "res/values-es/strings_locale.xml=>res/values/strings.xml",
+                 "res/values-es-rUS/strings.xml"));
+    }
 }

@@ -16,7 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ATTR_LOCALE;
+import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.google.common.base.Objects.equal;
 
@@ -110,7 +113,7 @@ public class TypoDetector extends ResourceXmlDetector {
         mLanguage = null;
         mRegion = null;
 
-        if (parent.equals("values")) { //$NON-NLS-1$
+        if (parent.equals(FD_RES_VALUES)) {
             return;
         }
 
@@ -137,7 +140,21 @@ public class TypoDetector extends ResourceXmlDetector {
     public void beforeCheckFile(@NonNull Context context) {
         initLocale(context.file.getParentFile().getName());
         if (mLanguage == null) {
-            mLanguage = "en"; //$NON-NLS-1$
+            // Check to see if the user has specified the language for this folder
+            // using a tools:locale attribute
+            if (context instanceof XmlContext) {
+                Element root = ((XmlContext) context).document.getDocumentElement();
+                if (root != null) {
+                    String locale = root.getAttributeNS(TOOLS_URI, ATTR_LOCALE);
+                    if (locale != null && !locale.isEmpty()) {
+                        initLocale(FD_RES_VALUES + '-' + locale);
+                    }
+                }
+            }
+
+            if (mLanguage == null) {
+                mLanguage = "en"; //$NON-NLS-1$
+            }
         }
 
         if (!equal(mLastLanguage, mLanguage) || !equal(mLastRegion, mRegion)) {
