@@ -349,6 +349,13 @@ public class ProjectProperties implements IPropertySource {
     }
 
     /**
+     * Returns the location of this property file.
+     */
+    public IAbstractFile getFile() {
+        return mProjectFolder.getFile(mType.mFilename);
+    }
+
+    /**
      * Creates and returns a copy of the current properties as a
      * {@link ProjectPropertiesWorkingCopy} that can be modified and saved.
      * @return a new instance of {@link ProjectPropertiesWorkingCopy}
