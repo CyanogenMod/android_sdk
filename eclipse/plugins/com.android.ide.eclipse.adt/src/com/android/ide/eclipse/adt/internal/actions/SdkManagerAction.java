@@ -137,7 +137,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
         final AtomicBoolean returnValue = new AtomicBoolean(false);
 
         final CloseableProgressMonitorDialog p =
-            new CloseableProgressMonitorDialog(AdtPlugin.getDisplay().getActiveShell());
+            new CloseableProgressMonitorDialog(AdtPlugin.getShell());
         p.setOpenOnRun(true);
         try {
             p.run(true /*fork*/, true /*cancelable*/, new IRunnableWithProgress() {
@@ -262,7 +262,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
         // log window now.)
 
         SdkUpdaterWindow window = new SdkUpdaterWindow(
-                AdtPlugin.getDisplay().getActiveShell(),
+                AdtPlugin.getShell(),
                 new AdtConsoleSdkLog() {
                     @Override
                     public void info(@NonNull String msgFormat, Object... args) {

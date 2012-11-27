@@ -522,10 +522,10 @@ public class NewProjectCreator  {
                 if (core.getStatus().getCode() == IResourceStatus.CASE_VARIANT_EXISTS) {
                     // The error indicates the file system is not case sensitive
                     // and there's a resource with a similar name.
-                    MessageDialog.openError(AdtPlugin.getDisplay().getActiveShell(),
+                    MessageDialog.openError(AdtPlugin.getShell(),
                             "Error", "Error: Case Variant Exists");
                 } else {
-                    ErrorDialog.openError(AdtPlugin.getDisplay().getActiveShell(),
+                    ErrorDialog.openError(AdtPlugin.getShell(),
                             "Error", core.getMessage(), core.getStatus());
                 }
             } else {
@@ -539,7 +539,7 @@ public class NewProjectCreator  {
                 if (msg == null) {
                     msg = t.toString();
                 }
-                MessageDialog.openError(AdtPlugin.getDisplay().getActiveShell(), "Error", msg);
+                MessageDialog.openError(AdtPlugin.getShell(), "Error", msg);
             }
             e.printStackTrace();
         } catch (InterruptedException e) {

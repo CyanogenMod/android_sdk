@@ -505,7 +505,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                 sb.append(issue.getMoreInfo());
             }
 
-            MessageDialog.openInformation(AdtPlugin.getDisplay().getActiveShell(), "More Info",
+            MessageDialog.openInformation(AdtPlugin.getShell(), "More Info",
                     sb.toString());
         }
 

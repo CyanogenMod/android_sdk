@@ -813,7 +813,7 @@ public class RenderPreview implements IJobChangeListener {
             if (x <= left) {
                 // Edit. For now, just rename
                 InputDialog d = new InputDialog(
-                        AdtPlugin.getDisplay().getActiveShell(),
+                        AdtPlugin.getShell(),
                         "Rename Preview",  // title
                         "Name:",
                         getDisplayName(),

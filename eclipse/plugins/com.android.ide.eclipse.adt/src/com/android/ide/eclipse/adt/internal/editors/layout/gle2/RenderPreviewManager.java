@@ -682,7 +682,7 @@ public class RenderPreviewManager {
             name = getUniqueName();
         }
         InputDialog d = new InputDialog(
-                AdtPlugin.getDisplay().getActiveShell(),
+                AdtPlugin.getShell(),
                 "Add as Thumbnail Preview",  // title
                 "Name of thumbnail:",
                 name,

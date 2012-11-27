@@ -81,7 +81,7 @@ public class RunLintAction implements IObjectActionDelegate, IMenuCreator,
         List<IProject> projects = AdtUtils.getSelectedProjects(selection);
 
         if (projects.isEmpty() && warn) {
-            MessageDialog.openWarning(AdtPlugin.getDisplay().getActiveShell(), "Lint",
+            MessageDialog.openWarning(AdtPlugin.getShell(), "Lint",
                     "Could not run Lint: Select an Android project first.");
         }
 

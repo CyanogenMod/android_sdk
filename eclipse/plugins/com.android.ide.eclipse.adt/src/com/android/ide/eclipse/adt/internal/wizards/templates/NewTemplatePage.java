@@ -811,7 +811,7 @@ public class NewTemplatePage extends WizardPage
                 scope = SearchEngine.createJavaSearchScope(classes, IJavaSearchScope.SOURCES);
             }
 
-            Shell parent = AdtPlugin.getDisplay().getActiveShell();
+            Shell parent = AdtPlugin.getShell();
             final SelectionDialog dialog = JavaUI.createTypeDialog(
                     parent,
                     new ProgressMonitorDialog(parent),

@@ -102,7 +102,7 @@ public class RenamePackageAction implements IObjectActionDelegate {
                     // enforce a save as a convenience.
                     RefactoringSaveHelper save_helper = new RefactoringSaveHelper(
                             RefactoringSaveHelper.SAVE_ALL_ALWAYS_ASK);
-                    if (save_helper.saveEditors(AdtPlugin.getDisplay().getActiveShell())) {
+                    if (save_helper.saveEditors(AdtPlugin.getShell())) {
                         promptNewName(project);
                     }
                 }
@@ -142,7 +142,7 @@ public class RenamePackageAction implements IObjectActionDelegate {
             }
         };
 
-        InputDialog dialog = new InputDialog(AdtPlugin.getDisplay().getActiveShell(),
+        InputDialog dialog = new InputDialog(AdtPlugin.getShell(),
                 "Rename Application Package", "Enter new package name:", oldPackageNameString,
                 validator);
 
@@ -165,7 +165,7 @@ public class RenamePackageAction implements IObjectActionDelegate {
             new ApplicationPackageNameRefactoringWizard(package_name_refactoring);
         RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
         try {
-            op.run(AdtPlugin.getDisplay().getActiveShell(), package_name_refactoring.getName());
+            op.run(AdtPlugin.getShell(), package_name_refactoring.getName());
         } catch (InterruptedException e) {
             Status s = new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, e.getMessage(), e);
             AdtPlugin.getDefault().getLog().log(s);

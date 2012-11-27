@@ -185,7 +185,7 @@ public class ConvertSwitchQuickFixProcessor implements IQuickFixProcessor {
 
         @Override
         public void apply(IDocument document) {
-            Shell shell = AdtPlugin.getDisplay().getActiveShell();
+            Shell shell = AdtPlugin.getShell();
             ConvertSwitchDialog dialog = new ConvertSwitchDialog(shell, mExpression);
             dialog.open();
         }

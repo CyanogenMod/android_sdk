@@ -326,19 +326,50 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return sPlugin;
     }
 
+    /**
+     * Returns the current display, if any
+     *
+     * @return the display
+     */
+    @NonNull
     public static Display getDisplay() {
-        IWorkbench bench = null;
         synchronized (AdtPlugin.class) {
-            if (sPlugin == null) {
-                return null;
+            if (sPlugin != null) {
+                IWorkbench bench = sPlugin.getWorkbench();
+                if (bench != null) {
+                    Display display = bench.getDisplay();
+                    if (display != null) {
+                        return display;
+                    }
+                }
             }
-            bench = sPlugin.getWorkbench();
         }
 
-        if (bench != null) {
-            return bench.getDisplay();
+        Display display = Display.getCurrent();
+        if (display != null) {
+            return display;
         }
-        return null;
+
+        return Display.getDefault();
+    }
+
+    /**
+     * Returns the shell, if any
+     *
+     * @return the shell, if any
+     */
+    @Nullable
+    public static Shell getShell() {
+        Display display = AdtPlugin.getDisplay();
+        Shell shell = display.getActiveShell();
+        if (shell == null) {
+            Shell[] shells = display.getShells();
+            if (shells.length > 0) {
+                shell = shells[0];
+            }
+        }
+
+        return shell;
     }
 
     /** Returns the adb path relative to the sdk folder */
