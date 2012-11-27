@@ -183,6 +183,17 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                     "res/values/buttonbar-values.xml"));
     }
 
+    public void testSuppressed() throws Exception {
+        sTestIssue = ButtonDetector.ORDER;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "apicheck/minsdk14.xml=>AndroidManifest.xml",
+                    "res/layout/buttonbar_suppressed.xml",
+                    "res/values/buttonbar-values.xml"));
+    }
+
     public void testButtonOrderRelativeLayout() throws Exception {
         sTestIssue = ButtonDetector.ORDER;
         assertEquals(

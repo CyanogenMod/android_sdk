@@ -38,7 +38,7 @@ public class TooManyViewsDetector extends LayoutDetector {
     public static final Issue TOO_MANY = Issue.create(
             "TooManyViews", //$NON-NLS-1$
             "Checks whether a layout has too many views",
-            "Using too many views in a single layout in a layout is bad for " +
+            "Using too many views in a single layout is bad for " +
             "performance. Consider using compound drawables or other tricks for " +
             "reducing the number of views in this layout.\n\n" +
             "The maximum view count defaults to 80 but can be configured with the " +

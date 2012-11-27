@@ -514,7 +514,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             if (mNonTranslatable != null && mNonTranslatable.contains(name)) {
                 String message = String.format("The resource string \"%1$s\" has been marked as " +
                         "translatable=\"false\"", name);
-                context.report(EXTRA, context.getLocation(attribute), message, null);
+                context.report(EXTRA, attribute, context.getLocation(attribute), message, null);
             }
 
             // TBD: Also make sure that the strings are not empty or placeholders?

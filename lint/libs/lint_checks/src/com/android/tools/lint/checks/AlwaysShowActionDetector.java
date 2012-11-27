@@ -83,6 +83,8 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
 
     /** List of showAsAction attributes appearing in the current menu XML file */
     private List<Attr> mFileAttributes;
+    /** If at least one location has been marked ignore in this file, ignore all */
+    private boolean mIgnoreFile;
     /** List of locations of MenuItem.SHOW_AS_ACTION_ALWAYS references in Java code */
     private List<Location> mAlwaysFields;
     /** True if references to MenuItem.SHOW_AS_ACTION_IF_ROOM were found */
@@ -114,6 +116,10 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
 
     @Override
     public void afterCheckFile(@NonNull Context context) {
+        if (mIgnoreFile) {
+            mFileAttributes = null;
+            return;
+        }
         if (mFileAttributes != null) {
             assert context instanceof XmlContext; // mAFilettributes is only set in XML files
 
@@ -175,6 +181,11 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
+        if (context.getDriver().isSuppressed(ISSUE, attribute)) {
+            mIgnoreFile = true;
+            return;
+        }
+
         if (mFileAttributes == null) {
             mFileAttributes = new ArrayList<Attr>();
         }
@@ -209,6 +220,9 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
             if ((isIfRoom || isAlways)
                     && node.astOperand().toString().equals("MenuItem")) { //$NON-NLS-1$
                 if (isAlways) {
+                    if (mContext.getDriver().isSuppressed(ISSUE, node)) {
+                        return super.visitSelect(node);
+                    }
                     if (mAlwaysFields == null) {
                         mAlwaysFields = new ArrayList<Location>();
                     }

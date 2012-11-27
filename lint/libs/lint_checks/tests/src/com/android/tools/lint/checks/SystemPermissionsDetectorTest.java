@@ -289,5 +289,12 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
 
               lintProject(
                       "protectedpermissions.xml=>AndroidManifest.xml"));
-  }
+    }
+
+    public void testSuppressed() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject("protectedpermissions2.xml=>AndroidManifest.xml"));
+    }
 }

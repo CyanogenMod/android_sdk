@@ -489,7 +489,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
 
         Location location = context.getLocation(element);
-        context.report(ORDER, location, message, null);
+        context.report(ORDER, element, location, message, null);
     }
 
     /**
