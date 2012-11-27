@@ -25,8 +25,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+@SuppressWarnings("javadoc")
 public class DeviceWriterTest extends TestCase {
 
     public void testWriteIsValid() throws Exception {
@@ -43,6 +45,25 @@ public class DeviceWriterTest extends TestCase {
                 devices.size(), writtenDevices.size());
         for (int i = 0; i < devices.size(); i++){
             assertEquals(devices.get(i), writtenDevices.get(i));
+        }
+    }
+
+    public void testLocale() throws Exception {
+        Locale prevLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.FRANCE);
+            InputStream devicesFile =
+                DeviceSchemaTest.class.getResourceAsStream("devices.xml");
+            List<Device> devices = DeviceParser.parse(devicesFile);
+            assertEquals("Parsed devices contained an un expected number of devices",
+                    2, devices.size());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DeviceWriter.writeToXml(baos, devices);
+            String xml = baos.toString();
+            assertTrue(xml.contains(".00"));
+            assertFalse(xml.contains(",00"));
+        } finally {
+            Locale.setDefault(prevLocale);
         }
     }
 

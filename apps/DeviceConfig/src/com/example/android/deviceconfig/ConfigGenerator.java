@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -219,7 +220,8 @@ public class ConfigGenerator {
             double xin = metrics.widthPixels / metrics.xdpi;
             double yin = metrics.heightPixels / metrics.ydpi;
             double diag = Math.sqrt(Math.pow(xin, 2) + Math.pow(yin, 2));
-            diagonalLength.appendChild(doc.createTextNode(String.format("%1$.2f", diag)));
+            diagonalLength.appendChild(doc.createTextNode(
+                  String.format(Locale.US, "%1$.2f", diag)));
 
             Element pixelDensity = doc.createElement(PREFIX + NODE_PIXEL_DENSITY);
             screen.appendChild(pixelDensity);
