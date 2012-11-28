@@ -73,4 +73,13 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                         "src/test/pkg/ActionTest1.java.txt=>src/test/pkg/ActionTest1.java",
                         "src/test/pkg/ActionTest2.java.txt=>src/test/pkg/ActionTest2.java"));
     }
+
+    public void testSuppress() throws Exception {
+        assertEquals(
+                "No warnings.",
+
+                lintProject(
+                    "res/menu-land/actions2_ignore.xml",
+                    "src/test/pkg/ActionTest1_ignore.java.txt=>src/test/pkg/ActionTest1.java"));
+    }
 }
