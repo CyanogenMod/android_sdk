@@ -25,6 +25,7 @@ import static com.android.SdkConstants.DOT_TXT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
 
@@ -81,8 +82,10 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.Attributes;
@@ -99,6 +102,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -672,8 +676,8 @@ class TemplateHandler {
             }
         }
 
-        Document currentManifest = DomUtilities.parseStructuredDocument(currentXml);
-        assert currentManifest != null : currentXml;
+        Document currentDocument = DomUtilities.parseStructuredDocument(currentXml);
+        assert currentDocument != null : currentXml;
         Document fragment = DomUtilities.parseStructuredDocument(xml);
         assert fragment != null : xml;
 
@@ -682,7 +686,7 @@ class TemplateHandler {
         boolean ok;
         String fileName = to.getName();
         if (fileName.equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
-            modified = ok = mergeManifest(currentManifest, fragment);
+            modified = ok = mergeManifest(currentDocument, fragment);
         } else {
             // Merge plain XML files
             String parentFolderName = to.getParent().getName();
@@ -693,7 +697,7 @@ class TemplateHandler {
                 formatStyle = XmlFormatStyle.FILE;
             }
 
-            modified = mergeResourceFile(currentManifest, fragment, folderType, paramMap);
+            modified = mergeResourceFile(currentDocument, fragment, folderType, paramMap);
             ok = true;
         }
 
@@ -701,7 +705,7 @@ class TemplateHandler {
         String contents = null;
         if (ok) {
             if (modified) {
-                contents = XmlPrettyPrinter.prettyPrint(currentManifest,
+                contents = XmlPrettyPrinter.prettyPrint(currentDocument,
                         XmlFormatPreferences.create(), formatStyle, null);
             }
         } else {
@@ -728,9 +732,21 @@ class TemplateHandler {
 
     /** Merges the given resource file contents into the given resource file
      * @param paramMap */
-    private boolean mergeResourceFile(Document currentManifest, Document fragment,
+    private static boolean mergeResourceFile(Document currentDocument, Document fragment,
             ResourceFolderType folderType, Map<String, Object> paramMap) {
         boolean modified = false;
+
+        // Copy namespace declarations
+        NamedNodeMap attributes = fragment.getDocumentElement().getAttributes();
+        if (attributes != null) {
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attribute = (Attr) attributes.item(i);
+                if (attribute.getName().startsWith(XMLNS_PREFIX)) {
+                    currentDocument.getDocumentElement().setAttribute(attribute.getName(),
+                            attribute.getValue());
+                }
+            }
+        }
 
         // For layouts for example, I want to *append* inside the root all the
         // contents of the new file.
@@ -747,8 +763,9 @@ class TemplateHandler {
             nodes.add(child);
             root.removeChild(child);
         }
+        Collections.reverse(nodes);
 
-        root = currentManifest.getDocumentElement();
+        root = currentDocument.getDocumentElement();
 
         if (folderType == ResourceFolderType.VALUES) {
             // Try to merge items of the same name
@@ -808,7 +825,7 @@ class TemplateHandler {
     }
 
     /** Merges the given manifest fragment into the given manifest file */
-    private boolean mergeManifest(Document currentManifest, Document fragment) {
+    private static boolean mergeManifest(Document currentManifest, Document fragment) {
         // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
         // and maintain error markers.
 
