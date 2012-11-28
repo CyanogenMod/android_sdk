@@ -17,11 +17,13 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_CORE_APP;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_STYLE;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.resources.ResourceFolderType.ANIM;
@@ -44,6 +46,7 @@ import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -134,6 +137,21 @@ public class DetectMissingPrefix extends LayoutDetector {
                     context.getLocation(attribute),
                     "Attribute is missing the Android namespace prefix",
                     null);
+        } else if (!ANDROID_URI.equals(uri)
+                && !TOOLS_URI.equals(uri)
+                && context.getResourceFolderType() == ResourceFolderType.LAYOUT
+                && !isCustomView(attribute.getOwnerElement())
+                // TODO: Consider not enforcing that the parent is a custom view
+                // too, though in that case we should filter out views that are
+                // layout params for the custom view parent:
+                // ....&& !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
+                && attribute.getOwnerElement().getParentNode().getNodeType() == Node.ELEMENT_NODE
+                && !isCustomView((Element) attribute.getOwnerElement().getParentNode())) {
+            context.report(MISSING_NAMESPACE, attribute,
+                    context.getLocation(attribute),
+                    String.format("Unexpected namespace prefix \"%1$s\" found for tag %2$s",
+                            attribute.getPrefix(), attribute.getOwnerElement().getTagName()),
+                            null);
         }
     }
 
