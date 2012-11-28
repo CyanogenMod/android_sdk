@@ -81,22 +81,6 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
     }
 
     @Nullable
-    private static Node findSurroundingMethod(Node scope) {
-        while (scope != null) {
-            Class<? extends Node> type = scope.getClass();
-            // The Lombok AST uses a flat hierarchy of node type implementation classes
-            // so no need to do instanceof stuff here.
-            if (type == MethodDeclaration.class || type == ConstructorDeclaration.class) {
-                return scope;
-            }
-
-            scope = scope.getParent();
-        }
-
-        return null;
-    }
-
-    @Nullable
     private static NormalTypeBody findSurroundingTypeBody(Node scope) {
         while (scope != null) {
             Class<? extends Node> type = scope.getClass();
@@ -156,7 +140,7 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
             allowCommitBeforeTarget = false;
         }
 
-        Node method = findSurroundingMethod(parent);
+        Node method = JavaContext.findSurroundingMethod(parent);
         if (method == null) {
             return;
         }
