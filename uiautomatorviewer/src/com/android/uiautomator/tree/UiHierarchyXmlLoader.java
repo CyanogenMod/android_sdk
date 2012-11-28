@@ -73,7 +73,17 @@ public class UiHierarchyXmlLoader {
                 // will be the parent of the element that is being started here
                 mParentNode = mWorkingNode;
                 if ("hierarchy".equals(qName)) {
-                    mWorkingNode = new RootWindowNode(attributes.getValue("windowName"));
+                    int rotation = 0;
+                    for (int i = 0; i < attributes.getLength(); i++) {
+                        if ("rotation".equals(attributes.getQName(i))) {
+                            try {
+                                rotation = Integer.parseInt(attributes.getValue(i));
+                            } catch (NumberFormatException nfe) {
+                                // do nothing
+                            }
+                        }
+                    }
+                    mWorkingNode = new RootWindowNode(attributes.getValue("windowName"), rotation);
                     nodeCreated = true;
                 } else if ("node".equals(qName)) {
                     UiNode tmpNode = new UiNode();

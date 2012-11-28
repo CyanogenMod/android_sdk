@@ -21,6 +21,7 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 public class ImageHelper {
@@ -32,6 +33,11 @@ public class ImageHelper {
             try {
                 data = new ImageLoader().load(is);
             } catch (SWTException e) {
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
             }
             if (data != null && data.length > 0) {
                 return ImageDescriptor.createFromImageData(data[0]);
