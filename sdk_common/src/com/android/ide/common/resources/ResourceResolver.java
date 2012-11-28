@@ -263,6 +263,9 @@ public class ResourceResolver extends RenderResources {
 
             // at this point, value contains type/[android:]name (drawable/foo for instance)
             String[] segments = reference.split("\\/");
+            if (segments.length <= 1) {
+                return null;
+            }
 
             // now we look for android: in the resource name in order to support format
             // such as: @drawable/android:name
