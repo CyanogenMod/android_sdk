@@ -196,6 +196,19 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
             if (destination instanceof IPackageFragment) {
                 IPackageFragment packageFragment = (IPackageFragment) destination;
                 mNewName = packageFragment.getElementName() + "." + type.getElementName();
+            } else if (destination instanceof IResource) {
+                try {
+                    IPackageFragment[] fragments = javaProject.getPackageFragments();
+                    for (IPackageFragment fragment : fragments) {
+                        IResource resource = fragment.getResource();
+                        if (resource.equals(destination)) {
+                            mNewName = fragment.getElementName() + "." + type.getElementName();
+                            break;
+                        }
+                    }
+                } catch (JavaModelException e) {
+                    // pass
+                }
             }
             if (mOldName == null || mNewName == null) {
                 return false;

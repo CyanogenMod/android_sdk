@@ -15,8 +15,11 @@
  */
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
+import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidDocumentChange;
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChange;
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidPackageRenameChange;
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidTypeRenameChange;
@@ -29,6 +32,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.internal.corext.refactoring.changes.RenameCompilationUnitChange;
 import org.eclipse.jdt.internal.corext.refactoring.changes.RenamePackageChange;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -38,11 +42,16 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange;
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange;
 import org.eclipse.text.edits.TextEdit;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @SuppressWarnings({"javadoc","restriction"})
 public abstract class RefactoringTestBase extends AdtProjectTest {
@@ -114,81 +123,54 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             indent(sb, indent);
             sb.append("* ");
             sb.append(changeName);
-            if (change instanceof TextFileChange) {
-                TextFileChange tfc = (TextFileChange) change;
+
+            IFile file = getFile(change);
+            if (file != null) {
                 sb.append(" - ");
-                sb.append(tfc.getFile().getFullPath());
+                sb.append(file.getFullPath());
                 sb.append('\n');
             } else {
                 sb.append('\n');
             }
-            if (change instanceof TextFileChange
-                    || change instanceof AndroidLayoutChange
-                    || change instanceof AndroidTypeRenameChange
-                    || change instanceof AndroidPackageRenameChange) {
-                TextChange tc = (TextChange) change;
-                TextEdit edit = tc.getEdit();
-                IFile file = null;
-                if (change instanceof TextFileChange) {
-                    TextFileChange tfc = (TextFileChange) change;
-                    file = tfc.getFile();
-                } else if (change instanceof AndroidPackageRenameChange) {
-                    AndroidPackageRenameChange aprc = (AndroidPackageRenameChange) change;
-                    file = aprc.getManifest();
-                } else if (change instanceof AndroidTypeRenameChange) {
-                    AndroidTypeRenameChange aprc = (AndroidTypeRenameChange) change;
-                    file = aprc.getManifest();
-                } else {
-                    assert change instanceof AndroidLayoutChange;
-                    AndroidLayoutChange alc = (AndroidLayoutChange) change;
-                    file = alc.getFile();
-                }
-                byte[] bytes = ByteStreams.toByteArray(file.getContents());
-                String before = new String(bytes, Charsets.UTF_8);
-                IDocument document = new Document();
-                document.replace(0, 0, before);
-                edit.apply(document);
-                String after = document.get();
 
-                String diff = getDiff(before, after);
-                for (String line : Splitter.on('\n').split(diff)) {
-                    if (!line.trim().isEmpty()) {
-                        indent(sb, indent + 1);
-                        sb.append(line);
+            if (change instanceof TextFileChange
+                    || change instanceof AndroidPackageRenameChange
+                    || change instanceof AndroidTypeRenameChange
+                    || change instanceof AndroidLayoutChange) {
+                assertNotNull(file);
+                if (file != null) {
+                    TextChange tc = (TextChange) change;
+                    TextEdit edit = tc.getEdit();
+                    byte[] bytes = ByteStreams.toByteArray(file.getContents());
+                    String before = new String(bytes, Charsets.UTF_8);
+                    IDocument document = new Document();
+                    document.replace(0, 0, before);
+                    // Make a copy: edits are sometimes destructive when run repeatedly!
+                    edit.copy().apply(document);
+                    String after = document.get();
+
+                    String diff = getDiff(before, after);
+                    for (String line : Splitter.on('\n').split(diff)) {
+                        if (!line.trim().isEmpty()) {
+                            indent(sb, indent + 1);
+                            sb.append(line);
+                        }
+                        sb.append('\n');
                     }
-                    sb.append('\n');
                 }
+            } else if (change instanceof RenameCompilationUnitChange) {
+                // Change name, appended above, is adequate
             } else if (change instanceof RenameResourceChange) {
                 // Change name, appended above, is adequate
             } else if (change instanceof RenamePackageChange) {
                 // Change name, appended above, is adequate
-            } else if (change instanceof AndroidPackageRenameChange) {
-                AndroidPackageRenameChange aprc = (AndroidPackageRenameChange) change;
-                aprc.getEdit();
-            } else if (change instanceof AndroidLayoutChange) {
-                AndroidLayoutChange tfc = (AndroidLayoutChange) change;
-                TextEdit edit = tfc.getEdit();
-                tfc.getModifiedElement();
-                IFile file = tfc.getFile();
-                byte[] bytes = ByteStreams.toByteArray(file.getContents());
-                String before = new String(bytes, Charsets.UTF_8);
-                IDocument document = new Document();
-                document.replace(0, 0, before);
-                edit.apply(document);
-                String after = document.get();
-                String diff = getDiff(before, after);
-                for (String line : Splitter.on('\n').split(diff)) {
-                    if (!line.trim().isEmpty()) {
-                        indent(sb, indent + 1);
-                        sb.append(line);
-                    }
-                    sb.append('\n');
-                }
+            } else if (change instanceof MoveResourceChange) {
+                // Change name, appended above, is adequate
             } else if (change instanceof CompositeChange) {
                 // Don't print details about children here; they'll be nested below
             } else {
                 indent(sb, indent);
-                sb.append("<unknown change type " + change.getClass().getName() + ">");
+                sb.append("<UNKNOWN CHANGE TYPE " + change.getClass().getName() + ">");
             }
             sb.append('\n');
         }
@@ -196,10 +178,64 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
         if (change instanceof CompositeChange) {
             CompositeChange composite = (CompositeChange) change;
             Change[] children = composite.getChildren();
-            for (Change child : children) {
+            List<Change> sorted = Arrays.asList(children);
+            // Process children in a fixed (output-alphabetical) order to ensure stable output
+            Collections.sort(sorted, new Comparator<Change>() {
+                @Override
+                public int compare(Change change1, Change change2) {
+                    try {
+                        IFile file1 = getFile(change1);
+                        IFile file2 = getFile(change2);
+                        if (file1 != null && file2 != null) {
+                            // Sort in decreasing order. This places the most interesting
+                            // files first: res > src > gen
+                            int fileDelta = file2.getFullPath().toOSString().compareToIgnoreCase(
+                                    file1.getFullPath().toOSString());
+                            if (fileDelta != 0) {
+                                return fileDelta;
+                            }
+                        }
+
+                        int nameDelta = change2.getName().compareTo(change1.getName());
+                        if (nameDelta != 0) {
+                            return nameDelta;
+                        }
+
+                        // This is pretty inefficient but ensures stable output
+                        return describe(change2).compareTo(describe(change1));
+                    } catch (Exception e) {
+                        fail(e.getLocalizedMessage());
+                        return 0;
+                    }
+                }
+
+            });
+            for (Change child : sorted) {
                 describe(sb, child, indent + (composite.isSynthetic() ? 0 : 1));
             }
         }
+    }
+
+    @Nullable
+    private static IFile getFile(@NonNull Change change) {
+        if (change instanceof TextFileChange) {
+            TextFileChange tfc = (TextFileChange) change;
+            return tfc.getFile();
+        } else if (change instanceof AndroidPackageRenameChange) {
+            AndroidPackageRenameChange aprc = (AndroidPackageRenameChange) change;
+            return aprc.getManifest();
+        } else if (change instanceof AndroidTypeRenameChange) {
+            AndroidTypeRenameChange aprc = (AndroidTypeRenameChange) change;
+            return aprc.getManifest();
+        } else if (change instanceof AndroidLayoutChange) {
+            AndroidLayoutChange alc = (AndroidLayoutChange) change;
+            return alc.getFile();
+        } else if (change instanceof AndroidDocumentChange) {
+            AndroidDocumentChange atmc = (AndroidDocumentChange) change;
+            return atmc.getManifest();
+        }
+
+        return null;
     }
 
     protected static void indent(StringBuilder sb, int indent) {
@@ -463,6 +499,102 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
 
         "res/layout-land/activity_main.xml",
         SAMPLE_LAYOUT_2,
+
+        "res/menu/activity_main.xml",
+        SAMPLE_MENU,
+
+        "res/values/strings.xml",   // file 3
+        SAMPLE_STRINGS,
+
+        "res/values/styles.xml",   // file 3
+        SAMPLE_STYLES,
+    };
+
+    // More test data
+
+    protected static final String CUSTOM_VIEW_1 =
+            "package com.example.refactoringtest;\n" +
+            "\n" +
+            "import android.content.Context;\n" +
+            "import android.widget.Button;\n" +
+            "\n" +
+            "public class CustomView1 extends Button {\n" +
+            "    public CustomView1(Context context) {\n" +
+            "        super(context);\n" +
+            "    }\n" +
+            "}\n";
+
+    protected static final String CUSTOM_VIEW_2 =
+            "package com.example.refactoringtest.subpackage;\n" +
+            "\n" +
+            "import android.content.Context;\n" +
+            "import android.widget.Button;\n" +
+            "\n" +
+            "public class CustomView2 extends Button {\n" +
+            "    public CustomView2(Context context) {\n" +
+            "        super(context);\n" +
+            "    }\n" +
+            "}\n";
+
+    protected static final String CUSTOM_VIEW_LAYOUT =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+            "    android:layout_width=\"match_parent\"\n" +
+            "    android:layout_height=\"match_parent\"\n" +
+            "    android:orientation=\"vertical\"\n" +
+            "    tools:ignore=\"HardcodedText\" >\n" +
+            "\n" +
+            "    <com.example.refactoringtest.CustomView1\n" +
+            "        android:id=\"@+id/customView1\"\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        android:text=\"CustomView1\" />\n" +
+            "\n" +
+            "    <com.example.refactoringtest.subpackage.CustomView2\n" +
+            "        android:id=\"@+id/customView2\"\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        android:text=\"CustomView2\" />\n" +
+            "\n" +
+            "</LinearLayout>";
+
+    protected static final Object[] TEST_PROJECT2 = new Object[] {
+        "AndroidManifest.xml",
+        SAMPLE_MANIFEST,
+
+        "src/com/example/refactoringtest/MainActivity.java",
+        SAMPLE_MAIN_ACTIVITY,
+
+        "src/com/example/refactoringtest/CustomView1.java",
+        CUSTOM_VIEW_1,
+
+        "src/com/example/refactoringtest/subpackage/CustomView2.java",
+        CUSTOM_VIEW_2,
+
+        "gen/com/example/refactoringtest/R.java",
+        SAMPLE_R,
+
+        "res/drawable-xhdpi/ic_launcher.png",
+        new byte[] { 0 },
+        "res/drawable-hdpi/ic_launcher.png",
+        new byte[] { 0 },
+        "res/drawable-ldpi/ic_launcher.png",
+        new byte[] { 0 },
+        "res/drawable-mdpi/ic_launcher.png",
+        new byte[] { 0 },
+
+        "res/layout/activity_main.xml",
+        SAMPLE_LAYOUT,
+
+        "res/layout-land/activity_main.xml",
+        SAMPLE_LAYOUT_2,
+
+        "res/layout/customviews.xml",
+        CUSTOM_VIEW_LAYOUT,
+
+        "res/layout-land/customviews.xml",
+        CUSTOM_VIEW_LAYOUT,
 
         "res/menu/activity_main.xml",
         SAMPLE_MENU,

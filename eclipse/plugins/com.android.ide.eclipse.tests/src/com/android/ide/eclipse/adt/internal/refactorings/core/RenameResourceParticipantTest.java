@@ -42,15 +42,6 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
-                "  @@ -13 +13\n" +
-                "  -         android:label=\"@string/app_name\"\n" +
-                "  +         android:label=\"@string/myname\"\n" +
-                "  @@ -17 +17\n" +
-                "  -             android:label=\"@string/app_name\" >\n" +
-                "  +             android:label=\"@string/myname\" >\n" +
-                "\n" +
-                "\n" +
                 "* strings.xml - /testRefactor1/res/values/strings.xml\n" +
                 "  @@ -4 +4\n" +
                 "  -     <string name=\"app_name\">RefactoringTest</string>\n" +
@@ -60,7 +51,16 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "* R.java - /testRefactor1/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -29 +29\n" +
                 "  -         public static final int app_name=0x7f040000;\n" +
-                "  +         public static final int myname=0x7f040000;");
+                "  +         public static final int myname=0x7f040000;\n" +
+                "\n" +
+                "\n" +
+                "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
+                "  @@ -13 +13\n" +
+                "  -         android:label=\"@string/app_name\"\n" +
+                "  +         android:label=\"@string/myname\"\n" +
+                "  @@ -17 +17\n" +
+                "  -             android:label=\"@string/app_name\" >\n" +
+                "  +             android:label=\"@string/myname\" >");
     }
 
     public void testRefactor2() throws Exception {
@@ -158,10 +158,6 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename 'testRefactor5/res/layout/activity_main.xml' to 'newlayout.xml'\n" +
-                "\n" +
-                "* Rename 'testRefactor5/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
-                "\n" +
                 "* MainActivity.java - /testRefactor5/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
@@ -171,7 +167,12 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "* R.java - /testRefactor5/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
-                "  +         public static final int newlayout=0x7f030000;");
+                "  +         public static final int newlayout=0x7f030000;\n" +
+                "\n" +
+                "\n" +
+                "* Rename 'testRefactor5/res/layout/activity_main.xml' to 'newlayout.xml'\n" +
+                "\n" +
+                "* Rename 'testRefactor5/res/layout-land/activity_main.xml' to 'newlayout.xml'");
     }
 
     public void testRefactor6() throws Exception {
@@ -183,24 +184,24 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* AndroidManifest.xml - /testRefactor6/AndroidManifest.xml\n" +
-                "  @@ -12 +12\n" +
-                "  -         android:icon=\"@drawable/ic_launcher\"\n" +
-                "  +         android:icon=\"@drawable/newlauncher\"\n" +
-                "\n" +
-                "\n" +
-                "* Rename 'testRefactor6/res/drawable-hdpi/ic_launcher.png' to 'newlauncher.png'\n" +
-                "\n" +
-                "* Rename 'testRefactor6/res/drawable-ldpi/ic_launcher.png' to 'newlauncher.png'\n" +
-                "\n" +
-                "* Rename 'testRefactor6/res/drawable-mdpi/ic_launcher.png' to 'newlauncher.png'\n" +
-                "\n" +
-                "* Rename 'testRefactor6/res/drawable-xhdpi/ic_launcher.png' to 'newlauncher.png'\n" +
-                "\n" +
                 "* R.java - /testRefactor6/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -14 +14\n" +
                 "  -         public static final int ic_launcher=0x7f020000;\n" +
-                "  +         public static final int newlauncher=0x7f020000;");
+                "  +         public static final int newlauncher=0x7f020000;\n" +
+                "\n" +
+                "\n" +
+                "* Rename 'testRefactor6/res/drawable-xhdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "\n" +
+                "* Rename 'testRefactor6/res/drawable-mdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "\n" +
+                "* Rename 'testRefactor6/res/drawable-ldpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "\n" +
+                "* Rename 'testRefactor6/res/drawable-hdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "\n" +
+                "* AndroidManifest.xml - /testRefactor6/AndroidManifest.xml\n" +
+                "  @@ -12 +12\n" +
+                "  -         android:icon=\"@drawable/ic_launcher\"\n" +
+                "  +         android:icon=\"@drawable/newlauncher\"");
     }
 
     public void testRefactor7() throws Exception {
@@ -215,10 +216,6 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'\n" +
-                "\n" +
-                "* Rename 'testRefactor7/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
-                "\n" +
                 "* MainActivity.java - /testRefactor7/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
@@ -228,7 +225,12 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "* R.java - /testRefactor7/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
-                "  +         public static final int newlayout=0x7f030000;");
+                "  +         public static final int newlayout=0x7f030000;\n" +
+                "\n" +
+                "\n" +
+                "* Rename 'testRefactor7/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
+                "\n" +
+                "* Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'");
     }
 
     public void testRefactor8() throws Exception {
@@ -255,6 +257,10 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
+                "* Rename 'testRefactor8/res/layout/activity_main.xml' to 'newlauncher.xml'\n" +
+                "\n" +
+                "* Rename 'testRefactor8/res/layout-land/activity_main.xml' to 'newlauncher.xml'\n" +
+                "\n" +
                 "* MainActivity.java - /testRefactor8/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
@@ -264,12 +270,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "* R.java - /testRefactor8/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
-                "  +         public static final int newlauncher=0x7f030000;\n" +
-                "\n" +
-                "\n" +
-                "* Rename 'testRefactor8/res/layout/activity_main.xml' to 'newlauncher.xml'\n" +
-                "\n" +
-                "* Rename 'testRefactor8/res/layout-land/activity_main.xml' to 'newlauncher.xml'");
+                "  +         public static final int newlauncher=0x7f030000;");
     }
 
     public void testInvalidName() throws Exception {
