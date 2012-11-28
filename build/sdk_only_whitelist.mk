@@ -63,6 +63,7 @@ subdirs += \
 	sdk/sdkstats \
 	sdk/sdkmanager \
 	sdk/swtmenubar \
+	sdk/testutils \
 	sdk/traceview \
 	sdk/uiautomatorviewer
 
