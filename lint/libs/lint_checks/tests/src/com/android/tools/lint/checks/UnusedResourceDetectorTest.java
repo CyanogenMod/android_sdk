@@ -160,11 +160,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
            // string1 is defined and used in the library project
            // string2 is defined in the library project and used in the master project
            // string3 is defined in the library project and not used anywhere
-           "/TESTROOT/UnusedResourceDetectorTest_testMultiProject/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
+           "/TESTROOT/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
            "    <string name=\"string3\">String 3</string>\n" +
            "            ~~~~~~~~~~~~~~\n" +
-           "0 errors, 1 warnings\n" +
-           "",
+           "0 errors, 1 warnings\n",
 
            checkLint(Arrays.asList(master, library)));
     }
@@ -222,7 +221,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         assertEquals(
            // The strings are all referenced in the library project's manifest file
            // which in this project is merged in
-           "/TESTROOT/UnusedResourceDetectorTest_testNoMerging/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
+           "/TESTROOT/LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
            "    <string name=\"string3\">String 3</string>\n" +
            "            ~~~~~~~~~~~~~~\n" +
            "0 errors, 1 warnings\n",

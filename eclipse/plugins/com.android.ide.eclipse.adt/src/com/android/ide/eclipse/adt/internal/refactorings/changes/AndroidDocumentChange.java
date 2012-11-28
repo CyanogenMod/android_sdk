@@ -78,6 +78,15 @@ public class AndroidDocumentChange extends DocumentChange {
         super(SdkConstants.FN_ANDROID_MANIFEST_XML, document);
     }
 
+    /**
+     * Returns the manifest file
+     *
+     * @return the manifest
+     */
+    public IFile getManifest() {
+        return mAndroidManifest;
+    }
+
      @Override
     public RefactoringStatus isValid(IProgressMonitor pm) throws CoreException,
             OperationCanceledException {

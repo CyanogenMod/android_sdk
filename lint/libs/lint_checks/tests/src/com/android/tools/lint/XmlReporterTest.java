@@ -112,7 +112,9 @@ public class XmlReporterTest extends AbstractCheckTest {
                 "\n" +
                 "* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)\n" +
                 "\n" +
-                "* The application cannot be translated to other languages by just adding new translations for existing string resources.\"\n" +
+                "* The application cannot be translated to other languages by just adding new translations for existing string resources.\n" +
+                "\n" +
+                "In Eclipse there is a quickfix to automatically extract this hardcoded string into a resource lookup.\"\n" +
                 "        errorLine1=\" (java.lang.String)         android:text=&quot;Fooo&quot; />\"\n" +
                 "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n" +
                 "        <location\n" +
@@ -211,7 +213,9 @@ public class XmlReporterTest extends AbstractCheckTest {
                 "\n" +
                 "* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)\n" +
                 "\n" +
-                "* The application cannot be translated to other languages by just adding new translations for existing string resources.\"\n" +
+                "* The application cannot be translated to other languages by just adding new translations for existing string resources.\n" +
+                "\n" +
+                "In Eclipse there is a quickfix to automatically extract this hardcoded string into a resource lookup.\"\n" +
                 "        errorLine1=\" (java.lang.String)         android:text=&quot;Fooo&quot; />\"\n" +
                 "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n" +
                 "        <location\n" +

@@ -30,7 +30,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.tests.SdkTestCase;
+import com.android.ide.eclipse.tests.SdkLoadingTestCase;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
@@ -91,7 +91,7 @@ import java.util.Set;
  * TODO: Test adding multiple instances of the templates (to look for resource conflicts)
  */
 @SuppressWarnings("javadoc")
-public class TemplateHandlerTest extends SdkTestCase {
+public class TemplateHandlerTest extends SdkLoadingTestCase {
     /**
      * Flag used to quickly check each template once (for one version), to get
      * quicker feedback on whether something is broken instead of waiting for

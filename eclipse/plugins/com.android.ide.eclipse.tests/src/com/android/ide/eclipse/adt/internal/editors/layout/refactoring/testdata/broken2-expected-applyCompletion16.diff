@@ -1,4 +1,4 @@
 Code completion in broken2.xml for style=^ selecting "@android:":
-<         style=^
----
->         style="@android:^"
+@@ -9 +9
+-         style=^
++         style="@android:^"

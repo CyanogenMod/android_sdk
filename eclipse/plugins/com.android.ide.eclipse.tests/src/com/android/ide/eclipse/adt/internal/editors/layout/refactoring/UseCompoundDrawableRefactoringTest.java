@@ -17,9 +17,12 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UseCompoundDrawableRefactoring.combine;
 
+import com.android.ide.eclipse.adt.AdtUtils;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.w3c.dom.Element;
 
 import java.util.List;
@@ -90,7 +93,8 @@ public class UseCompoundDrawableRefactoringTest extends RefactoringTest {
         checkRefactoring("refactoring/usecompound/compound7.xml", "@+id/layout1");
     }
 
-    private void checkRefactoring(String basename, String id) throws Exception {
+    private void checkRefactoring(String basename, String id)
+            throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditorDelegate layoutEditor = info.mLayoutEditorDelegate;
@@ -99,6 +103,12 @@ public class UseCompoundDrawableRefactoringTest extends RefactoringTest {
         UseCompoundDrawableRefactoring refactoring = new UseCompoundDrawableRefactoring(
                 selectedElements, layoutEditor);
         List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
+
+        CompositeChange cc = new CompositeChange("Combined from unit test",
+                changes.toArray(new Change[changes.size()]));
+        cc.markAsSynthetic();
+        addCleanupDir(AdtUtils.getAbsolutePath(getProject()).toFile());
+
         checkEdits(basename, changes);
     }
 }
