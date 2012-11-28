@@ -25,6 +25,7 @@ import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
+import static com.android.SdkConstants.ATTR_REF_PREFIX;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_DOCS;
@@ -914,24 +915,50 @@ public class Hyperlinks {
         String targetTag = getTagName(type);
         Element root = document.getDocumentElement();
         if (root.getTagName().equals(TAG_RESOURCES)) {
-            NodeList children = root.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element)child;
-                    if (element.getTagName().equals(targetTag)) {
-                        String elementName = element.getAttribute(ATTR_NAME);
-                        if (elementName.equals(name)) {
-                            IRegion region = null;
-                            if (element instanceof IndexedRegion) {
-                                IndexedRegion r = (IndexedRegion) element;
-                                // IndexedRegion.getLength() returns bogus values
-                                int length = r.getEndOffset() - r.getStartOffset();
-                                region = new Region(r.getStartOffset(), length);
+            NodeList topLevel = root.getChildNodes();
+            Pair<IFile, IRegion> value = findValueInChildren(name, file, targetTag, topLevel);
+            if (value == null && type == ResourceType.ATTR) {
+                for (int i = 0, n = topLevel.getLength(); i < n; i++) {
+                    Node child = topLevel.item(i);
+                    if (child.getNodeType() == Node.ELEMENT_NODE) {
+                        Element element = (Element)child;
+                        String tagName = element.getTagName();
+                        if (tagName.equals("declare-styleable")) {
+                            NodeList children = element.getChildNodes();
+                            value = findValueInChildren(name, file, targetTag, children);
+                            if (value != null) {
+                                return value;
                             }
-
-                            return Pair.of(file, region);
                         }
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        return null;
+    }
+
+    private static Pair<IFile, IRegion> findValueInChildren(String name, IFile file,
+            String targetTag, NodeList children) {
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element)child;
+                String tagName = element.getTagName();
+                if (tagName.equals(targetTag)) {
+                    String elementName = element.getAttribute(ATTR_NAME);
+                    if (elementName.equals(name)) {
+                        IRegion region = null;
+                        if (element instanceof IndexedRegion) {
+                            IndexedRegion r = (IndexedRegion) element;
+                            // IndexedRegion.getLength() returns bogus values
+                            int length = r.getEndOffset() - r.getStartOffset();
+                            region = new Region(r.getStartOffset(), length);
+                        }
+
+                        return Pair.of(file, region);
                     }
                 }
             }
@@ -1115,10 +1142,20 @@ public class Hyperlinks {
         return getResourceLinks(range, url, project, configuration);
     }
 
-    /** Parse a resource reference or a theme reference and return the individual parts */
+    /**
+     * Parse a resource reference or a theme reference and return the individual
+     * parts
+     *
+     * @param url the url to parse
+     * @return a pair which represents the resource type and name
+     */
     public static Pair<ResourceType,String> parseResource(String url) {
         if (url.startsWith(PREFIX_THEME_REF)) {
             String remainder = url.substring(PREFIX_THEME_REF.length());
+            if (url.startsWith(ATTR_REF_PREFIX)) {
+                url = PREFIX_RESOURCE_REF + url.substring(1);
+                return ResourceHelper.parseResource(url);
+            }
             int colon = url.indexOf(':');
             if (colon != -1) {
                 // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
@@ -1128,6 +1165,12 @@ public class Hyperlinks {
                 }
                 url = PREFIX_RESOURCE_REF + remainder;
                 return ResourceHelper.parseResource(url);
+            } else {
+                int slash = url.indexOf('/');
+                if (slash == -1) {
+                    url = PREFIX_RESOURCE_REF + RESOURCE_CLZ_ATTR + '/' + remainder;
+                    return ResourceHelper.parseResource(url);
+                }
             }
         }
 

@@ -186,6 +186,12 @@ public class HyperlinksTest extends AdtProjectTest {
                 "?android:attr/alert^DialogStyle");
     }
 
+    public void testNavigate16() throws Exception {
+        // Check navigating to a theme resource
+        checkXmlNavigation("navigation1.xml", "res/layout/navigation1.xml",
+                "?android:alert^DialogStyle");
+    }
+
     // Left to test:
     // onClick handling
     // class attributes
