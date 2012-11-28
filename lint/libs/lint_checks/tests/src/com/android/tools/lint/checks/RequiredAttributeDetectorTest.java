@@ -58,7 +58,6 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                     "res/layout/size2.xml",
                     "res/layout/sizeincluded.xml",
                     "res/values/sizestyles.xml"
-                    //"res/layout/sizeincludedmerge"
                     ));
     }
 
@@ -102,4 +101,25 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testThemeStyles() throws Exception {
+        // Check that we don't complain about cases where the size is defined in a theme
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/layout/size.xml",
+                    "res/values/themes.xml"
+            ));
+    }
+
+    public void testThemeStyles2() throws Exception {
+        // Check that we don't complain about cases where the size is defined in a theme
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "res/layout/size.xml",
+                    "res/values/themes2.xml"
+            ));
+    }
 }
