@@ -546,9 +546,6 @@ public class NewProjectPage extends WizardPage
         Object source = e.getSource();
         if (source == mMinSdkCombo) {
             mValues.minSdk = getSelectedMinSdk();
-            // If higher than build target, adjust build target
-            // TODO: implement
-
             Integer minSdk = mMinNameToApi.get(mValues.minSdk);
             if (minSdk == null) {
                 try {
@@ -559,6 +556,49 @@ public class NewProjectPage extends WizardPage
             }
             mValues.iconState.minSdk = minSdk.intValue();
             mValues.minSdkLevel = minSdk.intValue();
+
+            // If higher than build target, adjust build target
+            if (mValues.minSdkLevel > mValues.getBuildApi()) {
+                // Try to find a build target with an adequate build API
+                IAndroidTarget[] targets = (IAndroidTarget[]) mBuildSdkCombo.getData();
+                IAndroidTarget best = null;
+                int bestApi = Integer.MAX_VALUE;
+                int bestTargetIndex = -1;
+                for (int i = 0; i < targets.length; i++) {
+                    IAndroidTarget target = targets[i];
+                    if (!target.isPlatform()) {
+                        continue;
+                    }
+                    int api = target.getVersion().getApiLevel();
+                    if (api >= mValues.minSdkLevel && api < bestApi) {
+                        best = target;
+                        bestApi = api;
+                        bestTargetIndex = i;
+                    }
+                }
+
+                if (best != null) {
+                    assert bestTargetIndex != -1;
+                    mValues.target = best;
+                    try {
+                        mIgnore = true;
+                        mBuildSdkCombo.select(bestTargetIndex);
+                    } finally {
+                        mIgnore = false;
+                    }
+                }
+            }
+
+            // If higher than targetSdkVersion, adjust targetSdkVersion
+            if (mValues.minSdkLevel > mValues.targetSdkLevel) {
+                mValues.targetSdkLevel = mValues.minSdkLevel;
+                try {
+                    mIgnore = true;
+                    setSelectedTargetSdk(mValues.targetSdkLevel);
+                } finally {
+                    mIgnore = false;
+                }
+            }
         } else if (source == mBuildSdkCombo) {
             mValues.target = getSelectedBuildTarget();
 
@@ -612,6 +652,10 @@ public class NewProjectPage extends WizardPage
 
     private void setSelectedMinSdk(int api) {
         mMinSdkCombo.select(api - 1); // -1: First API level (at index 0) is 1
+    }
+
+    private void setSelectedTargetSdk(int api) {
+        mTargetSdkCombo.select(api - 1); // -1: First API level (at index 0) is 1
     }
 
     @Nullable
