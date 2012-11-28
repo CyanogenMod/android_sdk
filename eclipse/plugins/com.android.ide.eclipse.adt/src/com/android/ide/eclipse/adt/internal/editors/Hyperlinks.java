@@ -1116,7 +1116,7 @@ public class Hyperlinks {
     }
 
     /** Parse a resource reference or a theme reference and return the individual parts */
-    private static Pair<ResourceType,String> parseResource(String url) {
+    public static Pair<ResourceType,String> parseResource(String url) {
         if (url.startsWith(PREFIX_THEME_REF)) {
             String remainder = url.substring(PREFIX_THEME_REF.length());
             int colon = url.indexOf(':');

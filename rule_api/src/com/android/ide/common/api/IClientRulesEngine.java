@@ -106,6 +106,14 @@ public interface IClientRulesEngine {
             @Nullable IValidator filter);
 
     /**
+     * Renames the given node
+     *
+     * @param node the node to be renamed
+     * @return true if renaming was handled
+     */
+    boolean rename(INode node);
+
+    /**
      * Returns the minimum API level that the current Android project is targeting.
      *
      * @return the minimum API level to be supported, or -1 if it cannot be determined

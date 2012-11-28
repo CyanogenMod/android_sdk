@@ -29,6 +29,8 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.PkgProps;
@@ -1508,5 +1510,109 @@ public class AdtUtils {
         }
 
         return s;
+    }
+
+    /**
+     * Looks up the {@link ResourceFolderType} corresponding to a given
+     * {@link ResourceType}: the folder where those resources can be found.
+     * <p>
+     * Note that {@link ResourceType#ID} is a special case: it can not just
+     * be defined in {@link ResourceFolderType#VALUES}, but it can also be
+     * defined inline via {@code @+id} in {@link ResourceFolderType#LAYOUT} and
+     * {@link ResourceFolderType#MENU} folders.
+     *
+     * @param type the resource type
+     * @return the corresponding resource folder type
+     */
+    @NonNull
+    public static ResourceFolderType getFolderTypeFor(@NonNull ResourceType type) {
+        switch (type) {
+            case ANIM:
+                return ResourceFolderType.ANIM;
+            case ANIMATOR:
+                return ResourceFolderType.ANIMATOR;
+            case ARRAY:
+                return ResourceFolderType.VALUES;
+            case COLOR:
+                return ResourceFolderType.COLOR;
+            case DRAWABLE:
+                return ResourceFolderType.DRAWABLE;
+            case INTERPOLATOR:
+                return ResourceFolderType.INTERPOLATOR;
+            case LAYOUT:
+                return ResourceFolderType.LAYOUT;
+            case MENU:
+                return ResourceFolderType.MENU;
+            case MIPMAP:
+                return ResourceFolderType.MIPMAP;
+            case RAW:
+                return ResourceFolderType.RAW;
+            case XML:
+                return ResourceFolderType.XML;
+            case ATTR:
+            case BOOL:
+            case DECLARE_STYLEABLE:
+            case DIMEN:
+            case FRACTION:
+            case ID:
+            case INTEGER:
+            case PLURALS:
+            case PUBLIC:
+            case STRING:
+            case STYLE:
+            case STYLEABLE:
+                return ResourceFolderType.VALUES;
+            default:
+                assert false : type;
+            return ResourceFolderType.VALUES;
+
+        }
+    }
+
+    /**
+     * Looks up the {@link ResourceType} defined in a given {@link ResourceFolderType}.
+     * <p>
+     * Note that for {@link ResourceFolderType#VALUES} there are many, many
+     * different types of resources that can be defined, so this method returns
+     * {@code null} for that scenario.
+     * <p>
+     * Note also that {@link ResourceType#ID} is a special case: it can not just
+     * be defined in {@link ResourceFolderType#VALUES}, but it can also be
+     * defined inline via {@code @+id} in {@link ResourceFolderType#LAYOUT} and
+     * {@link ResourceFolderType#MENU} folders.
+     *
+     * @param folderType the resource folder type
+     * @return the corresponding resource type, or null if {@code folderType} is
+     *         {@link ResourceFolderType#VALUES}
+     */
+    @Nullable
+    public static ResourceType getResourceTypeFor(@NonNull ResourceFolderType folderType) {
+        switch (folderType) {
+            case ANIM:
+                return ResourceType.ANIM;
+            case ANIMATOR:
+                return ResourceType.ANIMATOR;
+            case COLOR:
+                return ResourceType.COLOR;
+            case DRAWABLE:
+                return ResourceType.DRAWABLE;
+            case INTERPOLATOR:
+                return ResourceType.INTERPOLATOR;
+            case LAYOUT:
+                return ResourceType.LAYOUT;
+            case MENU:
+                return ResourceType.MENU;
+            case MIPMAP:
+                return ResourceType.MIPMAP;
+            case RAW:
+                return ResourceType.RAW;
+            case XML:
+                return ResourceType.XML;
+            case VALUES:
+                return null;
+            default:
+                assert false : folderType;
+                return null;
+        }
     }
 }

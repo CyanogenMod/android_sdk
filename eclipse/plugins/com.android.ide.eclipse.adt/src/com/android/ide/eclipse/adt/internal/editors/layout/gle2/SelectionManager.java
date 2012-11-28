@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.FQCN_SPACE;
 import static com.android.SdkConstants.FQCN_SPACE_V7;
@@ -22,9 +23,7 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
 
-
 import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.api.INode;
@@ -39,6 +38,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceWizard;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResult;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
@@ -1184,40 +1185,78 @@ public class SelectionManager implements ISelectionProvider {
         if (selections.size() > 0) {
             NodeProxy primary = selections.get(0).getNode();
             if (primary != null) {
-                String currentId = primary.getStringAttr(ANDROID_URI, ATTR_ID);
-                currentId = BaseViewRule.stripIdPrefix(currentId);
-                InputDialog d = new InputDialog(
-                            AdtPlugin.getDisplay().getActiveShell(),
-                            "Set ID",
-                            "New ID:",
-                            currentId,
-                            ResourceNameValidator.create(false, (IProject) null, ResourceType.ID));
-                if (d.open() == Window.OK) {
-                    final String s = d.getValue();
-                    mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel("Set ID",
-                            new Runnable() {
-                        @Override
-                        public void run() {
-                            String newId = s;
-                            newId = NEW_ID_PREFIX + BaseViewRule.stripIdPrefix(s);
-                            for (SelectionItem item : selections) {
-                                item.getNode().setAttribute(ANDROID_URI, ATTR_ID, newId);
-                            }
+                performRename(primary, selections);
+            }
+        }
+    }
 
-                            LayoutCanvas canvas = mCanvas;
-                            CanvasViewInfo root = canvas.getViewHierarchy().getRoot();
-                            if (root != null) {
-                                UiViewElementNode uiViewNode = root.getUiViewNode();
-                                NodeFactory nodeFactory = canvas.getNodeFactory();
-                                NodeProxy rootNode = nodeFactory.create(uiViewNode);
-                                if (rootNode != null) {
-                                    rootNode.applyPendingChanges();
-                                }
+    /**
+     * Performs renaming the given node.
+     *
+     * @param primary the node to be renamed, or the primary node (to get the
+     *            current value from if more than one node should be renamed)
+     * @param selections if not null, a list of nodes to apply the setting to
+     *            (which should include the primary)
+     * @return the result of the renaming operation
+     */
+    @NonNull
+    public RenameResult performRename(
+            final @NonNull INode primary,
+            final @Nullable List<SelectionItem> selections) {
+        String id = primary.getStringAttr(ANDROID_URI, ATTR_ID);
+        if (id != null && !id.isEmpty()) {
+            RenameResult result = RenameResourceWizard.renameResource(
+                    mCanvas.getShell(),
+                    mCanvas.getEditorDelegate().getGraphicalEditor().getProject(),
+                    ResourceType.ID, BaseViewRule.stripIdPrefix(id), null, true /*canClear*/);
+            if (result.isCanceled()) {
+                return result;
+            } else if (!result.isUnavailable()) {
+                return result;
+            }
+        }
+        String currentId = primary.getStringAttr(ANDROID_URI, ATTR_ID);
+        currentId = BaseViewRule.stripIdPrefix(currentId);
+        InputDialog d = new InputDialog(
+                    AdtPlugin.getDisplay().getActiveShell(),
+                    "Set ID",
+                    "New ID:",
+                    currentId,
+                    ResourceNameValidator.create(false, (IProject) null, ResourceType.ID));
+        if (d.open() == Window.OK) {
+            final String s = d.getValue();
+            mCanvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel("Set ID",
+                    new Runnable() {
+                @Override
+                public void run() {
+                    String newId = s;
+                    newId = NEW_ID_PREFIX + BaseViewRule.stripIdPrefix(s);
+                    if (selections != null) {
+                        for (SelectionItem item : selections) {
+                            NodeProxy node = item.getNode();
+                            if (node != null) {
+                                node.setAttribute(ANDROID_URI, ATTR_ID, newId);
                             }
                         }
-                    });
+                    } else {
+                        primary.setAttribute(ANDROID_URI, ATTR_ID, newId);
+                    }
+
+                    LayoutCanvas canvas = mCanvas;
+                    CanvasViewInfo root = canvas.getViewHierarchy().getRoot();
+                    if (root != null) {
+                        UiViewElementNode uiViewNode = root.getUiViewNode();
+                        NodeFactory nodeFactory = canvas.getNodeFactory();
+                        NodeProxy rootNode = nodeFactory.create(uiViewNode);
+                        if (rootNode != null) {
+                            rootNode.applyPendingChanges();
+                        }
+                    }
                 }
-            }
+            });
+            return RenameResult.name(BaseViewRule.stripIdPrefix(s));
+        } else {
+            return RenameResult.canceled();
         }
     }
 }

@@ -1146,6 +1146,25 @@
             </enablement>
         </renameParticipant>
         <renameParticipant
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceParticipant"
+            id="com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceParticipant"
+            name="Android Rename Resource Participant">
+            <enablement>
+                <with variable="element">
+                    <or>
+                        <instanceof value="org.eclipse.jdt.core.IField"/>
+                        <instanceof value="org.eclipse.core.resources.IResource" />
+                        <instanceof value="java.lang.String" />
+                    </or>
+                </with>
+                <with variable="affectedNatures">
+                    <iterate operator="or">
+                        <equals value="com.android.ide.eclipse.adt.AndroidNature" />
+                    </iterate>
+                </with>
+            </enablement>
+        </renameParticipant>
+        <renameParticipant
             class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidPackageRenameParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidPackageRenameParticipant"
             name="Android Rename Package Participant">

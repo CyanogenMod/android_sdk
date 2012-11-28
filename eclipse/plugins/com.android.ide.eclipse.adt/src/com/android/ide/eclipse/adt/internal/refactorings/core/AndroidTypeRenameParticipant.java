@@ -24,6 +24,7 @@ import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutCh
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChangeDescription;
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutFileChanges;
 import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidTypeRenameChange;
+import com.android.resources.ResourceFolderType;
 import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.filebuffers.FileBuffers;
@@ -214,17 +215,26 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
     private void addLayoutChanges(IProject project, String className) {
         try {
             IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
-            IFolder layoutFolder = resFolder.getFolder(SdkConstants.FD_RES_LAYOUT);
-            IResource[] members = layoutFolder.members();
-            for (int i = 0; i < members.length; i++) {
-                IResource member = members[i];
-                if ((member instanceof IFile) && member.exists()) {
-                    IFile file = (IFile) member;
-                    Set<AndroidLayoutChangeDescription> changes = parse(file, className);
-                    if (changes.size() > 0) {
-                        AndroidLayoutFileChanges fileChange = new AndroidLayoutFileChanges(file);
-                        fileChange.getChanges().addAll(changes);
-                        mFileChanges.add(fileChange);
+            for (IResource folder : resFolder.members()) {
+                if (!(folder instanceof IFolder)) {
+                    continue;
+                }
+                ResourceFolderType type = ResourceFolderType.getFolderType(folder.getName());
+                if (type != ResourceFolderType.LAYOUT) {
+                    continue;
+                }
+                IFolder layoutFolder = (IFolder) folder;
+                IResource[] members = layoutFolder.members();
+                for (int i = 0; i < members.length; i++) {
+                    IResource member = members[i];
+                    if ((member instanceof IFile) && member.exists()) {
+                        IFile file = (IFile) member;
+                        Set<AndroidLayoutChangeDescription> changes = parse(file, className);
+                        if (changes.size() > 0) {
+                            AndroidLayoutFileChanges fileChange = new AndroidLayoutFileChanges(file);
+                            fileChange.getChanges().addAll(changes);
+                            mFileChanges.add(fileChange);
+                        }
                     }
                 }
             }
