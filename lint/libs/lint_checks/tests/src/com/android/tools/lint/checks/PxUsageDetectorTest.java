@@ -48,7 +48,13 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
             "res/layout/textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n" +
             "        android:textSize=\"14dip\" />\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 2 warnings\n",
+            "res/layout/textsize.xml:33: Warning: Avoid using sizes smaller than 12sp: 11sp [SmallSp]\n" +
+            "        android:textSize=\"11sp\" />\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/textsize.xml:37: Warning: Avoid using sizes smaller than 12sp: 6sp [SmallSp]\n" +
+            "        android:layout_height=\"6sp\" />\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 4 warnings\n",
 
             lintFiles("res/layout/textsize.xml"));
     }

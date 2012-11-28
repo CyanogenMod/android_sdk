@@ -25,4 +25,27 @@
         android:layout_height="wrap_content"
         android:textSize="@android/dimen/mysizedp" />
 
+    <!-- Small -->
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="6sp" />
+
+    <!-- No warnings: wrong attribute, size == 0, etc -->
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="0sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:marginTop="5sp" />
+
 </LinearLayout>
