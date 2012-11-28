@@ -967,6 +967,7 @@ public final class SdkConstants {
 
     // Attributes related to tools
     public static final String ATTR_IGNORE = "ignore";                   //$NON-NLS-1$
+    public static final String ATTR_LOCALE = "locale";                   //$NON-NLS-1$
 
     // SuppressLint
     public static final String SUPPRESS_ALL = "all";                     //$NON-NLS-1$

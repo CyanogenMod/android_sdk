@@ -38,6 +38,6 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
         "                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
         "0 errors, 3 warnings\n",
 
-        lintProject("res/layout/accessibility.xml"));
+        lintProject("res/layout/accessibility2.xml=>res/layout/accessibility.xml"));
     }
 }

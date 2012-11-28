@@ -17,12 +17,14 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ATTR_LOCALE;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TRANSLATABLE;
 import static com.android.SdkConstants.STRING_PREFIX;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -36,6 +38,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.w3c.dom.Attr;
@@ -83,7 +86,12 @@ public class TranslationDetector extends ResourceXmlDetector {
             "By default this detector allows regions of a language to just provide a " +
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
-            "environment variable `ANDROID_LINT_COMPLETE_REGIONS`.",
+            "environment variable `ANDROID_LINT_COMPLETE_REGIONS`.\n" +
+            "\n" +
+            "You can tell lint (and other tools) which language is the default language " +
+            "in your `res/values/` folder by specifying `tools:locale=\"languageCode\"` for " +
+            "the root `<resources>` element in your resource file. (The `tools` prefix refers " +
+            "to the namespace declaration `http://schemas.android.com/tools`.)",
             Category.MESSAGES,
             8,
             Severity.FATAL,
@@ -112,6 +120,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     private Set<String> mNonTranslatable;
     private boolean mIgnoreFile;
     private Map<File, Set<String>> mFileToNames;
+    private Map<File, String> mFileToLocale;
 
     /** Locations for each untranslated string name. Populated during phase 2, if necessary */
     private Map<String, Location> mMissingLocations;
@@ -164,8 +173,19 @@ public class TranslationDetector extends ResourceXmlDetector {
     public void afterCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Store this layout's set of ids for full project analysis in afterCheckProject
-            if (context.getProject().getReportIssues()) {
+            if (context.getProject().getReportIssues() && mNames != null) {
                 mFileToNames.put(context.file, mNames);
+
+                Element root = ((XmlContext) context).document.getDocumentElement();
+                if (root != null) {
+                    String locale = root.getAttributeNS(TOOLS_URI, ATTR_LOCALE);
+                    if (locale != null && !locale.isEmpty()) {
+                        if (mFileToLocale == null) {
+                            mFileToLocale = Maps.newHashMap();
+                        }
+                        mFileToLocale.put(context.file, locale);
+                    }
+                }
             }
 
             mNames = null;
@@ -258,7 +278,20 @@ public class TranslationDetector extends ResourceXmlDetector {
                 new HashMap<String, Set<String>>(languageCount);
         Set<String> allStrings = new HashSet<String>(200);
         for (File file : files) {
-            String language = parentFolderToLanguage.get(file.getParentFile());
+            String language = null;
+            if (mFileToLocale != null) {
+                String locale = mFileToLocale.get(file);
+                if (locale != null) {
+                    int index = locale.indexOf('-');
+                    if (index != -1) {
+                        locale = locale.substring(0, index);
+                    }
+                    language = locale;
+                }
+            }
+            if (language == null) {
+                language = parentFolderToLanguage.get(file.getParentFile());
+            }
             assert language != null : file.getParent();
             Set<String> fileStrings = mFileToNames.get(file);
 
