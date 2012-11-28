@@ -49,6 +49,7 @@ public class IconDetectorTest extends AbstractCheckTest {
         ALL.add(IconDetector.ICON_NODPI);
         ALL.add(IconDetector.ICON_COLORS);
         ALL.add(IconDetector.ICON_XML_AND_PNG);
+        ALL.add(IconDetector.ICON_LAUNCHER_SHAPE);
     }
 
     @Override
@@ -444,5 +445,16 @@ public class IconDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testSquareLauncher() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_LAUNCHER_SHAPE);
+        assertEquals(
+            "res/drawable-hdpi/ic_launcher_filled.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]\n" +
+            "0 errors, 1 warnings\n",
 
+            lintProject(
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "res/drawable-hdpi/filled.png=>res/drawable-hdpi/ic_launcher_filled.png",
+                    "res/drawable-mdpi/sample_icon.gif=>res/drawable-mdpi/ic_launcher_2.gif"
+            ));
+    }
 }
