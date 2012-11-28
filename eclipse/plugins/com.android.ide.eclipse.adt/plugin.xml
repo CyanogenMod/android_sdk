@@ -386,12 +386,24 @@
                     <with variable="selection">
                         <count value="1" />
                         <iterate>
-                            <and>
-                                <test property="org.eclipse.jdt.launching.isContainer" />
-                                <test
-                                    property="org.eclipse.jdt.launching.hasProjectNature"
-                                    args="com.android.ide.eclipse.adt.AndroidNature" />
-                            </and>
+                            <or>
+                                <adapt type="org.eclipse.core.resources.IFile">
+                                    <and>
+                                        <test
+                                            property="org.eclipse.core.resources.contentTypeId"
+                                            value="org.eclipse.core.runtime.xml" />
+                                        <test
+                                            property="org.eclipse.core.resources.projectNature"
+                                            value="com.android.ide.eclipse.adt.AndroidNature" />
+                                    </and>
+                                </adapt>
+                                <and>
+                                    <test property="org.eclipse.jdt.launching.isContainer" />
+                                    <test
+                                        property="org.eclipse.jdt.launching.hasProjectNature"
+                                        args="com.android.ide.eclipse.adt.AndroidNature" />
+                                </and>
+                            </or>
                         </iterate>
                     </with>
                 </enablement>
