@@ -15,27 +15,36 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import static com.android.SdkConstants.ATTR_NAME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.io.FolderWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,14 +54,20 @@ class ImportedProject {
     private String mActivityName;
     private ManifestData mManifest;
     private String mProjectName;
+    private String mRelativePath;
 
-    ImportedProject(File location) {
+    ImportedProject(File location, String relativePath) {
         super();
         mLocation = location;
+        mRelativePath = relativePath;
     }
 
     File getLocation() {
         return mLocation;
+    }
+
+    String getRelativePath() {
+        return mRelativePath;
     }
 
     @Nullable
@@ -104,6 +119,12 @@ class ImportedProject {
     @NonNull
     public String getProjectName() {
         if (mProjectName == null) {
+            // Are we importing an Eclipse project? If so just use the existing project name
+            mProjectName = findEclipseProjectName();
+            if (mProjectName != null) {
+                return mProjectName;
+            }
+
             String activityName = getActivityName();
             if (activityName == null || activityName.isEmpty()) {
                 // I could also look at the build files, say build.xml from ant, and
@@ -134,6 +155,37 @@ class ImportedProject {
         }
 
         return mProjectName;
+    }
+
+    @Nullable
+    private String findEclipseProjectName() {
+        File projectFile = new File(mLocation, ".project"); //$NON-NLS-1$
+        if (projectFile.exists()) {
+            String xml;
+            try {
+                xml = Files.toString(projectFile, Charsets.UTF_8);
+                Document doc = DomUtilities.parseDocument(xml, false);
+                if (doc != null) {
+                    NodeList names = doc.getElementsByTagName(ATTR_NAME);
+                    if (names.getLength() >= 1) {
+                        Node nameElement = names.item(0);
+                        String name = nameElement.getTextContent().trim();
+                        if (!name.isEmpty()) {
+                            return name;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                // pass: don't attempt to read project name; must be some sort of unrelated
+                // file with the same name, perhaps from a different editor or IDE
+            }
+        }
+
+        return null;
+    }
+
+    public void setProjectName(@NonNull String newName) {
+        mProjectName = newName;
     }
 
     public IAndroidTarget getTarget() {

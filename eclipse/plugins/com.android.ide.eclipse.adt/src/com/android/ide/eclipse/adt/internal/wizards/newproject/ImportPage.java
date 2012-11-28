@@ -24,18 +24,24 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.IColorProvider;
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -43,7 +49,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -52,6 +58,7 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkingSet;
@@ -63,7 +70,10 @@ import java.util.List;
 
 /** WizardPage for importing Android projects */
 class ImportPage extends WizardPage implements SelectionListener, IStructuredContentProvider,
-        ICheckStateListener, ILabelProvider, IColorProvider, KeyListener, TraverseListener {
+        ICheckStateListener, KeyListener, TraverseListener, ControlListener {
+    private static final int DIR_COLUMN = 0;
+    private static final int NAME_COLUMN = 1;
+
     private final NewProjectWizardState mValues;
     private List<ImportedProject> mProjectPaths;
     private final IProject[] mExistingProjects;
@@ -120,15 +130,29 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
         projectsLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
         projectsLabel.setText("Projects:");
 
-        mCheckboxTableViewer = CheckboxTableViewer.newCheckList(container,
-                SWT.BORDER | SWT.FULL_SELECTION);
-        mTable = mCheckboxTableViewer.getTable();
+        mTable = new Table(container, SWT.CHECK);
+        mTable.setHeaderVisible(true);
+        mCheckboxTableViewer = new CheckboxTableViewer(mTable);
+
+        TableViewerColumn dirViewerColumn = new TableViewerColumn(mCheckboxTableViewer, SWT.NONE);
+        TableColumn dirColumn = dirViewerColumn.getColumn();
+        dirColumn.setWidth(200);
+        dirColumn.setText("Project to Import");
+        TableViewerColumn nameViewerColumn = new TableViewerColumn(mCheckboxTableViewer, SWT.NONE);
+        TableColumn nameColumn = nameViewerColumn.getColumn();
+        nameColumn.setWidth(200);
+        nameColumn.setText("New Project Name");
+        nameViewerColumn.setEditingSupport(new ProjectNameEditingSupport(mCheckboxTableViewer));
+
         mTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 4));
+        mTable.setLinesVisible(true);
+        mTable.setHeaderVisible(true);
         mTable.addSelectionListener(this);
-        mCheckboxTableViewer.setLabelProvider(this);
+        mTable.addControlListener(this);
         mCheckboxTableViewer.setContentProvider(this);
         mCheckboxTableViewer.setInput(this);
         mCheckboxTableViewer.addCheckStateListener(this);
+        mCheckboxTableViewer.setLabelProvider(new ProjectCellLabelProvider());
 
         mSelectAllButton = new Button(container, SWT.NONE);
         mSelectAllButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
@@ -153,6 +177,21 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
 
         Composite group = mWorkingSetGroup.createControl(container);
         group.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+
+        updateColumnWidths();
+    }
+
+    private void updateColumnWidths() {
+        Rectangle r = mTable.getClientArea();
+        int availableWidth = r.width;
+        // Add all available size to the first column
+        for (int i = 1; i < mTable.getColumnCount(); i++) {
+            TableColumn column = mTable.getColumn(i);
+            availableWidth -= column.getWidth();
+        }
+        if (availableWidth > 100) {
+            mTable.getColumn(0).setWidth(availableWidth);
+        }
     }
 
     @Override
@@ -196,21 +235,25 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
 
     private List<ImportedProject> searchForProjects(File dir) {
         List<ImportedProject> projects = new ArrayList<ImportedProject>();
-        addProjects(dir, projects);
+        addProjects(dir, projects, dir.getPath().length() + 1);
         return projects;
     }
 
     /** Finds all project directories under the given directory */
-    private void addProjects(File dir, List<ImportedProject> projects) {
+    private void addProjects(File dir, List<ImportedProject> projects, int prefixLength) {
         if (dir.isDirectory()) {
             if (LintUtils.isProjectDir(dir)) {
-                projects.add(new ImportedProject(dir));
+                String relative = dir.getPath();
+                if (relative.length() > prefixLength) {
+                    relative = relative.substring(prefixLength);
+                }
+                projects.add(new ImportedProject(dir, relative));
             }
 
             File[] children = dir.listFiles();
             if (children != null) {
                 for (File child : children) {
-                    addProjects(child, projects);
+                    addProjects(child, projects, prefixLength);
                 }
             }
         }
@@ -234,6 +277,21 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
                             String.format("Cannot import %1$s because the project name is in use",
                                     project.getProjectName()));
                     break;
+                } else {
+                    status = ProjectNamePage.validateProjectName(project.getProjectName());
+                    if (status != null && !status.isOK()) {
+                        // Need to insert project name to make it clear which project name
+                        // is in violation
+                        if (mValues.importProjects.size() > 1) {
+                            String message = String.format("%1$s: %2$s",
+                                    project.getProjectName(), status.getMessage());
+                            status = new Status(status.getSeverity(), AdtPlugin.PLUGIN_ID,
+                                    message);
+                        }
+                        break;
+                    } else {
+                        status = null; // Don't leave non null status with isOK() == true
+                    }
                 }
             }
         }
@@ -365,48 +423,85 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
         }
         mValues.importProjects = selected;
         validatePage();
+
+        mCheckboxTableViewer.update(event.getElement(), null);
     }
 
-    // ---- Implements ILabelProvider ----
+    // ---- Implements ControlListener ----
 
     @Override
-    public void addListener(ILabelProviderListener listener) {
-    }
-
-    @Override
-    public void removeListener(ILabelProviderListener listener) {
-    }
-
-    @Override
-    public boolean isLabelProperty(Object element, String property) {
-        return false;
+    public void controlMoved(ControlEvent e) {
     }
 
     @Override
-    public Image getImage(Object element) {
-        return null;
+    public void controlResized(ControlEvent e) {
+        updateColumnWidths();
     }
 
-    @Override
-    public String getText(Object element) {
-        ImportedProject file = (ImportedProject) element;
-        return String.format("%1$s (%2$s)", file.getProjectName(), file.getLocation().getPath());
+    private final class ProjectCellLabelProvider extends CellLabelProvider {
+        @Override
+        public void update(ViewerCell cell) {
+            Object element = cell.getElement();
+            int index = cell.getColumnIndex();
+            ImportedProject project = (ImportedProject) element;
+
+            Display display = mTable.getDisplay();
+            Color fg;
+            if (mCheckboxTableViewer.getGrayed(element)) {
+                fg = display.getSystemColor(SWT.COLOR_DARK_GRAY);
+            } else {
+                fg = display.getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+            }
+            cell.setForeground(fg);
+            cell.setBackground(display.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+
+            switch (index) {
+                case DIR_COLUMN: {
+                    // Directory name
+                    cell.setText(project.getRelativePath());
+                    return;
+                }
+
+                case NAME_COLUMN: {
+                    // New name
+                    cell.setText(project.getProjectName());
+                    return;
+                }
+                default:
+                    assert false : index;
+            }
+            cell.setText("");
+        }
     }
 
-    // ---- IColorProvider ----
-
-    @Override
-    public Color getForeground(Object element) {
-        Display display = mTable.getDisplay();
-        if (mCheckboxTableViewer.getGrayed(element)) {
-            return display.getSystemColor(SWT.COLOR_DARK_GRAY);
+    /** Editing support for the project name column */
+    private class ProjectNameEditingSupport extends EditingSupport {
+        private ProjectNameEditingSupport(ColumnViewer viewer) {
+            super(viewer);
         }
 
-        return display.getSystemColor(SWT.COLOR_LIST_FOREGROUND);
-    }
+        @Override
+        protected void setValue(Object element, Object value) {
+            ImportedProject project = (ImportedProject) element;
+            project.setProjectName(value.toString());
+            mCheckboxTableViewer.update(element, null);
+            validatePage();
+        }
 
-    @Override
-    public Color getBackground(Object element) {
-        return mTable.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+        @Override
+        protected Object getValue(Object element) {
+            ImportedProject project = (ImportedProject) element;
+            return project.getProjectName();
+        }
+
+        @Override
+        protected CellEditor getCellEditor(Object element) {
+            return new TextCellEditor(mTable);
+        }
+
+        @Override
+        protected boolean canEdit(Object element) {
+            return true;
+        }
     }
 }
