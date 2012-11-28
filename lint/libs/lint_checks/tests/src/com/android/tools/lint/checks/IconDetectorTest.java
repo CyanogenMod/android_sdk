@@ -48,6 +48,7 @@ public class IconDetectorTest extends AbstractCheckTest {
         ALL.add(IconDetector.ICON_MISSING_FOLDER);
         ALL.add(IconDetector.ICON_NODPI);
         ALL.add(IconDetector.ICON_COLORS);
+        ALL.add(IconDetector.ICON_XML_AND_PNG);
     }
 
     @Override
@@ -93,6 +94,19 @@ public class IconDetectorTest extends AbstractCheckTest {
                     // an icon name
                     "res/drawable-mdpi/sample_icon.gif=>res/drawable-hdpi/.svn",
                     "res/drawable-hdpi/ic_launcher.png"));
+    }
+
+    public void testMixed() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_XML_AND_PNG);
+        assertEquals(
+            "res/drawable/background.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/background.png, res/drawable/background.xml [IconXmlAndPng]\n" +
+            "    res/drawable-mdpi/background.png: <No location-specific message\n" +
+            "0 errors, 1 warnings\n",
+
+            lintProject(
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/minsdk4.xml=>res/drawable/background.xml",
+                    "res/drawable/ic_launcher.png=>res/drawable-mdpi/background.png"));
     }
 
     public void testApi1() throws Exception {
@@ -174,9 +188,10 @@ public class IconDetectorTest extends AbstractCheckTest {
         assertEquals(
             "res/drawable-mdpi/frame.xml: Warning: The following images appear in both -nodpi and in a density folder: frame.png, frame.xml [IconNoDpi]\n" +
             "    res/drawable-mdpi/frame.png: <No location-specific message\n" +
+            "res/drawable-nodpi/frame.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/frame.png, res/drawable-nodpi/frame.xml [IconXmlAndPng]\n" +
+            "    res/drawable-mdpi/frame.png: <No location-specific message\n" +
             "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi [IconMissingDensityFolder]\n" +
-            "0 errors, 2 warnings\n" +
-            "",
+            "0 errors, 3 warnings\n",
 
             lintProject(
                 "res/drawable-mdpi/frame.png",
@@ -191,7 +206,10 @@ public class IconDetectorTest extends AbstractCheckTest {
         // drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: f.png (found in drawable-mdpi)
         // drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: f.png (found in drawable-mdpi)
         assertEquals(
-            "No warnings.",
+            "res/drawable-xhdpi/f.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-hdpi/f.xml, res/drawable-mdpi/f.png [IconXmlAndPng]\n" +
+            "    res/drawable-mdpi/f.png: <No location-specific message\n" +
+            "    res/drawable-hdpi/f.xml: <No location-specific message\n" +
+            "0 errors, 1 warnings\n",
 
             lintProject(
                     "res/drawable-mdpi/frame.png=>res/drawable-mdpi/f.png",
