@@ -24,6 +24,12 @@ import java.io.File;
  * Manages the location of the android files (including emulator files, ddms config, debug keystore)
  */
 public final class AndroidLocation {
+
+    /**
+     * The name of the .android folder returned by {@link #getFolder()}.
+     */
+    public static final String FOLDER_DOT_ANDROID = ".android";
+
     /**
      * Virtual Device folder inside the path returned by {@link #getFolder()}
      */
@@ -57,7 +63,11 @@ public final class AndroidLocation {
                         "Unable to get the Android SDK home directory.\n" +
                         "Make sure the environment variable ANDROID_SDK_HOME is set up.");
             } else {
-                sPrefsLocation = home + File.separator + ".android" + File.separator;
+                sPrefsLocation = home;
+                if (!sPrefsLocation.endsWith(File.separator)) {
+                    sPrefsLocation += File.separator;
+                }
+                sPrefsLocation += FOLDER_DOT_ANDROID + File.separator;
             }
         }
 
