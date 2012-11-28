@@ -7,7 +7,7 @@
     <!-- Various attributes that should be set on EditTexts, not TextViews -->
 
     <TextView
-        android:id="@+id/textview"
+        android:text="label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:autoText="true"
@@ -65,7 +65,7 @@
     <!-- Ok #1 -->
 
     <TextView
-        android:id="@+id/okTextView1"
+        android:text="label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:bufferType="spannable"
@@ -76,8 +76,19 @@
     <!-- Ok #2 -->
 
     <TextView
-        android:id="@+id/okTextView2"
+        android:text="label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/dynamictext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/dynamictext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="true" />
 
 </LinearLayout>

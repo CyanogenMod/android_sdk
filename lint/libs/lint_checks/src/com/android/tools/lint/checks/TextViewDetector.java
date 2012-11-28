@@ -24,6 +24,7 @@ import static com.android.SdkConstants.ATTR_CURSOR_VISIBLE;
 import static com.android.SdkConstants.ATTR_DIGITS;
 import static com.android.SdkConstants.ATTR_EDITABLE;
 import static com.android.SdkConstants.ATTR_EDITOR_EXTRAS;
+import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_IME_ACTION_ID;
 import static com.android.SdkConstants.ATTR_IME_ACTION_LABEL;
 import static com.android.SdkConstants.ATTR_IME_OPTIONS;
@@ -33,6 +34,9 @@ import static com.android.SdkConstants.ATTR_NUMERIC;
 import static com.android.SdkConstants.ATTR_PASSWORD;
 import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
 import static com.android.SdkConstants.ATTR_PRIVATE_IME_OPTIONS;
+import static com.android.SdkConstants.ATTR_TEXT;
+import static com.android.SdkConstants.ATTR_TEXT_IS_SELECTABLE;
+import static com.android.SdkConstants.ATTR_VISIBILITY;
 import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.CHECKED_TEXT_VIEW;
 import static com.android.SdkConstants.CHECK_BOX;
@@ -87,6 +91,25 @@ public class TextViewDetector extends LayoutDetector {
             TextViewDetector.class,
             Scope.RESOURCE_FILE_SCOPE);
 
+    /** Text could be selectable */
+    public static final Issue SELECTABLE = Issue.create(
+            "SelectableText", //$NON-NLS-1$
+            "Looks for TextViews which should probably allow their text to be selected",
+
+            "If a `<TextView>` is used to display data, the user might want to copy that " +
+            "data and paste it elsewhere. To allow this, the `<TextView>` should specify " +
+            "`android:textIsSelectable=\"true\"`.\n" +
+            "\n" +
+            "This lint check looks for TextViews which are likely to be displaying data: " +
+            "views whose text is set dynamically. This value will be ignored on platforms " +
+            "older than API 11, so it is okay to set it regardless of your `minSdkVersion`.",
+
+            Category.USABILITY,
+            7,
+            Severity.WARNING,
+            TextViewDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
     /** Constructs a new {@link TextViewDetector} */
     public TextViewDetector() {
     }
@@ -111,6 +134,18 @@ public class TextViewDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
+        if (element.getTagName().equals(TEXT_VIEW)) {
+            if (!element.hasAttributeNS(ANDROID_URI, ATTR_TEXT)
+                    && element.hasAttributeNS(ANDROID_URI, ATTR_ID)
+                    && !element.hasAttributeNS(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE)
+                    && !element.hasAttributeNS(ANDROID_URI, ATTR_VISIBILITY)
+                    && context.getMainProject().getTargetSdk() >= 11) {
+                context.report(SELECTABLE, element, context.getLocation(element),
+                        "Consider making the text value selectable by specifying " +
+                        "android:textIsSelectable=\"true\"", null);
+            }
+        }
+
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Attr attribute = (Attr) attributes.item(i);

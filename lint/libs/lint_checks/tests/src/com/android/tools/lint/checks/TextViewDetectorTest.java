@@ -90,9 +90,13 @@ public class TextViewDetectorTest extends AbstractCheckTest {
             "res/layout/edit_textview.xml:62: Warning: Attribute android:cursorVisible should not be used with <ToggleButton>: intended for editable text widgets [TextViewEdits]\n" +
             "        android:cursorVisible=\"true\" />\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 21 warnings\n" +
-            "",
+            "res/layout/edit_textview.xml:83: Warning: Consider making the text value selectable by specifying android:textIsSelectable=\"true\" [SelectableText]\n" +
+            "    <TextView\n" +
+            "    ^\n" +
+            "0 errors, 22 warnings\n",
 
-            lintFiles("res/layout/edit_textview.xml"));
+            lintFiles(
+                    "apicheck/minsdk14.xml=>AndroidManifest.xml", // API >= 11 for selectable issue
+                    "res/layout/edit_textview.xml"));
     }
 }

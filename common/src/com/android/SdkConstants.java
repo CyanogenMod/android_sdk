@@ -750,6 +750,9 @@ public final class SdkConstants {
     public static final String ATTR_ENABLED = "enabled";               //$NON-NLS-1$
     public static final String ATTR_SINGLE_LINE = "singleLine";        //$NON-NLS-1$
     public static final String ATTR_SCALE_TYPE = "scaleType";          //$NON-NLS-1$
+    public static final String ATTR_VISIBILITY = "visibility";         //$NON-NLS-1$
+    public static final String ATTR_TEXT_IS_SELECTABLE =
+            "textIsSelectable";                                        //$NON-NLS-1$
     public static final String ATTR_IMPORTANT_FOR_ACCESSIBILITY =
             "importantForAccessibility";                               //$NON-NLS-1$
 
