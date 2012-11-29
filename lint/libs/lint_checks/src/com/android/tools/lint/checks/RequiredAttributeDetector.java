@@ -124,6 +124,12 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
      * where the height is <b>not</b> set on the include */
     private @Nullable Set<String> mNotIncludedHeights;
 
+    /** Whether the width was set in a theme definition */
+    private boolean mSetWidthInTheme;
+
+    /** Whether the height was set in a theme definition */
+    private boolean mSetHeightInTheme;
+
     /** Constructs a new {@link RequiredAttributeDetector} */
     public RequiredAttributeDetector() {
     }
@@ -148,6 +154,8 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
         // not known.
         //
         if (context.getPhase() == 1) {
+            checkSizeSetInTheme();
+
             context.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE);
         }
     }
@@ -222,6 +230,65 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
         int index = style.lastIndexOf('.');
         if (index > 0) {
             return isSizeStyle(style.substring(0, index), sizeStyles, depth + 1);
+        }
+
+        return false;
+    }
+
+    private void checkSizeSetInTheme() {
+        // Look through the styles and determine whether each style is a theme
+        if (mStyleParents == null) {
+            return;
+        }
+
+        Map<String, Boolean> isTheme = Maps.newHashMap();
+        for (String style : mStyleParents.keySet()) {
+            if (isTheme(stripStylePrefix(style), isTheme, 0)) {
+                mSetWidthInTheme = true;
+                mSetHeightInTheme = true;
+                break;
+            }
+        }
+    }
+
+    private boolean isTheme(String style, Map<String, Boolean> isTheme, int depth) {
+        if (depth == 30) {
+            // Cycle between local and framework attribute style missed
+            // by the fact that we're stripping the distinction between framework
+            // and local styles here
+            return false;
+        }
+
+        assert !style.startsWith(STYLE_RESOURCE_PREFIX)
+                && !style.startsWith(ANDROID_STYLE_RESOURCE_PREFIX);
+
+        Boolean known = isTheme.get(style);
+        if (known != null) {
+            return known;
+        }
+
+        if (style.contains("Theme")) { //$NON-NLS-1$
+            isTheme.put(style, true);
+            return true;
+        }
+
+        if (mStyleParents != null) {
+            String parentStyle = mStyleParents.get(style);
+            if (parentStyle != null) {
+                parentStyle = stripStylePrefix(parentStyle);
+                if (isTheme(parentStyle, isTheme, depth + 1)) {
+                    isTheme.put(style, true);
+                    return true;
+                }
+            }
+        }
+
+        int index = style.lastIndexOf('.');
+        if (index > 0) {
+            String parentStyle = style.substring(0, index);
+            boolean result = isTheme(parentStyle, isTheme, depth + 1);
+            isTheme.put(style, result);
+            return result;
         }
 
         return false;
@@ -305,7 +372,6 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     }
                     String styleName = ((Element) element.getParentNode()).getAttribute(ATTR_NAME);
                     mWidthStyles.add(styleName);
-
                 }
                 if (name.endsWith(ATTR_LAYOUT_HEIGHT) &&
                         name.equals(ANDROID_NS_NAME_PREFIX + ATTR_LAYOUT_HEIGHT)) {
@@ -314,7 +380,6 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     }
                     String styleName = ((Element) element.getParentNode()).getAttribute(ATTR_NAME);
                     mHeightStyles.add(styleName);
-
                 }
             }
         } else if (folderType == LAYOUT) {
@@ -333,6 +398,15 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                 assert phase == 2; // Check everything using style data and include data
                 boolean hasWidth = element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
                 boolean hasHeight = element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
+
+                if (mSetWidthInTheme) {
+                    hasWidth = true;
+                }
+
+                if (mSetHeightInTheme) {
+                    hasHeight = true;
+                }
+
                 if (hasWidth && hasHeight) {
                     return;
                 }
