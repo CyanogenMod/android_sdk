@@ -55,10 +55,28 @@ public class FolderConfigurationTest extends TestCase {
     public void testVersionResMatch() {
         runConfigMatchTest(
                 "en-rUS-w600dp-h1024dp-large-port-mdpi-finger-nokeys-v12",
-                3,
+                2,
                 "",
                 "large",
                 "w540dp");
+    }
+
+    public void testAddQualifier() {
+        FolderConfiguration defaultConfig = new FolderConfiguration();
+        defaultConfig.createDefault();
+
+        final int count = FolderConfiguration.getQualifierCount();
+        for (int i = 0 ; i < count ; i++) {
+            FolderConfiguration empty = new FolderConfiguration();
+
+            ResourceQualifier q = defaultConfig.getQualifier(i);
+
+            empty.addQualifier(q);
+
+            // check it was added
+            assertNotNull(
+                    "addQualifier failed for " + q.getClass().getName(), empty.getQualifier(i));
+        }
     }
 
 
@@ -90,7 +108,6 @@ public class FolderConfigurationTest extends TestCase {
         List<? extends Configurable> list = getConfigurable(configs);
 
         Configurable match = reference.findMatchingConfigurable(list);
-        System.out.println(match.toString());
         assertEquals(resultIndex, list.indexOf(match));
     }
 

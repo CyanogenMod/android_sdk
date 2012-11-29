@@ -40,6 +40,7 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
+import com.android.ide.common.resources.configuration.LayoutDirectionQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
@@ -127,6 +128,7 @@ public class ResourceHelper {
             sIconMap.put(NetworkCodeQualifier.class,        factory.getIcon("mnc")); //$NON-NLS-1$
             sIconMap.put(LanguageQualifier.class,           factory.getIcon("language")); //$NON-NLS-1$
             sIconMap.put(RegionQualifier.class,             factory.getIcon("region")); //$NON-NLS-1$
+            sIconMap.put(LayoutDirectionQualifier.class,    factory.getIcon("bidi")); //$NON-NLS-1$
             sIconMap.put(ScreenSizeQualifier.class,         factory.getIcon("size")); //$NON-NLS-1$
             sIconMap.put(ScreenRatioQualifier.class,        factory.getIcon("ratio")); //$NON-NLS-1$
             sIconMap.put(ScreenOrientationQualifier.class,  factory.getIcon("orientation")); //$NON-NLS-1$

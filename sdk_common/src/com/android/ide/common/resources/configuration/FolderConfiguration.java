@@ -48,23 +48,24 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_NETWORK_CODE          = 1;
     private final static int INDEX_LANGUAGE              = 2;
     private final static int INDEX_REGION                = 3;
-    private final static int INDEX_SMALLEST_SCREEN_WIDTH = 4;
-    private final static int INDEX_SCREEN_WIDTH          = 5;
-    private final static int INDEX_SCREEN_HEIGHT         = 6;
-    private final static int INDEX_SCREEN_LAYOUT_SIZE    = 7;
-    private final static int INDEX_SCREEN_RATIO          = 8;
-    private final static int INDEX_SCREEN_ORIENTATION    = 9;
-    private final static int INDEX_UI_MODE               = 10;
-    private final static int INDEX_NIGHT_MODE            = 11;
-    private final static int INDEX_PIXEL_DENSITY         = 12;
-    private final static int INDEX_TOUCH_TYPE            = 13;
-    private final static int INDEX_KEYBOARD_STATE        = 14;
-    private final static int INDEX_TEXT_INPUT_METHOD     = 15;
-    private final static int INDEX_NAVIGATION_STATE      = 16;
-    private final static int INDEX_NAVIGATION_METHOD     = 17;
-    private final static int INDEX_SCREEN_DIMENSION      = 18;
-    private final static int INDEX_VERSION               = 19;
-    private final static int INDEX_COUNT                 = 20;
+    private final static int INDEX_LAYOUTDIR             = 4;
+    private final static int INDEX_SMALLEST_SCREEN_WIDTH = 5;
+    private final static int INDEX_SCREEN_WIDTH          = 6;
+    private final static int INDEX_SCREEN_HEIGHT         = 7;
+    private final static int INDEX_SCREEN_LAYOUT_SIZE    = 8;
+    private final static int INDEX_SCREEN_RATIO          = 9;
+    private final static int INDEX_SCREEN_ORIENTATION    = 10;
+    private final static int INDEX_UI_MODE               = 11;
+    private final static int INDEX_NIGHT_MODE            = 12;
+    private final static int INDEX_PIXEL_DENSITY         = 13;
+    private final static int INDEX_TOUCH_TYPE            = 14;
+    private final static int INDEX_KEYBOARD_STATE        = 15;
+    private final static int INDEX_TEXT_INPUT_METHOD     = 16;
+    private final static int INDEX_NAVIGATION_STATE      = 17;
+    private final static int INDEX_NAVIGATION_METHOD     = 18;
+    private final static int INDEX_SCREEN_DIMENSION      = 19;
+    private final static int INDEX_VERSION               = 20;
+    private final static int INDEX_COUNT                 = 21;
 
     /**
      * Creates a {@link FolderConfiguration} matching the folder segments.
@@ -267,6 +268,9 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof RegionQualifier) {
             mQualifiers[INDEX_REGION] = qualifier;
 
+        } else if (qualifier instanceof LayoutDirectionQualifier) {
+            mQualifiers[INDEX_LAYOUTDIR] = qualifier;
+
         } else if (qualifier instanceof SmallestScreenWidthQualifier) {
             mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = qualifier;
 
@@ -371,6 +375,14 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     public RegionQualifier getRegionQualifier() {
         return (RegionQualifier)mQualifiers[INDEX_REGION];
+    }
+
+    public void setLayoutDirectionQualifier(LayoutDirectionQualifier qualifier) {
+        mQualifiers[INDEX_LAYOUTDIR] = qualifier;
+    }
+
+    public LayoutDirectionQualifier getLayoutDirectionQualifier() {
+        return (LayoutDirectionQualifier)mQualifiers[INDEX_LAYOUTDIR];
     }
 
     public void setSmallestScreenWidthQualifier(SmallestScreenWidthQualifier qualifier) {
@@ -891,6 +903,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_NETWORK_CODE] = new NetworkCodeQualifier();
         mQualifiers[INDEX_LANGUAGE] = new LanguageQualifier();
         mQualifiers[INDEX_REGION] = new RegionQualifier();
+        mQualifiers[INDEX_LAYOUTDIR] = new LayoutDirectionQualifier();
         mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
