@@ -20,6 +20,8 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_JAVA_RESOURCE_DIRS := src
 
+LOCAL_JAVA_LIBRARIES := kxml2-2.3.0
+
 LOCAL_MODULE := ddmlib
 
 include $(BUILD_HOST_JAVA_LIBRARY)
