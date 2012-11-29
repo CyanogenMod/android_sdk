@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -425,7 +426,19 @@ public class ProjectProperties implements IPropertySource {
 
     /**
      * Parses a property file (using UTF-8 encoding) and returns a map of the content.
-     * <p/>If the file is not present, null is returned with no error messages sent to the log.
+     * <p/>
+     * If the file is not present, null is returned with no error messages sent to the log.
+     * <p/>
+     * IMPORTANT: This method is now unfortunately used in multiple places to parse random
+     * property files. This is NOT a safe practice since there is no corresponding method
+     * to write property files unless you use {@link ProjectPropertiesWorkingCopy#save()}.
+     * Code that writes INI or properties without at least using {@link #escape(String)} will
+     * certainly not load back correct data. <br/>
+     * Unless there's a strong legacy need to support existing files, new callers should
+     * probably just use Java's {@link Properties} which has well defined semantics.
+     * It's also a mistake to write/read property files using this code and expect it to
+     * work with Java's {@link Properties} or external tools (e.g. ant) since there can be
+     * differences in escaping and in character encoding.
      *
      * @param propFile the property file to parse
      * @param log the ILogger object receiving warning/error from the parsing.

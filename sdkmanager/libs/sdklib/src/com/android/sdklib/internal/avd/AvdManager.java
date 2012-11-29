@@ -17,8 +17,11 @@
 package com.android.sdklib.internal.avd;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.FileWrapper;
+import com.android.io.IAbstractFile;
+import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
@@ -33,7 +36,10 @@ import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.google.common.base.Charsets;
+import com.google.common.io.Closeables;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,7 +47,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,9 +75,30 @@ public class AvdManager {
         }
     }
 
-    public static final String AVD_FOLDER_EXTENSION = ".avd";  //$NON-NLS-1$
+    private final static Pattern INI_LINE_PATTERN =
+        Pattern.compile("^([a-zA-Z0-9._-]+)\\s*=\\s*(.*)\\s*$");        //$NON-NLS-1$
 
-    public static final String AVD_INFO_PATH = "path";         //$NON-NLS-1$
+    public static final String AVD_FOLDER_EXTENSION = ".avd";           //$NON-NLS-1$
+
+    /** Charset encoding used by the avd.ini/config.ini. */
+    public static final String AVD_INI_ENCODING = "avd.ini.encoding";   //$NON-NLS-1$
+
+    /**
+     * The *absolute* path to the AVD folder (which contains the #CONFIG_INI file).
+     */
+    public static final String AVD_INFO_ABS_PATH = "path";              //$NON-NLS-1$
+
+    /**
+     * The path to the AVD folder (which contains the #CONFIG_INI file) relative to
+     * the {@link AndroidLocation#FOLDER_DOT_ANDROID}. This information is written
+     * in the avd ini <b>only</b> if the AVD folder is located under the .android path
+     * (that is the relative that has no backward {@code ..} references).
+     */
+    public static final String AVD_INFO_REL_PATH = "path.rel";          //$NON-NLS-1$
+
+    /**
+     * The {@link IAndroidTarget#hashString()} of the AVD.
+     */
     public static final String AVD_INFO_TARGET = "target";     //$NON-NLS-1$
 
     /**
@@ -1087,8 +1116,20 @@ public class AvdManager {
             }
         }
 
+        String absPath = avdFolder.getAbsolutePath();
+        String relPath = null;
+        String androidPath = AndroidLocation.getFolder();
+        if (absPath.startsWith(androidPath)) {
+            // Compute the AVD path relative to the android path.
+            assert androidPath.endsWith(File.separator);
+            relPath = absPath.substring(androidPath.length());
+        }
+
         HashMap<String, String> values = new HashMap<String, String>();
-        values.put(AVD_INFO_PATH, avdFolder.getAbsolutePath());
+        if (relPath != null) {
+            values.put(AVD_INFO_REL_PATH, relPath);
+        }
+        values.put(AVD_INFO_ABS_PATH, absPath);
         values.put(AVD_INFO_TARGET, target.hashString());
         writeIniFile(iniFile, values);
 
@@ -1339,12 +1380,26 @@ public class AvdManager {
      *         valid or not.
      */
     private AvdInfo parseAvdInfo(File iniPath, ILogger log) {
-        Map<String, String> map = ProjectProperties.parsePropertyFile(
+        Map<String, String> map = parseIniFile(
                 new FileWrapper(iniPath),
                 log);
 
-        String avdPath = map.get(AVD_INFO_PATH);
+        String avdPath = map.get(AVD_INFO_ABS_PATH);
         String targetHash = map.get(AVD_INFO_TARGET);
+
+        if (!(new File(avdPath).isDirectory())) {
+            // Try to fallback on the relative path, if present.
+            String relPath = map.get(AVD_INFO_REL_PATH);
+            if (relPath != null) {
+                try {
+                    String androidPath = AndroidLocation.getFolder();
+                    File f = new File(androidPath, relPath);
+                    if (f.isDirectory()) {
+                        avdPath = f.getAbsolutePath();
+                    }
+                } catch (AndroidLocationException ignore) {}
+            }
+        }
 
         IAndroidTarget target = null;
         FileWrapper configIniFile = null;
@@ -1363,7 +1418,7 @@ public class AvdManager {
             if (!configIniFile.isFile()) {
                 log.warning("Missing file '%1$s'.",  configIniFile.getPath());
             } else {
-                properties = ProjectProperties.parsePropertyFile(configIniFile, log);
+                properties = parseIniFile(configIniFile, log);
             }
         }
 
@@ -1455,6 +1510,7 @@ public class AvdManager {
 
     /**
      * Writes a .ini file from a set of properties, using UTF-8 encoding.
+     * The file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
      *
      * @param iniFile The file to generate.
      * @param values THe properties to place in the ini file.
@@ -1462,13 +1518,119 @@ public class AvdManager {
      */
     private static void writeIniFile(File iniFile, Map<String, String> values)
             throws IOException {
-        OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(iniFile),
-                SdkConstants.INI_CHARSET);
+
+        Charset charset = Charsets.ISO_8859_1;
+        OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(iniFile), charset);
+
+        // Write down the charset used in case we want to use it later.
+        writer.write(String.format("%1$s=%2$s\n", AVD_INI_ENCODING, charset.name()));
 
         for (Entry<String, String> entry : values.entrySet()) {
             writer.write(String.format("%1$s=%2$s\n", entry.getKey(), entry.getValue()));
         }
         writer.close();
+    }
+
+    /**
+     * Parses a property file and returns a map of the content.
+     * <p/>
+     * If the file is not present, null is returned with no error messages sent to the log.
+     * <p/>
+     * Charset encoding will be either the system's default or the one specified by the
+     * {@link #AVD_INI_ENCODING} key if present.
+     *
+     * @param propFile the property file to parse
+     * @param log the ILogger object receiving warning/error from the parsing.
+     * @return the map of (key,value) pairs, or null if the parsing failed.
+     */
+    private static Map<String, String> parseIniFile(
+            @NonNull IAbstractFile propFile,
+            @Nullable ILogger log) {
+        return parseIniFileImpl(propFile, log, null /*charset*/);
+    }
+
+    /**
+     * Implementation helper for the {@link #parseIniFile(IAbstractFile, ILogger)} method.
+     * Don't call this one directly.
+     *
+     * @param propFile the property file to parse
+     * @param log the ILogger object receiving warning/error from the parsing.
+     * @param charset When a specific charset is specified, this will be used as-is.
+     *   When null, the default charset will first be used and if the key
+     *   {@link #AVD_INI_ENCODING} is found the parsing will restart using that specific
+     *   charset.
+     * @return the map of (key,value) pairs, or null if the parsing failed.
+     */
+    private static Map<String, String> parseIniFileImpl(
+            @NonNull IAbstractFile propFile,
+            @Nullable ILogger log,
+            @NonNull Charset charset) {
+
+        BufferedReader reader = null;
+        try {
+            boolean canChangeCharset = false;
+            if (charset == null) {
+                canChangeCharset = false;
+                charset = Charsets.ISO_8859_1;
+            }
+            reader = new BufferedReader(new InputStreamReader(propFile.getContents(), charset));
+
+            String line = null;
+            Map<String, String> map = new HashMap<String, String>();
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.length() > 0 && line.charAt(0) != '#') {
+
+                    Matcher m = INI_LINE_PATTERN.matcher(line);
+                    if (m.matches()) {
+                        // Note: we do NOT escape values.
+                        String key = m.group(1);
+                        String value = m.group(2);
+
+                        // If we find the charset encoding and it's not the same one and
+                        // it's a valid one, re-read the file using that charset.
+                        if (canChangeCharset &&
+                                AVD_INI_ENCODING.equals(key) &&
+                                !charset.name().equals(value) &&
+                                Charset.isSupported(value)) {
+                            charset = Charset.forName(value);
+                            return parseIniFileImpl(propFile, log, charset);
+                        }
+
+                        map.put(key, value);
+                    } else {
+                        if (log != null) {
+                            log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
+                                    propFile.getOsLocation(),
+                                    line);
+                        }
+                        return null;
+                    }
+                }
+            }
+
+            return map;
+        } catch (FileNotFoundException e) {
+            // this should not happen since we usually test the file existence before
+            // calling the method.
+            // Return null below.
+        } catch (IOException e) {
+            if (log != null) {
+                log.warning("Error parsing '%1$s': %2$s.",
+                        propFile.getOsLocation(),
+                        e.getMessage());
+            }
+        } catch (StreamException e) {
+            if (log != null) {
+                log.warning("Error parsing '%1$s': %2$s.",
+                        propFile.getOsLocation(),
+                        e.getMessage());
+            }
+        } finally {
+            Closeables.closeQuietly(reader);
+        }
+
+        return null;
     }
 
     /**
