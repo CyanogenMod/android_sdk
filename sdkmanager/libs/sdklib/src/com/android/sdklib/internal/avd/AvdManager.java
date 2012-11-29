@@ -1564,7 +1564,7 @@ public class AvdManager {
     private static Map<String, String> parseIniFileImpl(
             @NonNull IAbstractFile propFile,
             @Nullable ILogger log,
-            @NonNull Charset charset) {
+            @Nullable Charset charset) {
 
         BufferedReader reader = null;
         try {
