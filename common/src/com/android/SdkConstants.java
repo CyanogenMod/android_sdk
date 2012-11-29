@@ -805,6 +805,8 @@ public final class SdkConstants {
     public static final String VALUE_TRUE = "true";                     //$NON-NLS-1$
     public static final String VALUE_EDITABLE = "editable";             //$NON-NLS-1$
     public static final String VALUE_AUTO_FIT = "auto_fit";             //$NON-NLS-1$
+    public static final String VALUE_SELECTABLE_ITEM_BACKGROUND =
+            "?android:attr/selectableItemBackground";                   //$NON-NLS-1$
 
 
     // Values: Resources

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_STRING_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_BACKGROUND;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
 import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
@@ -25,6 +26,7 @@ import static com.android.SdkConstants.ATTR_LAYOUT_TO_LEFT_OF;
 import static com.android.SdkConstants.ATTR_LAYOUT_TO_RIGHT_OF;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ORIENTATION;
+import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.ATTR_TEXT;
 import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
@@ -32,6 +34,7 @@ import static com.android.SdkConstants.RELATIVE_LAYOUT;
 import static com.android.SdkConstants.STRING_PREFIX;
 import static com.android.SdkConstants.TABLE_ROW;
 import static com.android.SdkConstants.TAG_STRING;
+import static com.android.SdkConstants.VALUE_SELECTABLE_ITEM_BACKGROUND;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 
@@ -115,6 +118,24 @@ public class ButtonDetector extends ResourceXmlDetector {
             Scope.RESOURCE_FILE_SCOPE)
             .setMoreInfo(
                 "http://developer.android.com/design/building-blocks/dialogs.html"); //$NON-NLS-1$
+
+    /** The main issue discovered by this detector */
+    public static final Issue STYLE = Issue.create(
+            "ButtonStyle", //$NON-NLS-1$
+            "Ensures that buttons in button bars are borderless",
+
+            "Button bars typically use a borderless style for the buttons. Set the " +
+            "`style=\"?android:attr/buttonBarButtonStyle\"` attribute " +
+            "on each of the buttons, and set `style=\"?android:attr/buttonBarStyle\"` on " +
+            "the parent layout",
+
+            Category.USABILITY,
+            5,
+            Severity.WARNING,
+            ButtonDetector.class,
+            Scope.RESOURCE_FILE_SCOPE)
+            .setMoreInfo(
+                "http://developer.android.com/design/building-blocks/buttons.html"); //$NON-NLS-1$
 
     /** The main issue discovered by this detector */
     public static final Issue BACKBUTTON = Issue.create(
@@ -284,8 +305,25 @@ public class ButtonDetector extends ResourceXmlDetector {
                 }
             }
         } else if (tagName.equals(BUTTON)) {
+            if (phase == 1) {
+                if (isInButtonBar(element)
+                        && !element.hasAttribute(ATTR_STYLE)
+                        && !VALUE_SELECTABLE_ITEM_BACKGROUND.equals(
+                                element.getAttributeNS(ANDROID_URI, ATTR_BACKGROUND))
+                        && (context.getProject().getMinSdk() >= 11
+                            || context.getFolderVersion() >= 11)
+                        && context.isEnabled(STYLE)
+                        && !parentDefinesSelectableItem(element)) {
+                    context.report(STYLE, element, context.getLocation(element),
+                            "Buttons in button bars should be borderless; use " +
+                            "style=\"?android:attr/buttonBarButtonStyle\" (and " +
+                            "?android:attr/buttonBarStyle on the parent)",
+                            null);
+                }
+            }
+
             String text = element.getAttributeNS(ANDROID_URI, ATTR_TEXT);
-            if (context.getDriver().getPhase() == 2) {
+            if (phase == 2) {
                 if (mApplicableResources.contains(text)) {
                     String key = text;
                     if (key.startsWith(STRING_PREFIX)) {
@@ -321,6 +359,20 @@ public class ButtonDetector extends ResourceXmlDetector {
                 }
             }
         }
+    }
+
+    private boolean parentDefinesSelectableItem(Element element) {
+        String background = element.getAttributeNS(ANDROID_URI, ATTR_BACKGROUND);
+        if (VALUE_SELECTABLE_ITEM_BACKGROUND.equals(background)) {
+            return true;
+        }
+
+        Node parent = element.getParentNode();
+        if (parent != null && parent.getNodeType() == Node.ELEMENT_NODE) {
+            return parentDefinesSelectableItem((Element) parent);
+        }
+
+        return false;
     }
 
     /** Report the given OK button as being in the wrong position */
@@ -585,6 +637,48 @@ public class ButtonDetector extends ResourceXmlDetector {
     /** Is the OK button in the wrong position? It has to be on the right. */
     private boolean isWrongOkPosition(Element element) {
         return isWrongPosition(element, false /*isCancel*/);
+    }
+
+    private boolean isInButtonBar(Element element) {
+        assert element.getTagName().equals(BUTTON) : element.getTagName();
+        Node parentNode = element.getParentNode();
+        if (parentNode.getNodeType() != Node.ELEMENT_NODE) {
+            return false;
+        }
+        Element parent = (Element) parentNode;
+
+        String style = parent.getAttribute(ATTR_STYLE);
+        if (style != null && style.contains("buttonBarStyle")) { //$NON-NLS-1$
+            return true;
+        }
+
+        // Don't warn about single Cancel / OK buttons
+        if (LintUtils.getChildCount(parent) < 2) {
+            return false;
+        }
+
+        String layout = parent.getTagName();
+        if (layout.equals(LINEAR_LAYOUT) || layout.equals(TABLE_ROW)) {
+            String orientation = parent.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION);
+            if (VALUE_VERTICAL.equals(orientation)) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // Ensure that all the children are buttons
+        Node n = parent.getFirstChild();
+        while (n != null) {
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                if (!BUTTON.equals(n.getNodeName())) {
+                    return false;
+                }
+            }
+            n = n.getNextSibling();
+        }
+
+        return true;
     }
 
     /** Is the given button in the wrong position? */
