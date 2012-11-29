@@ -19,16 +19,21 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FD_RES_VALUES;
 
+import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
@@ -42,6 +47,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.source.ISourceViewer;
@@ -56,11 +62,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"restriction", "javadoc"})
 public abstract class AdtProjectTest extends SdkLoadingTestCase {
-    private static final int TARGET_API_LEVEL = 12;
+    private static final int TARGET_API_LEVEL = 16;
     public static final String TEST_PROJECT_PACKAGE = "com.android.eclipse.tests"; //$NON-NLS-1$
     private static final long TESTS_START_TIME = System.currentTimeMillis();
     private static final String PROJECTNAME_PREFIX = "testproject-";
@@ -100,6 +107,40 @@ public abstract class AdtProjectTest extends SdkLoadingTestCase {
         AdtPrefs.getPrefs().setPaletteModes("ICON_TEXT"); //$NON-NLS-1$
 
         getProject();
+
+        Sdk current = Sdk.getCurrent();
+        assertNotNull(current);
+        LoadStatus sdkStatus = AdtPlugin.getDefault().getSdkLoadStatus();
+        assertSame(LoadStatus.LOADED, sdkStatus);
+        IAndroidTarget target = current.getTarget(getProject());
+        IJavaProject javaProject = BaseProjectHelper.getJavaProject(getProject());
+        assertNotNull(javaProject);
+        int iterations = 0;
+        while (true) {
+            if (iterations == 100) {
+                fail("Couldn't load target; ran out of time");
+            }
+            LoadStatus status = current.checkAndLoadTargetData(target, javaProject);
+            if (status == LoadStatus.FAILED) {
+                fail("Couldn't load target " + target);
+            }
+            if (status != LoadStatus.LOADING) {
+                break;
+            }
+            Thread.sleep(250);
+            iterations++;
+        }
+        AndroidTargetData targetData = current.getTargetData(target);
+        assertNotNull(targetData);
+        LayoutDescriptors layoutDescriptors = targetData.getLayoutDescriptors();
+        assertNotNull(layoutDescriptors);
+        List<ViewElementDescriptor> viewDescriptors = layoutDescriptors.getViewDescriptors();
+        assertNotNull(viewDescriptors);
+        assertTrue(viewDescriptors.size() > 0);
+        List<ViewElementDescriptor> layoutParamDescriptors =
+                layoutDescriptors.getLayoutDescriptors();
+        assertNotNull(layoutParamDescriptors);
+        assertTrue(layoutParamDescriptors.size() > 0);
     }
 
     /** Set to true if the subclass test case should use a per-instance project rather
@@ -234,7 +275,6 @@ public abstract class AdtProjectTest extends SdkLoadingTestCase {
             }
         }
         assertNotNull(target);
-
 
         IRunnableContext context = new IRunnableContext() {
             @Override

@@ -27,11 +27,15 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.values.ValuesContentAssist;
 
 import org.eclipse.core.resources.IFile;
@@ -862,8 +866,17 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         assertNotNull(page);
         IEditorPart editor = IDE.openEditor(page, file);
         assertTrue(editor instanceof AndroidXmlEditor);
-        AndroidXmlEditor layoutEditor = (AndroidXmlEditor) editor;
-        ISourceViewer viewer = layoutEditor.getStructuredSourceViewer();
+        AndroidXmlEditor xmlEditor = (AndroidXmlEditor) editor;
+
+        UiElementNode root = xmlEditor.getUiRootNode();
+        ElementDescriptor descriptor = root.getDescriptor();
+        if (descriptor instanceof ViewElementDescriptor) {
+            ViewElementDescriptor vd = (ViewElementDescriptor) descriptor;
+            AttributeDescriptor[] attributes = vd.getAttributes();
+            assertTrue(Integer.toString(attributes.length), attributes.length > 0);
+        }
+
+        ISourceViewer viewer = xmlEditor.getStructuredSourceViewer();
 
         // Determine the offset, and possibly make text range selections as well
         int offset = updateCaret(viewer, caretLocation);

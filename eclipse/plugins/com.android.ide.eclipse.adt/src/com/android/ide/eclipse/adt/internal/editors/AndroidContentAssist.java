@@ -16,7 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.UNIT_DP;
 import static com.android.SdkConstants.UNIT_IN;
@@ -549,6 +551,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         Map<String, String> nsUriMap = new HashMap<String, String>();
+        boolean haveLayoutParams = false;
 
         for (Object choice : choices) {
             String keyword = null;
@@ -646,6 +649,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     cursorPosition++;
                 }
 
+                if (nsPrefix != null &&
+                        keyword.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length())) {
+                    haveLayoutParams = true;
+                }
+
                 // For attributes, automatically insert ns:attribute="" and place the cursor
                 // inside the quotes.
                 // Special case for attributes: insert ="" stuff and locate caret inside ""
@@ -661,6 +669,36 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     null,                               // IContextInformation contextInformation
                     tooltip                             // String additionalProposalInfo
                 ));
+            }
+        }
+
+        if (wordPrefix.length() > 0 && haveLayoutParams
+                && !wordPrefix.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
+            // Sort layout parameters to the front if we automatically inserted some
+            // that you didn't request. For example, you typed "width" and we match both
+            // "width" and "layout_width" - should match layout_width.
+            String nsPrefix = nsUriMap.get(ANDROID_URI);
+            if (nsPrefix == null) {
+                nsPrefix = PREFIX_ANDROID;
+            } else {
+                nsPrefix += ':';
+            }
+            if (!(wordPrefix.startsWith(nsPrefix)
+                    && wordPrefix.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length()))) {
+                int nextLayoutIndex = 0;
+                for (int i = 0, n = proposals.size(); i < n; i++) {
+                    ICompletionProposal proposal = proposals.get(i);
+                    String keyword = proposal.getDisplayString();
+                    if (keyword.startsWith(nsPrefix) &&
+                            keyword.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length())
+                            && i != nextLayoutIndex) {
+                        // Swap to front
+                        ICompletionProposal temp = proposals.get(nextLayoutIndex);
+                        proposals.set(nextLayoutIndex, proposal);
+                        proposals.set(i, temp);
+                        nextLayoutIndex++;
+                    }
+                }
             }
         }
     }

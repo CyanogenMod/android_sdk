@@ -23,6 +23,7 @@ import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_CONTEXT;
+import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
 import static com.android.SdkConstants.ATTR_REF_PREFIX;
@@ -223,7 +224,7 @@ public class Hyperlinks {
             // It's a value -declaration-, nowhere else to jump
             // (though we could consider jumping to the R-file; would that
             // be helpful?)
-            return false;
+            return !ATTR_ID.equals(attribute.getLocalName());
         }
 
         Pair<ResourceType,String> resource = parseResource(value);
@@ -1002,16 +1003,25 @@ public class Hyperlinks {
     private static Pair<IFile, IRegion> findIdInDocument(String id, IFile file,
             Document document) {
         String targetAttribute = NEW_ID_PREFIX + id;
-        return findIdInElement(document.getDocumentElement(), file, targetAttribute);
+        Element root = document.getDocumentElement();
+        Pair<IFile, IRegion> result = findIdInElement(root, file, targetAttribute,
+                true /*requireId*/);
+        if (result == null) {
+            result = findIdInElement(root, file, targetAttribute, false /*requireId*/);
+        }
+        return result;
     }
 
     private static Pair<IFile, IRegion> findIdInElement(
-            Element root, IFile file, String targetAttribute) {
+            Element root, IFile file, String targetAttribute, boolean requireIdAttribute) {
         NamedNodeMap attributes = root.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Node item = attributes.item(i);
             if (item instanceof Attr) {
-                Attr attribute = (Attr)item;
+                Attr attribute = (Attr) item;
+                if (requireIdAttribute && !ATTR_ID.equals(attribute.getLocalName())) {
+                    continue;
+                }
                 String value = attribute.getValue();
                 if (value.equals(targetAttribute)) {
                     // Select the element -containing- the id rather than the attribute itself
@@ -1034,7 +1044,8 @@ public class Hyperlinks {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)child;
-                Pair<IFile, IRegion> result = findIdInElement(element, file, targetAttribute);
+                Pair<IFile, IRegion> result = findIdInElement(element, file, targetAttribute,
+                        requireIdAttribute);
                 if (result != null) {
                     return result;
                 }
