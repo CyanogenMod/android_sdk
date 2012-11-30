@@ -46,7 +46,7 @@ import java.util.EnumSet;
 public class SystemPermissionsDetector extends Detector implements Detector.XmlScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ProtectedPermissons", //$NON-NLS-1$
+            "ProtectedPermissions", //$NON-NLS-1$
             "Looks for permissions that are only granted to system apps",
 
             "Permissions with the protection level signature or signatureOrSystem are only " +
