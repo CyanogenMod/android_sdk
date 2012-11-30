@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Warnings for these: -->
-    <uses-permission android:name="android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE" tools:ignore="ProtectedPermissons" />
+    <uses-permission android:name="android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE" tools:ignore="ProtectedPermissions" />
 
     <application
         android:icon="@drawable/ic_launcher"
