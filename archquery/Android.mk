@@ -25,4 +25,6 @@ LOCAL_JAVA_LIBRARIES := \
 
 LOCAL_MODULE := archquery
 
+LOCAL_MODULE_TAGS := debug
+
 include $(BUILD_HOST_JAVA_LIBRARY)

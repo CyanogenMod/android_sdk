@@ -25,6 +25,6 @@ LOCAL_JAVA_LIBRARIES := \
 	org-openide-util \
 	org-netbeans-api-visual
 LOCAL_MODULE := hierarchyviewer
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_HOST_JAVA_LIBRARY)
-
