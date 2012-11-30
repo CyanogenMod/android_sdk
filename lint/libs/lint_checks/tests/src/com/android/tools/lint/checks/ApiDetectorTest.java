@@ -72,6 +72,16 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     ));
     }
 
+    public void testXmlApi1TargetApi() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                "apicheck/layout_targetapi.xml=>res/layout/layout.xml"
+                ));
+    }
+
     public void testXmlApiFolderVersion11() throws Exception {
         assertEquals(
             "res/color-v11/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +

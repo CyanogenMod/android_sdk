@@ -139,6 +139,9 @@ public class MainTest extends AbstractCheckTest {
         "@TargetApi(11), such that this check considers 11 rather than your manifest\n" +
         "file's minimum SDK as the required API level.\n" +
         "\n" +
+        "Similarly, you can use tools:targetApi=\"11\" in an XML file to indicate that\n" +
+        "the element will only be inflated in an adequate context.\n" +
+        "\n" +
         "\n",
 
         // Expected error

@@ -189,11 +189,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                     String message = marker.getAttribute(IMarker.MESSAGE, null);
                     proposals.add(new MoreInfoProposal(id, message));
 
-                    ICompletionProposal fix = AddSuppressAttribute.createFix(editor, marker, id);
-                    if (fix != null) {
-                        proposals.add(fix);
-                    }
-
+                    proposals.addAll(AddSuppressAttribute.createFixes(editor, marker, id));
                     proposals.add(new SuppressProposal(file, id, false));
                     proposals.add(new SuppressProposal(file.getProject(), id, true /* all */));
                     proposals.add(new SuppressProposal(file, id, true /* all */));
@@ -296,11 +292,11 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                     assert isXml;
                     if (part instanceof AndroidXmlEditor) {
                         AndroidXmlEditor editor = (AndroidXmlEditor) part;
-                        AddSuppressAttribute fix = AddSuppressAttribute.createFix(editor,
+                        List<AddSuppressAttribute> fixes = AddSuppressAttribute.createFixes(editor,
                                 marker, id);
-                        if (fix != null) {
+                        if (fixes.size() > 0) {
                             IStructuredDocument document = editor.getStructuredDocument();
-                            fix.apply(document);
+                            fixes.get(0).apply(document);
                         }
                     }
                 }
@@ -511,7 +507,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         @Override
         public String getDisplayString() {
-            return "Explain Issue";
+            return String.format("Explain Issue (%1$s)", mId);
         }
 
         // ---- Implements MarkerResolution2 ----

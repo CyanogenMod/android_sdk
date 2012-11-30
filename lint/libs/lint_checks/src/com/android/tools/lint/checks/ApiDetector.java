@@ -19,14 +19,17 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_TARGET_API;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 import static com.android.SdkConstants.TARGET_API;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD;
 import static com.android.tools.lint.detector.api.Location.SearchDirection.NEAREST;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
@@ -35,6 +38,7 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -88,7 +92,10 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             "supported platform, then you can annotate your class or method with the " +
             "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
             "`@TargetApi(11)`, such that this check considers 11 rather than your manifest " +
-            "file's minimum SDK as the required API level.",
+            "file's minimum SDK as the required API level.\n" +
+            "\n" +
+            "Similarly, you can use tools:targetApi=\"11\" in an XML file to indicate that " +
+            "the element will only be inflated in an adequate context.",
             Category.CORRECTNESS,
             6,
             Severity.ERROR,
@@ -168,7 +175,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             }
             int api = mApiDatabase.getFieldVersion(owner, name);
             int minSdk = getMinSdk(context);
-            if (api > minSdk && api > context.getFolderVersion()) {
+            if (api > minSdk && api > context.getFolderVersion()
+                    && api > getLocalMinSdk(attribute.getOwnerElement())) {
                 Location location = context.getLocation(attribute);
                 String message = String.format(
                         "%1$s requires API level %2$d (current min is %3$d)",
@@ -210,7 +218,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             }
                             int api = mApiDatabase.getFieldVersion(owner, name);
                             int minSdk = getMinSdk(context);
-                            if (api > minSdk && api > context.getFolderVersion()) {
+                            if (api > minSdk && api > context.getFolderVersion()
+                                    && api > getLocalMinSdk(element)) {
                                 Location location = context.getLocation(textNode);
                                 String message = String.format(
                                         "%1$s requires API level %2$d (current min is %3$d)",
@@ -243,7 +252,8 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                     // "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"); //$NON-NLS-1$
                     "(Landroid/content/Context;)"); //$NON-NLS-1$
             int minSdk = getMinSdk(context);
-            if (api > minSdk && api > context.getFolderVersion()) {
+            if (api > minSdk && api > context.getFolderVersion()
+                    && api > getLocalMinSdk(element)) {
                 Location location = context.getLocation(element);
                 String message = String.format(
                         "View requires API level %1$d (current min is %2$d): <%3$s>",
@@ -650,7 +660,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
      * @return the API level to use for this node, or -1
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private int getLocalMinSdk(List annotations) {
+    private static int getLocalMinSdk(List annotations) {
         if (annotations != null) {
             for (AnnotationNode annotation : (List<AnnotationNode>)annotations) {
                 String desc = annotation.desc;
@@ -674,6 +684,44 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         }
                     }
                 }
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the minimum SDK to use in the given element context, or -1 if no
+     * {@code tools:targetApi} attribute was found.
+     *
+     * @param element the element to look at, including parents
+     * @return the API level to use for this element, or -1
+     */
+    private int getLocalMinSdk(@NonNull Element element) {
+        while (element != null) {
+            String targetApi = element.getAttributeNS(TOOLS_URI, ATTR_TARGET_API);
+            if (targetApi != null && !targetApi.isEmpty()) {
+                if (Character.isDigit(targetApi.charAt(0))) {
+                    try {
+                        return Integer.parseInt(targetApi);
+                    } catch (NumberFormatException nufe) {
+                        break;
+                    }
+                }
+
+                for (int api = 1; api < SdkConstants.HIGHEST_KNOWN_API; api++) {
+                    String code = LintUtils.getBuildCode(api);
+                    if (code != null && code.equalsIgnoreCase(targetApi)) {
+                        return api;
+                    }
+                }
+            }
+
+            Node parent = element.getParentNode();
+            if (parent != null && parent.getNodeType() == Node.ELEMENT_NODE) {
+                element = (Element) parent;
+            } else {
+                break;
             }
         }
 
