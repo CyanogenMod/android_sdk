@@ -655,11 +655,13 @@
             <!-- renderscript generates resources so it must be called before aapt -->
             <echo level="info">----------</echo>
             <echo level="info">Handling RenderScript files...</echo>
+            <!-- set the rs target prop in case it hasn't been set. -->
+            <property name="renderscript.target" value="${project.minSdkVersion}" />
             <renderscript executable="${renderscript}"
                     includePathRefId="android.renderscript.include.path"
                     genFolder="${gen.absolute.dir}"
                     resFolder="${out.res.absolute.dir}/raw"
-                    targetApi="${project.minSdkVersion}"
+                    targetApi="${renderscript.target}"
                     optLevel="${renderscript.opt.level}"
                     buildType="${build.is.packaging.debug}"
                     previousBuildType="${build.last.is.packaging.debug}">

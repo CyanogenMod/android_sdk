@@ -98,7 +98,7 @@ public class AidlProcessor extends SourceProcessor {
     @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int targetApi,
+            IProject project, IAndroidTarget projectTarget,
             List<IPath> sourceFolders, List<IFile> notCompiledOut, List<File> libraryProjectsOut,
             IProgressMonitor monitor) throws CoreException {
         // create the command line

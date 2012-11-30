@@ -143,8 +143,15 @@ public class RenderScriptProcessor extends SourceProcessor {
         }
     }
 
+    private int mTargetApi = 11;
+
     public RenderScriptProcessor(IJavaProject javaProject, IFolder genFolder) {
         super(javaProject, genFolder, new RsChangeHandler());
+    }
+
+    public void setTargetApi(int targetApi) {
+        // make sure the target api value is good. Must be 11+ or llvm-rs-cc complains.
+        mTargetApi = targetApi < 11 ? 11 : targetApi;
     }
 
     @Override
@@ -160,7 +167,7 @@ public class RenderScriptProcessor extends SourceProcessor {
     @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int targetApi,
+            IProject project, IAndroidTarget projectTarget,
             List<IPath> sourceFolders, List<IFile> notCompiledOut,  List<File> libraryProjectsOut,
             IProgressMonitor monitor) throws CoreException {
 
@@ -172,11 +179,6 @@ public class RenderScriptProcessor extends SourceProcessor {
                 new Path(SdkConstants.FD_RES).append(SdkConstants.FD_RES_RAW));
 
         int depIndex;
-
-        // make sure the target api value is good. Must be 11+ or llvm-rs-cc complains.
-        if (targetApi < 11) {
-            targetApi = 11;
-        }
 
         // create the command line
         String[] command = new String[15];
@@ -193,7 +195,7 @@ public class RenderScriptProcessor extends SourceProcessor {
         command[index++] = quote(rawFolder.getLocation().toOSString());
 
         command[index++] = "-target-api";   //$NON-NLS-1$
-        command[index++] = Integer.toString(targetApi);
+        command[index++] = Integer.toString(mTargetApi);
 
         command[index++] = "-d";   //$NON-NLS-1$
         command[depIndex = index++] = null;
