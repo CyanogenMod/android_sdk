@@ -220,7 +220,7 @@ public abstract class SourceProcessor {
      *
      */
     public final int compileFiles(BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int minSdkVersion,
+            IProject project, IAndroidTarget projectTarget,
             List<IPath> sourceFolders, List<File> libraryProjectsOut, IProgressMonitor monitor)
             throws CoreException {
 
@@ -242,7 +242,7 @@ public abstract class SourceProcessor {
         // list of files that have failed compilation.
         List<IFile> stillNeedCompilation = new ArrayList<IFile>();
 
-        doCompileFiles(mToCompile, builder, project, projectTarget, minSdkVersion, sourceFolders,
+        doCompileFiles(mToCompile, builder, project, projectTarget, sourceFolders,
                 stillNeedCompilation, libraryProjectsOut, monitor);
 
         mToCompile.clear();
@@ -274,7 +274,7 @@ public abstract class SourceProcessor {
 
     protected abstract void doCompileFiles(
             List<IFile> filesToCompile, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int targetApi,
+            IProject project, IAndroidTarget projectTarget,
             List<IPath> sourceFolders, List<IFile> notCompiledOut,
             List<File> libraryProjectsOut, IProgressMonitor monitor) throws CoreException;
 

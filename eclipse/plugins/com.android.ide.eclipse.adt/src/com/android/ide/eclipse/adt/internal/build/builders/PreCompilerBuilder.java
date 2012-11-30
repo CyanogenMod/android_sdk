@@ -139,6 +139,8 @@ public class PreCompilerBuilder extends BaseBuilder {
      */
     private DerivedProgressMonitor mDerivedProgressMonitor;
 
+    private RenderScriptProcessor mRenderScriptProcessor;
+
     /**
      * Progress monitor waiting the end of the process to set a persistent value
      * in a file. This is typically used in conjunction with <code>IResource.refresh()</code>,
@@ -650,10 +652,27 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // run the source processors
             int processorStatus = SourceProcessor.COMPILE_STATUS_NONE;
+
+            // get the renderscript target
+            int rsTarget = minSdkValue == -1 ? 11 : minSdkValue;
+            String rsTargetStr = projectState.getProperty(ProjectProperties.PROPERTY_RS_TARGET);
+            if (rsTargetStr != null) {
+                try {
+                    rsTarget = Integer.parseInt(rsTargetStr);
+                } catch (NumberFormatException e) {
+                    handleException(e, String.format(
+                            "Property %s is not an integer.",
+                            ProjectProperties.PROPERTY_RS_TARGET));
+                    return result;
+                }
+            }
+
+            mRenderScriptProcessor.setTargetApi(rsTarget);
+
             for (SourceProcessor processor : mProcessors) {
                 try {
                     processorStatus |= processor.compileFiles(this,
-                            project, projectTarget, minSdkValue, sourceFolderPathList,
+                            project, projectTarget, sourceFolderPathList,
                             libProjectsOut, monitor);
                 } catch (Throwable t) {
                     handleException(t, String.format(
@@ -776,10 +795,9 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // load the source processors
             SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
-            SourceProcessor renderScriptProcessor = new RenderScriptProcessor(javaProject,
-                    mGenFolder);
+            mRenderScriptProcessor = new RenderScriptProcessor(javaProject, mGenFolder);
             mProcessors.add(aidlProcessor);
-            mProcessors.add(renderScriptProcessor);
+            mProcessors.add(mRenderScriptProcessor);
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
         }
