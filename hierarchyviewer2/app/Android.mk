@@ -32,6 +32,7 @@ LOCAL_JAVA_LIBRARIES := \
     swtmenubar
 
 LOCAL_MODULE := hierarchyviewer2
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
