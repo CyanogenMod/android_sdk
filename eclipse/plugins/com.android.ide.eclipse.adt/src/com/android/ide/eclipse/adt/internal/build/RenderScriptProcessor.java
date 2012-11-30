@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
+import com.google.common.collect.Sets;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,6 +64,12 @@ public class RenderScriptProcessor extends SourceProcessor {
      * Single line llvm-rs-cc error: {@code <path>:<line>:<col>: <error>}
      */
     private static Pattern sLlvmPattern1 = Pattern.compile("^(.+?):(\\d+):(\\d+):\\s(.+)$"); //$NON-NLS-1$
+
+    private final static Set<String> EXTENSIONS = Sets.newHashSetWithExpectedSize(2);
+    static {
+        EXTENSIONS.add(SdkConstants.EXT_RS);
+        EXTENSIONS.add(SdkConstants.EXT_FS);
+    }
 
     private static class RsChangeHandler extends SourceChangeHandler {
 
@@ -85,29 +93,48 @@ public class RenderScriptProcessor extends SourceProcessor {
                 // remove the file name segment
                 relative = relative.removeLastSegments(1);
                 // add the file name of a Renderscript file.
-                relative = relative.append(file.getName().replaceAll(AdtConstants.RE_DEP_EXT,
-                        SdkConstants.DOT_RS));
+                relative = relative.append(file.getName().replaceAll(
+                        AdtConstants.RE_DEP_EXT, SdkConstants.DOT_RS));
 
-                // now look for a match in the source folders.
-                List<IPath> sourceFolders = BaseProjectHelper.getSourceClasspaths(
-                        processor.getJavaProject());
-                IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+                if (!findInSourceFolders(processor, genFolder, relative)) {
+                    // could be a FilterScript file?
+                    relative = file.getFullPath().makeRelativeTo(genFolder.getFullPath());
+                    // remove the file name segment
+                    relative = relative.removeLastSegments(1);
+                    // add the file name of a FilterScript file.
+                    relative = relative.append(file.getName().replaceAll(
+                            AdtConstants.RE_DEP_EXT, SdkConstants.DOT_FS));
 
-                for (IPath sourceFolderPath : sourceFolders) {
-                    IFolder sourceFolder = root.getFolder(sourceFolderPath);
-                    // we don't look in the 'gen' source folder as there will be no source in there.
-                    if (sourceFolder.exists() && sourceFolder.equals(genFolder) == false) {
-                        IFile sourceFile = sourceFolder.getFile(relative);
-                        SourceFileData data = processor.getFileData(sourceFile);
-                        if (data != null) {
-                            addFileToCompile(sourceFile);
-                            return true;
-                        }
+                    return findInSourceFolders(processor, genFolder, relative);
+                }
+
+                return true;
+            }
+
+            return r;
+        }
+
+        private boolean findInSourceFolders(SourceProcessor processor, IFolder genFolder,
+                IPath relative) {
+            // now look for a match in the source folders.
+            List<IPath> sourceFolders = BaseProjectHelper.getSourceClasspaths(
+                    processor.getJavaProject());
+            IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+
+            for (IPath sourceFolderPath : sourceFolders) {
+                IFolder sourceFolder = root.getFolder(sourceFolderPath);
+                // we don't look in the 'gen' source folder as there will be no source in there.
+                if (sourceFolder.exists() && sourceFolder.equals(genFolder) == false) {
+                    IFile sourceFile = sourceFolder.getFile(relative);
+                    SourceFileData data = processor.getFileData(sourceFile);
+                    if (data != null) {
+                        addFileToCompile(sourceFile);
+                        return true;
                     }
                 }
             }
 
-            return r;
+            return false;
         }
 
         @Override
@@ -121,8 +148,8 @@ public class RenderScriptProcessor extends SourceProcessor {
     }
 
     @Override
-    protected String getExtension() {
-        return SdkConstants.EXT_RS;
+    protected Set<String> getExtensions() {
+        return EXTENSIONS;
     }
 
     @Override

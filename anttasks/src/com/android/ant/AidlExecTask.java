@@ -16,6 +16,7 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
 import com.android.sdklib.io.FileOp;
 
 import org.apache.tools.ant.BuildException;
@@ -26,7 +27,9 @@ import org.apache.tools.ant.types.Path;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Task to execute aidl.
@@ -56,8 +59,8 @@ public class AidlExecTask extends MultiFilesTask {
     private class AidlProcessor implements SourceProcessor {
 
         @Override
-        public String getSourceFileExtension() {
-            return "aidl";
+        public Set<String> getSourceFileExtensions() {
+            return Collections.singleton(SdkConstants.EXT_AIDL);
         }
 
         @Override

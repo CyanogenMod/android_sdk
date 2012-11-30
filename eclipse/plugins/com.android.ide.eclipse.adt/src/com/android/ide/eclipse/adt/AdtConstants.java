@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_DEP;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_RS;
+import static com.android.SdkConstants.DOT_FS;
 
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
@@ -118,6 +119,8 @@ public class AdtConstants {
     public final static String RE_AIDL_EXT = "\\" + DOT_AIDL + "$"; //$NON-NLS-1$ //$NON-NLS-2$
     /** Regexp for rs extension, i.e. "\.rs$" */
     public final static String RE_RS_EXT = "\\" + DOT_RS + "$"; //$NON-NLS-1$ //$NON-NLS-2$
+    /** Regexp for rs extension, i.e. "\.fs$" */
+    public final static String RE_FS_EXT = "\\" + DOT_FS + "$"; //$NON-NLS-1$ //$NON-NLS-2$
     /** Regexp for .d extension, i.e. "\.d$" */
     public final static String RE_DEP_EXT = "\\" + DOT_DEP + "$"; //$NON-NLS-1$ //$NON-NLS-2$
 

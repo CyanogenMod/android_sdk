@@ -59,7 +59,7 @@ public class SourceChangeHandler {
 
     public void handleSourceFile(IFile file, int kind) {
         // first the file itself if this is a match for the processor's extension
-        if (mProcessor.getExtension().equals(file.getFileExtension())) {
+        if (mProcessor.getExtensions().contains(file.getFileExtension())) {
             if (kind == IResourceDelta.REMOVED) {
                 mRemoved.add(file);
             } else {

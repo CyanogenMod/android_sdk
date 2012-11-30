@@ -16,6 +16,9 @@
 
 package com.android.ant;
 
+import com.android.SdkConstants;
+import com.google.common.collect.Sets;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
@@ -24,6 +27,7 @@ import org.apache.tools.ant.types.Path;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Task to execute renderscript.
@@ -41,6 +45,12 @@ import java.util.List;
  * elements for where to find .rs files.
  */
 public class RenderScriptTask extends MultiFilesTask {
+
+    private final static Set<String> EXTENSIONS = Sets.newHashSetWithExpectedSize(2);
+    static {
+        EXTENSIONS.add(SdkConstants.EXT_RS);
+        EXTENSIONS.add(SdkConstants.EXT_FS);
+    }
 
     private String mExecutable;
     private Path mIncludePath;
@@ -62,8 +72,8 @@ public class RenderScriptTask extends MultiFilesTask {
         }
 
         @Override
-        public String getSourceFileExtension() {
-            return "rs";
+        public Set<String> getSourceFileExtensions() {
+            return EXTENSIONS;
         }
 
         @Override
