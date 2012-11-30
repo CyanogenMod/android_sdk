@@ -14,7 +14,7 @@
                 <d:screen-ratio>long</d:screen-ratio>
                 <d:dimensions>
                     <d:x-dimension>480</d:x-dimension>
-                    <d:y-dimension>720</d:y-dimension>
+                    <d:y-dimension>800</d:y-dimension>
                 </d:dimensions>
                 <d:xdpi>254</d:xdpi>
                 <d:ydpi>254</d:ydpi>
