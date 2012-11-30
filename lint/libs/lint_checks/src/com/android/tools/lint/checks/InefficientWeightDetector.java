@@ -23,11 +23,15 @@ import static com.android.SdkConstants.ATTR_LAYOUT_WEIGHT;
 import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
+import static com.android.SdkConstants.RADIO_GROUP;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 import static com.android.SdkConstants.VIEW;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -170,9 +174,16 @@ public class InefficientWeightDetector extends LayoutDetector {
                 && !element.hasAttributeNS(ANDROID_URI, ATTR_BASELINE_ALIGNED)) {
             // See if all the children are layouts
             boolean allChildrenAreLayouts = children.size() > 0;
+            SdkInfo sdkInfo = context.getClient().getSdkInfo(context.getProject());
             for (Element child : children) {
-                // TODO: Make better check
-                if (!child.getTagName().endsWith("Layout")) { //$NON-NLS-1$
+                String tagName = child.getTagName();
+                if (!(sdkInfo.isLayout(tagName)
+                        // RadioGroup is a layout, but one which possibly should be base aligned
+                        && !tagName.equals(RADIO_GROUP)
+                        // Consider <fragment> tags as layouts for the purposes of this check
+                        || VIEW_FRAGMENT.equals(tagName)
+                        // Ditto for <include> tags
+                        || VIEW_INCLUDE.equals(tagName))) {
                     allChildrenAreLayouts = false;
                 }
             }

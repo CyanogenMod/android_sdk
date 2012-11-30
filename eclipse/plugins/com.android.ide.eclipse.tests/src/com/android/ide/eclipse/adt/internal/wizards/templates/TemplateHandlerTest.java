@@ -180,11 +180,11 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
     }
 
     public void testNewFullscreen() throws Exception {
-        checkCreateTemplate("activities", "Fullscreen");
+        checkCreateTemplate("activities", "FullscreenActivity");
     }
 
     public void testFullscreenInProject() throws Exception {
-        checkCreateActivityInProject("Fullscreen");
+        checkCreateActivityInProject("FullscreenActivity");
     }
 
     public void testNewLoginActivity() throws Exception {

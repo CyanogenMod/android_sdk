@@ -4,14 +4,13 @@
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
-    android:baselineAligned="false"
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
     android:showDividers="middle"
-    tools:context=".${CollectionName}Activity">
+    tools:context=".ItemListActivity" >
 
     <!--
-    This layout is a two-pane layout for the ${objectKindPlural}
+    This layout is a two-pane layout for the Items
     master/detail flow. See res/values-large/refs.xml and
     res/values-sw600dp/refs.xml for an example of layout aliases
     that replace the single-pane version of the layout with
@@ -22,15 +21,15 @@
     -->
 
     <fragment
-        android:id="@+id/${collection_name}"
-        android:name="${packageName}.${CollectionName}Fragment"
+        android:id="@+id/item_list"
+        android:name="com.example.master.ItemListFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         tools:layout="@android:layout/list_content" />
 
     <FrameLayout
-        android:id="@+id/${detail_name}_container"
+        android:id="@+id/item_detail_container"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="3" />
