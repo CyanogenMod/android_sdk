@@ -277,7 +277,10 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
                 }
             }
         } else if (tag.equals(VIEW_FRAGMENT)) {
-            Attr classNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+            Attr classNode = element.getAttributeNode(ATTR_CLASS);
+            if (classNode == null) {
+                classNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+            }
             if (classNode != null && classNode.getValue().equals(mOldFqcn)) {
                 int start = RefactoringUtil.getAttributeValueRangeStart(classNode, document);
                 if (start != -1) {

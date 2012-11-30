@@ -153,10 +153,16 @@ public class UiViewElementNode extends UiElementNode {
                     if (className != null && className.length() > 0) {
                         int index = className.lastIndexOf('.');
                         if (index != -1) {
-                            className = className.substring(index + 1);
+                            className = "customView"; //$NON-NLS-1$
                         }
                         img = icons.getIcon(className);
                     }
+                }
+
+                if (img == null) {
+                    // Can't have both view.png and View.png; issues on case sensitive vs
+                    // case insensitive file systems
+                    img = icons.getIcon("View"); //$NON-NLS-1$
                 }
             }
             if (img == null) {

@@ -16,13 +16,3 @@ Code completion in manifest.xml for <uses-sdk android:minSdkVersion="^11" />:
 3 : API 3: Android 1.5 (Cupcake)
 2 : API 2: Android 1.1
 1 : API 1: Android 1.0
-@string/
-@android:
-@+id/
-@anim/
-@animator/
-@color/
-@drawable/
-@id/
-@layout/
-@style/

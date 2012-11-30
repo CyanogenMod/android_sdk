@@ -82,6 +82,10 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents an XML attribute for a class, that can be modified using a simple text field or
@@ -686,7 +690,46 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
 
     @Override
     public String[] getPossibleValues(String prefix) {
-        // TODO: compute a list of existing classes for content assist completion
+        // Compute a list of existing classes for content assist completion
+        IProject project = getProject();
+        if (project == null || mReferenceClass == null) {
+            return null;
+        }
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+            IType type = javaProject.findType(mReferenceClass);
+            // Use sets because query sometimes repeats the same class
+            Set<String> libraryTypes = new HashSet<String>(80);
+            Set<String> localTypes = new HashSet<String>(30);
+            if (type != null) {
+                ITypeHierarchy hierarchy = type.newTypeHierarchy(new NullProgressMonitor());
+                IType[] allSubtypes = hierarchy.getAllSubtypes(type);
+                for (IType subType : allSubtypes) {
+                    int flags = subType.getFlags();
+                    if (Flags.isPublic(flags) && !Flags.isAbstract(flags)) {
+                        String fqcn = subType.getFullyQualifiedName();
+                        if (subType.getResource() != null) {
+                            localTypes.add(fqcn);
+                        } else {
+                            libraryTypes.add(fqcn);
+                        }
+                    }
+                }
+            }
+
+            List<String> local = new ArrayList<String>(localTypes);
+            List<String> library = new ArrayList<String>(libraryTypes);
+            Collections.sort(local);
+            Collections.sort(library);
+            List<String> combined = new ArrayList<String>(local.size() + library.size());
+            combined.addAll(local);
+            combined.addAll(library);
+            return combined.toArray(new String[combined.size()]);
+        } catch (Exception e) {
+            AdtPlugin.log(e, null);
+        }
+
         return null;
     }
 }

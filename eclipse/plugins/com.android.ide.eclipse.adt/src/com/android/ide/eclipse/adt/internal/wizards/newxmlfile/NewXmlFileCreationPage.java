@@ -304,6 +304,7 @@ class NewXmlFileCreationPage extends WizardPage {
                     if (SCROLL_VIEW.equals(root) || HORIZONTAL_SCROLL_VIEW.equals(root)) {
                         return "    <LinearLayout "         //$NON-NLS-1$
                             + getDefaultAttrs(project, root).replace('\n', ' ')
+                            + " android:orientation=\"vertical\"" //$NON-NLS-1$
                             + "></LinearLayout>\n";         //$NON-NLS-1$
                     }
                     return null;

@@ -206,6 +206,15 @@ public interface IClientRulesEngine {
     String displayFragmentSourceInput();
 
     /**
+     * Displays an input dialog tailored for inputing the source of a {@code <view>}
+     * layout tag.
+     *
+     * @return the fully qualified class name of the custom view class, or null if canceled
+     */
+    @Nullable
+    String displayCustomViewClassInput();
+
+    /**
      * Select the given nodes
      *
      * @param nodes the nodes to be selected, never null

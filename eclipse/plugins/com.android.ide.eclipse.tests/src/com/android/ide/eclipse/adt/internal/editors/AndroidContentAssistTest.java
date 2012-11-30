@@ -501,6 +501,28 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("navigation1.xml", "?android:a^ttr/alertDialogStyle");
     }
 
+    public void testComplation77() throws Exception {
+        // Test <fragment class="^" completion
+        checkLayoutCompletion("fragmentlayout.xml", "android:name=\"^com");
+    }
+
+    public void testComplation78() throws Exception {
+        // Test <fragment android:name="^" completion
+        checkLayoutCompletion("fragmentlayout.xml", "class=\"^com");
+    }
+
+    public void testComplation79() throws Exception {
+        // Test tools context completion
+        checkLayoutCompletion("completion11.xml", "tools:context=\"^.MainActivity\"");
+    }
+
+    public void testComplation80() throws Exception {
+        // Test manifest class completion
+        checkManifestCompletion("manifest.xml", "<activity android:name=\"^.");
+    }
+
+    // TODO: Test <view completion!
+
     // ---- Test *applying* code completion ----
 
     // The following tests check -applying- a specific code completion
@@ -796,6 +818,12 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 "?android:attr/Textapp^", "?android:attr/textAppearanceLargeInverse");
     }
 
+    public void testApplyCompletion47() throws Exception {
+        // Test applying <fragment android:name="^" completion
+        checkApplyLayoutCompletion("fragmentlayout.xml", "class=\"^com",
+                "android.app.ListFragment");
+    }
+
     // --- Code Completion test infrastructure ----
 
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
@@ -944,11 +972,16 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         sb.append("Code completion in " + basename + " for " + caretLocation + ":\n");
         for (ICompletionProposal proposal : proposals) {
             // TODO: assertNotNull(proposal.getImage());
+            int length = sb.length();
             sb.append(proposal.getDisplayString().trim());
             String help = proposal.getAdditionalProposalInfo();
             if (help != null && help.trim().length() > 0) {
                 sb.append(" : ");
                 sb.append(help.replace('\n', ' ').trim());
+                if (sb.length() > length + 300) {
+                    sb.setLength(length + 300 - "...".length());
+                    sb.append("...");
+                }
             }
             sb.append('\n');
         }

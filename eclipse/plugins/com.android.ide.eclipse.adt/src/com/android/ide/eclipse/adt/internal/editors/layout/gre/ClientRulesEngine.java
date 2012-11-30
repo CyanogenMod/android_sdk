@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.URI_PREFIX;
 
@@ -512,7 +513,8 @@ class ClientRulesEngine implements IClientRulesEngine {
                                     int modifiers = typeInfoRequestor.getModifiers();
                                     if (!Flags.isPublic(modifiers)
                                             || Flags.isInterface(modifiers)
-                                            || Flags.isEnum(modifiers)) {
+                                            || Flags.isEnum(modifiers)
+                                            || Flags.isAbstract(modifiers)) {
                                         return false;
                                     }
                                     return true;
@@ -524,6 +526,98 @@ class ClientRulesEngine implements IClientRulesEngine {
 
             dialog.setTitle("Choose Fragment Class");
             dialog.setMessage("Select a Fragment class (? = any character, * = any string):");
+            if (dialog.open() == IDialogConstants.CANCEL_ID) {
+                return null;
+            }
+            if (returnValue.get() != null) {
+                return returnValue.get();
+            }
+
+            Object[] types = dialog.getResult();
+            if (types != null && types.length > 0) {
+                return ((IType) types[0]).getFullyQualifiedName();
+            }
+        } catch (JavaModelException e) {
+            AdtPlugin.log(e, null);
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
+        return null;
+    }
+
+    @Override
+    public String displayCustomViewClassInput() {
+        try {
+            IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
+            IProject project = mRulesEngine.getProject();
+            final IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+            if (javaProject != null) {
+                // Look up sub-types of each (new fragment class and compatibility fragment
+                // class, if any) and merge the two arrays - then create a scope from these
+                // elements.
+                IType[] viewTypes = new IType[0];
+                IType fragmentType = javaProject.findType(CLASS_VIEW);
+                if (fragmentType != null) {
+                    ITypeHierarchy hierarchy =
+                        fragmentType.newTypeHierarchy(new NullProgressMonitor());
+                    viewTypes = hierarchy.getAllSubtypes(fragmentType);
+                }
+                scope = SearchEngine.createJavaSearchScope(viewTypes, IJavaSearchScope.SOURCES);
+            }
+
+            Shell parent = AdtPlugin.getShell();
+            final AtomicReference<String> returnValue =
+                new AtomicReference<String>();
+            final AtomicReference<SelectionDialog> dialogHolder =
+                new AtomicReference<SelectionDialog>();
+            final SelectionDialog dialog = JavaUI.createTypeDialog(
+                    parent,
+                    new ProgressMonitorDialog(parent),
+                    scope,
+                    IJavaElementSearchConstants.CONSIDER_CLASSES, false,
+                    // Use ? as a default filter to fill dialog with matches
+                    "?", //$NON-NLS-1$
+                    new TypeSelectionExtension() {
+                        @Override
+                        public Control createContentArea(Composite parentComposite) {
+                            Composite composite = new Composite(parentComposite, SWT.NONE);
+                            composite.setLayout(new GridLayout(1, false));
+                            Button button = new Button(composite, SWT.PUSH);
+                            button.setText("Create New...");
+                            button.addSelectionListener(new SelectionAdapter() {
+                                @Override
+                                public void widgetSelected(SelectionEvent e) {
+                                    String fqcn = createNewCustomViewClass(javaProject);
+                                    if (fqcn != null) {
+                                        returnValue.set(fqcn);
+                                        dialogHolder.get().close();
+                                    }
+                                }
+                            });
+                            return composite;
+                        }
+
+                        @Override
+                        public ITypeInfoFilterExtension getFilterExtension() {
+                            return new ITypeInfoFilterExtension() {
+                                @Override
+                                public boolean select(ITypeInfoRequestor typeInfoRequestor) {
+                                    int modifiers = typeInfoRequestor.getModifiers();
+                                    if (!Flags.isPublic(modifiers)
+                                            || Flags.isInterface(modifiers)
+                                            || Flags.isEnum(modifiers)
+                                            || Flags.isAbstract(modifiers)) {
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            };
+                        }
+                    });
+            dialogHolder.set(dialog);
+
+            dialog.setTitle("Choose Custom View Class");
+            dialog.setMessage("Select a Custom View class (? = any character, * = any string):");
             if (dialog.open() == IDialogConstants.CANCEL_ID) {
                 return null;
             }
@@ -583,17 +677,47 @@ class ClientRulesEngine implements IClientRulesEngine {
         return (int) (pixels / mRulesEngine.getEditor().getCanvasControl().getScale());
     }
 
-    String createNewFragmentClass(IJavaProject javaProject) {
+    private String createNewFragmentClass(IJavaProject javaProject) {
         NewClassWizardPage page = new NewClassWizardPage();
 
         IProject project = mRulesEngine.getProject();
-        IAndroidTarget target = Sdk.getCurrent().getTarget(project);
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk == null) {
+            return null;
+        }
+        IAndroidTarget target = sdk.getTarget(project);
         String superClass;
-        if (target.getVersion().getApiLevel() < 11) {
+        if (target == null || target.getVersion().getApiLevel() < 11) {
             superClass = CLASS_V4_FRAGMENT;
         } else {
             superClass = CLASS_FRAGMENT;
         }
+        page.setSuperClass(superClass, true /* canBeModified */);
+        IPackageFragmentRoot root = ManifestInfo.getSourcePackageRoot(javaProject);
+        if (root != null) {
+            page.setPackageFragmentRoot(root, true /* canBeModified */);
+        }
+        ManifestInfo manifestInfo = ManifestInfo.get(project);
+        IPackageFragment pkg = manifestInfo.getPackageFragment();
+        if (pkg != null) {
+            page.setPackageFragment(pkg, true /* canBeModified */);
+        }
+        OpenNewClassWizardAction action = new OpenNewClassWizardAction();
+        action.setConfiguredWizardPage(page);
+        action.run();
+        IType createdType = page.getCreatedType();
+        if (createdType != null) {
+            return createdType.getFullyQualifiedName();
+        } else {
+            return null;
+        }
+    }
+
+    private String createNewCustomViewClass(IJavaProject javaProject) {
+        NewClassWizardPage page = new NewClassWizardPage();
+
+        IProject project = mRulesEngine.getProject();
+        String superClass = CLASS_VIEW;
         page.setSuperClass(superClass, true /* canBeModified */);
         IPackageFragmentRoot root = ManifestInfo.getSourcePackageRoot(javaProject);
         if (root != null) {

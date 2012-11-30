@@ -24,7 +24,9 @@ import static com.android.xml.AndroidManifest.ATTRIBUTE_PARENT_ACTIVITY_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_ACTIVITY;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.xml.AndroidManifest;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -174,24 +176,47 @@ public class RefactoringUtil {
      * Returns whether the given manifest attribute should be considered to describe
      * a class name. These will be eligible for refactoring when classes are renamed
      * or moved.
-     * <p>
-     * TODO: Move to {@link RefactoringUtil}
      *
      * @param attribute the manifest attribute
      * @return true if this attribute can describe a class
      */
     public static boolean isManifestClassAttribute(@NonNull Attr attribute) {
-        String name = attribute.getLocalName();
+        return isManifestClassAttribute(
+                attribute.getOwnerElement().getTagName(),
+                attribute.getNamespaceURI(),
+                attribute.getLocalName());
+    }
+
+    /**
+     * Returns whether the given manifest attribute should be considered to describe
+     * a class name. These will be eligible for refactoring when classes are renamed
+     * or moved.
+     *
+     * @param tag the tag, if known
+     * @param uri the attribute namespace, if any
+     * @param name the attribute local name, if any
+     * @return true if this attribute can describe a class
+     */
+    public static boolean isManifestClassAttribute(
+            @Nullable String tag,
+            @Nullable String uri,
+            @Nullable String name) {
         if (name == null) {
             return false;
         }
 
-        if (name.equals(ATTR_NAME)
+        if ((name.equals(ATTR_NAME)
+                && (AndroidManifest.NODE_ACTIVITY.equals(tag)
+                        || AndroidManifest.NODE_APPLICATION.equals(tag)
+                        || AndroidManifest.NODE_INSTRUMENTATION.equals(tag)
+                        || AndroidManifest.NODE_PROVIDER.equals(tag)
+                        || AndroidManifest.NODE_SERVICE.equals(tag)
+                        || AndroidManifest.NODE_RECEIVER.equals(tag)))
                 || name.equals(ATTRIBUTE_TARGET_ACTIVITY)
                 || name.equals(ATTRIBUTE_MANAGE_SPACE_ACTIVITY)
                 || name.equals(ATTRIBUTE_BACKUP_AGENT)
                 || name.equals(ATTRIBUTE_PARENT_ACTIVITY_NAME)) {
-            return ANDROID_URI.equals(attribute.getNamespaceURI());
+            return ANDROID_URI.equals(uri);
         }
 
         return false;

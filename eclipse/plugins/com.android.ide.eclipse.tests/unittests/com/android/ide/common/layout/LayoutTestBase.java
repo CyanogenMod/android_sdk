@@ -359,6 +359,13 @@ public class LayoutTestBase extends TestCase {
             fail("Not supported in tests yet");
             return false;
         }
+
+        @Override
+        @Nullable
+        public String displayCustomViewClassInput() {
+            fail("Not supported in tests yet");
+            return null;
+        }
     }
 
     public void testDummy() {

@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 import static com.android.SdkConstants.ANDROID_VIEW_PKG;
 import static com.android.SdkConstants.ANDROID_WEBKIT_PKG;
 import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.SdkConstants.VIEW;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -188,6 +190,10 @@ public class ViewElementDescriptor extends ElementDescriptor {
             // "android.gesture.GestureOverlayView" in their XML, we need to look up
             // only by basename
             name = name.substring(name.lastIndexOf('.') + 1);
+        } else if (VIEW_TAG.equals(name)) {
+            // Can't have both view.png and View.png; issues on case sensitive vs
+            // case insensitive file systems
+            name = VIEW;
         }
 
         Image icon = factory.getIcon(name);

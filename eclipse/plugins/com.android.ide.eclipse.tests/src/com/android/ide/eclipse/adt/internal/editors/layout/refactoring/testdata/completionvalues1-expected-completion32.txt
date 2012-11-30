@@ -34,7 +34,7 @@ android:childIndicator : Indicator shown beside the child View.  [reference]
 android:childIndicatorLeft : The left bound for a child's indicator.  [dimension]
 android:childIndicatorRight : The right bound for a child's indicator.  [dimension]
 android:choiceMode : Defines the choice behavior for the view.  [enum]
-class : Supply the name of the fragment class to instantiate
+class : Supply the name of the view class to instantiate
 android:clickColor : Color of the outline of click feedback.  [color]
 android:clickable : Defines whether this view reacts to click events.  [boolean]
 android:clipChildren : Defines whether a child is limited to draw inside of its bounds  or not.  [boolean]
@@ -244,7 +244,7 @@ android:showDividers : Setting for which dividers to show.  [flag]
 android:showWeekNumber : Whether do show week numbers.  [boolean]
 android:shownWeekCount : The number of weeks to be shown.  [integer]
 android:shrinkColumns : The zero-based index of the columns to shrink.  [string]
-android:singleLine : Constrains the text to a single horizontally scrolling line instead  of letting it wrap onto multiple lines, and advances focus instead  of inserting a newline when you press the enter key. * Deprecated: This attribute is deprecated. Use "maxLines" instead  to change the layout of a static text, and use the "textMultiLine"  flag in the inputType attribute instead for editable text views  (if both singleLine and inputType are supplied, the inputType  flags will override the value of singleLine).  [boolean]
+android:singleLine : Constrains the text to a single horizontally scrolling line instead  of letting it wrap onto multiple lines, and advances focus instead  of inserting a newline when you press the enter key. * Deprecated: This attribute is deprecated. Use "maxLines" instead  to change the layo...
 android:smoothScrollbar : When set to true, the list will use a more refined calculation  method based on the pixels height of the items visible on screen.  [boolean]
 android:soundEffectsEnabled : Boolean that controls whether a view should have sound effects  enabled for events such as clicking and touching.  [boolean]
 android:spacing : [dimension]

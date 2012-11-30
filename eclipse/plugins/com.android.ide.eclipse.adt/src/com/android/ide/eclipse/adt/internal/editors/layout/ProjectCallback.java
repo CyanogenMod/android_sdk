@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
 import static com.android.SdkConstants.CALENDAR_VIEW;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.SdkConstants.FQCN_GRID_VIEW;
 import static com.android.SdkConstants.FQCN_SPINNER;
@@ -141,6 +142,11 @@ public final class ProjectCallback extends LegacyCallback {
             Object[] constructorParameters)
             throws ClassNotFoundException, Exception {
         mUsed = true;
+
+        if (className == null) {
+            // Just make a plain <View> if you specify <view> without a class= attribute.
+            className = CLASS_VIEW;
+        }
 
         // look for a cached version
         Class<?> clazz = mLoadedClasses.get(className);

@@ -393,7 +393,10 @@ public class AndroidPackageRenameParticipant extends RenameParticipant {
             if (tag.equals(VIEW_TAG)) {
                 classNode = element.getAttributeNode(ATTR_CLASS);
             } else if (tag.equals(VIEW_FRAGMENT)) {
-                classNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                classNode = element.getAttributeNode(ATTR_CLASS);
+                if (classNode == null) {
+                    classNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                }
             } else if (element.hasAttributeNS(TOOLS_URI, ATTR_CONTEXT)) {
                 classNode = element.getAttributeNodeNS(TOOLS_URI, ATTR_CONTEXT);
                 if (classNode != null && classNode.getValue().startsWith(".")) { //$NON-NLS-1$
