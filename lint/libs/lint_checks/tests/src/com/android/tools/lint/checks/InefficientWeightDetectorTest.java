@@ -58,6 +58,15 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
             lintFiles("res/layout/baseline_weights.xml"));
     }
 
+    public void testWeights4() throws Exception {
+        assertEquals(
+            "res/layout/activity_item_two_pane.xml:1: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "^\n" +
+            "0 errors, 1 warnings\n",
+            lintFiles("res/layout/activity_item_two_pane.xml"));
+    }
+
     public void testNoVerticalWeights3() throws Exception {
         // Orientation=vertical
         assertEquals(

@@ -65,9 +65,12 @@ import static com.android.SdkConstants.WIDGET_PKG_PREFIX;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Default simple implementation of an {@link SdkInfo}
@@ -155,10 +158,23 @@ class DefaultSdkInfo extends SdkInfo {
         return type;
     }
 
-    private static final int CLASS_COUNT = 59;
+    @Override
+    public boolean isLayout(@NonNull String tag) {
+        // TODO: Read in widgets.txt from the platform install area to look up this information
+        // dynamically instead!
 
-    @NonNull
-    private static final Map<String, String> PARENTS = new HashMap<String, String>(CLASS_COUNT);
+        if (super.isLayout(tag)) {
+            return true;
+        }
+
+        return LAYOUTS.contains(tag);
+    }
+
+    private static final int CLASS_COUNT = 59;
+    private static final int LAYOUT_COUNT = 20;
+
+    private static final Map<String,String> PARENTS = Maps.newHashMapWithExpectedSize(CLASS_COUNT);
+    private static final Set<String> LAYOUTS =  Sets.newHashSetWithExpectedSize(CLASS_COUNT);
 
     static {
         PARENTS.put(COMPOUND_BUTTON, BUTTON);
@@ -203,8 +219,8 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(WEB_VIEW, ABSOLUTE_LAYOUT);
         PARENTS.put(AUTO_COMPLETE_TEXT_VIEW, EDIT_TEXT);
         PARENTS.put(MULTI_AUTO_COMPLETE_TEXT_VIEW, AUTO_COMPLETE_TEXT_VIEW);
+        PARENTS.put(CHECKED_TEXT_VIEW, TEXT_VIEW);
 
-        PARENTS.put("CheckedTextView", TEXT_VIEW);        //$NON-NLS-1$
         PARENTS.put("MediaController", FRAME_LAYOUT);     //$NON-NLS-1$
         PARENTS.put("SlidingDrawer", VIEW_GROUP);         //$NON-NLS-1$
         PARENTS.put("DialerFilter", RELATIVE_LAYOUT);     //$NON-NLS-1$
@@ -237,6 +253,28 @@ class DefaultSdkInfo extends SdkInfo {
             }
         }
         */
+
+        LAYOUTS.add(TAB_HOST);
+        LAYOUTS.add(HORIZONTAL_SCROLL_VIEW);
+        LAYOUTS.add(VIEW_SWITCHER);
+        LAYOUTS.add(TAB_WIDGET);
+        LAYOUTS.add(VIEW_ANIMATOR);
+        LAYOUTS.add(SCROLL_VIEW);
+        LAYOUTS.add(GRID_VIEW);
+        LAYOUTS.add(TABLE_ROW);
+        LAYOUTS.add(RADIO_GROUP);
+        LAYOUTS.add(LIST_VIEW);
+        LAYOUTS.add(EXPANDABLE_LIST_VIEW);
+        LAYOUTS.add("MediaController");        //$NON-NLS-1$
+        LAYOUTS.add("DialerFilter");           //$NON-NLS-1$
+        LAYOUTS.add("ViewFlipper");            //$NON-NLS-1$
+        LAYOUTS.add("SlidingDrawer");          //$NON-NLS-1$
+        LAYOUTS.add("StackView");              //$NON-NLS-1$
+        LAYOUTS.add("SearchView");             //$NON-NLS-1$
+        LAYOUTS.add("TextSwitcher");           //$NON-NLS-1$
+        LAYOUTS.add("AdapterViewFlipper");     //$NON-NLS-1$
+        LAYOUTS.add("ImageSwitcher");          //$NON-NLS-1$
+        assert LAYOUTS.size() <= LAYOUT_COUNT : LAYOUTS.size();
     }
 
     // Currently using a map; this should really be a list, but using a map until we actually

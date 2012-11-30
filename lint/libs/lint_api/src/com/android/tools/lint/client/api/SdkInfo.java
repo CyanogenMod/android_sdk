@@ -76,5 +76,15 @@ public abstract class SdkInfo {
     @Nullable
     public abstract String getParentViewName(@NonNull String name);
 
+    /**
+     * Returns true if the given widget name is a layout
+     *
+     * @param tag the XML tag for the view
+     * @return true if the given tag corresponds to a layout
+     */
+    public boolean isLayout(@NonNull String tag) {
+        return tag.endsWith("Layout"); //$NON-NLS-1$
+    }
+
     // TODO: Add access to resource resolution here.
 }
