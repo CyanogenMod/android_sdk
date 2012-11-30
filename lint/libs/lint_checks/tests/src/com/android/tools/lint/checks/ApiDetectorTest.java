@@ -124,15 +124,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi1() throws Exception {
         assertEquals(
-            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator [NewApi]\n" +
-            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
-            "                                             ~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar [NewApi]\n" +
             "  getActionBar(); // API 11\n" +
             "  ~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
-            "  DOMError error = null; // API 8\n" +
-            "  ~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
             "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
             "                 ~~~~~~~~~~~~~~~\n" +
@@ -145,22 +139,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
             "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
             "                         ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
+            //             Note: the above error range is wrong; should be pointing to the second
             "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 1): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 1): android.widget.GridLayout [NewApi]\n" +
-            " GridLayout getGridLayout() { // API 14\n" +
-            "            ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
-            " private ApplicationErrorReport getReport() {\n" +
-            "                                ~~~~~~~~~\n" +
-            "12 errors, 0 warnings\n",
+            "7 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -172,15 +158,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi2() throws Exception {
         assertEquals(
-            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMLocator [NewApi]\n" +
-            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
-            "                                             ~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 2): android.app.Activity#getActionBar [NewApi]\n" +
             "  getActionBar(); // API 11\n" +
             "  ~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMError [NewApi]\n" +
-            "  DOMError error = null; // API 8\n" +
-            "  ~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 2): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
             "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
             "                 ~~~~~~~~~~~~~~~\n" +
@@ -193,22 +173,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 2): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
             "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
             "                         ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 2): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 2): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 2): android.widget.GridLayout [NewApi]\n" +
-            " GridLayout getGridLayout() { // API 14\n" +
-            "            ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 2): android.app.ApplicationErrorReport [NewApi]\n" +
-            " private ApplicationErrorReport getReport() {\n" +
-            "                                ~~~~~~~~~\n" +
-            "12 errors, 0 warnings\n",
+            "7 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -220,15 +191,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testApi4() throws Exception {
         assertEquals(
-            "src/foo/bar/ApiCallTest.java:18: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMLocator [NewApi]\n" +
-            " public void method(Chronometer chronometer, DOMLocator locator) {\n" +
-            "                                             ~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:20: Error: Call requires API level 11 (current min is 4): android.app.Activity#getActionBar [NewApi]\n" +
             "  getActionBar(); // API 11\n" +
             "  ~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:23: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMError [NewApi]\n" +
-            "  DOMError error = null; // API 8\n" +
-            "  ~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:24: Error: Class requires API level 8 (current min is 4): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
             "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
             "                 ~~~~~~~~~~~~~~~\n" +
@@ -238,22 +203,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 4): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
             "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
             "                         ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 4): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 4): android.widget.GridLayout [NewApi]\n" +
-            " GridLayout getGridLayout() { // API 14\n" +
-            "            ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 4): android.app.ApplicationErrorReport [NewApi]\n" +
-            " private ApplicationErrorReport getReport() {\n" +
-            "                                ~~~~~~~~~\n" +
-            "11 errors, 0 warnings\n",
+            "6 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -274,22 +230,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/ApiCallTest.java:33: Error: Field requires API level 11 (current min is 10): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
             "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
             "                         ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:38: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:38: Error: Field requires API level 14 (current min is 10): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
             "src/foo/bar/ApiCallTest.java:41: Error: Field requires API level 11 (current min is 10): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "  Mode mode = PorterDuff.Mode.OVERLAY; // API 11\n" +
             "                              ~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:45: Error: Class requires API level 14 (current min is 10): android.widget.GridLayout [NewApi]\n" +
-            " GridLayout getGridLayout() { // API 14\n" +
-            "            ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/ApiCallTest.java:49: Error: Class requires API level 14 (current min is 10): android.app.ApplicationErrorReport [NewApi]\n" +
-            " private ApplicationErrorReport getReport() {\n" +
-            "                                ~~~~~~~~~\n" +
-            "8 errors, 0 warnings\n",
+            "5 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -404,15 +351,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // These errors are correctly -not- suppressed because they
             // appear in method3 (line 74-98) which is annotated with a
             // @SuppressLint annotation specifying only an unrelated issue id
-            "src/foo/bar/SuppressTest1.java:74: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMLocator [NewApi]\n" +
-            " public void method3(Chronometer chronometer, DOMLocator locator) {\n" +
-            "                                              ~~~~~~~~~~\n" +
+
             "src/foo/bar/SuppressTest1.java:76: Error: Call requires API level 11 (current min is 1): android.app.Activity#getActionBar [NewApi]\n" +
             "  getActionBar(); // API 11\n" +
             "  ~~~~~~~~~~~~\n" +
-            "src/foo/bar/SuppressTest1.java:79: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
-            "  DOMError error = null; // API 8\n" +
-            "  ~~~~~~~~\n" +
             "src/foo/bar/SuppressTest1.java:80: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n" +
             "  Class<?> clz = DOMErrorHandler.class; // API 8\n" +
             "                 ~~~~~~~~~~~~~~~\n" +
@@ -425,9 +367,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/foo/bar/SuppressTest1.java:89: Error: Field requires API level 11 (current min is 1): dalvik.bytecode.OpcodeInfo#MAXIMUM_VALUE [NewApi]\n" +
             "  int field = OpcodeInfo.MAXIMUM_VALUE; // API 11\n" +
             "                         ~~~~~~~~~~~~~\n" +
-            "src/foo/bar/SuppressTest1.java:94: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest1.java:94: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = getReport().batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
@@ -439,16 +378,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
             // no effect (because they don't end up in the bytecode)
 
 
-            "src/foo/bar/SuppressTest4.java:16: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport [NewApi]\n" +
-            "  ApplicationErrorReport report = null;\n" +
-            "  ~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/foo/bar/SuppressTest4.java:19: Error: Class requires API level 14 (current min is 1): android.app.ApplicationErrorReport.BatteryInfo [NewApi]\n" +
-            "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
-            "  ~~~~~~~~~~~\n" +
             "src/foo/bar/SuppressTest4.java:19: Error: Field requires API level 14 (current min is 1): android.app.ApplicationErrorReport#batteryInfo [NewApi]\n" +
             "  BatteryInfo batteryInfo = report.batteryInfo;\n" +
             "              ~~~~~~~~~~~\n" +
-            "13 errors, 0 warnings\n",
+            "8 errors, 0 warnings\n",
 
             lintProject(
                 "apicheck/classpath=>.classpath",
@@ -578,13 +511,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
             "src/test/pkg/TestEnum.java:37: Error: Enum value requires API level 11 (current min is 4): android.graphics.PorterDuff.Mode#OVERLAY [NewApi]\n" +
             "            case OVERLAY: {\n" +
             "                 ~~~~~~~\n" +
-            "src/test/pkg/TestEnum.java:58: Error: Class requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
-            "    public static void test4(final android.renderscript.Element.DataType type) {\n" +
-            "                                                                ~~~~~~~~\n" +
             "src/test/pkg/TestEnum.java:61: Error: Enum for switch requires API level 11 (current min is 4): android.renderscript.Element.DataType [NewApi]\n" +
             "        switch (type) {\n" +
             "        ^\n" +
-            "4 errors, 0 warnings\n",
+            "3 errors, 0 warnings\n",
 
             lintProject(
                     "apicheck/classpath=>.classpath",
@@ -623,10 +553,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testInnerClassPositions() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=38113
         assertEquals(
-            "src/test/pkg/ApiCallTest8.java:8: Error: Class requires API level 8 (current min is 4): android.text.style.LeadingMarginSpan.LeadingMarginSpan2 [NewApi]\n" +
-            "        LeadingMarginSpan.LeadingMarginSpan2 span = null;        \n" +
-            "                          ~~~~~~~~~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n",
+            "No warnings.",
 
             lintProject(
                     "apicheck/classpath=>.classpath",
