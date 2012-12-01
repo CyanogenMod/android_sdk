@@ -72,6 +72,7 @@ public class Project {
     private String mPackage;
     private int mMinSdk = 1;
     private int mTargetSdk = -1;
+    private int mBuildSdk = -1;
     private boolean mLibrary;
     private String mName;
     private String mProguardPath;
@@ -131,6 +132,22 @@ public class Project {
                     mProguardPath = properties.getProperty(PROGUARD_CONFIG);
                     mMergeManifests = VALUE_TRUE.equals(properties.getProperty(
                             "manifestmerger.enabled")); //$NON-NLS-1$
+                    String target = properties.getProperty("target"); //$NON-NLS-1$
+                    if (target != null) {
+                        int index = target.lastIndexOf('-');
+                        if (index == -1) {
+                            index = target.lastIndexOf(':');
+                        }
+                        if (index != -1) {
+                            String versionString = target.substring(index + 1);
+                            try {
+                                mBuildSdk = Integer.parseInt(versionString);
+                            } catch (NumberFormatException nufe) {
+                                mClient.log(Severity.WARNING, null,
+                                        "Unexpected build target format: %1$s", target);
+                            }
+                        }
+                    }
 
                     for (int i = 1; i < 1000; i++) {
                         String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
@@ -465,6 +482,15 @@ public class Project {
         // Assertion disabled because you might be running lint on a standalone library project.
 
         return mTargetSdk;
+    }
+
+    /**
+     * Returns the target API used to build the project, or -1 if not known
+     *
+     * @return the build target API or -1 if unknown
+     */
+    public int getBuildSdk() {
+        return mBuildSdk;
     }
 
     /**

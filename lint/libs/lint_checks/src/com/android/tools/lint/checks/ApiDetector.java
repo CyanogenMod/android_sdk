@@ -114,6 +114,32 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             .addAnalysisScope(Scope.RESOURCE_FILE_SCOPE)
             .addAnalysisScope(Scope.CLASS_FILE_SCOPE);
 
+    /** Accessing an unsupported API */
+    public static final Issue OVERRIDE = Issue.create("Override", //$NON-NLS-1$
+            "Finds method declarations that will accidentally override methods in later versions",
+
+            "Suppose you are building against Android API 8, and you've subclassed Activity. " +
+            "In your subclass you add a new method called `isDestroyed`(). At some later point, " +
+            "a method of the same name and signature is added to Android. Your method will " +
+            "now override the Android method, and possibly break its contract. Your method " +
+            "is not calling `super.isDestroyed()`, since your compilation target doesn't " +
+            "know about the method.\n" +
+            "\n" +
+            "The above scenario is what this lint detector looks for. The above example is " +
+            "real, since `isDestroyed()` was added in API 17, but it will be true for *any* " +
+            "method you have added to a subclass of an Android class where your build target " +
+            "is lower than the version the method was introduced in.\n" +
+            "\n" +
+            "To fix this, either rename your method, or if you are really trying to augment " +
+            "the builtin method if available, switch to a higher build target where you can " +
+            "deliberately add `@Override` on your overriding method, and call `super` if " +
+            "appropriate etc.\n",
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            ApiDetector.class,
+            Scope.CLASS_FILE_SCOPE);
+
     private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
     private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";  //$NON-NLS-1$
     private static final String ORDINAL_METHOD = "ordinal"; //$NON-NLS-1$
@@ -310,6 +336,33 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         }
 
         List methodList = classNode.methods;
+        if (methodList.isEmpty()) {
+            return;
+        }
+
+        boolean checkCalls = context.isEnabled(UNSUPPORTED);
+        boolean checkMethods = context.isEnabled(OVERRIDE)
+                && context.getMainProject().getBuildSdk() >= 1;
+        String frameworkParent = null;
+        if (checkMethods) {
+            LintDriver driver = context.getDriver();
+            String owner = classNode.superName;
+            while (owner != null) {
+                // For virtual dispatch, walk up the inheritance chain checking
+                // each inherited method
+                if (owner.startsWith("android/")           //$NON-NLS-1$
+                        || owner.startsWith("java/")       //$NON-NLS-1$
+                        || owner.startsWith("javax/")) {   //$NON-NLS-1$
+                    frameworkParent = owner;
+                    break;
+                }
+                owner = driver.getSuperClass(owner);
+            }
+            if (frameworkParent == null) {
+                checkMethods = false;
+            }
+        }
+
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
 
@@ -319,6 +372,35 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             }
 
             InsnList nodes = method.instructions;
+
+            if (checkMethods && Character.isJavaIdentifierStart(method.name.charAt(0))) {
+                int buildSdk = context.getMainProject().getBuildSdk();
+                String name = method.name;
+                assert frameworkParent != null;
+                int api = mApiDatabase.getCallVersion(frameworkParent, name, method.desc);
+                if (api > buildSdk && buildSdk != -1) {
+                    // TODO: Don't complain if it's annotated with @Override; that means
+                    // somehow the build target isn't correct.
+                    String fqcn;
+                    String owner = classNode.name;
+                    if (CONSTRUCTOR_NAME.equals(name)) {
+                        fqcn = "new " + ClassContext.getFqcn(owner); //$NON-NLS-1$
+                    } else {
+                        fqcn = ClassContext.getFqcn(owner) + '#' + name;
+                    }
+                    String message = String.format(
+                            "This method is not overriding anything with the current build " +
+                            "target, but will in API level %1$d (current target is %2$d): %3$s",
+                            api, buildSdk, fqcn);
+
+                    Location location = context.getLocation(method, classNode);
+                    context.report(OVERRIDE, method, null, location, message, null);
+                }
+            }
+
+            if (!checkCalls) {
+                continue;
+            }
 
             if (CHECK_DECLARATIONS) {
                 // Check types in parameter list and types of local variables
