@@ -74,6 +74,16 @@ import java.util.List;
  * by this application (according to its minimum API requirement in the manifest).
  */
 public class ApiDetector extends ResourceXmlDetector implements Detector.ClassScanner {
+    /**
+     * Whether we flag variable, field, parameter and return type declarations of a type
+     * not yet available. It appears Dalvik is very forgiving and doesn't try to preload
+     * classes until actually needed, so there is no need to flag these, and in fact,
+     * patterns used for supporting new and old versions sometimes declares these methods
+     * and only conditionally end up actually accessing methods and fields, so only check
+     * method and field accesses.
+     */
+    private static final boolean CHECK_DECLARATIONS = false;
+
     private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
 
     /** Accessing an unsupported API */
@@ -177,6 +187,13 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
             int minSdk = getMinSdk(context);
             if (api > minSdk && api > context.getFolderVersion()
                     && api > getLocalMinSdk(attribute.getOwnerElement())) {
+                // Don't complain about resource references in the tools namespace,
+                // such as for example "tools:layout="@android:layout/list_content",
+                // used only for designtime previews
+                if (TOOLS_URI.equals(attribute.getNamespaceURI())) {
+                    return;
+                }
+
                 Location location = context.getLocation(attribute);
                 String message = String.format(
                         "%1$s requires API level %2$d (current min is %3$d)",
@@ -303,47 +320,49 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
             InsnList nodes = method.instructions;
 
-            // Check types in parameter list and types of local variables
-            List localVariables = method.localVariables;
-            if (localVariables != null) {
-                for (Object v : localVariables) {
-                    LocalVariableNode var = (LocalVariableNode) v;
-                    String desc = var.desc;
-                    if (desc.charAt(0) == 'L') {
-                        // "Lpackage/Class;" => "package/Bar"
-                        String className = desc.substring(1, desc.length() - 1);
-                        int api = mApiDatabase.getClassVersion(className);
-                        if (api > minSdk) {
-                            String fqcn = ClassContext.getFqcn(className);
-                            String message = String.format(
-                                "Class requires API level %1$d (current min is %2$d): %3$s",
-                                api, minSdk, fqcn);
-                            report(context, message, var.start, method,
-                                    className.substring(className.lastIndexOf('/') + 1), null,
-                                    SearchHints.create(NEAREST).matchJavaSymbol());
+            if (CHECK_DECLARATIONS) {
+                // Check types in parameter list and types of local variables
+                List localVariables = method.localVariables;
+                if (localVariables != null) {
+                    for (Object v : localVariables) {
+                        LocalVariableNode var = (LocalVariableNode) v;
+                        String desc = var.desc;
+                        if (desc.charAt(0) == 'L') {
+                            // "Lpackage/Class;" => "package/Bar"
+                            String className = desc.substring(1, desc.length() - 1);
+                            int api = mApiDatabase.getClassVersion(className);
+                            if (api > minSdk) {
+                                String fqcn = ClassContext.getFqcn(className);
+                                String message = String.format(
+                                    "Class requires API level %1$d (current min is %2$d): %3$s",
+                                    api, minSdk, fqcn);
+                                report(context, message, var.start, method,
+                                        className.substring(className.lastIndexOf('/') + 1), null,
+                                        SearchHints.create(NEAREST).matchJavaSymbol());
+                            }
                         }
                     }
                 }
-            }
 
-            // Check return type
-            // The parameter types are already handled as local variables so we can skip
-            // right to the return type.
-            // Check types in parameter list
-            String signature = method.desc;
-            if (signature != null) {
-                int args = signature.indexOf(')');
-                if (args != -1 && signature.charAt(args + 1) == 'L') {
-                    String type = signature.substring(args + 2, signature.length() - 1);
-                    int api = mApiDatabase.getClassVersion(type);
-                    if (api > minSdk) {
-                        String fqcn = ClassContext.getFqcn(type);
-                        String message = String.format(
-                            "Class requires API level %1$d (current min is %2$d): %3$s",
-                            api, minSdk, fqcn);
-                        AbstractInsnNode first = nodes.size() > 0 ? nodes.get(0) : null;
-                        report(context, message, first, method, method.name, null,
-                                SearchHints.create(BACKWARD).matchJavaSymbol());
+                // Check return type
+                // The parameter types are already handled as local variables so we can skip
+                // right to the return type.
+                // Check types in parameter list
+                String signature = method.desc;
+                if (signature != null) {
+                    int args = signature.indexOf(')');
+                    if (args != -1 && signature.charAt(args + 1) == 'L') {
+                        String type = signature.substring(args + 2, signature.length() - 1);
+                        int api = mApiDatabase.getClassVersion(type);
+                        if (api > minSdk) {
+                            String fqcn = ClassContext.getFqcn(type);
+                            String message = String.format(
+                                "Class requires API level %1$d (current min is %2$d): %3$s",
+                                api, minSdk, fqcn);
+                            AbstractInsnNode first = nodes.size() > 0 ? nodes.get(0) : null;
+                            report(context, message, first, method, method.name, null,
+                                    SearchHints.create(BACKWARD).matchJavaSymbol());
+                        }
                     }
                 }
             }
