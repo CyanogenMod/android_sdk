@@ -104,7 +104,6 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.eclipse.adt.internal.preferences;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.properties;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.refactorings.changes;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.refactorings.core;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.refactorings.extractstring;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.refactorings.renamepackage;x-friends:="com.android.ide.eclipse.tests",

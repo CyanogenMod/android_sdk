@@ -56,7 +56,6 @@ import java.util.Map;
 /**
  * Design-time metadata lookup for layouts, such as fragment and AdapterView bindings.
  */
-@SuppressWarnings("restriction") // XML DOM model
 public class LayoutMetadata {
     /** The default layout to use for list items in expandable list views */
     public static final String DEFAULT_EXPANDABLE_LIST_ITEM = "simple_expandable_list_item_2"; //$NON-NLS-1$
@@ -75,6 +74,8 @@ public class LayoutMetadata {
     public static final String KEY_LV_FOOTER = "listfooter";    //$NON-NLS-1$
     /** The property key, included in comments, which references a fragment layout to show */
     public static final String KEY_FRAGMENT_LAYOUT = "layout";        //$NON-NLS-1$
+    // NOTE: If you add additional keys related to resources, make sure you update the
+    // ResourceRenameParticipant
 
     /** Utility class, do not create instances */
     private LayoutMetadata() {
@@ -191,9 +192,6 @@ public class LayoutMetadata {
                     return;
                 }
                 Display display = AdtPlugin.getDisplay();
-                if (display == null) {
-                    return;
-                }
                 WorkbenchJob job = new WorkbenchJob(display, "Update alternate views") {
                     @Override
                     public IStatus runInUIThread(IProgressMonitor monitor) {
