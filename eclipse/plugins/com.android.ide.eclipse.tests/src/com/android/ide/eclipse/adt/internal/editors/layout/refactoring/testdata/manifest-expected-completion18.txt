@@ -26,3 +26,4 @@ android:windowSoftInputMode : Specify the default soft-input mode for the main w
 android:immersive : Flag declaring this activity to be 'immersive'; immersive activities  should not be interrupted with other activities or notifications.  [boolean]
 android:hardwareAccelerated : <p>Flag indicating whether the application's rendering should  be hardware accelerated if possible.  [boolean]
 android:uiOptions : Extra options for an activity's UI.  [flag]
+android:parentActivityName : The name of the logical parent of the activity as it appears  in the manifest.  [string]
